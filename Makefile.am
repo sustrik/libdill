@@ -62,7 +62,7 @@ libmill_la_LDFLAGS = -no-undefined -version-info @TS_LIBTOOL_VERSION@
 # because of the stack pointer black magic in 'go' macro.
 libmill_la_CFLAGS = \
     -fvisibility=hidden\
-    -DMILL_EXPORTS \
+    -DTS_EXPORTS \
     -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0
 
 ################################################################################

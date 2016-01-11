@@ -52,23 +52,23 @@
 /*  Symbol visibility                                                         */
 /******************************************************************************/
 
-#if defined MILL_NO_EXPORTS
-#   define MILL_EXPORT
+#if defined TS_NO_EXPORTS
+#   define TS_EXPORT
 #else
 #   if defined _WIN32
-#      if defined MILL_EXPORTS
-#          define MILL_EXPORT __declspec(dllexport)
+#      if defined TS_EXPORTS
+#          define TS_EXPORT __declspec(dllexport)
 #      else
-#          define MILL_EXPORT __declspec(dllimport)
+#          define TS_EXPORT __declspec(dllimport)
 #      endif
 #   else
 #      if defined __SUNPRO_C
-#          define MILL_EXPORT __global
+#          define TS_EXPORT __global
 #      elif (defined __GNUC__ && __GNUC__ >= 4) || \
              defined __INTEL_COMPILER || defined __clang__
-#          define MILL_EXPORT __attribute__ ((visibility("default")))
+#          define TS_EXPORT __attribute__ ((visibility("default")))
 #      else
-#          define MILL_EXPORT
+#          define TS_EXPORT
 #      endif
 #   endif
 #endif
@@ -77,19 +77,19 @@
 /*  Helpers                                                                   */
 /******************************************************************************/
 
-MILL_EXPORT int64_t now(void);
+TS_EXPORT int64_t now(void);
 
 /******************************************************************************/
 /*  Coroutines                                                                */
 /******************************************************************************/
 
-MILL_EXPORT void goprepare(int count, size_t stack_size, size_t val_size);
+TS_EXPORT void goprepare(int count, size_t stack_size, size_t val_size);
 
-MILL_EXPORT extern volatile int mill_unoptimisable1;
-MILL_EXPORT extern volatile void *mill_unoptimisable2;
+TS_EXPORT extern volatile int mill_unoptimisable1;
+TS_EXPORT extern volatile void *mill_unoptimisable2;
 
-MILL_EXPORT void *mill_go_prologue(const char *created);
-MILL_EXPORT void mill_go_epilogue(void);
+TS_EXPORT void *mill_go_prologue(const char *created);
+TS_EXPORT void mill_go_epilogue(void);
 
 #define mill_string2(x) #x
 #define mill_string(x) mill_string2(x)
@@ -115,29 +115,29 @@ MILL_EXPORT void mill_go_epilogue(void);
 
 #define yield() mill_yield(__FILE__ ":" mill_string(__LINE__))
 
-MILL_EXPORT void mill_yield(const char *current);
+TS_EXPORT void mill_yield(const char *current);
 
 #define msleep(deadline) mill_msleep((deadline),\
     __FILE__ ":" mill_string(__LINE__))
 
-MILL_EXPORT void mill_msleep(int64_t deadline, const char *current);
+TS_EXPORT void mill_msleep(int64_t deadline, const char *current);
 
 #define fdwait(fd, events, deadline) mill_fdwait((fd), (events), (deadline),\
     __FILE__ ":" mill_string(__LINE__))
 
-MILL_EXPORT void fdclean(int fd);
+TS_EXPORT void fdclean(int fd);
 
 #define FDW_IN 1
 #define FDW_OUT 2
 #define FDW_ERR 4
 
-MILL_EXPORT int mill_fdwait(int fd, int events, int64_t deadline,
+TS_EXPORT int mill_fdwait(int fd, int events, int64_t deadline,
     const char *current);
 
-MILL_EXPORT pid_t mfork(void);
+TS_EXPORT pid_t mfork(void);
 
-MILL_EXPORT void *cls(void);
-MILL_EXPORT void setcls(void *val);
+TS_EXPORT void *cls(void);
+TS_EXPORT void setcls(void *val);
 
 /******************************************************************************/
 /*  Channels                                                                  */
@@ -175,13 +175,13 @@ typedef struct mill_chan *chan;
 #define chclose(channel) mill_chclose((channel),\
     __FILE__ ":" mill_string(__LINE__))
 
-MILL_EXPORT chan mill_chmake(size_t sz, size_t bufsz, const char *created);
-MILL_EXPORT chan mill_chdup(chan ch, const char *created);
-MILL_EXPORT void mill_chs(chan ch, void *val, size_t sz, const char *current);
-MILL_EXPORT void *mill_chr(chan ch, size_t sz, const char *current);
-MILL_EXPORT void mill_chdone(chan ch, void *val, size_t sz,
+TS_EXPORT chan mill_chmake(size_t sz, size_t bufsz, const char *created);
+TS_EXPORT chan mill_chdup(chan ch, const char *created);
+TS_EXPORT void mill_chs(chan ch, void *val, size_t sz, const char *current);
+TS_EXPORT void *mill_chr(chan ch, size_t sz, const char *current);
+TS_EXPORT void mill_chdone(chan ch, void *val, size_t sz,
     const char *current);
-MILL_EXPORT void mill_chclose(chan ch, const char *current);
+TS_EXPORT void mill_chclose(chan ch, const char *current);
 
 #define mill_concat(x,y) x##y
 
@@ -270,14 +270,14 @@ MILL_EXPORT void mill_chclose(chan ch, const char *current);
             mill_idx = mill_choose_wait();\
         }
 
-MILL_EXPORT void mill_choose_init(const char *current);
-MILL_EXPORT void mill_choose_in(void *clause, chan ch, size_t sz, int idx);
-MILL_EXPORT void mill_choose_out(void *clause, chan ch, void *val, size_t sz,
+TS_EXPORT void mill_choose_init(const char *current);
+TS_EXPORT void mill_choose_in(void *clause, chan ch, size_t sz, int idx);
+TS_EXPORT void mill_choose_out(void *clause, chan ch, void *val, size_t sz,
     int idx);
-MILL_EXPORT void mill_choose_deadline(int64_t ddline);
-MILL_EXPORT void mill_choose_otherwise(void);
-MILL_EXPORT int mill_choose_wait(void);
-MILL_EXPORT void *mill_choose_val(size_t sz);
+TS_EXPORT void mill_choose_deadline(int64_t ddline);
+TS_EXPORT void mill_choose_otherwise(void);
+TS_EXPORT int mill_choose_wait(void);
+TS_EXPORT void *mill_choose_val(size_t sz);
 
 /******************************************************************************/
 /*  IP address library                                                        */
@@ -291,10 +291,10 @@ MILL_EXPORT void *mill_choose_val(size_t sz);
 
 typedef struct {char data[32];} ipaddr;
 
-MILL_EXPORT ipaddr iplocal(const char *name, int port, int mode);
-MILL_EXPORT ipaddr ipremote(const char *name, int port, int mode,
+TS_EXPORT ipaddr iplocal(const char *name, int port, int mode);
+TS_EXPORT ipaddr ipremote(const char *name, int port, int mode,
     int64_t deadline);
-MILL_EXPORT const char *ipaddrstr(ipaddr addr, char *ipstr);
+TS_EXPORT const char *ipaddrstr(ipaddr addr, char *ipstr);
 
 /******************************************************************************/
 /*  TCP library                                                               */
@@ -302,20 +302,20 @@ MILL_EXPORT const char *ipaddrstr(ipaddr addr, char *ipstr);
 
 typedef struct mill_tcpsock *tcpsock;
 
-MILL_EXPORT tcpsock tcplisten(ipaddr addr, int backlog);
-MILL_EXPORT int tcpport(tcpsock s);
-MILL_EXPORT tcpsock tcpaccept(tcpsock s, int64_t deadline);
-MILL_EXPORT ipaddr tcpaddr(tcpsock s);
-MILL_EXPORT tcpsock tcpconnect(ipaddr addr, int64_t deadline);
-MILL_EXPORT size_t tcpsend(tcpsock s, const void *buf, size_t len,
+TS_EXPORT tcpsock tcplisten(ipaddr addr, int backlog);
+TS_EXPORT int tcpport(tcpsock s);
+TS_EXPORT tcpsock tcpaccept(tcpsock s, int64_t deadline);
+TS_EXPORT ipaddr tcpaddr(tcpsock s);
+TS_EXPORT tcpsock tcpconnect(ipaddr addr, int64_t deadline);
+TS_EXPORT size_t tcpsend(tcpsock s, const void *buf, size_t len,
     int64_t deadline);
-MILL_EXPORT void tcpflush(tcpsock s, int64_t deadline);
-MILL_EXPORT size_t tcprecv(tcpsock s, void *buf, size_t len, int64_t deadline);
-MILL_EXPORT size_t tcprecvuntil(tcpsock s, void *buf, size_t len,
+TS_EXPORT void tcpflush(tcpsock s, int64_t deadline);
+TS_EXPORT size_t tcprecv(tcpsock s, void *buf, size_t len, int64_t deadline);
+TS_EXPORT size_t tcprecvuntil(tcpsock s, void *buf, size_t len,
     const char *delims, size_t delimcount, int64_t deadline);
-MILL_EXPORT void tcpclose(tcpsock s);
-MILL_EXPORT tcpsock tcpattach(int fd, int listening);
-MILL_EXPORT int tcpdetach(tcpsock s);
+TS_EXPORT void tcpclose(tcpsock s);
+TS_EXPORT tcpsock tcpattach(int fd, int listening);
+TS_EXPORT int tcpdetach(tcpsock s);
 
 
 /******************************************************************************/
@@ -324,14 +324,14 @@ MILL_EXPORT int tcpdetach(tcpsock s);
 
 typedef struct mill_udpsock *udpsock;
 
-MILL_EXPORT udpsock udplisten(ipaddr addr);
-MILL_EXPORT int udpport(udpsock s);
-MILL_EXPORT void udpsend(udpsock s, ipaddr addr, const void *buf, size_t len);
-MILL_EXPORT size_t udprecv(udpsock s, ipaddr *addr,
+TS_EXPORT udpsock udplisten(ipaddr addr);
+TS_EXPORT int udpport(udpsock s);
+TS_EXPORT void udpsend(udpsock s, ipaddr addr, const void *buf, size_t len);
+TS_EXPORT size_t udprecv(udpsock s, ipaddr *addr,
     void *buf, size_t len, int64_t deadline);
-MILL_EXPORT void udpclose(udpsock s);
-MILL_EXPORT udpsock udpattach(int fd);
-MILL_EXPORT int udpdetach(udpsock s);
+TS_EXPORT void udpclose(udpsock s);
+TS_EXPORT udpsock udpattach(int fd);
+TS_EXPORT int udpdetach(udpsock s);
 
 /******************************************************************************/
 /*  UNIX library                                                              */
@@ -339,27 +339,27 @@ MILL_EXPORT int udpdetach(udpsock s);
 
 typedef struct mill_unixsock *unixsock;
 
-MILL_EXPORT unixsock unixlisten(const char *addr, int backlog);
-MILL_EXPORT unixsock unixaccept(unixsock s, int64_t deadline);
-MILL_EXPORT unixsock unixconnect(const char *addr);
-MILL_EXPORT void unixpair(unixsock *a, unixsock *b);
-MILL_EXPORT size_t unixsend(unixsock s, const void *buf, size_t len,
+TS_EXPORT unixsock unixlisten(const char *addr, int backlog);
+TS_EXPORT unixsock unixaccept(unixsock s, int64_t deadline);
+TS_EXPORT unixsock unixconnect(const char *addr);
+TS_EXPORT void unixpair(unixsock *a, unixsock *b);
+TS_EXPORT size_t unixsend(unixsock s, const void *buf, size_t len,
     int64_t deadline);
-MILL_EXPORT void unixflush(unixsock s, int64_t deadline);
-MILL_EXPORT size_t unixrecv(unixsock s, void *buf, size_t len,
+TS_EXPORT void unixflush(unixsock s, int64_t deadline);
+TS_EXPORT size_t unixrecv(unixsock s, void *buf, size_t len,
     int64_t deadline);
-MILL_EXPORT size_t unixrecvuntil(unixsock s, void *buf, size_t len,
+TS_EXPORT size_t unixrecvuntil(unixsock s, void *buf, size_t len,
     const char *delims, size_t delimcount, int64_t deadline);
-MILL_EXPORT void unixclose(unixsock s);
-MILL_EXPORT unixsock unixattach(int fd, int listening);
-MILL_EXPORT int unixdetach(unixsock s);
+TS_EXPORT void unixclose(unixsock s);
+TS_EXPORT unixsock unixattach(int fd, int listening);
+TS_EXPORT int unixdetach(unixsock s);
 
 /******************************************************************************/
 /*  Debugging                                                                 */
 /******************************************************************************/
 
-MILL_EXPORT void goredump(void);
-MILL_EXPORT void gotrace(int level);
+TS_EXPORT void goredump(void);
+TS_EXPORT void gotrace(int level);
 
 #endif
 
