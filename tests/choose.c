@@ -33,7 +33,8 @@ coroutine void sender1(chan ch, int val) {
 }
 
 coroutine void sender2(chan ch, int val) {
-    yield();
+    int rc = yield();
+    assert(rc == 0);
     chs(ch, int, val);
     chclose(ch);
 }
@@ -51,7 +52,8 @@ coroutine void receiver1(chan ch, int expected) {
 }
 
 coroutine void receiver2(chan ch, int expected) {
-    yield();
+    int rc = yield();
+    assert(rc == 0);
     int val = chr(ch, int);
     assert(val == expected);
     chclose(ch);
@@ -68,7 +70,8 @@ coroutine void choosesender(chan ch, int val) {
 coroutine void feeder(chan ch, int val) {
     while(1) {
         chs(ch, int, val);
-        yield();
+        int rc = yield();
+        assert(rc == 0);
     }
 }
 
@@ -195,7 +198,8 @@ int main() {
             ++second;
         end
         }
-        yield();
+        int rc = yield();
+        assert(rc == 0);
     }
     assert(first > 1 && second > 1);
     chclose(ch7);

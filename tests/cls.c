@@ -38,7 +38,8 @@ coroutine void worker(void) {
        to the main coroutine. */
     setcls(&dummy2);
     assert(cls() == &dummy2);
-    yield();
+    int rc = yield();
+    assert(rc == 0);
     assert(cls() == &dummy2);
 }
 
@@ -53,7 +54,8 @@ int main() {
     /* Check whether CLS is not messed up by launching a new coroutine. */
     go(worker());
     assert(cls() == &dummy1);
-    yield();
+    int rc = yield();
+    assert(rc == 0);
 
     /* Check whether CLS is not messed up when coroutine terminates. */
     assert(cls() == &dummy1);

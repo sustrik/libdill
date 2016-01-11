@@ -36,8 +36,10 @@ struct foo {
 };
 
 coroutine void sender(chan ch, int doyield, int val) {
-    if(doyield)
-        yield();
+    if(doyield) {
+        int rc = yield();
+        assert(rc == 0);
+    }
     chs(ch, int, val);
     chclose(ch);
 }
@@ -89,7 +91,8 @@ int main() {
     go(sender(chdup(ch3), 0, 999));
     val = chr(ch3, int);
     assert(val == 888);
-    yield();
+    int rc = yield();
+    assert(rc == 0);
     val = chr(ch3, int);
     assert(val == 999);
     chclose(ch3);

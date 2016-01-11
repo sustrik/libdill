@@ -146,13 +146,14 @@ void ts_epilogue(void) {
     ts_suspend();
 }
 
-void ts_yield(const char *current) {
+int ts_yield(const char *current) {
     ts_trace(current, "yield()");
     ts_set_current(&ts_running->debug, current);
     /* This looks fishy, but yes, we can resume the coroutine even before
        suspending it. */
     ts_resume(ts_running, 0);
     ts_suspend();
+    return 0;
 }
 
 void *ts_valbuf(struct ts_cr *cr, size_t size) {

@@ -113,7 +113,7 @@ TS_EXPORT void ts_epilogue(void);
 
 #define yield() ts_yield(__FILE__ ":" ts_string(__LINE__))
 
-TS_EXPORT void ts_yield(const char *current);
+TS_EXPORT int ts_yield(const char *current);
 
 #define msleep(deadline) ts_msleep((deadline),\
     __FILE__ ":" ts_string(__LINE__))

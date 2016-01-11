@@ -22,8 +22,8 @@
 
 */
 
-#include <errno.h>
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 
 #include "../treestack.h"
@@ -34,7 +34,8 @@ coroutine void worker(int count, int n) {
     int i;
     for(i = 0; i != count; ++i) {
         sum += n;
-        yield();
+        int rc = yield();
+        assert(rc == 0);
     }
 }
 
