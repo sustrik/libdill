@@ -155,8 +155,8 @@ typedef struct ts_chan *chan;
 #define chs(channel, val, len) \
     ts_chs((channel), (val), (len), __FILE__ ":" ts_string(__LINE__))
 
-#define chr(channel, type) \
-    (*(type*)ts_chr((channel), sizeof(type), __FILE__ ":" ts_string(__LINE__)))
+#define chr(channel, val, len) \
+    ts_chr((channel), (val), (len), __FILE__ ":" ts_string(__LINE__))
 
 #define chdone(channel, val, len) \
     ts_chdone((channel), (val), (len), __FILE__ ":" ts_string(__LINE__))
@@ -167,7 +167,7 @@ typedef struct ts_chan *chan;
 TS_EXPORT chan ts_chmake(size_t sz, size_t bufsz, const char *created);
 TS_EXPORT chan ts_chdup(chan ch, const char *created);
 TS_EXPORT int ts_chs(chan ch, const void *val, size_t len, const char *current);
-TS_EXPORT void *ts_chr(chan ch, size_t sz, const char *current);
+TS_EXPORT int ts_chr(chan ch, void *val, size_t len, const char *current);
 TS_EXPORT int ts_chdone(chan ch, const void *val, size_t len,
     const char *current);
 TS_EXPORT void ts_chclose(chan ch, const char *current);

@@ -48,10 +48,19 @@ int main() {
     go(delay(40, ch));
     go(delay(10, ch));
     go(delay(20, ch));
-    assert(chr(ch, int) == 10);
-    assert(chr(ch, int) == 20);
-    assert(chr(ch, int) == 30);
-    assert(chr(ch, int) == 40);
+    int val;
+    int rc = chr(ch, &val, sizeof(val));
+    assert(rc == 0);
+    assert(val == 10);
+    rc = chr(ch, &val, sizeof(val));
+    assert(rc == 0);
+    assert(val == 20);
+    rc = chr(ch, &val, sizeof(val));
+    assert(rc == 0);
+    assert(val == 30);
+    rc = chr(ch, &val, sizeof(val));
+    assert(rc == 0);
+    assert(val == 40);
 
     return 0;
 }

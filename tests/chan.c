@@ -46,17 +46,21 @@ coroutine void sender(chan ch, int doyield, int val) {
 }
 
 coroutine void receiver(chan ch, int expected) {
-    int val = chr(ch, int);
+    int val;
+    int rc = chr(ch, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == expected);
     chclose(ch);
 }
 
 coroutine void receiver2(chan ch, int expected, chan back) {
-    int val = chr(ch, int);
+    int val;
+    int rc = chr(ch, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == expected);
     chclose(ch);
     val = 0;
-    int rc = chs(back, &val, sizeof(val));
+    rc = chs(back, &val, sizeof(val));
     assert(rc == 0);
     chclose(back);
 }
@@ -79,14 +83,16 @@ int main() {
     /* Receiver waits for sender. */
     chan ch1 = chmake(int, 0);
     go(sender(chdup(ch1), 1, 333));
-    val = chr(ch1, int);
+    int rc = chr(ch1, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 333);
     chclose(ch1);
 
     /* Sender waits for receiver. */
     chan ch2 = chmake(int, 0);
     go(sender(chdup(ch2), 0, 444));
-    val = chr(ch2, int);
+    rc = chr(ch2, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 444);
     chclose(ch2);
 
@@ -94,11 +100,13 @@ int main() {
     chan ch3 = chmake(int, 0);
     go(sender(chdup(ch3), 0, 888));
     go(sender(chdup(ch3), 0, 999));
-    val = chr(ch3, int);
-    assert(val == 888);
-    int rc = yield();
+    rc = chr(ch3, &val, sizeof(val));
     assert(rc == 0);
-    val = chr(ch3, int);
+    assert(val == 888);
+    rc = yield();
+    assert(rc == 0);
+    rc = chr(ch3, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 999);
     chclose(ch3);
 
@@ -117,13 +125,17 @@ int main() {
     /* Test typed channels. */
     chan ch5 = chmake(char, 0);
     go(charsender(chdup(ch5), 111));
-    char charval = chr(ch5, char);
+    char charval;
+    rc = chr(ch5, &charval, sizeof(charval));
+    assert(rc == 0);
     assert(charval == 111);
     chclose(ch5);
     chan ch6 = chmake(struct foo, 0);
     struct foo foo1 = {555, 222};
     go(structsender(chdup(ch6), foo1));
-    struct foo foo2 = chr(ch6, struct foo);
+    struct foo foo2;
+    rc = chr(ch6, &foo2, sizeof(foo2));
+    assert(rc == 0);
     assert(foo2.first == 555 && foo2.second == 222);
     chclose(ch6);
 
@@ -135,14 +147,17 @@ int main() {
     val = 333;
     rc = chs(ch7, &val, sizeof(val));
     assert(rc == 0);
-    val = chr(ch7, int);
+    rc = chr(ch7, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 222);
-    val = chr(ch7, int);
+    rc = chr(ch7, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 333);
     val = 444;
     rc = chs(ch7, &val, sizeof(val));
     assert(rc == 0);
-    val = chr(ch7, int);
+    rc = chr(ch7, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 444);
     val = 555;
     rc = chs(ch7, &val, sizeof(val));
@@ -150,9 +165,11 @@ int main() {
     val = 666;
     rc = chs(ch7, &val, sizeof(val));
     assert(rc == 0);
-    val = chr(ch7, int);
+    rc = chr(ch7, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 555);
-    val = chr(ch7, int);
+    rc = chr(ch7, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 666);
     chclose(ch7);
 
@@ -161,20 +178,25 @@ int main() {
     val = 777;
     rc = chdone(ch8, &val, sizeof(val));
     assert(rc == 0);
-    val = chr(ch8, int);
+    rc = chr(ch8, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 777);
-    val = chr(ch8, int);
+    rc = chr(ch8, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 777);
-    val = chr(ch8, int);
+    rc = chr(ch8, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 777);
     chclose(ch8);
     chan ch9 = chmake(int, 10);
     val = 888;
     rc = chdone(ch9, &val, sizeof(val));
     assert(rc == 0);
-    val = chr(ch9, int);
+    rc = chr(ch9, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 888);
-    val = chr(ch9, int);
+    rc = chr(ch9, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 888);
     chclose(ch9);
     chan ch10 = chmake(int, 10);
@@ -184,11 +206,14 @@ int main() {
     val = 111;
     rc = chdone(ch10, &val, sizeof(val));
     assert(rc == 0);
-    val = chr(ch10, int);
+    rc = chr(ch10, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 999);
-    val = chr(ch10, int);
+    rc = chr(ch10, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 111);
-    val = chr(ch10, int);
+    rc = chr(ch10, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 111);
     chclose(ch10);
     chan ch11 = chmake(int, 1);
@@ -198,9 +223,11 @@ int main() {
     val = 333;
     rc = chdone(ch11, &val, sizeof(val));
     assert(rc == 0);
-    val = chr(ch11, int);
+    rc = chr(ch11, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 222);
-    val = chr(ch11, int);
+    rc = chr(ch11, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 333);
     chclose(ch11);
 
@@ -212,9 +239,11 @@ int main() {
     val = 444;
     rc = chdone(ch12, &val, sizeof(val));
     assert(rc == 0);
-    val = chr(ch13, int);
+    rc = chr(ch13, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 0);
-    val = chr(ch13, int);
+    rc = chr(ch13, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 0);
     chclose(ch13);
     chclose(ch12);
@@ -225,9 +254,11 @@ int main() {
     rc = chs(ch14, &val, sizeof(val));
     assert(rc == 0);
     go(sender(chdup(ch14), 0, 2));
-    val = chr(ch14, int);
+    rc = chr(ch14, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 1);
-    val = chr(ch14, int);
+    rc = chr(ch14, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == 2);
     chclose(ch14);
 

@@ -42,9 +42,11 @@ void signal_handler(int signo) {
 }
 
 coroutine void sender(chan ch) {
-    char signo = chr(ch, char);
-    int err = kill(getpid(), signo);
-    assert(err == 0);
+    char signo;
+    int rc = chr(ch, &signo, sizeof(signo));
+    assert(rc == 0);
+    rc = kill(getpid(), signo);
+    assert(rc == 0);
 }
 
 coroutine void receiver(chan ch) {
@@ -76,7 +78,9 @@ int main() {
         char c = SIGNAL;
         int rc = chs(sendch, &c, sizeof(c));
         assert(rc == 0);
-        int signo = chr(recvch, char);
+        char signo;
+        rc = chr(recvch, &signo, sizeof(signo));
+        assert(rc == 0);
         assert(signo == SIGNAL);
     }
 

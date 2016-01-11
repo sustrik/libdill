@@ -357,16 +357,20 @@ int ts_chs(chan ch, const void *val, size_t len, const char *current) {
     return 0;
 }
 
-void *ts_chr(chan ch, size_t sz, const char *current) {
-    if(ts_slow(!ch))
-        ts_panic("null channel used");
+int ts_chr(chan ch, void *val, size_t len, const char *current) {
+    if(ts_slow(!ch || !val || len != ch->sz)) {
+        errno = EINVAL;
+        return -1;
+    }
     ts_trace(current, "chr(<%d>)", (int)ch->debug.id);
     ts_running->state = TS_CHR;
     ts_choose_init_(current);
     struct ts_clause cl;
-    ts_choose_in(&cl, ch, sz, 0);
+    ts_choose_in(&cl, ch, len, 0);
     ts_choose_wait();
-    return ts_choose_val(sz);
+    void *res = ts_choose_val(len);
+    memcpy(val, res, len);
+    return 0;
 }
 
 int ts_chdone(chan ch, const void *val, size_t len, const char *current) {

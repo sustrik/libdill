@@ -50,7 +50,9 @@ coroutine void sender3(chan ch, int val, int64_t deadline) {
 }
 
 coroutine void receiver1(chan ch, int expected) {
-    int val = chr(ch, int);
+    int val;
+    int rc = chr(ch, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == expected);
     chclose(ch);
 }
@@ -58,7 +60,9 @@ coroutine void receiver1(chan ch, int expected) {
 coroutine void receiver2(chan ch, int expected) {
     int rc = yield();
     assert(rc == 0);
-    int val = chr(ch, int);
+    int val;
+    rc = chr(ch, &val, sizeof(val));
+    assert(rc == 0);
     assert(val == expected);
     chclose(ch);
 }
@@ -122,6 +126,8 @@ coroutine void unused(void) {
 }
 
 int main() {
+    int rc;
+
     /* In this test we are also going to make sure that the debugging support
        doesn't crash the application. */
     gotrace(1);
@@ -296,7 +302,9 @@ int main() {
     first = 0;
     second = 0;
     for(i = 0; i != 100; ++i) {
-        int v = chr(ch14, int);
+        int v;
+        rc = chr(ch14, &v, sizeof(v));
+        assert(rc == 0);
         if(v == 666)
             ++first;
         else if(v == 777)
@@ -325,7 +333,7 @@ int main() {
     /* Test transferring a large object. */
     chan ch17 = chmake(struct large, 1);
     struct large large = {{0}};
-    int  rc = chs(ch17, &large, sizeof(large));
+    rc = chs(ch17, &large, sizeof(large));
     assert(rc == 0);
     choose {
     in(ch17, struct large, v):
@@ -376,7 +384,8 @@ int main() {
     for(i = 0; i != 100; ++i) {
         int rc = msleep(10);
         assert(rc == 0);
-        val = chr(ch20, int);
+        rc = chr(ch20, &val, sizeof(val));
+        assert(rc == 0);
         switch(val) {
         case 1:
             ++first;

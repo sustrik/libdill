@@ -29,8 +29,10 @@
 
 coroutine void relay(chan src, chan dst) {
     while(1) {
-       int val = chr(src, int);
-       int rc = chs(dst, &val, sizeof(val));
+       int val;
+       int rc = chr(src, &val, sizeof(val));
+       assert(rc == 0);
+       rc = chs(dst, &val, sizeof(val));
        assert(rc == 0);
     }
 }
