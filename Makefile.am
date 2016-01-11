@@ -56,7 +56,7 @@ libmill_la_SOURCES = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = treestack.pc
 
-libmill_la_LDFLAGS = -no-undefined -version-info @MILL_LIBTOOL_VERSION@
+libmill_la_LDFLAGS = -no-undefined -version-info @TS_LIBTOOL_VERSION@
 
 # Turn the source fortification in glibc off - otherwise it would panic
 # because of the stack pointer black magic in 'go' macro.

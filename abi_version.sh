@@ -25,9 +25,9 @@ if [ ! -f treestack.h ]; then
     exit 1
 fi
 
-CURRENT=`egrep '^#define +MILL_VERSION_CURRENT +[0-9]+$' treestack.h`
-REVISION=`egrep '^#define +MILL_VERSION_REVISION +[0-9]+$' treestack.h`
-AGE=`egrep '^#define +MILL_VERSION_AGE +[0-9]+$' treestack.h`
+CURRENT=`egrep '^#define +TS_VERSION_CURRENT +[0-9]+$' treestack.h`
+REVISION=`egrep '^#define +TS_VERSION_REVISION +[0-9]+$' treestack.h`
+AGE=`egrep '^#define +TS_VERSION_AGE +[0-9]+$' treestack.h`
 
 if [ -z "$CURRENT" -o -z "$REVISION" -o -z "$AGE" ]; then
     echo "abi_version.sh: error: could not extract version from treestack.h" 1>&2

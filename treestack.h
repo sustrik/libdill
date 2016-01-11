@@ -22,8 +22,8 @@
 
 */
 
-#ifndef LIBMILL_H_INCLUDED
-#define LIBMILL_H_INCLUDED
+#ifndef TREESTACK_H_INCLUDED
+#define TREESTACK_H_INCLUDED
 
 #include <errno.h>
 #include <stddef.h>
@@ -40,13 +40,13 @@
 /*  www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html  */
 
 /*  The current interface version. */
-#define MILL_VERSION_CURRENT 14
+#define TS_VERSION_CURRENT 14
 
 /*  The latest revision of the current interface. */
-#define MILL_VERSION_REVISION 0
+#define TS_VERSION_REVISION 0
 
 /*  How many past interface versions are still supported. */
-#define MILL_VERSION_AGE 2
+#define TS_VERSION_AGE 2
 
 /******************************************************************************/
 /*  Symbol visibility                                                         */

@@ -26,8 +26,8 @@
 
 AC_PREREQ([2.53])
 
-AC_INIT([libmill], [m4_esyscmd([./package_version.sh])],
-   [libmill@freelists.org], [libmill], [http://libmill.org/])
+AC_INIT([treestack], [m4_esyscmd([./package_version.sh])],
+   [libmill@freelists.org], [treestack], [http://libmill.org/])
 AC_CONFIG_SRCDIR([treestack.pc.in])
 AM_INIT_AUTOMAKE([1.6 foreign subdir-objects tar-ustar])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -41,16 +41,16 @@ AC_CANONICAL_HOST
 AC_PROG_SED
 AC_PROG_AWK
 
-MILL_ABI_VERSION=m4_esyscmd([./abi_version.sh])
-MILL_PACKAGE_VERSION=m4_esyscmd([./package_version.sh])
-MILL_LIBTOOL_VERSION=m4_esyscmd([./abi_version.sh -libtool])
+TS_ABI_VERSION=m4_esyscmd([./abi_version.sh])
+TS_PACKAGE_VERSION=m4_esyscmd([./package_version.sh])
+TS_LIBTOOL_VERSION=m4_esyscmd([./abi_version.sh -libtool])
 
-AC_SUBST(MILL_ABI_VERSION)
-AC_SUBST(MILL_PACKAGE_VERSION)
-AC_SUBST(MILL_LIBTOOL_VERSION)
+AC_SUBST(TS_ABI_VERSION)
+AC_SUBST(TS_PACKAGE_VERSION)
+AC_SUBST(TS_LIBTOOL_VERSION)
 
-AC_MSG_NOTICE([Mill package version: $MILL_PACKAGE_VERSION])
-AC_MSG_NOTICE([Mill ABI version: $MILL_ABI_VERSION])
+AC_MSG_NOTICE([treestack package version: $TS_PACKAGE_VERSION])
+AC_MSG_NOTICE([treestack ABI version: $TS_ABI_VERSION])
 
 ################################################################################
 #  Check the compilers.                                                        #
