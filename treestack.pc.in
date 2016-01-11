@@ -3,10 +3,10 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
-Name: libmill
-Description: Go-style concurrency in C
-URL: http://libmill.org/
-Version: @LIBMILL_ABI_VERSION@
+Name: treestack
+Description: coroutine library
+URL: http://example.org/
+Version: @TS_ABI_VERSION@
 Requires:
-Libs: -L${libdir} -lmill @LIBS@
+Libs: -L${libdir} -ltreestack @LIBS@
 Cflags: -I${includedir}

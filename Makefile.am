@@ -23,15 +23,15 @@
 ACLOCAL_AMFLAGS = -I m4
 
 ################################################################################
-#  mill library                                                                #
+#  treestack library                                                           #
 ################################################################################
 
-millincludedir = $(includedir)
-millinclude_HEADERS = treestack.h
+treestackincludedir = $(includedir)
+treestackinclude_HEADERS = treestack.h
 
-lib_LTLIBRARIES = libmill.la
+lib_LTLIBRARIES = libtreestack.la
 
-libmill_la_SOURCES = \
+libtreestack_la_SOURCES = \
     chan.h \
     chan.c \
     cr.h \
@@ -56,11 +56,11 @@ libmill_la_SOURCES = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = treestack.pc
 
-libmill_la_LDFLAGS = -no-undefined -version-info @TS_LIBTOOL_VERSION@
+libtreestack_la_LDFLAGS = -no-undefined -version-info @TS_LIBTOOL_VERSION@
 
 # Turn the source fortification in glibc off - otherwise it would panic
 # because of the stack pointer black magic in 'go' macro.
-libmill_la_CFLAGS = \
+libtreestack_la_CFLAGS = \
     -fvisibility=hidden\
     -DTS_EXPORTS \
     -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0
@@ -80,7 +80,7 @@ check_PROGRAMS = \
     tests/signals \
     tests/overload
 
-LDADD = libmill.la
+LDADD = libtreestack.la
 
 TESTS = $(check_PROGRAMS)
 
