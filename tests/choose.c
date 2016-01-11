@@ -69,7 +69,7 @@ coroutine void receiver2(chan ch, int expected) {
 
 coroutine void choosesender(chan ch, int val) {
     choose {
-    out(ch, int, val):
+    out(ch, &val, sizeof(val)):
     end
     }
     chclose(ch);
@@ -87,8 +87,8 @@ coroutine void feeder(chan ch, int val) {
 coroutine void feeder2(chan ch, int first, int second) {
     while(1) {
         choose {
-        out(ch, int, first):
-        out(ch, int, second):
+        out(ch, &first, sizeof(first)):
+        out(ch, &second, sizeof(second)):
         end
         }
     }
@@ -105,10 +105,13 @@ coroutine void feeder3(chan ch, int val) {
 
 coroutine void feeder4(chan ch) {
     while(1) {
+        const int val1 = 1;
+        const int val2 = 2;
+        const int val3 = 3;
         choose {
-        out(ch, int, 1):
-        out(ch, int, 2):
-        out(ch, int, 3):
+        out(ch, &val1, sizeof(val1)):
+        out(ch, &val2, sizeof(val2)):
+        out(ch, &val3, sizeof(val3)):
         end
         }
     }
@@ -155,8 +158,9 @@ int main() {
     /* Non-blocking sender case. */
     chan ch3 = chmake(int, 0);
     go(receiver1(chdup(ch3), 777));
+    int val = 777;
     choose {
-    out(ch3, int, 777):
+    out(ch3, &val, sizeof(val)):
     end
     }
     chclose(ch3);
@@ -164,8 +168,9 @@ int main() {
     /* Blocking sender case. */
     chan ch4 = chmake(int, 0);
     go(receiver2(chdup(ch4), 888));
+    val = 888;
     choose {
-    out(ch4, int, 888):
+    out(ch4, &val, sizeof(val)):
     end
     }
     chclose(ch4);
@@ -239,7 +244,6 @@ int main() {
     assert(test == 1);
 
     /* Test two simultaneous senders vs. choose statement. */
-    int val;
     chan ch10 = chmake(int, 0);
     go(sender1(chdup(ch10), 888));
     go(sender1(chdup(ch10), 999));
@@ -263,12 +267,14 @@ int main() {
     chan ch11 = chmake(int, 0);
     go(receiver1(chdup(ch11), 333));
     go(receiver1(chdup(ch11), 444));
+    val = 333;
     choose {
-    out(ch11, int, 333):
+    out(ch11, &val, sizeof(val)):
     end
     }
+    val = 444;
     choose {
-    out(ch11, int, 444):
+    out(ch11, &val, sizeof(val)):
     end
     }
     chclose(ch11);
@@ -285,8 +291,9 @@ int main() {
 
     /* Choose vs. buffered channels. */
     chan ch13 = chmake(int, 2);
+    val = 999;
     choose {
-    out(ch13, int, 999):
+    out(ch13, &val, sizeof(val)):
     end
     }
     choose {

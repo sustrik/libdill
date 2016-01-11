@@ -163,7 +163,7 @@ void ts_choose_in(void *clause, chan ch, size_t sz, int idx) {
     cl->ep->tmp = -1;
 }
 
-void ts_choose_out(void *clause, chan ch, void *val, size_t sz, int idx) {
+void ts_choose_out(void *clause, chan ch, const void *val, size_t sz, int idx) {
     if(ts_slow(!ch))
         ts_panic("null channel used");
     if(ts_slow(ch->done))
@@ -182,7 +182,7 @@ void ts_choose_out(void *clause, chan ch, void *val, size_t sz, int idx) {
     struct ts_clause *cl = (struct ts_clause*) clause;
     cl->cr = ts_running;
     cl->ep = &ch->sender;
-    cl->val = val;
+    cl->val = (void*)val;
     cl->available = available;
     cl->idx = idx;
     cl->used = 1;
@@ -352,7 +352,7 @@ int ts_chs(chan ch, const void *val, size_t len, const char *current) {
     ts_choose_init_(current);
     ts_running->state = TS_CHS;
     struct ts_clause cl;
-    ts_choose_out(&cl, ch, (void*)val, len, 0);
+    ts_choose_out(&cl, ch, val, len, 0);
     ts_choose_wait();
     return 0;
 }

@@ -203,19 +203,14 @@ TS_EXPORT void ts_chclose(chan ch, const char *current);
 
 #define in(chan, type, name) ts_in((chan), type, name, __COUNTER__)
 
-#define ts_out(chan, type, val, idx) \
+#define ts_out(chan, val, len, idx) \
                     break;\
                 }\
                 goto ts_concat(ts_label, idx);\
             }\
             char ts_concat(ts_clause, idx)[TS_CLAUSELEN];\
-            type ts_concat(ts_val, idx) = (val);\
             ts_choose_out(\
-                &ts_concat(ts_clause, idx)[0],\
-                (chan),\
-                &ts_concat(ts_val, idx),\
-                sizeof(type),\
-                idx);\
+                &ts_concat(ts_clause, idx)[0], (chan), (val), (len), idx);\
             if(0) {\
                 ts_concat(ts_label, idx):\
                 if(ts_idx == idx) {\
@@ -261,8 +256,8 @@ TS_EXPORT void ts_chclose(chan ch, const char *current);
 
 TS_EXPORT void ts_choose_init(const char *current);
 TS_EXPORT void ts_choose_in(void *clause, chan ch, size_t sz, int idx);
-TS_EXPORT void ts_choose_out(void *clause, chan ch, void *val, size_t sz,
-    int idx);
+TS_EXPORT void ts_choose_out(void *clause, chan ch, const void *val,
+    size_t sz, int idx);
 TS_EXPORT void ts_choose_deadline(int64_t ddline);
 TS_EXPORT void ts_choose_otherwise(void);
 TS_EXPORT int ts_choose_wait(void);
