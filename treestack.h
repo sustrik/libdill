@@ -40,13 +40,13 @@
 /*  www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html  */
 
 /*  The current interface version. */
-#define TS_VERSION_CURRENT 14
+#define TS_VERSION_CURRENT 0
 
 /*  The latest revision of the current interface. */
 #define TS_VERSION_REVISION 0
 
 /*  How many past interface versions are still supported. */
-#define TS_VERSION_AGE 2
+#define TS_VERSION_AGE 0
 
 /******************************************************************************/
 /*  Symbol visibility                                                         */
