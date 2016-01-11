@@ -70,7 +70,4 @@ extern int ts_tracelevel;
 #define ts_trace if(ts_slow(ts_tracelevel)) ts_trace_
 void ts_trace_(const char *location, const char *format, ...);
 
-/* Returns 1 if there are any coroutines running, 0 otherwise. */
-int ts_hascrs(void);
-
 #endif

@@ -245,8 +245,3 @@ void ts_preserve_debug(void) {
     gotrace(0);
 }
 
-int ts_hascrs(void) {
-    return (ts_all_crs.first == &ts_main.debug.item &&
-        ts_all_crs.last == &ts_main.debug.item) ? 0 : 1;
-}
-

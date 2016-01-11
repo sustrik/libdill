@@ -107,49 +107,6 @@ static void *ts_allocstackmem(void) {
     return (void*)(((char*)ptr) + ts_get_stack_size());
 }
 
-
-void ts_preparestacks(int count, size_t stack_size) {
-    /* Purge the cached stacks. */
-    while(1) {
-        struct ts_slist_item *item = ts_slist_pop(&ts_cached_stacks);
-        if(!item)
-            break;
-        free(((char*)(item + 1)) - ts_get_stack_size());
-    }
-    /* Now that there are no stacks allocated, we can adjust the stack size. */
-    size_t old_stack_size = ts_stack_size;
-    size_t old_sanitised_stack_size = ts_sanitised_stack_size;
-    ts_stack_size = stack_size;
-    ts_sanitised_stack_size = 0;
-    /* Allocate the new stacks. */
-    int i;
-    for(i = 0; i != count; ++i) {
-        void *ptr = ts_allocstackmem();
-        if(!ptr) goto error;
-        struct ts_slist_item *item = ((struct ts_slist_item*)ptr) - 1;
-        ts_slist_push_back(&ts_cached_stacks, item);
-    }
-    ts_num_cached_stacks = count;
-    /* Make sure that the stacks won't get deallocated even if they aren't used
-       at the moment. */
-    ts_max_cached_stacks = count;
-    errno = 0;
-    return;
-error:
-    /* If we can't allocate all the stacks, allocate none, restore state and
-       return error. */
-    while(1) {
-        struct ts_slist_item *item = ts_slist_pop(&ts_cached_stacks);
-        if(!item)
-            break;
-        free(((char*)(item + 1)) - ts_get_stack_size());
-    }
-    ts_num_cached_stacks = 0;
-    ts_stack_size = old_stack_size;
-    ts_sanitised_stack_size = old_sanitised_stack_size;
-    errno = ENOMEM;
-}
-
 void *ts_allocstack(void) {
     if(!ts_slist_empty(&ts_cached_stacks)) {
         --ts_num_cached_stacks;

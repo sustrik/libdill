@@ -83,8 +83,6 @@ TS_EXPORT int64_t now(void);
 /*  Coroutines                                                                */
 /******************************************************************************/
 
-TS_EXPORT void goprepare(int count, size_t stack_size, size_t val_size);
-
 TS_EXPORT extern volatile int ts_unoptimisable1;
 TS_EXPORT extern volatile void *ts_unoptimisable2;
 

@@ -43,7 +43,6 @@ coroutine void dummy(void) {
 }
 
 int main() {
-    goprepare(10, 25000, 300);
     assert(errno == 0);
     go(worker(3, 7));
     go(worker(1, 11));

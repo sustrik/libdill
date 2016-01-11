@@ -27,10 +27,6 @@
 
 #include <stddef.h>
 
-/* Purges all the existing cached stacks and preallocates 'count' new stacks
-   of size 'stack_size'. Sets errno in case of error. */
-void ts_preparestacks(int count, size_t stack_size);
-
 /* Allocates new stack. Returns pointer to the *top* of the stack.
    For now we assume that the stack grows downwards. */
 void *ts_allocstack(void);

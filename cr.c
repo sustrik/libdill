@@ -74,21 +74,6 @@ static void *ts_getvalbuf(struct ts_cr *cr, size_t size) {
     return cr->valbuf;
 }
 
-void goprepare(int count, size_t stack_size, size_t val_size) {
-    if(ts_slow(ts_hascrs())) {errno = EAGAIN; return;}
-    /* Allocate any resources needed by the polling mechanism. */
-    ts_poller_init();
-    if(ts_slow(errno != 0)) return;
-    /* If needed, make val size slightly bigger to align properly. */
-    ts_valbuf_size = (val_size + 15) & ~((size_t)0xf);
-    /* Preallocate the valbuf for the main coroutine. */
-    if(ts_slow(!ts_getvalbuf(&ts_main, ts_valbuf_size))) {
-        errno = ENOMEM; return;}
-    /* Allocate the stacks. */
-    ts_preparestacks(count, stack_size + ts_valbuf_size +
-        sizeof(struct ts_cr));
-}
-
 int ts_suspend(void) {
     /* Even if process never gets idle, we have to process external events
        once in a while. The external signal may very well be a deadline or
