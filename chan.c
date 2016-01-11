@@ -23,6 +23,7 @@
 */
 
 #include <assert.h>
+#include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -305,7 +306,10 @@ static int ts_choose_(struct chclause *clauses, int nclauses,
     }
     /* If there are multiple parallel chooses done from different coroutines
        all but one must be blocked on the following line. */
-    return ts_suspend();
+    int res = ts_suspend();
+    if(res == -1)
+        errno = ETIMEDOUT;
+    return res;
 }
 
 int ts_choose(struct chclause *clauses, int nclauses, int64_t deadline,
