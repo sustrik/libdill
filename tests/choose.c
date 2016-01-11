@@ -130,6 +130,7 @@ coroutine void unused(void) {
 
 int main() {
     int rc;
+    int val;
 
     /* In this test we are also going to make sure that the debugging support
        doesn't crash the application. */
@@ -139,7 +140,7 @@ int main() {
     chan ch1 = chmake(int, 0);
     go(sender1(chdup(ch1), 555));
     choose {
-    in(ch1, int, val):
+    in(ch1, &val, sizeof(val)):
         assert(val == 555);
     end
     }
@@ -149,7 +150,7 @@ int main() {
     chan ch2 = chmake(int, 0);
     go(sender2(chdup(ch2), 666));
     choose {
-    in(ch2, int, val):
+    in(ch2, &val, sizeof(val)):
         assert(val == 666);
     end
     }
@@ -158,7 +159,7 @@ int main() {
     /* Non-blocking sender case. */
     chan ch3 = chmake(int, 0);
     go(receiver1(chdup(ch3), 777));
-    int val = 777;
+    val = 777;
     choose {
     out(ch3, &val, sizeof(val)):
     end
@@ -180,17 +181,17 @@ int main() {
     chan ch6 = chmake(int, 0);
     go(sender1(chdup(ch6), 555));
     choose {
-    in(ch5, int, val):
+    in(ch5, &val, sizeof(val)):
         assert(0);
-    in(ch6, int, val):
+    in(ch6, &val, sizeof(val)):
         assert(val == 555);
     end
     }
     go(sender2(chdup(ch5), 666));
     choose {
-    in(ch5, int, val):
+    in(ch5, &val, sizeof(val)):
         assert(val == 666);
-    in(ch6, int, val):
+    in(ch6, &val, sizeof(val)):
         assert(0);
     end
     }
@@ -208,10 +209,10 @@ int main() {
     int third = 0;
     for(i = 0; i != 100; ++i) {
         choose {
-        in(ch7, int, val):
+        in(ch7, &val, sizeof(val)):
             assert(val == 111);
             ++first;
-        in(ch8, int, val):
+        in(ch8, &val, sizeof(val)):
             assert(val == 222);
             ++second;
         end
@@ -227,7 +228,7 @@ int main() {
     int test = 0;
     chan ch9 = chmake(int, 0);
     choose {
-    in(ch9, int, val):
+    in(ch9, &val, sizeof(val)):
         assert(0);
     otherwise:
         test = 1;
@@ -249,15 +250,13 @@ int main() {
     go(sender1(chdup(ch10), 999));
     val = 0;
     choose {
-    in(ch10, int, v):
-        val = v;
+    in(ch10, &val, sizeof(val)):
     end
     }
     assert(val == 888);
     val = 0;
     choose {
-    in(ch10, int, v):
-        val = v;
+    in(ch10, &val, sizeof(val)):
     end
     }
     assert(val == 999);
@@ -283,8 +282,8 @@ int main() {
     chan ch12 = chmake(int, 0);
     go(choosesender(chdup(ch12), 111));
     choose {
-    in(ch12, int, v):
-        assert(v == 111);
+    in(ch12, &val, sizeof(val)):
+        assert(val == 111);
     end
     }
     chclose(ch12);
@@ -297,7 +296,7 @@ int main() {
     end
     }
     choose {
-    in(ch13, int, val):
+    in(ch13, &val, sizeof(val)):
         assert(val == 999);
     end
     }
@@ -327,10 +326,11 @@ int main() {
     chan ch16 = chmake(int, 1);
     go(sender2(chdup(ch16), 1111));
     goredump();
+    struct large lrg;
     choose {
-    in(ch16, int, val):
+    in(ch16, &val, sizeof(val)):
         assert(val == 1111);
-    in(ch15, struct large, val):
+    in(ch15, &lrg, sizeof(lrg)):
         assert(0);
     end
     }
@@ -343,7 +343,7 @@ int main() {
     rc = chs(ch17, &large, sizeof(large));
     assert(rc == 0);
     choose {
-    in(ch17, struct large, v):
+    in(ch17, &lrg, sizeof(lrg)):
     end
     }
     chclose(ch17);
@@ -354,7 +354,7 @@ int main() {
     rc = chdone(ch18, &val, sizeof(val));
     assert(rc == 0);
     choose {
-    in(ch18, int, val):
+    in(ch18, &val, sizeof(val)):
         assert(val == 2222);
     end
     }
@@ -369,11 +369,11 @@ int main() {
     go(feeder3(chdup(ch19), 3333));
     for(i = 0; i != 100; ++i) {
         choose {
-        in(ch19, int, val):
+        in(ch19, &val, sizeof(val)):
             ++first;
-        in(ch19, int, val):
+        in(ch19, &val, sizeof(val)):
             ++second;
-        in(ch19, int, val):
+        in(ch19, &val, sizeof(val)):
             ++third;
         end
         }
@@ -415,7 +415,7 @@ int main() {
     chan ch21 = chmake(int, 0);
     int64_t start = now();
     choose {
-    in(ch21, int, val):
+    in(ch21, &val, sizeof(val)):
         assert(0);
     deadline(start + 50):
         test = 1;
@@ -432,7 +432,7 @@ int main() {
     start = now();
     go(sender3(chdup(ch22), 4444, start + 50));
     choose {
-    in(ch22, int, val):
+    in(ch22, &val, sizeof(val)):
         test = val;
     deadline(start + 1000):
         assert(0);

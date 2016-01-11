@@ -182,26 +182,21 @@ TS_EXPORT void ts_chclose(chan ch, const char *current);
             if(ts_idx != -2) {\
                 if(0)
 
-#define ts_in(chan, type, name, idx) \
+#define ts_in(chan, val, len, idx) \
                     break;\
                 }\
                 goto ts_concat(ts_label, idx);\
             }\
             char ts_concat(ts_clause, idx)[TS_CLAUSELEN];\
             ts_choose_in(\
-                &ts_concat(ts_clause, idx)[0],\
-                (chan),\
-                sizeof(type),\
-                idx);\
+                &ts_concat(ts_clause, idx)[0], (chan), (val), (len), idx);\
             if(0) {\
-                type name;\
                 ts_concat(ts_label, idx):\
                 if(ts_idx == idx) {\
-                    name = *(type*)ts_choose_val(sizeof(type));\
                     goto ts_concat(ts_dummylabel, idx);\
                     ts_concat(ts_dummylabel, idx)
 
-#define in(chan, type, name) ts_in((chan), type, name, __COUNTER__)
+#define in(chan, val, len) ts_in((chan), (val), (len), __COUNTER__)
 
 #define ts_out(chan, val, len, idx) \
                     break;\
@@ -217,7 +212,7 @@ TS_EXPORT void ts_chclose(chan ch, const char *current);
                     goto ts_concat(ts_dummylabel, idx);\
                     ts_concat(ts_dummylabel, idx)
 
-#define out(chan, type, val) ts_out((chan), type, (val), __COUNTER__)
+#define out(chan, val, len) ts_out((chan), (val), (len), __COUNTER__)
 
 #define ts_deadline(ddline, idx) \
                     break;\
@@ -255,13 +250,13 @@ TS_EXPORT void ts_chclose(chan ch, const char *current);
         }
 
 TS_EXPORT void ts_choose_init(const char *current);
-TS_EXPORT void ts_choose_in(void *clause, chan ch, size_t sz, int idx);
+TS_EXPORT void ts_choose_in(void *clause, chan ch, void *val,
+    size_t len, int idx);
 TS_EXPORT void ts_choose_out(void *clause, chan ch, const void *val,
-    size_t sz, int idx);
+    size_t len, int idx);
 TS_EXPORT void ts_choose_deadline(int64_t ddline);
 TS_EXPORT void ts_choose_otherwise(void);
 TS_EXPORT int ts_choose_wait(void);
-TS_EXPORT void *ts_choose_val(size_t sz);
 
 /******************************************************************************/
 /*  Debugging                                                                 */

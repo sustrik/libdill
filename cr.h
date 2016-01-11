@@ -45,12 +45,11 @@ enum ts_state {
 
 /* The coroutine. The memory layout looks like this:
 
-   +----------------------------------------------------+--------+---------+
-   |                                              stack | valbuf |  ts_cr  |
-   +----------------------------------------------------+--------+---------+
+   +-------------------------------------------------------------+---------+
+   |                                                      stack  |  ts_cr  |
+   +-------------------------------------------------------------+---------+
 
    - ts_cr contains generic book-keeping info about the coroutine
-   - valbuf is a buffer for temporarily storing values received from channels
    - stack is a standard C stack; it grows downwards (at the moment treestack
      doesn't support microarchitectures where stack grows upwards)
 
@@ -82,12 +81,6 @@ struct ts_cr {
     /* Argument to resume() call being passed to the blocked suspend() call. */
     int result;
 
-    /* If size of the valbuf needs to be larger than ts_valbuf size it is
-       allocated dyncamically and the pointer, along with the size of the buffer
-       is stored here. */
-    void *valbuf;
-    size_t valbuf_sz;
-
     /* Coroutine-local storage. */
     void *cls;
 
@@ -110,9 +103,5 @@ int ts_suspend(void);
    it doesn't immediately run it, just puts it into the queue of ready
    coroutines. */
 void ts_resume(struct ts_cr *cr, int result);
-
-/* Returns pointer to the value buffer. The returned buffer is guaranteed
-   to be at least 'size' bytes long. */
-void *ts_valbuf(struct ts_cr *cr, size_t size);
 
 #endif

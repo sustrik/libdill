@@ -132,10 +132,10 @@ void ts_choose_init(const char *current) {
     ts_choose_init_(current);
 }
 
-void ts_choose_in(void *clause, chan ch, size_t sz, int idx) {
+void ts_choose_in(void *clause, chan ch, void *val, size_t len, int idx) {
     if(ts_slow(!ch))
         ts_panic("null channel used");
-    if(ts_slow(ch->sz != sz))
+    if(ts_slow(ch->sz != len))
         ts_panic("receive of a type not matching the channel");
     /* Find out whether the clause is immediately available. */
     int available = ch->done || !ts_list_empty(&ch->sender.clauses) ||
@@ -149,7 +149,7 @@ void ts_choose_in(void *clause, chan ch, size_t sz, int idx) {
     struct ts_clause *cl = (struct ts_clause*) clause;
     cl->cr = ts_running;
     cl->ep = &ch->receiver;
-    cl->val = NULL;
+    cl->val = val;
     cl->idx = idx;
     cl->available = available;
     cl->used = 1;
@@ -163,12 +163,13 @@ void ts_choose_in(void *clause, chan ch, size_t sz, int idx) {
     cl->ep->tmp = -1;
 }
 
-void ts_choose_out(void *clause, chan ch, const void *val, size_t sz, int idx) {
+void ts_choose_out(void *clause, chan ch, const void *val,
+      size_t len, int idx) {
     if(ts_slow(!ch))
         ts_panic("null channel used");
     if(ts_slow(ch->done))
         ts_panic("send to done-with channel");
-    if(ts_slow(ch->sz != sz))
+    if(ts_slow(ch->sz != len))
         ts_panic("send of a type not matching the channel");
     /* Find out whether the clause is immediately available. */
     int available = !ts_list_empty(&ch->receiver.clauses) ||
@@ -234,7 +235,7 @@ static void ts_enqueue(chan ch, void *val) {
         ts_assert(ch->items == 0);
         struct ts_clause *cl = ts_cont(
             ts_list_begin(&ch->receiver.clauses), struct ts_clause, epitem);
-        memcpy(ts_valbuf(cl->cr, ch->sz), val, ch->sz);
+        memcpy(cl->val, val, ch->sz);
         ts_choose_unblock(cl);
         return;
     }
@@ -299,7 +300,7 @@ int ts_choose_wait(void) {
         if(cl->ep->type == TS_SENDER)
             ts_enqueue(ch, cl->val);
         else
-            ts_dequeue(ch, ts_valbuf(cl->cr, ch->sz));
+            ts_dequeue(ch, cl->val);
         ts_resume(ts_running, cl->idx);
         return ts_suspend();
     }
@@ -336,13 +337,6 @@ int ts_choose_wait(void) {
     return ts_suspend();
 }
 
-void *ts_choose_val(size_t sz) {
-    /* The assumption here is that by supplying the same size as before
-       we are going to get the same buffer which already has the data
-       written into it. */
-    return ts_valbuf(ts_running, sz);
-}
-
 int ts_chs(chan ch, const void *val, size_t len, const char *current) {
     if(ts_slow(!ch || !val || len != ch->sz)) {
         errno = EINVAL;
@@ -366,10 +360,8 @@ int ts_chr(chan ch, void *val, size_t len, const char *current) {
     ts_running->state = TS_CHR;
     ts_choose_init_(current);
     struct ts_clause cl;
-    ts_choose_in(&cl, ch, len, 0);
+    ts_choose_in(&cl, ch, val, len, 0);
     ts_choose_wait();
-    void *res = ts_choose_val(len);
-    memcpy(val, res, len);
     return 0;
 }
 
@@ -392,7 +384,7 @@ int ts_chdone(chan ch, const void *val, size_t len, const char *current) {
     while(!ts_list_empty(&ch->receiver.clauses)) {
         struct ts_clause *cl = ts_cont(
             ts_list_begin(&ch->receiver.clauses), struct ts_clause, epitem);
-        memcpy(ts_valbuf(cl->cr, ch->sz), val, ch->sz);
+        memcpy(cl->val, val, ch->sz);
         ts_choose_unblock(cl);
     }
     return 0;

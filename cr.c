@@ -33,14 +33,6 @@
 #include "treestack.h"
 #include "utils.h"
 
-/* Size of the buffer for temporary storage of values received from channels.
-   It should be properly aligned and never change if there are any stacks
-   allocated at the moment. */
-size_t ts_valbuf_size = 128;
-
-/* Valbuf for tha main coroutine. */
-char ts_main_valbuf[128];
-
 volatile int ts_unoptimisable1 = 1;
 volatile void *ts_unoptimisable2 = NULL;
 
@@ -50,29 +42,6 @@ struct ts_cr *ts_running = &ts_main;
 
 /* Queue of coroutines scheduled for execution. */
 static struct ts_slist ts_ready = {0};
-
-static void *ts_getvalbuf(struct ts_cr *cr, size_t size) {
-    /* Small valbufs don't require dynamic allocation. Also note that main
-       coroutine doesn't have a stack allocated on the heap like other
-       coroutines, so we have to handle valbuf in a special way. */
-    if(ts_fast(cr != &ts_main)) {
-        if(ts_fast(size <= ts_valbuf_size))
-            return (void*)(((char*)cr) - ts_valbuf_size);
-    }
-    else {
-        if(ts_fast(size <= sizeof(ts_main_valbuf)))
-            return (void*)ts_main_valbuf;
-    }
-    /* Large valbufs are simply allocated on heap. */
-    if(ts_fast(cr->valbuf && cr->valbuf_sz <= size))
-        return cr->valbuf;
-    void *ptr = realloc(cr->valbuf, size);
-    if(!ptr)
-        return NULL;
-    cr->valbuf = ptr;
-    cr->valbuf_sz = size;
-    return cr->valbuf;
-}
 
 int ts_suspend(void) {
     /* Even if process never gets idle, we have to process external events
@@ -117,8 +86,6 @@ void *ts_prologue(const char *created) {
     /* Allocate and initialise new stack. */
     struct ts_cr *cr = ((struct ts_cr*)ts_allocstack()) - 1;
     ts_register_cr(&cr->debug, created);
-    cr->valbuf = NULL;
-    cr->valbuf_sz = 0;
     cr->cls = NULL;
     cr->fd = -1;
     cr->events = 0;
@@ -128,17 +95,14 @@ void *ts_prologue(const char *created) {
         return NULL;
     ts_resume(ts_running, 0);    
     ts_running = cr;
-    /* Return pointer to the top of the stack. There's valbuf interposed
-       between the ts_cr structure and the stack itself. */
-    return (void*)(((char*)cr) - ts_valbuf_size);
+    /* Return pointer to the top of the stack. */
+    return (void*)cr;
 }
 
 /* The final part of go(). Cleans up after the coroutine is finished. */
 void ts_epilogue(void) {
     ts_trace(NULL, "go() done");
     ts_unregister_cr(&ts_running->debug);
-    if(ts_running->valbuf)
-        free(ts_running->valbuf);
     ts_freestack(ts_running + 1);
     ts_running = NULL;
     /* Given that there's no running coroutine at this point
@@ -154,13 +118,6 @@ int ts_yield(const char *current) {
     ts_resume(ts_running, 0);
     ts_suspend();
     return 0;
-}
-
-void *ts_valbuf(struct ts_cr *cr, size_t size) {
-    void *ptr = ts_getvalbuf(cr, size);
-    if(!ptr)
-        ts_panic("not enough memory to receive from channel");
-    return ptr;
 }
 
 void *cls(void) {
