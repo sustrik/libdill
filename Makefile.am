@@ -70,19 +70,15 @@ libmill_la_CFLAGS = \
 ################################################################################
 
 check_PROGRAMS = \
-    tests/example\
-    tests/go\
-    tests/cls\
-    tests/chan\
-    tests/choose\
-    tests/sleep\
-    tests/fdwait\
-    tests/tcp\
-    tests/udp\
-    tests/unix\
-    tests/signals\
-    tests/overload\
-    tests/ip
+    tests/example \
+    tests/go \
+    tests/cls \
+    tests/chan \
+    tests/choose \
+    tests/sleep \
+    tests/fdwait \
+    tests/signals \
+    tests/overload
 
 LDADD = libmill.la
 

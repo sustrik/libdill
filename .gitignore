@@ -25,7 +25,10 @@ test-driver
 tests/.deps/
 tests/.dirstamp
 tests/.libs/
+tests/*.log
+tests/*.trs
 tests/*.o
+test-suite.log
 tests/chan
 tests/choose
 tests/cls
@@ -33,3 +36,5 @@ tests/example
 tests/fdwait
 tests/go
 tests/sleep
+tests/overload
+tests/signals
