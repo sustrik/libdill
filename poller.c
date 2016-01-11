@@ -33,81 +33,81 @@
 
 /* Forward declarations for the functions implemented by specific poller
    mechanisms (poll, epoll, kqueue). */
-void mill_poller_init(void);
-static void mill_poller_add(int fd, int events);
-static void mill_poller_rm(int fd, int events);
-static void mill_poller_clean(int fd);
-static int mill_poller_wait(int timeout);
-static pid_t mill_fork(void);
+void ts_poller_init(void);
+static void ts_poller_add(int fd, int events);
+static void ts_poller_rm(int fd, int events);
+static void ts_poller_clean(int fd);
+static int ts_poller_wait(int timeout);
+static pid_t ts_fork(void);
 
-/* If 1, mill_poller_init was already called. */
-static int mill_poller_initialised = 0;
+/* If 1, ts_poller_init was already called. */
+static int ts_poller_initialised = 0;
 
 pid_t mfork(void) {
-    return mill_fork();
+    return ts_fork();
 }
 
 /* Pause current coroutine for a specified time interval. */
-void mill_msleep(int64_t deadline, const char *current) {
-    mill_fdwait(-1, 0, deadline, current);
+void ts_msleep(int64_t deadline, const char *current) {
+    ts_fdwait(-1, 0, deadline, current);
 }
 
-static void mill_poller_callback(struct mill_timer *timer) {
-    mill_resume(mill_cont(timer, struct mill_cr, timer), -1);
+static void ts_poller_callback(struct ts_timer *timer) {
+    ts_resume(ts_cont(timer, struct ts_cr, timer), -1);
 }
 
-int mill_fdwait(int fd, int events, int64_t deadline, const char *current) {
-    if(mill_slow(!mill_poller_initialised)) {
-        mill_poller_init();
-        mill_assert(errno == 0);
-        mill_poller_initialised = 1;
+int ts_fdwait(int fd, int events, int64_t deadline, const char *current) {
+    if(ts_slow(!ts_poller_initialised)) {
+        ts_poller_init();
+        ts_assert(errno == 0);
+        ts_poller_initialised = 1;
     }
     /* If required, start waiting for the timeout. */
     if(deadline >= 0)
-        mill_timer_add(&mill_running->timer, deadline, mill_poller_callback);
+        ts_timer_add(&ts_running->timer, deadline, ts_poller_callback);
     /* If required, start waiting for the file descriptor. */
     if(fd >= 0)
-        mill_poller_add(fd, events);
+        ts_poller_add(fd, events);
     /* Do actual waiting. */
-    mill_running->state = fd < 0 ? MILL_MSLEEP : MILL_FDWAIT;
-    mill_running->fd = fd;
-    mill_running->events = events;
-    mill_set_current(&mill_running->debug, current);
-    int rc = mill_suspend();
+    ts_running->state = fd < 0 ? TS_MSLEEP : TS_FDWAIT;
+    ts_running->fd = fd;
+    ts_running->events = events;
+    ts_set_current(&ts_running->debug, current);
+    int rc = ts_suspend();
     /* Handle file descriptor events. */
     if(rc >= 0) {
         if(deadline >= 0)
-            mill_timer_rm(&mill_running->timer);
+            ts_timer_rm(&ts_running->timer);
         return rc;
     }
     /* Handle the timeout. Clean-up the pollset. */
     if(fd >= 0)
-        mill_poller_rm(fd, events);
+        ts_poller_rm(fd, events);
     return 0;
 }
 
 void fdclean(int fd) {
-    if(mill_slow(!mill_poller_initialised)) {
-        mill_poller_init();
-        mill_assert(errno == 0);
-        mill_poller_initialised = 1;
+    if(ts_slow(!ts_poller_initialised)) {
+        ts_poller_init();
+        ts_assert(errno == 0);
+        ts_poller_initialised = 1;
     }
-    mill_poller_clean(fd);
+    ts_poller_clean(fd);
 }
 
-void mill_wait(int block) {
-    if(mill_slow(!mill_poller_initialised)) {
-        mill_poller_init();
-        mill_assert(errno == 0);
-        mill_poller_initialised = 1;
+void ts_wait(int block) {
+    if(ts_slow(!ts_poller_initialised)) {
+        ts_poller_init();
+        ts_assert(errno == 0);
+        ts_poller_initialised = 1;
     }
     while(1) {
         /* Compute timeout for the subsequent poll. */
-        int timeout = block ? mill_timer_next() : 0;
+        int timeout = block ? ts_timer_next() : 0;
         /* Wait for events. */
-        int fd_fired = mill_poller_wait(timeout);
+        int fd_fired = ts_poller_wait(timeout);
         /* Fire all expired timers. */
-        int timer_fired = mill_timer_fire();
+        int timer_fired = ts_timer_fire();
         /* Never retry the poll in non-blocking mode. */
         if(!block || fd_fired || timer_fired)
             break;
@@ -120,11 +120,11 @@ void mill_wait(int block) {
 /* Include the poll-mechanism-specific stuff. */
 
 /* User overloads. */
-#if defined MILL_EPOLL
+#if defined TS_EPOLL
 #include "epoll.inc"
-#elif defined MILL_KQUEUE
+#elif defined TS_KQUEUE
 #include "kqueue.inc"
-#elif defined MILL_POLL
+#elif defined TS_POLL
 #include "poll.inc"
 /* Defaults. */
 #elif defined __linux__ && !defined TS_NO_EPOLL

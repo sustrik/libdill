@@ -22,15 +22,15 @@
 
 */
 
-#ifndef MILL_DEBUG_INCLUDED
-#define MILL_DEBUG_INCLUDED
+#ifndef TS_DEBUG_INCLUDED
+#define TS_DEBUG_INCLUDED
 
 #include "list.h"
 #include "utils.h"
 
-struct mill_debug_cr {
+struct ts_debug_cr {
     /* List of all coroutines. */
-    struct mill_list_item item;
+    struct ts_list_item item;
     /* Unique ID of the coroutine. */
     int id;
     /* File and line where the coroutine was launched. */
@@ -39,9 +39,9 @@ struct mill_debug_cr {
     const char *current;
 };
 
-struct mill_debug_chan {
+struct ts_debug_chan {
     /* List of all channels. */
-    struct mill_list_item item;
+    struct ts_list_item item;
     /* Unique ID of the channel. */
     int id;
     /* File and line where the channel was created. */
@@ -49,28 +49,28 @@ struct mill_debug_chan {
 };
 
 /* Cause panic. */
-void mill_panic(const char *text);
+void ts_panic(const char *text);
 
 /* No-op, but ensures that debugging functions get compiled into the binary. */
-void mill_preserve_debug(void);
+void ts_preserve_debug(void);
 
 /* (Un)register coroutines and channels with the debugging subsystem. */
-void mill_register_cr(struct mill_debug_cr *cr, const char *created);
-void mill_unregister_cr(struct mill_debug_cr *cr);
-void mill_register_chan(struct mill_debug_chan *ch, const char *created);
-void mill_unregister_chan(struct mill_debug_chan *ch);
+void ts_register_cr(struct ts_debug_cr *cr, const char *created);
+void ts_unregister_cr(struct ts_debug_cr *cr);
+void ts_register_chan(struct ts_debug_chan *ch, const char *created);
+void ts_unregister_chan(struct ts_debug_chan *ch);
 
 /* While doing a blocking operation coroutine should register where
    the operation was invoked from. */
-void mill_set_current(struct mill_debug_cr *cr, const char *current);
+void ts_set_current(struct ts_debug_cr *cr, const char *current);
 
-extern int mill_tracelevel;
+extern int ts_tracelevel;
 
 /* Create a trace record. */
-#define mill_trace if(mill_slow(mill_tracelevel)) mill_trace_
-void mill_trace_(const char *location, const char *format, ...);
+#define ts_trace if(ts_slow(ts_tracelevel)) ts_trace_
+void ts_trace_(const char *location, const char *format, ...);
 
 /* Returns 1 if there are any coroutines running, 0 otherwise. */
-int mill_hascrs(void);
+int ts_hascrs(void);
 
 #endif

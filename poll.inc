@@ -32,151 +32,151 @@
 #include "utils.h"
 
 /* Pollset used for waiting for file descriptors. */
-static int mill_pollset_size = 0;
-static int mill_pollset_capacity = 0;
-static struct pollfd *mill_pollset_fds = NULL;
+static int ts_pollset_size = 0;
+static int ts_pollset_capacity = 0;
+static struct pollfd *ts_pollset_fds = NULL;
 
 /* The item at a specific index in this array corresponds to the entry
-   in mill_pollset fds with the same index. */
-struct mill_pollset_item {
-    struct mill_cr *in;
-    struct mill_cr *out;
+   in ts_pollset fds with the same index. */
+struct ts_pollset_item {
+    struct ts_cr *in;
+    struct ts_cr *out;
 };
-static struct mill_pollset_item *mill_pollset_items = NULL;
+static struct ts_pollset_item *ts_pollset_items = NULL;
 
 /* Find pollset index by fd. If fd is not in pollset, return the index after
    the last item. TODO: This is O(n) operation! */
-static int mill_find_pollset(int fd) {
+static int ts_find_pollset(int fd) {
     int i;
-    for(i = 0; i != mill_pollset_size; ++i) {
-        if(mill_pollset_fds[i].fd == fd)
+    for(i = 0; i != ts_pollset_size; ++i) {
+        if(ts_pollset_fds[i].fd == fd)
             break;
     }
     return i;
 }
 
-void mill_poller_init(void) {
+void ts_poller_init(void) {
     errno = 0;
 }
 
-pid_t mill_fork(void) {
+pid_t ts_fork(void) {
 }
 
-static void mill_poller_add(int fd, int events) {
-    int i = mill_find_pollset(fd);
+static void ts_poller_add(int fd, int events) {
+    int i = ts_find_pollset(fd);
     /* Grow the pollset as needed. */
-    if(i == mill_pollset_size) {
-        if(mill_pollset_size == mill_pollset_capacity) {
-            mill_pollset_capacity = mill_pollset_capacity ?
-                mill_pollset_capacity * 2 : 64;
-            mill_pollset_fds = realloc(mill_pollset_fds,
-                mill_pollset_capacity * sizeof(struct pollfd));
-            mill_pollset_items = realloc(mill_pollset_items,
-                mill_pollset_capacity * sizeof(struct mill_pollset_item));
+    if(i == ts_pollset_size) {
+        if(ts_pollset_size == ts_pollset_capacity) {
+            ts_pollset_capacity = ts_pollset_capacity ?
+                ts_pollset_capacity * 2 : 64;
+            ts_pollset_fds = realloc(ts_pollset_fds,
+                ts_pollset_capacity * sizeof(struct pollfd));
+            ts_pollset_items = realloc(ts_pollset_items,
+                ts_pollset_capacity * sizeof(struct ts_pollset_item));
         }
-        ++mill_pollset_size;
-        mill_pollset_fds[i].fd = fd;
-        mill_pollset_fds[i].events = 0;
-        mill_pollset_fds[i].revents = 0;
-        mill_pollset_items[i].in = NULL;
-        mill_pollset_items[i].out = NULL;
+        ++ts_pollset_size;
+        ts_pollset_fds[i].fd = fd;
+        ts_pollset_fds[i].events = 0;
+        ts_pollset_fds[i].revents = 0;
+        ts_pollset_items[i].in = NULL;
+        ts_pollset_items[i].out = NULL;
     }
     /* Register the new file descriptor in the pollset. */
     if(events & FDW_IN) {
-        if(mill_slow(mill_pollset_items[i].in))
-            mill_panic(
+        if(ts_slow(ts_pollset_items[i].in))
+            ts_panic(
                 "multiple coroutines waiting for a single file descriptor");
-        mill_pollset_fds[i].events |= POLLIN;
-        mill_pollset_items[i].in = mill_running;
+        ts_pollset_fds[i].events |= POLLIN;
+        ts_pollset_items[i].in = ts_running;
     }
     if(events & FDW_OUT) {
-        if(mill_slow(mill_pollset_items[i].out))
-            mill_panic(
+        if(ts_slow(ts_pollset_items[i].out))
+            ts_panic(
                 "multiple coroutines waiting for a single file descriptor");
-        mill_pollset_fds[i].events |= POLLOUT;
-        mill_pollset_items[i].out = mill_running;
+        ts_pollset_fds[i].events |= POLLOUT;
+        ts_pollset_items[i].out = ts_running;
     }
 }
 
-static void mill_poller_rm(int fd, int events) {
-    int i = mill_find_pollset(fd);
-    mill_assert(i < mill_pollset_size);
-    if(mill_pollset_items[i].in == mill_running) {
-        mill_pollset_items[i].in = NULL;
-        mill_pollset_fds[i].events &= ~POLLIN;
+static void ts_poller_rm(int fd, int events) {
+    int i = ts_find_pollset(fd);
+    ts_assert(i < ts_pollset_size);
+    if(ts_pollset_items[i].in == ts_running) {
+        ts_pollset_items[i].in = NULL;
+        ts_pollset_fds[i].events &= ~POLLIN;
     }
-    if(mill_pollset_items[i].out == mill_running) {
-        mill_pollset_items[i].out = NULL;
-        mill_pollset_fds[i].events &= ~POLLOUT;
+    if(ts_pollset_items[i].out == ts_running) {
+        ts_pollset_items[i].out = NULL;
+        ts_pollset_fds[i].events &= ~POLLOUT;
     }
-    if(!mill_pollset_fds[i].events) {
-        --mill_pollset_size;
-        if(i < mill_pollset_size) {
-            mill_pollset_items[i] = mill_pollset_items[mill_pollset_size];
-            mill_pollset_fds[i] = mill_pollset_fds[mill_pollset_size];
+    if(!ts_pollset_fds[i].events) {
+        --ts_pollset_size;
+        if(i < ts_pollset_size) {
+            ts_pollset_items[i] = ts_pollset_items[ts_pollset_size];
+            ts_pollset_fds[i] = ts_pollset_fds[ts_pollset_size];
         }
     }
 }
 
-static void mill_poller_clean(int fd) {
+static void ts_poller_clean(int fd) {
 }
 
-static int mill_poller_wait(int timeout) {
+static int ts_poller_wait(int timeout) {
     /* Wait for events. */
     int numevs;
     while(1) {
-        numevs = poll(mill_pollset_fds, mill_pollset_size, timeout);
+        numevs = poll(ts_pollset_fds, ts_pollset_size, timeout);
         if(numevs < 0 && errno == EINTR)
             continue;
-        mill_assert(numevs >= 0);
+        ts_assert(numevs >= 0);
         break;  
     }
     /* Fire file descriptor events. */
     int result = numevs > 0 ? 1 : 0;
     int i;
-    for(i = 0; i != mill_pollset_size && numevs; ++i) {
+    for(i = 0; i != ts_pollset_size && numevs; ++i) {
         int inevents = 0;
         int outevents = 0;
         /* Set the result values. */
-        if(mill_pollset_fds[i].revents & POLLIN)
+        if(ts_pollset_fds[i].revents & POLLIN)
             inevents |= FDW_IN;
-        if(mill_pollset_fds[i].revents & POLLOUT)
+        if(ts_pollset_fds[i].revents & POLLOUT)
             outevents |= FDW_OUT;
-        if(mill_pollset_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
+        if(ts_pollset_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
             inevents |= FDW_ERR;
             outevents |= FDW_ERR;
         }
         /* Resume the blocked coroutines. */
-        if(mill_pollset_items[i].in &&
-              mill_pollset_items[i].in == mill_pollset_items[i].out) {
-            struct mill_cr *cr = mill_pollset_items[i].in;
-            mill_resume(cr, inevents | outevents);
-            mill_pollset_fds[i].events = 0;
-            mill_pollset_items[i].in = NULL;
-            mill_pollset_items[i].out = NULL;
+        if(ts_pollset_items[i].in &&
+              ts_pollset_items[i].in == ts_pollset_items[i].out) {
+            struct ts_cr *cr = ts_pollset_items[i].in;
+            ts_resume(cr, inevents | outevents);
+            ts_pollset_fds[i].events = 0;
+            ts_pollset_items[i].in = NULL;
+            ts_pollset_items[i].out = NULL;
         }
         else {
-            if(mill_pollset_items[i].in && inevents) {
-                struct mill_cr *cr = mill_pollset_items[i].in;
-                mill_resume(cr, inevents);
-                mill_pollset_fds[i].events &= ~POLLIN;
-                mill_pollset_items[i].in = NULL;
+            if(ts_pollset_items[i].in && inevents) {
+                struct ts_cr *cr = ts_pollset_items[i].in;
+                ts_resume(cr, inevents);
+                ts_pollset_fds[i].events &= ~POLLIN;
+                ts_pollset_items[i].in = NULL;
             }
-            else if(mill_pollset_items[i].out && outevents) {
-                struct mill_cr *cr = mill_pollset_items[i].out;
-                mill_resume(cr, outevents);
-                mill_pollset_fds[i].events &= ~POLLOUT;
-                mill_pollset_items[i].out = NULL;
+            else if(ts_pollset_items[i].out && outevents) {
+                struct ts_cr *cr = ts_pollset_items[i].out;
+                ts_resume(cr, outevents);
+                ts_pollset_fds[i].events &= ~POLLOUT;
+                ts_pollset_items[i].out = NULL;
             }
         }
         /* If nobody is polling for the fd remove it from the pollset. */
-        if(!mill_pollset_fds[i].events) {
-            mill_assert(!mill_pollset_items[i].in &&
-                !mill_pollset_items[i].out);
-            --mill_pollset_size;
-            if(i != mill_pollset_size) {
-                mill_pollset_fds[i] = mill_pollset_fds[mill_pollset_size];
-                mill_pollset_items[i] = mill_pollset_items[mill_pollset_size];
+        if(!ts_pollset_fds[i].events) {
+            ts_assert(!ts_pollset_items[i].in &&
+                !ts_pollset_items[i].out);
+            --ts_pollset_size;
+            if(i != ts_pollset_size) {
+                ts_pollset_fds[i] = ts_pollset_fds[ts_pollset_size];
+                ts_pollset_items[i] = ts_pollset_items[ts_pollset_size];
             }
             --i;
             --numevs;

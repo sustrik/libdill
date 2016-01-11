@@ -28,7 +28,7 @@
 
 #if defined __APPLE__
 #include <mach/mach_time.h>
-static mach_timebase_info_data_t mill_mtid = {0};
+static mach_timebase_info_data_t ts_mtid = {0};
 #endif
 
 #include "timer.h"
@@ -38,19 +38,19 @@ static mach_timebase_info_data_t mill_mtid = {0};
 /* 1 millisecond expressed in CPU ticks. The value is chosen is such a way that
    it works reasonably well for CPU frequencies above 500MHz. On significanly
    slower machines you may wish to reconsider. */
-#define MILL_CLOCK_PRECISION 1000000
+#define TS_CLOCK_PRECISION 1000000
 
 /* Returns current time by querying the operating system. */
-static int64_t mill_now(void) {
+static int64_t ts_now(void) {
 #if defined __APPLE__
-    if (mill_slow(!mill_mtid.denom))
-        mach_timebase_info(&mill_mtid);
+    if (ts_slow(!ts_mtid.denom))
+        mach_timebase_info(&ts_mtid);
     uint64_t ticks = mach_absolute_time();
-    return (int64_t)(ticks * mill_mtid.numer / mill_mtid.denom / 1000000);
+    return (int64_t)(ticks * ts_mtid.numer / ts_mtid.denom / 1000000);
 #elif defined CLOCK_MONOTONIC
     struct timespec ts;
     int rc = clock_gettime(CLOCK_MONOTONIC, &ts);
-    mill_assert (rc == 0);
+    ts_assert (rc == 0);
     return ((int64_t)ts.tv_sec) * 1000 + (((int64_t)ts.tv_nsec) / 1000000);
 #else
     struct timeval tv;
@@ -75,73 +75,73 @@ int64_t now(void) {
        this function is called. */
     static int64_t last_tsc = -1;
     static int64_t last_now = -1;
-    if(mill_slow(last_tsc < 0)) {
+    if(ts_slow(last_tsc < 0)) {
         last_tsc = tsc;
-        last_now = mill_now();
+        last_now = ts_now();
     }   
     /* If TSC haven't jumped back or progressed more than 1/2 ms, we can use
        the cached time value. */
-    if(mill_fast(tsc - last_tsc <= (MILL_CLOCK_PRECISION / 2) &&
+    if(ts_fast(tsc - last_tsc <= (TS_CLOCK_PRECISION / 2) &&
           tsc >= last_tsc))
         return last_now;
     /* It's more than 1/2 ms since we've last measured the time.
        We'll do a new measurement now. */
     last_tsc = tsc;
-    last_now = mill_now();
+    last_now = ts_now();
     return last_now;
 #else
-    return mill_now();
+    return ts_now();
 #endif
 }
 
 /* Global linked list of all timers. The list is ordered.
    First timer to be resume comes first and so on. */
-static struct mill_list mill_timers = {0};
+static struct ts_list ts_timers = {0};
 
-void mill_timer_add(struct mill_timer *timer, int64_t deadline,
-      mill_timer_callback callback) {
-    mill_assert(deadline >= 0);
+void ts_timer_add(struct ts_timer *timer, int64_t deadline,
+      ts_timer_callback callback) {
+    ts_assert(deadline >= 0);
     timer->expiry = deadline;
     timer->callback = callback;
     /* Move the timer into the right place in the ordered list
        of existing timers. TODO: This is an O(n) operation! */
-    struct mill_list_item *it = mill_list_begin(&mill_timers);
+    struct ts_list_item *it = ts_list_begin(&ts_timers);
     while(it) {
-        struct mill_timer *tm = mill_cont(it, struct mill_timer, item);
+        struct ts_timer *tm = ts_cont(it, struct ts_timer, item);
         /* If multiple timers expire at the same momemt they will be fired
            in the order they were created in (> rather than >=). */
         if(tm->expiry > timer->expiry)
             break;
-        it = mill_list_next(it);
+        it = ts_list_next(it);
     }
-    mill_list_insert(&mill_timers, &timer->item, it);
+    ts_list_insert(&ts_timers, &timer->item, it);
 }
 
-void mill_timer_rm(struct mill_timer *timer) {
-    mill_list_erase(&mill_timers, &timer->item);
+void ts_timer_rm(struct ts_timer *timer) {
+    ts_list_erase(&ts_timers, &timer->item);
 }
 
-int mill_timer_next(void) {
-    if(mill_list_empty(&mill_timers))
+int ts_timer_next(void) {
+    if(ts_list_empty(&ts_timers))
         return -1;
     int64_t nw = now();
-    int64_t expiry = mill_cont(mill_list_begin(&mill_timers),
-        struct mill_timer, item)->expiry;
+    int64_t expiry = ts_cont(ts_list_begin(&ts_timers),
+        struct ts_timer, item)->expiry;
     return (int) (nw >= expiry ? 0 : expiry - nw);
 }
 
-int mill_timer_fire(void) {
+int ts_timer_fire(void) {
     /* Avoid getting current time if there are no timers anyway. */
-    if(mill_list_empty(&mill_timers))
+    if(ts_list_empty(&ts_timers))
         return 0;
     int64_t nw = now();
     int fired = 0;
-    while(!mill_list_empty(&mill_timers)) {
-        struct mill_timer *tm = mill_cont(
-            mill_list_begin(&mill_timers), struct mill_timer, item);
+    while(!ts_list_empty(&ts_timers)) {
+        struct ts_timer *tm = ts_cont(
+            ts_list_begin(&ts_timers), struct ts_timer, item);
         if(tm->expiry > nw)
             break;
-        mill_list_erase(&mill_timers, mill_list_begin(&mill_timers));
+        ts_list_erase(&ts_timers, ts_list_begin(&ts_timers));
         if(tm->callback)
             tm->callback(tm);
         fired = 1;

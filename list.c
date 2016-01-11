@@ -26,14 +26,14 @@
 
 #include "list.h"
 
-void mill_list_init(struct mill_list *self)
+void ts_list_init(struct ts_list *self)
 {
     self->first = NULL;
     self->last = NULL;
 }
 
-void mill_list_insert(struct mill_list *self, struct mill_list_item *item,
-    struct mill_list_item *it)
+void ts_list_insert(struct ts_list *self, struct ts_list_item *item,
+    struct ts_list_item *it)
 {
     item->prev = it ? it->prev : self->last;
     item->next = it;
@@ -47,10 +47,10 @@ void mill_list_insert(struct mill_list *self, struct mill_list_item *item,
         self->last = item;
 }
 
-struct mill_list_item *mill_list_erase(struct mill_list *self,
-    struct mill_list_item *item)
+struct ts_list_item *ts_list_erase(struct ts_list *self,
+    struct ts_list_item *item)
 {
-    struct mill_list_item *next;
+    struct ts_list_item *next;
 
     if(item->prev)
         item->prev->next = item->next;

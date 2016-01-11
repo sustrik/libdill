@@ -85,14 +85,14 @@ TS_EXPORT int64_t now(void);
 
 TS_EXPORT void goprepare(int count, size_t stack_size, size_t val_size);
 
-TS_EXPORT extern volatile int mill_unoptimisable1;
-TS_EXPORT extern volatile void *mill_unoptimisable2;
+TS_EXPORT extern volatile int ts_unoptimisable1;
+TS_EXPORT extern volatile void *ts_unoptimisable2;
 
-TS_EXPORT void *mill_go_prologue(const char *created);
-TS_EXPORT void mill_go_epilogue(void);
+TS_EXPORT void *ts_go_prologue(const char *created);
+TS_EXPORT void ts_go_epilogue(void);
 
-#define mill_string2(x) #x
-#define mill_string(x) mill_string2(x)
+#define ts_string2(x) #x
+#define ts_string(x) ts_string2(x)
 
 #if defined __GNUC__ || defined __clang__
 #define coroutine __attribute__((noinline))
@@ -102,28 +102,28 @@ TS_EXPORT void mill_go_epilogue(void);
 
 #define go(fn) \
     do {\
-        void *mill_sp = mill_go_prologue(__FILE__ ":" mill_string(__LINE__));\
-        if(mill_sp) {\
-            int mill_anchor[mill_unoptimisable1];\
-            mill_unoptimisable2 = &mill_anchor;\
-            char mill_filler[(char*)&mill_anchor - (char*)(mill_sp)];\
-            mill_unoptimisable2 = &mill_filler;\
+        void *ts_sp = ts_go_prologue(__FILE__ ":" ts_string(__LINE__));\
+        if(ts_sp) {\
+            int ts_anchor[ts_unoptimisable1];\
+            ts_unoptimisable2 = &ts_anchor;\
+            char ts_filler[(char*)&ts_anchor - (char*)(ts_sp)];\
+            ts_unoptimisable2 = &ts_filler;\
             fn;\
-            mill_go_epilogue();\
+            ts_go_epilogue();\
         }\
     } while(0)
 
-#define yield() mill_yield(__FILE__ ":" mill_string(__LINE__))
+#define yield() ts_yield(__FILE__ ":" ts_string(__LINE__))
 
-TS_EXPORT void mill_yield(const char *current);
+TS_EXPORT void ts_yield(const char *current);
 
-#define msleep(deadline) mill_msleep((deadline),\
-    __FILE__ ":" mill_string(__LINE__))
+#define msleep(deadline) ts_msleep((deadline),\
+    __FILE__ ":" ts_string(__LINE__))
 
-TS_EXPORT void mill_msleep(int64_t deadline, const char *current);
+TS_EXPORT void ts_msleep(int64_t deadline, const char *current);
 
-#define fdwait(fd, events, deadline) mill_fdwait((fd), (events), (deadline),\
-    __FILE__ ":" mill_string(__LINE__))
+#define fdwait(fd, events, deadline) ts_fdwait((fd), (events), (deadline),\
+    __FILE__ ":" ts_string(__LINE__))
 
 TS_EXPORT void fdclean(int fd);
 
@@ -131,7 +131,7 @@ TS_EXPORT void fdclean(int fd);
 #define FDW_OUT 2
 #define FDW_ERR 4
 
-TS_EXPORT int mill_fdwait(int fd, int events, int64_t deadline,
+TS_EXPORT int ts_fdwait(int fd, int events, int64_t deadline,
     const char *current);
 
 TS_EXPORT pid_t mfork(void);
@@ -143,141 +143,141 @@ TS_EXPORT void setcls(void *val);
 /*  Channels                                                                  */
 /******************************************************************************/
 
-typedef struct mill_chan *chan;
+typedef struct ts_chan *chan;
 
-#define MILL_CLAUSELEN (sizeof(struct{void *f1; void *f2; void *f3; void *f4; \
+#define TS_CLAUSELEN (sizeof(struct{void *f1; void *f2; void *f3; void *f4; \
     void *f5; void *f6; int f7; int f8; int f9;}))
 
-#define chmake(type, bufsz) mill_chmake(sizeof(type), bufsz,\
-    __FILE__ ":" mill_string(__LINE__))
+#define chmake(type, bufsz) ts_chmake(sizeof(type), bufsz,\
+    __FILE__ ":" ts_string(__LINE__))
 
-#define chdup(channel) mill_chdup((channel),\
-    __FILE__ ":" mill_string(__LINE__))
+#define chdup(channel) ts_chdup((channel),\
+    __FILE__ ":" ts_string(__LINE__))
 
 #define chs(channel, type, value) \
     do {\
-        type mill_val = (value);\
-        mill_chs((channel), &mill_val, sizeof(type),\
-            __FILE__ ":" mill_string(__LINE__));\
+        type ts_val = (value);\
+        ts_chs((channel), &ts_val, sizeof(type),\
+            __FILE__ ":" ts_string(__LINE__));\
     } while(0)
 
 #define chr(channel, type) \
-    (*(type*)mill_chr((channel), sizeof(type),\
-        __FILE__ ":" mill_string(__LINE__)))
+    (*(type*)ts_chr((channel), sizeof(type),\
+        __FILE__ ":" ts_string(__LINE__)))
 
 #define chdone(channel, type, value) \
     do {\
-        type mill_val = (value);\
-        mill_chdone((channel), &mill_val, sizeof(type),\
-             __FILE__ ":" mill_string(__LINE__));\
+        type ts_val = (value);\
+        ts_chdone((channel), &ts_val, sizeof(type),\
+             __FILE__ ":" ts_string(__LINE__));\
     } while(0)
 
-#define chclose(channel) mill_chclose((channel),\
-    __FILE__ ":" mill_string(__LINE__))
+#define chclose(channel) ts_chclose((channel),\
+    __FILE__ ":" ts_string(__LINE__))
 
-TS_EXPORT chan mill_chmake(size_t sz, size_t bufsz, const char *created);
-TS_EXPORT chan mill_chdup(chan ch, const char *created);
-TS_EXPORT void mill_chs(chan ch, void *val, size_t sz, const char *current);
-TS_EXPORT void *mill_chr(chan ch, size_t sz, const char *current);
-TS_EXPORT void mill_chdone(chan ch, void *val, size_t sz,
+TS_EXPORT chan ts_chmake(size_t sz, size_t bufsz, const char *created);
+TS_EXPORT chan ts_chdup(chan ch, const char *created);
+TS_EXPORT void ts_chs(chan ch, void *val, size_t sz, const char *current);
+TS_EXPORT void *ts_chr(chan ch, size_t sz, const char *current);
+TS_EXPORT void ts_chdone(chan ch, void *val, size_t sz,
     const char *current);
-TS_EXPORT void mill_chclose(chan ch, const char *current);
+TS_EXPORT void ts_chclose(chan ch, const char *current);
 
-#define mill_concat(x,y) x##y
+#define ts_concat(x,y) x##y
 
 #define choose \
     {\
-        mill_choose_init(__FILE__ ":" mill_string(__LINE__));\
-        int mill_idx = -2;\
+        ts_choose_init(__FILE__ ":" ts_string(__LINE__));\
+        int ts_idx = -2;\
         while(1) {\
-            if(mill_idx != -2) {\
+            if(ts_idx != -2) {\
                 if(0)
 
-#define mill_in(chan, type, name, idx) \
+#define ts_in(chan, type, name, idx) \
                     break;\
                 }\
-                goto mill_concat(mill_label, idx);\
+                goto ts_concat(ts_label, idx);\
             }\
-            char mill_concat(mill_clause, idx)[MILL_CLAUSELEN];\
-            mill_choose_in(\
-                &mill_concat(mill_clause, idx)[0],\
+            char ts_concat(ts_clause, idx)[TS_CLAUSELEN];\
+            ts_choose_in(\
+                &ts_concat(ts_clause, idx)[0],\
                 (chan),\
                 sizeof(type),\
                 idx);\
             if(0) {\
                 type name;\
-                mill_concat(mill_label, idx):\
-                if(mill_idx == idx) {\
-                    name = *(type*)mill_choose_val(sizeof(type));\
-                    goto mill_concat(mill_dummylabel, idx);\
-                    mill_concat(mill_dummylabel, idx)
+                ts_concat(ts_label, idx):\
+                if(ts_idx == idx) {\
+                    name = *(type*)ts_choose_val(sizeof(type));\
+                    goto ts_concat(ts_dummylabel, idx);\
+                    ts_concat(ts_dummylabel, idx)
 
-#define in(chan, type, name) mill_in((chan), type, name, __COUNTER__)
+#define in(chan, type, name) ts_in((chan), type, name, __COUNTER__)
 
-#define mill_out(chan, type, val, idx) \
+#define ts_out(chan, type, val, idx) \
                     break;\
                 }\
-                goto mill_concat(mill_label, idx);\
+                goto ts_concat(ts_label, idx);\
             }\
-            char mill_concat(mill_clause, idx)[MILL_CLAUSELEN];\
-            type mill_concat(mill_val, idx) = (val);\
-            mill_choose_out(\
-                &mill_concat(mill_clause, idx)[0],\
+            char ts_concat(ts_clause, idx)[TS_CLAUSELEN];\
+            type ts_concat(ts_val, idx) = (val);\
+            ts_choose_out(\
+                &ts_concat(ts_clause, idx)[0],\
                 (chan),\
-                &mill_concat(mill_val, idx),\
+                &ts_concat(ts_val, idx),\
                 sizeof(type),\
                 idx);\
             if(0) {\
-                mill_concat(mill_label, idx):\
-                if(mill_idx == idx) {\
-                    goto mill_concat(mill_dummylabel, idx);\
-                    mill_concat(mill_dummylabel, idx)
+                ts_concat(ts_label, idx):\
+                if(ts_idx == idx) {\
+                    goto ts_concat(ts_dummylabel, idx);\
+                    ts_concat(ts_dummylabel, idx)
 
-#define out(chan, type, val) mill_out((chan), type, (val), __COUNTER__)
+#define out(chan, type, val) ts_out((chan), type, (val), __COUNTER__)
 
-#define mill_deadline(ddline, idx) \
+#define ts_deadline(ddline, idx) \
                     break;\
                 }\
-                goto mill_concat(mill_label, idx);\
+                goto ts_concat(ts_label, idx);\
             }\
-            mill_choose_deadline(ddline);\
+            ts_choose_deadline(ddline);\
             if(0) {\
-                mill_concat(mill_label, idx):\
-                if(mill_idx == -1) {\
-                    goto mill_concat(mill_dummylabel, idx);\
-                    mill_concat(mill_dummylabel, idx)
+                ts_concat(ts_label, idx):\
+                if(ts_idx == -1) {\
+                    goto ts_concat(ts_dummylabel, idx);\
+                    ts_concat(ts_dummylabel, idx)
 
-#define deadline(ddline) mill_deadline(ddline, __COUNTER__)
+#define deadline(ddline) ts_deadline(ddline, __COUNTER__)
 
-#define mill_otherwise(idx) \
+#define ts_otherwise(idx) \
                     break;\
                 }\
-                goto mill_concat(mill_label, idx);\
+                goto ts_concat(ts_label, idx);\
             }\
-            mill_choose_otherwise();\
+            ts_choose_otherwise();\
             if(0) {\
-                mill_concat(mill_label, idx):\
-                if(mill_idx == -1) {\
-                    goto mill_concat(mill_dummylabel, idx);\
-                    mill_concat(mill_dummylabel, idx)
+                ts_concat(ts_label, idx):\
+                if(ts_idx == -1) {\
+                    goto ts_concat(ts_dummylabel, idx);\
+                    ts_concat(ts_dummylabel, idx)
 
-#define otherwise mill_otherwise(__COUNTER__)
+#define otherwise ts_otherwise(__COUNTER__)
 
 #define end \
                     break;\
                 }\
             }\
-            mill_idx = mill_choose_wait();\
+            ts_idx = ts_choose_wait();\
         }
 
-TS_EXPORT void mill_choose_init(const char *current);
-TS_EXPORT void mill_choose_in(void *clause, chan ch, size_t sz, int idx);
-TS_EXPORT void mill_choose_out(void *clause, chan ch, void *val, size_t sz,
+TS_EXPORT void ts_choose_init(const char *current);
+TS_EXPORT void ts_choose_in(void *clause, chan ch, size_t sz, int idx);
+TS_EXPORT void ts_choose_out(void *clause, chan ch, void *val, size_t sz,
     int idx);
-TS_EXPORT void mill_choose_deadline(int64_t ddline);
-TS_EXPORT void mill_choose_otherwise(void);
-TS_EXPORT int mill_choose_wait(void);
-TS_EXPORT void *mill_choose_val(size_t sz);
+TS_EXPORT void ts_choose_deadline(int64_t ddline);
+TS_EXPORT void ts_choose_otherwise(void);
+TS_EXPORT int ts_choose_wait(void);
+TS_EXPORT void *ts_choose_val(size_t sz);
 
 /******************************************************************************/
 /*  Debugging                                                                 */

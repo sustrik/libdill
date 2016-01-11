@@ -22,8 +22,8 @@
 
 */
 
-#ifndef MILL_UTILS_H_INCLUDED
-#define MILL_UTILS_H_INCLUDED
+#ifndef TS_UTILS_H_INCLUDED
+#define TS_UTILS_H_INCLUDED
 
 #include <setjmp.h>
 #include <stddef.h>
@@ -32,39 +32,39 @@
 #include <stdlib.h>
 
 /* For now use longjmp. Replace by a different mechanism as needed. */
-struct mill_ctx {
+struct ts_ctx {
     sigjmp_buf jbuf;
 };
 
-#define mill_setjmp(ctx) sigsetjmp((ctx)->jbuf, 0)
-#define mill_jmp(ctx) siglongjmp((ctx)->jbuf, 1)
+#define ts_setjmp(ctx) sigsetjmp((ctx)->jbuf, 0)
+#define ts_jmp(ctx) siglongjmp((ctx)->jbuf, 1)
 
 /*  Takes a pointer to a member variable and computes pointer to the structure
     that contains it. 'type' is type of the structure, not the member. */
-#define mill_cont(ptr, type, member) \
+#define ts_cont(ptr, type, member) \
     (ptr ? ((type*) (((char*) ptr) - offsetof(type, member))) : NULL)
 
 /* Compile-time assert. */
-#define MILL_CT_ASSERT_HELPER2(prefix, line) \
+#define TS_CT_ASSERT_HELPER2(prefix, line) \
     prefix##line
-#define MILL_CT_ASSERT_HELPER1(prefix, line) \
-    MILL_CT_ASSERT_HELPER2(prefix, line)
-#define MILL_CT_ASSERT(x) \
-    typedef int MILL_CT_ASSERT_HELPER1(ct_assert_,__COUNTER__) [(x) ? 1 : -1]
+#define TS_CT_ASSERT_HELPER1(prefix, line) \
+    TS_CT_ASSERT_HELPER2(prefix, line)
+#define TS_CT_ASSERT(x) \
+    typedef int TS_CT_ASSERT_HELPER1(ct_assert_,__COUNTER__) [(x) ? 1 : -1]
 
 #if defined __GNUC__ || defined __llvm__
-#define mill_fast(x) __builtin_expect(!!(x), 1)
-#define mill_slow(x) __builtin_expect(!!(x), 0)
+#define ts_fast(x) __builtin_expect(!!(x), 1)
+#define ts_slow(x) __builtin_expect(!!(x), 0)
 #else
-#define mill_fast(x) (x)
-#define mill_slow(x) (x)
+#define ts_fast(x) (x)
+#define ts_slow(x) (x)
 #endif
 
 /* Define our own assert. This way we are sure that it stays in place even
    if the standard C assert would be thrown away by the compiler. */
-#define mill_assert(x) \
+#define ts_assert(x) \
     do {\
-        if (mill_slow(!(x))) {\
+        if (ts_slow(!(x))) {\
             fprintf(stderr, "Assert failed: " #x " (%s:%d)\n",\
                 __FILE__, __LINE__);\
             fflush(stderr);\

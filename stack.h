@@ -22,20 +22,20 @@
 
 */
 
-#ifndef MILL_STACK_INCLUDED
-#define MILL_STACK_INCLUDED
+#ifndef TS_STACK_INCLUDED
+#define TS_STACK_INCLUDED
 
 #include <stddef.h>
 
 /* Purges all the existing cached stacks and preallocates 'count' new stacks
    of size 'stack_size'. Sets errno in case of error. */
-void mill_preparestacks(int count, size_t stack_size);
+void ts_preparestacks(int count, size_t stack_size);
 
 /* Allocates new stack. Returns pointer to the *top* of the stack.
    For now we assume that the stack grows downwards. */
-void *mill_allocstack(void);
+void *ts_allocstack(void);
 
 /* Deallocates a stack. The argument is pointer to the top of the stack. */
-void mill_freestack(void *stack);
+void ts_freestack(void *stack);
 
 #endif

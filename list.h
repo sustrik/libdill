@@ -22,43 +22,43 @@
 
 */
 
-#ifndef MILL_LIST_INCLUDED
-#define MILL_LIST_INCLUDED
+#ifndef TS_LIST_INCLUDED
+#define TS_LIST_INCLUDED
 
 /* Doubly-linked list. */
 
-struct mill_list_item {
-    struct mill_list_item *next;
-    struct mill_list_item *prev;
+struct ts_list_item {
+    struct ts_list_item *next;
+    struct ts_list_item *prev;
 };
 
-struct mill_list {
-    struct mill_list_item *first;
-    struct mill_list_item *last;
+struct ts_list {
+    struct ts_list_item *first;
+    struct ts_list_item *last;
 };
 
 /* Initialise the list. To statically initialise the list use = {0}. */
-void mill_list_init(struct mill_list *self);
+void ts_list_init(struct ts_list *self);
 
 /* True is the list has no items. */
-#define mill_list_empty(self) (!((self)->first))
+#define ts_list_empty(self) (!((self)->first))
 
 /* Returns iterator to the first item in the list or NULL if
    the list is empty. */
-#define mill_list_begin(self) ((self)->first)
+#define ts_list_begin(self) ((self)->first)
 
 /* Returns iterator to one past the item pointed to by 'it'. */
-#define mill_list_next(it) ((it)->next)
+#define ts_list_next(it) ((it)->next)
 
 /* Adds the item to the list before the item pointed to by 'it'.
    If 'it' is NULL the item is inserted to the end of the list. */
-void mill_list_insert(struct mill_list *self, struct mill_list_item *item,
-    struct mill_list_item *it);
+void ts_list_insert(struct ts_list *self, struct ts_list_item *item,
+    struct ts_list_item *it);
 
 /* Removes the item from the list and returns pointer to the next item in the
    list. Item must be part of the list. */
-struct mill_list_item *mill_list_erase(struct mill_list *self,
-    struct mill_list_item *item);
+struct ts_list_item *ts_list_erase(struct ts_list *self,
+    struct ts_list_item *item);
 
 #endif
 

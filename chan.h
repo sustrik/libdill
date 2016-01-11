@@ -22,8 +22,8 @@
 
 */
 
-#ifndef MILL_CHAN_INCLUDED
-#define MILL_CHAN_INCLUDED
+#ifndef TS_CHAN_INCLUDED
+#define TS_CHAN_INCLUDED
 
 #include <stddef.h>
 
@@ -32,9 +32,9 @@
 #include "slist.h"
 
 /* One of these structures is preallocated for every coroutine. */
-struct mill_choosedata {
+struct ts_choosedata {
     /* List of clauses in the 'choose' statement. */
-    struct mill_slist clauses;
+    struct ts_slist clauses;
     /* 1 if there is 'otherwise' clause. 0 if there is not. */
     int othws;
     /* Deadline specified in 'deadline' clause. -1 if none. */
@@ -44,9 +44,9 @@ struct mill_choosedata {
 };
 
 /* Channel endpoint. */
-struct mill_ep {
+struct ts_ep {
     /* Thanks to this flag we can cast from ep pointer to chan pointer. */
-    enum {MILL_SENDER, MILL_RECEIVER} type;
+    enum {TS_SENDER, TS_RECEIVER} type;
     /* Sequence number of the choose operation being initialised. */
     int seqnum;
     /* Number of clauses referring to this endpoint within the choose
@@ -55,17 +55,17 @@ struct mill_ep {
     /* Number of refs already processed. */
     int tmp;
     /* List of clauses waiting for this endpoint. */
-    struct mill_list clauses;
+    struct ts_list clauses;
 };
 
 /* Channel. */
-struct mill_chan {
+struct ts_chan {
     /* The size of the elements stored in the channel, in bytes. */
     size_t sz;
     /* Channel holds two lists, the list of clauses waiting to send and list
        of clauses waiting to receive. */
-    struct mill_ep sender;
-    struct mill_ep receiver;
+    struct ts_ep sender;
+    struct ts_ep receiver;
     /* Number of open handles to this channel. */
     int refcount;
     /* 1 is chdone() was already called. 0 otherwise. */
@@ -81,20 +81,20 @@ struct mill_chan {
     size_t first;
 
     /* Debugging info. */
-    struct mill_debug_chan debug;
+    struct ts_debug_chan debug;
 };
 
 /* This structure represents a single clause in a choose statement.
    Similarly, both chs() and chr() each create a single clause. */
-struct mill_clause {
+struct ts_clause {
     /* Member of list of clauses waiting for a channel endpoint. */
-    struct mill_list_item epitem;
+    struct ts_list_item epitem;
     /* Linked list of clauses in the choose statement. */
-    struct mill_slist_item chitem;
+    struct ts_slist_item chitem;
     /* The coroutine which created the clause. */
-    struct mill_cr *cr;
+    struct ts_cr *cr;
     /* Channel endpoint the clause is waiting for. */
-    struct mill_ep *ep;
+    struct ts_ep *ep;
     /* For out clauses, pointer to the value to send. NULL for in clauses. */
     void *val;
     /* The index to jump to when the clause is executed. */
@@ -107,7 +107,7 @@ struct mill_clause {
 };
 
 /* Returns pointer to the channel that contains specified endpoint. */
-struct mill_chan *mill_getchan(struct mill_ep *ep);
+struct ts_chan *ts_getchan(struct ts_ep *ep);
 
 #endif
 

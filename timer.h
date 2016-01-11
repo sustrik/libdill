@@ -22,40 +22,40 @@
 
 */
 
-#ifndef MILL_TIMER_INCLUDED
-#define MILL_TIMER_INCLUDED
+#ifndef TS_TIMER_INCLUDED
+#define TS_TIMER_INCLUDED
 
 #include <stdint.h>
 
 #include "list.h"
 
-struct mill_timer;
+struct ts_timer;
 
-typedef void (*mill_timer_callback)(struct mill_timer *timer);
+typedef void (*ts_timer_callback)(struct ts_timer *timer);
 
-struct mill_timer {
+struct ts_timer {
     /* Item in the global list of all timers. */
-    struct mill_list_item item;
+    struct ts_list_item item;
     /* The deadline when the timer expires. */
     int64_t expiry;
     /* Callback invoked when timer expires. Pfui Teufel! */
-    mill_timer_callback callback;
+    ts_timer_callback callback;
 };
 
 /* Add a timer for the running coroutine. */
-void mill_timer_add(struct mill_timer *timer, int64_t deadline,
-    mill_timer_callback callback);
+void ts_timer_add(struct ts_timer *timer, int64_t deadline,
+    ts_timer_callback callback);
 
 /* Remove the timer associated with the running coroutine. */
-void mill_timer_rm(struct mill_timer *timer);
+void ts_timer_rm(struct ts_timer *timer);
 
 /* Number of milliseconds till the next timer expires.
    If there are no timers returns -1. */
-int mill_timer_next(void);
+int ts_timer_next(void);
 
 /* Resumes all coroutines whose timers have already expired.
    Returns zero if no coroutine was resumed, 1 otherwise. */
-int mill_timer_fire(void);
+int ts_timer_fire(void);
 
 #endif
 

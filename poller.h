@@ -22,18 +22,18 @@
 
 */
 
-#ifndef MILL_POLLER_INCLUDED
-#define MILL_POLLER_INCLUDED
+#ifndef TS_POLLER_INCLUDED
+#define TS_POLLER_INCLUDED
 
-void mill_poller_init(void);
+void ts_poller_init(void);
 
-/* poller.c also implements mill_wait() and mill_fdwait() declared
+/* poller.c also implements ts_wait() and ts_fdwait() declared
    in treestack.h. */
 
 /* Wait till at least one coroutine is resumed. If block is set to 0 the
    function will poll for events and return immediately. If it is set to 1
    it will block until there's at least one event to process. */
-void mill_wait(int block);
+void ts_wait(int block);
 
 #endif
 

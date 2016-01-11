@@ -37,47 +37,47 @@
 #include "utils.h"
 
 /* ID to be assigned to next launched coroutine. */
-static int mill_next_cr_id = 1;
+static int ts_next_cr_id = 1;
 
 /* List of all coroutines. */
-static struct mill_list mill_all_crs = {
-    &mill_main.debug.item, &mill_main.debug.item};
+static struct ts_list ts_all_crs = {
+    &ts_main.debug.item, &ts_main.debug.item};
 
 /* ID to be assigned to the next created channel. */
-static int mill_next_chan_id = 1;
+static int ts_next_chan_id = 1;
 
 /* List of all channels. */
-static struct mill_list mill_all_chans = {0};
+static struct ts_list ts_all_chans = {0};
 
-void mill_panic(const char *text) {
+void ts_panic(const char *text) {
     fprintf(stderr, "panic: %s\n", text);
     abort();
 }
 
-void mill_register_cr(struct mill_debug_cr *cr, const char *created) {
-    mill_list_insert(&mill_all_crs, &cr->item, NULL);
-    cr->id = mill_next_cr_id;
-    ++mill_next_cr_id;
+void ts_register_cr(struct ts_debug_cr *cr, const char *created) {
+    ts_list_insert(&ts_all_crs, &cr->item, NULL);
+    cr->id = ts_next_cr_id;
+    ++ts_next_cr_id;
     cr->created = created;
     cr->current = NULL;
 }
 
-void mill_unregister_cr(struct mill_debug_cr *cr) {
-    mill_list_erase(&mill_all_crs, &cr->item);
+void ts_unregister_cr(struct ts_debug_cr *cr) {
+    ts_list_erase(&ts_all_crs, &cr->item);
 }
 
-void mill_register_chan(struct mill_debug_chan *ch, const char *created) {
-    mill_list_insert(&mill_all_chans, &ch->item, NULL);
-    ch->id = mill_next_chan_id;
-    ++mill_next_chan_id;
+void ts_register_chan(struct ts_debug_chan *ch, const char *created) {
+    ts_list_insert(&ts_all_chans, &ch->item, NULL);
+    ch->id = ts_next_chan_id;
+    ++ts_next_chan_id;
     ch->created = created;
 }
 
-void mill_unregister_chan(struct mill_debug_chan *ch) {
-    mill_list_erase(&mill_all_chans, &ch->item);
+void ts_unregister_chan(struct ts_debug_chan *ch) {
+    ts_list_erase(&ts_all_chans, &ch->item);
 }
 
-void mill_set_current(struct mill_debug_cr *cr, const char *current) {
+void ts_set_current(struct ts_debug_cr *cr, const char *current) {
     cr->current = current;
 }
 
@@ -91,44 +91,44 @@ void goredump(void) {
     fprintf(stderr,
         "----------------------------------------------------------------------"
         "--------------------------------------------------\n");
-    struct mill_list_item *it;
-    for(it = mill_list_begin(&mill_all_crs); it; it = mill_list_next(it)) {
-        struct mill_cr *cr = mill_cont(it, struct mill_cr, debug.item);
+    struct ts_list_item *it;
+    for(it = ts_list_begin(&ts_all_crs); it; it = ts_list_next(it)) {
+        struct ts_cr *cr = ts_cont(it, struct ts_cr, debug.item);
         switch(cr->state) {
-        case MILL_READY:
-            sprintf(buf, "%s", mill_running == cr ? "RUNNING" : "ready");
+        case TS_READY:
+            sprintf(buf, "%s", ts_running == cr ? "RUNNING" : "ready");
             break;
-        case MILL_MSLEEP:
+        case TS_MSLEEP:
             sprintf(buf, "msleep()");
             break;
-        case MILL_FDWAIT:
+        case TS_FDWAIT:
             sprintf(buf, "fdwait(%d, %s)", cr->fd,
                 (cr->events & FDW_IN) &&
                     (cr->events & FDW_OUT) ? "FDW_IN | FDW_OUT" :
                 cr->events & FDW_IN ? "FDW_IN" :
                 cr->events & FDW_OUT ? "FDW_OUT" : 0);
             break;
-        case MILL_CHR:
-        case MILL_CHS:
-        case MILL_CHOOSE:
+        case TS_CHR:
+        case TS_CHS:
+        case TS_CHOOSE:
             {
                 int pos = 0;
-                if(cr->state == MILL_CHR)
+                if(cr->state == TS_CHR)
                     pos += sprintf(&buf[pos], "chr(");
-                else if(cr->state == MILL_CHS)
+                else if(cr->state == TS_CHS)
                     pos += sprintf(&buf[pos], "chs(");
                 else
                     pos += sprintf(&buf[pos], "choose(");
                 int first = 1;
-                struct mill_slist_item *it;
-                for(it = mill_slist_begin(&cr->choosedata.clauses); it;
-                      it = mill_slist_next(it)) {
+                struct ts_slist_item *it;
+                for(it = ts_slist_begin(&cr->choosedata.clauses); it;
+                      it = ts_slist_next(it)) {
                 if(first)
                     first = 0;
                 else
                     pos += sprintf(&buf[pos], ",");
-                pos += sprintf(&buf[pos], "<%d>", mill_getchan(
-                        mill_cont(it, struct mill_clause,
+                pos += sprintf(&buf[pos], "<%d>", ts_getchan(
+                        ts_cont(it, struct ts_clause,
                         chitem)->ep)->debug.id);
             }
             sprintf(&buf[pos], ")");
@@ -141,12 +141,12 @@ void goredump(void) {
         fprintf(stderr, "%-8s   %-42s %-40s %s\n",
             idbuf,
             buf,
-            cr == mill_running ? "---" : cr->debug.current,
+            cr == ts_running ? "---" : cr->debug.current,
             cr->debug.created ? cr->debug.created : "<main>");
     }
     fprintf(stderr,"\n");
 
-    if(mill_list_empty(&mill_all_chans))
+    if(ts_list_empty(&ts_all_chans))
         return;
     fprintf(stderr,
         "CHANNEL  msgs/max    senders/receivers                          "
@@ -154,8 +154,8 @@ void goredump(void) {
     fprintf(stderr,
         "----------------------------------------------------------------------"
         "--------------------------------------------------\n");
-    for(it = mill_list_begin(&mill_all_chans); it; it = mill_list_next(it)) {
-        struct mill_chan *ch = mill_cont(it, struct mill_chan, debug.item);
+    for(it = ts_list_begin(&ts_all_chans); it; it = ts_list_next(it)) {
+        struct ts_chan *ch = ts_cont(it, struct ts_chan, debug.item);
         snprintf(idbuf, sizeof(idbuf), "<%d>", (int)ch->debug.id);
         sprintf(buf, "%d/%d",
             (int)ch->items,
@@ -164,12 +164,12 @@ void goredump(void) {
             idbuf,
             buf);
         int pos;
-        struct mill_list *clauselist;
-        if(!mill_list_empty(&ch->sender.clauses)) {
+        struct ts_list *clauselist;
+        if(!ts_list_empty(&ch->sender.clauses)) {
             pos = sprintf(buf, "s:");
             clauselist = &ch->sender.clauses;
         }
-        else if(!mill_list_empty(&ch->receiver.clauses)) {
+        else if(!ts_list_empty(&ch->receiver.clauses)) {
             pos = sprintf(buf, "r:");
             clauselist = &ch->receiver.clauses;
         }
@@ -177,10 +177,10 @@ void goredump(void) {
             sprintf(buf, " ");
             clauselist = NULL;
         }
-        struct mill_clause *cl = NULL;
+        struct ts_clause *cl = NULL;
         if(clauselist)
-            cl = mill_cont(mill_list_begin(clauselist),
-                struct mill_clause, epitem);
+            cl = ts_cont(ts_list_begin(clauselist),
+                struct ts_clause, epitem);
         int first = 1;
         while(cl) {
             if(first)
@@ -188,8 +188,8 @@ void goredump(void) {
             else
                 pos += sprintf(&buf[pos], ",");
             pos += sprintf(&buf[pos], "{%d}", (int)cl->cr->debug.id);
-            cl = mill_cont(mill_list_next(&cl->epitem),
-                struct mill_clause, epitem);
+            cl = ts_cont(ts_list_next(&cl->epitem),
+                struct ts_clause, epitem);
         }
         fprintf(stderr, "%-42s %-5d %-5s %s\n",
             buf,
@@ -200,14 +200,14 @@ void goredump(void) {
     fprintf(stderr,"\n");
 }
 
-int mill_tracelevel = 0;
+int ts_tracelevel = 0;
 
 void gotrace(int level) {
-    mill_tracelevel = level;
+    ts_tracelevel = level;
 }
 
-void mill_trace_(const char *location, const char *format, ...) {
-    if(mill_fast(mill_tracelevel <= 0))
+void ts_trace_(const char *location, const char *format, ...) {
+    if(ts_fast(ts_tracelevel <= 0))
         return;
 
     char buf[256];
@@ -221,7 +221,7 @@ void mill_trace_(const char *location, const char *format, ...) {
     fprintf(stderr, "==> %s.%06d ", buf, (int)nw.tv_usec);
 
     /* Coroutine ID. */
-    snprintf(buf, sizeof(buf), "{%d}", (int)mill_running->debug.id);
+    snprintf(buf, sizeof(buf), "{%d}", (int)ts_running->debug.id);
     fprintf(stderr, "%-8s ", buf);
 
     va_list va;
@@ -235,7 +235,7 @@ void mill_trace_(const char *location, const char *format, ...) {
     fflush(stderr);
 }
 
-void mill_preserve_debug(void) {
+void ts_preserve_debug(void) {
     /* Do nothing, but trick the compiler into thinking that the debug
        functions are being used so that it does not optimise them away. */
     static volatile int unoptimisable = 1;
@@ -245,8 +245,8 @@ void mill_preserve_debug(void) {
     gotrace(0);
 }
 
-int mill_hascrs(void) {
-    return (mill_all_crs.first == &mill_main.debug.item &&
-        mill_all_crs.last == &mill_main.debug.item) ? 0 : 1;
+int ts_hascrs(void) {
+    return (ts_all_crs.first == &ts_main.debug.item &&
+        ts_all_crs.last == &ts_main.debug.item) ? 0 : 1;
 }
 
