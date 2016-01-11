@@ -252,29 +252,25 @@ int main() {
     assert(rc == 0);
     chclose(ch11);
 
-#if 0
     /* Choose vs. choose. */
     chan ch12 = chmake(sizeof(int), 0);
     go(choosesender(chdup(ch12), 111));
-    choose {
-    in(ch12, &val, sizeof(val)):
-        assert(val == 111);
-    end
-    }
+    struct chclause cls10[] = {{ch12, CHOOSE_CHR, &val, sizeof(val)}};
+    rc = choose(cls10, 1, -1);
+    assert(rc == 0);
+    assert(val == 111);
     chclose(ch12);
 
     /* Choose vs. buffered channels. */
     chan ch13 = chmake(sizeof(int), 2);
     val = 999;
-    choose {
-    out(ch13, &val, sizeof(val)):
-    end
-    }
-    choose {
-    in(ch13, &val, sizeof(val)):
-        assert(val == 999);
-    end
-    }
+    struct chclause cls11[] = {{ch13, CHOOSE_CHS, &val, sizeof(val)}};
+    rc = choose(cls11, 1, -1);
+    assert(rc == 0);
+    struct chclause cls12[] = {{ch13, CHOOSE_CHR, &val, sizeof(val)}};
+    rc = choose(cls12, 1, -1);
+    assert(rc == 0);
+    assert(val == 999);
     chclose(ch13);
 
     /* Test whether selection of out channels is random. */
@@ -302,13 +298,13 @@ int main() {
     go(sender2(chdup(ch16), 1111));
     goredump();
     struct large lrg;
-    choose {
-    in(ch16, &val, sizeof(val)):
-        assert(val == 1111);
-    in(ch15, &lrg, sizeof(lrg)):
-        assert(0);
-    end
-    }
+    struct chclause cls13[] = {
+        {ch16, CHOOSE_CHR, &val, sizeof(val)},
+        {ch15, CHOOSE_CHR, &lrg, sizeof(lrg)}
+    };
+    rc = choose(cls13, 2, -1);
+    assert(rc == 0);
+    assert(val == 1111);
     chclose(ch16);
     chclose(ch15);
 
@@ -317,10 +313,9 @@ int main() {
     struct large large = {{0}};
     rc = chs(ch17, &large, sizeof(large));
     assert(rc == 0);
-    choose {
-    in(ch17, &lrg, sizeof(lrg)):
-    end
-    }
+    struct chclause cls14[] = {{ch17, CHOOSE_CHR, &lrg, sizeof(lrg)}};
+    rc = choose(cls14, 1, -1);
+    assert(rc == 0);
     chclose(ch17);
 
     /* Test that 'in' on done-with channel fires. */
@@ -328,11 +323,10 @@ int main() {
     val = 2222;
     rc = chdone(ch18, &val, sizeof(val));
     assert(rc == 0);
-    choose {
-    in(ch18, &val, sizeof(val)):
-        assert(val == 2222);
-    end
-    }
+    struct chclause cls15[] = {{ch18, CHOOSE_CHR, &val, sizeof(val)}};
+    rc = choose(cls15, 1, -1);
+    assert(rc == 0);
+    assert(val == 2222);
     chclose(ch18);
 
     /* Test whether selection of in channels is random when there's nothing
@@ -343,14 +337,24 @@ int main() {
     chan ch19 = chmake(sizeof(int), 0);
     go(feeder3(chdup(ch19), 3333));
     for(i = 0; i != 100; ++i) {
-        choose {
-        in(ch19, &val, sizeof(val)):
+        struct chclause cls16[] = {
+            {ch19, CHOOSE_CHR, &val, sizeof(val)},
+            {ch19, CHOOSE_CHR, &val, sizeof(val)},
+            {ch19, CHOOSE_CHR, &val, sizeof(val)}
+        };
+        rc = choose(cls16, 3, -1);
+        switch(rc) {
+        case 0:
             ++first;
-        in(ch19, &val, sizeof(val)):
+            break;
+        case 1:
             ++second;
-        in(ch19, &val, sizeof(val)):
+            break;
+        case 2:
             ++third;
-        end
+            break;
+        default:
+            assert(0);
         }
     }
     assert(first > 1 && second > 1 && third > 1);
@@ -386,38 +390,26 @@ int main() {
     chclose(ch20);
 
     /* Test expiration of 'deadline' clause. */
-    test = 0;
     chan ch21 = chmake(sizeof(int), 0);
     int64_t start = now();
-    choose {
-    in(ch21, &val, sizeof(val)):
-        assert(0);
-    deadline(start + 50):
-        test = 1;
-    end
-    }
-    assert(test == 1);
-    ihnt64_t diff = now() - start;
+    struct chclause cls17[] = {{ch21, CHOOSE_CHR, &val, sizeof(val)}};
+    rc = choose(cls17, 1, start + 50);
+    assert(rc == -1 && errno == ETIMEDOUT);
+    int64_t diff = now() - start;
     assert(diff > 30 && diff < 70);
     chclose(ch21);
 
     /* Test unexpired 'deadline' clause. */
-    test = 0;
     chan ch22 = chmake(sizeof(int), 0);
     start = now();
     go(sender3(chdup(ch22), 4444, start + 50));
-    choose {
-    in(ch22, &val, sizeof(val)):
-        test = val;
-    deadline(start + 1000):
-        assert(0);
-    end
-    }
-    assert(test == 4444);
+    struct chclause cls18[] = {{ch22, CHOOSE_CHR, &val, sizeof(val)}};
+    rc = choose(cls17, 1, start + 1000);
+    assert(rc == 0);
+    assert(val == 4444);
     diff = now() - start;
     assert(diff > 30 && diff < 70);
     chclose(ch22);
-#endif
 
     return 0;
 }
