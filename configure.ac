@@ -27,7 +27,7 @@
 AC_PREREQ([2.53])
 
 AC_INIT([treestack], [m4_esyscmd([./package_version.sh])],
-   [libmill@freelists.org], [treestack], [http://libmill.org/])
+   [libmill@freelists.org], [treestack], [http://example.org/])
 AC_CONFIG_SRCDIR([treestack.pc.in])
 AM_INIT_AUTOMAKE([1.6 foreign subdir-objects tar-ustar])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -80,8 +80,8 @@ AC_CHECK_FUNC([mprotect], [AC_DEFINE([HAVE_MPROTECT])])
 AC_CHECK_LIB([rt], [clock_gettime])
 AC_CHECK_FUNCS([clock_gettime])
 AC_CHECK_LIB([socket], [socket])
-AC_CHECK_FUNCS([epoll_create], [] ,[AC_DEFINE([MILL_NO_EPOLL])])
-AC_CHECK_FUNCS([kqueue], [] ,[AC_DEFINE([MILL_NO_KQUEUE])])
+AC_CHECK_FUNCS([epoll_create], [] ,[AC_DEFINE([TS_NO_EPOLL])])
+AC_CHECK_FUNCS([kqueue], [] ,[AC_DEFINE([TS_NO_KQUEUE])])
 
 ################################################################################
 #  Libtool                                                                     #
