@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <unistd.h>
 
-#include "../libmill.h"
+#include "../treestack.h"
 
 coroutine void relay(chan src, chan dst) {
     while(1) {

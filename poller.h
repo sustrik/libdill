@@ -28,7 +28,7 @@
 void mill_poller_init(void);
 
 /* poller.c also implements mill_wait() and mill_fdwait() declared
-   in libmill.h. */
+   in treestack.h. */
 
 /* Wait till at least one coroutine is resumed. If block is set to 0 the
    function will poll for events and return immediately. If it is set to 1

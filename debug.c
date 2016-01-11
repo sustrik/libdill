@@ -31,9 +31,9 @@
 
 #include "chan.h"
 #include "cr.h"
-#include "libmill.h"
 #include "list.h"
 #include "stack.h"
+#include "treestack.h"
 #include "utils.h"
 
 /* ID to be assigned to next launched coroutine. */

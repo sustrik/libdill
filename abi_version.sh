@@ -20,17 +20,17 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-if [ ! -f libmill.h ]; then
-    echo "abi_version.sh: error: libmill.h does not exist" 1>&2
+if [ ! -f treestack.h ]; then
+    echo "abi_version.sh: error: treestack.h does not exist" 1>&2
     exit 1
 fi
 
-CURRENT=`egrep '^#define +MILL_VERSION_CURRENT +[0-9]+$' libmill.h`
-REVISION=`egrep '^#define +MILL_VERSION_REVISION +[0-9]+$' libmill.h`
-AGE=`egrep '^#define +MILL_VERSION_AGE +[0-9]+$' libmill.h`
+CURRENT=`egrep '^#define +MILL_VERSION_CURRENT +[0-9]+$' treestack.h`
+REVISION=`egrep '^#define +MILL_VERSION_REVISION +[0-9]+$' treestack.h`
+AGE=`egrep '^#define +MILL_VERSION_AGE +[0-9]+$' treestack.h`
 
 if [ -z "$CURRENT" -o -z "$REVISION" -o -z "$AGE" ]; then
-    echo "abi_version.sh: error: could not extract version from libmill.h" 1>&2
+    echo "abi_version.sh: error: could not extract version from treestack.h" 1>&2
     exit 1
 fi
 

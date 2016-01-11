@@ -31,7 +31,7 @@
 #include "chan.h"
 #include "cr.h"
 #include "debug.h"
-#include "libmill.h"
+#include "treestack.h"
 #include "utils.h"
 
 MILL_CT_ASSERT(MILL_CLAUSELEN == sizeof(struct mill_clause));

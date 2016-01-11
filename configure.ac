@@ -28,7 +28,7 @@ AC_PREREQ([2.53])
 
 AC_INIT([libmill], [m4_esyscmd([./package_version.sh])],
    [libmill@freelists.org], [libmill], [http://libmill.org/])
-AC_CONFIG_SRCDIR([libmill.pc.in])
+AC_CONFIG_SRCDIR([treestack.pc.in])
 AM_INIT_AUTOMAKE([1.6 foreign subdir-objects tar-ustar])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
@@ -95,6 +95,6 @@ LT_INIT
 
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_OUTPUT([Makefile libmill.pc])
+AC_OUTPUT([Makefile treestack.pc])
 cp confdefs.h config.h
 

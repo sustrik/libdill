@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "../libmill.h"
+#include "../treestack.h"
 
 struct foo {
     int first;

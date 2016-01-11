@@ -31,8 +31,8 @@
 static mach_timebase_info_data_t mill_mtid = {0};
 #endif
 
-#include "libmill.h"
 #include "timer.h"
+#include "treestack.h"
 #include "utils.h"
 
 /* 1 millisecond expressed in CPU ticks. The value is chosen is such a way that

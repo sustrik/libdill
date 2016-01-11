@@ -26,10 +26,10 @@
 #include <sys/param.h>
 
 #include "cr.h"
-#include "libmill.h"
 #include "list.h"
 #include "poller.h"
 #include "timer.h"
+#include "treestack.h"
 
 /* Forward declarations for the functions implemented by specific poller
    mechanisms (poll, epoll, kqueue). */

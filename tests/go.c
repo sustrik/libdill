@@ -26,7 +26,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "../libmill.h"
+#include "../treestack.h"
 
 int sum = 0;
 

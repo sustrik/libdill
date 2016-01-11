@@ -27,7 +27,7 @@ ACLOCAL_AMFLAGS = -I m4
 ################################################################################
 
 millincludedir = $(includedir)
-millinclude_HEADERS = libmill.h
+millinclude_HEADERS = treestack.h
 
 lib_LTLIBRARIES = libmill.la
 
@@ -54,7 +54,7 @@ libmill_la_SOURCES = \
     kqueue.inc
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libmill.pc
+pkgconfig_DATA = treestack.pc
 
 libmill_la_LDFLAGS = -no-undefined -version-info @MILL_LIBTOOL_VERSION@
 

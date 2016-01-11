@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "../libmill.h"
+#include "../treestack.h"
 
 coroutine void sender1(chan ch, int val) {
     chs(ch, int, val);

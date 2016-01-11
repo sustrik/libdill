@@ -24,7 +24,7 @@
 
 #include <stdio.h>
 
-#include "../libmill.h"
+#include "../treestack.h"
 
 coroutine void worker(int count, const char *text) {
     int i;

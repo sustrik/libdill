@@ -28,9 +28,9 @@
 
 #include "cr.h"
 #include "debug.h"
-#include "libmill.h"
 #include "poller.h"
 #include "stack.h"
+#include "treestack.h"
 #include "utils.h"
 
 /* Size of the buffer for temporary storage of values received from channels.

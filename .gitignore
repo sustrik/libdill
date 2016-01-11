@@ -13,7 +13,7 @@ config.sub
 configure
 depcomp
 install-sh
-libmill.pc
+treestack.pc
 *.o
 *.lo
 *.la
