@@ -68,8 +68,8 @@ int main() {
 
     signal(SIGNAL, signal_handler);
 
-    chan sendch = chmake(char, 0);
-    chan recvch = chmake(char, 0);
+    chan sendch = chmake(sizeof(char), 0);
+    chan recvch = chmake(sizeof(char), 0);
 
     int i;
     for(i = 0; i < COUNT; ++i) {

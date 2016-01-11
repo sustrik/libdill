@@ -48,7 +48,7 @@ struct ts_chan *ts_getchan(struct ts_ep *ep) {
     }
 }
 
-chan ts_chmake(size_t sz, size_t bufsz, const char *created) {
+chan ts_chmake(size_t itemsz, size_t bufsz, const char *created) {
     /* If there's at least one channel created in the user's code
        we want the debug functions to get into the binary. */
     ts_preserve_debug();
@@ -56,11 +56,11 @@ chan ts_chmake(size_t sz, size_t bufsz, const char *created) {
        store the done-with value. It can't be stored in the regular buffer
        because that would mean chdone() would block when buffer is full. */
     struct ts_chan *ch = (struct ts_chan*)
-        malloc(sizeof(struct ts_chan) + (sz * (bufsz + 1)));
+        malloc(sizeof(struct ts_chan) + (itemsz * (bufsz + 1)));
     if(!ch)
         return NULL;
     ts_register_chan(&ch->debug, created);
-    ch->sz = sz;
+    ch->sz = itemsz;
     ch->sender.type = TS_SENDER;
     ch->sender.seqnum = ts_choose_seqnum;
     ts_list_init(&ch->sender.clauses);

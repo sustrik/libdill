@@ -131,7 +131,7 @@ int main() {
     gotrace(1);
 
     /* Non-blocking receiver case. */
-    chan ch1 = chmake(int, 0);
+    chan ch1 = chmake(sizeof(int), 0);
     go(sender1(chdup(ch1), 555));
     struct chclause cls1[] = {{ch1, CHOOSE_CHR, &val, sizeof(val)}};
     rc = choose(cls1, 1, -1);
@@ -140,7 +140,7 @@ int main() {
     chclose(ch1);
 
     /* Blocking receiver case. */
-    chan ch2 = chmake(int, 0);
+    chan ch2 = chmake(sizeof(int), 0);
     go(sender2(chdup(ch2), 666));
     struct chclause cls2[] = {{ch2, CHOOSE_CHR, &val, sizeof(val)}};
     rc = choose(cls2, 1, -1);
@@ -149,7 +149,7 @@ int main() {
     chclose(ch2);
 
     /* Non-blocking sender case. */
-    chan ch3 = chmake(int, 0);
+    chan ch3 = chmake(sizeof(int), 0);
     go(receiver1(chdup(ch3), 777));
     val = 777;
     struct chclause cls3[] = {{ch3, CHOOSE_CHS, &val, sizeof(val)}};
@@ -158,7 +158,7 @@ int main() {
     chclose(ch3);
 
     /* Blocking sender case. */
-    chan ch4 = chmake(int, 0);
+    chan ch4 = chmake(sizeof(int), 0);
     go(receiver2(chdup(ch4), 888));
     val = 888;
     struct chclause cls4[] = {{ch4, CHOOSE_CHS, &val, sizeof(val)}};
@@ -167,8 +167,8 @@ int main() {
     chclose(ch4);
 
     /* Check with two channels. */
-    chan ch5 = chmake(int, 0);
-    chan ch6 = chmake(int, 0);
+    chan ch5 = chmake(sizeof(int), 0);
+    chan ch6 = chmake(sizeof(int), 0);
     go(sender1(chdup(ch6), 555));
     struct chclause cls5[] = {
         {ch5, CHOOSE_CHR, &val, sizeof(val)},
@@ -185,8 +185,8 @@ int main() {
     chclose(ch6);
 
     /* Test whether selection of in channels is random. */
-    chan ch7 = chmake(int, 0);
-    chan ch8 = chmake(int, 0);
+    chan ch7 = chmake(sizeof(int), 0);
+    chan ch8 = chmake(sizeof(int), 0);
     go(feeder(chdup(ch7), 111));
     go(feeder(chdup(ch8), 222));
     int i;
@@ -216,7 +216,7 @@ int main() {
     chclose(ch8);
 
     /* Test 'otherwise' clause. */
-    chan ch9 = chmake(int, 0);
+    chan ch9 = chmake(sizeof(int), 0);
     struct chclause cls7[] = {{ch9, CHOOSE_CHR, &val, sizeof(val)}};
     rc = choose(cls7, 1, 0);
     assert(rc == -1 && errno == ETIMEDOUT);
@@ -225,7 +225,7 @@ int main() {
     assert(rc == -1 && errno == ETIMEDOUT);
 
     /* Test two simultaneous senders vs. choose statement. */
-    chan ch10 = chmake(int, 0);
+    chan ch10 = chmake(sizeof(int), 0);
     go(sender1(chdup(ch10), 888));
     go(sender1(chdup(ch10), 999));
     val = 0;
@@ -240,7 +240,7 @@ int main() {
     chclose(ch10);
 
     /* Test two simultaneous receivers vs. choose statement. */
-    chan ch11 = chmake(int, 0);
+    chan ch11 = chmake(sizeof(int), 0);
     go(receiver1(chdup(ch11), 333));
     go(receiver1(chdup(ch11), 444));
     val = 333;
@@ -254,7 +254,7 @@ int main() {
 
 #if 0
     /* Choose vs. choose. */
-    chan ch12 = chmake(int, 0);
+    chan ch12 = chmake(sizeof(int), 0);
     go(choosesender(chdup(ch12), 111));
     choose {
     in(ch12, &val, sizeof(val)):
@@ -264,7 +264,7 @@ int main() {
     chclose(ch12);
 
     /* Choose vs. buffered channels. */
-    chan ch13 = chmake(int, 2);
+    chan ch13 = chmake(sizeof(int), 2);
     val = 999;
     choose {
     out(ch13, &val, sizeof(val)):
@@ -278,7 +278,7 @@ int main() {
     chclose(ch13);
 
     /* Test whether selection of out channels is random. */
-    chan ch14 = chmake(int, 0);
+    chan ch14 = chmake(sizeof(int), 0);
     go(feeder2(chdup(ch14), 666, 777));
     first = 0;
     second = 0;
@@ -297,8 +297,8 @@ int main() {
     chclose(ch14);
 
     /* Test whether allocating larger in buffer breaks previous in clause. */
-    chan ch15 = chmake(struct large, 1);
-    chan ch16 = chmake(int, 1);
+    chan ch15 = chmake(sizeof(struct large), 1);
+    chan ch16 = chmake(sizeof(int), 1);
     go(sender2(chdup(ch16), 1111));
     goredump();
     struct large lrg;
@@ -313,7 +313,7 @@ int main() {
     chclose(ch15);
 
     /* Test transferring a large object. */
-    chan ch17 = chmake(struct large, 1);
+    chan ch17 = chmake(sizeof(struct large), 1);
     struct large large = {{0}};
     rc = chs(ch17, &large, sizeof(large));
     assert(rc == 0);
@@ -324,7 +324,7 @@ int main() {
     chclose(ch17);
 
     /* Test that 'in' on done-with channel fires. */
-    chan ch18 = chmake(int, 0);
+    chan ch18 = chmake(sizeof(int), 0);
     val = 2222;
     rc = chdone(ch18, &val, sizeof(val));
     assert(rc == 0);
@@ -340,7 +340,7 @@ int main() {
     first = 0;
     second = 0;
     third = 0;
-    chan ch19 = chmake(int, 0);
+    chan ch19 = chmake(sizeof(int), 0);
     go(feeder3(chdup(ch19), 3333));
     for(i = 0; i != 100; ++i) {
         choose {
@@ -361,7 +361,7 @@ int main() {
     first = 0;
     second = 0;
     third = 0;
-    chan ch20 = chmake(int, 0);
+    chan ch20 = chmake(sizeof(int), 0);
     go(feeder4(chdup(ch20)));
     for(i = 0; i != 100; ++i) {
         int rc = msleep(10);
@@ -387,7 +387,7 @@ int main() {
 
     /* Test expiration of 'deadline' clause. */
     test = 0;
-    chan ch21 = chmake(int, 0);
+    chan ch21 = chmake(sizeof(int), 0);
     int64_t start = now();
     choose {
     in(ch21, &val, sizeof(val)):
@@ -403,7 +403,7 @@ int main() {
 
     /* Test unexpired 'deadline' clause. */
     test = 0;
-    chan ch22 = chmake(int, 0);
+    chan ch22 = chmake(sizeof(int), 0);
     start = now();
     go(sender3(chdup(ch22), 4444, start + 50));
     choose {

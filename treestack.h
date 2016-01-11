@@ -161,8 +161,8 @@ struct chclause {
     int reserved8;
 };
 
-#define chmake(type, bufsz) \
-    ts_chmake(sizeof(type), bufsz, __FILE__ ":" ts_string(__LINE__))
+#define chmake(itemsz, bufsz) \
+    ts_chmake((itemsz), (bufsz), __FILE__ ":" ts_string(__LINE__))
 
 #define chdup(channel) \
    ts_chdup((channel), __FILE__ ":" ts_string(__LINE__))
@@ -183,7 +183,7 @@ struct chclause {
     ts_choose((clauses), (nclauses), (deadline), \
     __FILE__ ":" ts_string(__LINE__))
 
-TS_EXPORT chan ts_chmake(size_t sz, size_t bufsz, const char *created);
+TS_EXPORT chan ts_chmake(size_t itemsz, size_t bufsz, const char *created);
 TS_EXPORT chan ts_chdup(chan ch, const char *created);
 TS_EXPORT int ts_chs(chan ch, const void *val, size_t len, const char *current);
 TS_EXPORT int ts_chr(chan ch, void *val, size_t len, const char *current);
