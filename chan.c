@@ -34,8 +34,6 @@
 #include "treestack.h"
 #include "utils.h"
 
-TS_CT_ASSERT(TS_CLAUSELEN == sizeof(struct ts_clause));
-
 static int ts_choose_seqnum = 0;
 
 struct ts_chan *ts_getchan(struct ts_ep *ep) {
@@ -112,89 +110,9 @@ static void ts_choose_unblock(struct ts_clause *cl) {
             continue;
         ts_list_erase(&itcl->ep->clauses, &itcl->epitem);
     }
-    if(cl->cr->choosedata.ddline >= 0)
+    if(cl->cr->choosedata.ddline > 0)
         ts_timer_rm(&cl->cr->timer);
     ts_resume(cl->cr, cl->idx);
-}
-
-static void ts_choose_init_(const char *current) {
-    ts_set_current(&ts_running->debug, current);
-    ts_slist_init(&ts_running->choosedata.clauses);
-    ts_running->choosedata.othws = 0;
-    ts_running->choosedata.ddline = -1;
-    ts_running->choosedata.available = 0;
-    ++ts_choose_seqnum;
-}
-
-void ts_choose_init(const char *current) {
-    ts_trace(current, "choose()");
-    ts_running->state = TS_CHOOSE;
-    ts_choose_init_(current);
-}
-
-void ts_choose_in(void *clause, chan ch, void *val, size_t len, int idx) {
-    if(ts_slow(!ch))
-        ts_panic("null channel used");
-    if(ts_slow(ch->sz != len))
-        ts_panic("receive of a type not matching the channel");
-    /* Find out whether the clause is immediately available. */
-    int available = ch->done || !ts_list_empty(&ch->sender.clauses) ||
-        ch->items ? 1 : 0;
-    if(available)
-        ++ts_running->choosedata.available;
-    /* If there are available clauses don't bother with non-available ones. */
-    if(!available && ts_running->choosedata.available)
-        return;
-    /* Fill in the clause entry. */
-    struct ts_clause *cl = (struct ts_clause*) clause;
-    cl->cr = ts_running;
-    cl->ep = &ch->receiver;
-    cl->val = val;
-    cl->idx = idx;
-    cl->available = available;
-    cl->used = 1;
-    ts_slist_push_back(&ts_running->choosedata.clauses, &cl->chitem);
-    if(cl->ep->seqnum == ts_choose_seqnum) {
-        ++cl->ep->refs;
-        return;
-    }
-    cl->ep->seqnum = ts_choose_seqnum;
-    cl->ep->refs = 1;
-    cl->ep->tmp = -1;
-}
-
-void ts_choose_out(void *clause, chan ch, const void *val,
-      size_t len, int idx) {
-    if(ts_slow(!ch))
-        ts_panic("null channel used");
-    if(ts_slow(ch->done))
-        ts_panic("send to done-with channel");
-    if(ts_slow(ch->sz != len))
-        ts_panic("send of a type not matching the channel");
-    /* Find out whether the clause is immediately available. */
-    int available = !ts_list_empty(&ch->receiver.clauses) ||
-        ch->items < ch->bufsz ? 1 : 0;
-    if(available)
-        ++ts_running->choosedata.available;
-    /* If there are available clauses don't bother with non-available ones. */
-    if(!available && ts_running->choosedata.available)
-        return;
-    /* Fill in the clause entry. */
-    struct ts_clause *cl = (struct ts_clause*) clause;
-    cl->cr = ts_running;
-    cl->ep = &ch->sender;
-    cl->val = (void*)val;
-    cl->available = available;
-    cl->idx = idx;
-    cl->used = 1;
-    ts_slist_push_back(&ts_running->choosedata.clauses, &cl->chitem);
-    if(cl->ep->seqnum == ts_choose_seqnum) {
-        ++cl->ep->refs;
-        return;
-    }
-    cl->ep->seqnum = ts_choose_seqnum;
-    cl->ep->refs = 1;
-    cl->ep->tmp = -1;
 }
 
 static void ts_choose_callback(struct ts_timer *timer) {
@@ -207,25 +125,6 @@ static void ts_choose_callback(struct ts_timer *timer) {
         ts_list_erase(&itcl->ep->clauses, &itcl->epitem);
     }
     ts_resume(cr, -1);
-}
-
-void ts_choose_deadline(int64_t ddline) {
-    if(ts_slow(ts_running->choosedata.othws ||
-          ts_running->choosedata.ddline >= 0))
-        ts_panic(
-            "multiple 'otherwise' or 'deadline' clauses in a choose statement");
-    /* Infinite deadline clause can never fire so we can as well ignore it. */
-    if(ddline < 0)
-        return;
-    ts_running->choosedata.ddline = ddline;
-}
-
-void ts_choose_otherwise(void) {
-    if(ts_slow(ts_running->choosedata.othws ||
-          ts_running->choosedata.ddline >= 0))
-        ts_panic(
-            "multiple 'otherwise' or 'deadline' clauses in a choose statement");
-    ts_running->choosedata.othws = 1;
 }
 
 /* Push new item to the channel. */
@@ -279,7 +178,75 @@ static void ts_dequeue(chan ch, void *val) {
     }
 }
 
-int ts_choose_wait(void) {
+static int ts_choose_(struct chclause *clauses, int nclauses,
+      int64_t deadline) {
+    if(ts_slow(nclauses < 0 || (nclauses && !clauses))) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    ts_slist_init(&ts_running->choosedata.clauses);
+    ts_running->choosedata.ddline = -1;
+    ts_running->choosedata.available = 0;
+    ++ts_choose_seqnum;
+
+    int i;
+    for(i = 0; i != nclauses; ++i) {
+        struct ts_clause *cl = (struct ts_clause*)&clauses[i];
+        if(ts_slow(!cl->channel || cl->channel->sz != cl->len)) {
+            errno = EINVAL;
+            return -1;
+        }
+        int available;
+        switch(cl->op) {
+        case CHOOSE_CHS:
+            /* Cannot send to done-with channel. */
+            if(ts_slow(cl->channel->done)) {
+                errno = EPIPE;
+                return -1;
+            }
+            /* Find out whether the clause is immediately available. */
+            available = !ts_list_empty(&cl->channel->receiver.clauses) ||
+                cl->channel->items < cl->channel->bufsz ? 1 : 0;
+            if(available)
+                ++ts_running->choosedata.available;
+            /* Fill in the reserved fields in clause entry. */
+            cl->cr = ts_running;
+            cl->ep = &cl->channel->sender;
+            cl->available = available;
+            cl->idx = i;
+            cl->used = 1;
+            ts_slist_push_back(&ts_running->choosedata.clauses, &cl->chitem);
+            break;
+        case CHOOSE_CHR:
+            /* Find out whether the clause is immediately available. */
+            available = cl->channel->done ||
+                !ts_list_empty(&cl->channel->sender.clauses) ||
+                cl->channel->items ? 1 : 0;
+            if(available)
+                ++ts_running->choosedata.available;
+            /* Fill in the clause entry. */
+            cl->cr = ts_running;
+            cl->ep = &cl->channel->receiver;
+            cl->idx = i;
+            cl->available = available;
+            cl->used = 1;
+            ts_slist_push_back(&ts_running->choosedata.clauses, &cl->chitem);
+            break;
+        default:
+            errno = EINVAL;
+            return -1;
+        }
+        if(cl->ep->seqnum == ts_choose_seqnum) {
+            ++cl->ep->refs;
+        }
+        else {
+            cl->ep->seqnum = ts_choose_seqnum;
+            cl->ep->refs = 1;
+            cl->ep->tmp = -1;
+        }
+    }
+
     struct ts_choosedata *cd = &ts_running->choosedata;
     struct ts_slist_item *it;
     struct ts_clause *cl;
@@ -305,15 +272,19 @@ int ts_choose_wait(void) {
         return ts_suspend();
     }
 
-    /* If not so but there's an 'otherwise' clause we can go straight to it. */
-    if(cd->othws) {
+    /* If immediate execution was requested, exit now. */
+    if(deadline == 0) {
         ts_resume(ts_running, -1);
-        return ts_suspend();
+        ts_suspend();
+        errno = ETIMEDOUT;
+        return -1;
     }
 
     /* If deadline was specified, start the timer. */
-    if(cd->ddline >= 0)
-        ts_timer_add(&ts_running->timer, cd->ddline, ts_choose_callback);
+    if(deadline > 0) {
+        cd->ddline = deadline;
+        ts_timer_add(&ts_running->timer, deadline, ts_choose_callback);
+    }
 
     /* In all other cases register this coroutine with the queried channels
        and wait till one of the clauses unblocks. */
@@ -337,18 +308,23 @@ int ts_choose_wait(void) {
     return ts_suspend();
 }
 
+int ts_choose(struct chclause *clauses, int nclauses, int64_t deadline,
+      const char *current) {
+    ts_trace(current, "choose()");
+    ts_running->state = TS_CHOOSE;
+    ts_set_current(&ts_running->debug, current);
+    return ts_choose_(clauses, nclauses, deadline);
+}
+
 int ts_chs(chan ch, const void *val, size_t len, const char *current) {
     if(ts_slow(!ch || !val || len != ch->sz)) {
         errno = EINVAL;
         return -1;
     }
     ts_trace(current, "chs(<%d>)", (int)ch->debug.id);
-    ts_choose_init_(current);
     ts_running->state = TS_CHS;
-    struct ts_clause cl;
-    ts_choose_out(&cl, ch, val, len, 0);
-    ts_choose_wait();
-    return 0;
+    struct chclause cl = {ch, CHOOSE_CHS, (void*)val, len};
+    return ts_choose_(&cl, 1, -1);
 }
 
 int ts_chr(chan ch, void *val, size_t len, const char *current) {
@@ -358,11 +334,8 @@ int ts_chr(chan ch, void *val, size_t len, const char *current) {
     }
     ts_trace(current, "chr(<%d>)", (int)ch->debug.id);
     ts_running->state = TS_CHR;
-    ts_choose_init_(current);
-    struct ts_clause cl;
-    ts_choose_in(&cl, ch, val, len, 0);
-    ts_choose_wait();
-    return 0;
+    struct chclause cl = {ch, CHOOSE_CHR, val, len};
+    return ts_choose_(&cl, 1, -1);
 }
 
 int ts_chdone(chan ch, const void *val, size_t len, const char *current) {

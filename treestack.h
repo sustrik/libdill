@@ -143,8 +143,23 @@ TS_EXPORT void setcls(void *val);
 
 typedef struct ts_chan *chan;
 
-#define TS_CLAUSELEN (sizeof(struct{void *f1; void *f2; void *f3; void *f4; \
-    void *f5; void *f6; int f7; int f8; int f9;}))
+#define CHOOSE_CHS 1
+#define CHOOSE_CHR 2
+
+struct chclause {
+    chan channel;
+    int op;
+    void *val;
+    size_t len;
+    void *reserved1;
+    void *reserved2;
+    void *reserved3;
+    void *reserved4;
+    void *reserved5;
+    int reserved6;
+    int reserved7;
+    int reserved8;
+};
 
 #define chmake(type, bufsz) \
     ts_chmake(sizeof(type), bufsz, __FILE__ ":" ts_string(__LINE__))
@@ -164,6 +179,10 @@ typedef struct ts_chan *chan;
 #define chclose(channel) \
     ts_chclose((channel), __FILE__ ":" ts_string(__LINE__))
 
+#define choose(clauses, nclauses, deadline) \
+    ts_choose((clauses), (nclauses), (deadline), \
+    __FILE__ ":" ts_string(__LINE__))
+
 TS_EXPORT chan ts_chmake(size_t sz, size_t bufsz, const char *created);
 TS_EXPORT chan ts_chdup(chan ch, const char *created);
 TS_EXPORT int ts_chs(chan ch, const void *val, size_t len, const char *current);
@@ -171,92 +190,8 @@ TS_EXPORT int ts_chr(chan ch, void *val, size_t len, const char *current);
 TS_EXPORT int ts_chdone(chan ch, const void *val, size_t len,
     const char *current);
 TS_EXPORT void ts_chclose(chan ch, const char *current);
-
-#define ts_concat(x,y) x##y
-
-#define choose \
-    {\
-        ts_choose_init(__FILE__ ":" ts_string(__LINE__));\
-        int ts_idx = -2;\
-        while(1) {\
-            if(ts_idx != -2) {\
-                if(0)
-
-#define ts_in(chan, val, len, idx) \
-                    break;\
-                }\
-                goto ts_concat(ts_label, idx);\
-            }\
-            char ts_concat(ts_clause, idx)[TS_CLAUSELEN];\
-            ts_choose_in(\
-                &ts_concat(ts_clause, idx)[0], (chan), (val), (len), idx);\
-            if(0) {\
-                ts_concat(ts_label, idx):\
-                if(ts_idx == idx) {\
-                    goto ts_concat(ts_dummylabel, idx);\
-                    ts_concat(ts_dummylabel, idx)
-
-#define in(chan, val, len) ts_in((chan), (val), (len), __COUNTER__)
-
-#define ts_out(chan, val, len, idx) \
-                    break;\
-                }\
-                goto ts_concat(ts_label, idx);\
-            }\
-            char ts_concat(ts_clause, idx)[TS_CLAUSELEN];\
-            ts_choose_out(\
-                &ts_concat(ts_clause, idx)[0], (chan), (val), (len), idx);\
-            if(0) {\
-                ts_concat(ts_label, idx):\
-                if(ts_idx == idx) {\
-                    goto ts_concat(ts_dummylabel, idx);\
-                    ts_concat(ts_dummylabel, idx)
-
-#define out(chan, val, len) ts_out((chan), (val), (len), __COUNTER__)
-
-#define ts_deadline(ddline, idx) \
-                    break;\
-                }\
-                goto ts_concat(ts_label, idx);\
-            }\
-            ts_choose_deadline(ddline);\
-            if(0) {\
-                ts_concat(ts_label, idx):\
-                if(ts_idx == -1) {\
-                    goto ts_concat(ts_dummylabel, idx);\
-                    ts_concat(ts_dummylabel, idx)
-
-#define deadline(ddline) ts_deadline(ddline, __COUNTER__)
-
-#define ts_otherwise(idx) \
-                    break;\
-                }\
-                goto ts_concat(ts_label, idx);\
-            }\
-            ts_choose_otherwise();\
-            if(0) {\
-                ts_concat(ts_label, idx):\
-                if(ts_idx == -1) {\
-                    goto ts_concat(ts_dummylabel, idx);\
-                    ts_concat(ts_dummylabel, idx)
-
-#define otherwise ts_otherwise(__COUNTER__)
-
-#define end \
-                    break;\
-                }\
-            }\
-            ts_idx = ts_choose_wait();\
-        }
-
-TS_EXPORT void ts_choose_init(const char *current);
-TS_EXPORT void ts_choose_in(void *clause, chan ch, void *val,
-    size_t len, int idx);
-TS_EXPORT void ts_choose_out(void *clause, chan ch, const void *val,
-    size_t len, int idx);
-TS_EXPORT void ts_choose_deadline(int64_t ddline);
-TS_EXPORT void ts_choose_otherwise(void);
-TS_EXPORT int ts_choose_wait(void);
+TS_EXPORT int ts_choose(struct chclause *clauses, int nclauses,
+    int64_t deadline, const char *current);
 
 /******************************************************************************/
 /*  Debugging                                                                 */

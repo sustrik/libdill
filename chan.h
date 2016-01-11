@@ -35,8 +35,6 @@
 struct ts_choosedata {
     /* List of clauses in the 'choose' statement. */
     struct ts_slist clauses;
-    /* 1 if there is 'otherwise' clause. 0 if there is not. */
-    int othws;
     /* Deadline specified in 'deadline' clause. -1 if none. */
     int64_t ddline;
     /* Number of clauses that are immediately available. */
@@ -87,6 +85,11 @@ struct ts_chan {
 /* This structure represents a single clause in a choose statement.
    Similarly, both chs() and chr() each create a single clause. */
 struct ts_clause {
+    /* Publicly visible members. */
+    struct ts_chan *channel;
+    int op;
+    void *val;
+    size_t len;
     /* Member of list of clauses waiting for a channel endpoint. */
     struct ts_list_item epitem;
     /* Linked list of clauses in the choose statement. */
@@ -95,8 +98,6 @@ struct ts_clause {
     struct ts_cr *cr;
     /* Channel endpoint the clause is waiting for. */
     struct ts_ep *ep;
-    /* For out clauses, pointer to the value to send. NULL for in clauses. */
-    void *val;
     /* The index to jump to when the clause is executed. */
     int idx;
     /* If 0, there's no peer waiting for the clause at the moment.
@@ -105,9 +106,6 @@ struct ts_clause {
     /* If 1, the clause is in the list of channel's senders/receivers. */
     int used;
 };
-
-/* Returns pointer to the channel that contains specified endpoint. */
-struct ts_chan *ts_getchan(struct ts_ep *ep);
 
 #endif
 
