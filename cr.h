@@ -46,12 +46,12 @@ enum ts_state {
 /* The coroutine. The memory layout looks like this:
 
    +----------------------------------------------------+--------+---------+
-   |                                              stack | valbuf | ts_cr |
+   |                                              stack | valbuf |  ts_cr  |
    +----------------------------------------------------+--------+---------+
 
    - ts_cr contains generic book-keeping info about the coroutine
    - valbuf is a buffer for temporarily storing values received from channels
-   - stack is a standard C stack; it grows downwards (at the moment libmill
+   - stack is a standard C stack; it grows downwards (at the moment treestack
      doesn't support microarchitectures where stack grows upwards)
 
 */
