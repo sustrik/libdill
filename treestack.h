@@ -118,7 +118,7 @@ TS_EXPORT int ts_yield(const char *current);
 #define msleep(deadline) ts_msleep((deadline),\
     __FILE__ ":" ts_string(__LINE__))
 
-TS_EXPORT void ts_msleep(int64_t deadline, const char *current);
+TS_EXPORT int ts_msleep(int64_t deadline, const char *current);
 
 #define fdwait(fd, events, deadline) ts_fdwait((fd), (events), (deadline),\
     __FILE__ ":" ts_string(__LINE__))

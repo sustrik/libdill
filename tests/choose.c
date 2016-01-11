@@ -40,7 +40,8 @@ coroutine void sender2(chan ch, int val) {
 }
 
 coroutine void sender3(chan ch, int val, int64_t deadline) {
-    msleep(deadline);
+    int rc = msleep(deadline);
+    assert(rc == 0);
     chs(ch, int, val);
     chclose(ch);
 }
@@ -87,7 +88,8 @@ coroutine void feeder2(chan ch, int first, int second) {
 
 coroutine void feeder3(chan ch, int val) {
     while(1) {
-        msleep(10);
+        int rc = msleep(10);
+        assert(rc == 0);
         chs(ch, int, val);
     }
 }
@@ -364,7 +366,8 @@ int main() {
     chan ch20 = chmake(int, 0);
     go(feeder4(chdup(ch20)));
     for(i = 0; i != 100; ++i) {
-        msleep(10);
+        int rc = msleep(10);
+        assert(rc == 0);
         val = chr(ch20, int);
         switch(val) {
         case 1:

@@ -48,8 +48,9 @@ pid_t mfork(void) {
 }
 
 /* Pause current coroutine for a specified time interval. */
-void ts_msleep(int64_t deadline, const char *current) {
+int ts_msleep(int64_t deadline, const char *current) {
     ts_fdwait(-1, 0, deadline, current);
+    return 0;
 }
 
 static void ts_poller_callback(struct ts_timer *timer) {
