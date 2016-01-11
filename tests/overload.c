@@ -30,7 +30,8 @@
 coroutine void relay(chan src, chan dst) {
     while(1) {
        int val = chr(src, int);
-       chs(dst, int, val);
+       int rc = chs(dst, &val, sizeof(val));
+       assert(rc == 0);
     }
 }
 
@@ -41,7 +42,9 @@ int main() {
     go(relay(left, right));
     go(relay(right, left));
 
-    chs(left, int, 42);
+    int val = 42;
+    int rc = chs(left, &val, sizeof(val));
+    assert(rc == 0);
 
     /* Fail with exit code 128+SIGALRM if we deadlock */
     alarm(1);

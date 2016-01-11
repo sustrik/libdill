@@ -146,38 +146,29 @@ typedef struct ts_chan *chan;
 #define TS_CLAUSELEN (sizeof(struct{void *f1; void *f2; void *f3; void *f4; \
     void *f5; void *f6; int f7; int f8; int f9;}))
 
-#define chmake(type, bufsz) ts_chmake(sizeof(type), bufsz,\
-    __FILE__ ":" ts_string(__LINE__))
+#define chmake(type, bufsz) \
+    ts_chmake(sizeof(type), bufsz, __FILE__ ":" ts_string(__LINE__))
 
-#define chdup(channel) ts_chdup((channel),\
-    __FILE__ ":" ts_string(__LINE__))
+#define chdup(channel) \
+   ts_chdup((channel), __FILE__ ":" ts_string(__LINE__))
 
-#define chs(channel, type, value) \
-    do {\
-        type ts_val = (value);\
-        ts_chs((channel), &ts_val, sizeof(type),\
-            __FILE__ ":" ts_string(__LINE__));\
-    } while(0)
+#define chs(channel, val, len) \
+    ts_chs((channel), (val), (len), __FILE__ ":" ts_string(__LINE__))
 
 #define chr(channel, type) \
-    (*(type*)ts_chr((channel), sizeof(type),\
-        __FILE__ ":" ts_string(__LINE__)))
+    (*(type*)ts_chr((channel), sizeof(type), __FILE__ ":" ts_string(__LINE__)))
 
-#define chdone(channel, type, value) \
-    do {\
-        type ts_val = (value);\
-        ts_chdone((channel), &ts_val, sizeof(type),\
-             __FILE__ ":" ts_string(__LINE__));\
-    } while(0)
+#define chdone(channel, val, len) \
+    ts_chdone((channel), (val), (len), __FILE__ ":" ts_string(__LINE__))
 
-#define chclose(channel) ts_chclose((channel),\
-    __FILE__ ":" ts_string(__LINE__))
+#define chclose(channel) \
+    ts_chclose((channel), __FILE__ ":" ts_string(__LINE__))
 
 TS_EXPORT chan ts_chmake(size_t sz, size_t bufsz, const char *created);
 TS_EXPORT chan ts_chdup(chan ch, const char *created);
-TS_EXPORT void ts_chs(chan ch, void *val, size_t sz, const char *current);
+TS_EXPORT int ts_chs(chan ch, const void *val, size_t len, const char *current);
 TS_EXPORT void *ts_chr(chan ch, size_t sz, const char *current);
-TS_EXPORT void ts_chdone(chan ch, void *val, size_t sz,
+TS_EXPORT int ts_chdone(chan ch, const void *val, size_t len,
     const char *current);
 TS_EXPORT void ts_chclose(chan ch, const char *current);
 

@@ -56,7 +56,8 @@ coroutine void receiver(chan ch) {
     assert(sz == 1);
     assert(signo == SIGNAL);
 
-    chs(ch, char, signo);
+    int rc = chs(ch, &signo, sizeof(signo));
+    assert(rc == 0);
 }
 
 int main() {
@@ -72,7 +73,9 @@ int main() {
     for(i = 0; i < COUNT; ++i) {
         go(sender(sendch));
         go(receiver(recvch));
-        chs(sendch, char, SIGNAL);
+        char c = SIGNAL;
+        int rc = chs(sendch, &c, sizeof(c));
+        assert(rc == 0);
         int signo = chr(recvch, char);
         assert(signo == SIGNAL);
     }

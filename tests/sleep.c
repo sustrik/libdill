@@ -31,7 +31,8 @@
 
 coroutine static void delay(int n, chan ch) {
     msleep(now() + n);
-    chs(ch, int, n);
+    int rc = chs(ch, &n, sizeof(n));
+    assert(rc == 0);
 }
 
 int main() {

@@ -343,15 +343,18 @@ void *ts_choose_val(size_t sz) {
     return ts_valbuf(ts_running, sz);
 }
 
-void ts_chs(chan ch, void *val, size_t sz, const char *current) {
-    if(ts_slow(!ch))
-        ts_panic("null channel used");
+int ts_chs(chan ch, const void *val, size_t len, const char *current) {
+    if(ts_slow(!ch || !val || len != ch->sz)) {
+        errno = EINVAL;
+        return -1;
+    }
     ts_trace(current, "chs(<%d>)", (int)ch->debug.id);
     ts_choose_init_(current);
     ts_running->state = TS_CHS;
     struct ts_clause cl;
-    ts_choose_out(&cl, ch, val, sz, 0);
+    ts_choose_out(&cl, ch, (void*)val, len, 0);
     ts_choose_wait();
+    return 0;
 }
 
 void *ts_chr(chan ch, size_t sz, const char *current) {
@@ -366,14 +369,14 @@ void *ts_chr(chan ch, size_t sz, const char *current) {
     return ts_choose_val(sz);
 }
 
-void ts_chdone(chan ch, void *val, size_t sz, const char *current) {
-    if(ts_slow(!ch))
-        ts_panic("null channel used");
+int ts_chdone(chan ch, const void *val, size_t len, const char *current) {
+    if(ts_slow(!ch || !val || len != ch->sz)) {
+        errno = EINVAL;
+        return -1;
+    }
     ts_trace(current, "chdone(<%d>)", (int)ch->debug.id);
     if(ts_slow(ch->done))
         ts_panic("chdone on already done-with channel");
-    if(ts_slow(ch->sz != sz))
-        ts_panic("send of a type not matching the channel");
     /* Panic if there are other senders on the same channel. */
     if(ts_slow(!ts_list_empty(&ch->sender.clauses)))
         ts_panic("send to done-with channel");
@@ -388,5 +391,6 @@ void ts_chdone(chan ch, void *val, size_t sz, const char *current) {
         memcpy(ts_valbuf(cl->cr, ch->sz), val, ch->sz);
         ts_choose_unblock(cl);
     }
+    return 0;
 }
 

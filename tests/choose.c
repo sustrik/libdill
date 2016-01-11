@@ -28,21 +28,24 @@
 #include "../treestack.h"
 
 coroutine void sender1(chan ch, int val) {
-    chs(ch, int, val);
+    int rc = chs(ch, &val, sizeof(val));
+    assert(rc == 0);
     chclose(ch);
 }
 
 coroutine void sender2(chan ch, int val) {
     int rc = yield();
     assert(rc == 0);
-    chs(ch, int, val);
+    rc = chs(ch, &val, sizeof(val));
+    assert(rc == 0);
     chclose(ch);
 }
 
 coroutine void sender3(chan ch, int val, int64_t deadline) {
     int rc = msleep(deadline);
     assert(rc == 0);
-    chs(ch, int, val);
+    rc = chs(ch, &val, sizeof(val));
+    assert(rc == 0);
     chclose(ch);
 }
 
@@ -70,8 +73,9 @@ coroutine void choosesender(chan ch, int val) {
 
 coroutine void feeder(chan ch, int val) {
     while(1) {
-        chs(ch, int, val);
-        int rc = yield();
+        int rc = chs(ch, &val, sizeof(val));
+        assert(rc == 0);
+        rc = yield();
         assert(rc == 0);
     }
 }
@@ -90,7 +94,8 @@ coroutine void feeder3(chan ch, int val) {
     while(1) {
         int rc = msleep(10);
         assert(rc == 0);
-        chs(ch, int, val);
+        rc = chs(ch, &val, sizeof(val));
+        assert(rc == 0);
     }
 }
 
@@ -320,7 +325,8 @@ int main() {
     /* Test transferring a large object. */
     chan ch17 = chmake(struct large, 1);
     struct large large = {{0}};
-    chs(ch17, struct large, large);
+    int  rc = chs(ch17, &large, sizeof(large));
+    assert(rc == 0);
     choose {
     in(ch17, struct large, v):
     end
@@ -329,7 +335,9 @@ int main() {
 
     /* Test that 'in' on done-with channel fires. */
     chan ch18 = chmake(int, 0);
-    chdone(ch18, int, 2222);
+    val = 2222;
+    rc = chdone(ch18, &val, sizeof(val));
+    assert(rc == 0);
     choose {
     in(ch18, int, val):
         assert(val == 2222);

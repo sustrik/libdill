@@ -40,7 +40,8 @@ coroutine void sender(chan ch, int doyield, int val) {
         int rc = yield();
         assert(rc == 0);
     }
-    chs(ch, int, val);
+    int rc = chs(ch, &val, sizeof(val));
+    assert(rc == 0);
     chclose(ch);
 }
 
@@ -54,17 +55,21 @@ coroutine void receiver2(chan ch, int expected, chan back) {
     int val = chr(ch, int);
     assert(val == expected);
     chclose(ch);
-    chs(back, int, 0);
+    val = 0;
+    int rc = chs(back, &val, sizeof(val));
+    assert(rc == 0);
     chclose(back);
 }
 
 coroutine void charsender(chan ch, char val) {
-    chs(ch, char, val);
+    int rc = chs(ch, &val, sizeof(val));
+    assert(rc == 0);
     chclose(ch);
 }
 
 coroutine void structsender(chan ch, struct foo val) {
-    chs(ch, struct foo, val);
+    int rc = chs(ch, &val, sizeof(val));
+    assert(rc == 0);
     chclose(ch);
 }
 
@@ -101,8 +106,12 @@ int main() {
     chan ch4 = chmake(int, 0);
     go(receiver(chdup(ch4), 333));
     go(receiver(chdup(ch4), 444));
-    chs(ch4, int, 333);
-    chs(ch4, int, 444);
+    val = 333;
+    rc = chs(ch4, &val, sizeof(val));
+    assert(rc == 0);
+    val = 444;
+    rc = chs(ch4, &val, sizeof(val));
+    assert(rc == 0);
     chclose(ch4);
 
     /* Test typed channels. */
@@ -120,17 +129,27 @@ int main() {
 
     /* Test message buffering. */
     chan ch7 = chmake(int, 2);
-    chs(ch7, int, 222);
-    chs(ch7, int, 333);
+    val = 222;
+    rc = chs(ch7, &val, sizeof(val));
+    assert(rc == 0);
+    val = 333;
+    rc = chs(ch7, &val, sizeof(val));
+    assert(rc == 0);
     val = chr(ch7, int);
     assert(val == 222);
     val = chr(ch7, int);
     assert(val == 333);
-    chs(ch7, int, 444);
+    val = 444;
+    rc = chs(ch7, &val, sizeof(val));
+    assert(rc == 0);
     val = chr(ch7, int);
     assert(val == 444);
-    chs(ch7, int, 555);
-    chs(ch7, int, 666);
+    val = 555;
+    rc = chs(ch7, &val, sizeof(val));
+    assert(rc == 0);
+    val = 666;
+    rc = chs(ch7, &val, sizeof(val));
+    assert(rc == 0);
     val = chr(ch7, int);
     assert(val == 555);
     val = chr(ch7, int);
@@ -139,7 +158,9 @@ int main() {
 
     /* Test simple chdone() scenarios. */
     chan ch8 = chmake(int, 0);
-    chdone(ch8, int, 777);
+    val = 777;
+    rc = chdone(ch8, &val, sizeof(val));
+    assert(rc == 0);
     val = chr(ch8, int);
     assert(val == 777);
     val = chr(ch8, int);
@@ -148,15 +169,21 @@ int main() {
     assert(val == 777);
     chclose(ch8);
     chan ch9 = chmake(int, 10);
-    chdone(ch9, int, 888);
+    val = 888;
+    rc = chdone(ch9, &val, sizeof(val));
+    assert(rc == 0);
     val = chr(ch9, int);
     assert(val == 888);
     val = chr(ch9, int);
     assert(val == 888);
     chclose(ch9);
     chan ch10 = chmake(int, 10);
-    chs(ch10, int, 999);
-    chdone(ch10, int, 111);
+    val = 999;
+    rc = chs(ch10, &val, sizeof(val));
+    assert(rc == 0);
+    val = 111;
+    rc = chdone(ch10, &val, sizeof(val));
+    assert(rc == 0);
     val = chr(ch10, int);
     assert(val == 999);
     val = chr(ch10, int);
@@ -165,8 +192,12 @@ int main() {
     assert(val == 111);
     chclose(ch10);
     chan ch11 = chmake(int, 1);
-    chs(ch11, int, 222);
-    chdone(ch11, int, 333);
+    val = 222;
+    rc = chs(ch11, &val, sizeof(val));
+    assert(rc == 0);
+    val = 333;
+    rc = chdone(ch11, &val, sizeof(val));
+    assert(rc == 0);
     val = chr(ch11, int);
     assert(val == 222);
     val = chr(ch11, int);
@@ -178,7 +209,9 @@ int main() {
     chan ch13 = chmake(int, 0);
     go(receiver2(chdup(ch12), 444, chdup(ch13)));
     go(receiver2(chdup(ch12), 444, chdup(ch13)));
-    chdone(ch12, int, 444);
+    val = 444;
+    rc = chdone(ch12, &val, sizeof(val));
+    assert(rc == 0);
     val = chr(ch13, int);
     assert(val == 0);
     val = chr(ch13, int);
@@ -188,7 +221,9 @@ int main() {
 
     /* Test a combination of blocked sender and an item in the channel. */
     chan ch14 = chmake(int, 1);
-    chs(ch14, int, 1);
+    val = 1;
+    rc = chs(ch14, &val, sizeof(val));
+    assert(rc == 0);
     go(sender(chdup(ch14), 0, 2));
     val = chr(ch14, int);
     assert(val == 1);
