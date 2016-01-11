@@ -86,8 +86,8 @@ TS_EXPORT int64_t now(void);
 TS_EXPORT extern volatile int ts_unoptimisable1;
 TS_EXPORT extern volatile void *ts_unoptimisable2;
 
-TS_EXPORT void *ts_go_prologue(const char *created);
-TS_EXPORT void ts_go_epilogue(void);
+TS_EXPORT void *ts_prologue(const char *created);
+TS_EXPORT void ts_epilogue(void);
 
 #define ts_string2(x) #x
 #define ts_string(x) ts_string2(x)
@@ -100,14 +100,14 @@ TS_EXPORT void ts_go_epilogue(void);
 
 #define go(fn) \
     do {\
-        void *ts_sp = ts_go_prologue(__FILE__ ":" ts_string(__LINE__));\
+        void *ts_sp = ts_prologue(__FILE__ ":" ts_string(__LINE__));\
         if(ts_sp) {\
             int ts_anchor[ts_unoptimisable1];\
             ts_unoptimisable2 = &ts_anchor;\
             char ts_filler[(char*)&ts_anchor - (char*)(ts_sp)];\
             ts_unoptimisable2 = &ts_filler;\
             fn;\
-            ts_go_epilogue();\
+            ts_epilogue();\
         }\
     } while(0)
 

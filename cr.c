@@ -110,7 +110,7 @@ void ts_resume(struct ts_cr *cr, int result) {
 
 /* The intial part of go(). Starts the new coroutine.
    Returns the pointer to the top of its stack. */
-void *ts_go_prologue(const char *created) {
+void *ts_prologue(const char *created) {
     /* Ensure that debug functions are available whenever a single go()
        statement is present in the user's code. */
     ts_preserve_debug();
@@ -134,7 +134,7 @@ void *ts_go_prologue(const char *created) {
 }
 
 /* The final part of go(). Cleans up after the coroutine is finished. */
-void ts_go_epilogue(void) {
+void ts_epilogue(void) {
     ts_trace(NULL, "go() done");
     ts_unregister_cr(&ts_running->debug);
     if(ts_running->valbuf)
