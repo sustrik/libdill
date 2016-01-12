@@ -188,9 +188,9 @@ static int ts_choose_(struct chclause *clauses, int nclauses,
 
     ts_slist_init(&ts_running->choosedata.clauses);
     ts_running->choosedata.ddline = -1;
-    ts_running->choosedata.available = 0;
     ++ts_choose_seqnum;
 
+    int available = 0;
     int i;
     for(i = 0; i != nclauses; ++i) {
         struct ts_clause *cl = (struct ts_clause*)&clauses[i];
@@ -198,7 +198,7 @@ static int ts_choose_(struct chclause *clauses, int nclauses,
             errno = EINVAL;
             return -1;
         }
-        int available;
+        int av;
         switch(cl->op) {
         case CHOOSE_CHS:
             /* Cannot send to done-with channel. */
@@ -207,30 +207,30 @@ static int ts_choose_(struct chclause *clauses, int nclauses,
                 return -1;
             }
             /* Find out whether the clause is immediately available. */
-            available = !ts_list_empty(&cl->channel->receiver.clauses) ||
+            av = !ts_list_empty(&cl->channel->receiver.clauses) ||
                 cl->channel->items < cl->channel->bufsz ? 1 : 0;
-            if(available)
-                ++ts_running->choosedata.available;
+            if(av)
+                ++available;
             /* Fill in the reserved fields in clause entry. */
             cl->cr = ts_running;
             cl->ep = &cl->channel->sender;
-            cl->available = available;
+            cl->available = av;
             cl->idx = i;
             cl->used = 1;
             ts_slist_push_back(&ts_running->choosedata.clauses, &cl->chitem);
             break;
         case CHOOSE_CHR:
             /* Find out whether the clause is immediately available. */
-            available = cl->channel->done ||
+            av = cl->channel->done ||
                 !ts_list_empty(&cl->channel->sender.clauses) ||
                 cl->channel->items ? 1 : 0;
-            if(available)
-                ++ts_running->choosedata.available;
+            if(av)
+                ++available;
             /* Fill in the clause entry. */
             cl->cr = ts_running;
             cl->ep = &cl->channel->receiver;
             cl->idx = i;
-            cl->available = available;
+            cl->available = av;
             cl->used = 1;
             ts_slist_push_back(&ts_running->choosedata.clauses, &cl->chitem);
             break;
@@ -254,8 +254,8 @@ static int ts_choose_(struct chclause *clauses, int nclauses,
 
     /* If there are clauses that are immediately available
        randomly choose one of them. */
-    if(cd->available > 0) {
-        int chosen = cd->available == 1 ? 0 : (int)(random() % (cd->available));
+    if(available > 0) {
+        int chosen = available == 1 ? 0 : (int)(random() % available);
         for(it = ts_slist_begin(&cd->clauses); it; it = ts_slist_next(it)) {
             cl = ts_cont(it, struct ts_clause, chitem);
             if(!cl->available)

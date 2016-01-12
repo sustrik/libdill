@@ -37,8 +37,6 @@ struct ts_choosedata {
     struct ts_slist clauses;
     /* Deadline specified in 'deadline' clause. -1 if none. */
     int64_t ddline;
-    /* Number of clauses that are immediately available. */
-    int available;
 };
 
 /* Channel endpoint. */
