@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "../treestack.h"
+#include "../libdill.h"
 
 coroutine void sender1(chan ch, int val) {
     int rc = chs(ch, &val, sizeof(val));

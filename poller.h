@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -22,18 +22,18 @@
 
 */
 
-#ifndef TS_POLLER_INCLUDED
-#define TS_POLLER_INCLUDED
+#ifndef DILL_POLLER_INCLUDED
+#define DILL_POLLER_INCLUDED
 
-void ts_poller_init(void);
+void dill_poller_init(void);
 
-/* poller.c also implements ts_wait() and ts_fdwait() declared
+/* poller.c also implements dill_wait() and dill_fdwait() declared
    in treestack.h. */
 
 /* Wait till at least one coroutine is resumed. If block is set to 0 the
    function will poll for events and return immediately. If it is set to 1
    it will block until there's at least one event to process. */
-void ts_wait(int block);
+void dill_wait(int block);
 
 #endif
 

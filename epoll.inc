@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -31,72 +31,72 @@
 #include "cr.h"
 #include "utils.h"
 
-#define TS_ENDLIST 0xffffffff
+#define DILL_ENDLIST 0xffffffff
 
-#define TS_EPOLLSETSIZE 128
+#define DILL_EPOLLSETSIZE 128
 
 /* Global pollset. */
-static int ts_efd = -1;
+static int dill_efd = -1;
 
 /* Epoll allows to register only a single pointer with a file decriptor.
    However, we may need two pointers to coroutines. One for the coroutine
    waiting to receive data from the descriptor, one for the coroutine waiting
    to send data to the descriptor. Thus, we are going to keep an array of
    pointer pairs for each file descriptor. */
-struct ts_crpair {
-    struct ts_cr *in;
-    struct ts_cr *out;
+struct dill_crpair {
+    struct dill_cr *in;
+    struct dill_cr *out;
     uint32_t currevs;
-    /* 1-based index, 0 stands for "not part of the list", TS_ENDLIST
+    /* 1-based index, 0 stands for "not part of the list", DILL_ENDLIST
        stads for "no more elements in the list. */
     uint32_t next;
 };
 
-static struct ts_crpair *ts_crpairs = NULL;
-static int ts_ncrpairs = 0;
-static uint32_t ts_changelist = TS_ENDLIST;
+static struct dill_crpair *dill_crpairs = NULL;
+static int dill_ncrpairs = 0;
+static uint32_t dill_changelist = DILL_ENDLIST;
 
-void ts_poller_init(void) {
+void dill_poller_init(void) {
     struct rlimit rlim;
     int rc = getrlimit(RLIMIT_NOFILE, &rlim);
-    if(ts_slow(rc < 0)) return;
-    ts_ncrpairs = rlim.rlim_max;
-    ts_crpairs = (struct ts_crpair*)
-        calloc(ts_ncrpairs, sizeof(struct ts_crpair));
-    if(ts_slow(!ts_crpairs)) {errno = ENOMEM; return;}
-    ts_efd = epoll_create(1);
-    if(ts_slow(ts_efd < 0)) {
-        free(ts_crpairs);
-        ts_crpairs = NULL;
+    if(dill_slow(rc < 0)) return;
+    dill_ncrpairs = rlim.rlim_max;
+    dill_crpairs = (struct dill_crpair*)
+        calloc(dill_ncrpairs, sizeof(struct dill_crpair));
+    if(dill_slow(!dill_crpairs)) {errno = ENOMEM; return;}
+    dill_efd = epoll_create(1);
+    if(dill_slow(dill_efd < 0)) {
+        free(dill_crpairs);
+        dill_crpairs = NULL;
         return;
     }
     errno = 0;
 }
 
-pid_t ts_fork(void) {
+pid_t dill_fork(void) {
     pid_t pid = fork();
     if(pid != 0)
         return pid;
     /* In the child process we have to create a new kernel-side pollset,
        identical to the one in the parent process, yet not sharing its
        destiny. */
-    if(ts_efd != -1) {
-        int rc = close(ts_efd);
-        ts_assert(rc == 0);
-        ts_efd = epoll_create(1);
-        ts_assert(ts_efd >= 0);
+    if(dill_efd != -1) {
+        int rc = close(dill_efd);
+        dill_assert(rc == 0);
+        dill_efd = epoll_create(1);
+        dill_assert(dill_efd >= 0);
         int fd;
-        for(fd = 0; fd != ts_ncrpairs; ++fd) {
-            if(ts_crpairs[fd].currevs) {
+        for(fd = 0; fd != dill_ncrpairs; ++fd) {
+            if(dill_crpairs[fd].currevs) {
                 struct epoll_event ev;
                 ev.data.fd = fd;
                 ev.events = 0;
-                if(ts_crpairs[fd].currevs & FDW_IN)
+                if(dill_crpairs[fd].currevs & FDW_IN)
                     ev.events |= EPOLLIN;
-                if(ts_crpairs[fd].currevs & FDW_OUT)
+                if(dill_crpairs[fd].currevs & FDW_OUT)
                     ev.events |= EPOLLOUT;
-                rc = epoll_ctl(ts_efd, EPOLL_CTL_ADD, fd, &ev);
-                ts_assert(rc == 0);
+                rc = epoll_ctl(dill_efd, EPOLL_CTL_ADD, fd, &ev);
+                dill_assert(rc == 0);
             }
         }
     }
@@ -104,64 +104,64 @@ pid_t ts_fork(void) {
     return 0;
 }
 
-static void ts_poller_add(int fd, int events) {
-    struct ts_crpair *crp = &ts_crpairs[fd];
+static void dill_poller_add(int fd, int events) {
+    struct dill_crpair *crp = &dill_crpairs[fd];
     if(events & FDW_IN) {
         if(crp->in)
-            ts_panic(
+            dill_panic(
                 "multiple coroutines waiting for a single file descriptor");
-        crp->in = ts_running;
+        crp->in = dill_running;
     }
     if(events & FDW_OUT) {
         if(crp->out)
-            ts_panic(
+            dill_panic(
                 "multiple coroutines waiting for a single file descriptor");
-        crp->out = ts_running;
+        crp->out = dill_running;
     }
     if(!crp->next) {
-        crp->next = ts_changelist;
-        ts_changelist = fd + 1;
+        crp->next = dill_changelist;
+        dill_changelist = fd + 1;
     }
 }
 
-static void ts_poller_rm(int fd, int events) {
-    struct ts_crpair *crp = &ts_crpairs[fd];
+static void dill_poller_rm(int fd, int events) {
+    struct dill_crpair *crp = &dill_crpairs[fd];
     if(events & FDW_IN)
         crp->in = NULL;
     if(events & FDW_OUT)
         crp->out = NULL;
     if(!crp->next) {
-        crp->next = ts_changelist;
-        ts_changelist = fd + 1;
+        crp->next = dill_changelist;
+        dill_changelist = fd + 1;
     }
 }
 
-static void ts_poller_clean(int fd) {
-    struct ts_crpair *crp = &ts_crpairs[fd];
-    ts_assert(!crp->in);
-    ts_assert(!crp->out);
+static void dill_poller_clean(int fd) {
+    struct dill_crpair *crp = &dill_crpairs[fd];
+    dill_assert(!crp->in);
+    dill_assert(!crp->out);
     /* Remove the file descriptor from the pollset, if it is still present. */
     if(crp->currevs) {   
         struct epoll_event ev;
         ev.data.fd = fd;
         ev.events = 0;
-        int rc = epoll_ctl(ts_efd, EPOLL_CTL_DEL, fd, &ev);
-        ts_assert(rc == 0 || errno == ENOENT);
+        int rc = epoll_ctl(dill_efd, EPOLL_CTL_DEL, fd, &ev);
+        dill_assert(rc == 0 || errno == ENOENT);
     }
     /* Clean the cache. */
     crp->currevs = 0;
     if(!crp->next) {
-        crp->next = ts_changelist;
-        ts_changelist = fd + 1;
+        crp->next = dill_changelist;
+        dill_changelist = fd + 1;
     }
 }
 
-static int ts_poller_wait(int timeout) {
+static int dill_poller_wait(int timeout) {
     /* Apply any changes to the pollset.
        TODO: Use epoll_ctl_batch once available. */
-    while(ts_changelist != TS_ENDLIST) {
-        int fd = ts_changelist - 1;
-        struct ts_crpair *crp = &ts_crpairs[fd];
+    while(dill_changelist != DILL_ENDLIST) {
+        int fd = dill_changelist - 1;
+        struct dill_crpair *crp = &dill_crpairs[fd];
         struct epoll_event ev;
         ev.data.fd = fd;
         ev.events = 0;
@@ -178,26 +178,26 @@ static int ts_poller_wait(int timeout) {
             else
                  op = EPOLL_CTL_MOD;
             crp->currevs = ev.events;
-            int rc = epoll_ctl(ts_efd, op, fd, &ev);
-            ts_assert(rc == 0);
+            int rc = epoll_ctl(dill_efd, op, fd, &ev);
+            dill_assert(rc == 0);
         }
-        ts_changelist = crp->next;
+        dill_changelist = crp->next;
         crp->next = 0;
     }
     /* Wait for events. */
-    struct epoll_event evs[TS_EPOLLSETSIZE];
+    struct epoll_event evs[DILL_EPOLLSETSIZE];
     int numevs;
     while(1) {
-        numevs = epoll_wait(ts_efd, evs, TS_EPOLLSETSIZE, timeout);
+        numevs = epoll_wait(dill_efd, evs, DILL_EPOLLSETSIZE, timeout);
         if(numevs < 0 && errno == EINTR)
             continue;
-        ts_assert(numevs >= 0);
+        dill_assert(numevs >= 0);
         break;
     }
     /* Fire file descriptor events. */
     int i;
     for(i = 0; i != numevs; ++i) {
-        struct ts_crpair *crp = &ts_crpairs[evs[i].data.fd];
+        struct dill_crpair *crp = &dill_crpairs[evs[i].data.fd];
         int inevents = 0;
         int outevents = 0;
         /* Set the result values. */
@@ -211,17 +211,17 @@ static int ts_poller_wait(int timeout) {
         }
         /* Resume the blocked coroutines. */  
         if(crp->in == crp->out) {
-            ts_resume(crp->in, inevents | outevents);
-            ts_poller_rm(evs[i].data.fd, FDW_IN | FDW_OUT);
+            dill_resume(crp->in, inevents | outevents);
+            dill_poller_rm(evs[i].data.fd, FDW_IN | FDW_OUT);
         }
         else {
             if(crp->in && inevents) {
-                ts_resume(crp->in, inevents);
-                ts_poller_rm(evs[i].data.fd, FDW_IN);
+                dill_resume(crp->in, inevents);
+                dill_poller_rm(evs[i].data.fd, FDW_IN);
             }
             if(crp->out && outevents) {
-                ts_resume(crp->out, outevents);
-                ts_poller_rm(evs[i].data.fd, FDW_OUT);
+                dill_resume(crp->out, outevents);
+                dill_poller_rm(evs[i].data.fd, FDW_OUT);
             }
         }
     }

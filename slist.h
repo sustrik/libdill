@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -22,44 +22,44 @@
 
 */
 
-#ifndef TS_SLIST_INCLUDED
-#define TS_SLIST_INCLUDED
+#ifndef DILL_SLIST_INCLUDED
+#define DILL_SLIST_INCLUDED
 
 /* Singly-linked list. Having both push and push_back functions means that
    it can be used both as a queue and as a stack. */
 
-struct ts_slist_item {
-    struct ts_slist_item *next;
+struct dill_slist_item {
+    struct dill_slist_item *next;
 };
 
-struct ts_slist {
-    struct ts_slist_item *first;
-    struct ts_slist_item *last;
+struct dill_slist {
+    struct dill_slist_item *first;
+    struct dill_slist_item *last;
 };
 
 /* Initialise the list. To statically initialise the list use = {0}. */
-void ts_slist_init(struct ts_slist *self);
+void dill_slist_init(struct dill_slist *self);
 
 /* True is the list has no items. */
-#define ts_slist_empty(self) (!((self)->first))
+#define dill_slist_empty(self) (!((self)->first))
 
 /* Returns iterator to the first item in the list or NULL if
    the list is empty. */
-#define ts_slist_begin(self) ((self)->first)
+#define dill_slist_begin(self) ((self)->first)
 
 /* Returns iterator to one past the item pointed to by 'it'.
    If there are no more items returns NULL. */
-#define ts_slist_next(it) ((it)->next)
+#define dill_slist_next(it) ((it)->next)
 
 /* Push the item to the beginning of the list. */
-void ts_slist_push(struct ts_slist *self, struct ts_slist_item *item);
+void dill_slist_push(struct dill_slist *self, struct dill_slist_item *item);
 
 /* Push the item to the end of the list. */
-void ts_slist_push_back(struct ts_slist *self,
-    struct ts_slist_item *item);
+void dill_slist_push_back(struct dill_slist *self,
+    struct dill_slist_item *item);
 
 /* Pop an item from the beginning of the list. */
-struct ts_slist_item *ts_slist_pop(struct ts_slist *self);
+struct dill_slist_item *dill_slist_pop(struct dill_slist *self);
 
 #endif
 

@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -22,16 +22,16 @@
 
 */
 
-#ifndef TS_STACK_INCLUDED
-#define TS_STACK_INCLUDED
+#ifndef DILL_STACK_INCLUDED
+#define DILL_STACK_INCLUDED
 
 #include <stddef.h>
 
 /* Allocates new stack. Returns pointer to the *top* of the stack.
    For now we assume that the stack grows downwards. */
-void *ts_allocstack(void);
+void *dill_allocstack(void);
 
 /* Deallocates a stack. The argument is pointer to the top of the stack. */
-void ts_freestack(void *stack);
+void dill_freestack(void *stack);
 
 #endif

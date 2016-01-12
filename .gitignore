@@ -13,7 +13,7 @@ config.sub
 configure
 depcomp
 install-sh
-treestack.pc
+libdill.pc
 *.o
 *.lo
 *.la

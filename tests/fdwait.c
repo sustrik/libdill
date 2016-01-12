@@ -30,7 +30,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include "../treestack.h"
+#include "../libdill.h"
 
 coroutine void trigger(int fd, int64_t deadline) {
     msleep(deadline);

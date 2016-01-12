@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#include "../treestack.h"
+#include "../libdill.h"
 
 coroutine static void delay(int n, chan ch) {
     msleep(now() + n);

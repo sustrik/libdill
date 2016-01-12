@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -22,43 +22,43 @@
 
 */
 
-#ifndef TS_LIST_INCLUDED
-#define TS_LIST_INCLUDED
+#ifndef DILL_LIST_INCLUDED
+#define DILL_LIST_INCLUDED
 
 /* Doubly-linked list. */
 
-struct ts_list_item {
-    struct ts_list_item *next;
-    struct ts_list_item *prev;
+struct dill_list_item {
+    struct dill_list_item *next;
+    struct dill_list_item *prev;
 };
 
-struct ts_list {
-    struct ts_list_item *first;
-    struct ts_list_item *last;
+struct dill_list {
+    struct dill_list_item *first;
+    struct dill_list_item *last;
 };
 
 /* Initialise the list. To statically initialise the list use = {0}. */
-void ts_list_init(struct ts_list *self);
+void dill_list_init(struct dill_list *self);
 
 /* True is the list has no items. */
-#define ts_list_empty(self) (!((self)->first))
+#define dill_list_empty(self) (!((self)->first))
 
 /* Returns iterator to the first item in the list or NULL if
    the list is empty. */
-#define ts_list_begin(self) ((self)->first)
+#define dill_list_begin(self) ((self)->first)
 
 /* Returns iterator to one past the item pointed to by 'it'. */
-#define ts_list_next(it) ((it)->next)
+#define dill_list_next(it) ((it)->next)
 
 /* Adds the item to the list before the item pointed to by 'it'.
    If 'it' is NULL the item is inserted to the end of the list. */
-void ts_list_insert(struct ts_list *self, struct ts_list_item *item,
-    struct ts_list_item *it);
+void dill_list_insert(struct dill_list *self, struct dill_list_item *item,
+    struct dill_list_item *it);
 
 /* Removes the item from the list and returns pointer to the next item in the
    list. Item must be part of the list. */
-struct ts_list_item *ts_list_erase(struct ts_list *self,
-    struct ts_list_item *item);
+struct dill_list_item *dill_list_erase(struct dill_list *self,
+    struct dill_list_item *item);
 
 #endif
 

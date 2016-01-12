@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -22,8 +22,8 @@
 
 */
 
-#ifndef TS_CR_INCLUDED
-#define TS_CR_INCLUDED
+#ifndef DILL_CR_INCLUDED
+#define DILL_CR_INCLUDED
 
 #include <stdint.h>
 
@@ -34,33 +34,33 @@
 #include "timer.h"
 #include "utils.h"
 
-enum ts_state {
-    TS_READY,
-    TS_MSLEEP,
-    TS_FDWAIT,
-    TS_CHR,
-    TS_CHS,
-    TS_CHOOSE
+enum dill_state {
+    DILL_READY,
+    DILL_MSLEEP,
+    DILL_FDWAIT,
+    DILL_CHR,
+    DILL_CHS,
+    DILL_CHOOSE
 };
 
 /* The coroutine. The memory layout looks like this:
 
    +-------------------------------------------------------------+---------+
-   |                                                      stack  |  ts_cr  |
+   |                                                      stack  | dill_cr |
    +-------------------------------------------------------------+---------+
 
-   - ts_cr contains generic book-keeping info about the coroutine
+   - dill_cr contains generic book-keeping info about the coroutine
    - stack is a standard C stack; it grows downwards (at the moment treestack
      doesn't support microarchitectures where stack grows upwards)
 
 */
-struct ts_cr {
+struct dill_cr {
     /* The coroutine is stored in this list if it is not blocked and it is
        waiting to be executed. */
-    struct ts_slist_item ready;
+    struct dill_slist_item ready;
 
     /* If the coroutine is waiting for a deadline, it uses this timer. */
-    struct ts_timer timer;
+    struct dill_timer timer;
 
     /* When the coroutine is blocked in fdwait(), these members contains the
        file descriptor and events that the function waits for. They are used
@@ -70,10 +70,10 @@ struct ts_cr {
 
     /* This structure is used when the coroutine is executing a choose
        statement. */
-    struct ts_choosedata choosedata;
+    struct dill_choosedata choosedata;
 
     /* Stored coroutine context while it is not executing. */
-    struct ts_ctx ctx;
+    struct dill_ctx ctx;
 
     /* Argument to resume() call being passed to the blocked suspend() call. */
     int result;
@@ -82,11 +82,11 @@ struct ts_cr {
     void *cls;
 
     /* Debugging info. */
-    struct ts_debug_cr debug;
+    struct dill_debug_cr debug;
 
-    /* TODO: Following fields should go to ts_debug_cr. */
+    /* TODO: Following fields should go to dill_debug_cr. */
     /* Status of the coroutine. Used for debugging purposes. */
-    enum ts_state state;
+    enum dill_state state;
 
     /* If coroutine is stuck in choose(), here are the clauses.
        Used for debugging. */
@@ -95,19 +95,19 @@ struct ts_cr {
 };
 
 /* Fake coroutine corresponding to the main thread of execution. */
-extern struct ts_cr ts_main;
+extern struct dill_cr dill_main;
 
 /* The coroutine that is running at the moment. */
-extern struct ts_cr *ts_running;
+extern struct dill_cr *dill_running;
 
 /* Suspend running coroutine. Move to executing different coroutines. Once
-   someone resumes this coroutine using ts_resume function 'result' argument
+   someone resumes this coroutine using dill_resume function 'result' argument
    of that function will be returned. */
-int ts_suspend(void);
+int dill_suspend(void);
 
 /* Schedules preiously suspended coroutine for execution. Keep in mind that
    it doesn't immediately run it, just puts it into the queue of ready
    coroutines. */
-void ts_resume(struct ts_cr *cr, int result);
+void dill_resume(struct dill_cr *cr, int result);
 
 #endif

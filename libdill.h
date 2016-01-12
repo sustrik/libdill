@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -22,8 +22,8 @@
 
 */
 
-#ifndef TREESTACK_H_INCLUDED
-#define TREESTACK_H_INCLUDED
+#ifndef LIBDILL_H_INCLUDED
+#define LIBDILL_H_INCLUDED
 
 #include <errno.h>
 #include <stddef.h>
@@ -40,35 +40,35 @@
 /*  www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html  */
 
 /*  The current interface version. */
-#define TS_VERSION_CURRENT 0
+#define DILL_VERSION_CURRENT 0
 
 /*  The latest revision of the current interface. */
-#define TS_VERSION_REVISION 0
+#define DILL_VERSION_REVISION 0
 
 /*  How many past interface versions are still supported. */
-#define TS_VERSION_AGE 0
+#define DILL_VERSION_AGE 0
 
 /******************************************************************************/
 /*  Symbol visibility                                                         */
 /******************************************************************************/
 
-#if defined TS_NO_EXPORTS
-#   define TS_EXPORT
+#if defined DILL_NO_EXPORTS
+#   define DILL_EXPORT
 #else
 #   if defined _WIN32
-#      if defined TS_EXPORTS
-#          define TS_EXPORT __declspec(dllexport)
+#      if defined DILL_EXPORTS
+#          define DILL_EXPORT __declspec(dllexport)
 #      else
-#          define TS_EXPORT __declspec(dllimport)
+#          define DILL_EXPORT __declspec(dllimport)
 #      endif
 #   else
 #      if defined __SUNPRO_C
-#          define TS_EXPORT __global
+#          define DILL_EXPORT __global
 #      elif (defined __GNUC__ && __GNUC__ >= 4) || \
              defined __INTEL_COMPILER || defined __clang__
-#          define TS_EXPORT __attribute__ ((visibility("default")))
+#          define DILL_EXPORT __attribute__ ((visibility("default")))
 #      else
-#          define TS_EXPORT
+#          define DILL_EXPORT
 #      endif
 #   endif
 #endif
@@ -77,20 +77,20 @@
 /*  Helpers                                                                   */
 /******************************************************************************/
 
-TS_EXPORT int64_t now(void);
+DILL_EXPORT int64_t now(void);
 
 /******************************************************************************/
 /*  Coroutines                                                                */
 /******************************************************************************/
 
-TS_EXPORT extern volatile int ts_unoptimisable1;
-TS_EXPORT extern volatile void *ts_unoptimisable2;
+DILL_EXPORT extern volatile int dill_unoptimisable1;
+DILL_EXPORT extern volatile void *dill_unoptimisable2;
 
-TS_EXPORT void *ts_prologue(const char *created);
-TS_EXPORT void ts_epilogue(void);
+DILL_EXPORT void *dill_prologue(const char *created);
+DILL_EXPORT void dill_epilogue(void);
 
-#define ts_string2(x) #x
-#define ts_string(x) ts_string2(x)
+#define dill_string2(x) #x
+#define dill_string(x) dill_string2(x)
 
 #if defined __GNUC__ || defined __clang__
 #define coroutine __attribute__((noinline))
@@ -100,48 +100,48 @@ TS_EXPORT void ts_epilogue(void);
 
 #define go(fn) \
     do {\
-        void *ts_sp = ts_prologue(__FILE__ ":" ts_string(__LINE__));\
-        if(ts_sp) {\
-            int ts_anchor[ts_unoptimisable1];\
-            ts_unoptimisable2 = &ts_anchor;\
-            char ts_filler[(char*)&ts_anchor - (char*)(ts_sp)];\
-            ts_unoptimisable2 = &ts_filler;\
+        void *dill_sp = dill_prologue(__FILE__ ":" dill_string(__LINE__));\
+        if(dill_sp) {\
+            int dill_anchor[dill_unoptimisable1];\
+            dill_unoptimisable2 = &dill_anchor;\
+            char dill_filler[(char*)&dill_anchor - (char*)(dill_sp)];\
+            dill_unoptimisable2 = &dill_filler;\
             fn;\
-            ts_epilogue();\
+            dill_epilogue();\
         }\
     } while(0)
 
-#define yield() ts_yield(__FILE__ ":" ts_string(__LINE__))
+#define yield() dill_yield(__FILE__ ":" dill_string(__LINE__))
 
-TS_EXPORT int ts_yield(const char *current);
+DILL_EXPORT int dill_yield(const char *current);
 
-#define msleep(deadline) ts_msleep((deadline),\
-    __FILE__ ":" ts_string(__LINE__))
+#define msleep(deadline) dill_msleep((deadline),\
+    __FILE__ ":" dill_string(__LINE__))
 
-TS_EXPORT int ts_msleep(int64_t deadline, const char *current);
+DILL_EXPORT int dill_msleep(int64_t deadline, const char *current);
 
-#define fdwait(fd, events, deadline) ts_fdwait((fd), (events), (deadline),\
-    __FILE__ ":" ts_string(__LINE__))
+#define fdwait(fd, events, deadline) dill_fdwait((fd), (events), (deadline),\
+    __FILE__ ":" dill_string(__LINE__))
 
-TS_EXPORT void fdclean(int fd);
+DILL_EXPORT void fdclean(int fd);
 
 #define FDW_IN 1
 #define FDW_OUT 2
 #define FDW_ERR 4
 
-TS_EXPORT int ts_fdwait(int fd, int events, int64_t deadline,
+DILL_EXPORT int dill_fdwait(int fd, int events, int64_t deadline,
     const char *current);
 
-TS_EXPORT pid_t mfork(void);
+DILL_EXPORT pid_t mfork(void);
 
-TS_EXPORT void *cls(void);
-TS_EXPORT void setcls(void *val);
+DILL_EXPORT void *cls(void);
+DILL_EXPORT void setcls(void *val);
 
 /******************************************************************************/
 /*  Channels                                                                  */
 /******************************************************************************/
 
-typedef struct ts_chan *chan;
+typedef struct dill_chan *chan;
 
 #define CHOOSE_CHS 1
 #define CHOOSE_CHR 2
@@ -162,43 +162,48 @@ struct chclause {
 };
 
 #define chmake(itemsz, bufsz) \
-    ts_chmake((itemsz), (bufsz), __FILE__ ":" ts_string(__LINE__))
+    dill_chmake((itemsz), (bufsz), __FILE__ ":" dill_string(__LINE__))
 
 #define chdup(channel) \
-   ts_chdup((channel), __FILE__ ":" ts_string(__LINE__))
+   dill_chdup((channel), __FILE__ ":" dill_string(__LINE__))
 
 #define chs(channel, val, len) \
-    ts_chs((channel), (val), (len), __FILE__ ":" ts_string(__LINE__))
+    dill_chs((channel), (val), (len), __FILE__ ":" dill_string(__LINE__))
 
 #define chr(channel, val, len) \
-    ts_chr((channel), (val), (len), __FILE__ ":" ts_string(__LINE__))
+    dill_chr((channel), (val), (len), __FILE__ ":" dill_string(__LINE__))
 
 #define chdone(channel, val, len) \
-    ts_chdone((channel), (val), (len), __FILE__ ":" ts_string(__LINE__))
+    dill_chdone((channel), (val), (len), __FILE__ ":" dill_string(__LINE__))
 
 #define chclose(channel) \
-    ts_chclose((channel), __FILE__ ":" ts_string(__LINE__))
+    dill_chclose((channel), __FILE__ ":" dill_string(__LINE__))
 
 #define choose(clauses, nclauses, deadline) \
-    ts_choose((clauses), (nclauses), (deadline), \
-    __FILE__ ":" ts_string(__LINE__))
+    dill_choose((clauses), (nclauses), (deadline), \
+    __FILE__ ":" dill_string(__LINE__))
 
-TS_EXPORT chan ts_chmake(size_t itemsz, size_t bufsz, const char *created);
-TS_EXPORT chan ts_chdup(chan ch, const char *created);
-TS_EXPORT int ts_chs(chan ch, const void *val, size_t len, const char *current);
-TS_EXPORT int ts_chr(chan ch, void *val, size_t len, const char *current);
-TS_EXPORT int ts_chdone(chan ch, const void *val, size_t len,
+DILL_EXPORT chan dill_chmake(size_t itemsz, size_t bufsz,
+    const char *created);
+DILL_EXPORT chan dill_chdup(chan ch,
+    const char *created);
+DILL_EXPORT int dill_chs(chan ch, const void *val, size_t len,
     const char *current);
-TS_EXPORT void ts_chclose(chan ch, const char *current);
-TS_EXPORT int ts_choose(struct chclause *clauses, int nclauses,
+DILL_EXPORT int dill_chr(chan ch, void *val, size_t len,
+    const char *current);
+DILL_EXPORT int dill_chdone(chan ch, const void *val, size_t len,
+    const char *current);
+DILL_EXPORT void dill_chclose(chan ch,
+    const char *current);
+DILL_EXPORT int dill_choose(struct chclause *clauses, int nclauses,
     int64_t deadline, const char *current);
 
 /******************************************************************************/
 /*  Debugging                                                                 */
 /******************************************************************************/
 
-TS_EXPORT void goredump(void);
-TS_EXPORT void gotrace(int level);
+DILL_EXPORT void goredump(void);
+DILL_EXPORT void gotrace(int level);
 
 #endif
 

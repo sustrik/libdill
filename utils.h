@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -22,8 +22,8 @@
 
 */
 
-#ifndef TS_UTILS_H_INCLUDED
-#define TS_UTILS_H_INCLUDED
+#ifndef DILL_UTILS_H_INCLUDED
+#define DILL_UTILS_H_INCLUDED
 
 #include <setjmp.h>
 #include <stddef.h>
@@ -32,39 +32,39 @@
 #include <stdlib.h>
 
 /* For now use longjmp. Replace by a different mechanism as needed. */
-struct ts_ctx {
+struct dill_ctx {
     sigjmp_buf jbuf;
 };
 
-#define ts_setjmp(ctx) sigsetjmp((ctx)->jbuf, 0)
-#define ts_jmp(ctx) siglongjmp((ctx)->jbuf, 1)
+#define dill_setjmp(ctx) sigsetjmp((ctx)->jbuf, 0)
+#define dill_jmp(ctx) siglongjmp((ctx)->jbuf, 1)
 
 /*  Takes a pointer to a member variable and computes pointer to the structure
     that contains it. 'type' is type of the structure, not the member. */
-#define ts_cont(ptr, type, member) \
+#define dill_cont(ptr, type, member) \
     (ptr ? ((type*) (((char*) ptr) - offsetof(type, member))) : NULL)
 
 /* Compile-time assert. */
-#define TS_CT_ASSERT_HELPER2(prefix, line) \
+#define DILL_CT_ASSERT_HELPER2(prefix, line) \
     prefix##line
-#define TS_CT_ASSERT_HELPER1(prefix, line) \
-    TS_CT_ASSERT_HELPER2(prefix, line)
-#define TS_CT_ASSERT(x) \
-    typedef int TS_CT_ASSERT_HELPER1(ct_assert_,__COUNTER__) [(x) ? 1 : -1]
+#define DILL_CT_ASSERT_HELPER1(prefix, line) \
+    DILL_CT_ASSERT_HELPER2(prefix, line)
+#define DILL_CT_ASSERT(x) \
+    typedef int DILL_CT_ASSERT_HELPER1(ct_assert_,__COUNTER__) [(x) ? 1 : -1]
 
 #if defined __GNUC__ || defined __llvm__
-#define ts_fast(x) __builtin_expect(!!(x), 1)
-#define ts_slow(x) __builtin_expect(!!(x), 0)
+#define dill_fast(x) __builtin_expect(!!(x), 1)
+#define dill_slow(x) __builtin_expect(!!(x), 0)
 #else
-#define ts_fast(x) (x)
-#define ts_slow(x) (x)
+#define dill_fast(x) (x)
+#define dill_slow(x) (x)
 #endif
 
 /* Define our own assert. This way we are sure that it stays in place even
    if the standard C assert would be thrown away by the compiler. */
-#define ts_assert(x) \
+#define dill_assert(x) \
     do {\
-        if (ts_slow(!(x))) {\
+        if (dill_slow(!(x))) {\
             fprintf(stderr, "Assert failed: " #x " (%s:%d)\n",\
                 __FILE__, __LINE__);\
             fflush(stderr);\

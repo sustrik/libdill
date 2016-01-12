@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "../treestack.h"
+#include "../libdill.h"
 
 #define SIGNAL SIGUSR1
 #define COUNT 1000

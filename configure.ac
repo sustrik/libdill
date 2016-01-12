@@ -26,9 +26,9 @@
 
 AC_PREREQ([2.53])
 
-AC_INIT([treestack], [m4_esyscmd([./package_version.sh])],
-   [libmill@freelists.org], [treestack], [http://example.org/])
-AC_CONFIG_SRCDIR([treestack.pc.in])
+AC_INIT([libdill], [m4_esyscmd([./package_version.sh])],
+   [libmill@freelists.org], [libdill], [http://example.org/])
+AC_CONFIG_SRCDIR([libdill.pc.in])
 AM_INIT_AUTOMAKE([1.6 foreign subdir-objects tar-ustar])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
@@ -41,16 +41,16 @@ AC_CANONICAL_HOST
 AC_PROG_SED
 AC_PROG_AWK
 
-TS_ABI_VERSION=m4_esyscmd([./abi_version.sh])
-TS_PACKAGE_VERSION=m4_esyscmd([./package_version.sh])
-TS_LIBTOOL_VERSION=m4_esyscmd([./abi_version.sh -libtool])
+DILL_ABI_VERSION=m4_esyscmd([./abi_version.sh])
+DILL_PACKAGE_VERSION=m4_esyscmd([./package_version.sh])
+DILL_LIBTOOL_VERSION=m4_esyscmd([./abi_version.sh -libtool])
 
-AC_SUBST(TS_ABI_VERSION)
-AC_SUBST(TS_PACKAGE_VERSION)
-AC_SUBST(TS_LIBTOOL_VERSION)
+AC_SUBST(DILL_ABI_VERSION)
+AC_SUBST(DILL_PACKAGE_VERSION)
+AC_SUBST(DILL_LIBTOOL_VERSION)
 
-AC_MSG_NOTICE([treestack package version: $TS_PACKAGE_VERSION])
-AC_MSG_NOTICE([treestack ABI version: $TS_ABI_VERSION])
+AC_MSG_NOTICE([libdill package version: $DILL_PACKAGE_VERSION])
+AC_MSG_NOTICE([libdill ABI version: $DILL_ABI_VERSION])
 
 ################################################################################
 #  Check the compilers.                                                        #
@@ -80,8 +80,8 @@ AC_CHECK_FUNC([mprotect], [AC_DEFINE([HAVE_MPROTECT])])
 AC_CHECK_LIB([rt], [clock_gettime])
 AC_CHECK_FUNCS([clock_gettime])
 AC_CHECK_LIB([socket], [socket])
-AC_CHECK_FUNCS([epoll_create], [] ,[AC_DEFINE([TS_NO_EPOLL])])
-AC_CHECK_FUNCS([kqueue], [] ,[AC_DEFINE([TS_NO_KQUEUE])])
+AC_CHECK_FUNCS([epoll_create], [] ,[AC_DEFINE([DILL_NO_EPOLL])])
+AC_CHECK_FUNCS([kqueue], [] ,[AC_DEFINE([DILL_NO_KQUEUE])])
 
 ################################################################################
 #  Libtool                                                                     #
@@ -95,6 +95,6 @@ LT_INIT
 
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_OUTPUT([Makefile treestack.pc])
+AC_OUTPUT([Makefile libdill.pc])
 cp confdefs.h config.h
 

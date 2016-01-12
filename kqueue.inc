@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -34,72 +34,72 @@
 #include "cr.h"
 #include "utils.h"
 
-#define TS_ENDLIST 0xffffffff
+#define DILL_ENDLIST 0xffffffff
 
-#define TS_CHNGSSIZE 128
-#define TS_EVSSIZE 128
+#define DILL_CHNGSSIZE 128
+#define DILL_EVSSIZE 128
 
-static int ts_kfd = -1;
+static int dill_kfd = -1;
 
-struct ts_crpair {
-    struct ts_cr *in;
-    struct ts_cr *out;
+struct dill_crpair {
+    struct dill_cr *in;
+    struct dill_cr *out;
     uint16_t currevs;
     uint16_t firing;
-    /* 1-based index, 0 stands for "not part of the list", TS_ENDLIST
+    /* 1-based index, 0 stands for "not part of the list", DILL_ENDLIST
        stads for "no more elements in the list. */
     uint32_t next;
 };
 
-static struct ts_crpair *ts_crpairs = NULL;
-static int ts_ncrpairs = 0;
-static uint32_t ts_changelist = TS_ENDLIST;
+static struct dill_crpair *dill_crpairs = NULL;
+static int dill_ncrpairs = 0;
+static uint32_t dill_changelist = DILL_ENDLIST;
 
-void ts_poller_init(void) {
+void dill_poller_init(void) {
     struct rlimit rlim;
     int rc = getrlimit(RLIMIT_NOFILE, &rlim);
-    if(ts_slow(rc < 0)) return;
-    ts_ncrpairs = rlim.rlim_max;
+    if(dill_slow(rc < 0)) return;
+    dill_ncrpairs = rlim.rlim_max;
     /* The above behaves weirdly on newer versions of OSX, ruturning limit
        of -1. Fix it by using OPEN_MAX instead. */
-    if(ts_ncrpairs < 0)
-        ts_ncrpairs = OPEN_MAX;
-    ts_crpairs = (struct ts_crpair*)
-        calloc(ts_ncrpairs, sizeof(struct ts_crpair));
-    if(ts_slow(!ts_crpairs)) {errno = ENOMEM; return;}
-    ts_kfd = kqueue();
-    if(ts_slow(ts_kfd < 0)) {
-        free(ts_crpairs);
-        ts_crpairs = NULL;
+    if(dill_ncrpairs < 0)
+        dill_ncrpairs = OPEN_MAX;
+    dill_crpairs = (struct dill_crpair*)
+        calloc(dill_ncrpairs, sizeof(struct dill_crpair));
+    if(dill_slow(!dill_crpairs)) {errno = ENOMEM; return;}
+    dill_kfd = kqueue();
+    if(dill_slow(dill_kfd < 0)) {
+        free(dill_crpairs);
+        dill_crpairs = NULL;
         return;
     }
     errno = 0;
 }
 
-pid_t ts_fork(void) {
+pid_t dill_fork(void) {
     pid_t pid = fork();
     if(pid != 0)
         return pid;
     /* In the child process we have to create a new kernel-side pollset,
        identical to the one in the parent process, yet not sharing its
        destiny. */
-    if(ts_kfd != -1) {
+    if(dill_kfd != -1) {
         /* TODO: kqueue documentation says that a kqueue descriptor won't
            survive a fork. If that was so, one would expect following close()
            to fail with EBADF error. Yet, at least on FreeBSD, the call
            succeeds. */
-        int rc = close(ts_kfd);
-        ts_assert(rc == 0);
-        ts_kfd = kqueue();
-        ts_assert(ts_kfd >= 0);
-        struct kevent chngs[TS_CHNGSSIZE];
+        int rc = close(dill_kfd);
+        dill_assert(rc == 0);
+        dill_kfd = kqueue();
+        dill_assert(dill_kfd >= 0);
+        struct kevent chngs[DILL_CHNGSSIZE];
         int nchngs = 0;
         int fd;
-        for(fd = 0; fd != ts_ncrpairs; ++fd) {
-            struct ts_crpair *crp = &ts_crpairs[fd];
-            if(nchngs >= TS_CHNGSSIZE - 1) {
-                rc = kevent(ts_kfd, chngs, nchngs, NULL, 0, NULL);
-                ts_assert(rc != -1);
+        for(fd = 0; fd != dill_ncrpairs; ++fd) {
+            struct dill_crpair *crp = &dill_crpairs[fd];
+            if(nchngs >= DILL_CHNGSSIZE - 1) {
+                rc = kevent(dill_kfd, chngs, nchngs, NULL, 0, NULL);
+                dill_assert(rc != -1);
                 nchngs = 0;
             }
             if(crp->currevs & FDW_IN) {
@@ -116,42 +116,42 @@ pid_t ts_fork(void) {
     return 0;
 }
 
-static void ts_poller_add(int fd, int events) {
-    struct ts_crpair *crp = &ts_crpairs[fd];
+static void dill_poller_add(int fd, int events) {
+    struct dill_crpair *crp = &dill_crpairs[fd];
     if(events & FDW_IN) {
         if(crp->in)
-            ts_panic(
+            dill_panic(
                 "multiple coroutines waiting for a single file descriptor");
-        crp->in = ts_running;
+        crp->in = dill_running;
     }
     if(events & FDW_OUT) {
         if(crp->out)
-            ts_panic(
+            dill_panic(
                 "multiple coroutines waiting for a single file descriptor");
-        crp->out = ts_running;
+        crp->out = dill_running;
     }
     if(!crp->next) {
-        crp->next = ts_changelist;
-        ts_changelist = fd + 1;
+        crp->next = dill_changelist;
+        dill_changelist = fd + 1;
     }
 }
 
-static void ts_poller_rm(int fd, int events) {
-    struct ts_crpair *crp = &ts_crpairs[fd];
+static void dill_poller_rm(int fd, int events) {
+    struct dill_crpair *crp = &dill_crpairs[fd];
     if(events & FDW_IN)
         crp->in = NULL;
     if(events & FDW_OUT)
         crp->out = NULL;
     if(!crp->next) {
-        crp->next = ts_changelist;
-        ts_changelist = fd + 1;
+        crp->next = dill_changelist;
+        dill_changelist = fd + 1;
     }
 }
 
-static void ts_poller_clean(int fd) {
-    struct ts_crpair *crp = &ts_crpairs[fd];
-    ts_assert(!crp->in);
-    ts_assert(!crp->out);
+static void dill_poller_clean(int fd) {
+    struct dill_crpair *crp = &dill_crpairs[fd];
+    dill_assert(!crp->in);
+    dill_assert(!crp->out);
     /* Remove the file descriptor from the pollset, if it is still there. */
     int nevs = 0;
     struct kevent evs[2];
@@ -164,33 +164,33 @@ static void ts_poller_clean(int fd) {
         ++nevs;
     }
     if(nevs) {
-        int rc = kevent(ts_kfd, evs, nevs, NULL, 0, NULL);
-        ts_assert(rc != -1);
+        int rc = kevent(dill_kfd, evs, nevs, NULL, 0, NULL);
+        dill_assert(rc != -1);
     }
     /* Clean up the cache. */
     crp->currevs = 0;
     if(!crp->next) {
-        crp->next = ts_changelist;
-        ts_changelist = fd + 1;
+        crp->next = dill_changelist;
+        dill_changelist = fd + 1;
     }
 }
 
-static int ts_poller_wait(int timeout) {
+static int dill_poller_wait(int timeout) {
     /* Apply any changes to the pollset. */
-    struct kevent chngs[TS_CHNGSSIZE];
+    struct kevent chngs[DILL_CHNGSSIZE];
     int nchngs = 0;
-    while(ts_changelist != TS_ENDLIST) {
+    while(dill_changelist != DILL_ENDLIST) {
         /* Flush the changes to the pollset even if there is one emtpy entry
            left in the changeset. That way we make sure that both in & out
            associated with the next file descriptor can be filled in if we
            choose not to flush the changes yet. */
-        if(nchngs >= TS_CHNGSSIZE - 1) {
-            int rc = kevent(ts_kfd, chngs, nchngs, NULL, 0, NULL);
-            ts_assert(rc != -1);
+        if(nchngs >= DILL_CHNGSSIZE - 1) {
+            int rc = kevent(dill_kfd, chngs, nchngs, NULL, 0, NULL);
+            dill_assert(rc != -1);
             nchngs = 0;
         }
-        int fd = ts_changelist - 1;
-        struct ts_crpair *crp = &ts_crpairs[fd];
+        int fd = dill_changelist - 1;
+        struct dill_crpair *crp = &dill_crpairs[fd];
         if(crp->in) {
             if(!(crp->currevs & FDW_IN)) {
                 EV_SET(&chngs[nchngs], fd, EVFILT_READ, EV_ADD, 0, 0, 0);
@@ -220,11 +220,11 @@ static int ts_poller_wait(int timeout) {
             }
         }
         crp->firing = 0;
-        ts_changelist = crp->next;
+        dill_changelist = crp->next;
         crp->next = 0;
     }
     /* Wait for events. */
-    struct kevent evs[TS_EVSSIZE];
+    struct kevent evs[DILL_EVSSIZE];
     int nevs;
     while(1) {
         struct timespec ts;
@@ -232,19 +232,19 @@ static int ts_poller_wait(int timeout) {
             ts.tv_sec = timeout / 1000;
             ts.tv_nsec = (((long)timeout) % 1000) * 1000000;
         }
-        nevs = kevent(ts_kfd, chngs, nchngs, evs, TS_EVSSIZE,
+        nevs = kevent(dill_kfd, chngs, nchngs, evs, DILL_EVSSIZE,
             timeout < 0 ? NULL : &ts);
         if(nevs < 0 && errno == EINTR)
             continue;
-        ts_assert(nevs >= 0);
+        dill_assert(nevs >= 0);
         break;
     }
     /* Join events on file descriptor basis. */
     int i;
     for(i = 0; i != nevs; ++i) {
-        ts_assert(evs[i].flags != EV_ERROR);
+        dill_assert(evs[i].flags != EV_ERROR);
         int fd = (int)evs[i].ident;
-        struct ts_crpair *crp = &ts_crpairs[fd];
+        struct dill_crpair *crp = &dill_crpairs[fd];
         /* Add firing event to the result list. */
         if(evs[i].flags == EV_EOF)
             crp->firing |= FDW_ERR;
@@ -255,28 +255,28 @@ static int ts_poller_wait(int timeout) {
                 crp->firing |= FDW_OUT;
         }
         if(!crp->next) {
-            crp->next = ts_changelist;
-            ts_changelist = fd + 1;
+            crp->next = dill_changelist;
+            dill_changelist = fd + 1;
         }
     }
     /* Resume the blocked coroutines. */
-    uint32_t chl = ts_changelist;
-    while(chl != TS_ENDLIST) {
+    uint32_t chl = dill_changelist;
+    while(chl != DILL_ENDLIST) {
         int fd = chl - 1;
-        struct ts_crpair *crp = &ts_crpairs[fd];
+        struct dill_crpair *crp = &dill_crpairs[fd];
         if(crp->in == crp->out) {
-            ts_assert(crp->in);
-            ts_resume(crp->in, crp->firing);
+            dill_assert(crp->in);
+            dill_resume(crp->in, crp->firing);
             crp->in = NULL;
             crp->out = NULL;
         }
         else {
             if(crp->in) {
-                ts_resume(crp->in, crp->firing & (FDW_IN | FDW_ERR));
+                dill_resume(crp->in, crp->firing & (FDW_IN | FDW_ERR));
                 crp->in = NULL;
             }
             if(crp->out) {
-                ts_resume(crp->out, crp->firing & (FDW_OUT | FDW_ERR));
+                dill_resume(crp->out, crp->firing & (FDW_OUT | FDW_ERR));
                 crp->out = NULL;
             }
         }

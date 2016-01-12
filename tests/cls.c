@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <stddef.h>
 
-#include "../treestack.h"
+#include "../libdill.h"
 
 static int dummy1 = 0;
 static int dummy2 = 0;

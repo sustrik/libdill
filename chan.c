@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -32,98 +32,98 @@
 #include "chan.h"
 #include "cr.h"
 #include "debug.h"
-#include "treestack.h"
+#include "libdill.h"
 #include "utils.h"
 
-static int ts_choose_seqnum = 0;
+static int dill_choose_seqnum = 0;
 
-chan ts_chmake(size_t itemsz, size_t bufsz, const char *created) {
+chan dill_chmake(size_t itemsz, size_t bufsz, const char *created) {
     /* If there's at least one channel created in the user's code
        we want the debug functions to get into the binary. */
-    ts_preserve_debug();
+    dill_preserve_debug();
     /* We are allocating 1 additional element after the channel buffer to
        store the done-with value. It can't be stored in the regular buffer
        because that would mean chdone() would block when buffer is full. */
-    struct ts_chan *ch = (struct ts_chan*)
-        malloc(sizeof(struct ts_chan) + (itemsz * (bufsz + 1)));
+    struct dill_chan *ch = (struct dill_chan*)
+        malloc(sizeof(struct dill_chan) + (itemsz * (bufsz + 1)));
     if(!ch)
         return NULL;
-    ts_register_chan(&ch->debug, created);
+    dill_register_chan(&ch->debug, created);
     ch->sz = itemsz;
-    ch->sender.seqnum = ts_choose_seqnum;
-    ts_list_init(&ch->sender.clauses);
-    ch->receiver.seqnum = ts_choose_seqnum;
-    ts_list_init(&ch->receiver.clauses);
+    ch->sender.seqnum = dill_choose_seqnum;
+    dill_list_init(&ch->sender.clauses);
+    ch->receiver.seqnum = dill_choose_seqnum;
+    dill_list_init(&ch->receiver.clauses);
     ch->refcount = 1;
     ch->done = 0;
     ch->bufsz = bufsz;
     ch->items = 0;
     ch->first = 0;
-    ts_trace(created, "<%d>=chmake(%d)", (int)ch->debug.id, (int)bufsz);
+    dill_trace(created, "<%d>=chmake(%d)", (int)ch->debug.id, (int)bufsz);
     return ch;
 }
 
-chan ts_chdup(chan ch, const char *current) {
-    if(ts_slow(!ch))
-        ts_panic("null channel used");
-    ts_trace(current, "chdup(<%d>)", (int)ch->debug.id);
+chan dill_chdup(chan ch, const char *current) {
+    if(dill_slow(!ch))
+        dill_panic("null channel used");
+    dill_trace(current, "chdup(<%d>)", (int)ch->debug.id);
     ++ch->refcount;
     return ch;
 }
 
-void ts_chclose(chan ch, const char *current) {
-    if(ts_slow(!ch))
-        ts_panic("null channel used");
-    ts_trace(current, "chclose(<%d>)", (int)ch->debug.id);
+void dill_chclose(chan ch, const char *current) {
+    if(dill_slow(!ch))
+        dill_panic("null channel used");
+    dill_trace(current, "chclose(<%d>)", (int)ch->debug.id);
     assert(ch->refcount > 0);
     --ch->refcount;
     if(ch->refcount)
         return;
-    if(!ts_list_empty(&ch->sender.clauses) ||
-          !ts_list_empty(&ch->receiver.clauses))
-        ts_panic("attempt to close a channel while it is still being used");
-    ts_unregister_chan(&ch->debug);
+    if(!dill_list_empty(&ch->sender.clauses) ||
+          !dill_list_empty(&ch->receiver.clauses))
+        dill_panic("attempt to close a channel while it is still being used");
+    dill_unregister_chan(&ch->debug);
     free(ch);
 }
 
-/* Unblock a coroutine blocked in ts_choose_wait() function.
+/* Unblock a coroutine blocked in dill_choose_wait() function.
    It also cleans up the associated clause list. */
-static void ts_choose_unblock(struct ts_clause *cl) {
-    struct ts_slist_item *it;
-    struct ts_clause *itcl;
-    for(it = ts_slist_begin(&cl->cr->choosedata.clauses);
-          it; it = ts_slist_next(it)) {
-        itcl = ts_cont(it, struct ts_clause, chitem);
+static void dill_choose_unblock(struct dill_clause *cl) {
+    struct dill_slist_item *it;
+    struct dill_clause *itcl;
+    for(it = dill_slist_begin(&cl->cr->choosedata.clauses);
+          it; it = dill_slist_next(it)) {
+        itcl = dill_cont(it, struct dill_clause, chitem);
         if(!itcl->used)
             continue;
-        ts_list_erase(&itcl->ep->clauses, &itcl->epitem);
+        dill_list_erase(&itcl->ep->clauses, &itcl->epitem);
     }
     if(cl->cr->choosedata.ddline > 0)
-        ts_timer_rm(&cl->cr->timer);
-    ts_resume(cl->cr, cl->idx);
+        dill_timer_rm(&cl->cr->timer);
+    dill_resume(cl->cr, cl->idx);
 }
 
-static void ts_choose_callback(struct ts_timer *timer) {
-    struct ts_cr *cr = ts_cont(timer, struct ts_cr, timer);
-    struct ts_slist_item *it;
-    for(it = ts_slist_begin(&cr->choosedata.clauses);
-          it; it = ts_slist_next(it)) {
-        struct ts_clause *itcl = ts_cont(it, struct ts_clause, chitem);
-        ts_assert(itcl->used);
-        ts_list_erase(&itcl->ep->clauses, &itcl->epitem);
+static void dill_choose_callback(struct dill_timer *timer) {
+    struct dill_cr *cr = dill_cont(timer, struct dill_cr, timer);
+    struct dill_slist_item *it;
+    for(it = dill_slist_begin(&cr->choosedata.clauses);
+          it; it = dill_slist_next(it)) {
+        struct dill_clause *itcl = dill_cont(it, struct dill_clause, chitem);
+        dill_assert(itcl->used);
+        dill_list_erase(&itcl->ep->clauses, &itcl->epitem);
     }
-    ts_resume(cr, -1);
+    dill_resume(cr, -1);
 }
 
 /* Push new item to the channel. */
-static void ts_enqueue(chan ch, void *val) {
+static void dill_enqueue(chan ch, void *val) {
     /* If there's a receiver already waiting, let's resume it. */
-    if(!ts_list_empty(&ch->receiver.clauses)) {
-        ts_assert(ch->items == 0);
-        struct ts_clause *cl = ts_cont(
-            ts_list_begin(&ch->receiver.clauses), struct ts_clause, epitem);
+    if(!dill_list_empty(&ch->receiver.clauses)) {
+        dill_assert(ch->items == 0);
+        struct dill_clause *cl = dill_cont(
+            dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
         memcpy(cl->val, val, ch->sz);
-        ts_choose_unblock(cl);
+        dill_choose_unblock(cl);
         return;
     }
     /* Write the value to the buffer. */
@@ -134,22 +134,22 @@ static void ts_enqueue(chan ch, void *val) {
 }
 
 /* Pop one value from the channel. */
-static void ts_dequeue(chan ch, void *val) {
+static void dill_dequeue(chan ch, void *val) {
     /* Get a blocked sender, if any. */
-    struct ts_clause *cl = ts_cont(
-        ts_list_begin(&ch->sender.clauses), struct ts_clause, epitem);
+    struct dill_clause *cl = dill_cont(
+        dill_list_begin(&ch->sender.clauses), struct dill_clause, epitem);
     if(!ch->items) {
         /* If chdone was already called we can return the value immediately.
            There are no senders waiting to send. */
-        if(ts_slow(ch->done)) {
-            ts_assert(!cl);
+        if(dill_slow(ch->done)) {
+            dill_assert(!cl);
             memcpy(val, ((char*)(ch + 1)) + (ch->bufsz * ch->sz), ch->sz);
             return;
         }
         /* Otherwise there must be a sender waiting to send. */
-        ts_assert(cl);
+        dill_assert(cl);
         memcpy(val, cl->val, ch->sz);
-        ts_choose_unblock(cl);
+        dill_choose_unblock(cl);
         return;
     }
     /* If there's a value in the buffer start by retrieving it. */
@@ -162,43 +162,43 @@ static void ts_dequeue(chan ch, void *val) {
         size_t pos = (ch->first + ch->items) % ch->bufsz;
         memcpy(((char*)(ch + 1)) + (pos * ch->sz) , cl->val, ch->sz);
         ++ch->items;
-        ts_choose_unblock(cl);
+        dill_choose_unblock(cl);
     }
 }
 
-static int ts_choose_(struct chclause *clauses, int nclauses,
+static int dill_choose_(struct chclause *clauses, int nclauses,
       int64_t deadline) {
-    if(ts_slow(nclauses < 0 || (nclauses && !clauses))) {
+    if(dill_slow(nclauses < 0 || (nclauses && !clauses))) {
         errno = EINVAL;
         return -1;
     }
 
-    ts_slist_init(&ts_running->choosedata.clauses);
-    ts_running->choosedata.ddline = -1;
-    ++ts_choose_seqnum;
+    dill_slist_init(&dill_running->choosedata.clauses);
+    dill_running->choosedata.ddline = -1;
+    ++dill_choose_seqnum;
 
     int available = 0;
     int i;
     for(i = 0; i != nclauses; ++i) {
-        struct ts_clause *cl = (struct ts_clause*)&clauses[i];
-        if(ts_slow(!cl->channel || cl->channel->sz != cl->len)) {
+        struct dill_clause *cl = (struct dill_clause*)&clauses[i];
+        if(dill_slow(!cl->channel || cl->channel->sz != cl->len)) {
             errno = EINVAL;
             return -1;
         }
         switch(cl->op) {
         case CHOOSE_CHS:
             /* Cannot send to done-with channel. */
-            if(ts_slow(cl->channel->done)) {
+            if(dill_slow(cl->channel->done)) {
                 errno = EPIPE;
                 return -1;
             }
-            cl->available = !ts_list_empty(&cl->channel->receiver.clauses) ||
+            cl->available = !dill_list_empty(&cl->channel->receiver.clauses) ||
                 cl->channel->items < cl->channel->bufsz ? 1 : 0;
             cl->ep = &cl->channel->sender;
             break;
         case CHOOSE_CHR:
             cl->available = cl->channel->done ||
-                !ts_list_empty(&cl->channel->sender.clauses) ||
+                !dill_list_empty(&cl->channel->sender.clauses) ||
                 cl->channel->items ? 1 : 0;
             cl->ep = &cl->channel->receiver;
             break;
@@ -206,32 +206,32 @@ static int ts_choose_(struct chclause *clauses, int nclauses,
             errno = EINVAL;
             return -1;
         }
-        cl->cr = ts_running;
+        cl->cr = dill_running;
         cl->idx = i;
         cl->used = 1;
-        ts_slist_push_back(&ts_running->choosedata.clauses, &cl->chitem);
+        dill_slist_push_back(&dill_running->choosedata.clauses, &cl->chitem);
         if(cl->available)
             ++available;
-        if(cl->ep->seqnum == ts_choose_seqnum) {
+        if(cl->ep->seqnum == dill_choose_seqnum) {
             ++cl->ep->refs;
         }
         else {
-            cl->ep->seqnum = ts_choose_seqnum;
+            cl->ep->seqnum = dill_choose_seqnum;
             cl->ep->refs = 1;
             cl->ep->tmp = -1;
         }
     }
 
-    struct ts_choosedata *cd = &ts_running->choosedata;
-    struct ts_slist_item *it;
-    struct ts_clause *cl;
+    struct dill_choosedata *cd = &dill_running->choosedata;
+    struct dill_slist_item *it;
+    struct dill_clause *cl;
 
     /* If there are clauses that are immediately available
        randomly choose one of them. */
     if(available > 0) {
         int chosen = available == 1 ? 0 : (int)(random() % available);
-        for(it = ts_slist_begin(&cd->clauses); it; it = ts_slist_next(it)) {
-            cl = ts_cont(it, struct ts_clause, chitem);
+        for(it = dill_slist_begin(&cd->clauses); it; it = dill_slist_next(it)) {
+            cl = dill_cont(it, struct dill_clause, chitem);
             if(!cl->available)
                 continue;
             if(!chosen)
@@ -239,17 +239,17 @@ static int ts_choose_(struct chclause *clauses, int nclauses,
             --chosen;
         }
         if(cl->op == CHOOSE_CHS)
-            ts_enqueue(cl->channel, cl->val);
+            dill_enqueue(cl->channel, cl->val);
         else
-            ts_dequeue(cl->channel, cl->val);
-        ts_resume(ts_running, cl->idx);
-        return ts_suspend();
+            dill_dequeue(cl->channel, cl->val);
+        dill_resume(dill_running, cl->idx);
+        return dill_suspend();
     }
 
     /* If immediate execution was requested, exit now. */
     if(deadline == 0) {
-        ts_resume(ts_running, -1);
-        ts_suspend();
+        dill_resume(dill_running, -1);
+        dill_suspend();
         errno = ETIMEDOUT;
         return -1;
     }
@@ -257,14 +257,14 @@ static int ts_choose_(struct chclause *clauses, int nclauses,
     /* If deadline was specified, start the timer. */
     if(deadline > 0) {
         cd->ddline = deadline;
-        ts_timer_add(&ts_running->timer, deadline, ts_choose_callback);
+        dill_timer_add(&dill_running->timer, deadline, dill_choose_callback);
     }
 
     /* In all other cases register this coroutine with the queried channels
        and wait till one of the clauses unblocks. */
-    for(it = ts_slist_begin(&cd->clauses); it; it = ts_slist_next(it)) {
-        cl = ts_cont(it, struct ts_clause, chitem);
-        if(ts_slow(cl->ep->refs > 1)) {
+    for(it = dill_slist_begin(&cd->clauses); it; it = dill_slist_next(it)) {
+        cl = dill_cont(it, struct dill_clause, chitem);
+        if(dill_slow(cl->ep->refs > 1)) {
             if(cl->ep->tmp == -1)
                 cl->ep->tmp =
                     cl->ep->refs == 1 ? 0 : (int)(random() % cl->ep->refs);
@@ -275,69 +275,69 @@ static int ts_choose_(struct chclause *clauses, int nclauses,
             }
             cl->ep->tmp = -2;
         }
-        ts_list_insert(&cl->ep->clauses, &cl->epitem, NULL);
+        dill_list_insert(&cl->ep->clauses, &cl->epitem, NULL);
     }
     /* If there are multiple parallel chooses done from different coroutines
        all but one must be blocked on the following line. */
-    int res = ts_suspend();
+    int res = dill_suspend();
     if(res == -1)
         errno = ETIMEDOUT;
     return res;
 }
 
-int ts_choose(struct chclause *clauses, int nclauses, int64_t deadline,
+int dill_choose(struct chclause *clauses, int nclauses, int64_t deadline,
       const char *current) {
-    ts_trace(current, "choose()");
-    ts_running->state = TS_CHOOSE;
-    ts_running->nclauses = nclauses;
-    ts_running->clauses = clauses;
-    ts_set_current(&ts_running->debug, current);
-    return ts_choose_(clauses, nclauses, deadline);
+    dill_trace(current, "choose()");
+    dill_running->state = DILL_CHOOSE;
+    dill_running->nclauses = nclauses;
+    dill_running->clauses = clauses;
+    dill_set_current(&dill_running->debug, current);
+    return dill_choose_(clauses, nclauses, deadline);
 }
 
-int ts_chs(chan ch, const void *val, size_t len, const char *current) {
-    if(ts_slow(!ch || !val || len != ch->sz)) {
+int dill_chs(chan ch, const void *val, size_t len, const char *current) {
+    if(dill_slow(!ch || !val || len != ch->sz)) {
         errno = EINVAL;
         return -1;
     }
-    ts_trace(current, "chs(<%d>)", (int)ch->debug.id);
-    ts_running->state = TS_CHS;
+    dill_trace(current, "chs(<%d>)", (int)ch->debug.id);
+    dill_running->state = DILL_CHS;
     struct chclause cl = {ch, CHOOSE_CHS, (void*)val, len};
-    return ts_choose_(&cl, 1, -1);
+    return dill_choose_(&cl, 1, -1);
 }
 
-int ts_chr(chan ch, void *val, size_t len, const char *current) {
-    if(ts_slow(!ch || !val || len != ch->sz)) {
+int dill_chr(chan ch, void *val, size_t len, const char *current) {
+    if(dill_slow(!ch || !val || len != ch->sz)) {
         errno = EINVAL;
         return -1;
     }
-    ts_trace(current, "chr(<%d>)", (int)ch->debug.id);
-    ts_running->state = TS_CHR;
+    dill_trace(current, "chr(<%d>)", (int)ch->debug.id);
+    dill_running->state = DILL_CHR;
     struct chclause cl = {ch, CHOOSE_CHR, val, len};
-    return ts_choose_(&cl, 1, -1);
+    return dill_choose_(&cl, 1, -1);
 }
 
-int ts_chdone(chan ch, const void *val, size_t len, const char *current) {
-    if(ts_slow(!ch || !val || len != ch->sz)) {
+int dill_chdone(chan ch, const void *val, size_t len, const char *current) {
+    if(dill_slow(!ch || !val || len != ch->sz)) {
         errno = EINVAL;
         return -1;
     }
-    ts_trace(current, "chdone(<%d>)", (int)ch->debug.id);
-    if(ts_slow(ch->done))
-        ts_panic("chdone on already done-with channel");
+    dill_trace(current, "chdone(<%d>)", (int)ch->debug.id);
+    if(dill_slow(ch->done))
+        dill_panic("chdone on already done-with channel");
     /* Panic if there are other senders on the same channel. */
-    if(ts_slow(!ts_list_empty(&ch->sender.clauses)))
-        ts_panic("send to done-with channel");
+    if(dill_slow(!dill_list_empty(&ch->sender.clauses)))
+        dill_panic("send to done-with channel");
     /* Put the channel into done-with mode. */
     ch->done = 1;
     /* Store the terminal value into a special position in the channel. */
     memcpy(((char*)(ch + 1)) + (ch->bufsz * ch->sz) , val, ch->sz);
     /* Resume all the receivers currently waiting on the channel. */
-    while(!ts_list_empty(&ch->receiver.clauses)) {
-        struct ts_clause *cl = ts_cont(
-            ts_list_begin(&ch->receiver.clauses), struct ts_clause, epitem);
+    while(!dill_list_empty(&ch->receiver.clauses)) {
+        struct dill_clause *cl = dill_cont(
+            dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
         memcpy(cl->val, val, ch->sz);
-        ts_choose_unblock(cl);
+        dill_choose_unblock(cl);
     }
     return 0;
 }

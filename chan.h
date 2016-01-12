@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -22,8 +22,8 @@
 
 */
 
-#ifndef TS_CHAN_INCLUDED
-#define TS_CHAN_INCLUDED
+#ifndef DILL_CHAN_INCLUDED
+#define DILL_CHAN_INCLUDED
 
 #include <stddef.h>
 
@@ -32,15 +32,15 @@
 #include "slist.h"
 
 /* One of these structures is preallocated for every coroutine. */
-struct ts_choosedata {
+struct dill_choosedata {
     /* List of clauses in the 'choose' statement. */
-    struct ts_slist clauses;
+    struct dill_slist clauses;
     /* Deadline specified in 'deadline' clause. -1 if none. */
     int64_t ddline;
 };
 
 /* Channel endpoint. */
-struct ts_ep {
+struct dill_ep {
     /* Sequence number of the choose operation being initialised. */
     int seqnum;
     /* Number of clauses referring to this endpoint within the choose
@@ -49,17 +49,17 @@ struct ts_ep {
     /* Number of refs already processed. */
     int tmp;
     /* List of clauses waiting for this endpoint. */
-    struct ts_list clauses;
+    struct dill_list clauses;
 };
 
 /* Channel. */
-struct ts_chan {
+struct dill_chan {
     /* The size of the elements stored in the channel, in bytes. */
     size_t sz;
     /* Channel holds two lists, the list of clauses waiting to send and list
        of clauses waiting to receive. */
-    struct ts_ep sender;
-    struct ts_ep receiver;
+    struct dill_ep sender;
+    struct dill_ep receiver;
     /* Number of open handles to this channel. */
     int refcount;
     /* 1 is chdone() was already called. 0 otherwise. */
@@ -75,25 +75,25 @@ struct ts_chan {
     size_t first;
 
     /* Debugging info. */
-    struct ts_debug_chan debug;
+    struct dill_debug_chan debug;
 };
 
 /* This structure represents a single clause in a choose statement.
    Similarly, both chs() and chr() each create a single clause. */
-struct ts_clause {
+struct dill_clause {
     /* Publicly visible members. */
-    struct ts_chan *channel;
+    struct dill_chan *channel;
     int op;
     void *val;
     size_t len;
     /* Member of list of clauses waiting for a channel endpoint. */
-    struct ts_list_item epitem;
+    struct dill_list_item epitem;
     /* Linked list of clauses in the choose statement. */
-    struct ts_slist_item chitem;
+    struct dill_slist_item chitem;
     /* The coroutine which created the clause. */
-    struct ts_cr *cr;
+    struct dill_cr *cr;
     /* Channel endpoint the clause is waiting for. */
-    struct ts_ep *ep;
+    struct dill_ep *ep;
     /* The index to jump to when the clause is executed. */
     int idx;
     /* If 0, there's no peer waiting for the clause at the moment.

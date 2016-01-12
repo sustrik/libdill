@@ -26,20 +26,20 @@
 
 #include "slist.h"
 
-void ts_slist_init(struct ts_slist *self) {
+void dill_slist_init(struct dill_slist *self) {
     self->first = NULL;
     self->last = NULL;
 }
 
-void ts_slist_push(struct ts_slist *self, struct ts_slist_item *item) {
+void dill_slist_push(struct dill_slist *self, struct dill_slist_item *item) {
     item->next = self->first;
     self->first = item;
     if(!self->last)
         self->last = item;
 }
 
-void ts_slist_push_back(struct ts_slist *self,
-      struct ts_slist_item *item) {
+void dill_slist_push_back(struct dill_slist *self,
+      struct dill_slist_item *item) {
     item->next = NULL;
     if(!self->last)
         self->first = item;
@@ -48,10 +48,10 @@ void ts_slist_push_back(struct ts_slist *self,
     self->last = item;
 }
 
-struct ts_slist_item *ts_slist_pop(struct ts_slist *self) {
+struct dill_slist_item *dill_slist_pop(struct dill_slist *self) {
     if(!self->first)
         return NULL;
-    struct ts_slist_item *it = self->first;
+    struct dill_slist_item *it = self->first;
     self->first = self->first->next;
     if(!self->first)
         self->last = NULL;

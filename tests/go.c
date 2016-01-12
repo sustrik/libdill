@@ -26,7 +26,7 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "../treestack.h"
+#include "../libdill.h"
 
 int sum = 0;
 

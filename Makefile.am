@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2015 Martin Sustrik  All rights reserved.
+# Copyright (c) 2016 Martin Sustrik  All rights reserved.
 # Copyright (c) 2013 Luca Barbato
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,15 +23,15 @@
 ACLOCAL_AMFLAGS = -I m4
 
 ################################################################################
-#  treestack library                                                           #
+#  libdill library                                                             #
 ################################################################################
 
-treestackincludedir = $(includedir)
-treestackinclude_HEADERS = treestack.h
+dillincludedir = $(includedir)
+dillinclude_HEADERS = libdill.h
 
-lib_LTLIBRARIES = libtreestack.la
+lib_LTLIBRARIES = libdill.la
 
-libtreestack_la_SOURCES = \
+libdill_la_SOURCES = \
     chan.h \
     chan.c \
     cr.h \
@@ -54,15 +54,15 @@ libtreestack_la_SOURCES = \
     kqueue.inc
 
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = treestack.pc
+pkgconfig_DATA = libdill.pc
 
-libtreestack_la_LDFLAGS = -no-undefined -version-info @TS_LIBTOOL_VERSION@
+libdill_la_LDFLAGS = -no-undefined -version-info @DILL_LIBTOOL_VERSION@
 
 # Turn the source fortification in glibc off - otherwise it would panic
 # because of the stack pointer black magic in 'go' macro.
-libtreestack_la_CFLAGS = \
+libdill_la_CFLAGS = \
     -fvisibility=hidden\
-    -DTS_EXPORTS \
+    -DDILL_EXPORTS \
     -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0
 
 ################################################################################
@@ -80,7 +80,7 @@ check_PROGRAMS = \
     tests/signals \
     tests/overload
 
-LDADD = libtreestack.la
+LDADD = libdill.la
 
 TESTS = $(check_PROGRAMS)
 

@@ -20,17 +20,17 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-if [ ! -f treestack.h ]; then
-    echo "abi_version.sh: error: treestack.h does not exist" 1>&2
+if [ ! -f libdill.h ]; then
+    echo "abi_version.sh: error: libdill.h does not exist" 1>&2
     exit 1
 fi
 
-CURRENT=`egrep '^#define +TS_VERSION_CURRENT +[0-9]+$' treestack.h`
-REVISION=`egrep '^#define +TS_VERSION_REVISION +[0-9]+$' treestack.h`
-AGE=`egrep '^#define +TS_VERSION_AGE +[0-9]+$' treestack.h`
+CURRENT=`egrep '^#define +DILL_VERSION_CURRENT +[0-9]+$' libdill.h`
+REVISION=`egrep '^#define +DILL_VERSION_REVISION +[0-9]+$' libdill.h`
+AGE=`egrep '^#define +DILL_VERSION_AGE +[0-9]+$' libdill.h`
 
 if [ -z "$CURRENT" -o -z "$REVISION" -o -z "$AGE" ]; then
-    echo "abi_version.sh: error: could not extract version from treestack.h" 1>&2
+    echo "abi_version.sh: error: could not extract version from libdill.h" 1>&2
     exit 1
 fi
 

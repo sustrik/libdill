@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -22,15 +22,15 @@
 
 */
 
-#ifndef TS_DEBUG_INCLUDED
-#define TS_DEBUG_INCLUDED
+#ifndef DILL_DEBUG_INCLUDED
+#define DILL_DEBUG_INCLUDED
 
 #include "list.h"
 #include "utils.h"
 
-struct ts_debug_cr {
+struct dill_debug_cr {
     /* List of all coroutines. */
-    struct ts_list_item item;
+    struct dill_list_item item;
     /* Unique ID of the coroutine. */
     int id;
     /* File and line where the coroutine was launched. */
@@ -39,9 +39,9 @@ struct ts_debug_cr {
     const char *current;
 };
 
-struct ts_debug_chan {
+struct dill_debug_chan {
     /* List of all channels. */
-    struct ts_list_item item;
+    struct dill_list_item item;
     /* Unique ID of the channel. */
     int id;
     /* File and line where the channel was created. */
@@ -49,25 +49,25 @@ struct ts_debug_chan {
 };
 
 /* Cause panic. */
-void ts_panic(const char *text);
+void dill_panic(const char *text);
 
 /* No-op, but ensures that debugging functions get compiled into the binary. */
-void ts_preserve_debug(void);
+void dill_preserve_debug(void);
 
 /* (Un)register coroutines and channels with the debugging subsystem. */
-void ts_register_cr(struct ts_debug_cr *cr, const char *created);
-void ts_unregister_cr(struct ts_debug_cr *cr);
-void ts_register_chan(struct ts_debug_chan *ch, const char *created);
-void ts_unregister_chan(struct ts_debug_chan *ch);
+void dill_register_cr(struct dill_debug_cr *cr, const char *created);
+void dill_unregister_cr(struct dill_debug_cr *cr);
+void dill_register_chan(struct dill_debug_chan *ch, const char *created);
+void dill_unregister_chan(struct dill_debug_chan *ch);
 
 /* While doing a blocking operation coroutine should register where
    the operation was invoked from. */
-void ts_set_current(struct ts_debug_cr *cr, const char *current);
+void dill_set_current(struct dill_debug_cr *cr, const char *current);
 
-extern int ts_tracelevel;
+extern int dill_tracelevel;
 
 /* Create a trace record. */
-#define ts_trace if(ts_slow(ts_tracelevel)) ts_trace_
-void ts_trace_(const char *location, const char *format, ...);
+#define dill_trace if(dill_slow(dill_tracelevel)) dill_trace_
+void dill_trace_(const char *location, const char *format, ...);
 
 #endif

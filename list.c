@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -26,14 +26,14 @@
 
 #include "list.h"
 
-void ts_list_init(struct ts_list *self)
+void dill_list_init(struct dill_list *self)
 {
     self->first = NULL;
     self->last = NULL;
 }
 
-void ts_list_insert(struct ts_list *self, struct ts_list_item *item,
-    struct ts_list_item *it)
+void dill_list_insert(struct dill_list *self, struct dill_list_item *item,
+    struct dill_list_item *it)
 {
     item->prev = it ? it->prev : self->last;
     item->next = it;
@@ -47,10 +47,10 @@ void ts_list_insert(struct ts_list *self, struct ts_list_item *item,
         self->last = item;
 }
 
-struct ts_list_item *ts_list_erase(struct ts_list *self,
-    struct ts_list_item *item)
+struct dill_list_item *dill_list_erase(struct dill_list *self,
+    struct dill_list_item *item)
 {
-    struct ts_list_item *next;
+    struct dill_list_item *next;
 
     if(item->prev)
         item->prev->next = item->next;

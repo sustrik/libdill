@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -31,53 +31,53 @@
 
 #include "chan.h"
 #include "cr.h"
+#include "libdill.h"
 #include "list.h"
 #include "stack.h"
-#include "treestack.h"
 #include "utils.h"
 
 /* ID to be assigned to next launched coroutine. */
-static int ts_next_cr_id = 1;
+static int dill_next_cr_id = 1;
 
 /* List of all coroutines. */
-static struct ts_list ts_all_crs = {
-    &ts_main.debug.item, &ts_main.debug.item};
+static struct dill_list dill_all_crs = {
+    &dill_main.debug.item, &dill_main.debug.item};
 
 /* ID to be assigned to the next created channel. */
-static int ts_next_chan_id = 1;
+static int dill_next_chan_id = 1;
 
 /* List of all channels. */
-static struct ts_list ts_all_chans = {0};
+static struct dill_list dill_all_chans = {0};
 
-void ts_panic(const char *text) {
+void dill_panic(const char *text) {
     fprintf(stderr, "panic: %s\n", text);
     abort();
 }
 
-void ts_register_cr(struct ts_debug_cr *cr, const char *created) {
-    ts_list_insert(&ts_all_crs, &cr->item, NULL);
-    cr->id = ts_next_cr_id;
-    ++ts_next_cr_id;
+void dill_register_cr(struct dill_debug_cr *cr, const char *created) {
+    dill_list_insert(&dill_all_crs, &cr->item, NULL);
+    cr->id = dill_next_cr_id;
+    ++dill_next_cr_id;
     cr->created = created;
     cr->current = NULL;
 }
 
-void ts_unregister_cr(struct ts_debug_cr *cr) {
-    ts_list_erase(&ts_all_crs, &cr->item);
+void dill_unregister_cr(struct dill_debug_cr *cr) {
+    dill_list_erase(&dill_all_crs, &cr->item);
 }
 
-void ts_register_chan(struct ts_debug_chan *ch, const char *created) {
-    ts_list_insert(&ts_all_chans, &ch->item, NULL);
-    ch->id = ts_next_chan_id;
-    ++ts_next_chan_id;
+void dill_register_chan(struct dill_debug_chan *ch, const char *created) {
+    dill_list_insert(&dill_all_chans, &ch->item, NULL);
+    ch->id = dill_next_chan_id;
+    ++dill_next_chan_id;
     ch->created = created;
 }
 
-void ts_unregister_chan(struct ts_debug_chan *ch) {
-    ts_list_erase(&ts_all_chans, &ch->item);
+void dill_unregister_chan(struct dill_debug_chan *ch) {
+    dill_list_erase(&dill_all_chans, &ch->item);
 }
 
-void ts_set_current(struct ts_debug_cr *cr, const char *current) {
+void dill_set_current(struct dill_debug_cr *cr, const char *current) {
     cr->current = current;
 }
 
@@ -91,31 +91,31 @@ void goredump(void) {
     fprintf(stderr,
         "----------------------------------------------------------------------"
         "--------------------------------------------------\n");
-    struct ts_list_item *it;
-    for(it = ts_list_begin(&ts_all_crs); it; it = ts_list_next(it)) {
-        struct ts_cr *cr = ts_cont(it, struct ts_cr, debug.item);
+    struct dill_list_item *it;
+    for(it = dill_list_begin(&dill_all_crs); it; it = dill_list_next(it)) {
+        struct dill_cr *cr = dill_cont(it, struct dill_cr, debug.item);
         switch(cr->state) {
-        case TS_READY:
-            sprintf(buf, "%s", ts_running == cr ? "RUNNING" : "ready");
+        case DILL_READY:
+            sprintf(buf, "%s", dill_running == cr ? "RUNNING" : "ready");
             break;
-        case TS_MSLEEP:
+        case DILL_MSLEEP:
             sprintf(buf, "msleep()");
             break;
-        case TS_FDWAIT:
+        case DILL_FDWAIT:
             sprintf(buf, "fdwait(%d, %s)", cr->fd,
                 (cr->events & FDW_IN) &&
                     (cr->events & FDW_OUT) ? "FDW_IN | FDW_OUT" :
                 cr->events & FDW_IN ? "FDW_IN" :
                 cr->events & FDW_OUT ? "FDW_OUT" : 0);
             break;
-        case TS_CHR:
-        case TS_CHS:
-        case TS_CHOOSE:
+        case DILL_CHR:
+        case DILL_CHS:
+        case DILL_CHOOSE:
             {
                 int pos = 0;
-                if(cr->state == TS_CHR)
+                if(cr->state == DILL_CHR)
                     pos += sprintf(&buf[pos], "chr(");
-                else if(cr->state == TS_CHS)
+                else if(cr->state == DILL_CHS)
                     pos += sprintf(&buf[pos], "chs(");
                 else
                     pos += sprintf(&buf[pos], "choose(");
@@ -140,12 +140,12 @@ void goredump(void) {
         fprintf(stderr, "%-8s   %-42s %-40s %s\n",
             idbuf,
             buf,
-            cr == ts_running ? "---" : cr->debug.current,
+            cr == dill_running ? "---" : cr->debug.current,
             cr->debug.created ? cr->debug.created : "<main>");
     }
     fprintf(stderr,"\n");
 
-    if(ts_list_empty(&ts_all_chans))
+    if(dill_list_empty(&dill_all_chans))
         return;
     fprintf(stderr,
         "CHANNEL  msgs/max    senders/receivers                          "
@@ -153,8 +153,8 @@ void goredump(void) {
     fprintf(stderr,
         "----------------------------------------------------------------------"
         "--------------------------------------------------\n");
-    for(it = ts_list_begin(&ts_all_chans); it; it = ts_list_next(it)) {
-        struct ts_chan *ch = ts_cont(it, struct ts_chan, debug.item);
+    for(it = dill_list_begin(&dill_all_chans); it; it = dill_list_next(it)) {
+        struct dill_chan *ch = dill_cont(it, struct dill_chan, debug.item);
         snprintf(idbuf, sizeof(idbuf), "<%d>", (int)ch->debug.id);
         sprintf(buf, "%d/%d",
             (int)ch->items,
@@ -163,12 +163,12 @@ void goredump(void) {
             idbuf,
             buf);
         int pos;
-        struct ts_list *clauselist;
-        if(!ts_list_empty(&ch->sender.clauses)) {
+        struct dill_list *clauselist;
+        if(!dill_list_empty(&ch->sender.clauses)) {
             pos = sprintf(buf, "s:");
             clauselist = &ch->sender.clauses;
         }
-        else if(!ts_list_empty(&ch->receiver.clauses)) {
+        else if(!dill_list_empty(&ch->receiver.clauses)) {
             pos = sprintf(buf, "r:");
             clauselist = &ch->receiver.clauses;
         }
@@ -176,10 +176,10 @@ void goredump(void) {
             sprintf(buf, " ");
             clauselist = NULL;
         }
-        struct ts_clause *cl = NULL;
+        struct dill_clause *cl = NULL;
         if(clauselist)
-            cl = ts_cont(ts_list_begin(clauselist),
-                struct ts_clause, epitem);
+            cl = dill_cont(dill_list_begin(clauselist),
+                struct dill_clause, epitem);
         int first = 1;
         while(cl) {
             if(first)
@@ -187,8 +187,8 @@ void goredump(void) {
             else
                 pos += sprintf(&buf[pos], ",");
             pos += sprintf(&buf[pos], "{%d}", (int)cl->cr->debug.id);
-            cl = ts_cont(ts_list_next(&cl->epitem),
-                struct ts_clause, epitem);
+            cl = dill_cont(dill_list_next(&cl->epitem),
+                struct dill_clause, epitem);
         }
         fprintf(stderr, "%-42s %-5d %-5s %s\n",
             buf,
@@ -199,14 +199,14 @@ void goredump(void) {
     fprintf(stderr,"\n");
 }
 
-int ts_tracelevel = 0;
+int dill_tracelevel = 0;
 
 void gotrace(int level) {
-    ts_tracelevel = level;
+    dill_tracelevel = level;
 }
 
-void ts_trace_(const char *location, const char *format, ...) {
-    if(ts_fast(ts_tracelevel <= 0))
+void dill_trace_(const char *location, const char *format, ...) {
+    if(dill_fast(dill_tracelevel <= 0))
         return;
 
     char buf[256];
@@ -220,7 +220,7 @@ void ts_trace_(const char *location, const char *format, ...) {
     fprintf(stderr, "==> %s.%06d ", buf, (int)nw.tv_usec);
 
     /* Coroutine ID. */
-    snprintf(buf, sizeof(buf), "{%d}", (int)ts_running->debug.id);
+    snprintf(buf, sizeof(buf), "{%d}", (int)dill_running->debug.id);
     fprintf(stderr, "%-8s ", buf);
 
     va_list va;
@@ -234,7 +234,7 @@ void ts_trace_(const char *location, const char *format, ...) {
     fflush(stderr);
 }
 
-void ts_preserve_debug(void) {
+void dill_preserve_debug(void) {
     /* Do nothing, but trick the compiler into thinking that the debug
        functions are being used so that it does not optimise them away. */
     static volatile int unoptimisable = 1;

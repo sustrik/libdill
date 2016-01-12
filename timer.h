@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -22,40 +22,40 @@
 
 */
 
-#ifndef TS_TIMER_INCLUDED
-#define TS_TIMER_INCLUDED
+#ifndef DILL_TIMER_INCLUDED
+#define DILL_TIMER_INCLUDED
 
 #include <stdint.h>
 
 #include "list.h"
 
-struct ts_timer;
+struct dill_timer;
 
-typedef void (*ts_timer_callback)(struct ts_timer *timer);
+typedef void (*dill_timer_callback)(struct dill_timer *timer);
 
-struct ts_timer {
+struct dill_timer {
     /* Item in the global list of all timers. */
-    struct ts_list_item item;
+    struct dill_list_item item;
     /* The deadline when the timer expires. */
     int64_t expiry;
     /* Callback invoked when timer expires. Pfui Teufel! */
-    ts_timer_callback callback;
+    dill_timer_callback callback;
 };
 
 /* Add a timer for the running coroutine. */
-void ts_timer_add(struct ts_timer *timer, int64_t deadline,
-    ts_timer_callback callback);
+void dill_timer_add(struct dill_timer *timer, int64_t deadline,
+    dill_timer_callback callback);
 
 /* Remove the timer associated with the running coroutine. */
-void ts_timer_rm(struct ts_timer *timer);
+void dill_timer_rm(struct dill_timer *timer);
 
 /* Number of milliseconds till the next timer expires.
    If there are no timers returns -1. */
-int ts_timer_next(void);
+int dill_timer_next(void);
 
 /* Resumes all coroutines whose timers have already expired.
    Returns zero if no coroutine was resumed, 1 otherwise. */
-int ts_timer_fire(void);
+int dill_timer_fire(void);
 
 #endif
 
