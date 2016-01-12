@@ -50,10 +50,8 @@ chan ts_chmake(size_t itemsz, size_t bufsz, const char *created) {
         return NULL;
     ts_register_chan(&ch->debug, created);
     ch->sz = itemsz;
-    ch->sender.type = TS_SENDER;
     ch->sender.seqnum = ts_choose_seqnum;
     ts_list_init(&ch->sender.clauses);
-    ch->receiver.type = TS_RECEIVER;
     ch->receiver.seqnum = ts_choose_seqnum;
     ts_list_init(&ch->receiver.clauses);
     ch->refcount = 1;
@@ -240,7 +238,7 @@ static int ts_choose_(struct chclause *clauses, int nclauses,
                 break;
             --chosen;
         }
-        if(cl->ep->type == TS_SENDER)
+        if(cl->op == CHOOSE_CHS)
             ts_enqueue(cl->channel, cl->val);
         else
             ts_dequeue(cl->channel, cl->val);

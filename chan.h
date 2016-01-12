@@ -41,8 +41,6 @@ struct ts_choosedata {
 
 /* Channel endpoint. */
 struct ts_ep {
-    /* Thanks to this flag we can cast from ep pointer to chan pointer. */
-    enum {TS_SENDER, TS_RECEIVER} type;
     /* Sequence number of the choose operation being initialised. */
     int seqnum;
     /* Number of clauses referring to this endpoint within the choose
