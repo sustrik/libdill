@@ -198,7 +198,6 @@ static int ts_choose_(struct chclause *clauses, int nclauses,
             errno = EINVAL;
             return -1;
         }
-        int av;
         switch(cl->op) {
         case CHOOSE_CHS:
             /* Cannot send to done-with channel. */
@@ -206,38 +205,26 @@ static int ts_choose_(struct chclause *clauses, int nclauses,
                 errno = EPIPE;
                 return -1;
             }
-            /* Find out whether the clause is immediately available. */
-            av = !ts_list_empty(&cl->channel->receiver.clauses) ||
+            cl->available = !ts_list_empty(&cl->channel->receiver.clauses) ||
                 cl->channel->items < cl->channel->bufsz ? 1 : 0;
-            if(av)
-                ++available;
-            /* Fill in the reserved fields in clause entry. */
-            cl->cr = ts_running;
             cl->ep = &cl->channel->sender;
-            cl->available = av;
-            cl->idx = i;
-            cl->used = 1;
-            ts_slist_push_back(&ts_running->choosedata.clauses, &cl->chitem);
             break;
         case CHOOSE_CHR:
-            /* Find out whether the clause is immediately available. */
-            av = cl->channel->done ||
+            cl->available = cl->channel->done ||
                 !ts_list_empty(&cl->channel->sender.clauses) ||
                 cl->channel->items ? 1 : 0;
-            if(av)
-                ++available;
-            /* Fill in the clause entry. */
-            cl->cr = ts_running;
             cl->ep = &cl->channel->receiver;
-            cl->idx = i;
-            cl->available = av;
-            cl->used = 1;
-            ts_slist_push_back(&ts_running->choosedata.clauses, &cl->chitem);
             break;
         default:
             errno = EINVAL;
             return -1;
         }
+        cl->cr = ts_running;
+        cl->idx = i;
+        cl->used = 1;
+        ts_slist_push_back(&ts_running->choosedata.clauses, &cl->chitem);
+        if(cl->available)
+            ++available;
         if(cl->ep->seqnum == ts_choose_seqnum) {
             ++cl->ep->refs;
         }
