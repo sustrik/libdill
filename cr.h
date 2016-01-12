@@ -50,7 +50,7 @@ enum dill_state {
    +-------------------------------------------------------------+---------+
 
    - dill_cr contains generic book-keeping info about the coroutine
-   - stack is a standard C stack; it grows downwards (at the moment treestack
+   - stack is a standard C stack; it grows downwards (at the moment libdill
      doesn't support microarchitectures where stack grows upwards)
 
 */
