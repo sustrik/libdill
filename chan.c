@@ -37,17 +37,6 @@
 
 static int ts_choose_seqnum = 0;
 
-struct ts_chan *ts_getchan(struct ts_ep *ep) {
-    switch(ep->type) {
-    case TS_SENDER:
-        return ts_cont(ep, struct ts_chan, sender);
-    case TS_RECEIVER:
-        return ts_cont(ep, struct ts_chan, receiver);
-    default:
-        assert(0);
-    }
-}
-
 chan ts_chmake(size_t itemsz, size_t bufsz, const char *created) {
     /* If there's at least one channel created in the user's code
        we want the debug functions to get into the binary. */
@@ -251,11 +240,10 @@ static int ts_choose_(struct chclause *clauses, int nclauses,
                 break;
             --chosen;
         }
-        struct ts_chan *ch = ts_getchan(cl->ep);
         if(cl->ep->type == TS_SENDER)
-            ts_enqueue(ch, cl->val);
+            ts_enqueue(cl->channel, cl->val);
         else
-            ts_dequeue(ch, cl->val);
+            ts_dequeue(cl->channel, cl->val);
         ts_resume(ts_running, cl->idx);
         return ts_suspend();
     }
