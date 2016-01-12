@@ -55,9 +55,6 @@ enum ts_state {
 
 */
 struct ts_cr {
-    /* Status of the coroutine. Used for debugging purposes. */
-    enum ts_state state;
-
     /* The coroutine is stored in this list if it is not blocked and it is
        waiting to be executed. */
     struct ts_slist_item ready;
@@ -86,6 +83,15 @@ struct ts_cr {
 
     /* Debugging info. */
     struct ts_debug_cr debug;
+
+    /* TODO: Following fields should go to ts_debug_cr. */
+    /* Status of the coroutine. Used for debugging purposes. */
+    enum ts_state state;
+
+    /* If coroutine is stuck in choose(), here are the clauses.
+       Used for debugging. */
+    int nclauses;
+    struct chclause *clauses;
 };
 
 /* Fake coroutine corresponding to the main thread of execution. */

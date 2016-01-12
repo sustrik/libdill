@@ -120,19 +120,16 @@ void goredump(void) {
                 else
                     pos += sprintf(&buf[pos], "choose(");
                 int first = 1;
-#if 0 /* TODO */
-                struct ts_slist_item *it;
-                for(it = ts_slist_begin(&cr->choosedata.clauses); it;
-                      it = ts_slist_next(it)) {
+                int i;
+                for(i = 0; i != cr->nclauses; ++i) {
                     if(first)
                         first = 0;
                     else
                         pos += sprintf(&buf[pos], ",");
-                    pos += sprintf(&buf[pos], "<%d>", ts_getchan(
-                            ts_cont(it, struct ts_clause,
-                            chitem)->ep)->debug.id);
+                    pos += sprintf(&buf[pos], "%c<%d>",
+                        cr->clauses[i].op == CHOOSE_CHS ? 'S' : 'R',
+                        cr->clauses[i].channel->debug.id);
                 }
-#endif
                 sprintf(&buf[pos], ")");
             }
             break;

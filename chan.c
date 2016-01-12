@@ -316,6 +316,8 @@ int ts_choose(struct chclause *clauses, int nclauses, int64_t deadline,
       const char *current) {
     ts_trace(current, "choose()");
     ts_running->state = TS_CHOOSE;
+    ts_running->nclauses = nclauses;
+    ts_running->clauses = clauses;
     ts_set_current(&ts_running->debug, current);
     return ts_choose_(clauses, nclauses, deadline);
 }
