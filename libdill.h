@@ -98,8 +98,11 @@ DILL_EXPORT void dill_epilogue(void);
 #define coroutine
 #endif
 
+/* Statement expressions are a gcc-ism but they are also supported by clang.
+   Given that there's no other way to do this, screw other compilers for now.
+   See https://gcc.gnu.org/onlinedocs/gcc-3.2/gcc/Statement-Exprs.html */
 #define go(fn) \
-    do {\
+    ({\
         void *dill_sp = dill_prologue(__FILE__ ":" dill_string(__LINE__));\
         if(dill_sp) {\
             int dill_anchor[dill_unoptimisable1];\
@@ -109,7 +112,8 @@ DILL_EXPORT void dill_epilogue(void);
             fn;\
             dill_epilogue();\
         }\
-    } while(0)
+        dill_sp;\
+    })
 
 #define yield() dill_yield(__FILE__ ":" dill_string(__LINE__))
 
