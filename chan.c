@@ -35,8 +35,6 @@
 #include "libdill.h"
 #include "utils.h"
 
-static int dill_choose_seqnum = 0;
-
 chan dill_chmake(size_t itemsz, size_t bufsz, const char *created) {
     /* If there's at least one channel created in the user's code
        we want the debug functions to get into the binary. */
@@ -50,9 +48,9 @@ chan dill_chmake(size_t itemsz, size_t bufsz, const char *created) {
         return NULL;
     dill_register_chan(&ch->debug, created);
     ch->sz = itemsz;
-    ch->sender.seqnum = dill_choose_seqnum;
+    ch->sender.seq = 0;
     dill_list_init(&ch->sender.clauses);
-    ch->receiver.seqnum = dill_choose_seqnum;
+    ch->receiver.seq = 0;
     dill_list_init(&ch->receiver.clauses);
     ch->refcount = 1;
     ch->done = 0;
@@ -173,9 +171,13 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         return -1;
     }
 
+    /* Create unique ID for each invocation of choose(). It is used to identify
+       and ignore duplicate entries in the pollset. */
+    static uint64_t seq = 0;
+    ++seq;
+
     dill_slist_init(&dill_running->choosedata.clauses);
     dill_running->choosedata.ddline = -1;
-    ++dill_choose_seqnum;
 
     int available = 0;
     int i;
@@ -212,11 +214,11 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         dill_slist_push_back(&dill_running->choosedata.clauses, &cl->chitem);
         if(cl->available)
             ++available;
-        if(cl->ep->seqnum == dill_choose_seqnum) {
+        if(cl->ep->seq == seq) {
             ++cl->ep->refs;
         }
         else {
-            cl->ep->seqnum = dill_choose_seqnum;
+            cl->ep->seq = seq;
             cl->ep->refs = 1;
             cl->ep->tmp = -1;
         }

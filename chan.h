@@ -26,6 +26,7 @@
 #define DILL_CHAN_INCLUDED
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "debug.h"
 #include "list.h"
@@ -41,8 +42,10 @@ struct dill_choosedata {
 
 /* Channel endpoint. */
 struct dill_ep {
-    /* Sequence number of the choose operation being initialised. */
-    int seqnum;
+    /* Sequence number of the choose operation being initialised.
+       The variable is used only temporarily and has no meaning outside
+       of the scope of choose() function. */
+    uint64_t seq;
     /* Number of clauses referring to this endpoint within the choose
        operation being initialised. */
     int refs;
