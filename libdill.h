@@ -119,6 +119,15 @@ DILL_EXPORT void dill_epilogue(void);
 
 DILL_EXPORT int dill_yield(const char *current);
 
+DILL_EXPORT void gocancel(void *hndl, int64_t deadline);
+DILL_EXPORT void godelay(void);
+DILL_EXPORT void gonodelay(void);
+DILL_EXPORT int64_t godeadline(void);
+
+/******************************************************************************/
+/*  Miscellaneous functionality                                               */
+/******************************************************************************/
+
 #define msleep(deadline) dill_msleep((deadline),\
     __FILE__ ":" dill_string(__LINE__))
 
