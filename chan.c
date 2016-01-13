@@ -211,17 +211,12 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         cl->cr = dill_running;
         cl->idx = i;
         cl->used = 1;
+        if(cl->ep->seq == seq)
+            continue;
+        cl->ep->seq = seq;
         dill_slist_push_back(&dill_running->choosedata.clauses, &cl->chitem);
         if(cl->available)
             ++available;
-        if(cl->ep->seq == seq) {
-            ++cl->ep->refs;
-        }
-        else {
-            cl->ep->seq = seq;
-            cl->ep->refs = 1;
-            cl->ep->tmp = -1;
-        }
     }
 
     struct dill_choosedata *cd = &dill_running->choosedata;
@@ -266,17 +261,6 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
        and wait till one of the clauses unblocks. */
     for(it = dill_slist_begin(&cd->clauses); it; it = dill_slist_next(it)) {
         cl = dill_cont(it, struct dill_clause, chitem);
-        if(dill_slow(cl->ep->refs > 1)) {
-            if(cl->ep->tmp == -1)
-                cl->ep->tmp =
-                    cl->ep->refs == 1 ? 0 : (int)(random() % cl->ep->refs);
-            if(cl->ep->tmp) {
-                --cl->ep->tmp;
-                cl->used = 0;
-                continue;
-            }
-            cl->ep->tmp = -2;
-        }
         dill_list_insert(&cl->ep->clauses, &cl->epitem, NULL);
     }
     /* If there are multiple parallel chooses done from different coroutines

@@ -83,41 +83,6 @@ coroutine void feeder(chan ch, int val) {
     }
 }
 
-coroutine void feeder2(chan ch, int first, int second) {
-    struct chclause cls[] = {
-        {ch, CHOOSE_CHS, &first, sizeof(first)},
-        {ch, CHOOSE_CHS, &second, sizeof(second)}
-    };
-    while(1) {
-        int rc = choose(cls, 2, -1);
-        assert(rc >= 0);
-    }
-}
-
-coroutine void feeder3(chan ch, int val) {
-    while(1) {
-        int rc = msleep(10);
-        assert(rc == 0);
-        rc = chs(ch, &val, sizeof(val));
-        assert(rc == 0);
-    }
-}
-
-coroutine void feeder4(chan ch) {
-    while(1) {
-        int val1 = 1;
-        int val2 = 2;
-        int val3 = 3;
-        struct chclause cls[] = {
-            {ch, CHOOSE_CHS, &val1, sizeof(val1)},
-            {ch, CHOOSE_CHS, &val2, sizeof(val2)},
-            {ch, CHOOSE_CHS, &val3, sizeof(val3)}
-        };
-        int rc = choose(cls, 3, -1);
-        assert(rc >= 0);
-    }
-}
-
 struct large {
     char buf[1024];
 };
@@ -273,25 +238,6 @@ int main() {
     assert(val == 999);
     chclose(ch13);
 
-    /* Test whether selection of out channels is random. */
-    chan ch14 = chmake(sizeof(int), 0);
-    go(feeder2(chdup(ch14), 666, 777));
-    first = 0;
-    second = 0;
-    for(i = 0; i != 100; ++i) {
-        int v;
-        rc = chr(ch14, &v, sizeof(v));
-        assert(rc == 0);
-        if(v == 666)
-            ++first;
-        else if(v == 777)
-            ++second;
-        else
-            assert(0);
-    }
-    assert(first > 1 && second > 1);
-    chclose(ch14);
-
     /* Test whether allocating larger in buffer breaks previous in clause. */
     chan ch15 = chmake(sizeof(struct large), 1);
     chan ch16 = chmake(sizeof(int), 1);
@@ -328,66 +274,6 @@ int main() {
     assert(rc == 0);
     assert(val == 2222);
     chclose(ch18);
-
-    /* Test whether selection of in channels is random when there's nothing
-       immediately available to receive. */
-    first = 0;
-    second = 0;
-    third = 0;
-    chan ch19 = chmake(sizeof(int), 0);
-    go(feeder3(chdup(ch19), 3333));
-    for(i = 0; i != 100; ++i) {
-        struct chclause cls16[] = {
-            {ch19, CHOOSE_CHR, &val, sizeof(val)},
-            {ch19, CHOOSE_CHR, &val, sizeof(val)},
-            {ch19, CHOOSE_CHR, &val, sizeof(val)}
-        };
-        rc = choose(cls16, 3, -1);
-        switch(rc) {
-        case 0:
-            ++first;
-            break;
-        case 1:
-            ++second;
-            break;
-        case 2:
-            ++third;
-            break;
-        default:
-            assert(0);
-        }
-    }
-    assert(first > 1 && second > 1 && third > 1);
-    chclose(ch19);
-
-    /* Test whether selection of out channels is random when sending
-       cannot be performed immediately. */
-    first = 0;
-    second = 0;
-    third = 0;
-    chan ch20 = chmake(sizeof(int), 0);
-    go(feeder4(chdup(ch20)));
-    for(i = 0; i != 100; ++i) {
-        int rc = msleep(10);
-        assert(rc == 0);
-        rc = chr(ch20, &val, sizeof(val));
-        assert(rc == 0);
-        switch(val) {
-        case 1:
-            ++first;
-            break;
-        case 2:
-            ++second;
-            break;
-        case 3:
-            ++third;
-            break;
-        default:
-            assert(0);
-        }
-    }
-    assert(first > 1 && second > 1 && third > 1);
-    chclose(ch20);
 
     /* Test expiration of 'deadline' clause. */
     chan ch21 = chmake(sizeof(int), 0);

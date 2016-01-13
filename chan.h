@@ -46,11 +46,6 @@ struct dill_ep {
        The variable is used only temporarily and has no meaning outside
        of the scope of choose() function. */
     uint64_t seq;
-    /* Number of clauses referring to this endpoint within the choose
-       operation being initialised. */
-    int refs;
-    /* Number of refs already processed. */
-    int tmp;
     /* List of clauses waiting for this endpoint. */
     struct dill_list clauses;
 };
