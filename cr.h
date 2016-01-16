@@ -78,12 +78,6 @@ struct dill_cr {
     /* Argument to resume() call being passed to the blocked suspend() call. */
     int result;
 
-    /* 1 if in delay mode. 0 otherwise. */
-    int delay;
-
-    /* Cancelation deadling. If the coroutine is not yet canceled, -1. */
-    int64_t deadline;
-
     /* Coroutine-local storage. */
     void *cls;
 

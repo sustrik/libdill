@@ -89,8 +89,6 @@ void *dill_prologue(const char *created) {
     cr->cls = NULL;
     cr->fd = -1;
     cr->events = 0;
-    cr->delay = 1;
-    cr->deadline = -1;
     dill_trace(created, "{%d}=go()", (int)cr->debug.id);
     /* Suspend the parent coroutine and make the new one running. */
     if(dill_setjmp(&dill_running->ctx))
@@ -120,22 +118,6 @@ int dill_yield(const char *current) {
     dill_resume(dill_running, 0);
     dill_suspend();
     return 0;
-}
-
-void gocancel(void *hndl, int64_t deadline) {
-    dill_assert(0);
-}
-
-void godelay(void) {
-    dill_running->delay = 1;
-}
-
-void gonodelay(void) {
-    dill_running->delay = 0;
-}
-
-int64_t godeadline(void) {
-    return dill_running->deadline;
 }
 
 void *cls(void) {
