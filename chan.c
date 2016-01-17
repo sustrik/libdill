@@ -110,7 +110,7 @@ static void dill_choose_callback(struct dill_timer *timer) {
         dill_assert(itcl->used);
         dill_list_erase(&itcl->ep->clauses, &itcl->epitem);
     }
-    dill_resume(cr, -1);
+    dill_resume(cr, -ETIMEDOUT);
 }
 
 /* Push new item to the channel. */
@@ -168,6 +168,10 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
       int64_t deadline) {
     if(dill_slow(nclauses < 0 || (nclauses && !clauses))) {
         errno = EINVAL;
+        return -1;
+    }
+    if(dill_slow(dill_running->canceled)) {
+        errno = ECANCELED;
         return -1;
     }
 
@@ -245,7 +249,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
 
     /* If immediate execution was requested, exit now. */
     if(deadline == 0) {
-        dill_resume(dill_running, -1);
+        dill_resume(dill_running, -ETIMEDOUT);
         dill_suspend();
         errno = ETIMEDOUT;
         return -1;
@@ -266,8 +270,10 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     /* If there are multiple parallel chooses done from different coroutines
        all but one must be blocked on the following line. */
     int res = dill_suspend();
-    if(res == -1)
-        errno = ETIMEDOUT;
+    if(dill_slow(res < 0)) {
+        errno = -res;
+        return -1;
+    }
     return res;
 }
 

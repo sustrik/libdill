@@ -57,6 +57,14 @@ static void dill_poller_callback(struct dill_timer *timer) {
 }
 
 int dill_fdwait(int fd, int events, int64_t deadline, const char *current) {
+    if(dill_slow(fd < 0 || events < 0)) {
+        errno = EINVAL;
+        return -1;
+    }
+    if(dill_slow(dill_running->canceled)) {
+        errno = ECANCELED;
+        return -1;
+    }
     if(dill_slow(!dill_poller_initialised)) {
         dill_poller_init();
         dill_assert(errno == 0);
