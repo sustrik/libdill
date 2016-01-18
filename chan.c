@@ -96,6 +96,10 @@ void dill_chclose(chan ch, const char *current) {
     free(ch);
 }
 
+static struct dill_ep *dill_getep(struct dill_clause *cl) {
+    return cl->op == CHOOSE_CHS ? &cl->channel->sender : &cl->channel->receiver;
+}
+
 static void dill_choose_unblock_cb(struct dill_cr *cr) {
     struct dill_slist_item *it;
     struct dill_clause *itcl;
@@ -103,7 +107,7 @@ static void dill_choose_unblock_cb(struct dill_cr *cr) {
     for(it = dill_slist_begin(&cd->clauses);
           it; it = dill_slist_next(it)) {
         itcl = dill_cont(it, struct dill_clause, chitem);
-        dill_list_erase(&itcl->ep->clauses, &itcl->epitem);
+        dill_list_erase(&dill_getep(itcl)->clauses, &itcl->epitem);
     }
     if(cd->ddline > 0)
         dill_timer_rm(&cr->timer);
@@ -194,31 +198,21 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     int i;
     for(i = 0; i != nclauses; ++i) {
         struct dill_clause *cl = (struct dill_clause*)&clauses[i];
-        if(dill_slow(!cl->channel || cl->channel->sz != cl->len)) {
+        if(dill_slow(!cl->channel || cl->channel->sz != cl->len ||
+              (cl->op != CHOOSE_CHS && cl->op != CHOOSE_CHR))) {
             errno = EINVAL;
             return -1;
         }
-        switch(cl->op) {
-        case CHOOSE_CHS:
-            /* Cannot send to done-with channel. */
-            if(dill_slow(cl->channel->done)) {
-                errno = EPIPE;
-                return -1;
-            }
-            cl->ep = &cl->channel->sender;
-            break;
-        case CHOOSE_CHR:
-            cl->ep = &cl->channel->receiver;
-            break;
-        default:
-            errno = EINVAL;
+        if(dill_slow(cl->op == CHOOSE_CHS && cl->channel->done)) {
+            errno = EPIPE;
             return -1;
         }
         cl->cr = dill_running;
         cl->idx = i;
-        if(cl->ep->seq == seq)
+        struct dill_ep *ep = dill_getep(cl);
+        if(ep->seq == seq)
             continue;
-        cl->ep->seq = seq;
+        ep->seq = seq;
         dill_slist_push_back(&cd->clauses, &cl->chitem);
         if(dill_choose_available(cl))
             ++available;
@@ -265,7 +259,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
        and wait till one of the clauses unblocks. */
     for(it = dill_slist_begin(&cd->clauses); it; it = dill_slist_next(it)) {
         cl = dill_cont(it, struct dill_clause, chitem);
-        dill_list_insert(&cl->ep->clauses, &cl->epitem, NULL);
+        dill_list_insert(&dill_getep(cl)->clauses, &cl->epitem, NULL);
     }
     /* If there are multiple parallel chooses done from different coroutines
        all but one must be blocked on the following line. */

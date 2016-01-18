@@ -94,8 +94,6 @@ struct dill_clause {
     struct dill_slist_item chitem;
     /* The coroutine which created the clause. */
     struct dill_cr *cr;
-    /* Channel endpoint the clause is waiting for. */
-    struct dill_ep *ep;
     /* The index to jump to when the clause is executed. */
     int idx;
 };

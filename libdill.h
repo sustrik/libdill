@@ -161,8 +161,7 @@ struct chclause {
     void *reserved2;
     void *reserved3;
     void *reserved4;
-    void *reserved5;
-    int reserved6;
+    int reserved5;
 };
 
 #define chmake(itemsz, bufsz) \
