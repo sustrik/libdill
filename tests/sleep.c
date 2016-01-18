@@ -30,15 +30,17 @@
 #include "../libdill.h"
 
 coroutine static void delay(int n, chan ch) {
-    msleep(now() + n);
-    int rc = chs(ch, &n, sizeof(n));
+    int rc = msleep(now() + n);
+    assert(rc == 0);
+    rc = chs(ch, &n, sizeof(n));
     assert(rc == 0);
 }
 
 int main() {
     /* Test 'msleep'. */
     int64_t deadline = now() + 100;
-    msleep(deadline);
+    int rc = msleep(deadline);
+    assert(rc == 0);
     int64_t diff = now () - deadline;
     assert(diff > -20 && diff < 20);
 
@@ -49,7 +51,7 @@ int main() {
     go(delay(10, ch));
     go(delay(20, ch));
     int val;
-    int rc = chr(ch, &val, sizeof(val));
+    rc = chr(ch, &val, sizeof(val));
     assert(rc == 0);
     assert(val == 10);
     rc = chr(ch, &val, sizeof(val));

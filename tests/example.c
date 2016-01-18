@@ -22,6 +22,7 @@
 
 */
 
+#include <assert.h>
 #include <stdio.h>
 
 #include "../libdill.h"
@@ -30,7 +31,8 @@ coroutine void worker(int count, const char *text) {
     int i;
     for(i = 0; i != count; ++i) {
         printf("%s\n", text);
-        msleep(10);
+        int rc = msleep(10);
+        assert(rc == 0);
     }
 }
 
@@ -38,7 +40,8 @@ int main() {
     go(worker(4, "a"));
     go(worker(2, "b"));
     go(worker(3, "c"));
-    msleep(100);
+    int rc = msleep(100);
+    assert(rc == 0);
     return 0;
 }
 

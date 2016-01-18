@@ -46,19 +46,20 @@ int main() {
 
     /* Check for out. */
     rc = fdwait(fds[0], FDW_OUT, -1);
+    assert(rc >= 0);
     assert(rc & FDW_OUT);
     assert(!(rc & ~FDW_OUT));
 
     /* Check with the timeout that doesn't expire. */
     rc = fdwait(fds[0], FDW_OUT, now() + 100);
-    assert(rc);
+    assert(rc >= 0);
     assert(rc & FDW_OUT);
     assert(!(rc & ~FDW_OUT));
 
     /* Check with the timeout that does expire. */
     int64_t deadline = now() + 100;
     rc = fdwait(fds[0], FDW_IN, deadline);
-    assert(rc == 0);
+    assert(rc >= 0);
     int64_t diff = now() - deadline;
     assert(diff > -20 && diff < 20);
 
@@ -66,11 +67,13 @@ int main() {
     ssize_t sz = send(fds[1], "A", 1, 0);
     assert(sz == 1);
     rc = fdwait(fds[0], FDW_IN, -1);
+    assert(rc >= 0);
     assert(rc & FDW_IN);
     assert(!(rc & ~FDW_IN));
 
     /* Check for both in and out. */
     rc = fdwait(fds[0], FDW_IN | FDW_OUT, -1);
+    assert(rc >= 0);
     assert(rc & FDW_IN);
     assert(rc & FDW_OUT);
     assert(!(rc & ~(FDW_IN | FDW_OUT)));
@@ -82,6 +85,7 @@ int main() {
     int64_t start = now();
     go(trigger(fds[0], start + 50));
     rc = fdwait(fds[1], FDW_IN, start + 90);
+    assert(rc >= 0);
     assert(rc == FDW_IN);
     diff = now() - start;
     assert(diff > 30 && diff < 70);

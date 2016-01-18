@@ -51,7 +51,8 @@ int main() {
     /* Fail with exit code 128+SIGALRM if we deadlock */
     alarm(1);
 
-    msleep(1);
+    rc = msleep(1);
+    assert(rc == 0);
 
     return 0;
 }

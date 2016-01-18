@@ -40,7 +40,8 @@ coroutine void worker(int count, int n) {
 }
 
 coroutine void dummy(void) {
-    msleep(now() + 50);
+    int rc = msleep(now() + 50);
+    assert(rc == 0);
 }
 
 int main() {
@@ -48,14 +49,16 @@ int main() {
     go(worker(3, 7));
     go(worker(1, 11));
     go(worker(2, 5));
-    msleep(100);
+    int rc = msleep(100);
+    assert(rc == 0);
     assert(sum == 42);
 
     /* Test whether stack deallocation works. */
     int i;
     for(i = 0; i != 20; ++i)
         go(dummy());
-    msleep(now() + 100);
+    rc = msleep(now() + 100);
+    assert(rc == 0);
 
     return 0;
 }
