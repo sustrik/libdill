@@ -35,13 +35,6 @@
 #include "libdill.h"
 #include "utils.h"
 
-struct dill_choosedata {
-    /* List of clauses in the 'choose' statement. */
-    struct dill_slist clauses;
-    /* Deadline specified in 'deadline' clause. -1 if none. */
-    int64_t ddline;
-};
-
 DILL_CT_ASSERT(sizeof(struct dill_choosedata) <= DILL_OPAQUE_SIZE);
 
 chan dill_chmake(size_t itemsz, size_t bufsz, const char *created) {
@@ -272,8 +265,9 @@ int dill_choose(struct chclause *clauses, int nclauses, int64_t deadline,
       const char *current) {
     dill_trace(current, "choose()");
     dill_running->state = DILL_CHOOSE;
-    dill_running->nclauses = nclauses;
-    dill_running->clauses = clauses;
+    struct dill_choosedata *cd = (struct dill_choosedata*)dill_running->opaque;
+    cd->nchclauses = nclauses;
+    cd->chclauses = clauses;
     dill_set_current(&dill_running->debug, current);
     return dill_choose_(clauses, nclauses, deadline);
 }

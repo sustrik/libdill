@@ -112,6 +112,8 @@ void goredump(void) {
         case DILL_CHS:
         case DILL_CHOOSE:
             {
+                struct dill_choosedata *cd =
+                    (struct dill_choosedata*)cr->opaque;
                 int pos = 0;
                 if(cr->state == DILL_CHR)
                     pos += sprintf(&buf[pos], "chr(");
@@ -121,14 +123,14 @@ void goredump(void) {
                     pos += sprintf(&buf[pos], "choose(");
                 int first = 1;
                 int i;
-                for(i = 0; i != cr->nclauses; ++i) {
+                for(i = 0; i != cd->nchclauses; ++i) {
                     if(first)
                         first = 0;
                     else
                         pos += sprintf(&buf[pos], ",");
                     pos += sprintf(&buf[pos], "%c<%d>",
-                        cr->clauses[i].op == CHOOSE_CHS ? 'S' : 'R',
-                        cr->clauses[i].channel->debug.id);
+                        cd->chclauses[i].op == CHOOSE_CHS ? 'S' : 'R',
+                        cd->chclauses[i].channel->debug.id);
                 }
                 sprintf(&buf[pos], ")");
             }

@@ -33,7 +33,7 @@
 #include "timer.h"
 #include "utils.h"
 
-#define DILL_OPAQUE_SIZE 32
+#define DILL_OPAQUE_SIZE 48
 
 enum dill_state {
     DILL_READY,
@@ -91,11 +91,6 @@ struct dill_cr {
     /* TODO: Following fields should go to dill_debug_cr. */
     /* Status of the coroutine. Used for debugging purposes. */
     enum dill_state state;
-
-    /* If coroutine is stuck in choose(), here are the clauses.
-       Used for debugging. */
-    int nclauses;
-    struct chclause *clauses;
 
     /* Opaque storage for whatever data the current blocking operation
        needs to store while it is suspended. */
