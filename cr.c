@@ -94,9 +94,7 @@ int dill_prologue(struct dill_cr **cr, const char *created) {
     *cr = ((struct dill_cr*)dill_allocstack()) - 1;
     dill_register_cr(&(*cr)->debug, created);
     (*cr)->cls = NULL;
-    (*cr)->fd = -1;
-    (*cr)->events = 0;
-    (*cr)->unblock_cb = NULL;
+      (*cr)->unblock_cb = NULL;
     dill_trace(created, "{%d}=go()", (int)(*cr)->debug.id);
     /* Suspend the parent coroutine and make the new one running. */
     if(dill_setjmp(&dill_running->ctx))

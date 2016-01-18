@@ -33,6 +33,7 @@
 #include "cr.h"
 #include "libdill.h"
 #include "list.h"
+#include "poller.h"
 #include "stack.h"
 #include "utils.h"
 
@@ -102,12 +103,16 @@ void goredump(void) {
             sprintf(buf, "msleep()");
             break;
         case DILL_FDWAIT:
-            sprintf(buf, "fdwait(%d, %s)", cr->fd,
-                (cr->events & FDW_IN) &&
-                    (cr->events & FDW_OUT) ? "FDW_IN | FDW_OUT" :
-                cr->events & FDW_IN ? "FDW_IN" :
-                cr->events & FDW_OUT ? "FDW_OUT" : 0);
-            break;
+            {
+                struct dill_fdwaitdata *fdata =
+                    (struct dill_fdwaitdata*)cr->opaque;
+                sprintf(buf, "fdwait(%d, %s)", fdata->fd,
+                    (fdata->events & FDW_IN) &&
+                        (fdata->events & FDW_OUT) ? "FDW_IN | FDW_OUT" :
+                    fdata->events & FDW_IN ? "FDW_IN" :
+                    fdata->events & FDW_OUT ? "FDW_OUT" : 0);
+                break;
+            }
         case DILL_CHR:
         case DILL_CHS:
         case DILL_CHOOSE:

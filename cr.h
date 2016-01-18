@@ -70,12 +70,6 @@ struct dill_cr {
     /* Function to be called when the coroutine is unblocked. */
     dill_unblock_cb unblock_cb;
 
-    /* When the coroutine is blocked in fdwait(), these members contains the
-       file descriptor and events that the function waits for. They are used
-       only for debugging purposes. */
-    int fd;
-    int events;
-
     /* Stored coroutine context while it is not executing. */
     struct dill_ctx ctx;
 

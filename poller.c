@@ -54,6 +54,8 @@ static int dill_fdwait_(int fd, int events, int64_t deadline,
         dill_assert(errno == 0);
         dill_poller_initialised = 1;
     }
+    struct dill_fdwaitdata *fdata =
+        (struct dill_fdwaitdata*)dill_running->opaque;
     /* If required, start waiting for the timeout. */
     if(deadline >= 0)
         dill_timer_add(&dill_running->timer, deadline);
@@ -62,8 +64,8 @@ static int dill_fdwait_(int fd, int events, int64_t deadline,
         dill_poller_add(fd, events);
     /* Do actual waiting. */
     dill_running->op = fd < 0 ? DILL_MSLEEP : DILL_FDWAIT;
-    dill_running->fd = fd;
-    dill_running->events = events;
+    fdata->fd = fd;
+    fdata->events = events;
     dill_set_current(&dill_running->debug, current);
     int rc = dill_suspend(NULL);
     /* Handle file descriptor events. */

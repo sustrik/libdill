@@ -25,6 +25,13 @@
 #ifndef DILL_POLLER_INCLUDED
 #define DILL_POLLER_INCLUDED
 
+struct dill_fdwaitdata {
+    /* File descriptor being waited for. */
+    int fd;
+    /* Events being waited for (FDW_IN, FDW_OUT). */
+    int events;
+};
+
 void dill_poller_init(void);
 
 /* poller.c also implements dill_wait() and dill_fdwait() declared
