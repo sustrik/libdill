@@ -67,8 +67,7 @@ struct dill_cr {
     /* Debugging info. */
     struct dill_debug_cr debug;
     /* Opaque storage for whatever data the current blocking operation
-       needs to store while it is suspended. Actual type differs depending
-       on 'op' variable. */
+       needs to store while it is suspended. */
     uint8_t opaque[DILL_OPAQUE_SIZE];
 };
 
