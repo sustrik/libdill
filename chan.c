@@ -35,6 +35,15 @@
 #include "libdill.h"
 #include "utils.h"
 
+struct dill_choosedata {
+    /* List of clauses in the 'choose' statement. */
+    struct dill_slist clauses;
+    /* Deadline specified in 'deadline' clause. -1 if none. */
+    int64_t ddline;
+};
+
+DILL_CT_ASSERT(sizeof(struct dill_choosedata) <= DILL_OPAQUE_SIZE);
+
 chan dill_chmake(size_t itemsz, size_t bufsz, const char *created) {
     /* If there's at least one channel created in the user's code
        we want the debug functions to get into the binary. */
@@ -87,14 +96,15 @@ void dill_chclose(chan ch, const char *current) {
 static void dill_choose_unblock_cb(struct dill_cr *cr) {
     struct dill_slist_item *it;
     struct dill_clause *itcl;
-    for(it = dill_slist_begin(&cr->choosedata.clauses);
+    struct dill_choosedata *cd = (struct dill_choosedata*)cr->opaque;
+    for(it = dill_slist_begin(&cd->clauses);
           it; it = dill_slist_next(it)) {
         itcl = dill_cont(it, struct dill_clause, chitem);
         if(!itcl->used)
             continue;
         dill_list_erase(&itcl->ep->clauses, &itcl->epitem);
     }
-    if(cr->choosedata.ddline > 0)
+    if(cd->ddline > 0)
         dill_timer_rm(&cr->timer);
 }
 
@@ -161,8 +171,9 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     static uint64_t seq = 0;
     ++seq;
 
-    dill_slist_init(&dill_running->choosedata.clauses);
-    dill_running->choosedata.ddline = -1;
+    struct dill_choosedata *cd = (struct dill_choosedata*)dill_running->opaque;
+    dill_slist_init(&cd->clauses);
+    cd->ddline = -1;
 
     int available = 0;
     int i;
@@ -199,12 +210,11 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         if(cl->ep->seq == seq)
             continue;
         cl->ep->seq = seq;
-        dill_slist_push_back(&dill_running->choosedata.clauses, &cl->chitem);
+        dill_slist_push_back(&cd->clauses, &cl->chitem);
         if(cl->available)
             ++available;
     }
 
-    struct dill_choosedata *cd = &dill_running->choosedata;
     struct dill_slist_item *it;
     struct dill_clause *cl;
 

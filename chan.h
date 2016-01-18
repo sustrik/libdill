@@ -32,14 +32,6 @@
 #include "list.h"
 #include "slist.h"
 
-/* One of these structures is preallocated for every coroutine. */
-struct dill_choosedata {
-    /* List of clauses in the 'choose' statement. */
-    struct dill_slist clauses;
-    /* Deadline specified in 'deadline' clause. -1 if none. */
-    int64_t ddline;
-};
-
 /* Channel endpoint. */
 struct dill_ep {
     /* Sequence number of the choose operation being initialised.

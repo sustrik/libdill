@@ -27,12 +27,13 @@
 
 #include <stdint.h>
 
-#include "chan.h"
 #include "debug.h"
 #include "list.h"
 #include "slist.h"
 #include "timer.h"
 #include "utils.h"
+
+#define DILL_OPAQUE_SIZE 32
 
 enum dill_state {
     DILL_READY,
@@ -42,6 +43,8 @@ enum dill_state {
     DILL_CHS,
     DILL_CHOOSE
 };
+
+struct dill_cr;
 
 typedef void (*dill_unblock_cb)(struct dill_cr *cr);
 
@@ -73,10 +76,6 @@ struct dill_cr {
     int fd;
     int events;
 
-    /* This structure is used when the coroutine is executing a choose
-       statement. */
-    struct dill_choosedata choosedata;
-
     /* Stored coroutine context while it is not executing. */
     struct dill_ctx ctx;
 
@@ -97,6 +96,10 @@ struct dill_cr {
        Used for debugging. */
     int nclauses;
     struct chclause *clauses;
+
+    /* Opaque storage for whatever data the current blocking operation
+       needs to store while it is suspended. */
+    uint8_t opaque[DILL_OPAQUE_SIZE];
 };
 
 /* Fake coroutine corresponding to the main thread of execution. */
