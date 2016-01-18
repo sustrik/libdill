@@ -35,15 +35,6 @@
 
 #define DILL_OPAQUE_SIZE 48
 
-enum dill_op {
-    DILL_READY,
-    DILL_MSLEEP,
-    DILL_FDWAIT,
-    DILL_CHR,
-    DILL_CHS,
-    DILL_CHOOSE
-};
-
 struct dill_cr;
 
 typedef void (*dill_unblock_cb)(struct dill_cr *cr);
@@ -75,8 +66,6 @@ struct dill_cr {
     void *cls;
     /* Debugging info. */
     struct dill_debug_cr debug;
-    /* Operation being processed at the moment. Used for debugging. */
-    enum dill_op op;
     /* Opaque storage for whatever data the current blocking operation
        needs to store while it is suspended. Actual type differs depending
        on 'op' variable. */

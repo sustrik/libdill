@@ -28,11 +28,22 @@
 #include "list.h"
 #include "utils.h"
 
+enum dill_op {
+    DILL_READY,
+    DILL_MSLEEP,
+    DILL_FDWAIT,
+    DILL_CHR,
+    DILL_CHS,
+    DILL_CHOOSE
+};
+
 struct dill_debug_cr {
     /* List of all coroutines. */
     struct dill_list_item item;
     /* Unique ID of the coroutine. */
     int id;
+    /* Operation being processed at the moment. Used for debugging. */
+    enum dill_op op;
     /* File and line where the coroutine was launched. */
     const char *created;
     /* File and line where the current blocking operation was invoked from. */

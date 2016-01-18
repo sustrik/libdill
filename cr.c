@@ -80,7 +80,7 @@ void dill_resume(struct dill_cr *cr, int result) {
         cr->unblock_cb = NULL;
     }
     cr->result = result;
-    cr->op = DILL_READY;
+    cr->debug.op = DILL_READY;
     dill_slist_push_back(&dill_ready, &cr->ready);
 }
 
