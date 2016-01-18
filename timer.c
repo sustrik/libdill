@@ -31,6 +31,7 @@
 static mach_timebase_info_data_t dill_mtid = {0};
 #endif
 
+#include "cr.h"
 #include "libdill.h"
 #include "timer.h"
 #include "utils.h"
@@ -98,11 +99,9 @@ int64_t now(void) {
    First timer to be resume comes first and so on. */
 static struct dill_list dill_timers = {0};
 
-void dill_timer_add(struct dill_timer *timer, int64_t deadline,
-      dill_timer_callback callback) {
+void dill_timer_add(struct dill_timer *timer, int64_t deadline) {
     dill_assert(deadline >= 0);
     timer->expiry = deadline;
-    timer->callback = callback;
     /* Move the timer into the right place in the ordered list
        of existing timers. TODO: This is an O(n) operation! */
     struct dill_list_item *it = dill_list_begin(&dill_timers);
@@ -142,8 +141,7 @@ int dill_timer_fire(void) {
         if(tm->expiry > nw)
             break;
         dill_list_erase(&dill_timers, dill_list_begin(&dill_timers));
-        if(tm->callback)
-            tm->callback(tm);
+        dill_resume(dill_cont(tm, struct dill_cr, timer), -ETIMEDOUT);
         fired = 1;
     }
     return fired;

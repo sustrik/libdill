@@ -29,22 +29,15 @@
 
 #include "list.h"
 
-struct dill_timer;
-
-typedef void (*dill_timer_callback)(struct dill_timer *timer);
-
 struct dill_timer {
     /* Item in the global list of all timers. */
     struct dill_list_item item;
     /* The deadline when the timer expires. */
     int64_t expiry;
-    /* Callback invoked when timer expires. Pfui Teufel! */
-    dill_timer_callback callback;
 };
 
 /* Add a timer for the running coroutine. */
-void dill_timer_add(struct dill_timer *timer, int64_t deadline,
-    dill_timer_callback callback);
+void dill_timer_add(struct dill_timer *timer, int64_t deadline);
 
 /* Remove the timer associated with the running coroutine. */
 void dill_timer_rm(struct dill_timer *timer);

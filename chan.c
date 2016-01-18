@@ -98,11 +98,6 @@ static void dill_choose_unblock_cb(struct dill_cr *cr, int result) {
         dill_timer_rm(&cr->timer);
 }
 
-static void dill_choose_callback(struct dill_timer *timer) {
-    struct dill_cr *cr = dill_cont(timer, struct dill_cr, timer);
-    dill_resume(cr, -ETIMEDOUT);
-}
-
 /* Push new item to the channel. */
 static void dill_enqueue(chan ch, void *val) {
     /* If there's a receiver already waiting, let's resume it. */
@@ -244,7 +239,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     /* If deadline was specified, start the timer. */
     if(deadline > 0) {
         cd->ddline = deadline;
-        dill_timer_add(&dill_running->timer, deadline, dill_choose_callback);
+        dill_timer_add(&dill_running->timer, deadline);
     }
 
     /* In all other cases register this coroutine with the queried channels

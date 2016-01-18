@@ -52,10 +52,6 @@ int dill_msleep(int64_t deadline, const char *current) {
     return dill_fdwait(-1, 0, deadline, current);
 }
 
-static void dill_poller_callback(struct dill_timer *timer) {
-    dill_resume(dill_cont(timer, struct dill_cr, timer), -ETIMEDOUT);
-}
-
 int dill_fdwait(int fd, int events, int64_t deadline, const char *current) {
     if(dill_slow(!dill_poller_initialised)) {
         dill_poller_init();
@@ -64,7 +60,7 @@ int dill_fdwait(int fd, int events, int64_t deadline, const char *current) {
     }
     /* If required, start waiting for the timeout. */
     if(deadline >= 0)
-        dill_timer_add(&dill_running->timer, deadline, dill_poller_callback);
+        dill_timer_add(&dill_running->timer, deadline);
     /* If required, start waiting for the file descriptor. */
     if(fd >= 0)
         dill_poller_add(fd, events);
