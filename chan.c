@@ -167,6 +167,8 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     struct dill_choosedata *cd = (struct dill_choosedata*)dill_running->opaque;
     dill_slist_init(&cd->clauses);
     cd->ddline = -1;
+    cd->nchclauses = nclauses;
+    cd->chclauses = clauses;
 
     int available = 0;
     int i;
@@ -264,9 +266,6 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
 int dill_choose(struct chclause *clauses, int nclauses, int64_t deadline,
       const char *current) {
     dill_trace(current, "choose()");
-    struct dill_choosedata *cd = (struct dill_choosedata*)dill_running->opaque;
-    cd->nchclauses = nclauses;
-    cd->chclauses = clauses;
     dill_startop(&dill_running->debug, DILL_CHOOSE, current);
     return dill_choose_(clauses, nclauses, deadline);
 }

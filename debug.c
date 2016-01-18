@@ -85,7 +85,7 @@ void dill_startop(struct dill_debug_cr *cr, enum dill_op op,
 }
 
 void goredump(void) {
-    char buf[256];
+    char buf[512];
     char idbuf[10];
 
     fprintf(stderr,
@@ -136,8 +136,12 @@ void goredump(void) {
                             first = 0;
                         else
                             pos += sprintf(&buf[pos], ",");
-                        pos += sprintf(&buf[pos], "%c<%d>",
-                            cd->chclauses[i].op == CHOOSE_CHS ? 'S' : 'R',
+                        if(cr->debug.op == DILL_CHOOSE) {
+                            buf[pos] = cd->chclauses[i].op ==
+                                CHOOSE_CHS ? 'S' : 'R';
+                            ++pos;
+                        }
+                        pos += sprintf(&buf[pos], "<%d>",
                             cd->chclauses[i].channel->debug.id);
                     }
                     sprintf(&buf[pos], ")");
