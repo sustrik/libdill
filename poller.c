@@ -53,7 +53,7 @@ int dill_msleep(int64_t deadline, const char *current) {
 }
 
 static void dill_poller_callback(struct dill_timer *timer) {
-    dill_resume(dill_cont(timer, struct dill_cr, timer), -1);
+    dill_resume(dill_cont(timer, struct dill_cr, timer), -ETIMEDOUT);
 }
 
 int dill_fdwait(int fd, int events, int64_t deadline, const char *current) {

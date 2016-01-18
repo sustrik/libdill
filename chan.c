@@ -100,7 +100,7 @@ static void dill_choose_unblock_cb(struct dill_cr *cr, int result) {
 
 static void dill_choose_callback(struct dill_timer *timer) {
     struct dill_cr *cr = dill_cont(timer, struct dill_cr, timer);
-    dill_resume(cr, -1);
+    dill_resume(cr, -ETIMEDOUT);
 }
 
 /* Push new item to the channel. */
@@ -256,8 +256,10 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     /* If there are multiple parallel chooses done from different coroutines
        all but one must be blocked on the following line. */
     int res = dill_suspend(dill_choose_unblock_cb);
-    if(res == -1)
-        errno = ETIMEDOUT;
+    if(dill_slow(res < 0)) {
+        errno = -res;
+        return -1;
+    }
     return res;
 }
 
