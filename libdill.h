@@ -86,7 +86,7 @@ DILL_EXPORT int64_t now(void);
 DILL_EXPORT extern volatile int dill_unoptimisable1;
 DILL_EXPORT extern volatile void *dill_unoptimisable2;
 
-DILL_EXPORT int dill_prologue(void **crhndl, const char *created);
+DILL_EXPORT void *dill_prologue(const char *created);
 DILL_EXPORT void dill_epilogue(void);
 
 #define dill_string2(x) #x
@@ -103,8 +103,8 @@ DILL_EXPORT void dill_epilogue(void);
    See https://gcc.gnu.org/onlinedocs/gcc-3.2/gcc/Statement-Exprs.html */
 #define go(fn) \
     ({\
-        void *dill_sp;\
-        if(dill_prologue(&dill_sp, __FILE__ ":" dill_string(__LINE__))) {\
+        void *dill_sp = dill_prologue(__FILE__ ":" dill_string(__LINE__));\
+        if(dill_sp) {\
             int dill_anchor[dill_unoptimisable1];\
             dill_unoptimisable2 = &dill_anchor;\
             char dill_filler[(char*)&dill_anchor - (char*)(dill_sp)];\
@@ -114,8 +114,6 @@ DILL_EXPORT void dill_epilogue(void);
         }\
         dill_sp;\
     })
-
-DILL_EXPORT int gocancel(void *crhndl);
 
 #define yield() dill_yield(__FILE__ ":" dill_string(__LINE__))
 

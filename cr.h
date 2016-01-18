@@ -78,9 +78,6 @@ struct dill_cr {
     /* Argument to resume() call being passed to the blocked suspend() call. */
     int result;
 
-    /* If 1, gocancel() was called for the coroutine. 0 otherwise. */
-    int canceled;
-
     /* Coroutine-local storage. */
     void *cls;
 

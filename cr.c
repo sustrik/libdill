@@ -79,7 +79,7 @@ void dill_resume(struct dill_cr *cr, int result) {
 
 /* The intial part of go(). Starts the new coroutine.
    Returns the pointer to the top of its stack. */
-int dill_prologue(void **crhndl, const char *created) {
+void *dill_prologue(const char *created) {
     /* Ensure that debug functions are available whenever a single go()
        statement is present in the user's code. */
     dill_preserve_debug();
@@ -89,18 +89,14 @@ int dill_prologue(void **crhndl, const char *created) {
     cr->cls = NULL;
     cr->fd = -1;
     cr->events = 0;
-    cr->canceled = 0;
     dill_trace(created, "{%d}=go()", (int)cr->debug.id);
     /* Suspend the parent coroutine and make the new one running. */
-    if(dill_setjmp(&dill_running->ctx)) {
-        *crhndl = (void*)cr;
-        return 0;
-    }
+    if(dill_setjmp(&dill_running->ctx))
+        return NULL;
     dill_resume(dill_running, 0);    
     dill_running = cr;
     /* Return pointer to the top of the stack. */
-    *crhndl = (void*)cr;
-    return 1;
+    return (void*)cr;
 }
 
 /* The final part of go(). Cleans up after the coroutine is finished. */
@@ -121,14 +117,6 @@ int dill_yield(const char *current) {
        suspending it. */
     dill_resume(dill_running, 0);
     dill_suspend();
-    return 0;
-}
-
-int gocancel(void *crhndl) {
-    struct dill_cr *cr = (struct dill_cr*)crhndl;
-    /* TODO: Clean up! */
-    cr->canceled = 1;
-    dill_resume(cr, -ECANCELED);
     return 0;
 }
 
