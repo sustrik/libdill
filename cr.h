@@ -43,7 +43,7 @@ enum dill_state {
     DILL_CHOOSE
 };
 
-typedef void (*dill_unblock_cb)(struct dill_cr *cr, int error);
+typedef void (*dill_unblock_cb)(struct dill_cr *cr);
 
 /* The coroutine. The memory layout looks like this:
 

@@ -76,7 +76,7 @@ int dill_suspend(dill_unblock_cb unblock_cb) {
 
 void dill_resume(struct dill_cr *cr, int result) {
     if(cr->unblock_cb) {
-        cr->unblock_cb(cr, result);
+        cr->unblock_cb(cr);
         cr->unblock_cb = NULL;
     }
     cr->result = result;

@@ -84,7 +84,7 @@ void dill_chclose(chan ch, const char *current) {
     free(ch);
 }
 
-static void dill_choose_unblock_cb(struct dill_cr *cr, int result) {
+static void dill_choose_unblock_cb(struct dill_cr *cr) {
     struct dill_slist_item *it;
     struct dill_clause *itcl;
     for(it = dill_slist_begin(&cr->choosedata.clauses);

@@ -96,7 +96,7 @@ int64_t now(void) {
 }
 
 /* Global linked list of all timers. The list is ordered.
-   First timer to be resume comes first and so on. */
+   First timer to be resumed comes first and so on. */
 static struct dill_list dill_timers = {0};
 
 void dill_timer_add(struct dill_timer *timer, int64_t deadline) {
