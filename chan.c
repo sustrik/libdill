@@ -79,10 +79,18 @@ void dill_chclose(chan ch, const char *current) {
     --ch->refcount;
     if(ch->refcount)
         return;
-    if(dill_slow(!dill_list_empty(&ch->sender.clauses) ||
-          !dill_list_empty(&ch->receiver.clauses))) {
-        /* TODO: Senders and receivers should return EPIPE here. */
-        dill_panic("attempt to close a channel while it is still being used");
+    /* Resume any remaining senders and receivers on the channel
+       with EPIPE error. */
+    struct dill_list_item *it;
+    for(it = dill_list_begin(&ch->sender.clauses); it;
+          it = dill_list_next(it)) {
+        struct dill_clause *cl = dill_cont(it, struct dill_clause, epitem);
+        dill_resume(cl->cr, -EPIPE);
+    }
+    for(it = dill_list_begin(&ch->receiver.clauses); it;
+          it = dill_list_next(it)) {
+        struct dill_clause *cl = dill_cont(it, struct dill_clause, epitem);
+        dill_resume(cl->cr, -EPIPE);
     }
     dill_unregister_chan(&ch->debug);
     free(ch);
@@ -300,11 +308,16 @@ int dill_chdone(chan ch, const void *val, size_t len, const char *current) {
         return -1;
     }
     dill_trace(current, "chdone(<%d>)", (int)ch->debug.id);
-    if(dill_slow(ch->done) || !dill_list_empty(&ch->sender.clauses)) {
-        /* TODO: If there are pending senders, they should be unblocked to
-                 return EPIPE. */
+    if(dill_slow(ch->done)) {
         errno = EPIPE;
         return -1;
+    }
+    /* Resume any remaining senders on the channel with EPIPE error. */
+    struct dill_list_item *it;
+    for(it = dill_list_begin(&ch->sender.clauses); it;
+          it = dill_list_next(it)) {
+        struct dill_clause *cl = dill_cont(it, struct dill_clause, epitem);
+        dill_resume(cl->cr, -EPIPE);
     }
     /* Put the channel into done-with mode. */
     ch->done = 1;

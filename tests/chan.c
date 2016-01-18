@@ -77,6 +77,18 @@ coroutine void structsender(chan ch, struct foo val) {
     chclose(ch);
 }
 
+coroutine void sender2(chan ch, int val) {
+    int rc = chs(ch, &val, sizeof(val));
+    assert(rc == -1 && errno == EPIPE);
+    chclose(ch);
+}
+
+coroutine void receiver3(chan ch) {
+    int val;
+    int rc = chr(ch, &val, sizeof(val));
+    assert(rc == -1 && errno == EPIPE);
+}
+
 int main() {
     int val;
 
@@ -261,6 +273,31 @@ int main() {
     assert(rc == 0);
     assert(val == 2);
     chclose(ch14);
+
+    /* Test whether chdone() unblocks blocked senders. */
+    chan ch15 = chmake(sizeof(int), 0);
+    go(sender2(chdup(ch15), 999));
+    go(sender2(chdup(ch15), 999));
+    go(sender2(chdup(ch15), 999));
+    rc = msleep(now() + 50);
+    assert(rc == 0);
+    val = -1;
+    rc = chdone(ch15, &val, sizeof(val));
+    assert(rc == 0);
+    chclose(ch15);
+
+    /* Test whether chclose() unblocks blocked senders and receivers. */
+    chan ch16 = chmake(sizeof(int), 0);
+    go(receiver3(ch16));
+    go(receiver3(ch16));
+    rc = msleep(now() + 50);
+    assert(rc == 0);
+    chclose(ch16);
+
+    /* Give it a little time to make sure that terminating coroutines
+       don't fail. */
+    rc = msleep(now() + 100);
+    assert(rc == 0);
 
     return 0;
 }
