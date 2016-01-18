@@ -79,9 +79,11 @@ void dill_chclose(chan ch, const char *current) {
     --ch->refcount;
     if(ch->refcount)
         return;
-    if(!dill_list_empty(&ch->sender.clauses) ||
-          !dill_list_empty(&ch->receiver.clauses))
+    if(dill_slow(!dill_list_empty(&ch->sender.clauses) ||
+          !dill_list_empty(&ch->receiver.clauses))) {
+        /* TODO: Senders and receivers should return EPIPE here. */
         dill_panic("attempt to close a channel while it is still being used");
+    }
     dill_unregister_chan(&ch->debug);
     free(ch);
 }
@@ -299,6 +301,8 @@ int dill_chdone(chan ch, const void *val, size_t len, const char *current) {
     }
     dill_trace(current, "chdone(<%d>)", (int)ch->debug.id);
     if(dill_slow(ch->done) || !dill_list_empty(&ch->sender.clauses)) {
+        /* TODO: If there are pending senders, they should be unblocked to
+                 return EPIPE. */
         errno = EPIPE;
         return -1;
     }
