@@ -80,7 +80,6 @@ void dill_resume(struct dill_cr *cr, int result) {
         cr->unblock_cb = NULL;
     }
     cr->result = result;
-    dill_startop(&cr->debug, DILL_READY, NULL);
     dill_slist_push_back(&dill_ready, &cr->ready);
 }
 
@@ -117,7 +116,7 @@ void dill_epilogue(void) {
 
 int dill_yield(const char *current) {
     dill_trace(current, "yield()");
-    dill_startop(&dill_running->debug, DILL_READY, current);
+    dill_startop(&dill_running->debug, DILL_YIELD, current);
     /* This looks fishy, but yes, we can resume the coroutine even before
        suspending it. */
     dill_resume(dill_running, 0);

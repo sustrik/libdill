@@ -29,7 +29,7 @@
 #include "utils.h"
 
 enum dill_op {
-    DILL_READY,
+    DILL_YIELD,
     DILL_MSLEEP,
     DILL_FDWAIT,
     DILL_CHR,

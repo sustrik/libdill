@@ -97,58 +97,60 @@ void goredump(void) {
     struct dill_list_item *it;
     for(it = dill_list_begin(&dill_all_crs); it; it = dill_list_next(it)) {
         struct dill_cr *cr = dill_cont(it, struct dill_cr, debug.item);
-        switch(cr->debug.op) {
-        case DILL_READY:
-            sprintf(buf, "%s", dill_running == cr ? "RUNNING" : "ready");
-            break;
-        case DILL_MSLEEP:
-            sprintf(buf, "msleep()");
-            break;
-        case DILL_FDWAIT:
-            {
-                struct dill_fdwaitdata *fdata =
-                    (struct dill_fdwaitdata*)cr->opaque;
-                sprintf(buf, "fdwait(%d, %s)", fdata->fd,
-                    (fdata->events & FDW_IN) &&
-                        (fdata->events & FDW_OUT) ? "FDW_IN | FDW_OUT" :
-                    fdata->events & FDW_IN ? "FDW_IN" :
-                    fdata->events & FDW_OUT ? "FDW_OUT" : 0);
+        if(dill_running != cr) {
+            switch(cr->debug.op) {
+            case DILL_YIELD:
+                sprintf(buf, "%s", "yield()");
                 break;
-            }
-        case DILL_CHR:
-        case DILL_CHS:
-        case DILL_CHOOSE:
-            {
-                struct dill_choosedata *cd =
-                    (struct dill_choosedata*)cr->opaque;
-                int pos = 0;
-                if(cr->debug.op == DILL_CHR)
-                    pos += sprintf(&buf[pos], "chr(");
-                else if(cr->debug.op == DILL_CHS)
-                    pos += sprintf(&buf[pos], "chs(");
-                else
-                    pos += sprintf(&buf[pos], "choose(");
-                int first = 1;
-                int i;
-                for(i = 0; i != cd->nchclauses; ++i) {
-                    if(first)
-                        first = 0;
-                    else
-                        pos += sprintf(&buf[pos], ",");
-                    pos += sprintf(&buf[pos], "%c<%d>",
-                        cd->chclauses[i].op == CHOOSE_CHS ? 'S' : 'R',
-                        cd->chclauses[i].channel->debug.id);
+            case DILL_MSLEEP:
+                sprintf(buf, "msleep()");
+                break;
+            case DILL_FDWAIT:
+                {
+                    struct dill_fdwaitdata *fdata =
+                        (struct dill_fdwaitdata*)cr->opaque;
+                    sprintf(buf, "fdwait(%d, %s)", fdata->fd,
+                        (fdata->events & FDW_IN) &&
+                            (fdata->events & FDW_OUT) ? "FDW_IN | FDW_OUT" :
+                        fdata->events & FDW_IN ? "FDW_IN" :
+                        fdata->events & FDW_OUT ? "FDW_OUT" : 0);
+                    break;
                 }
-                sprintf(&buf[pos], ")");
+            case DILL_CHR:
+            case DILL_CHS:
+            case DILL_CHOOSE:
+                {
+                    struct dill_choosedata *cd =
+                        (struct dill_choosedata*)cr->opaque;
+                    int pos = 0;
+                    if(cr->debug.op == DILL_CHR)
+                        pos += sprintf(&buf[pos], "chr(");
+                    else if(cr->debug.op == DILL_CHS)
+                        pos += sprintf(&buf[pos], "chs(");
+                    else
+                        pos += sprintf(&buf[pos], "choose(");
+                    int first = 1;
+                    int i;
+                    for(i = 0; i != cd->nchclauses; ++i) {
+                        if(first)
+                            first = 0;
+                        else
+                            pos += sprintf(&buf[pos], ",");
+                        pos += sprintf(&buf[pos], "%c<%d>",
+                            cd->chclauses[i].op == CHOOSE_CHS ? 'S' : 'R',
+                            cd->chclauses[i].channel->debug.id);
+                    }
+                    sprintf(&buf[pos], ")");
+                }
+                break;
+            default:
+                assert(0);
             }
-            break;
-        default:
-            assert(0);
         }
         snprintf(idbuf, sizeof(idbuf), "{%d}", (int)cr->debug.id);
         fprintf(stderr, "%-8s   %-42s %-40s %s\n",
             idbuf,
-            buf,
+            cr == dill_running ? "RUNNING" : buf,
             cr == dill_running ? "---" : cr->debug.current,
             cr->debug.created ? cr->debug.created : "<main>");
     }
