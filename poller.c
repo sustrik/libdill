@@ -31,6 +31,8 @@
 #include "poller.h"
 #include "timer.h"
 
+DILL_CT_ASSERT(sizeof(struct dill_fdwaitdata) <= DILL_OPAQUE_SIZE);
+
 /* Forward declarations for the functions implemented by specific poller
    mechanisms (poll, epoll, kqueue). */
 void dill_poller_init(void);
