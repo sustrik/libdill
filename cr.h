@@ -63,28 +63,20 @@ struct dill_cr {
     /* The coroutine is stored in this list if it is not blocked and it is
        waiting to be executed. */
     struct dill_slist_item ready;
-
     /* If the coroutine is waiting for a deadline, it uses this timer. */
     struct dill_timer timer;
-
     /* Function to be called when the coroutine is unblocked. */
     dill_unblock_cb unblock_cb;
-
     /* Stored coroutine context while it is not executing. */
     struct dill_ctx ctx;
-
     /* Argument to resume() call being passed to the blocked suspend() call. */
     int result;
-
     /* Coroutine-local storage. */
     void *cls;
-
     /* Debugging info. */
     struct dill_debug_cr debug;
-
     /* Operation being processed at the moment. Used for debugging. */
     enum dill_op op;
-
     /* Opaque storage for whatever data the current blocking operation
        needs to store while it is suspended. Actual type differs depending
        on 'op' variable. */
