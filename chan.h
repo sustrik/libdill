@@ -98,9 +98,6 @@ struct dill_clause {
     struct dill_ep *ep;
     /* The index to jump to when the clause is executed. */
     int idx;
-    /* If 0, there's no peer waiting for the clause at the moment.
-       If 1, there is one. */
-    int available;
 };
 
 #endif

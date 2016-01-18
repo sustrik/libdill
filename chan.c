@@ -160,6 +160,18 @@ static void dill_dequeue(chan ch, void *val) {
     }
 }
 
+static int dill_choose_available(struct dill_clause *cl) {
+    if(cl->op == CHOOSE_CHS) {
+        return !dill_list_empty(&cl->channel->receiver.clauses) ||
+        cl->channel->items < cl->channel->bufsz ? 1 : 0;
+    }
+    else {
+        return cl->channel->done ||
+            !dill_list_empty(&cl->channel->sender.clauses) ||
+            cl->channel->items ? 1 : 0;
+    }
+}
+
 static int dill_choose_(struct chclause *clauses, int nclauses,
       int64_t deadline) {
     if(dill_slow(nclauses < 0 || (nclauses && !clauses))) {
@@ -193,14 +205,9 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
                 errno = EPIPE;
                 return -1;
             }
-            cl->available = !dill_list_empty(&cl->channel->receiver.clauses) ||
-                cl->channel->items < cl->channel->bufsz ? 1 : 0;
             cl->ep = &cl->channel->sender;
             break;
         case CHOOSE_CHR:
-            cl->available = cl->channel->done ||
-                !dill_list_empty(&cl->channel->sender.clauses) ||
-                cl->channel->items ? 1 : 0;
             cl->ep = &cl->channel->receiver;
             break;
         default:
@@ -213,7 +220,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
             continue;
         cl->ep->seq = seq;
         dill_slist_push_back(&cd->clauses, &cl->chitem);
-        if(cl->available)
+        if(dill_choose_available(cl))
             ++available;
     }
 
@@ -226,7 +233,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         int chosen = available == 1 ? 0 : (int)(random() % available);
         for(it = dill_slist_begin(&cd->clauses); it; it = dill_slist_next(it)) {
             cl = dill_cont(it, struct dill_clause, chitem);
-            if(!cl->available)
+            if(!dill_choose_available(cl))
                 continue;
             if(!chosen)
                 break;
