@@ -65,7 +65,7 @@ chan dill_chmake(size_t itemsz, size_t bufsz, const char *created) {
 
 chan dill_chdup(chan ch, const char *current) {
     if(dill_slow(!ch))
-        dill_panic("null channel used");
+       return NULL;
     dill_trace(current, "chdup(<%d>)", (int)ch->debug.id);
     ++ch->refcount;
     return ch;
@@ -73,7 +73,7 @@ chan dill_chdup(chan ch, const char *current) {
 
 void dill_chclose(chan ch, const char *current) {
     if(dill_slow(!ch))
-        dill_panic("null channel used");
+        return;
     dill_trace(current, "chclose(<%d>)", (int)ch->debug.id);
     assert(ch->refcount > 0);
     --ch->refcount;
@@ -298,8 +298,10 @@ int dill_chdone(chan ch, const void *val, size_t len, const char *current) {
         return -1;
     }
     dill_trace(current, "chdone(<%d>)", (int)ch->debug.id);
-    if(dill_slow(ch->done))
-        dill_panic("chdone on already done-with channel");
+    if(dill_slow(ch->done)) {
+        errno = EPIPE;
+        return -1;
+    }
     /* Panic if there are other senders on the same channel. */
     if(dill_slow(!dill_list_empty(&ch->sender.clauses)))
         dill_panic("send to done-with channel");
