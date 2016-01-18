@@ -35,7 +35,7 @@
 
 #define DILL_OPAQUE_SIZE 48
 
-enum dill_state {
+enum dill_op {
     DILL_READY,
     DILL_MSLEEP,
     DILL_FDWAIT,
@@ -88,9 +88,8 @@ struct dill_cr {
     /* Debugging info. */
     struct dill_debug_cr debug;
 
-    /* TODO: Following fields should go to dill_debug_cr. */
-    /* Status of the coroutine. Used for debugging purposes. */
-    enum dill_state state;
+    /* Operation being processed at the moment. Used for debugging. */
+    enum dill_op op;
 
     /* Opaque storage for whatever data the current blocking operation
        needs to store while it is suspended. */

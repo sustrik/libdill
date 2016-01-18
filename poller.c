@@ -61,7 +61,7 @@ static int dill_fdwait_(int fd, int events, int64_t deadline,
     if(fd >= 0)
         dill_poller_add(fd, events);
     /* Do actual waiting. */
-    dill_running->state = fd < 0 ? DILL_MSLEEP : DILL_FDWAIT;
+    dill_running->op = fd < 0 ? DILL_MSLEEP : DILL_FDWAIT;
     dill_running->fd = fd;
     dill_running->events = events;
     dill_set_current(&dill_running->debug, current);

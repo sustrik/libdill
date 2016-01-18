@@ -94,7 +94,7 @@ void goredump(void) {
     struct dill_list_item *it;
     for(it = dill_list_begin(&dill_all_crs); it; it = dill_list_next(it)) {
         struct dill_cr *cr = dill_cont(it, struct dill_cr, debug.item);
-        switch(cr->state) {
+        switch(cr->op) {
         case DILL_READY:
             sprintf(buf, "%s", dill_running == cr ? "RUNNING" : "ready");
             break;
@@ -115,9 +115,9 @@ void goredump(void) {
                 struct dill_choosedata *cd =
                     (struct dill_choosedata*)cr->opaque;
                 int pos = 0;
-                if(cr->state == DILL_CHR)
+                if(cr->op == DILL_CHR)
                     pos += sprintf(&buf[pos], "chr(");
-                else if(cr->state == DILL_CHS)
+                else if(cr->op == DILL_CHS)
                     pos += sprintf(&buf[pos], "chs(");
                 else
                     pos += sprintf(&buf[pos], "choose(");
