@@ -33,7 +33,8 @@
 #include "../libdill.h"
 
 coroutine void trigger(int fd, int64_t deadline) {
-    msleep(deadline);
+    int rc = msleep(deadline);
+    assert(rc == 0);
     ssize_t sz = send(fd, "A", 1, 0);
     assert(sz == 1);
 }

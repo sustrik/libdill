@@ -47,12 +47,8 @@ pid_t mfork(void) {
     return dill_fork();
 }
 
-/* Pause current coroutine for a specified time interval. */
-int dill_msleep(int64_t deadline, const char *current) {
-    return dill_fdwait(-1, 0, deadline, current);
-}
-
-int dill_fdwait(int fd, int events, int64_t deadline, const char *current) {
+static int dill_fdwait_(int fd, int events, int64_t deadline,
+      const char *current) {
     if(dill_slow(!dill_poller_initialised)) {
         dill_poller_init();
         dill_assert(errno == 0);
@@ -80,6 +76,18 @@ int dill_fdwait(int fd, int events, int64_t deadline, const char *current) {
     if(fd >= 0)
         dill_poller_rm(fd, events);
     return 0;
+}
+
+int dill_msleep(int64_t deadline, const char *current) {
+    return dill_fdwait_(-1, 0, deadline, current);
+}
+
+int dill_fdwait(int fd, int events, int64_t deadline, const char *current) {
+    if(dill_slow(fd < 0 || events < 0))  {
+        errno = EINVAL;
+        return -1;
+    }
+    return dill_fdwait_(fd, events, deadline, current);
 }
 
 void fdclean(int fd) {
