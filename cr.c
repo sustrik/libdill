@@ -74,12 +74,14 @@ int dill_suspend(dill_unblock_cb unblock_cb) {
     }
 }
 
-void dill_resume(struct dill_cr *cr, int error) {
-    cr->result = error;
+void dill_resume(struct dill_cr *cr, int result) {
+    if(cr->unblock_cb) {
+        cr->unblock_cb(cr, result);
+        cr->unblock_cb = NULL;
+    }
+    cr->result = result;
     cr->state = DILL_READY;
     dill_slist_push_back(&dill_ready, &cr->ready);
-    if(cr->unblock_cb)
-        cr->unblock_cb(cr, error);
 }
 
 /* The intial part of go(). Starts the new coroutine.
@@ -94,6 +96,7 @@ int dill_prologue(struct dill_cr **cr, const char *created) {
     (*cr)->cls = NULL;
     (*cr)->fd = -1;
     (*cr)->events = 0;
+    (*cr)->unblock_cb = NULL;
     dill_trace(created, "{%d}=go()", (int)(*cr)->debug.id);
     /* Suspend the parent coroutine and make the new one running. */
     if(dill_setjmp(&dill_running->ctx))

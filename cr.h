@@ -114,6 +114,6 @@ int dill_suspend(dill_unblock_cb unblock_cb);
 /* Schedules preiously suspended coroutine for execution. Keep in mind that
    it doesn't immediately run it, just puts it into the queue of ready
    coroutines. */
-void dill_resume(struct dill_cr *cr, int error);
+void dill_resume(struct dill_cr *cr, int result);
 
 #endif

@@ -96,18 +96,10 @@ static void dill_choose_unblock_cb(struct dill_cr *cr, int result) {
     }
     if(cr->choosedata.ddline > 0)
         dill_timer_rm(&cr->timer);
-    dill_resume(cr, result);
 }
 
 static void dill_choose_callback(struct dill_timer *timer) {
     struct dill_cr *cr = dill_cont(timer, struct dill_cr, timer);
-    struct dill_slist_item *it;
-    for(it = dill_slist_begin(&cr->choosedata.clauses);
-          it; it = dill_slist_next(it)) {
-        struct dill_clause *itcl = dill_cont(it, struct dill_clause, chitem);
-        dill_assert(itcl->used);
-        dill_list_erase(&itcl->ep->clauses, &itcl->epitem);
-    }
     dill_resume(cr, -1);
 }
 
@@ -119,7 +111,7 @@ static void dill_enqueue(chan ch, void *val) {
         struct dill_clause *cl = dill_cont(
             dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
         memcpy(cl->val, val, ch->sz);
-        dill_choose_unblock_cb(cl->cr, cl->idx);
+        dill_resume(cl->cr, cl->idx);
         return;
     }
     /* Write the value to the buffer. */
@@ -145,7 +137,7 @@ static void dill_dequeue(chan ch, void *val) {
         /* Otherwise there must be a sender waiting to send. */
         dill_assert(cl);
         memcpy(val, cl->val, ch->sz);
-        dill_choose_unblock_cb(cl->cr, cl->idx);
+        dill_resume(cl->cr, cl->idx);
         return;
     }
     /* If there's a value in the buffer start by retrieving it. */
@@ -158,7 +150,7 @@ static void dill_dequeue(chan ch, void *val) {
         size_t pos = (ch->first + ch->items) % ch->bufsz;
         memcpy(((char*)(ch + 1)) + (pos * ch->sz) , cl->val, ch->sz);
         ++ch->items;
-        dill_choose_unblock_cb(cl->cr, cl->idx);
+        dill_resume(cl->cr, cl->idx);
     }
 }
 
@@ -263,7 +255,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     }
     /* If there are multiple parallel chooses done from different coroutines
        all but one must be blocked on the following line. */
-    int res = dill_suspend(NULL);
+    int res = dill_suspend(dill_choose_unblock_cb);
     if(res == -1)
         errno = ETIMEDOUT;
     return res;
@@ -321,7 +313,7 @@ int dill_chdone(chan ch, const void *val, size_t len, const char *current) {
         struct dill_clause *cl = dill_cont(
             dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
         memcpy(cl->val, val, ch->sz);
-        dill_choose_unblock_cb(cl->cr, cl->idx);
+        dill_resume(cl->cr, cl->idx);
     }
     return 0;
 }
