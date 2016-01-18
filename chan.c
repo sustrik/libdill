@@ -298,13 +298,10 @@ int dill_chdone(chan ch, const void *val, size_t len, const char *current) {
         return -1;
     }
     dill_trace(current, "chdone(<%d>)", (int)ch->debug.id);
-    if(dill_slow(ch->done)) {
+    if(dill_slow(ch->done) || !dill_list_empty(&ch->sender.clauses)) {
         errno = EPIPE;
         return -1;
     }
-    /* Panic if there are other senders on the same channel. */
-    if(dill_slow(!dill_list_empty(&ch->sender.clauses)))
-        dill_panic("send to done-with channel");
     /* Put the channel into done-with mode. */
     ch->done = 1;
     /* Store the terminal value into a special position in the channel. */
