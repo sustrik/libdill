@@ -92,7 +92,8 @@ struct dill_cr {
     enum dill_op op;
 
     /* Opaque storage for whatever data the current blocking operation
-       needs to store while it is suspended. */
+       needs to store while it is suspended. Actual type differs depending
+       on 'op' variable. */
     uint8_t opaque[DILL_OPAQUE_SIZE];
 };
 
