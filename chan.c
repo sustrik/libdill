@@ -240,13 +240,13 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         else
             dill_dequeue(cl->channel, cl->val);
         dill_resume(dill_running, cl->idx);
-        return dill_suspend();
+        return dill_suspend(NULL);
     }
 
     /* If immediate execution was requested, exit now. */
     if(deadline == 0) {
         dill_resume(dill_running, -1);
-        dill_suspend();
+        dill_suspend(NULL);
         errno = ETIMEDOUT;
         return -1;
     }
@@ -265,7 +265,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     }
     /* If there are multiple parallel chooses done from different coroutines
        all but one must be blocked on the following line. */
-    int res = dill_suspend();
+    int res = dill_suspend(NULL);
     if(res == -1)
         errno = ETIMEDOUT;
     return res;

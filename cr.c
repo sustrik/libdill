@@ -43,7 +43,7 @@ struct dill_cr *dill_running = &dill_main;
 /* Queue of coroutines scheduled for execution. */
 static struct dill_slist dill_ready = {0};
 
-int dill_suspend(void) {
+int dill_suspend(dill_unblock_cb unblock_cb) {
     /* Even if process never gets idle, we have to process external events
        once in a while. The external signal may very well be a deadline or
        a user-issued command that cancels the CPU intensive operation. */
@@ -53,8 +53,11 @@ int dill_suspend(void) {
         counter = 0;
     }
     /* Store the context of the current coroutine, if any. */
-    if(dill_running && dill_setjmp(&dill_running->ctx))
-        return dill_running->result;
+    if(dill_running) {
+        dill_running->unblock_cb = unblock_cb;
+        if(dill_setjmp(&dill_running->ctx))
+            return dill_running->result;
+    }
     while(1) {
         /* If there's a coroutine ready to be executed go for it. */
         if(!dill_slist_empty(&dill_ready)) {
@@ -71,10 +74,12 @@ int dill_suspend(void) {
     }
 }
 
-void dill_resume(struct dill_cr *cr, int result) {
-    cr->result = result;
+void dill_resume(struct dill_cr *cr, int error) {
+    cr->result = error;
     cr->state = DILL_READY;
     dill_slist_push_back(&dill_ready, &cr->ready);
+    if(cr->unblock_cb)
+        cr->unblock_cb(cr, error);
 }
 
 /* The intial part of go(). Starts the new coroutine.
@@ -106,7 +111,7 @@ void dill_epilogue(void) {
     dill_running = NULL;
     /* Given that there's no running coroutine at this point
        this call will never return. */
-    dill_suspend();
+    dill_suspend(NULL);
 }
 
 int dill_yield(const char *current) {
@@ -115,7 +120,7 @@ int dill_yield(const char *current) {
     /* This looks fishy, but yes, we can resume the coroutine even before
        suspending it. */
     dill_resume(dill_running, 0);
-    dill_suspend();
+    dill_suspend(NULL);
     return 0;
 }
 

@@ -43,6 +43,8 @@ enum dill_state {
     DILL_CHOOSE
 };
 
+typedef void (*dill_unblock_cb)(struct dill_cr *cr, int error);
+
 /* The coroutine. The memory layout looks like this:
 
    +-------------------------------------------------------------+---------+
@@ -61,6 +63,9 @@ struct dill_cr {
 
     /* If the coroutine is waiting for a deadline, it uses this timer. */
     struct dill_timer timer;
+
+    /* Function to be called when the coroutine is unblocked. */
+    dill_unblock_cb unblock_cb;
 
     /* When the coroutine is blocked in fdwait(), these members contains the
        file descriptor and events that the function waits for. They are used
@@ -101,13 +106,14 @@ extern struct dill_cr dill_main;
 extern struct dill_cr *dill_running;
 
 /* Suspend running coroutine. Move to executing different coroutines. Once
-   someone resumes this coroutine using dill_resume function 'result' argument
-   of that function will be returned. */
-int dill_suspend(void);
+   someone resumes this coroutine using dill_resume(), unblock_cb is
+   invoked immediately. dill_suspend() returns the argument passed
+   to dill_resume() function. */
+int dill_suspend(dill_unblock_cb unblock_cb);
 
 /* Schedules preiously suspended coroutine for execution. Keep in mind that
    it doesn't immediately run it, just puts it into the queue of ready
    coroutines. */
-void dill_resume(struct dill_cr *cr, int result);
+void dill_resume(struct dill_cr *cr, int error);
 
 #endif

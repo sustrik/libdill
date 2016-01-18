@@ -73,7 +73,7 @@ int dill_fdwait(int fd, int events, int64_t deadline, const char *current) {
     dill_running->fd = fd;
     dill_running->events = events;
     dill_set_current(&dill_running->debug, current);
-    int rc = dill_suspend();
+    int rc = dill_suspend(NULL);
     /* Handle file descriptor events. */
     if(rc >= 0) {
         if(deadline >= 0)
