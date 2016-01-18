@@ -264,11 +264,10 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
 int dill_choose(struct chclause *clauses, int nclauses, int64_t deadline,
       const char *current) {
     dill_trace(current, "choose()");
-    dill_running->debug.op = DILL_CHOOSE;
     struct dill_choosedata *cd = (struct dill_choosedata*)dill_running->opaque;
     cd->nchclauses = nclauses;
     cd->chclauses = clauses;
-    dill_set_current(&dill_running->debug, current);
+    dill_startop(&dill_running->debug, DILL_CHOOSE, current);
     return dill_choose_(clauses, nclauses, deadline);
 }
 
@@ -278,7 +277,7 @@ int dill_chs(chan ch, const void *val, size_t len, const char *current) {
         return -1;
     }
     dill_trace(current, "chs(<%d>)", (int)ch->debug.id);
-    dill_running->debug.op = DILL_CHS;
+    dill_startop(&dill_running->debug, DILL_CHS, current);
     struct chclause cl = {ch, CHOOSE_CHS, (void*)val, len};
     return dill_choose_(&cl, 1, -1);
 }
@@ -289,7 +288,7 @@ int dill_chr(chan ch, void *val, size_t len, const char *current) {
         return -1;
     }
     dill_trace(current, "chr(<%d>)", (int)ch->debug.id);
-    dill_running->debug.op = DILL_CHR;
+    dill_startop(&dill_running->debug, DILL_CHS, current);
     struct chclause cl = {ch, CHOOSE_CHR, val, len};
     return dill_choose_(&cl, 1, -1);
 }

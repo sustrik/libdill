@@ -78,7 +78,9 @@ void dill_unregister_chan(struct dill_debug_chan *ch) {
     dill_list_erase(&dill_all_chans, &ch->item);
 }
 
-void dill_set_current(struct dill_debug_cr *cr, const char *current) {
+void dill_startop(struct dill_debug_cr *cr, enum dill_op op,
+      const char *current) {
+    cr->op = op;
     cr->current = current;
 }
 

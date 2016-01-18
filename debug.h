@@ -71,9 +71,9 @@ void dill_unregister_cr(struct dill_debug_cr *cr);
 void dill_register_chan(struct dill_debug_chan *ch, const char *created);
 void dill_unregister_chan(struct dill_debug_chan *ch);
 
-/* While doing a blocking operation coroutine should register where
-   the operation was invoked from. */
-void dill_set_current(struct dill_debug_cr *cr, const char *current);
+/* While doing a blocking operation coroutine should register itself. */
+void dill_startop(struct dill_debug_cr *cr, enum dill_op op,
+    const char *current);
 
 extern int dill_tracelevel;
 
