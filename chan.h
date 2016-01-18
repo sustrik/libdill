@@ -101,8 +101,6 @@ struct dill_clause {
     /* If 0, there's no peer waiting for the clause at the moment.
        If 1, there is one. */
     int available;
-    /* If 1, the clause is in the list of channel's senders/receivers. */
-    int used;
 };
 
 #endif

@@ -103,8 +103,6 @@ static void dill_choose_unblock_cb(struct dill_cr *cr) {
     for(it = dill_slist_begin(&cd->clauses);
           it; it = dill_slist_next(it)) {
         itcl = dill_cont(it, struct dill_clause, chitem);
-        if(!itcl->used)
-            continue;
         dill_list_erase(&itcl->ep->clauses, &itcl->epitem);
     }
     if(cd->ddline > 0)
@@ -211,7 +209,6 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         }
         cl->cr = dill_running;
         cl->idx = i;
-        cl->used = 1;
         if(cl->ep->seq == seq)
             continue;
         cl->ep->seq = seq;
