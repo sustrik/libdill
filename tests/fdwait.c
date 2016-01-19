@@ -60,7 +60,7 @@ int main() {
     /* Check with the timeout that does expire. */
     int64_t deadline = now() + 100;
     rc = fdwait(fds[0], FDW_IN, deadline);
-    assert(rc >= 0);
+    assert(rc == -1 && errno == ETIMEDOUT);
     int64_t diff = now() - deadline;
     assert(diff > -20 && diff < 20);
 

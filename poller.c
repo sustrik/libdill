@@ -76,14 +76,24 @@ static int dill_fdwait_(int fd, int events, int64_t deadline,
             dill_timer_rm(&dill_running->timer);
         return rc;
     }
-    /* Handle the timeout. Clean-up the pollset. */
-    if(fd >= 0)
+    /* Clean up the pollset and the timer. */
+    if(rc < 0 && fd >= 0)
         dill_poller_rm(fd, events);
-    return 0;
+    if(deadline >= 0 && rc != -ETIMEDOUT)
+        dill_timer_rm(&dill_running->timer);
+    if(dill_slow(rc < 0)) {
+        errno = -rc;
+        return -1;
+    }
+    return rc;
 }
 
 int dill_msleep(int64_t deadline, const char *current) {
-    return dill_fdwait_(-1, 0, deadline, current);
+    int rc = dill_fdwait_(-1, 0, deadline, current);
+    dill_assert(rc == -1);
+    if(errno == ETIMEDOUT)
+        return 0;
+    return -1;
 }
 
 int dill_fdwait(int fd, int events, int64_t deadline, const char *current) {
