@@ -151,8 +151,8 @@ DILL_EXPORT void setcls(void *val);
 
 typedef struct dill_chan *chan;
 
-#define CHOOSE_CHSEND 1
-#define CHOOSE_CHRECV 2
+#define CHSEND 1
+#define CHRECV 2
 
 struct chclause {
     chan channel;

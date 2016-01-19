@@ -98,7 +98,7 @@ void dill_chclose(chan ch, const char *current) {
 }
 
 static struct dill_ep *dill_getep(struct dill_clause *cl) {
-    return cl->op == CHOOSE_CHSEND ?
+    return cl->op == CHSEND ?
         &cl->channel->sender : &cl->channel->receiver;
 }
 
@@ -167,7 +167,7 @@ static void dill_dequeue(chan ch, void *val) {
 }
 
 static int dill_choose_available(struct dill_clause *cl) {
-    if(cl->op == CHOOSE_CHSEND) {
+    if(cl->op == CHSEND) {
         return !dill_list_empty(&cl->channel->receiver.clauses) ||
         cl->channel->items < cl->channel->bufsz ? 1 : 0;
     }
@@ -205,11 +205,11 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     for(i = 0; i != nclauses; ++i) {
         struct dill_clause *cl = (struct dill_clause*)&clauses[i];
         if(dill_slow(!cl->channel || cl->channel->sz != cl->len ||
-              (cl->op != CHOOSE_CHSEND && cl->op != CHOOSE_CHRECV))) {
+              (cl->op != CHSEND && cl->op != CHRECV))) {
             errno = EINVAL;
             return -1;
         }
-        if(dill_slow(cl->op == CHOOSE_CHSEND && cl->channel->done)) {
+        if(dill_slow(cl->op == CHSEND && cl->channel->done)) {
             errno = EPIPE;
             return -1;
         }
@@ -239,7 +239,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
                 break;
             --chosen;
         }
-        if(cl->op == CHOOSE_CHSEND)
+        if(cl->op == CHSEND)
             dill_enqueue(cl->channel, cl->val);
         else
             dill_dequeue(cl->channel, cl->val);
@@ -291,7 +291,7 @@ int dill_chsend(chan ch, const void *val, size_t len, const char *current) {
     }
     dill_trace(current, "chsend(<%d>)", (int)ch->debug.id);
     dill_startop(&dill_running->debug, DILL_CHSEND, current);
-    struct chclause cl = {ch, CHOOSE_CHSEND, (void*)val, len};
+    struct chclause cl = {ch, CHSEND, (void*)val, len};
     return dill_choose_(&cl, 1, -1);
 }
 
@@ -302,7 +302,7 @@ int dill_chrecv(chan ch, void *val, size_t len, const char *current) {
     }
     dill_trace(current, "chrecv(<%d>)", (int)ch->debug.id);
     dill_startop(&dill_running->debug, DILL_CHRECV, current);
-    struct chclause cl = {ch, CHOOSE_CHRECV, val, len};
+    struct chclause cl = {ch, CHRECV, val, len};
     return dill_choose_(&cl, 1, -1);
 }
 

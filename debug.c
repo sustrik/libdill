@@ -137,8 +137,8 @@ void goredump(void) {
                         else
                             pos += sprintf(&buf[pos], ",");
                         if(cr->debug.op == DILL_CHOOSE) {
-                            buf[pos] = cd->chclauses[i].op ==
-                                CHOOSE_CHSEND ? 'S' : 'R';
+                            buf[pos] =
+                                cd->chclauses[i].op == CHSEND ? 'S' : 'R';
                             ++pos;
                         }
                         pos += sprintf(&buf[pos], "<%d>",
