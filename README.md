@@ -44,10 +44,11 @@ Close a channel:
 Multipex several channel operations:
 
 ```
-int val;
+int val1;
+int val2 = 42;
 struct chclause clauses[] = {
-    {ch1, CHOOSE_CHRECV, &val, sizeof(val)},
-    {ch2, CHOOSE_CHRECV, &val, sizeof(val)}
+    {ch1, CHRECV, &val1, sizeof(val1)},
+    {ch2, CHSEND, &val2, sizeof(val2)}
 };
 int rc = choose(clauses, 2, -1);
 ```
