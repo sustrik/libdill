@@ -116,17 +116,17 @@ void goredump(void) {
                         fdata->events & FDW_OUT ? "FDW_OUT" : 0);
                     break;
                 }
-            case DILL_CHR:
-            case DILL_CHS:
+            case DILL_CHSEND:
+            case DILL_CHRECV:
             case DILL_CHOOSE:
                 {
                     struct dill_choosedata *cd =
                         (struct dill_choosedata*)cr->opaque;
                     int pos = 0;
-                    if(cr->debug.op == DILL_CHR)
-                        pos += sprintf(&buf[pos], "chr(");
-                    else if(cr->debug.op == DILL_CHS)
-                        pos += sprintf(&buf[pos], "chs(");
+                    if(cr->debug.op == DILL_CHRECV)
+                        pos += sprintf(&buf[pos], "chrecv(");
+                    else if(cr->debug.op == DILL_CHSEND)
+                        pos += sprintf(&buf[pos], "chsend(");
                     else
                         pos += sprintf(&buf[pos], "choose(");
                     int first = 1;
@@ -138,7 +138,7 @@ void goredump(void) {
                             pos += sprintf(&buf[pos], ",");
                         if(cr->debug.op == DILL_CHOOSE) {
                             buf[pos] = cd->chclauses[i].op ==
-                                CHOOSE_CHS ? 'S' : 'R';
+                                CHOOSE_CHSEND ? 'S' : 'R';
                             ++pos;
                         }
                         pos += sprintf(&buf[pos], "<%d>",

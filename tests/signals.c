@@ -43,7 +43,7 @@ void signal_handler(int signo) {
 
 coroutine void sender(chan ch) {
     char signo;
-    int rc = chr(ch, &signo, sizeof(signo));
+    int rc = chrecv(ch, &signo, sizeof(signo));
     assert(rc == 0);
     rc = kill(getpid(), signo);
     assert(rc == 0);
@@ -58,7 +58,7 @@ coroutine void receiver(chan ch) {
     assert(sz == 1);
     assert(signo == SIGNAL);
 
-    int rc = chs(ch, &signo, sizeof(signo));
+    int rc = chsend(ch, &signo, sizeof(signo));
     assert(rc == 0);
 }
 
@@ -76,10 +76,10 @@ int main() {
         go(sender(sendch));
         go(receiver(recvch));
         char c = SIGNAL;
-        int rc = chs(sendch, &c, sizeof(c));
+        int rc = chsend(sendch, &c, sizeof(c));
         assert(rc == 0);
         char signo;
-        rc = chr(recvch, &signo, sizeof(signo));
+        rc = chrecv(recvch, &signo, sizeof(signo));
         assert(rc == 0);
         assert(signo == SIGNAL);
     }

@@ -151,8 +151,8 @@ DILL_EXPORT void setcls(void *val);
 
 typedef struct dill_chan *chan;
 
-#define CHOOSE_CHS 1
-#define CHOOSE_CHR 2
+#define CHOOSE_CHSEND 1
+#define CHOOSE_CHRECV 2
 
 struct chclause {
     chan channel;
@@ -172,11 +172,11 @@ struct chclause {
 #define chdup(channel) \
    dill_chdup((channel), __FILE__ ":" dill_string(__LINE__))
 
-#define chs(channel, val, len) \
-    dill_chs((channel), (val), (len), __FILE__ ":" dill_string(__LINE__))
+#define chsend(channel, val, len) \
+    dill_chsend((channel), (val), (len), __FILE__ ":" dill_string(__LINE__))
 
-#define chr(channel, val, len) \
-    dill_chr((channel), (val), (len), __FILE__ ":" dill_string(__LINE__))
+#define chrecv(channel, val, len) \
+    dill_chrecv((channel), (val), (len), __FILE__ ":" dill_string(__LINE__))
 
 #define chdone(channel, val, len) \
     dill_chdone((channel), (val), (len), __FILE__ ":" dill_string(__LINE__))
@@ -192,9 +192,9 @@ DILL_EXPORT chan dill_chmake(size_t itemsz, size_t bufsz,
     const char *created);
 DILL_EXPORT chan dill_chdup(chan ch,
     const char *created);
-DILL_EXPORT int dill_chs(chan ch, const void *val, size_t len,
+DILL_EXPORT int dill_chsend(chan ch, const void *val, size_t len,
     const char *current);
-DILL_EXPORT int dill_chr(chan ch, void *val, size_t len,
+DILL_EXPORT int dill_chrecv(chan ch, void *val, size_t len,
     const char *current);
 DILL_EXPORT int dill_chdone(chan ch, const void *val, size_t len,
     const char *current);

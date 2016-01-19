@@ -20,14 +20,14 @@ Send a message to channel:
 
 ```
 int val = 42;
-int rc = chs(ch, &val, sizeof(val));
+int rc = chsend(ch, &val, sizeof(val));
 ```
 
 Receive a message from channel:
 
 ```
 int val;
-int rc = chr(ch, &val, sizeof(val));
+int rc = chrecv(ch, &val, sizeof(val));
 ```
 
 Mark a channel as closed for sending:
@@ -46,8 +46,8 @@ Multipex several channel operations:
 ```
 int val;
 struct chclause clauses[] = {
-    {ch1, CHOOSE_CHR, &val, sizeof(val)},
-    {ch2, CHOOSE_CHR, &val, sizeof(val)}
+    {ch1, CHOOSE_CHRECV, &val, sizeof(val)},
+    {ch2, CHOOSE_CHRECV, &val, sizeof(val)}
 };
 int rc = choose(clauses, 2, -1);
 ```

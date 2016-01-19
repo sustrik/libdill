@@ -30,9 +30,9 @@
 coroutine void relay(chan src, chan dst) {
     while(1) {
        int val;
-       int rc = chr(src, &val, sizeof(val));
+       int rc = chrecv(src, &val, sizeof(val));
        assert(rc == 0);
-       rc = chs(dst, &val, sizeof(val));
+       rc = chsend(dst, &val, sizeof(val));
        assert(rc == 0);
     }
 }
@@ -45,7 +45,7 @@ int main() {
     go(relay(right, left));
 
     int val = 42;
-    int rc = chs(left, &val, sizeof(val));
+    int rc = chsend(left, &val, sizeof(val));
     assert(rc == 0);
 
     /* Fail with exit code 128+SIGALRM if we deadlock */

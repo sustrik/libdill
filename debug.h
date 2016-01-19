@@ -32,8 +32,8 @@ enum dill_op {
     DILL_YIELD,
     DILL_MSLEEP,
     DILL_FDWAIT,
-    DILL_CHR,
-    DILL_CHS,
+    DILL_CHSEND,
+    DILL_CHRECV ,
     DILL_CHOOSE
 };
 
