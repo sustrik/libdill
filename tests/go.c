@@ -42,6 +42,9 @@ coroutine void worker(int count, int n) {
 coroutine void worker2(void) {
     int rc = msleep(now() + 1000);
     assert(rc == -1 && errno == ECANCELED);
+    /* Try again to test whether subsequent calls fail as well. */
+    rc = msleep(now() + 1000);
+    assert(rc == -1 && errno == ECANCELED);
 }
 
 coroutine void dummy(void) {
