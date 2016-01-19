@@ -39,6 +39,11 @@ coroutine void worker(int count, int n) {
     }
 }
 
+coroutine void worker2(void) {
+    int rc = msleep(now() + 1000);
+    assert(rc == -1 && errno == ECANCELED);
+}
+
 coroutine void dummy(void) {
     int rc = msleep(now() + 50);
     assert(rc == 0);
@@ -58,6 +63,14 @@ int main() {
     for(i = 0; i != 20; ++i)
         go(dummy());
     rc = msleep(now() + 100);
+    assert(rc == 0);
+
+    /* Test whether cancelation works. */
+    coro cr = go(worker2());
+    rc = msleep(now() + 30);
+    assert(rc == 0);
+    gocancel(cr);
+    rc = msleep(now() + 30);
     assert(rc == 0);
 
     return 0;

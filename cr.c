@@ -55,6 +55,7 @@ int dill_suspend(dill_unblock_cb unblock_cb) {
     /* Store the context of the current coroutine, if any. */
     if(dill_running) {
         dill_running->unblock_cb = unblock_cb;
+        dill_running->suspended = 1;
         if(dill_setjmp(&dill_running->ctx))
             return dill_running->result;
     }
@@ -80,6 +81,7 @@ void dill_resume(struct dill_cr *cr, int result) {
         cr->unblock_cb = NULL;
     }
     cr->result = result;
+    cr->suspended = 0;
     dill_slist_push_back(&dill_ready, &cr->ready);
 }
 
@@ -92,6 +94,8 @@ int dill_prologue(struct dill_cr **cr, const char *created) {
     /* Allocate and initialise new stack. */
     *cr = ((struct dill_cr*)dill_allocstack()) - 1;
     dill_register_cr(&(*cr)->debug, created);
+    (*cr)->canceled = 0;
+    (*cr)->suspended = 0;
     (*cr)->cls = NULL;
       (*cr)->unblock_cb = NULL;
     dill_trace(created, "{%d}=go()", (int)(*cr)->debug.id);
@@ -120,8 +124,13 @@ int dill_yield(const char *current) {
     /* This looks fishy, but yes, we can resume the coroutine even before
        suspending it. */
     dill_resume(dill_running, 0);
-    dill_suspend(NULL);
-    return 0;
+    return -dill_suspend(NULL);
+}
+
+void gocancel(coro cr) {
+    cr->canceled = 1;
+    if(cr->suspended)
+        dill_resume(cr, -ECANCELED);
 }
 
 void *cls(void) {

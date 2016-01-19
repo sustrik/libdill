@@ -60,6 +60,10 @@ struct dill_cr {
     dill_unblock_cb unblock_cb;
     /* Stored coroutine context while it is not executing. */
     struct dill_ctx ctx;
+    /* 1 is the coroutine is suspended, 0 if it's either ready or running. */
+    int suspended;
+    /* 1 is the coroutine was canceled, 0 otherwise. */
+    int canceled;
     /* Argument to resume() call being passed to the blocked suspend() call. */
     int result;
     /* Coroutine-local storage. */
