@@ -166,8 +166,8 @@ struct chclause {
     int reserved5;
 };
 
-#define chmake(itemsz, bufsz) \
-    dill_chmake((itemsz), (bufsz), __FILE__ ":" dill_string(__LINE__))
+#define channel(itemsz, bufsz) \
+    dill_channel((itemsz), (bufsz), __FILE__ ":" dill_string(__LINE__))
 
 #define chdup(channel) \
    dill_chdup((channel), __FILE__ ":" dill_string(__LINE__))
@@ -188,7 +188,7 @@ struct chclause {
     dill_choose((clauses), (nclauses), (deadline), \
     __FILE__ ":" dill_string(__LINE__))
 
-DILL_EXPORT chan dill_chmake(size_t itemsz, size_t bufsz,
+DILL_EXPORT chan dill_channel(size_t itemsz, size_t bufsz,
     const char *created);
 DILL_EXPORT chan dill_chdup(chan ch,
     const char *created);

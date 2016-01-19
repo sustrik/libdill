@@ -45,7 +45,7 @@ int main() {
     assert(diff > -20 && diff < 20);
 
     /* msleep-sort */
-    chan ch = chmake(sizeof(int), 0);
+    chan ch = channel(sizeof(int), 0);
     go(delay(30, ch));
     go(delay(40, ch));
     go(delay(10, ch));

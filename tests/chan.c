@@ -102,7 +102,7 @@ int main() {
     int val;
 
     /* Receiver waits for sender. */
-    chan ch1 = chmake(sizeof(int), 0);
+    chan ch1 = channel(sizeof(int), 0);
     go(sender(chdup(ch1), 1, 333));
     int rc = chrecv(ch1, &val, sizeof(val));
     assert(rc == 0);
@@ -110,7 +110,7 @@ int main() {
     chclose(ch1);
 
     /* Sender waits for receiver. */
-    chan ch2 = chmake(sizeof(int), 0);
+    chan ch2 = channel(sizeof(int), 0);
     go(sender(chdup(ch2), 0, 444));
     rc = chrecv(ch2, &val, sizeof(val));
     assert(rc == 0);
@@ -118,7 +118,7 @@ int main() {
     chclose(ch2);
 
     /* Test two simultaneous senders. */
-    chan ch3 = chmake(sizeof(int), 0);
+    chan ch3 = channel(sizeof(int), 0);
     go(sender(chdup(ch3), 0, 888));
     go(sender(chdup(ch3), 0, 999));
     rc = chrecv(ch3, &val, sizeof(val));
@@ -132,7 +132,7 @@ int main() {
     chclose(ch3);
 
     /* Test two simultaneous receivers. */
-    chan ch4 = chmake(sizeof(int), 0);
+    chan ch4 = channel(sizeof(int), 0);
     go(receiver(chdup(ch4), 333));
     go(receiver(chdup(ch4), 444));
     val = 333;
@@ -144,14 +144,14 @@ int main() {
     chclose(ch4);
 
     /* Test typed channels. */
-    chan ch5 = chmake(sizeof(char), 0);
+    chan ch5 = channel(sizeof(char), 0);
     go(charsender(chdup(ch5), 111));
     char charval;
     rc = chrecv(ch5, &charval, sizeof(charval));
     assert(rc == 0);
     assert(charval == 111);
     chclose(ch5);
-    chan ch6 = chmake(sizeof(struct foo), 0);
+    chan ch6 = channel(sizeof(struct foo), 0);
     struct foo foo1 = {555, 222};
     go(structsender(chdup(ch6), foo1));
     struct foo foo2;
@@ -161,7 +161,7 @@ int main() {
     chclose(ch6);
 
     /* Test message buffering. */
-    chan ch7 = chmake(sizeof(int), 2);
+    chan ch7 = channel(sizeof(int), 2);
     val = 222;
     rc = chsend(ch7, &val, sizeof(val));
     assert(rc == 0);
@@ -195,7 +195,7 @@ int main() {
     chclose(ch7);
 
     /* Test simple chdone() scenarios. */
-    chan ch8 = chmake(sizeof(int), 0);
+    chan ch8 = channel(sizeof(int), 0);
     val = 777;
     rc = chdone(ch8, &val, sizeof(val));
     assert(rc == 0);
@@ -209,7 +209,7 @@ int main() {
     assert(rc == 0);
     assert(val == 777);
     chclose(ch8);
-    chan ch9 = chmake(sizeof(int), 10);
+    chan ch9 = channel(sizeof(int), 10);
     val = 888;
     rc = chdone(ch9, &val, sizeof(val));
     assert(rc == 0);
@@ -220,7 +220,7 @@ int main() {
     assert(rc == 0);
     assert(val == 888);
     chclose(ch9);
-    chan ch10 = chmake(sizeof(int), 10);
+    chan ch10 = channel(sizeof(int), 10);
     val = 999;
     rc = chsend(ch10, &val, sizeof(val));
     assert(rc == 0);
@@ -237,7 +237,7 @@ int main() {
     assert(rc == 0);
     assert(val == 111);
     chclose(ch10);
-    chan ch11 = chmake(sizeof(int), 1);
+    chan ch11 = channel(sizeof(int), 1);
     val = 222;
     rc = chsend(ch11, &val, sizeof(val));
     assert(rc == 0);
@@ -253,8 +253,8 @@ int main() {
     chclose(ch11);
 
     /* Test whether chdone() unblocks all receivers. */
-    chan ch12 = chmake(sizeof(int), 0);
-    chan ch13 = chmake(sizeof(int), 0);
+    chan ch12 = channel(sizeof(int), 0);
+    chan ch13 = channel(sizeof(int), 0);
     go(receiver2(chdup(ch12), 444, chdup(ch13)));
     go(receiver2(chdup(ch12), 444, chdup(ch13)));
     val = 444;
@@ -270,7 +270,7 @@ int main() {
     chclose(ch12);
 
     /* Test a combination of blocked sender and an item in the channel. */
-    chan ch14 = chmake(sizeof(int), 1);
+    chan ch14 = channel(sizeof(int), 1);
     val = 1;
     rc = chsend(ch14, &val, sizeof(val));
     assert(rc == 0);
@@ -284,7 +284,7 @@ int main() {
     chclose(ch14);
 
     /* Test whether chdone() unblocks blocked senders. */
-    chan ch15 = chmake(sizeof(int), 0);
+    chan ch15 = channel(sizeof(int), 0);
     go(sender2(chdup(ch15), 999));
     go(sender2(chdup(ch15), 999));
     go(sender2(chdup(ch15), 999));
@@ -296,7 +296,7 @@ int main() {
     chclose(ch15);
 
     /* Test whether chclose() unblocks blocked senders and receivers. */
-    chan ch16 = chmake(sizeof(int), 0);
+    chan ch16 = channel(sizeof(int), 0);
     go(receiver3(ch16));
     go(receiver3(ch16));
     rc = msleep(now() + 50);
@@ -305,7 +305,7 @@ int main() {
 
 #if 0
     /* Test cancelation. */
-    chan ch17 = chmake(sizeof(int), 0);
+    chan ch17 = channel(sizeof(int), 0);
     go(cancel(ch17));
     rc = msleep(now() + 50);
     assert(rc == 0);

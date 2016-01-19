@@ -38,8 +38,8 @@ coroutine void relay(chan src, chan dst) {
 }
 
 int main() {
-    chan left = chmake(sizeof(int), 0);
-    chan right = chmake(sizeof(int), 0);
+    chan left = channel(sizeof(int), 0);
+    chan right = channel(sizeof(int), 0);
 
     go(relay(left, right));
     go(relay(right, left));

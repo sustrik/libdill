@@ -37,7 +37,7 @@
 
 DILL_CT_ASSERT(sizeof(struct dill_choosedata) <= DILL_OPAQUE_SIZE);
 
-chan dill_chmake(size_t itemsz, size_t bufsz, const char *created) {
+chan dill_channel(size_t itemsz, size_t bufsz, const char *created) {
     /* If there's at least one channel created in the user's code
        we want the debug functions to get into the binary. */
     dill_preserve_debug();
@@ -59,7 +59,8 @@ chan dill_chmake(size_t itemsz, size_t bufsz, const char *created) {
     ch->bufsz = bufsz;
     ch->items = 0;
     ch->first = 0;
-    dill_trace(created, "<%d>=chmake(%d)", (int)ch->debug.id, (int)bufsz);
+    dill_trace(created, "<%d>=channel(%d, %d)", (int)ch->debug.id,
+        (int)itemsz, (int)bufsz);
     return ch;
 }
 

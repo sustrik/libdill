@@ -10,7 +10,7 @@ Yield execution to a different coroutine:
 
 Create a channel:
 
-`chan ch = chmake(item_size, buffer_size);`
+`chan ch = channel(item_size, buffer_size);`
 
 Duplicate a channel handle:
 
