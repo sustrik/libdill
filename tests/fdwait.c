@@ -32,6 +32,13 @@
 
 #include "../libdill.h"
 
+coroutine void cancel(int fd) {
+    int rc = fdwait(fd, FDW_IN, -1);
+    assert(rc == -1 && errno == ECANCELED);
+    rc = fdwait(fd, FDW_IN, -1);
+    assert(rc == -1 && errno == ECANCELED);
+}
+
 coroutine void trigger(int fd, int64_t deadline) {
     int rc = msleep(deadline);
     assert(rc == 0);
@@ -63,6 +70,12 @@ int main() {
     assert(rc == -1 && errno == ETIMEDOUT);
     int64_t diff = now() - deadline;
     assert(diff > -20 && diff < 20);
+
+    /* Check cancelation. */
+    coro cr = go(cancel(fds[0]));
+    gocancel(cr);
+    rc = msleep(now () + 30);
+    assert(rc == 0);
 
     /* Check for in. */
     ssize_t sz = send(fds[1], "A", 1, 0);
