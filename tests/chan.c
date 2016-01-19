@@ -89,6 +89,15 @@ coroutine void receiver3(chan ch) {
     assert(rc == -1 && errno == EPIPE);
 }
 
+coroutine void cancel(chan ch) {
+    int val;
+    int rc = chr(ch, &val, sizeof(val));
+    assert(rc == -1 && errno == ECANCELED);
+    rc = chr(ch, &val, sizeof(val));
+    assert(rc == -1 && errno == ECANCELED);
+    chclose(ch);
+}
+
 int main() {
     int val;
 
@@ -293,6 +302,13 @@ int main() {
     rc = msleep(now() + 50);
     assert(rc == 0);
     chclose(ch16);
+
+    /* Test cancelation. */
+    chan ch17 = chmake(sizeof(int), 0);
+    go(cancel(ch17));
+    rc = msleep(now() + 50);
+    assert(rc == 0);
+    chclose(ch17);
 
     /* Give it a little time to make sure that terminating coroutines
        don't fail. */
