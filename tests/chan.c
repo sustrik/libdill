@@ -305,8 +305,8 @@ int main() {
 
     /* Test cancelation. */
     chan ch17 = channel(sizeof(int), 0);
-    coro cr = goalloc(cancel(chdup(ch17)));
-    gofree(cr);
+    coro cr = go(cancel(chdup(ch17)));
+    gocancel(cr);
     chclose(ch17);
 
     /* Give it a little time to make sure that terminating coroutines

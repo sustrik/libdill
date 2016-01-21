@@ -143,7 +143,7 @@ int dill_yield(const char *current) {
     return -dill_suspend(NULL);
 }
 
-void gofree(coro cr) {
+void gocancel(coro cr) {
     cr->canceler = dill_running;
     if(cr->suspended)
         dill_resume(cr, -ECANCELED);

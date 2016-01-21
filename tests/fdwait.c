@@ -72,8 +72,8 @@ int main() {
     assert(diff > -20 && diff < 20);
 
     /* Check cancelation. */
-    coro cr = goalloc(cancel(fds[0]));
-    gofree(cr);
+    coro cr = go(cancel(fds[0]));
+    gocancel(cr);
 
     /* Check for in. */
     ssize_t sz = send(fds[1], "A", 1, 0);
