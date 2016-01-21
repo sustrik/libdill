@@ -113,6 +113,12 @@ static void dill_choose_unblock_cb(struct dill_cr *cr) {
         dill_timer_rm(&cr->timer);
 }
 
+/* Returns index of the clause in the pollset. */
+static int dill_choose_index(struct dill_clause *cl) {
+    struct dill_choosedata *cd = (struct dill_choosedata*)cl->cr->opaque;
+    return cl - cd->clauses;
+}
+
 /* Push new item to the channel. */
 static void dill_enqueue(chan ch, void *val) {
     /* If there's a receiver already waiting, let's resume it. */
@@ -121,7 +127,7 @@ static void dill_enqueue(chan ch, void *val) {
         struct dill_clause *cl = dill_cont(
             dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
         memcpy(cl->val, val, ch->sz);
-        dill_resume(cl->cr, cl->idx);
+        dill_resume(cl->cr, dill_choose_index(cl));
         return;
     }
     /* Write the value to the buffer. */
@@ -147,7 +153,7 @@ static void dill_dequeue(chan ch, void *val) {
         /* Otherwise there must be a sender waiting to send. */
         dill_assert(cl);
         memcpy(val, cl->val, ch->sz);
-        dill_resume(cl->cr, cl->idx);
+        dill_resume(cl->cr, dill_choose_index(cl));
         return;
     }
     /* If there's a value in the buffer start by retrieving it. */
@@ -160,7 +166,7 @@ static void dill_dequeue(chan ch, void *val) {
         size_t pos = (ch->first + ch->items) % ch->bufsz;
         memcpy(((char*)(ch + 1)) + (pos * ch->sz) , cl->val, ch->sz);
         ++ch->items;
-        dill_resume(cl->cr, cl->idx);
+        dill_resume(cl->cr, dill_choose_index(cl));
     }
 }
 
@@ -213,7 +219,6 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
             return -1;
         }
         cls[i].cr = dill_running;
-        cls[i].idx = i;
         struct dill_ep *ep = dill_getep(&cls[i]);
         if(ep->seq == seq)
             continue;
@@ -233,7 +238,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
             dill_enqueue(cl->channel, cl->val);
         else
             dill_dequeue(cl->channel, cl->val);
-        dill_resume(dill_running, cl->idx);
+        dill_resume(dill_running, dill_choose_index(cl));
         return dill_suspend(NULL);
     }
 
@@ -322,7 +327,7 @@ int dill_chdone(chan ch, const void *val, size_t len, const char *current) {
         struct dill_clause *cl = dill_cont(
             dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
         memcpy(cl->val, val, ch->sz);
-        dill_resume(cl->cr, cl->idx);
+        dill_resume(cl->cr, dill_choose_index(cl));
     }
     return 0;
 }

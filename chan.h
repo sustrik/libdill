@@ -88,8 +88,6 @@ struct dill_clause {
     struct dill_list_item epitem;
     /* The coroutine which created the clause. */
     struct dill_cr *cr;
-    /* The index to jump to when the clause is executed. */
-    int idx;
     /* This field within a pollset forms an array of indices of all immediately
        available clauses. */
     int aidx;
