@@ -56,16 +56,18 @@ struct dill_cr {
     struct dill_slist_item ready;
     /* If the coroutine is waiting for a deadline, it uses this timer. */
     struct dill_timer timer;
-    /* Function to be called when the coroutine is unblocked. */
-    dill_unblock_cb unblock_cb;
-    /* Stored coroutine context while it is not executing. */
-    struct dill_ctx ctx;
-    /* 1 is the coroutine is suspended, 0 if it's either ready or running. */
+
+    /* When coroutine is suspended, 'suspended' is set to 1, 'ctx' holds the
+       context (registers and such), 'unblock_cb' is a function to be called
+       when the coroutine is moved back to the list of ready coroutines and
+       'result' is the value to be returned from the suspend function. */
     int suspended;
+    struct dill_ctx ctx;
+    dill_unblock_cb unblock_cb;
+    int result;
+
     /* 1 is the coroutine was canceled, 0 otherwise. */
     int canceled;
-    /* Argument to resume() call being passed to the blocked suspend() call. */
-    int result;
     /* Coroutine-local storage. */
     void *cls;
     /* Debugging info. */
