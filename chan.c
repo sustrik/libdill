@@ -194,6 +194,8 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     static uint64_t seq = 0;
     ++seq;
 
+    struct dill_clause *cls = (struct dill_clause*)clauses;
+
     struct dill_choosedata *cd = (struct dill_choosedata*)dill_running->opaque;
     dill_slist_init(&cd->clauses);
     cd->ddline = -1;
@@ -203,25 +205,26 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     int available = 0;
     int i;
     for(i = 0; i != nclauses; ++i) {
-        struct dill_clause *cl = (struct dill_clause*)&clauses[i];
-        if(dill_slow(!cl->channel || cl->channel->sz != cl->len ||
-              (cl->op != CHSEND && cl->op != CHRECV))) {
+        if(dill_slow(!cls[i].channel || cls[i].channel->sz != cls[i].len ||
+              (cls[i].op != CHSEND && cls[i].op != CHRECV))) {
             errno = EINVAL;
             return -1;
         }
-        if(dill_slow(cl->op == CHSEND && cl->channel->done)) {
+        if(dill_slow(cls[i].op == CHSEND && cls[i].channel->done)) {
             errno = EPIPE;
             return -1;
         }
-        cl->cr = dill_running;
-        cl->idx = i;
-        struct dill_ep *ep = dill_getep(cl);
+        cls[i].cr = dill_running;
+        cls[i].idx = i;
+        struct dill_ep *ep = dill_getep(&cls[i]);
         if(ep->seq == seq)
             continue;
         ep->seq = seq;
-        dill_slist_push_back(&cd->clauses, &cl->chitem);
-        if(dill_choose_available(cl))
+        dill_slist_push_back(&cd->clauses, &cls[i].chitem);
+        if(dill_choose_available(&cls[i])) {
+            cls[available].aidx = i;
             ++available;
+        }
     }
 
     struct dill_slist_item *it;
@@ -231,14 +234,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
        randomly choose one of them. */
     if(available > 0) {
         int chosen = available == 1 ? 0 : (int)(random() % available);
-        for(it = dill_slist_begin(&cd->clauses); it; it = dill_slist_next(it)) {
-            cl = dill_cont(it, struct dill_clause, chitem);
-            if(!dill_choose_available(cl))
-                continue;
-            if(!chosen)
-                break;
-            --chosen;
-        }
+        struct dill_clause *cl = &cls[cls[chosen].aidx];
         if(cl->op == CHSEND)
             dill_enqueue(cl->channel, cl->val);
         else
@@ -264,7 +260,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     /* In all other cases register this coroutine with the queried channels
        and wait till one of the clauses unblocks. */
     for(it = dill_slist_begin(&cd->clauses); it; it = dill_slist_next(it)) {
-        cl = dill_cont(it, struct dill_clause, chitem);
+        struct dill_clause *cl = dill_cont(it, struct dill_clause, chitem);
         dill_list_insert(&dill_getep(cl)->clauses, &cl->epitem, NULL);
     }
     /* If there are multiple parallel chooses done from different coroutines
