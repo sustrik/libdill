@@ -131,18 +131,18 @@ void goredump(void) {
                         pos += sprintf(&buf[pos], "choose(");
                     int first = 1;
                     int i;
-                    for(i = 0; i != cd->nchclauses; ++i) {
+                    for(i = 0; i != cd->nclauses; ++i) {
                         if(first)
                             first = 0;
                         else
                             pos += sprintf(&buf[pos], ",");
                         if(cr->debug.op == DILL_CHOOSE) {
                             buf[pos] =
-                                cd->chclauses[i].op == CHSEND ? 'S' : 'R';
+                                cd->clauses[i].op == CHSEND ? 'S' : 'R';
                             ++pos;
                         }
                         pos += sprintf(&buf[pos], "<%d>",
-                            cd->chclauses[i].channel->debug.id);
+                            cd->clauses[i].channel->debug.id);
                     }
                     sprintf(&buf[pos], ")");
                 }

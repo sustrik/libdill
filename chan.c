@@ -103,13 +103,11 @@ static struct dill_ep *dill_getep(struct dill_clause *cl) {
 }
 
 static void dill_choose_unblock_cb(struct dill_cr *cr) {
-    struct dill_slist_item *it;
-    struct dill_clause *itcl;
     struct dill_choosedata *cd = (struct dill_choosedata*)cr->opaque;
-    for(it = dill_slist_begin(&cd->clauses);
-          it; it = dill_slist_next(it)) {
-        itcl = dill_cont(it, struct dill_clause, chitem);
-        dill_list_erase(&dill_getep(itcl)->clauses, &itcl->epitem);
+    int i;
+    for(i = 0; i != cd->nclauses; ++i) {
+        struct dill_clause *cl = &cd->clauses[i];
+        dill_list_erase(&dill_getep(cl)->clauses, &cl->epitem);
     }
     if(cd->ddline > 0)
         dill_timer_rm(&cr->timer);
@@ -197,10 +195,9 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     struct dill_clause *cls = (struct dill_clause*)clauses;
 
     struct dill_choosedata *cd = (struct dill_choosedata*)dill_running->opaque;
-    dill_slist_init(&cd->clauses);
+    cd->nclauses = nclauses;
+    cd->clauses = (struct dill_clause*)clauses;
     cd->ddline = -1;
-    cd->nchclauses = nclauses;
-    cd->chclauses = clauses;
 
     int available = 0;
     int i;
@@ -220,7 +217,6 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         if(ep->seq == seq)
             continue;
         ep->seq = seq;
-        dill_slist_push_back(&cd->clauses, &cls[i].chitem);
         if(dill_choose_available(&cls[i])) {
             cls[available].aidx = i;
             ++available;
@@ -256,9 +252,8 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
 
     /* In all other cases register this coroutine with the queried channels
        and wait till one of the clauses unblocks. */
-    struct dill_slist_item *it;
-    for(it = dill_slist_begin(&cd->clauses); it; it = dill_slist_next(it)) {
-        struct dill_clause *cl = dill_cont(it, struct dill_clause, chitem);
+    for(i = 0; i != cd->nclauses; ++i) {
+        struct dill_clause *cl = &cd->clauses[i];
         dill_list_insert(&dill_getep(cl)->clauses, &cl->epitem, NULL);
     }
     /* If there are multiple parallel chooses done from different coroutines

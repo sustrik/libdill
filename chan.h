@@ -34,14 +34,11 @@
 
 /* Per-coroutine data. Used to store info while choose() is blocked. */
 struct dill_choosedata {
-    /* List of clauses in the 'choose' statement. */
-    struct dill_slist clauses;
+    /* Pollset, ase passed to the choose() function. */
+    int nclauses;
+    struct dill_clause *clauses;
     /* Deadline specified in 'deadline' clause. -1 if none. */
     int64_t ddline;
-    /* Pollset, ase passed to the choose() function. Used for debugging
-       purposes. */
-    int nchclauses;
-    struct chclause *chclauses;
 };
 
 /* Channel endpoint. */
@@ -90,8 +87,6 @@ struct dill_clause {
     size_t len;
     /* Member of list of clauses waiting for a channel endpoint. */
     struct dill_list_item epitem;
-    /* Linked list of clauses in the choose statement. */
-    struct dill_slist_item chitem;
     /* The coroutine which created the clause. */
     struct dill_cr *cr;
     /* The index to jump to when the clause is executed. */
