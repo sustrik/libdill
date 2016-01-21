@@ -192,13 +192,14 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     static uint64_t seq = 0;
     ++seq;
 
+    /* Initialise the operation. */
     struct dill_clause *cls = (struct dill_clause*)clauses;
-
     struct dill_choosedata *cd = (struct dill_choosedata*)dill_running->opaque;
     cd->nclauses = nclauses;
-    cd->clauses = (struct dill_clause*)clauses;
+    cd->clauses = cls;
     cd->ddline = -1;
 
+    /* Find out which clauses are immediately available. */
     int available = 0;
     int i;
     for(i = 0; i != nclauses; ++i) {
@@ -236,7 +237,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         return dill_suspend(NULL);
     }
 
-    /* If immediate execution was requested, exit now. */
+    /* If non-blocking behaviour was requested, exit now. */
     if(deadline == 0) {
         dill_resume(dill_running, -1);
         dill_suspend(NULL);
