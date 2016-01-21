@@ -307,8 +307,6 @@ int main() {
     chan ch17 = channel(sizeof(int), 0);
     coro cr = go(cancel(chdup(ch17)));
     gocancel(cr);
-    rc = msleep(now() + 50);
-    assert(rc == 0);
     chclose(ch17);
 
     /* Give it a little time to make sure that terminating coroutines
