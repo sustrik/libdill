@@ -51,7 +51,7 @@ pid_t mfork(void) {
 
 static int dill_fdwait_(int fd, int events, int64_t deadline,
       const char *current) {
-    if(dill_slow(dill_running->canceled)) {
+    if(dill_slow(dill_running->canceler)) {
         errno = ECANCELED;
         return -1;
     }

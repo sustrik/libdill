@@ -94,7 +94,7 @@ int dill_prologue(struct dill_cr **cr, const char *created) {
     /* Allocate and initialise new stack. */
     *cr = ((struct dill_cr*)dill_allocstack()) - 1;
     dill_register_cr(&(*cr)->debug, created);
-    (*cr)->canceled = 0;
+    (*cr)->canceler = NULL;
     (*cr)->suspended = 0;
     (*cr)->cls = NULL;
       (*cr)->unblock_cb = NULL;
@@ -109,6 +109,10 @@ int dill_prologue(struct dill_cr **cr, const char *created) {
 
 /* The final part of go(). Cleans up after the coroutine is finished. */
 void dill_epilogue(void) {
+    /* Resume the canceler, if any. */
+    if(dill_running->canceler)
+        dill_resume(dill_running->canceler, 0);
+    /* Stop the coroutine and deallocate the resources. */
     dill_trace(NULL, "go() done");
     dill_unregister_cr(&dill_running->debug);
     dill_freestack(dill_running + 1);
@@ -128,9 +132,11 @@ int dill_yield(const char *current) {
 }
 
 void gocancel(coro cr) {
-    cr->canceled = 1;
+    cr->canceler = dill_running;
     if(cr->suspended)
         dill_resume(cr, -ECANCELED);
+    int rc = dill_suspend(NULL);
+    dill_assert(rc == 0);
 }
 
 void *cls(void) {

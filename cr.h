@@ -66,8 +66,10 @@ struct dill_cr {
     dill_unblock_cb unblock_cb;
     int result;
 
-    /* 1 is the coroutine was canceled, 0 otherwise. */
-    int canceled;
+    /* If the coroutine is being canceled, the coroutine that performs
+       the cancelation. */
+    struct dill_cr *canceler;
+
     /* Coroutine-local storage. */
     void *cls;
     /* Debugging info. */

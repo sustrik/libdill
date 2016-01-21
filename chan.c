@@ -188,7 +188,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         errno = EINVAL;
         return -1;
     }
-    if(dill_slow(dill_running->canceled)) {
+    if(dill_slow(dill_running->canceler)) {
         errno = ECANCELED;
         return -1;
     }
