@@ -25,7 +25,6 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "cr.h"
 #include "debug.h"
@@ -86,23 +85,12 @@ void dill_resume(struct dill_cr *cr, int result) {
     dill_slist_push_back(&dill_ready, &cr->ready);
 }
 
-/* This function is called when main coroutine finishes. */
-static void dill_atexit(void) {
-}
-
 /* The intial part of go(). Starts the new coroutine.
    Returns the pointer to the top of its stack. */
 int dill_prologue(struct dill_cr **cr, const char *created) {
     /* Ensure that debug functions are available whenever a single go()
        statement is present in the user's code. */
     dill_preserve_debug();
-    /* Register termination function. */
-    static int has_atexit = 0;
-    if(dill_slow(!has_atexit)) {
-        int rc = atexit(dill_atexit);
-        dill_assert(rc == 0);
-        has_atexit = 1;
-    }
     /* Allocate and initialise new stack. */
     *cr = ((struct dill_cr*)dill_allocstack()) - 1;
     dill_register_cr(&(*cr)->debug, created);
