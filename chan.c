@@ -189,8 +189,8 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         return -1;
     }
 
-    /* Create unique ID for each invocation of choose(). It is used to identify
-       and ignore duplicate entries in the pollset. */
+    /* Create unique ID for each invocation of choose(). It is used to
+       identify and ignore duplicate entries in the pollset. */
     static uint64_t seq = 0;
     ++seq;
 
@@ -227,9 +227,6 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         }
     }
 
-    struct dill_slist_item *it;
-    struct dill_clause *cl;
-
     /* If there are clauses that are immediately available
        randomly choose one of them. */
     if(available > 0) {
@@ -259,6 +256,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
 
     /* In all other cases register this coroutine with the queried channels
        and wait till one of the clauses unblocks. */
+    struct dill_slist_item *it;
     for(it = dill_slist_begin(&cd->clauses); it; it = dill_slist_next(it)) {
         struct dill_clause *cl = dill_cont(it, struct dill_clause, chitem);
         dill_list_insert(&dill_getep(cl)->clauses, &cl->epitem, NULL);
