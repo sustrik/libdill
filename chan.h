@@ -30,7 +30,6 @@
 
 #include "debug.h"
 #include "list.h"
-#include "slist.h"
 
 /* Per-coroutine data. Used to store info while choose() is blocked. */
 struct dill_choosedata {
