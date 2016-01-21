@@ -72,10 +72,10 @@ int main() {
     assert(rc == 0);
 
     /* Test whether cancelation works. */
-    coro cr = go(worker2());
+    coro cr = goalloc(worker2());
     rc = msleep(now() + 30);
     assert(rc == 0);
-    gocancel(cr);
+    gofree(cr);
     assert(worker2_done);
 
     /* Let the test running for a while to detect possible errors in

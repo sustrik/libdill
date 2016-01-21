@@ -100,10 +100,23 @@ DILL_EXPORT void dill_epilogue(void);
 #define coroutine
 #endif
 
+#define go(fn) \
+    do {\
+        struct dill_cr *dill_sp;\
+        if(dill_prologue(&dill_sp, __FILE__ ":" dill_string(__LINE__))) {\
+            int dill_anchor[dill_unoptimisable1];\
+            dill_unoptimisable2 = &dill_anchor;\
+            char dill_filler[(char*)&dill_anchor - (char*)(dill_sp)];\
+            dill_unoptimisable2 = &dill_filler;\
+            fn;\
+            dill_epilogue();\
+        }\
+    } while(0)
+
 /* Statement expressions are a gcc-ism but they are also supported by clang.
    Given that there's no other way to do this, screw other compilers for now.
    See https://gcc.gnu.org/onlinedocs/gcc-3.2/gcc/Statement-Exprs.html */
-#define go(fn) \
+#define goalloc(fn) \
     ({\
         struct dill_cr *dill_sp;\
         if(dill_prologue(&dill_sp, __FILE__ ":" dill_string(__LINE__))) {\
@@ -121,7 +134,7 @@ DILL_EXPORT void dill_epilogue(void);
 
 DILL_EXPORT int dill_yield(const char *current);
 
-DILL_EXPORT void gocancel(coro cr);
+DILL_EXPORT void gofree(coro cr);
 
 #define msleep(deadline) dill_msleep((deadline),\
     __FILE__ ":" dill_string(__LINE__))
