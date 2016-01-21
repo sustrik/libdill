@@ -47,7 +47,7 @@ coroutine void worker2(void) {
     /* Try again to test whether subsequent calls fail as well. */
     rc = msleep(now() + 1000);
     assert(rc == -1 && errno == ECANCELED);
-    worker2_done = 1;
+    ++worker2_done;
 }
 
 coroutine void dummy(void) {
@@ -72,11 +72,14 @@ int main() {
     assert(rc == 0);
 
     /* Test whether cancelation works. */
-    coro cr = go(worker2());
+    coro crs[3];
+    crs[0] = go(worker2());
+    crs[1] = go(worker2());
+    crs[2] = go(worker2());
     rc = msleep(now() + 30);
     assert(rc == 0);
-    gocancel(cr);
-    assert(worker2_done);
+    gocancel(crs, 3, -1);
+    assert(worker2_done == 3);
 
     /* Let the test running for a while to detect possible errors in
        independently running coroutines. */

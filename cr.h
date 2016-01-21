@@ -70,6 +70,9 @@ struct dill_cr {
        the cancelation. */
     struct dill_cr *canceler;
 
+    /* When blocked in gocancel(), number of coroutines yet to finish. */
+    int pending;
+
     /* Coroutine-local storage. */
     void *cls;
     /* Debugging info. */

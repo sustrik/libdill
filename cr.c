@@ -110,8 +110,12 @@ int dill_prologue(struct dill_cr **cr, const char *created) {
 /* The final part of go(). Cleans up after the coroutine is finished. */
 void dill_epilogue(void) {
     /* Resume the canceler, if any. */
-    if(dill_running->canceler)
-        dill_resume(dill_running->canceler, 0);
+    if(dill_running->canceler) {
+        dill_running->canceler->pending--;
+        dill_assert(dill_running->canceler->pending >= 0);
+        if(!dill_running->canceler->pending)
+            dill_resume(dill_running->canceler, 0);
+    }
     /* Stop the coroutine and deallocate the resources. */
     dill_trace(NULL, "go() done");
     dill_unregister_cr(&dill_running->debug);
@@ -131,10 +135,14 @@ int dill_yield(const char *current) {
     return -dill_suspend(NULL);
 }
 
-void gocancel(coro cr) {
-    cr->canceler = dill_running;
-    if(cr->suspended)
-        dill_resume(cr, -ECANCELED);
+void gocancel(coro *crs, int ncrs, int64_t deadline) {
+    int i;
+    for(i = 0; i != ncrs; ++i) {
+        crs[i]->canceler = dill_running;
+        if(crs[i]->suspended)
+            dill_resume(crs[i], -ECANCELED);
+    }
+    dill_running->pending = ncrs;
     int rc = dill_suspend(NULL);
     dill_assert(rc == 0);
 }

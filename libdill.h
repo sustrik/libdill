@@ -121,7 +121,7 @@ DILL_EXPORT void dill_epilogue(void);
 
 DILL_EXPORT int dill_yield(const char *current);
 
-DILL_EXPORT void gocancel(coro cr);
+DILL_EXPORT void gocancel(coro *crs, int ncrs, int64_t deadline);
 
 #define msleep(deadline) dill_msleep((deadline),\
     __FILE__ ":" dill_string(__LINE__))
