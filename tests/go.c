@@ -39,12 +39,15 @@ coroutine void worker(int count, int n) {
     }
 }
 
+static int worker2_done = 0;
+
 coroutine void worker2(void) {
     int rc = msleep(now() + 1000);
     assert(rc == -1 && errno == ECANCELED);
     /* Try again to test whether subsequent calls fail as well. */
     rc = msleep(now() + 1000);
     assert(rc == -1 && errno == ECANCELED);
+    worker2_done = 1;
 }
 
 coroutine void dummy(void) {
@@ -73,7 +76,11 @@ int main() {
     rc = msleep(now() + 30);
     assert(rc == 0);
     gocancel(cr);
-    rc = msleep(now() + 30);
+    assert(worker2_done);
+
+    /* Let the test running for a while to detect possible errors in
+       independently running coroutines. */
+    rc = msleep(now() + 100);
     assert(rc == 0);
 
     return 0;
