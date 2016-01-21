@@ -75,3 +75,18 @@ Debugging:
 gotrace(1);
 goredump();
 ```
+**TODO**
+
+Detached coroutines:
+
+```
+coro cr = goalloc(fx());
+gofree(cr);
+```
+
+Wait till all child coroutines exit:
+
+```
+int rc = gowait(-1);
+```
+

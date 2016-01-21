@@ -303,14 +303,13 @@ int main() {
     assert(rc == 0);
     chclose(ch16);
 
-#if 0
     /* Test cancelation. */
     chan ch17 = channel(sizeof(int), 0);
-    go(cancel(ch17));
+    coro cr = go(cancel(chdup(ch17)));
+    gocancel(cr);
     rc = msleep(now() + 50);
     assert(rc == 0);
     chclose(ch17);
-#endif
 
     /* Give it a little time to make sure that terminating coroutines
        don't fail. */
