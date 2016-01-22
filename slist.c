@@ -26,6 +26,17 @@
 
 #include "slist.h"
 
+/* After removing item from a list, next points here. */
+static struct dill_slist_item dill_slist_item_none = {NULL};
+
+void dill_slist_item_init(struct dill_slist_item *self) {
+    self->next = &dill_slist_item_none;
+}
+
+int dill_slist_item_inlist(struct dill_slist_item *self) {
+    return self->next == &dill_slist_item_none ? 0 : 1;
+}
+
 void dill_slist_init(struct dill_slist *self) {
     self->first = NULL;
     self->last = NULL;
@@ -55,6 +66,7 @@ struct dill_slist_item *dill_slist_pop(struct dill_slist *self) {
     self->first = self->first->next;
     if(!self->first)
         self->last = NULL;
+    it->next = &dill_slist_item_none;
     return it;
 }
 

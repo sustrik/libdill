@@ -29,6 +29,15 @@
 /* After removing item from a list, prev & next point here. */
 static struct dill_list_item dill_list_item_none = {NULL, NULL};
 
+void dill_list_item_init(struct dill_list_item *self) {
+    self->prev = &dill_list_item_none;
+    self->next = &dill_list_item_none;
+}
+
+int dill_list_item_inlist(struct dill_list_item *self) {
+    return self->prev == &dill_list_item_none ? 0 : 1;
+}
+
 void dill_list_init(struct dill_list *self)
 {
     self->first = NULL;
@@ -53,8 +62,6 @@ void dill_list_insert(struct dill_list *self, struct dill_list_item *item,
 struct dill_list_item *dill_list_erase(struct dill_list *self,
     struct dill_list_item *item)
 {
-    struct dill_list_item *next;
-
     if(item->prev)
         item->prev->next = item->next;
     else
@@ -63,12 +70,9 @@ struct dill_list_item *dill_list_erase(struct dill_list *self,
         item->next->prev = item->prev;
     else
         self->last = item->prev;
-
-    next = item->next;
-
+    struct dill_list_item *next = item->next;
     item->prev = &dill_list_item_none;
     item->next = &dill_list_item_none;
-
     return next;
 }
 
