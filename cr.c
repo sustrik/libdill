@@ -128,11 +128,20 @@ void dill_epilogue(void) {
 
 int dill_yield(const char *current) {
     dill_trace(current, "yield()");
+    if(dill_slow(dill_running->canceler)) {
+        errno = ECANCELED;
+        return -1;
+    }
     dill_startop(&dill_running->debug, DILL_YIELD, current);
     /* This looks fishy, but yes, we can resume the coroutine even before
        suspending it. */
     dill_resume(dill_running, 0);
-    return -dill_suspend(NULL);
+    int rc = dill_suspend(NULL);
+    if(rc == 0)
+        return 0;
+    dill_assert(rc < 0);
+    errno = -rc;
+    return -1;
 }
 
 void gocancel(coro *crs, int ncrs, int64_t deadline) {
