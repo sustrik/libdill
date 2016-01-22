@@ -82,15 +82,14 @@ void dill_chclose(chan ch, const char *current) {
         return;
     /* Resume any remaining senders and receivers on the channel
        with EPIPE error. */
-    struct dill_list_item *it;
-    for(it = dill_list_begin(&ch->sender.clauses); it;
-          it = dill_list_next(it)) {
-        struct dill_clause *cl = dill_cont(it, struct dill_clause, epitem);
+    while(!dill_list_empty(&ch->sender.clauses)) {
+        struct dill_clause *cl = dill_cont(dill_list_begin(
+            &ch->sender.clauses), struct dill_clause, epitem);
         dill_resume(cl->cr, -EPIPE);
     }
-    for(it = dill_list_begin(&ch->receiver.clauses); it;
-          it = dill_list_next(it)) {
-        struct dill_clause *cl = dill_cont(it, struct dill_clause, epitem);
+    while(!dill_list_empty(&ch->receiver.clauses)) {
+        struct dill_clause *cl = dill_cont(
+            dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
         dill_resume(cl->cr, -EPIPE);
     }
     dill_unregister_chan(&ch->debug);
@@ -312,10 +311,9 @@ int dill_chdone(chan ch, const void *val, size_t len, const char *current) {
         return -1;
     }
     /* Resume any remaining senders on the channel with EPIPE error. */
-    struct dill_list_item *it;
-    for(it = dill_list_begin(&ch->sender.clauses); it;
-          it = dill_list_next(it)) {
-        struct dill_clause *cl = dill_cont(it, struct dill_clause, epitem);
+    while(!dill_list_empty(&ch->sender.clauses)) {
+        struct dill_clause *cl = dill_cont(dill_list_begin(&ch->sender.clauses),
+            struct dill_clause, epitem);
         dill_resume(cl->cr, -EPIPE);
     }
     /* Put the channel into done-with mode. */

@@ -26,6 +26,9 @@
 
 #include "list.h"
 
+/* After removing item from a list, prev & next point here. */
+static struct dill_list_item dill_list_item_none = {NULL, NULL};
+
 void dill_list_init(struct dill_list *self)
 {
     self->first = NULL;
@@ -63,8 +66,8 @@ struct dill_list_item *dill_list_erase(struct dill_list *self,
 
     next = item->next;
 
-    item->prev = NULL;
-    item->next = NULL;
+    item->prev = &dill_list_item_none;
+    item->next = &dill_list_item_none;
 
     return next;
 }
