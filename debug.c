@@ -148,7 +148,7 @@ void goredump(void) {
                 }
                 break;
             case DILL_FINISHED:
-                sprintf(buf, "finished");
+                sprintf(buf, " finished");
                 break;
             default:
                 assert(0);
@@ -158,7 +158,8 @@ void goredump(void) {
         fprintf(stderr, "%-8s   %-42s %-40s %s\n",
             idbuf,
             cr == dill_running ? "RUNNING" : buf,
-            cr == dill_running ? "---" : cr->debug.current,
+            cr == dill_running || !cr->debug.current ?
+                "---" : cr->debug.current,
             cr->debug.created ? cr->debug.created : "<main>");
     }
     fprintf(stderr,"\n");
