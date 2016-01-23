@@ -79,7 +79,11 @@ static int dill_max_cached_stacks = 64;
 static int dill_num_cached_stacks = 0;
 static struct dill_slist dill_cached_stacks = {0};
 
-static void *dill_allocstackmem(void) {
+void *dill_allocstack(void) {
+    if(!dill_slist_empty(&dill_cached_stacks)) {
+        --dill_num_cached_stacks;
+        return (void*)(dill_slist_pop(&dill_cached_stacks) + 1);
+    }
     void *ptr;
 #if defined HAVE_POSIX_MEMALIGN && HAVE_MPROTECT
     /* Allocate the stack so that it's memory-page-aligned. */
@@ -105,17 +109,6 @@ static void *dill_allocstackmem(void) {
     }
 #endif
     return (void*)(((char*)ptr) + dill_get_stack_size());
-}
-
-void *dill_allocstack(void) {
-    if(!dill_slist_empty(&dill_cached_stacks)) {
-        --dill_num_cached_stacks;
-        return (void*)(dill_slist_pop(&dill_cached_stacks) + 1);
-    }
-    void *ptr = dill_allocstackmem();
-    if(!ptr)
-        dill_panic("not enough memory to allocate coroutine stack");
-    return ptr;
 }
 
 void dill_freestack(void *stack) {

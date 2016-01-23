@@ -85,14 +85,16 @@ void dill_resume(struct dill_cr *cr, int result) {
     dill_slist_push_back(&dill_ready, &cr->ready);
 }
 
-/* The intial part of go(). Starts the new coroutine.
-   Returns the pointer to the top of its stack. */
+/* The intial part of go(). Starts the new coroutine.  Returns 1 in the
+   new coroutine, 0 in the old one. */
 int dill_prologue(struct dill_cr **cr, const char *created) {
     /* Ensure that debug functions are available whenever a single go()
        statement is present in the user's code. */
     dill_preserve_debug();
     /* Allocate and initialise new stack. */
     *cr = ((struct dill_cr*)dill_allocstack()) - 1;
+    if(!*cr)
+        return 0;
     dill_register_cr(&(*cr)->debug, created);
     (*cr)->canceler = NULL;
     (*cr)->suspended = 0;
