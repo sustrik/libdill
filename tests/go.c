@@ -28,6 +28,11 @@
 
 #include "../libdill.h"
 
+coroutine void dummy(void) {
+    int rc = msleep(now() + 50);
+    assert(rc == 0);
+}
+
 int sum = 0;
 
 coroutine void worker(int count, int n) {
@@ -74,9 +79,15 @@ coroutine void worker4(int64_t deadline) {
     assert(0);
 }
 
-coroutine void dummy(void) {
-    int rc = msleep(now() + 50);
-    assert(rc == 0);
+coroutine void worker6(void) {
+    int rc = msleep(now() + 2000);
+    assert(rc == -1 && errno == ECANCELED);
+}
+
+coroutine void worker5(void) {
+    coro cr = go(worker6());
+    int rc = gocancel(&cr, 1, now() + 1000);
+    assert(rc == -1 && errno == ECANCELED);
 }
 
 int main() {
@@ -126,6 +137,11 @@ int main() {
     assert(rc == 0);
     assert(worker4_finished == 3);
     assert(worker4_canceled == 3);
+
+    /* Test canceling a cancelation. */
+    coro cr = go(worker5());
+    rc = gocancel(&cr, 1, now() + 50);
+    assert(rc == 0);
 
     /* Let the test running for a while to detect possible errors in
        independently running coroutines. */

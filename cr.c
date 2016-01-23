@@ -174,6 +174,7 @@ int gocancel(coro *crs, int ncrs, int64_t deadline) {
         dill_list_insert(&dill_running->tocancel, &crs[i]->tocancel_item, NULL);
     }
     /* If all coroutines are finished return straight away. */
+    int canceled = 0;
     if(dill_list_empty(&dill_running->tocancel))
         return 0;
     /* If user requested immediate cancelation we can skip all this stuff. */
@@ -193,6 +194,8 @@ int gocancel(coro *crs, int ncrs, int64_t deadline) {
       dill_assert(rc == -ECANCELED || rc == -ETIMEDOUT);
       if(rc != -ETIMEDOUT && deadline > 0)
           dill_timer_rm(&dill_running->timer);
+      if(rc == -ECANCELED)
+          canceled = 1;
     }
     /* Send cancel signal to the remaining coroutines. */
     struct dill_list_item *it;
@@ -210,6 +213,11 @@ int gocancel(coro *crs, int ncrs, int64_t deadline) {
         if(rc == 0)
             break;
         dill_assert(rc == -ECANCELED);
+        canceled = 1;
+    }
+    if(canceled) {
+        errno = ECANCELED;
+        return -1;
     }
     return 0;
 }
