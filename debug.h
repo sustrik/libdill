@@ -33,8 +33,9 @@ enum dill_op {
     DILL_MSLEEP,
     DILL_FDWAIT,
     DILL_CHSEND,
-    DILL_CHRECV ,
-    DILL_CHOOSE
+    DILL_CHRECV,
+    DILL_CHOOSE,
+    DILL_FINISHED
 };
 
 struct dill_debug_cr {

@@ -50,6 +50,30 @@ coroutine void worker2(void) {
     ++worker2_done;
 }
 
+static int worker3_done = 0;
+
+coroutine void worker3(void) {
+    int rc = msleep(now() + 100);
+    assert(rc == 0);
+    ++worker3_done;
+}
+
+static int worker4_finished = 0;
+static int worker4_canceled = 0;
+
+coroutine void worker4(int64_t deadline) {
+    int rc = msleep(deadline);
+    if(rc == 0) {
+        ++worker4_finished;
+        return;
+    }
+    if(rc == -1 && errno == ECANCELED) {
+        ++worker4_canceled;
+        return;
+    }
+    assert(0);
+}
+
 coroutine void dummy(void) {
     int rc = msleep(now() + 50);
     assert(rc == 0);
@@ -71,15 +95,37 @@ int main() {
     rc = msleep(now() + 100);
     assert(rc == 0);
 
-    /* Test whether cancelation works. */
-    coro crs[3];
+    coro crs[6];
+
+    /* Test whether immediate cancelation works. */
     crs[0] = go(worker2());
     crs[1] = go(worker2());
     crs[2] = go(worker2());
     rc = msleep(now() + 30);
     assert(rc == 0);
-    gocancel(crs, 3, -1);
+    rc = gocancel(crs, 3, 0);
+    assert(rc == 0);
     assert(worker2_done == 3);
+
+    /* Test cancelation with infinite deadline. */
+    crs[0] = go(worker3());
+    crs[1] = go(worker3());
+    crs[2] = go(worker3());
+    rc = gocancel(crs, 3, -1);
+    assert(rc == 0);
+    assert(worker3_done == 3);
+
+    /* Test cancelation with a finite deadline. */
+    crs[0] = go(worker4(now() + 50));
+    crs[1] = go(worker4(now() + 50));
+    crs[2] = go(worker4(now() + 50));
+    crs[3] = go(worker4(now() + 200));
+    crs[4] = go(worker4(now() + 200));
+    crs[5] = go(worker4(now() + 200));
+    rc = gocancel(crs, 6, now() + 100);
+    assert(rc == 0);
+    assert(worker4_finished == 3);
+    assert(worker4_canceled == 3);
 
     /* Let the test running for a while to detect possible errors in
        independently running coroutines. */

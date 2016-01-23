@@ -100,7 +100,7 @@ void goredump(void) {
         if(dill_running != cr) {
             switch(cr->debug.op) {
             case DILL_YIELD:
-                sprintf(buf, "%s", "yield()");
+                sprintf(buf, "yield()");
                 break;
             case DILL_MSLEEP:
                 sprintf(buf, "msleep()");
@@ -146,6 +146,9 @@ void goredump(void) {
                     }
                     sprintf(&buf[pos], ")");
                 }
+                break;
+            case DILL_FINISHED:
+                sprintf(buf, "finished");
                 break;
             default:
                 assert(0);

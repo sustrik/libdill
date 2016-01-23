@@ -97,7 +97,8 @@ int dill_prologue(struct dill_cr **cr, const char *created) {
     (*cr)->canceler = NULL;
     (*cr)->suspended = 0;
     (*cr)->cls = NULL;
-      (*cr)->unblock_cb = NULL;
+    (*cr)->unblock_cb = NULL;
+    (*cr)->finished = 0;
     dill_trace(created, "{%d}=go()", (int)(*cr)->debug.id);
     /* Suspend the parent coroutine and make the new one running. */
     if(dill_setjmp(&dill_running->ctx))
@@ -109,15 +110,24 @@ int dill_prologue(struct dill_cr **cr, const char *created) {
 
 /* The final part of go(). Cleans up after the coroutine is finished. */
 void dill_epilogue(void) {
-    /* Resume the canceler, if any. */
+    dill_trace(NULL, "go() done");
+    dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
+    dill_running->finished = 1;
     if(dill_running->canceler) {
-        dill_running->canceler->pending--;
-        dill_assert(dill_running->canceler->pending >= 0);
-        if(!dill_running->canceler->pending)
+        /* If there's gocancel() already waiting for this coroutine,
+           remove it from its list and resume it if there's no other
+           coroutine left it the list. */
+        dill_list_erase(&dill_running->canceler->tocancel,
+            &dill_running->tocancel_item);
+        if(dill_list_empty(&dill_running->canceler->tocancel))
             dill_resume(dill_running->canceler, 0);
     }
+    else {
+        /* If gocancel() wasn't call yet wait for it. */
+        int rc = dill_suspend(NULL);
+        dill_assert(rc == 0);
+    }
     /* Stop the coroutine and deallocate the resources. */
-    dill_trace(NULL, "go() done");
     dill_unregister_cr(&dill_running->debug);
     dill_freestack(dill_running + 1);
     dill_running = NULL;
@@ -144,16 +154,64 @@ int dill_yield(const char *current) {
     return -1;
 }
 
-void gocancel(coro *crs, int ncrs, int64_t deadline) {
+int gocancel(coro *crs, int ncrs, int64_t deadline) {
+    if(dill_slow(ncrs == 0))
+        return 0;
+    if(dill_slow(!crs)) {
+        errno = EINVAL;
+        return -1;
+    }
+    /* Add all not yet finished coroutines to a list. Let finished ones
+       deallocate themselves. */
+    dill_list_init(&dill_running->tocancel);
     int i;
     for(i = 0; i != ncrs; ++i) {
+        if(crs[i]->finished) {
+            dill_resume(crs[i], 0);
+            continue;
+        }
         crs[i]->canceler = dill_running;
-        if(crs[i]->suspended)
-            dill_resume(crs[i], -ECANCELED);
+        dill_list_insert(&dill_running->tocancel, &crs[i]->tocancel_item, NULL);
     }
-    dill_running->pending = ncrs;
-    int rc = dill_suspend(NULL);
-    dill_assert(rc == 0);
+    /* If all coroutines are finished return straight away. */
+    if(dill_list_empty(&dill_running->tocancel))
+        return 0;
+    /* If user requested immediate cancelation we can skip all this stuff. */
+    if(deadline != 0) {
+      /* If required, start waiting for the timeout. */
+      if(deadline > 0)
+          dill_timer_add(&dill_running->timer, deadline);
+      /* Wait till all coroutines are finished. */
+      int rc = dill_suspend(NULL);
+      if(rc == 0) {
+          /* All coroutines have finished. We are done. */
+          if(deadline > 0)
+              dill_timer_rm(&dill_running->timer);
+          return 0;
+      }
+      /* We'll have to force coroutines to exit. No need for timer any more. */
+      dill_assert(rc == -ECANCELED || rc == -ETIMEDOUT);
+      if(rc != -ETIMEDOUT && deadline > 0)
+          dill_timer_rm(&dill_running->timer);
+    }
+    /* Send cancel signal to the remaining coroutines. */
+    struct dill_list_item *it;
+    for(it = dill_list_begin(&dill_running->tocancel); it;
+          it = dill_list_next(it)) {
+        struct dill_cr *cr = dill_cont(it, struct dill_cr, tocancel_item);
+        if(cr->suspended)
+            dill_resume(cr, -ECANCELED);
+    }
+    /* Wait till they all finish. Waiting may be interrupted if this
+       coroutine itself is asked to cancel itself, but there's nothing
+       much to do there anyway. It'll just continue waiting. */
+    while(1) {
+        int rc = dill_suspend(NULL);
+        if(rc == 0)
+            break;
+        dill_assert(rc == -ECANCELED);
+    }
+    return 0;
 }
 
 void *cls(void) {

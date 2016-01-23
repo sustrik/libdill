@@ -73,7 +73,7 @@ int main() {
 
     /* Check cancelation. */
     coro cr = go(cancel(fds[0]));
-    gocancel(&cr, 1, -1);
+    gocancel(&cr, 1, 0);
 
     /* Check for in. */
     ssize_t sz = send(fds[1], "A", 1, 0);

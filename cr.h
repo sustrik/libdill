@@ -69,10 +69,13 @@ struct dill_cr {
     /* If the coroutine is being canceled, the coroutine that performs
        the cancelation. */
     struct dill_cr *canceler;
+    /* List of coroutines being canceled at the moment. */
+    struct dill_list tocancel;
+    /* A member of the above list. */
+    struct dill_list_item tocancel_item;
 
-    /* When blocked in gocancel(), number of coroutines yet to finish. */
-    int pending;
-
+    /* 1 if coroutine is done waiting only to be canceled. */
+    int finished;
     /* Coroutine-local storage. */
     void *cls;
     /* Debugging info. */
