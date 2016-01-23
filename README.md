@@ -2,11 +2,15 @@
 
 Starting a coroutine:
 
-`go(foo(1, 2, 3));`
+`coro cr = go(foo(1, 2, 3));`
 
 Yield execution to a different coroutine:
 
 `int rc = yield();`
+
+Cancel a coroutine:
+
+```int rc = gocancel(&cr, 1, -1);```
 
 Create a channel:
 
@@ -41,7 +45,7 @@ Close a channel:
 
 `chclose(ch);`
 
-Multipex several channel operations:
+Multiplex several channel operations:
 
 ```
 int val1;
@@ -74,19 +78,5 @@ Debugging:
 ```
 gotrace(1);
 goredump();
-```
-**TODO**
-
-Detached coroutines:
-
-```
-coro cr = goalloc(fx());
-gofree(cr);
-```
-
-Wait till all child coroutines exit:
-
-```
-int rc = gowait(-1);
 ```
 
