@@ -10,7 +10,19 @@ Yield execution to a different coroutine:
 
 Cancel a coroutine:
 
-```int rc = gocancel(&cr, 1, -1);```
+```
+coro crs[2];
+crs[0] = go(fx());
+crs[1] = go(fx());
+int rc = gocancel(crs, 2, now() + 1000);
+```
+
+The tihrd arugment is deadline. Coroutines being canceled will get grace period
+to run till the deadline expires. Afterwards they will be canceled forcibly,
+i.e. all blocking calls in the coroutine start returning ECANCELED error.
+
+All coroutines are canceled even if the canceling coroutine itself is canceled
+and gocancel() returns ECANCELED.
 
 Create a channel:
 
