@@ -50,11 +50,6 @@ static int dill_next_chan_id = 1;
 /* List of all channels. */
 static struct dill_list dill_all_chans = {0};
 
-void dill_panic(const char *text) {
-    fprintf(stderr, "panic: %s\n", text);
-    abort();
-}
-
 void dill_register_cr(struct dill_debug_cr *cr, const char *created) {
     dill_list_insert(&dill_all_crs, &cr->item, NULL);
     cr->id = dill_next_cr_id;

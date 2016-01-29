@@ -116,7 +116,7 @@ pid_t dill_fork(void) {
     return 0;
 }
 
-static void dill_poller_add(int fd, int events) {
+static int dill_poller_add(int fd, int events) {
     struct dill_crpair *crp = &dill_crpairs[fd];
     if(events & FDW_IN) {
         if(crp->in)
@@ -134,6 +134,7 @@ static void dill_poller_add(int fd, int events) {
         crp->next = dill_changelist;
         dill_changelist = fd + 1;
     }
+    return 0;
 }
 
 static void dill_poller_rm(int fd, int events) {

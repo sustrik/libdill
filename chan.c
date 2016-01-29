@@ -278,7 +278,8 @@ int dill_choose(struct chclause *clauses, int nclauses, int64_t deadline,
     return dill_choose_(clauses, nclauses, deadline);
 }
 
-int dill_chsend(chan ch, const void *val, size_t len, const char *current) {
+int dill_chsend(chan ch, const void *val, size_t len, int64_t deadline,
+      const char *current) {
     if(dill_slow(!ch || !val || len != ch->sz)) {
         errno = EINVAL;
         return -1;
@@ -286,10 +287,11 @@ int dill_chsend(chan ch, const void *val, size_t len, const char *current) {
     dill_trace(current, "chsend(<%d>)", (int)ch->debug.id);
     dill_startop(&dill_running->debug, DILL_CHSEND, current);
     struct chclause cl = {ch, CHSEND, (void*)val, len};
-    return dill_choose_(&cl, 1, -1);
+    return dill_choose_(&cl, 1, deadline);
 }
 
-int dill_chrecv(chan ch, void *val, size_t len, const char *current) {
+int dill_chrecv(chan ch, void *val, size_t len, int64_t deadline,
+      const char *current) {
     if(dill_slow(!ch || !val || len != ch->sz)) {
         errno = EINVAL;
         return -1;
@@ -297,7 +299,7 @@ int dill_chrecv(chan ch, void *val, size_t len, const char *current) {
     dill_trace(current, "chrecv(<%d>)", (int)ch->debug.id);
     dill_startop(&dill_running->debug, DILL_CHRECV, current);
     struct chclause cl = {ch, CHRECV, val, len};
-    return dill_choose_(&cl, 1, -1);
+    return dill_choose_(&cl, 1, deadline);
 }
 
 int dill_chdone(chan ch, const void *val, size_t len, const char *current) {

@@ -36,7 +36,7 @@ DILL_CT_ASSERT(sizeof(struct dill_fdwaitdata) <= DILL_OPAQUE_SIZE);
 /* Forward declarations for the functions implemented by specific poller
    mechanisms (poll, epoll, kqueue). */
 void dill_poller_init(void);
-static void dill_poller_add(int fd, int events);
+static int dill_poller_add(int fd, int events);
 static void dill_poller_rm(int fd, int events);
 static void dill_poller_clean(int fd);
 static int dill_poller_wait(int timeout);
@@ -62,12 +62,15 @@ static int dill_fdwait_(int fd, int events, int64_t deadline,
     }
     struct dill_fdwaitdata *fdata =
         (struct dill_fdwaitdata*)dill_running->opaque;
+    /* If required, start waiting for the file descriptor. */
+    if(fd >= 0) {
+        int rc = dill_poller_add(fd, events);
+        if(dill_slow(rc < 0))
+            return -1;
+    }
     /* If required, start waiting for the timeout. */
     if(deadline >= 0)
         dill_timer_add(&dill_running->timer, deadline);
-    /* If required, start waiting for the file descriptor. */
-    if(fd >= 0)
-        dill_poller_add(fd, events);
     /* Do actual waiting. */
     fdata->fd = fd;
     fdata->events = events;

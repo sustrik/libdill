@@ -62,7 +62,7 @@ void dill_poller_init(void) {
 pid_t dill_fork(void) {
 }
 
-static void dill_poller_add(int fd, int events) {
+static int dill_poller_add(int fd, int events) {
     int i = dill_find_pollset(fd);
     /* Grow the pollset as needed. */
     if(i == dill_pollset_size) {
@@ -96,6 +96,7 @@ static void dill_poller_add(int fd, int events) {
         dill_pollset_fds[i].events |= POLLOUT;
         dill_pollset_items[i].out = dill_running;
     }
+    return 0;
 }
 
 static void dill_poller_rm(int fd, int events) {

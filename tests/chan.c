@@ -40,14 +40,14 @@ coroutine void sender(chan ch, int doyield, int val) {
         int rc = yield();
         assert(rc == 0);
     }
-    int rc = chsend(ch, &val, sizeof(val));
+    int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch);
 }
 
 coroutine void receiver(chan ch, int expected) {
     int val;
-    int rc = chrecv(ch, &val, sizeof(val));
+    int rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == expected);
     chclose(ch);
@@ -55,45 +55,45 @@ coroutine void receiver(chan ch, int expected) {
 
 coroutine void receiver2(chan ch, int expected, chan back) {
     int val;
-    int rc = chrecv(ch, &val, sizeof(val));
+    int rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == expected);
     chclose(ch);
     val = 0;
-    rc = chsend(back, &val, sizeof(val));
+    rc = chsend(back, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(back);
 }
 
 coroutine void charsender(chan ch, char val) {
-    int rc = chsend(ch, &val, sizeof(val));
+    int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch);
 }
 
 coroutine void structsender(chan ch, struct foo val) {
-    int rc = chsend(ch, &val, sizeof(val));
+    int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch);
 }
 
 coroutine void sender2(chan ch, int val) {
-    int rc = chsend(ch, &val, sizeof(val));
+    int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == -1 && errno == EPIPE);
     chclose(ch);
 }
 
 coroutine void receiver3(chan ch) {
     int val;
-    int rc = chrecv(ch, &val, sizeof(val));
+    int rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == -1 && errno == EPIPE);
 }
 
 coroutine void cancel(chan ch) {
     int val;
-    int rc = chrecv(ch, &val, sizeof(val));
+    int rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == -1 && errno == ECANCELED);
-    rc = chrecv(ch, &val, sizeof(val));
+    rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == -1 && errno == ECANCELED);
     chclose(ch);
 }
@@ -104,7 +104,7 @@ int main() {
     /* Receiver waits for sender. */
     chan ch1 = channel(sizeof(int), 0);
     go(sender(chdup(ch1), 1, 333));
-    int rc = chrecv(ch1, &val, sizeof(val));
+    int rc = chrecv(ch1, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 333);
     chclose(ch1);
@@ -112,7 +112,7 @@ int main() {
     /* Sender waits for receiver. */
     chan ch2 = channel(sizeof(int), 0);
     go(sender(chdup(ch2), 0, 444));
-    rc = chrecv(ch2, &val, sizeof(val));
+    rc = chrecv(ch2, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 444);
     chclose(ch2);
@@ -121,12 +121,12 @@ int main() {
     chan ch3 = channel(sizeof(int), 0);
     go(sender(chdup(ch3), 0, 888));
     go(sender(chdup(ch3), 0, 999));
-    rc = chrecv(ch3, &val, sizeof(val));
+    rc = chrecv(ch3, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 888);
     rc = yield();
     assert(rc == 0);
-    rc = chrecv(ch3, &val, sizeof(val));
+    rc = chrecv(ch3, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 999);
     chclose(ch3);
@@ -136,10 +136,10 @@ int main() {
     go(receiver(chdup(ch4), 333));
     go(receiver(chdup(ch4), 444));
     val = 333;
-    rc = chsend(ch4, &val, sizeof(val));
+    rc = chsend(ch4, &val, sizeof(val), -1);
     assert(rc == 0);
     val = 444;
-    rc = chsend(ch4, &val, sizeof(val));
+    rc = chsend(ch4, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch4);
 
@@ -147,7 +147,7 @@ int main() {
     chan ch5 = channel(sizeof(char), 0);
     go(charsender(chdup(ch5), 111));
     char charval;
-    rc = chrecv(ch5, &charval, sizeof(charval));
+    rc = chrecv(ch5, &charval, sizeof(charval), -1);
     assert(rc == 0);
     assert(charval == 111);
     chclose(ch5);
@@ -155,7 +155,7 @@ int main() {
     struct foo foo1 = {555, 222};
     go(structsender(chdup(ch6), foo1));
     struct foo foo2;
-    rc = chrecv(ch6, &foo2, sizeof(foo2));
+    rc = chrecv(ch6, &foo2, sizeof(foo2), -1);
     assert(rc == 0);
     assert(foo2.first == 555 && foo2.second == 222);
     chclose(ch6);
@@ -163,33 +163,33 @@ int main() {
     /* Test message buffering. */
     chan ch7 = channel(sizeof(int), 2);
     val = 222;
-    rc = chsend(ch7, &val, sizeof(val));
+    rc = chsend(ch7, &val, sizeof(val), -1);
     assert(rc == 0);
     val = 333;
-    rc = chsend(ch7, &val, sizeof(val));
+    rc = chsend(ch7, &val, sizeof(val), -1);
     assert(rc == 0);
-    rc = chrecv(ch7, &val, sizeof(val));
+    rc = chrecv(ch7, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 222);
-    rc = chrecv(ch7, &val, sizeof(val));
+    rc = chrecv(ch7, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 333);
     val = 444;
-    rc = chsend(ch7, &val, sizeof(val));
+    rc = chsend(ch7, &val, sizeof(val), -1);
     assert(rc == 0);
-    rc = chrecv(ch7, &val, sizeof(val));
+    rc = chrecv(ch7, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 444);
     val = 555;
-    rc = chsend(ch7, &val, sizeof(val));
+    rc = chsend(ch7, &val, sizeof(val), -1);
     assert(rc == 0);
     val = 666;
-    rc = chsend(ch7, &val, sizeof(val));
+    rc = chsend(ch7, &val, sizeof(val), -1);
     assert(rc == 0);
-    rc = chrecv(ch7, &val, sizeof(val));
+    rc = chrecv(ch7, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 555);
-    rc = chrecv(ch7, &val, sizeof(val));
+    rc = chrecv(ch7, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 666);
     chclose(ch7);
@@ -199,13 +199,13 @@ int main() {
     val = 777;
     rc = chdone(ch8, &val, sizeof(val));
     assert(rc == 0);
-    rc = chrecv(ch8, &val, sizeof(val));
+    rc = chrecv(ch8, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 777);
-    rc = chrecv(ch8, &val, sizeof(val));
+    rc = chrecv(ch8, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 777);
-    rc = chrecv(ch8, &val, sizeof(val));
+    rc = chrecv(ch8, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 777);
     chclose(ch8);
@@ -213,41 +213,41 @@ int main() {
     val = 888;
     rc = chdone(ch9, &val, sizeof(val));
     assert(rc == 0);
-    rc = chrecv(ch9, &val, sizeof(val));
+    rc = chrecv(ch9, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 888);
-    rc = chrecv(ch9, &val, sizeof(val));
+    rc = chrecv(ch9, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 888);
     chclose(ch9);
     chan ch10 = channel(sizeof(int), 10);
     val = 999;
-    rc = chsend(ch10, &val, sizeof(val));
+    rc = chsend(ch10, &val, sizeof(val), -1);
     assert(rc == 0);
     val = 111;
     rc = chdone(ch10, &val, sizeof(val));
     assert(rc == 0);
-    rc = chrecv(ch10, &val, sizeof(val));
+    rc = chrecv(ch10, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 999);
-    rc = chrecv(ch10, &val, sizeof(val));
+    rc = chrecv(ch10, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 111);
-    rc = chrecv(ch10, &val, sizeof(val));
+    rc = chrecv(ch10, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 111);
     chclose(ch10);
     chan ch11 = channel(sizeof(int), 1);
     val = 222;
-    rc = chsend(ch11, &val, sizeof(val));
+    rc = chsend(ch11, &val, sizeof(val), -1);
     assert(rc == 0);
     val = 333;
     rc = chdone(ch11, &val, sizeof(val));
     assert(rc == 0);
-    rc = chrecv(ch11, &val, sizeof(val));
+    rc = chrecv(ch11, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 222);
-    rc = chrecv(ch11, &val, sizeof(val));
+    rc = chrecv(ch11, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 333);
     chclose(ch11);
@@ -260,10 +260,10 @@ int main() {
     val = 444;
     rc = chdone(ch12, &val, sizeof(val));
     assert(rc == 0);
-    rc = chrecv(ch13, &val, sizeof(val));
+    rc = chrecv(ch13, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 0);
-    rc = chrecv(ch13, &val, sizeof(val));
+    rc = chrecv(ch13, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 0);
     chclose(ch13);
@@ -272,13 +272,13 @@ int main() {
     /* Test a combination of blocked sender and an item in the channel. */
     chan ch14 = channel(sizeof(int), 1);
     val = 1;
-    rc = chsend(ch14, &val, sizeof(val));
+    rc = chsend(ch14, &val, sizeof(val), -1);
     assert(rc == 0);
     go(sender(chdup(ch14), 0, 2));
-    rc = chrecv(ch14, &val, sizeof(val));
+    rc = chrecv(ch14, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 1);
-    rc = chrecv(ch14, &val, sizeof(val));
+    rc = chrecv(ch14, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 2);
     chclose(ch14);

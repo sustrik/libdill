@@ -171,11 +171,13 @@ struct chclause {
 #define chdup(channel) \
    dill_chdup((channel), __FILE__ ":" dill_string(__LINE__))
 
-#define chsend(channel, val, len) \
-    dill_chsend((channel), (val), (len), __FILE__ ":" dill_string(__LINE__))
+#define chsend(channel, val, len, deadline) \
+    dill_chsend((channel), (val), (len), (deadline), \
+    __FILE__ ":" dill_string(__LINE__))
 
-#define chrecv(channel, val, len) \
-    dill_chrecv((channel), (val), (len), __FILE__ ":" dill_string(__LINE__))
+#define chrecv(channel, val, len, deadline) \
+    dill_chrecv((channel), (val), (len), (deadline), \
+    __FILE__ ":" dill_string(__LINE__))
 
 #define chdone(channel, val, len) \
     dill_chdone((channel), (val), (len), __FILE__ ":" dill_string(__LINE__))
@@ -192,9 +194,9 @@ DILL_EXPORT chan dill_channel(size_t itemsz, size_t bufsz,
 DILL_EXPORT chan dill_chdup(chan ch,
     const char *created);
 DILL_EXPORT int dill_chsend(chan ch, const void *val, size_t len,
-    const char *current);
+    int64_t deadline, const char *current);
 DILL_EXPORT int dill_chrecv(chan ch, void *val, size_t len,
-    const char *current);
+    int64_t deadline, const char *current);
 DILL_EXPORT int dill_chdone(chan ch, const void *val, size_t len,
     const char *current);
 DILL_EXPORT void dill_chclose(chan ch,

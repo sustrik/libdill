@@ -32,7 +32,7 @@
 coroutine static void delay(int n, chan ch) {
     int rc = msleep(now() + n);
     assert(rc == 0);
-    rc = chsend(ch, &n, sizeof(n));
+    rc = chsend(ch, &n, sizeof(n), -1);
     assert(rc == 0);
 }
 
@@ -51,16 +51,16 @@ int main() {
     go(delay(10, ch));
     go(delay(20, ch));
     int val;
-    rc = chrecv(ch, &val, sizeof(val));
+    rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 10);
-    rc = chrecv(ch, &val, sizeof(val));
+    rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 20);
-    rc = chrecv(ch, &val, sizeof(val));
+    rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 30);
-    rc = chrecv(ch, &val, sizeof(val));
+    rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 40);
 

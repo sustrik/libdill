@@ -28,7 +28,7 @@
 #include "../libdill.h"
 
 coroutine void sender1(chan ch, int val) {
-    int rc = chsend(ch, &val, sizeof(val));
+    int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch);
 }
@@ -36,7 +36,7 @@ coroutine void sender1(chan ch, int val) {
 coroutine void sender2(chan ch, int val) {
     int rc = yield();
     assert(rc == 0);
-    rc = chsend(ch, &val, sizeof(val));
+    rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch);
 }
@@ -44,14 +44,14 @@ coroutine void sender2(chan ch, int val) {
 coroutine void sender3(chan ch, int val, int64_t deadline) {
     int rc = msleep(deadline);
     assert(rc == 0);
-    rc = chsend(ch, &val, sizeof(val));
+    rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch);
 }
 
 coroutine void receiver1(chan ch, int expected) {
     int val;
-    int rc = chrecv(ch, &val, sizeof(val));
+    int rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == expected);
     chclose(ch);
@@ -61,7 +61,7 @@ coroutine void receiver2(chan ch, int expected) {
     int rc = yield();
     assert(rc == 0);
     int val;
-    rc = chrecv(ch, &val, sizeof(val));
+    rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == expected);
     chclose(ch);
@@ -76,7 +76,7 @@ coroutine void choosesender(chan ch, int val) {
 
 coroutine void feeder(chan ch, int val) {
     while(1) {
-        int rc = chsend(ch, &val, sizeof(val));
+        int rc = chsend(ch, &val, sizeof(val), -1);
         assert(rc == 0);
         rc = yield();
         assert(rc == 0);
@@ -257,7 +257,7 @@ int main() {
     /* Test transferring a large object. */
     chan ch17 = channel(sizeof(struct large), 1);
     struct large large = {{0}};
-    rc = chsend(ch17, &large, sizeof(large));
+    rc = chsend(ch17, &large, sizeof(large), -1);
     assert(rc == 0);
     struct chclause cls14[] = {{ch17, CHRECV, &lrg, sizeof(lrg)}};
     rc = choose(cls14, 1, -1);

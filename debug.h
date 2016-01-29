@@ -60,9 +60,6 @@ struct dill_debug_chan {
     const char *created;
 };
 
-/* Cause panic. */
-void dill_panic(const char *text);
-
 /* No-op, but ensures that debugging functions get compiled into the binary. */
 void dill_preserve_debug(void);
 
