@@ -238,7 +238,12 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         else
             dill_dequeue(cl->channel, cl->val);
         dill_resume(dill_running, dill_choose_index(cl));
-        return dill_suspend(NULL);
+        int res = dill_suspend(NULL);
+        if(dill_slow(res < 0)) {
+            errno = -res;
+            return -1;
+        }
+        return res;
     }
 
     /* If non-blocking behaviour was requested, exit now. */
