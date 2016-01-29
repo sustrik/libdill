@@ -46,10 +46,11 @@ int main() {
 
     /* msleep-sort */
     chan ch = channel(sizeof(int), 0);
-    go(delay(30, ch));
-    go(delay(40, ch));
-    go(delay(10, ch));
-    go(delay(20, ch));
+    coro crs[4];
+    crs[0] = go(delay(30, ch));
+    crs[1] = go(delay(40, ch));
+    crs[2] = go(delay(10, ch));
+    crs[3] = go(delay(20, ch));
     int val;
     rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
@@ -63,6 +64,7 @@ int main() {
     rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 40);
+    gocancel(crs, 4, 1000);
 
     return 0;
 }

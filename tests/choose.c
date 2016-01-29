@@ -77,8 +77,10 @@ coroutine void choosesender(chan ch, int val) {
 coroutine void feeder(chan ch, int val) {
     while(1) {
         int rc = chsend(ch, &val, sizeof(val), -1);
+        if(rc == -1 && errno == ECANCELED) return;
         assert(rc == 0);
         rc = yield();
+        if(rc == -1 && errno == ECANCELED) return;
         assert(rc == 0);
     }
 }
@@ -97,44 +99,49 @@ int main() {
 
     /* Non-blocking receiver case. */
     chan ch1 = channel(sizeof(int), 0);
-    go(sender1(chdup(ch1), 555));
+    coro cr1 = go(sender1(chdup(ch1), 555));
     struct chclause cls1[] = {{ch1, CHRECV, &val, sizeof(val)}};
     rc = choose(cls1, 1, -1);
     assert(rc == 0);
     assert(val == 555);
     chclose(ch1);
+    gocancel(&cr1, 1, -1);
 
     /* Blocking receiver case. */
     chan ch2 = channel(sizeof(int), 0);
-    go(sender2(chdup(ch2), 666));
+    coro cr2 = go(sender2(chdup(ch2), 666));
     struct chclause cls2[] = {{ch2, CHRECV, &val, sizeof(val)}};
     rc = choose(cls2, 1, -1);
     assert(rc == 0);
     assert(val == 666);
     chclose(ch2);
+    gocancel(&cr2, 1, -1);
 
     /* Non-blocking sender case. */
     chan ch3 = channel(sizeof(int), 0);
-    go(receiver1(chdup(ch3), 777));
+    coro cr3 = go(receiver1(chdup(ch3), 777));
     val = 777;
     struct chclause cls3[] = {{ch3, CHSEND, &val, sizeof(val)}};
     rc = choose(cls3, 1, -1);
     assert(rc == 0);
     chclose(ch3);
+    gocancel(&cr3, 1, -1);
 
     /* Blocking sender case. */
     chan ch4 = channel(sizeof(int), 0);
-    go(receiver2(chdup(ch4), 888));
+    coro cr4 = go(receiver2(chdup(ch4), 888));
     val = 888;
     struct chclause cls4[] = {{ch4, CHSEND, &val, sizeof(val)}};
     rc = choose(cls4, 1, -1);
     assert(rc == 0);
     chclose(ch4);
+    gocancel(&cr4, 1, -1);
 
     /* Check with two channels. */
+    coro cr5[2];
     chan ch5 = channel(sizeof(int), 0);
     chan ch6 = channel(sizeof(int), 0);
-    go(sender1(chdup(ch6), 555));
+    cr5[0] = go(sender1(chdup(ch6), 555));
     struct chclause cls5[] = {
         {ch5, CHRECV, &val, sizeof(val)},
         {ch6, CHRECV, &val, sizeof(val)}
@@ -142,18 +149,20 @@ int main() {
     rc = choose(cls5, 2, -1);
     assert(rc == 1);
     assert(val == 555);
-    go(sender2(chdup(ch5), 666));
+    cr5[1] = go(sender2(chdup(ch5), 666));
     rc = choose(cls5, 2, -1);
     assert(rc == 0);
     assert(val == 666);
     chclose(ch5);
     chclose(ch6);
+    gocancel(cr5, 2, -1);
 
     /* Test whether selection of in channels is random. */
     chan ch7 = channel(sizeof(int), 0);
     chan ch8 = channel(sizeof(int), 0);
-    go(feeder(chdup(ch7), 111));
-    go(feeder(chdup(ch8), 222));
+    coro cr6[2];
+    cr6[0] = go(feeder(chdup(ch7), 111));
+    cr6[1] = go(feeder(chdup(ch8), 222));
     int i;
     int first = 0;
     int second = 0;
@@ -179,6 +188,7 @@ int main() {
     assert(first > 1 && second > 1);
     chclose(ch7);
     chclose(ch8);
+    gocancel(cr6, 2, 0);
 
     /* Test 'otherwise' clause. */
     chan ch9 = channel(sizeof(int), 0);
@@ -191,8 +201,9 @@ int main() {
 
     /* Test two simultaneous senders vs. choose statement. */
     chan ch10 = channel(sizeof(int), 0);
-    go(sender1(chdup(ch10), 888));
-    go(sender1(chdup(ch10), 999));
+    coro cr7[2];
+    cr7[0] = go(sender1(chdup(ch10), 888));
+    cr7[1] = go(sender1(chdup(ch10), 999));
     val = 0;
     struct chclause cls8[] = {{ch10, CHRECV, &val, sizeof(val)}};
     rc = choose(cls8, 1, -1);
@@ -203,11 +214,13 @@ int main() {
     assert(rc == 0);
     assert(val == 999);
     chclose(ch10);
+    gocancel(cr7, 2, -1);
 
     /* Test two simultaneous receivers vs. choose statement. */
     chan ch11 = channel(sizeof(int), 0);
-    go(receiver1(chdup(ch11), 333));
-    go(receiver1(chdup(ch11), 444));
+    coro cr8[2];
+    cr8[0] = go(receiver1(chdup(ch11), 333));
+    cr8[1] = go(receiver1(chdup(ch11), 444));
     val = 333;
     struct chclause cls9[] = {{ch11, CHSEND, &val, sizeof(val)}};
     rc = choose(cls9, 1, -1);
@@ -216,15 +229,17 @@ int main() {
     rc = choose(cls9, 1, -1);
     assert(rc == 0);
     chclose(ch11);
+    gocancel(cr8, 2, -1);
 
     /* Choose vs. choose. */
     chan ch12 = channel(sizeof(int), 0);
-    go(choosesender(chdup(ch12), 111));
+    coro cr9 = go(choosesender(chdup(ch12), 111));
     struct chclause cls10[] = {{ch12, CHRECV, &val, sizeof(val)}};
     rc = choose(cls10, 1, -1);
     assert(rc == 0);
     assert(val == 111);
     chclose(ch12);
+    gocancel(&cr9, 1, -1);
 
     /* Choose vs. buffered channels. */
     chan ch13 = channel(sizeof(int), 2);
@@ -241,7 +256,7 @@ int main() {
     /* Test whether allocating larger in buffer breaks previous in clause. */
     chan ch15 = channel(sizeof(struct large), 1);
     chan ch16 = channel(sizeof(int), 1);
-    go(sender2(chdup(ch16), 1111));
+    coro cr10 = go(sender2(chdup(ch16), 1111));
     goredump();
     struct large lrg;
     struct chclause cls13[] = {
@@ -253,6 +268,7 @@ int main() {
     assert(val == 1111);
     chclose(ch16);
     chclose(ch15);
+    gocancel(&cr10, 1, -1);
 
     /* Test transferring a large object. */
     chan ch17 = channel(sizeof(struct large), 1);
@@ -288,7 +304,7 @@ int main() {
     /* Test unexpired 'deadline' clause. */
     chan ch22 = channel(sizeof(int), 0);
     start = now();
-    go(sender3(chdup(ch22), 4444, start + 50));
+    coro cr11 = go(sender3(chdup(ch22), 4444, start + 50));
     struct chclause cls18[] = {{ch22, CHRECV, &val, sizeof(val)}};
     rc = choose(cls17, 1, start + 1000);
     assert(rc == 0);
@@ -296,6 +312,7 @@ int main() {
     diff = now() - start;
     assert(diff > 30 && diff < 70);
     chclose(ch22);
+    gocancel(&cr11, 1, -1);
 
     return 0;
 }

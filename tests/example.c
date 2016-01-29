@@ -37,11 +37,11 @@ coroutine void worker(int count, const char *text) {
 }
 
 int main() {
-    go(worker(4, "a"));
-    go(worker(2, "b"));
-    go(worker(3, "c"));
-    int rc = msleep(100);
-    assert(rc == 0);
+    coro crs[3];
+    crs[0] = go(worker(4, "a"));
+    crs[1] = go(worker(2, "b"));
+    crs[2] = go(worker(3, "c"));
+    gocancel(crs, 3, -1);
     return 0;
 }
 

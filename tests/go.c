@@ -92,19 +92,21 @@ coroutine void worker5(void) {
 
 int main() {
     assert(errno == 0);
-    go(worker(3, 7));
-    go(worker(1, 11));
-    go(worker(2, 5));
-    int rc = msleep(100);
-    assert(rc == 0);
+    coro crs3[3];
+    crs3[0] = go(worker(3, 7));
+    crs3[1] = go(worker(1, 11));
+    crs3[2] = go(worker(2, 5));
+    gocancel(crs3, 3, -1);
     assert(sum == 42);
 
     /* Test whether stack deallocation works. */
     int i;
+    coro crs2[20];
     for(i = 0; i != 20; ++i)
-        go(dummy());
-    rc = msleep(now() + 100);
+        crs2[i] = go(dummy());
+    int rc = msleep(now() + 100);
     assert(rc == 0);
+    gocancel(crs2, 20, -1);
 
     coro crs[6];
 

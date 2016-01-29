@@ -103,24 +103,27 @@ int main() {
 
     /* Receiver waits for sender. */
     chan ch1 = channel(sizeof(int), 0);
-    go(sender(chdup(ch1), 1, 333));
+    coro cr1 = go(sender(chdup(ch1), 1, 333));
     int rc = chrecv(ch1, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 333);
     chclose(ch1);
+    gocancel(&cr1, 1, -1);
 
     /* Sender waits for receiver. */
     chan ch2 = channel(sizeof(int), 0);
-    go(sender(chdup(ch2), 0, 444));
+    coro cr2 = go(sender(chdup(ch2), 0, 444));
     rc = chrecv(ch2, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 444);
     chclose(ch2);
+    gocancel(&cr2, 1, -1);
 
     /* Test two simultaneous senders. */
     chan ch3 = channel(sizeof(int), 0);
-    go(sender(chdup(ch3), 0, 888));
-    go(sender(chdup(ch3), 0, 999));
+    coro cr3[2];
+    cr3[0] = go(sender(chdup(ch3), 0, 888));
+    cr3[1] = go(sender(chdup(ch3), 0, 999));
     rc = chrecv(ch3, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 888);
@@ -130,11 +133,13 @@ int main() {
     assert(rc == 0);
     assert(val == 999);
     chclose(ch3);
+    gocancel(cr3, 2, -1);
 
     /* Test two simultaneous receivers. */
     chan ch4 = channel(sizeof(int), 0);
-    go(receiver(chdup(ch4), 333));
-    go(receiver(chdup(ch4), 444));
+    coro cr4[2];
+    cr4[0] = go(receiver(chdup(ch4), 333));
+    cr4[1] = go(receiver(chdup(ch4), 444));
     val = 333;
     rc = chsend(ch4, &val, sizeof(val), -1);
     assert(rc == 0);
@@ -142,10 +147,12 @@ int main() {
     rc = chsend(ch4, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch4);
+    gocancel(cr4, 2, -1);
 
     /* Test typed channels. */
+    coro cr5[2];
     chan ch5 = channel(sizeof(char), 0);
-    go(charsender(chdup(ch5), 111));
+    cr5[0] = go(charsender(chdup(ch5), 111));
     char charval;
     rc = chrecv(ch5, &charval, sizeof(charval), -1);
     assert(rc == 0);
@@ -153,12 +160,13 @@ int main() {
     chclose(ch5);
     chan ch6 = channel(sizeof(struct foo), 0);
     struct foo foo1 = {555, 222};
-    go(structsender(chdup(ch6), foo1));
+    cr5[1] = go(structsender(chdup(ch6), foo1));
     struct foo foo2;
     rc = chrecv(ch6, &foo2, sizeof(foo2), -1);
     assert(rc == 0);
     assert(foo2.first == 555 && foo2.second == 222);
     chclose(ch6);
+    gocancel(cr5, 2, -1);
 
     /* Test message buffering. */
     chan ch7 = channel(sizeof(int), 2);
@@ -255,8 +263,9 @@ int main() {
     /* Test whether chdone() unblocks all receivers. */
     chan ch12 = channel(sizeof(int), 0);
     chan ch13 = channel(sizeof(int), 0);
-    go(receiver2(chdup(ch12), 444, chdup(ch13)));
-    go(receiver2(chdup(ch12), 444, chdup(ch13)));
+    coro cr6[2];
+    cr6[0] = go(receiver2(chdup(ch12), 444, chdup(ch13)));
+    cr6[1] = go(receiver2(chdup(ch12), 444, chdup(ch13)));
     val = 444;
     rc = chdone(ch12, &val, sizeof(val));
     assert(rc == 0);
@@ -268,13 +277,14 @@ int main() {
     assert(val == 0);
     chclose(ch13);
     chclose(ch12);
+    gocancel(cr6, 2, -1);
 
     /* Test a combination of blocked sender and an item in the channel. */
     chan ch14 = channel(sizeof(int), 1);
     val = 1;
     rc = chsend(ch14, &val, sizeof(val), -1);
     assert(rc == 0);
-    go(sender(chdup(ch14), 0, 2));
+    coro cr7 = go(sender(chdup(ch14), 0, 2));
     rc = chrecv(ch14, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 1);
@@ -282,37 +292,37 @@ int main() {
     assert(rc == 0);
     assert(val == 2);
     chclose(ch14);
+    gocancel(&cr7, 1, -1);
 
     /* Test whether chdone() unblocks blocked senders. */
     chan ch15 = channel(sizeof(int), 0);
-    go(sender2(chdup(ch15), 999));
-    go(sender2(chdup(ch15), 999));
-    go(sender2(chdup(ch15), 999));
+    coro cr8[3];
+    cr8[0] = go(sender2(chdup(ch15), 999));
+    cr8[1] = go(sender2(chdup(ch15), 999));
+    cr8[2] = go(sender2(chdup(ch15), 999));
     rc = msleep(now() + 50);
     assert(rc == 0);
     val = -1;
     rc = chdone(ch15, &val, sizeof(val));
     assert(rc == 0);
     chclose(ch15);
+    gocancel(cr8, 3, -1);
 
     /* Test whether chclose() unblocks blocked senders and receivers. */
     chan ch16 = channel(sizeof(int), 0);
-    go(receiver3(ch16));
-    go(receiver3(ch16));
+    coro cr9[2];
+    cr9[0] = go(receiver3(ch16));
+    cr9[1] = go(receiver3(ch16));
     rc = msleep(now() + 50);
     assert(rc == 0);
     chclose(ch16);
+    gocancel(cr9, 2, -1);
 
     /* Test cancelation. */
     chan ch17 = channel(sizeof(int), 0);
-    coro cr = go(cancel(chdup(ch17)));
-    gocancel(&cr, 1, 0);
+    coro cr10 = go(cancel(chdup(ch17)));
+    gocancel(&cr10, 1, 0);
     chclose(ch17);
-
-    /* Give it a little time to make sure that terminating coroutines
-       don't fail. */
-    rc = msleep(now() + 100);
-    assert(rc == 0);
 
     return 0;
 }

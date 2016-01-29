@@ -52,10 +52,11 @@ int main() {
     assert(cls() == &dummy1);
 
     /* Check whether CLS is not messed up by launching a new coroutine. */
-    go(worker());
+    coro cr = go(worker());
     assert(cls() == &dummy1);
     int rc = yield();
     assert(rc == 0);
+    gocancel(&cr, 1, -1);
 
     /* Check whether CLS is not messed up when coroutine terminates. */
     assert(cls() == &dummy1);

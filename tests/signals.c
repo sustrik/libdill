@@ -73,8 +73,9 @@ int main() {
 
     int i;
     for(i = 0; i < COUNT; ++i) {
-        go(sender(sendch));
-        go(receiver(recvch));
+        coro crs[2];
+        crs[0] = go(sender(sendch));
+        crs[1] = go(receiver(recvch));
         char c = SIGNAL;
         int rc = chsend(sendch, &c, sizeof(c), -1);
         assert(rc == 0);
@@ -82,6 +83,7 @@ int main() {
         rc = chrecv(recvch, &signo, sizeof(signo), -1);
         assert(rc == 0);
         assert(signo == SIGNAL);
+        gocancel(crs, 2, -1);
     }
 
     return 0;

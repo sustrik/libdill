@@ -72,8 +72,8 @@ int main() {
     assert(diff > -20 && diff < 20);
 
     /* Check cancelation. */
-    coro cr = go(cancel(fds[0]));
-    gocancel(&cr, 1, 0);
+    coro cr1 = go(cancel(fds[0]));
+    gocancel(&cr1, 1, 0);
 
     /* Check for in. */
     ssize_t sz = send(fds[1], "A", 1, 0);
@@ -95,12 +95,13 @@ int main() {
 
     /* Two interleaved deadlines. */
     int64_t start = now();
-    go(trigger(fds[0], start + 50));
+    coro cr2 = go(trigger(fds[0], start + 50));
     rc = fdwait(fds[1], FDW_IN, start + 90);
     assert(rc >= 0);
     assert(rc == FDW_IN);
     diff = now() - start;
     assert(diff > 30 && diff < 70);
+    gocancel(&cr2, 1, -1);
 
     close(fds[0]);
     close(fds[1]);

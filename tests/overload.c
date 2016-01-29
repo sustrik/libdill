@@ -31,8 +31,10 @@ coroutine void relay(chan src, chan dst) {
     while(1) {
        int val;
        int rc = chrecv(src, &val, sizeof(val), -1);
+       if(rc == -1 && errno == ECANCELED) return;
        assert(rc == 0);
        rc = chsend(dst, &val, sizeof(val), -1);
+       if(rc == -1 && errno == ECANCELED) return;
        assert(rc == 0);
     }
 }
@@ -41,8 +43,9 @@ int main() {
     chan left = channel(sizeof(int), 0);
     chan right = channel(sizeof(int), 0);
 
-    go(relay(left, right));
-    go(relay(right, left));
+    coro crs[2];
+    crs[0] = go(relay(left, right));
+    crs[1] = go(relay(right, left));
 
     int val = 42;
     int rc = chsend(left, &val, sizeof(val), -1);
@@ -51,8 +54,7 @@ int main() {
     /* Fail with exit code 128+SIGALRM if we deadlock */
     alarm(1);
 
-    rc = msleep(1);
-    assert(rc == 0);
+    gocancel(crs, 2, now() + 500);
 
     return 0;
 }
