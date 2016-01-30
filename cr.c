@@ -94,8 +94,8 @@ void dill_resume(struct dill_cr *cr, int result) {
         cr->unblock_cb = NULL;
     }
     cr->result = result;
-    cr->suspended = 0;
     dill_slist_push_back(&dill_ready, &cr->ready);
+    cr->suspended = 0;
 }
 
 /* The intial part of go(). Starts the new coroutine.  Returns 1 in the
@@ -221,7 +221,7 @@ int gocancel(coro *crs, int ncrs, int64_t deadline) {
           it = dill_list_next(it)) {
         struct dill_cr *cr = dill_cont(it, struct dill_cr, tocancel_item);
         cr->canceled = 1;
-        if(cr->suspended)
+        if(cr->suspended && !dill_slist_item_inlist(&cr->ready))
             dill_resume(cr, -ECANCELED);
     }
     /* Wait till they all finish. Waiting may be interrupted if this
