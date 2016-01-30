@@ -114,6 +114,7 @@ void *dill_allocstack(void) {
 void dill_freestack(void *stack) {
     /* Put the stack to the list of cached stacks. */
     struct dill_slist_item *item = ((struct dill_slist_item*)stack) - 1;
+    dill_slist_item_init(item);
     dill_slist_push_back(&dill_cached_stacks, item);
     if(dill_num_cached_stacks < dill_max_cached_stacks) {
         ++dill_num_cached_stacks;

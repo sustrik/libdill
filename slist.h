@@ -37,6 +37,10 @@ struct dill_slist {
     struct dill_slist_item *last;
 };
 
+extern struct dill_slist_item dill_slist_item_none;
+
+#define DILL_SLIST_ITEM_INITIALISER {&dill_slist_item_none}
+
 /* Initialise a list item. */
 void dill_slist_item_init(struct dill_slist_item *self);
 

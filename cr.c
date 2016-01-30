@@ -36,7 +36,7 @@
 volatile int dill_unoptimisable1 = 1;
 volatile void *dill_unoptimisable2 = NULL;
 
-struct dill_cr dill_main = {0};
+struct dill_cr dill_main = {DILL_SLIST_ITEM_INITIALISER};
 
 struct dill_cr *dill_running = &dill_main;
 
@@ -109,6 +109,7 @@ int dill_prologue(struct dill_cr **cr, const char *created) {
     if(!*cr)
         return 0;
     dill_register_cr(&(*cr)->debug, created);
+    dill_slist_item_init(&(*cr)->ready);
     (*cr)->canceled = 0;
     (*cr)->canceler = NULL;
     (*cr)->suspended = 0;
