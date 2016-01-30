@@ -35,6 +35,7 @@ enum dill_op {
     DILL_CHSEND,
     DILL_CHRECV,
     DILL_CHOOSE,
+    DILL_GOCANCEL,
     DILL_FINISHED
 };
 

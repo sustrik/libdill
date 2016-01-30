@@ -142,6 +142,9 @@ void goredump(void) {
                     sprintf(&buf[pos], ")");
                 }
                 break;
+            case DILL_GOCANCEL:
+                sprintf(buf, "gocancel()");
+                break;
             case DILL_FINISHED:
                 sprintf(buf, " finished");
                 break;

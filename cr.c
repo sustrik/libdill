@@ -169,13 +169,15 @@ int dill_yield(const char *current) {
     return -1;
 }
 
-int gocancel(coro *crs, int ncrs, int64_t deadline) {
+int dill_gocancel(coro *crs, int ncrs, int64_t deadline, const char *current) {
+    dill_trace(current, "gocancel()");
     if(dill_slow(ncrs == 0))
         return 0;
     if(dill_slow(!crs)) {
         errno = EINVAL;
         return -1;
     }
+    dill_startop(&dill_running->debug, DILL_GOCANCEL, current);
     /* Add all not yet finished coroutines to a list. Let finished ones
        deallocate themselves. */
     dill_list_init(&dill_running->tocancel);

@@ -117,31 +117,26 @@ DILL_EXPORT void dill_epilogue(void);
         dill_sp;\
     })
 
-#define yield() dill_yield(__FILE__ ":" dill_string(__LINE__))
-
-DILL_EXPORT int dill_yield(const char *current);
-
-DILL_EXPORT int gocancel(coro *crs, int ncrs, int64_t deadline);
-
-#define msleep(deadline) dill_msleep((deadline),\
-    __FILE__ ":" dill_string(__LINE__))
-
-DILL_EXPORT int dill_msleep(int64_t deadline, const char *current);
-
-#define fdwait(fd, events, deadline) dill_fdwait((fd), (events), (deadline),\
-    __FILE__ ":" dill_string(__LINE__))
-
-DILL_EXPORT void fdclean(int fd);
-
 #define FDW_IN 1
 #define FDW_OUT 2
 #define FDW_ERR 4
 
+#define yield() dill_yield(__FILE__ ":" dill_string(__LINE__))
+#define gocancel(crs, ncrs, deadline) dill_gocancel((crs), (ncrs), (deadline), \
+    __FILE__ ":" dill_string(__LINE__))
+#define msleep(deadline) dill_msleep((deadline),\
+    __FILE__ ":" dill_string(__LINE__))
+#define fdwait(fd, events, deadline) dill_fdwait((fd), (events), (deadline),\
+    __FILE__ ":" dill_string(__LINE__))
+
+DILL_EXPORT int dill_yield(const char *current);
+DILL_EXPORT int dill_gocancel(coro *crs, int ncrs, int64_t deadline,
+    const char *current);
+DILL_EXPORT int dill_msleep(int64_t deadline, const char *current);
+DILL_EXPORT void fdclean(int fd);
 DILL_EXPORT int dill_fdwait(int fd, int events, int64_t deadline,
     const char *current);
-
 DILL_EXPORT pid_t mfork(void);
-
 DILL_EXPORT void *cls(void);
 DILL_EXPORT void setcls(void *val);
 
