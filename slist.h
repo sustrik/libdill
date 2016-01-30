@@ -37,6 +37,12 @@ struct dill_slist {
     struct dill_slist_item *last;
 };
 
+/* Initialise a list item. */
+void dill_slist_item_init(struct dill_slist_item *self);
+
+/* Returns 1 if the item is part of a list. 0 otherwise. */
+int dill_slist_item_inlist(struct dill_slist_item *self);
+
 /* Initialise the list. To statically initialise the list use = {0}. */
 void dill_slist_init(struct dill_slist *self);
 
