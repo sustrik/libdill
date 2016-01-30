@@ -64,11 +64,10 @@ struct dill_cr {
     /* If the coroutine is waiting for a deadline, it uses this timer. */
     struct dill_timer timer;
 
-    /* When coroutine is suspended, 'suspended' is set to 1, 'ctx' holds the
-       context (registers and such), 'unblock_cb' is a function to be called
-       when the coroutine is moved back to the list of ready coroutines and
-       'result' is the value to be returned from the suspend function. */
-    int suspended;
+    /* When coroutine is suspended 'ctx' holds the context (registers and such),
+       'unblock_cb' is a function to be called when the coroutine is moved back
+       to the list of ready coroutines and 'result' is the value to be returned
+       from the suspend function. */
     struct dill_ctx ctx;
     dill_unblock_cb unblock_cb;
     int result;
