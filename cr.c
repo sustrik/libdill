@@ -109,6 +109,7 @@ int dill_prologue(struct dill_cr **cr, const char *created) {
     if(!*cr)
         return 0;
     dill_register_cr(&(*cr)->debug, created);
+    (*cr)->canceled = 0;
     (*cr)->canceler = NULL;
     (*cr)->suspended = 0;
     (*cr)->cls = NULL;
@@ -154,7 +155,7 @@ void dill_epilogue(void) {
 
 int dill_yield(const char *current) {
     dill_trace(current, "yield()");
-    if(dill_slow(dill_running->canceler)) {
+    if(dill_slow(dill_running->canceled)) {
         errno = ECANCELED;
         return -1;
     }
@@ -218,6 +219,7 @@ int gocancel(coro *crs, int ncrs, int64_t deadline) {
     for(it = dill_list_begin(&dill_running->tocancel); it;
           it = dill_list_next(it)) {
         struct dill_cr *cr = dill_cont(it, struct dill_cr, tocancel_item);
+        cr->canceled = 1;
         if(cr->suspended)
             dill_resume(cr, -ECANCELED);
     }
