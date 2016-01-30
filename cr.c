@@ -33,6 +33,8 @@
 #include "stack.h"
 #include "utils.h"
 
+DILL_CT_ASSERT(sizeof(struct dill_gocanceldata) <= DILL_OPAQUE_SIZE);
+
 volatile int dill_unoptimisable1 = 1;
 volatile void *dill_unoptimisable2 = NULL;
 
@@ -177,7 +179,12 @@ int dill_gocancel(coro *crs, int ncrs, int64_t deadline, const char *current) {
         errno = EINVAL;
         return -1;
     }
+    /* Set debug info. */
     dill_startop(&dill_running->debug, DILL_GOCANCEL, current);
+    struct dill_gocanceldata *gcd =
+        (struct dill_gocanceldata*)dill_running->opaque;
+    gcd->crs = crs;
+    gcd->ncrs = ncrs;
     /* Add all not yet finished coroutines to a list. Let finished ones
        deallocate themselves. */
     dill_list_init(&dill_running->tocancel);

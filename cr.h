@@ -34,6 +34,12 @@
 #include "timer.h"
 #include "utils.h"
 
+/* Used to store debug info while gocancel() is blocked. */
+struct dill_gocanceldata {
+    struct dill_cr **crs;
+    int ncrs;
+};
+
 /* For now use longjmp. Replace by a different mechanism as needed. */
 struct dill_ctx {
     int valid;

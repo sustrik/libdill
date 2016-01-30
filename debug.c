@@ -143,7 +143,23 @@ void goredump(void) {
                 }
                 break;
             case DILL_GOCANCEL:
-                sprintf(buf, "gocancel()");
+                {
+                    struct dill_gocanceldata *gcd =
+                        (struct dill_gocanceldata*)cr->opaque;
+                    int pos = 0;
+                    pos += sprintf(&buf[pos], "gocancel(");
+                    int first = 1;
+                    int i;
+                    for(i = 0; i != gcd->ncrs; ++i) {
+                        if(first)
+                            first = 0;
+                        else
+                            pos += sprintf(&buf[pos], ",");
+                        pos += sprintf(&buf[pos], "{%d}",
+                            gcd->crs[i]->debug.id);
+                    }
+                    sprintf(&buf[pos], ")");
+                }
                 break;
             case DILL_FINISHED:
                 sprintf(buf, " finished");
