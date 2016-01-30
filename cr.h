@@ -36,6 +36,7 @@
 
 /* For now use longjmp. Replace by a different mechanism as needed. */
 struct dill_ctx {
+    int valid;
     sigjmp_buf jbuf;
 };
 

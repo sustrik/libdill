@@ -33,9 +33,6 @@
 #include "stack.h"
 #include "utils.h"
 
-#define dill_setjmp(ctx) sigsetjmp((ctx)->jbuf, 0)
-#define dill_jmp(ctx) siglongjmp((ctx)->jbuf, 1)
-
 volatile int dill_unoptimisable1 = 1;
 volatile void *dill_unoptimisable2 = NULL;
 
@@ -45,6 +42,19 @@ struct dill_cr *dill_running = &dill_main;
 
 /* Queue of coroutines scheduled for execution. */
 static struct dill_slist dill_ready = {0};
+
+#define dill_setjmp(ctx) \
+    ({\
+        dill_assert(!(ctx)->valid);\
+        (ctx)->valid = 1;\
+        sigsetjmp((ctx)->jbuf, 0);\
+    })
+#define dill_jmp(ctx) \
+    do{\
+        dill_assert((ctx)->valid);\
+        (ctx)->valid = 0;\
+        siglongjmp((ctx)->jbuf, 1);\
+    } while(0)
 
 int dill_suspend(dill_unblock_cb unblock_cb) {
     /* Even if process never gets idle, we have to process external events
@@ -104,6 +114,7 @@ int dill_prologue(struct dill_cr **cr, const char *created) {
     (*cr)->cls = NULL;
     (*cr)->unblock_cb = NULL;
     (*cr)->finished = 0;
+    (*cr)->ctx.valid = 0;
     dill_trace(created, "{%d}=go()", (int)(*cr)->debug.id);
     /* Suspend the parent coroutine and make the new one running. */
     if(dill_setjmp(&dill_running->ctx))
