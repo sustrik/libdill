@@ -25,6 +25,7 @@
 #ifndef DILL_CR_INCLUDED
 #define DILL_CR_INCLUDED
 
+#include <setjmp.h>
 #include <stdint.h>
 
 #include "debug.h"
@@ -32,6 +33,11 @@
 #include "slist.h"
 #include "timer.h"
 #include "utils.h"
+
+/* For now use longjmp. Replace by a different mechanism as needed. */
+struct dill_ctx {
+    sigjmp_buf jbuf;
+};
 
 #define DILL_OPAQUE_SIZE 48
 

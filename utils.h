@@ -25,19 +25,10 @@
 #ifndef DILL_UTILS_H_INCLUDED
 #define DILL_UTILS_H_INCLUDED
 
-#include <setjmp.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-/* For now use longjmp. Replace by a different mechanism as needed. */
-struct dill_ctx {
-    sigjmp_buf jbuf;
-};
-
-#define dill_setjmp(ctx) sigsetjmp((ctx)->jbuf, 0)
-#define dill_jmp(ctx) siglongjmp((ctx)->jbuf, 1)
 
 /*  Takes a pointer to a member variable and computes pointer to the structure
     that contains it. 'type' is type of the structure, not the member. */

@@ -33,6 +33,9 @@
 #include "stack.h"
 #include "utils.h"
 
+#define dill_setjmp(ctx) sigsetjmp((ctx)->jbuf, 0)
+#define dill_jmp(ctx) siglongjmp((ctx)->jbuf, 1)
+
 volatile int dill_unoptimisable1 = 1;
 volatile void *dill_unoptimisable2 = NULL;
 
