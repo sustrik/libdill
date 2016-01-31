@@ -8,7 +8,7 @@ coroutine void foo(int arg1, int arg2, int arg3) {
 }
 ```
 
-To Start a coroutine use 'go' keyword. Expression return coroutine handle of
+To start a coroutine use 'go' keyword. Expression returns coroutine handle of
 type 'coro'. Keep in mind that each coroutine handle has to be closed using
 'gocancel' otherwise it will result in a memory leak.
 
@@ -36,8 +36,8 @@ The tihrd arugment is deadline. Coroutines being canceled will get grace period
 to run until the deadline expires. Afterwards they will be canceled by force,
 i.e. all blocking calls in the coroutine will return ECANCELED error.
 
-All coroutines are canceled even if the coroutine doing cancellation is itself
-canceled and gocancel() returns ECANCELED.
+All coroutines are properly canceled even if the coroutine doing cancellation
+is itself canceled and gocancel() returns ECANCELED.
 
 Semantics of channel are identical to semantics of channels in Go language.
 
@@ -45,7 +45,7 @@ To create a channel use 'channel' function:
 
 `chan ch = channel(sizeof(int), 100);`
 
-The line aboce creates a channel of int-sized elements able to hold 100 items.
+The line above creates a channel of int-sized elements able to hold 100 items.
 To get an unbuffered channel set second parameter to zero.
 
 
@@ -71,7 +71,7 @@ int rc = chdone(ch, &val, sizeof(val));
 ```
 
 Once this function is called, all attempts to read from the channel will
-return the specified value without blocking. All attems to send to the channel
+return the specified value with no blocking. All attems to send to the channel
 will result in EPIPE error.
 
 To duplicate a channel handle:
@@ -106,19 +106,20 @@ case -1:
 }
 ```
 
-Libdill doesn't use timeouts but rather deadlines. Deadline is a specific
+Libdill uses deadlines rather than timeouts. Deadline is a specific
 point in time when the function should be canceled. To create a deadline
-use 'now' function. The result it in milliseconds thus `now() + 1000` means
+use 'now' function. The result it in milliseconds, thus `now() + 1000` means
 one second from now onward.
 
-If deadline is reached functions fail and set errno to ETIMEDOUT.
+If deadline is reached the function in question fails and sets errno to
+ETIMEDOUT.
 
 Deadline -1 means "Never time out."
 
 Deadline 0 means: "Perform the operation immediately. If not possile return
 ETIMEDOUT."
 
-To sleep until deadline use 'msleep' function:
+To sleep until deadline expires use 'msleep' function:
 
 `int rc = msleep(now() + 1000);`
 
@@ -126,9 +127,9 @@ Wait for a file descriptor:
 
 `int rc = fdwait(fd, FDW_IN | FDW_OUT, now() + 1000);`
 
-Libdill tries to minimise user/kernel mode switches by caching some information
-about file descriptors. After closing a file descriptor you MUST call
-`fdclean(fd)` function to clean the associated cache. Also, you MUST use
+Libdill tries to minimise user/kernel mode transitions by caching some
+information about file descriptors. After closing a file descriptor you MUST
+call `fdclean(fd)` function to clean the associated cache. Also, you MUST use
 `mfork` function instead of standard `fork`.
 
 A single pointer can be stored in coroutine-local storage.
@@ -153,6 +154,6 @@ gotrace(1); /* starts tracing */
 goredump(); /* dumps info about current coroutines and channels */
 ```
 
-Both functions can be invoked from the debugger.
+If need be, both functions can be invoked directly from the debugger.
 
 The library is licensed under MIT/X11 license.
