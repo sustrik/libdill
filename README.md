@@ -1,4 +1,4 @@
-# Simple coroutine library for C**
+# Simple coroutine library for C
 
 Coroutine is a standard C function with 'coroutine' modifier:
 
