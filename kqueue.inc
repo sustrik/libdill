@@ -118,18 +118,15 @@ pid_t dill_fork(void) {
 
 static int dill_poller_add(int fd, int events) {
     struct dill_crpair *crp = &dill_crpairs[fd];
-    if(events & FDW_IN) {
-        if(crp->in)
-            dill_panic(
-                "multiple coroutines waiting for a single file descriptor");
+    if(dill_slow((events & FDW_IN && crp->in) ||
+          (events & FDW_OUT && crp->out))) {
+        errno = EEXIST;
+        return -1;
+    }
+    if(events & FDW_IN)
         crp->in = dill_running;
-    }
-    if(events & FDW_OUT) {
-        if(crp->out)
-            dill_panic(
-                "multiple coroutines waiting for a single file descriptor");
+    if(events & FDW_OUT)
         crp->out = dill_running;
-    }
     if(!crp->next) {
         crp->next = dill_changelist;
         dill_changelist = fd + 1;
