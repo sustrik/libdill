@@ -82,17 +82,16 @@ static int dill_poller_add(int fd, int events) {
         dill_pollset_items[i].out = NULL;
     }
     /* Register the new file descriptor in the pollset. */
+    if(dill_slow((events & FDW_IN && dill_pollset_items[i].in) ||
+          (events & FDW_OUT && dill_pollset_items[i].out))) {
+        errno = EEXIST;
+        return -1;
+    }
     if(events & FDW_IN) {
-        if(dill_slow(dill_pollset_items[i].in))
-            dill_panic(
-                "multiple coroutines waiting for a single file descriptor");
         dill_pollset_fds[i].events |= POLLIN;
         dill_pollset_items[i].in = dill_running;
     }
     if(events & FDW_OUT) {
-        if(dill_slow(dill_pollset_items[i].out))
-            dill_panic(
-                "multiple coroutines waiting for a single file descriptor");
         dill_pollset_fds[i].events |= POLLOUT;
         dill_pollset_items[i].out = dill_running;
     }
