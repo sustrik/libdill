@@ -74,11 +74,23 @@ sets errno to one of the following values:
 
 ## Yield CPU to other coroutines
 
-`int rc = yield();`
+Occassionally, a coroutine has to perform a long calculation with no natural
+coroutine switching points. Such calculation can block other coroutines from
+executing for a long interval of time. To mitigate this problem call `yield()`
+function once in a while.
 
-Semantics of channel are identical to semantics of channels in Go language.
+```
+int yield(void);
+```
+
+In case of success `yield()` returns 0. In case of error it returns -1 and
+sets errno to one of the following values:
+
+* `ECANCELED`: Current coroutine was canceled by its owner.
 
 ## Create a channel
+
+Semantics of channel are identical to semantics of channels in Go language.
 
 To create a channel use 'channel' function:
 
