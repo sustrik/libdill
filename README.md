@@ -54,9 +54,9 @@ crs[1] = go(fx());
 int rc = gocancel(crs, 2, now() + 1000);
 ```
 
-The tihrd arugment is deadline. Coroutines being canceled will get grace period
-to run until the deadline expires. Afterwards they will be canceled by force,
-i.e. all blocking calls in the coroutine will return ECANCELED error.
+Coroutines being canceled will get grace period to run until the deadline
+expires. Afterwards they will be canceled by force, i.e. all blocking calls
+in the coroutine will return ECANCELED error.
 
 Exact algorithm of this function is as follows:
 
@@ -119,7 +119,7 @@ values:
 
 * `ENOMEM`: Not enough memory.
 
-## Sending to channel
+## Sending to a channel
 
 Send a message to channel:
 
@@ -128,7 +128,7 @@ int val = 42;
 int rc = chsend(ch, &val, sizeof(val));
 ```
   
-## Receiving from channel
+## Receiving from a channel
 
 Receive a message from channel:
 
@@ -137,7 +137,7 @@ int val;
 int rc = chrecv(ch, &val, sizeof(val));
 ```
 
-## Terminating the communication on channel
+## Terminating communication on a channel
 
 Mark a channel as non-functional:
 
