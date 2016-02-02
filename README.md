@@ -117,6 +117,7 @@ In case of success the function returns handle to the newly created channel.
 In case of error it returns `NULL` and sets `errno` to one of the following
 values:
 
+* `EINVAL`: Invalid argument.
 * `ENOMEM`: Not enough memory.
 
 ## Sending to a channel
@@ -125,8 +126,16 @@ Send a message to channel:
 
 ```
 int val = 42;
-int rc = chsend(ch, &val, sizeof(val));
+int rc = chsend(ch, &val, sizeof(val), -1);
 ```
+
+In case of success the function returns 0. In case of error it returns -1 and
+sets `errno` to one of the following values:
+
+* `EINVAL`: Invalid argument.
+* `ETIMEDOUT`: The deadline expired before the message was sent.
+* `EPIPE`: Communication was terminated via `chdone()` function.
+* `ECANCELED`: The coroutine was canceled by its owner.
   
 ## Receiving from a channel
 
@@ -134,8 +143,15 @@ Receive a message from channel:
 
 ```
 int val;
-int rc = chrecv(ch, &val, sizeof(val));
+int rc = chrecv(ch, &val, sizeof(val), -1);
 ```
+
+In case of success the function returns 0. In case of error it returns -1 and
+sets `errno` to one of the following values:
+
+* `EINVAL`: Invalid argument.
+* `ETIMEDOUT`: The deadline expired before a message was received.
+* `ECANCELED`: The coroutine was canceled by its owner.
 
 ## Terminating communication on a channel
 
