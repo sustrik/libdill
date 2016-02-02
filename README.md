@@ -25,7 +25,7 @@ scheduler switching points: `go()`, `yield()`, `gocancel()`, `chsend()`,
 Keep in mind that each coroutine handle has to be closed using `gocancel()`
 otherwise it will result in a memory leak.
 
-In case of error `go()` returns `NULL` and sets errno to one of the following
+In case of error `go()` returns `NULL` and sets `errno` to one of the following
 values:
 
 * `ENOMEM`: Not enough memory.
@@ -88,7 +88,7 @@ int yield(void);
 ```
 
 In case of success `yield()` returns 0. In case of error it returns -1 and
-sets errno to one of the following values:
+sets `errno` to one of the following values:
 
 * `ECANCELED`: Current coroutine was canceled by its owner.
 
@@ -98,10 +98,26 @@ Semantics of channel are identical to semantics of channels in Go language.
 
 To create a channel use 'channel' function:
 
-`chan ch = channel(sizeof(int), 100);`
+```
+chan channel(size_t item_size, size_t buffer_size);
+```
 
-The line above creates a channel of int-sized elements able to hold 100 items.
-To get an unbuffered channel set second parameter to zero.
+First argument is the size of one element in the channel. Second argument
+is number of elements that can be stored in the channel. To get an unbuffered
+channel set the second parameter to zero.
+
+For example, this line creates a channel of int-sized elements able to hold
+100 items:
+
+```
+chan ch = channel(sizeof(int), 100);
+```
+
+In case of success the function returns handle to the newly created channel.
+In case of error it returns `NULL` and sets `errno` to one of the following
+values:
+
+* `ENOMEM`: Not enough memory.
 
 ## Sending to channel
 
@@ -179,7 +195,7 @@ point in time when the function should be canceled. To create a deadline
 use 'now' function. The result it in milliseconds, thus `now() + 1000` means
 one second from now onward.
 
-If deadline is reached the function in question fails and sets errno to
+If deadline is reached the function in question fails and sets `errno` to
 ETIMEDOUT.
 
 Deadline -1 means "Never time out."
