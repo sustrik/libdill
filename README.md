@@ -207,6 +207,6 @@ goredump(); /* dumps info about current coroutines and channels */
 
 If need be, both functions can be invoked directly from the debugger.
 
-## Licensing
+## License
 
 The library is licensed under MIT/X11 license.
