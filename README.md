@@ -63,6 +63,15 @@ If you are doing long computation without any blocking
 functions you may want to yield CPU to different coroutines using `yield()`
 function.
 
+In case of success `gocancel()` returns 0. In case or error it returns -1 and
+sets errno to one of the following values:
+
+* `EINVAL`: Invalid arguments.
+* `ETIMEDOUT`: Deadline expired. Coroutines in `crs` array are cleanly canceled
+   even in the case of this error.
+* `ECANCELED`: Current coroutine was canceled by its owner. Coroutines in `crs`
+   array are cleanly canceled even in the case of this error.
+
 ## Yield CPU to other coroutines
 
 `int rc = yield();`

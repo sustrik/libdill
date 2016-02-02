@@ -106,7 +106,7 @@ int dill_prologue(struct dill_cr **cr, const char *created) {
     dill_preserve_debug();
     /* Allocate and initialise new stack. */
     *cr = ((struct dill_cr*)dill_allocstack()) - 1;
-    if(!*cr) {
+    if(dill_slow(!*cr)) {
         errno = ENOMEM;
         return 0;
     }
