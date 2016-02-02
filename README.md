@@ -2,7 +2,7 @@
 
 ## Define a coroutine
 
-Coroutine is a standard C function with 'coroutine' modifier applied:
+Coroutine is a standard C function with `coroutine` modifier applied:
 
 ```
 coroutine void foo(int arg1, int arg2, int arg3) {
@@ -12,7 +12,7 @@ coroutine void foo(int arg1, int arg2, int arg3) {
 
 ## Launch a coroutine
 
-To start a coroutine use 'go' keyword. Expression returns coroutine handle.
+To start a coroutine use 'go' keyword. Expression returns a coroutine handle.
 
 ```
 coro cr = go(foo(1, 2, 3));
@@ -42,6 +42,8 @@ int gocancel(coro *crs, int ncrs, int64_t deadline);
 ```
 
 The function cancels `ncrs` coroutines in the array pointed to be `crs`.
+Third argument is a deadline. For detailed information about deadlines check
+"Deadlines" section of this manual.
 
 Example:
 
@@ -56,12 +58,16 @@ The tihrd arugment is deadline. Coroutines being canceled will get grace period
 to run until the deadline expires. Afterwards they will be canceled by force,
 i.e. all blocking calls in the coroutine will return ECANCELED error.
 
-All coroutines are properly canceled even if the coroutine doing cancellation
-is itself canceled and gocancel() returns ECANCELED.
+Exact algorithm of this function is as follows:
 
-If you are doing long computation without any blocking
-functions you may want to yield CPU to different coroutines using `yield()`
-function.
+1. If all the coroutines are already finished it succeeds straight away.
+2. If not so it waits until the deadline. If all coroutines finish during
+   this grace period the function succeeds immediately afterwards.
+3. Otherwise it "kills" the remaining coroutines. What that means is that
+   all function calls in the coroutine in question from that point on will
+   fail with `ECANCELED` error.
+4. Finally, `gocancel()` will wait until all the "killed" coroutines exit.
+   It itself will succeed immediately afterwards.
 
 In case of success `gocancel()` returns 0. In case or error it returns -1 and
 sets errno to one of the following values:
@@ -107,7 +113,7 @@ Send a message to channel:
 int val = 42;
 int rc = chsend(ch, &val, sizeof(val));
 ```
-
+  
 ## Receiving from channel
 
 Receive a message from channel:
