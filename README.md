@@ -170,16 +170,21 @@ will result in EPIPE error.
 
 To duplicate a channel handle:
 
-`chan ch2 = chdup(ch);`
+```
+chan chdup(chan ch);
+```
+
+The channel is deallocated only after all handles referring to it are closed.
 
 ## Closing a channel
 
-The channel will be deallocated only after all the clones of the handle
-are closed using 'chclose' function.
+To close a channel handle use `chclose()` function.
 
-To close a channel:
+```
+void chclose(chan ch);
+```
 
-`chclose(ch);`
+The channel is deallocated only after all handles referring to it are closed.
 
 ## Working with multiple channels
 
@@ -216,14 +221,20 @@ ETIMEDOUT.
 
 Deadline -1 means "Never time out."
 
-Deadline 0 means: "Perform the operation immediately. If not possile return
-ETIMEDOUT."
+Deadline 0 means "Perform the operation immediately. If not possile return
+ETIMEDOUT." This is different to deadline of `now()` where the operation may
+not even be attempted.
 
 ## Sleeping
 
 To sleep until deadline expires use 'msleep' function:
 
 `int rc = msleep(now() + 1000);`
+
+The function return 0 if it succeeds. In case of error it returns -1 and
+sets errno to one of the following values:
+
+* `ECANCELED`: Current coroutine was canceled by its owner.
 
 ## Waiting for file descriptors
 
@@ -236,22 +247,32 @@ information about file descriptors. After closing a file descriptor you MUST
 call `fdclean(fd)` function to clean the associated cache. Also, you MUST use
 `mfork` function instead of standard `fork`.
 
+On success, the function returns a combinatation of `FDW_IN`, `FDW_OUT` and
+`FDW_ERR`. On error it returns -1 and sets `errno` to one of the following
+values:
+
+* `EINVAL`: Invalid argument.
+* `ETIMEDOUT`: Deadline was reached.
+* `ECANCELED`: Current coroutine was canceled by its owner.
+
 ## Coroutine-local storage
 
 A single pointer can be stored in coroutine-local storage.
 
-To set it:
+To set it use `setcls()` function:
 
 ```
-void *val = ...;
-setcls(val);
+void setcls(void *p);
 ```
 
-To retrieve it:
+To retrieve it use `cls()` function:
 
 ```
-void *val = cls();
+void *cls();
 ```
+
+When coroutine is launched the value of coroutine-local storage is guaranteed
+to be NULL.
 
 ## Debugging
 
@@ -267,3 +288,4 @@ If need be, both functions can be invoked directly from the debugger.
 ## License
 
 The library is licensed under MIT/X11 license.
+
