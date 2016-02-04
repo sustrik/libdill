@@ -200,11 +200,12 @@ int dill_gocancel(coro *crs, int ncrs, int64_t deadline, const char *current) {
         dill_list_insert(&dill_running->tocancel, &crs[i]->tocancel_item, NULL);
     }
     /* If all coroutines are finished return straight away. */
-    int canceled = 0;
+    int canceled = dill_running->canceled;
     if(dill_list_empty(&dill_running->tocancel))
-        return 0;
-    /* If user requested immediate cancelation we can skip all this stuff. */
-    if(deadline != 0) {
+        goto finish;
+    /* If user requested immediate cancelation or if this coroutine was already
+       canceled by its owner we can skip the grace period. */
+    if(deadline != 0 || dill_running->canceled) {
       /* If required, start waiting for the timeout. */
       if(deadline > 0)
           dill_timer_add(&dill_running->timer, deadline);
@@ -214,7 +215,7 @@ int dill_gocancel(coro *crs, int ncrs, int64_t deadline, const char *current) {
           /* All coroutines have finished. We are done. */
           if(deadline > 0)
               dill_timer_rm(&dill_running->timer);
-          return 0;
+          goto finish;
       }
       /* We'll have to force coroutines to exit. No need for timer any more. */
       dill_assert(rc == -ECANCELED || rc == -ETIMEDOUT);
@@ -242,7 +243,9 @@ int dill_gocancel(coro *crs, int ncrs, int64_t deadline, const char *current) {
         dill_assert(rc == -ECANCELED);
         canceled = 1;
     }
+finish:
     if(canceled) {
+        /* This coroutine was canceled by its owner. */
         errno = ECANCELED;
         return -1;
     }
