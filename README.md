@@ -156,13 +156,18 @@ sets `errno` to one of the following values:
 Mark a channel as non-functional:
 
 ```
-int val = -1;
-int rc = chdone(ch, &val, sizeof(val));
+int chdone(chan ch);
 ```
 
-Once this function is called, all attempts to read from the channel will
-return the specified value with no blocking. All attems to send to the channel
-will result in EPIPE error.
+Once this function is called all subsequent attemps to send to this channel
+will result in EPIPE error. After all the items are received from the channel
+all the subsequent attemps to receive will fail with EPIPE error.
+
+In case of success the function returns 0. In case of error it returns -1 and
+sets `errno` to one of the following values:
+
+* `EINVAL`: Invalid argument.
+* `EPIPE`: `chdone()` was already called on the channel.
 
 ## Duplicating a channel handle
 
