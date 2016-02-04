@@ -158,6 +158,7 @@ struct chclause {
     void *reserved2;
     void *reserved3;
     int reserved4;
+    int reserved5;
 };
 
 #define channel(itemsz, bufsz) \
@@ -174,8 +175,8 @@ struct chclause {
     dill_chrecv((channel), (val), (len), (deadline), \
     __FILE__ ":" dill_string(__LINE__))
 
-#define chdone(channel, val, len) \
-    dill_chdone((channel), (val), (len), __FILE__ ":" dill_string(__LINE__))
+#define chdone(channel) \
+    dill_chdone((channel), __FILE__ ":" dill_string(__LINE__))
 
 #define chclose(channel) \
     dill_chclose((channel), __FILE__ ":" dill_string(__LINE__))
@@ -192,8 +193,7 @@ DILL_EXPORT int dill_chsend(chan ch, const void *val, size_t len,
     int64_t deadline, const char *current);
 DILL_EXPORT int dill_chrecv(chan ch, void *val, size_t len,
     int64_t deadline, const char *current);
-DILL_EXPORT int dill_chdone(chan ch, const void *val, size_t len,
-    const char *current);
+DILL_EXPORT int dill_chdone(chan ch, const char *current);
 DILL_EXPORT void dill_chclose(chan ch,
     const char *current);
 DILL_EXPORT int dill_choose(struct chclause *clauses, int nclauses,

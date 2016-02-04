@@ -282,13 +282,11 @@ int main() {
 
     /* Test that 'in' on done-with channel fires. */
     chan ch18 = channel(sizeof(int), 0);
-    val = 2222;
-    rc = chdone(ch18, &val, sizeof(val));
+    rc = chdone(ch18);
     assert(rc == 0);
     struct chclause cls15[] = {{ch18, CHRECV, &val, sizeof(val)}};
     rc = choose(cls15, 1, -1);
-    assert(rc == 0);
-    assert(val == 2222);
+    assert(rc == 0 && errno == EPIPE);
     chclose(ch18);
 
     /* Test expiration of 'deadline' clause. */

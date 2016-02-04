@@ -41,13 +41,13 @@ chan dill_channel(size_t itemsz, size_t bufsz, const char *created) {
     /* If there's at least one channel created in the user's code
        we want the debug functions to get into the binary. */
     dill_preserve_debug();
-    /* We are allocating 1 additional element after the channel buffer to
-       store the done-with value. It can't be stored in the regular buffer
-       because that would mean chdone() would block when buffer is full. */
+    /* Allocate the channel structure followed by the item buffer. */
     struct dill_chan *ch = (struct dill_chan*)
-        malloc(sizeof(struct dill_chan) + (itemsz * (bufsz + 1)));
-    if(!ch)
+        malloc(sizeof(struct dill_chan) + (itemsz * bufsz));
+    if(!ch) {
+        errno = ENOMEM;
         return NULL;
+    }
     dill_register_chan(&ch->debug, created);
     ch->sz = itemsz;
     ch->sender.seq = 0;
@@ -72,6 +72,12 @@ chan dill_chdup(chan ch, const char *current) {
     return ch;
 }
 
+/* Returns index of the clause in the pollset. */
+static int dill_choose_index(struct dill_clause *cl) {
+    struct dill_choosedata *cd = (struct dill_choosedata*)cl->cr->opaque;
+    return cl - cd->clauses;
+}
+
 void dill_chclose(chan ch, const char *current) {
     if(dill_slow(!ch))
         return;
@@ -85,12 +91,14 @@ void dill_chclose(chan ch, const char *current) {
     while(!dill_list_empty(&ch->sender.clauses)) {
         struct dill_clause *cl = dill_cont(dill_list_begin(
             &ch->sender.clauses), struct dill_clause, epitem);
-        dill_resume(cl->cr, -EPIPE);
+        cl->error = EPIPE;
+        dill_resume(cl->cr, dill_choose_index(cl));
     }
     while(!dill_list_empty(&ch->receiver.clauses)) {
         struct dill_clause *cl = dill_cont(
             dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
-        dill_resume(cl->cr, -EPIPE);
+        cl->error = EPIPE;
+        dill_resume(cl->cr, dill_choose_index(cl));
     }
     dill_unregister_chan(&ch->debug);
     free(ch);
@@ -112,12 +120,6 @@ static void dill_choose_unblock_cb(struct dill_cr *cr) {
         dill_timer_rm(&cr->timer);
 }
 
-/* Returns index of the clause in the pollset. */
-static int dill_choose_index(struct dill_clause *cl) {
-    struct dill_choosedata *cd = (struct dill_choosedata*)cl->cr->opaque;
-    return cl - cd->clauses;
-}
-
 /* Push new item to the channel. */
 static void dill_enqueue(chan ch, void *val) {
     /* If there's a receiver already waiting, let's resume it. */
@@ -126,6 +128,7 @@ static void dill_enqueue(chan ch, void *val) {
         struct dill_clause *cl = dill_cont(
             dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
         memcpy(cl->val, val, ch->sz);
+        cl->error = 0;
         dill_resume(cl->cr, dill_choose_index(cl));
         return;
     }
@@ -152,6 +155,7 @@ static void dill_dequeue(chan ch, void *val) {
         /* Otherwise there must be a sender waiting to send. */
         dill_assert(cl);
         memcpy(val, cl->val, ch->sz);
+        cl->error = 0;
         dill_resume(cl->cr, dill_choose_index(cl));
         return;
     }
@@ -165,19 +169,32 @@ static void dill_dequeue(chan ch, void *val) {
         size_t pos = (ch->first + ch->items) % ch->bufsz;
         memcpy(((char*)(ch + 1)) + (pos * ch->sz) , cl->val, ch->sz);
         ++ch->items;
+        cl->error = 0;
         dill_resume(cl->cr, dill_choose_index(cl));
     }
 }
 
-static int dill_choose_available(struct dill_clause *cl) {
-    if(cl->op == CHSEND) {
-        return !dill_list_empty(&cl->channel->receiver.clauses) ||
-        cl->channel->items < cl->channel->bufsz ? 1 : 0;
-    }
-    else {
-        return cl->channel->done ||
-            !dill_list_empty(&cl->channel->sender.clauses) ||
-            cl->channel->items ? 1 : 0;
+/* Returns 0 if operation can be performed.
+   EAGAIN if it would block.
+   EPIPE if it would return EPIPE. */
+static int dill_choose_error(struct dill_clause *cl) {
+    switch(cl->op) {
+    case CHSEND:
+        if(cl->channel->done)
+            return EPIPE;
+        if(dill_list_empty(&cl->channel->receiver.clauses) &&
+              cl->channel->items == cl->channel->bufsz)
+            return EAGAIN;
+        return 0;
+    case CHRECV:
+        if(!dill_list_empty(&cl->channel->sender.clauses) ||
+              cl->channel->items > 0)
+            return 0;
+        if(cl->channel->done)
+            return EPIPE;
+        return EAGAIN;
+    default:
+        dill_assert(0);
     }
 }
 
@@ -213,16 +230,13 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
             errno = EINVAL;
             return -1;
         }
-        if(dill_slow(cls[i].op == CHSEND && cls[i].channel->done)) {
-            errno = EPIPE;
-            return -1;
-        }
         cls[i].cr = dill_running;
         struct dill_ep *ep = dill_getep(&cls[i]);
         if(ep->seq == seq)
             continue;
         ep->seq = seq;
-        if(dill_choose_available(&cls[i])) {
+        cls[i].error = dill_choose_error(&cls[i]);
+        if(cls[i].error != EAGAIN) {
             cls[available].aidx = i;
             ++available;
         }
@@ -230,6 +244,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
 
     /* If there are clauses that are immediately available
        randomly choose one of them. */
+    int res;
     if(available > 0) {
         int chosen = available == 1 ? 0 : (int)(random() % available);
         struct dill_clause *cl = &cls[cls[chosen].aidx];
@@ -238,12 +253,8 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         else
             dill_dequeue(cl->channel, cl->val);
         dill_resume(dill_running, dill_choose_index(cl));
-        int res = dill_suspend(NULL);
-        if(dill_slow(res < 0)) {
-            errno = -res;
-            return -1;
-        }
-        return res;
+        res = dill_suspend(NULL);
+        goto finish;
     }
 
     /* If non-blocking behaviour was requested, exit now. */
@@ -268,11 +279,16 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     }
     /* If there are multiple parallel chooses done from different coroutines
        all but one must be blocked on the following line. */
-    int res = dill_suspend(dill_choose_unblock_cb);
+    res = dill_suspend(dill_choose_unblock_cb);
+finish:
+    /* Global error, not related to any particular clause. */
     if(dill_slow(res < 0)) {
         errno = -res;
         return -1;
     }
+    /* Success or error for the triggered clause. */
+    errno = cls[res].error;
+    dill_assert(errno == 0 || errno == EPIPE);
     return res;
 }
 
@@ -292,7 +308,10 @@ int dill_chsend(chan ch, const void *val, size_t len, int64_t deadline,
     dill_trace(current, "chsend(<%d>)", (int)ch->debug.id);
     dill_startop(&dill_running->debug, DILL_CHSEND, current);
     struct chclause cl = {ch, CHSEND, (void*)val, len};
-    return dill_choose_(&cl, 1, deadline);
+    int res = dill_choose_(&cl, 1, deadline);
+    if(dill_slow(res == 0 && errno != 0))
+        res = -1;
+    return res;
 }
 
 int dill_chrecv(chan ch, void *val, size_t len, int64_t deadline,
@@ -304,11 +323,14 @@ int dill_chrecv(chan ch, void *val, size_t len, int64_t deadline,
     dill_trace(current, "chrecv(<%d>)", (int)ch->debug.id);
     dill_startop(&dill_running->debug, DILL_CHRECV, current);
     struct chclause cl = {ch, CHRECV, val, len};
-    return dill_choose_(&cl, 1, deadline);
+    int res = dill_choose_(&cl, 1, deadline);
+    if(dill_slow(res == 0 && errno != 0))
+        res = -1;
+    return res;
 }
 
-int dill_chdone(chan ch, const void *val, size_t len, const char *current) {
-    if(dill_slow(!ch || !val || len != ch->sz)) {
+int dill_chdone(chan ch, const char *current) {
+    if(dill_slow(!ch)) {
         errno = EINVAL;
         return -1;
     }
@@ -317,21 +339,20 @@ int dill_chdone(chan ch, const void *val, size_t len, const char *current) {
         errno = EPIPE;
         return -1;
     }
-    /* Resume any remaining senders on the channel with EPIPE error. */
+    /* Put the channel into done-with mode. */
+    ch->done = 1;
+    /* Resume any remaining senders on the channel. */
     while(!dill_list_empty(&ch->sender.clauses)) {
         struct dill_clause *cl = dill_cont(dill_list_begin(&ch->sender.clauses),
             struct dill_clause, epitem);
-        dill_resume(cl->cr, -EPIPE);
+        cl->error = EPIPE;
+        dill_resume(cl->cr, dill_choose_index(cl));
     }
-    /* Put the channel into done-with mode. */
-    ch->done = 1;
-    /* Store the terminal value into a special position in the channel. */
-    memcpy(((char*)(ch + 1)) + (ch->bufsz * ch->sz) , val, ch->sz);
     /* Resume all the receivers currently waiting on the channel. */
     while(!dill_list_empty(&ch->receiver.clauses)) {
         struct dill_clause *cl = dill_cont(
             dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
-        memcpy(cl->val, val, ch->sz);
+        cl->error = EPIPE;
         dill_resume(cl->cr, dill_choose_index(cl));
     }
     return 0;

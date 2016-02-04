@@ -53,11 +53,10 @@ coroutine void receiver(chan ch, int expected) {
     chclose(ch);
 }
 
-coroutine void receiver2(chan ch, int expected, chan back) {
+coroutine void receiver2(chan ch, chan back) {
     int val;
     int rc = chrecv(ch, &val, sizeof(val), -1);
-    assert(rc == 0);
-    assert(val == expected);
+    assert(rc == -1 && errno == EPIPE);
     chclose(ch);
     val = 0;
     rc = chsend(back, &val, sizeof(val), -1);
@@ -77,7 +76,8 @@ coroutine void structsender(chan ch, struct foo val) {
     chclose(ch);
 }
 
-coroutine void sender2(chan ch, int val) {
+coroutine void sender2(chan ch) {
+    int val = 0;
     int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == -1 && errno == EPIPE);
     chclose(ch);
@@ -204,70 +204,51 @@ int main() {
 
     /* Test simple chdone() scenarios. */
     chan ch8 = channel(sizeof(int), 0);
-    val = 777;
-    rc = chdone(ch8, &val, sizeof(val));
+    rc = chdone(ch8);
     assert(rc == 0);
     rc = chrecv(ch8, &val, sizeof(val), -1);
-    assert(rc == 0);
-    assert(val == 777);
+    assert(rc == -1 && errno == EPIPE);
     rc = chrecv(ch8, &val, sizeof(val), -1);
-    assert(rc == 0);
-    assert(val == 777);
+    assert(rc == -1 && errno == EPIPE);
     rc = chrecv(ch8, &val, sizeof(val), -1);
-    assert(rc == 0);
-    assert(val == 777);
+    assert(rc == -1 && errno == EPIPE);
     chclose(ch8);
-    chan ch9 = channel(sizeof(int), 10);
-    val = 888;
-    rc = chdone(ch9, &val, sizeof(val));
-    assert(rc == 0);
-    rc = chrecv(ch9, &val, sizeof(val), -1);
-    assert(rc == 0);
-    assert(val == 888);
-    rc = chrecv(ch9, &val, sizeof(val), -1);
-    assert(rc == 0);
-    assert(val == 888);
-    chclose(ch9);
+
     chan ch10 = channel(sizeof(int), 10);
     val = 999;
     rc = chsend(ch10, &val, sizeof(val), -1);
     assert(rc == 0);
-    val = 111;
-    rc = chdone(ch10, &val, sizeof(val));
+    rc = chdone(ch10);
     assert(rc == 0);
     rc = chrecv(ch10, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 999);
     rc = chrecv(ch10, &val, sizeof(val), -1);
-    assert(rc == 0);
-    assert(val == 111);
+    assert(rc == -1 && errno == EPIPE);
     rc = chrecv(ch10, &val, sizeof(val), -1);
-    assert(rc == 0);
-    assert(val == 111);
+    assert(rc == -1 && errno == EPIPE);
     chclose(ch10);
+
     chan ch11 = channel(sizeof(int), 1);
     val = 222;
     rc = chsend(ch11, &val, sizeof(val), -1);
     assert(rc == 0);
-    val = 333;
-    rc = chdone(ch11, &val, sizeof(val));
+    rc = chdone(ch11);
     assert(rc == 0);
     rc = chrecv(ch11, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 222);
     rc = chrecv(ch11, &val, sizeof(val), -1);
-    assert(rc == 0);
-    assert(val == 333);
+    assert(rc == -1 && errno == EPIPE);
     chclose(ch11);
 
     /* Test whether chdone() unblocks all receivers. */
     chan ch12 = channel(sizeof(int), 0);
     chan ch13 = channel(sizeof(int), 0);
     coro cr6[2];
-    cr6[0] = go(receiver2(chdup(ch12), 444, chdup(ch13)));
-    cr6[1] = go(receiver2(chdup(ch12), 444, chdup(ch13)));
-    val = 444;
-    rc = chdone(ch12, &val, sizeof(val));
+    cr6[0] = go(receiver2(chdup(ch12), chdup(ch13)));
+    cr6[1] = go(receiver2(chdup(ch12), chdup(ch13)));
+    rc = chdone(ch12);
     assert(rc == 0);
     rc = chrecv(ch13, &val, sizeof(val), -1);
     assert(rc == 0);
@@ -297,13 +278,12 @@ int main() {
     /* Test whether chdone() unblocks blocked senders. */
     chan ch15 = channel(sizeof(int), 0);
     coro cr8[3];
-    cr8[0] = go(sender2(chdup(ch15), 999));
-    cr8[1] = go(sender2(chdup(ch15), 999));
-    cr8[2] = go(sender2(chdup(ch15), 999));
+    cr8[0] = go(sender2(chdup(ch15)));
+    cr8[1] = go(sender2(chdup(ch15)));
+    cr8[2] = go(sender2(chdup(ch15)));
     rc = msleep(now() + 50);
     assert(rc == 0);
-    val = -1;
-    rc = chdone(ch15, &val, sizeof(val));
+    rc = chdone(ch15);
     assert(rc == 0);
     chclose(ch15);
     gocancel(cr8, 3, -1);

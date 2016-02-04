@@ -192,6 +192,12 @@ To multiplex several channel operations use 'choose' function. Its semantics
 closely mimic semantics of Golang's 'select' statement.
 
 ```
+int choose(struct chclause *cls, int ncls, int64_t deadline);
+```
+
+Example:
+
+```
 int val1;
 int val2 = 42;
 struct chclause clauses[] = {
@@ -201,13 +207,32 @@ struct chclause clauses[] = {
 int rc = choose(clauses, 2, now() + 30000);
 switch(rc) {
 case 0:
+    if(errno == EPIPE) {
+        /* chdone was called on ch1 */
+    }
     /* val1 received from ch1 */
 case 1:
+    if(errno == EPIPE) {
+        /* chdone was called on ch2 */
+    }
     /* val2 sent to ch2 */
 case -1:
     /* error */
 }
 ```
+
+In case of error `choose()` returns -1 and sets errno to one of the following
+values:
+
+* `EINVAL`: Invalid argument.
+* `ETIMEDOUT`: Deadline expired.
+* `ECANCELED`: Current coroutine was canceled by its owner.
+
+In case of success it returns index of the triggered clause and sets errno
+to one of the following values:
+
+* `0`: Operation succeeded.
+* `EPIPE`: Communication on channel was terminated using `chdone()` function.
 
 ## Deadlines
 
