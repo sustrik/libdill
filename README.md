@@ -25,10 +25,8 @@ scheduler switching points: `go()`, `yield()`, `gocancel()`, `chsend()`,
 Keep in mind that each coroutine handle has to be closed using `gocancel()`
 otherwise it will result in a memory leak.
 
-In case of error `go()` returns `NULL` and sets `errno` to one of the following
-values:
-
-* `ENOMEM`: Not enough memory.
+If there's not enough memory available to allocate the stack for the new
+coroutine `go()` returns `NULL`.
 
 ## Cancel a coroutine
 
@@ -247,6 +245,7 @@ ETIMEDOUT.
 Deadline -1 means "Never time out."
 
 Deadline 0 means "Perform the operation immediately. If not possile return
+
 ETIMEDOUT." This is different to deadline of `now()` where the operation may
 not even be attempted.
 
