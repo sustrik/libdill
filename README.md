@@ -12,7 +12,7 @@ coroutine void foo(int arg1, int arg2, int arg3) {
 
 ## Launch a coroutine
 
-To start a coroutine use 'go' keyword. Expression returns a coroutine handle.
+To start a coroutine use `go` keyword. Expression returns a coroutine handle.
 
 ```
 coro cr = go(foo(1, 2, 3));
@@ -33,7 +33,7 @@ coroutine `go()` returns `NULL`.
 To cancel a coroutine use `gocancel()` function. This function deallocates
 resources owned by the coroutine, therefore it has to be called even for
 coroutines that have already finished executing. Failure to do so results
-in resource leaks.
+in resource leak.
 
 ```
 int gocancel(coro *crs, int ncrs, int64_t deadline);
@@ -54,17 +54,17 @@ int rc = gocancel(crs, 2, now() + 1000);
 
 Coroutines being canceled will get grace period to run until the deadline
 expires. Afterwards they will be canceled by force, i.e. all blocking calls
-in the coroutine will return ECANCELED error.
+in the coroutine will return `ECANCELED` error.
 
-Exact algorithm of this function is as follows:
+The exact algorithm for this function is as follows:
 
 1. If all the coroutines are already finished it succeeds straight away.
 2. If not so it waits until the deadline. If all coroutines finish during
    this grace period the function succeeds immediately afterwards.
 3. Otherwise it "kills" the remaining coroutines. What that means is that
-   all function calls in the coroutine in question from that point on will
+   all function calls inside the coroutine in question from that point on will
    fail with `ECANCELED` error.
-4. Finally, `gocancel()` will wait until all the "killed" coroutines exit.
+4. Finally, `gocancel()` waits until all the "killed" coroutines exit.
    It itself will succeed immediately afterwards.
 
 In case of success `gocancel()` returns 0. In case or error it returns -1 and
@@ -94,7 +94,7 @@ sets `errno` to one of the following values:
 
 Semantics of channel are identical to semantics of channels in Go language.
 
-To create a channel use 'channel' function:
+To create a channel use `channel()` function:
 
 ```
 chan channel(size_t item_size, size_t buffer_size);
@@ -160,8 +160,8 @@ int chdone(chan ch);
 ```
 
 Once this function is called all subsequent attemps to send to this channel
-will result in EPIPE error. After all the items are received from the channel
-all the subsequent attemps to receive will fail with EPIPE error.
+will result in `EPIPE` error. After all the items are received from the channel
+all the subsequent attemps to receive will fail with `EPIPE` error.
 
 In case of success the function returns 0. In case of error it returns -1 and
 sets `errno` to one of the following values:
@@ -191,8 +191,8 @@ The channel is deallocated only after all handles referring to it are closed.
 
 ## Working with multiple channels
 
-To multiplex several channel operations use 'choose' function. Its semantics
-closely mimic semantics of Golang's 'select' statement.
+To multiplex several channel operations use `choose()` function. Its semantics
+closely mimic semantics of Go's `select` statement.
 
 ```
 int choose(struct chclause *cls, int ncls, int64_t deadline);
@@ -241,26 +241,25 @@ to one of the following values:
 
 Libdill uses deadlines rather than timeouts. Deadline is a specific
 point in time when the function should be canceled. To create a deadline
-use 'now' function. The result it in milliseconds, thus `now() + 1000` means
-one second from now onward.
+use `now()` function. The result is in milliseconds, thus `now() + 1000` means
+"one second from now onward".
 
 If deadline is reached the function in question fails and sets `errno` to
-ETIMEDOUT.
+`ETIMEDOUT`.
 
 Deadline -1 means "Never time out."
 
 Deadline 0 means "Perform the operation immediately. If not possile return
-
-ETIMEDOUT." This is different to deadline of `now()` where the operation may
-not even be attempted.
+`ETIMEDOUT`." This is different to deadline of `now()` where the operation 
+is not guaranteed to be attempted.
 
 ## Sleeping
 
-To sleep until deadline expires use 'msleep' function:
+To sleep until deadline expires use `msleep()` function:
 
 `int rc = msleep(now() + 1000);`
 
-The function return 0 if it succeeds. In case of error it returns -1 and
+The function returns 0 if it succeeds. In case of error it returns -1 and
 sets errno to one of the following values:
 
 * `ECANCELED`: Current coroutine was canceled by its owner.
@@ -274,7 +273,7 @@ Wait for a file descriptor:
 Libdill tries to minimise user/kernel mode transitions by caching some
 information about file descriptors. After closing a file descriptor you MUST
 call `fdclean(fd)` function to clean the associated cache. Also, you MUST use
-`mfork` function instead of standard `fork`.
+`mfork()` function instead of standard `fork`.
 
 On success, the function returns a combinatation of `FDW_IN`, `FDW_OUT` and
 `FDW_ERR`. On error it returns -1 and sets `errno` to one of the following
@@ -300,8 +299,8 @@ To retrieve it use `cls()` function:
 void *cls();
 ```
 
-When coroutine is launched the value of coroutine-local storage is guaranteed
-to be NULL.
+When new coroutine is launched the value of coroutine-local storage is
+guaranteed to be `NULL`.
 
 ## Debugging
 
