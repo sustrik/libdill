@@ -248,10 +248,12 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     if(available > 0) {
         int chosen = available == 1 ? 0 : (int)(random() % available);
         struct dill_clause *cl = &cls[cls[chosen].aidx];
-        if(cl->op == CHSEND)
-            dill_enqueue(cl->channel, cl->val);
-        else
-            dill_dequeue(cl->channel, cl->val);
+        if(cl->error == 0) {
+            if(cl->op == CHSEND)
+                dill_enqueue(cl->channel, cl->val);
+            else
+                dill_dequeue(cl->channel, cl->val);
+        }
         dill_resume(dill_running, dill_choose_index(cl));
         res = dill_suspend(NULL);
         goto finish;
