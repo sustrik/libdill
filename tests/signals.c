@@ -69,13 +69,17 @@ int main() {
     signal(SIGNAL, signal_handler);
 
     chan sendch = channel(sizeof(char), 0);
+    assert(sendch);
     chan recvch = channel(sizeof(char), 0);
+    assert(recvch);
 
     int i;
     for(i = 0; i < COUNT; ++i) {
         coro crs[2];
         crs[0] = go(sender(sendch));
+        assert(crs[0]);
         crs[1] = go(receiver(recvch));
+        assert(crs[1]);
         char c = SIGNAL;
         int rc = chsend(sendch, &c, sizeof(c), -1);
         assert(rc == 0);

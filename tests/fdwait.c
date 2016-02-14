@@ -73,6 +73,7 @@ int main() {
 
     /* Check cancelation. */
     coro cr1 = go(cancel(fds[0]));
+    assert(cr1);
     gocancel(&cr1, 1, 0);
 
     /* Check for in. */
@@ -96,6 +97,7 @@ int main() {
     /* Two interleaved deadlines. */
     int64_t start = now();
     coro cr2 = go(trigger(fds[0], start + 50));
+    assert(cr2);
     rc = fdwait(fds[1], FDW_IN, start + 90);
     assert(rc >= 0);
     assert(rc == FDW_IN);

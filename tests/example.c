@@ -39,8 +39,11 @@ coroutine void worker(int count, const char *text) {
 int main() {
     coro crs[3];
     crs[0] = go(worker(4, "a"));
+    assert(crs[0]);
     crs[1] = go(worker(2, "b"));
+    assert(crs[1]);
     crs[2] = go(worker(3, "c"));
+    assert(crs[2]);
     gocancel(crs, 3, -1);
     return 0;
 }

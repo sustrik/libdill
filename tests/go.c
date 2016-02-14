@@ -112,8 +112,11 @@ int main() {
 
     /* Test whether immediate cancelation works. */
     crs[0] = go(worker2());
+    assert(crs[0]);
     crs[1] = go(worker2());
+    assert(crs[1]);
     crs[2] = go(worker2());
+    assert(crs[2]);
     rc = msleep(now() + 30);
     assert(rc == 0);
     rc = gocancel(crs, 3, 0);
@@ -122,19 +125,28 @@ int main() {
 
     /* Test cancelation with infinite deadline. */
     crs[0] = go(worker3());
+    assert(crs[0]);
     crs[1] = go(worker3());
+    assert(crs[1]);
     crs[2] = go(worker3());
+    assert(crs[2]);
     rc = gocancel(crs, 3, -1);
     assert(rc == 0);
     assert(worker3_done == 3);
 
     /* Test cancelation with a finite deadline. */
     crs[0] = go(worker4(now() + 50));
+    assert(crs[0]);
     crs[1] = go(worker4(now() + 50));
+    assert(crs[1]);
     crs[2] = go(worker4(now() + 50));
+    assert(crs[2]);
     crs[3] = go(worker4(now() + 200));
+    assert(crs[3]);
     crs[4] = go(worker4(now() + 200));
+    assert(crs[4]);
     crs[5] = go(worker4(now() + 200));
+    assert(crs[5]);
     rc = gocancel(crs, 6, now() + 100);
     assert(rc == 0);
     assert(worker4_finished == 3);
@@ -142,6 +154,7 @@ int main() {
 
     /* Test canceling a cancelation. */
     coro cr = go(worker5());
+    assert(cr);
     rc = gocancel(&cr, 1, now() + 50);
     assert(rc == 0);
 

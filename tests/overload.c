@@ -41,11 +41,15 @@ coroutine void relay(chan src, chan dst) {
 
 int main() {
     chan left = channel(sizeof(int), 0);
+    assert(left);
     chan right = channel(sizeof(int), 0);
+    assert(right);
 
     coro crs[2];
     crs[0] = go(relay(left, right));
+    assert(crs[0]);
     crs[1] = go(relay(right, left));
+    assert(crs[1]);
 
     int val = 42;
     int rc = chsend(left, &val, sizeof(val), -1);

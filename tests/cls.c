@@ -53,6 +53,7 @@ int main() {
 
     /* Check whether CLS is not messed up by launching a new coroutine. */
     coro cr = go(worker());
+    assert(cr);
     assert(cls() == &dummy1);
     int rc = yield();
     assert(rc == 0);
