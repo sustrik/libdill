@@ -195,6 +195,13 @@ To multiplex several channel operations use `choose()` function. Its semantics
 closely mimic semantics of Go's `select` statement.
 
 ```
+struct chclause {
+    chan channel;
+    int op;
+    void *val;
+    size_t len;
+};
+
 int choose(struct chclause *cls, int ncls, int64_t deadline);
 ```
 
@@ -250,8 +257,8 @@ If deadline is reached the function in question fails and sets `errno` to
 Deadline -1 means "Never time out."
 
 Deadline 0 means "Perform the operation immediately. If not possile return
-`ETIMEDOUT`." This is different to deadline of `now()` where the operation 
-is not guaranteed to be attempted.
+`ETIMEDOUT`." This is different from deadline of `now()` where there is no
+guarantee that the operation will be attempted before timing out.
 
 ## Sleeping
 
