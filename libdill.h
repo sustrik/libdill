@@ -40,7 +40,7 @@
 /*  www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html  */
 
 /*  The current interface version. */
-#define DILL_VERSION_CURRENT 1
+#define DILL_VERSION_CURRENT 2
 
 /*  The latest revision of the current interface. */
 #define DILL_VERSION_REVISION 0
