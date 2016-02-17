@@ -34,8 +34,8 @@
 #include "timer.h"
 #include "utils.h"
 
-/* Used to store debug info while gocancel() is blocked. */
-struct dill_gocanceldata {
+/* Used to store debug info while stop() is blocked. */
+struct dill_stopdata {
     struct dill_cr **hndls;
     int nhndls;
 };

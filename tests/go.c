@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -86,7 +86,7 @@ coroutine void worker6(void) {
 
 coroutine void worker5(void) {
     handle hndl = go(worker6());
-    int rc = gocancel(&hndl, 1, now() + 1000);
+    int rc = stop(&hndl, 1, now() + 1000);
     assert(rc == -1 && errno == ECANCELED);
 }
 
@@ -95,7 +95,7 @@ int main() {
     hndls3[0] = go(worker(3, 7));
     hndls3[1] = go(worker(1, 11));
     hndls3[2] = go(worker(2, 5));
-    int rc = gocancel(hndls3, 3, -1);
+    int rc = stop(hndls3, 3, -1);
     assert(rc == 0);
     assert(sum == 42);
 
@@ -106,7 +106,8 @@ int main() {
         hndls2[i] = go(dummy());
     rc = msleep(now() + 100);
     assert(rc == 0);
-    gocancel(hndls2, 20, -1);
+    rc = stop(hndls2, 20, -1);
+    assert(rc == 0);
 
     handle hndls[6];
 
@@ -119,7 +120,7 @@ int main() {
     assert(hndls[2]);
     rc = msleep(now() + 30);
     assert(rc == 0);
-    rc = gocancel(hndls, 3, 0);
+    rc = stop(hndls, 3, 0);
     assert(rc == 0);
     assert(worker2_done == 3);
 
@@ -130,7 +131,7 @@ int main() {
     assert(hndls[1]);
     hndls[2] = go(worker3());
     assert(hndls[2]);
-    rc = gocancel(hndls, 3, -1);
+    rc = stop(hndls, 3, -1);
     assert(rc == 0);
     assert(worker3_done == 3);
 
@@ -147,7 +148,7 @@ int main() {
     assert(hndls[4]);
     hndls[5] = go(worker4(now() + 200));
     assert(hndls[5]);
-    rc = gocancel(hndls, 6, now() + 100);
+    rc = stop(hndls, 6, now() + 100);
     assert(rc == 0);
     assert(worker4_finished == 3);
     assert(worker4_canceled == 3);
@@ -155,7 +156,7 @@ int main() {
     /* Test canceling a cancelation. */
     handle hndl = go(worker5());
     assert(hndl);
-    rc = gocancel(&hndl, 1, now() + 50);
+    rc = stop(&hndl, 1, now() + 50);
     assert(rc == 0);
 
     /* Let the test running for a while to detect possible errors in

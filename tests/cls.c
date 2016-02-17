@@ -57,7 +57,8 @@ int main() {
     assert(cls() == &dummy1);
     int rc = yield();
     assert(rc == 0);
-    gocancel(&hndl, 1, -1);
+    rc = stop(&hndl, 1, -1);
+    assert(rc == 0);
 
     /* Check whether CLS is not messed up when coroutine terminates. */
     assert(cls() == &dummy1);

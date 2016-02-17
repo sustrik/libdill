@@ -74,7 +74,8 @@ int main() {
     /* Check cancelation. */
     handle hndl1 = go(cancel(fds[0]));
     assert(hndl1);
-    gocancel(&hndl1, 1, 0);
+    rc = stop(&hndl1, 1, 0);
+    assert(rc == 0);
 
     /* Check for in. */
     ssize_t sz = send(fds[1], "A", 1, 0);
@@ -103,7 +104,8 @@ int main() {
     assert(rc == FDW_IN);
     diff = now() - start;
     assert(diff > 30 && diff < 70);
-    gocancel(&hndl2, 1, -1);
+    rc = stop(&hndl2, 1, -1);
+    assert(rc == 0);
 
     close(fds[0]);
     close(fds[1]);

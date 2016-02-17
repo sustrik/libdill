@@ -33,7 +33,7 @@
 #include "stack.h"
 #include "utils.h"
 
-DILL_CT_ASSERT(sizeof(struct dill_gocanceldata) <= DILL_OPAQUE_SIZE);
+DILL_CT_ASSERT(sizeof(struct dill_stopdata) <= DILL_OPAQUE_SIZE);
 
 volatile int dill_unoptimisable1 = 1;
 volatile void *dill_unoptimisable2 = NULL;
@@ -131,7 +131,7 @@ void dill_epilogue(void) {
     dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
     dill_running->finished = 1;
     if(dill_running->canceler) {
-        /* If there's gocancel() already waiting for this coroutine,
+        /* If there's stop() already waiting for this coroutine,
            remove it from its list and resume it if there's no other
            coroutine left it the list. */
         dill_list_erase(&dill_running->canceler->tocancel,
@@ -140,7 +140,7 @@ void dill_epilogue(void) {
             dill_resume(dill_running->canceler, 0);
     }
     else {
-        /* If gocancel() wasn't call yet wait for it. */
+        /* If stop() wasn't call yet wait for it. */
         int rc = dill_suspend(NULL);
         dill_assert(rc == 0);
     }
@@ -171,9 +171,9 @@ int dill_yield(const char *current) {
     return -1;
 }
 
-int dill_gocancel(handle *hndls, int nhndls, int64_t deadline,
+int dill_stop(handle *hndls, int nhndls, int64_t deadline,
       const char *current) {
-    dill_trace(current, "gocancel()");
+    dill_trace(current, "stop()");
     if(dill_slow(nhndls == 0))
         return 0;
     if(dill_slow(!hndls)) {
@@ -181,11 +181,10 @@ int dill_gocancel(handle *hndls, int nhndls, int64_t deadline,
         return -1;
     }
     /* Set debug info. */
-    dill_startop(&dill_running->debug, DILL_GOCANCEL, current);
-    struct dill_gocanceldata *gcd =
-        (struct dill_gocanceldata*)dill_running->opaque;
-    gcd->hndls = hndls;
-    gcd->nhndls = nhndls;
+    dill_startop(&dill_running->debug, DILL_STOP, current);
+    struct dill_stopdata *sd = (struct dill_stopdata*)dill_running->opaque;
+    sd->hndls = hndls;
+    sd->nhndls = nhndls;
     /* Add all not yet finished coroutines to a list. Let finished ones
        deallocate themselves. */
     dill_list_init(&dill_running->tocancel);

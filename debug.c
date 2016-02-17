@@ -142,21 +142,21 @@ void goredump(void) {
                     sprintf(&buf[pos], ")");
                 }
                 break;
-            case DILL_GOCANCEL:
+            case DILL_STOP:
                 {
-                    struct dill_gocanceldata *gcd =
-                        (struct dill_gocanceldata*)cr->opaque;
+                    struct dill_stopdata *sd =
+                        (struct dill_stopdata*)cr->opaque;
                     int pos = 0;
-                    pos += sprintf(&buf[pos], "gocancel(");
+                    pos += sprintf(&buf[pos], "stop(");
                     int first = 1;
                     int i;
-                    for(i = 0; i != gcd->nhndls; ++i) {
+                    for(i = 0; i != sd->nhndls; ++i) {
                         if(first)
                             first = 0;
                         else
                             pos += sprintf(&buf[pos], ",");
                         pos += sprintf(&buf[pos], "{%d}",
-                            gcd->hndls[i]->debug.id);
+                            sd->hndls[i]->debug.id);
                     }
                     sprintf(&buf[pos], ")");
                 }

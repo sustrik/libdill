@@ -87,7 +87,8 @@ int main() {
         rc = chrecv(recvch, &signo, sizeof(signo), -1);
         assert(rc == 0);
         assert(signo == SIGNAL);
-        gocancel(hndls, 2, -1);
+        rc = stop(hndls, 2, -1);
+        assert(rc == 0);
     }
 
     return 0;

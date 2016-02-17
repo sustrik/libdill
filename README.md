@@ -19,10 +19,10 @@ handle h = go(foo(1, 2, 3));
 ```
 
 Coroutines are cooperatively scheduled. Following functions are used as
-scheduler switching points: `go()`, `yield()`, `gocancel()`, `chsend()`,
+scheduler switching points: `go()`, `yield()`, `stop()`, `chsend()`,
 `chrecv()`, `choose()`, `msleep()` and `fdwait()`.
 
-Keep in mind that each coroutine handle has to be closed using `gocancel()`
+Keep in mind that each coroutine handle has to be closed using `stop()`
 otherwise it will result in a memory leak.
 
 If there's not enough memory available to allocate the stack for the new
@@ -30,13 +30,13 @@ coroutine `go()` returns `NULL`.
 
 ## Cancel a coroutine
 
-To cancel a coroutine use `gocancel()` function. This function deallocates
+To cancel a coroutine use `stop()` function. This function deallocates
 resources owned by the coroutine, therefore it has to be called even for
 coroutines that have already finished executing. Failure to do so results
 in resource leak.
 
 ```
-int gocancel(handle *hndls, int nhndls, int64_t deadline);
+int stop(handle *hndls, int nhndls, int64_t deadline);
 ```
 
 The function cancels `nhndls` coroutines in the array pointed to be `hndls`.
@@ -49,7 +49,7 @@ Example:
 handle hndls[2];
 hndls[0] = go(fx());
 hndls[1] = go(fx());
-int rc = gocancel(hndls, 2, now() + 1000);
+int rc = stop(hndls, 2, now() + 1000);
 ```
 
 Coroutines being canceled will get grace period to run until the deadline
@@ -64,10 +64,10 @@ The exact algorithm for this function is as follows:
 3. Otherwise it "kills" the remaining coroutines. What that means is that
    all function calls inside the coroutine in question from that point on will
    fail with `ECANCELED` error.
-4. Finally, `gocancel()` waits until all the "killed" coroutines exit.
+4. Finally, `stop()` waits until all the "killed" coroutines exit.
    It itself will succeed immediately afterwards.
 
-In case of success `gocancel()` returns 0. In case or error it returns -1 and
+In case of success `stop()` returns 0. In case or error it returns -1 and
 sets errno to one of the following values:
 
 * `EINVAL`: Invalid arguments.

@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -44,7 +44,8 @@ int main() {
     assert(hndls[1]);
     hndls[2] = go(worker(3, "c"));
     assert(hndls[2]);
-    gocancel(hndls, 3, -1);
+    int rc = stop(hndls, 3, -1);
+    assert(rc == 0);
     return 0;
 }
 

@@ -122,7 +122,7 @@ DILL_EXPORT void dill_epilogue(void);
 #define FDW_ERR 4
 
 #define yield() dill_yield(__FILE__ ":" dill_string(__LINE__))
-#define gocancel(crs, ncrs, deadline) dill_gocancel((crs), (ncrs), (deadline), \
+#define stop(crs, ncrs, deadline) dill_stop((crs), (ncrs), (deadline), \
     __FILE__ ":" dill_string(__LINE__))
 #define msleep(deadline) dill_msleep((deadline),\
     __FILE__ ":" dill_string(__LINE__))
@@ -130,7 +130,7 @@ DILL_EXPORT void dill_epilogue(void);
     __FILE__ ":" dill_string(__LINE__))
 
 DILL_EXPORT int dill_yield(const char *current);
-DILL_EXPORT int dill_gocancel(handle *hndls, int nhndls, int64_t deadline,
+DILL_EXPORT int dill_stop(handle *hndls, int nhndls, int64_t deadline,
     const char *current);
 DILL_EXPORT int dill_msleep(int64_t deadline, const char *current);
 DILL_EXPORT void fdclean(int fd);

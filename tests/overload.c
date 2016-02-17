@@ -44,21 +44,18 @@ int main() {
     assert(left);
     chan right = channel(sizeof(int), 0);
     assert(right);
-
     handle hndls[2];
     hndls[0] = go(relay(left, right));
     assert(hndls[0]);
     hndls[1] = go(relay(right, left));
     assert(hndls[1]);
-
     int val = 42;
     int rc = chsend(left, &val, sizeof(val), -1);
     assert(rc == 0);
-
     /* Fail with exit code 128+SIGALRM if we deadlock */
     alarm(1);
-
-    gocancel(hndls, 2, now() + 500);
+    rc = stop(hndls, 2, now() + 500);
+    assert(rc == 0);
 
     return 0;
 }

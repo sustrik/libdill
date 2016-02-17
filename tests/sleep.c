@@ -69,7 +69,8 @@ int main() {
     rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 40);
-    gocancel(hndls, 4, 1000);
+    rc = stop(hndls, 4, 1000);
+    assert(rc == 0);
 
     return 0;
 }
