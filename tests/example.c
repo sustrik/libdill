@@ -37,14 +37,14 @@ coroutine void worker(int count, const char *text) {
 }
 
 int main() {
-    coro crs[3];
-    crs[0] = go(worker(4, "a"));
-    assert(crs[0]);
-    crs[1] = go(worker(2, "b"));
-    assert(crs[1]);
-    crs[2] = go(worker(3, "c"));
-    assert(crs[2]);
-    gocancel(crs, 3, -1);
+    handle hndls[3];
+    hndls[0] = go(worker(4, "a"));
+    assert(hndls[0]);
+    hndls[1] = go(worker(2, "b"));
+    assert(hndls[1]);
+    hndls[2] = go(worker(3, "c"));
+    assert(hndls[2]);
+    gocancel(hndls, 3, -1);
     return 0;
 }
 

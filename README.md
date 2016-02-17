@@ -15,7 +15,7 @@ coroutine void foo(int arg1, int arg2, int arg3) {
 To start a coroutine use `go` keyword. Expression returns a coroutine handle.
 
 ```
-coro cr = go(foo(1, 2, 3));
+handle h = go(foo(1, 2, 3));
 ```
 
 Coroutines are cooperatively scheduled. Following functions are used as
@@ -36,20 +36,20 @@ coroutines that have already finished executing. Failure to do so results
 in resource leak.
 
 ```
-int gocancel(coro *crs, int ncrs, int64_t deadline);
+int gocancel(handle *hndls, int nhndls, int64_t deadline);
 ```
 
-The function cancels `ncrs` coroutines in the array pointed to be `crs`.
+The function cancels `nhndls` coroutines in the array pointed to be `hndls`.
 Third argument is a deadline. For detailed information about deadlines check
 "Deadlines" section of this manual.
 
 Example:
 
 ```
-coro crs[2];
-crs[0] = go(fx());
-crs[1] = go(fx());
-int rc = gocancel(crs, 2, now() + 1000);
+handle hndls[2];
+hndls[0] = go(fx());
+hndls[1] = go(fx());
+int rc = gocancel(hndls, 2, now() + 1000);
 ```
 
 Coroutines being canceled will get grace period to run until the deadline
@@ -71,8 +71,8 @@ In case of success `gocancel()` returns 0. In case or error it returns -1 and
 sets errno to one of the following values:
 
 * `EINVAL`: Invalid arguments.
-* `ECANCELED`: Current coroutine was canceled by its owner. Coroutines in `crs`
-   array are cleanly canceled even in the case of this error.
+* `ECANCELED`: Current coroutine was canceled by its owner. Coroutines in
+   `hndls` array are cleanly canceled even in the case of this error.
 
 ## Yield CPU to other coroutines
 

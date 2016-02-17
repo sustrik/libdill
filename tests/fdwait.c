@@ -47,7 +47,7 @@ coroutine void trigger(int fd, int64_t deadline) {
 }
 
 int main() {
-    /* Create a pair of file descriptors for testing. */
+    /* Create a pair of file deshndliptors for testing. */
     int fds[2];
     int rc = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
     assert(rc == 0);
@@ -72,9 +72,9 @@ int main() {
     assert(diff > -20 && diff < 20);
 
     /* Check cancelation. */
-    coro cr1 = go(cancel(fds[0]));
-    assert(cr1);
-    gocancel(&cr1, 1, 0);
+    handle hndl1 = go(cancel(fds[0]));
+    assert(hndl1);
+    gocancel(&hndl1, 1, 0);
 
     /* Check for in. */
     ssize_t sz = send(fds[1], "A", 1, 0);
@@ -96,14 +96,14 @@ int main() {
 
     /* Two interleaved deadlines. */
     int64_t start = now();
-    coro cr2 = go(trigger(fds[0], start + 50));
-    assert(cr2);
+    handle hndl2 = go(trigger(fds[0], start + 50));
+    assert(hndl2);
     rc = fdwait(fds[1], FDW_IN, start + 90);
     assert(rc >= 0);
     assert(rc == FDW_IN);
     diff = now() - start;
     assert(diff > 30 && diff < 70);
-    gocancel(&cr2, 1, -1);
+    gocancel(&hndl2, 1, -1);
 
     close(fds[0]);
     close(fds[1]);

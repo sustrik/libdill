@@ -83,12 +83,12 @@ DILL_EXPORT int64_t now(void);
 /*  Coroutines                                                                */
 /******************************************************************************/
 
-typedef struct dill_cr *coro;
+typedef struct dill_cr *handle;
 
 DILL_EXPORT extern volatile int dill_unoptimisable1;
 DILL_EXPORT extern volatile void *dill_unoptimisable2;
 
-DILL_EXPORT int dill_prologue(coro *cr, const char *created);
+DILL_EXPORT int dill_prologue(handle *cr, const char *created);
 DILL_EXPORT void dill_epilogue(void);
 
 #define dill_string2(x) #x
@@ -130,7 +130,7 @@ DILL_EXPORT void dill_epilogue(void);
     __FILE__ ":" dill_string(__LINE__))
 
 DILL_EXPORT int dill_yield(const char *current);
-DILL_EXPORT int dill_gocancel(coro *crs, int ncrs, int64_t deadline,
+DILL_EXPORT int dill_gocancel(handle *hndls, int nhndls, int64_t deadline,
     const char *current);
 DILL_EXPORT int dill_msleep(int64_t deadline, const char *current);
 DILL_EXPORT void fdclean(int fd);

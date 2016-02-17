@@ -150,13 +150,13 @@ void goredump(void) {
                     pos += sprintf(&buf[pos], "gocancel(");
                     int first = 1;
                     int i;
-                    for(i = 0; i != gcd->ncrs; ++i) {
+                    for(i = 0; i != gcd->nhndls; ++i) {
                         if(first)
                             first = 0;
                         else
                             pos += sprintf(&buf[pos], ",");
                         pos += sprintf(&buf[pos], "{%d}",
-                            gcd->crs[i]->debug.id);
+                            gcd->hndls[i]->debug.id);
                     }
                     sprintf(&buf[pos], ")");
                 }

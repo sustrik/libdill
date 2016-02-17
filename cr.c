@@ -171,11 +171,12 @@ int dill_yield(const char *current) {
     return -1;
 }
 
-int dill_gocancel(coro *crs, int ncrs, int64_t deadline, const char *current) {
+int dill_gocancel(handle *hndls, int nhndls, int64_t deadline,
+      const char *current) {
     dill_trace(current, "gocancel()");
-    if(dill_slow(ncrs == 0))
+    if(dill_slow(nhndls == 0))
         return 0;
-    if(dill_slow(!crs)) {
+    if(dill_slow(!hndls)) {
         errno = EINVAL;
         return -1;
     }
@@ -183,19 +184,20 @@ int dill_gocancel(coro *crs, int ncrs, int64_t deadline, const char *current) {
     dill_startop(&dill_running->debug, DILL_GOCANCEL, current);
     struct dill_gocanceldata *gcd =
         (struct dill_gocanceldata*)dill_running->opaque;
-    gcd->crs = crs;
-    gcd->ncrs = ncrs;
+    gcd->hndls = hndls;
+    gcd->nhndls = nhndls;
     /* Add all not yet finished coroutines to a list. Let finished ones
        deallocate themselves. */
     dill_list_init(&dill_running->tocancel);
     int i;
-    for(i = 0; i != ncrs; ++i) {
-        if(crs[i]->finished) {
-            dill_resume(crs[i], 0);
+    for(i = 0; i != nhndls; ++i) {
+        if(hndls[i]->finished) {
+            dill_resume(hndls[i], 0);
             continue;
         }
-        crs[i]->canceler = dill_running;
-        dill_list_insert(&dill_running->tocancel, &crs[i]->tocancel_item, NULL);
+        hndls[i]->canceler = dill_running;
+        dill_list_insert(&dill_running->tocancel,
+            &hndls[i]->tocancel_item, NULL);
     }
     /* If all coroutines are finished return straight away. */
     int canceled = dill_running->canceled;

@@ -85,77 +85,77 @@ coroutine void worker6(void) {
 }
 
 coroutine void worker5(void) {
-    coro cr = go(worker6());
-    int rc = gocancel(&cr, 1, now() + 1000);
+    handle hndl = go(worker6());
+    int rc = gocancel(&hndl, 1, now() + 1000);
     assert(rc == -1 && errno == ECANCELED);
 }
 
 int main() {
-    coro crs3[3];
-    crs3[0] = go(worker(3, 7));
-    crs3[1] = go(worker(1, 11));
-    crs3[2] = go(worker(2, 5));
-    int rc = gocancel(crs3, 3, -1);
+    handle hndls3[3];
+    hndls3[0] = go(worker(3, 7));
+    hndls3[1] = go(worker(1, 11));
+    hndls3[2] = go(worker(2, 5));
+    int rc = gocancel(hndls3, 3, -1);
     assert(rc == 0);
     assert(sum == 42);
 
     /* Test whether stack deallocation works. */
     int i;
-    coro crs2[20];
+    handle hndls2[20];
     for(i = 0; i != 20; ++i)
-        crs2[i] = go(dummy());
+        hndls2[i] = go(dummy());
     rc = msleep(now() + 100);
     assert(rc == 0);
-    gocancel(crs2, 20, -1);
+    gocancel(hndls2, 20, -1);
 
-    coro crs[6];
+    handle hndls[6];
 
     /* Test whether immediate cancelation works. */
-    crs[0] = go(worker2());
-    assert(crs[0]);
-    crs[1] = go(worker2());
-    assert(crs[1]);
-    crs[2] = go(worker2());
-    assert(crs[2]);
+    hndls[0] = go(worker2());
+    assert(hndls[0]);
+    hndls[1] = go(worker2());
+    assert(hndls[1]);
+    hndls[2] = go(worker2());
+    assert(hndls[2]);
     rc = msleep(now() + 30);
     assert(rc == 0);
-    rc = gocancel(crs, 3, 0);
+    rc = gocancel(hndls, 3, 0);
     assert(rc == 0);
     assert(worker2_done == 3);
 
     /* Test cancelation with infinite deadline. */
-    crs[0] = go(worker3());
-    assert(crs[0]);
-    crs[1] = go(worker3());
-    assert(crs[1]);
-    crs[2] = go(worker3());
-    assert(crs[2]);
-    rc = gocancel(crs, 3, -1);
+    hndls[0] = go(worker3());
+    assert(hndls[0]);
+    hndls[1] = go(worker3());
+    assert(hndls[1]);
+    hndls[2] = go(worker3());
+    assert(hndls[2]);
+    rc = gocancel(hndls, 3, -1);
     assert(rc == 0);
     assert(worker3_done == 3);
 
     /* Test cancelation with a finite deadline. */
-    crs[0] = go(worker4(now() + 50));
-    assert(crs[0]);
-    crs[1] = go(worker4(now() + 50));
-    assert(crs[1]);
-    crs[2] = go(worker4(now() + 50));
-    assert(crs[2]);
-    crs[3] = go(worker4(now() + 200));
-    assert(crs[3]);
-    crs[4] = go(worker4(now() + 200));
-    assert(crs[4]);
-    crs[5] = go(worker4(now() + 200));
-    assert(crs[5]);
-    rc = gocancel(crs, 6, now() + 100);
+    hndls[0] = go(worker4(now() + 50));
+    assert(hndls[0]);
+    hndls[1] = go(worker4(now() + 50));
+    assert(hndls[1]);
+    hndls[2] = go(worker4(now() + 50));
+    assert(hndls[2]);
+    hndls[3] = go(worker4(now() + 200));
+    assert(hndls[3]);
+    hndls[4] = go(worker4(now() + 200));
+    assert(hndls[4]);
+    hndls[5] = go(worker4(now() + 200));
+    assert(hndls[5]);
+    rc = gocancel(hndls, 6, now() + 100);
     assert(rc == 0);
     assert(worker4_finished == 3);
     assert(worker4_canceled == 3);
 
     /* Test canceling a cancelation. */
-    coro cr = go(worker5());
-    assert(cr);
-    rc = gocancel(&cr, 1, now() + 50);
+    handle hndl = go(worker5());
+    assert(hndl);
+    rc = gocancel(&hndl, 1, now() + 50);
     assert(rc == 0);
 
     /* Let the test running for a while to detect possible errors in

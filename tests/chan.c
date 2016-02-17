@@ -114,33 +114,33 @@ int main() {
     /* Receiver waits for sender. */
     chan ch1 = channel(sizeof(int), 0);
     assert(ch1);
-    coro cr1 = go(sender(chdup(ch1), 1, 333));
-    assert(cr1);
+    handle hndl1 = go(sender(chdup(ch1), 1, 333));
+    assert(hndl1);
     int rc = chrecv(ch1, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 333);
     chclose(ch1);
-    gocancel(&cr1, 1, -1);
+    gocancel(&hndl1, 1, -1);
 
     /* Sender waits for receiver. */
     chan ch2 = channel(sizeof(int), 0);
     assert(ch2);
-    coro cr2 = go(sender(chdup(ch2), 0, 444));
-    assert(cr2);
+    handle hndl2 = go(sender(chdup(ch2), 0, 444));
+    assert(hndl2);
     rc = chrecv(ch2, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 444);
     chclose(ch2);
-    gocancel(&cr2, 1, -1);
+    gocancel(&hndl2, 1, -1);
 
     /* Test two simultaneous senders. */
     chan ch3 = channel(sizeof(int), 0);
     assert(ch3);
-    coro cr3[2];
-    cr3[0] = go(sender(chdup(ch3), 0, 888));
-    assert(cr3[0]);
-    cr3[1] = go(sender(chdup(ch3), 0, 999));
-    assert(cr3[1]);
+    handle hndl3[2];
+    hndl3[0] = go(sender(chdup(ch3), 0, 888));
+    assert(hndl3[0]);
+    hndl3[1] = go(sender(chdup(ch3), 0, 999));
+    assert(hndl3[1]);
     rc = chrecv(ch3, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 888);
@@ -150,16 +150,16 @@ int main() {
     assert(rc == 0);
     assert(val == 999);
     chclose(ch3);
-    gocancel(cr3, 2, -1);
+    gocancel(hndl3, 2, -1);
 
     /* Test two simultaneous receivers. */
     chan ch4 = channel(sizeof(int), 0);
     assert(ch4);
-    coro cr4[2];
-    cr4[0] = go(receiver(chdup(ch4), 333));
-    assert(cr4[0]);
-    cr4[1] = go(receiver(chdup(ch4), 444));
-    assert(cr4[1]);
+    handle hndl4[2];
+    hndl4[0] = go(receiver(chdup(ch4), 333));
+    assert(hndl4[0]);
+    hndl4[1] = go(receiver(chdup(ch4), 444));
+    assert(hndl4[1]);
     val = 333;
     rc = chsend(ch4, &val, sizeof(val), -1);
     assert(rc == 0);
@@ -167,14 +167,14 @@ int main() {
     rc = chsend(ch4, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch4);
-    gocancel(cr4, 2, -1);
+    gocancel(hndl4, 2, -1);
 
     /* Test typed channels. */
-    coro cr5[2];
+    handle hndl5[2];
     chan ch5 = channel(sizeof(char), 0);
     assert(ch5);
-    cr5[0] = go(charsender(chdup(ch5), 111));
-    assert(cr5[0]);
+    hndl5[0] = go(charsender(chdup(ch5), 111));
+    assert(hndl5[0]);
     char charval;
     rc = chrecv(ch5, &charval, sizeof(charval), -1);
     assert(rc == 0);
@@ -183,14 +183,14 @@ int main() {
     chan ch6 = channel(sizeof(struct foo), 0);
     assert(ch6);
     struct foo foo1 = {555, 222};
-    cr5[1] = go(structsender(chdup(ch6), foo1));
-    assert(cr5[1]);
+    hndl5[1] = go(structsender(chdup(ch6), foo1));
+    assert(hndl5[1]);
     struct foo foo2;
     rc = chrecv(ch6, &foo2, sizeof(foo2), -1);
     assert(rc == 0);
     assert(foo2.first == 555 && foo2.second == 222);
     chclose(ch6);
-    gocancel(cr5, 2, -1);
+    gocancel(hndl5, 2, -1);
 
     /* Test message buffering. */
     chan ch7 = channel(sizeof(int), 2);
@@ -275,11 +275,11 @@ int main() {
     assert(ch12);
     chan ch13 = channel(sizeof(int), 0);
     assert(ch13);
-    coro cr6[2];
-    cr6[0] = go(receiver2(chdup(ch12), chdup(ch13)));
-    assert(cr6[0]);
-    cr6[1] = go(receiver2(chdup(ch12), chdup(ch13)));
-    assert(cr6[1]);
+    handle hndl6[2];
+    hndl6[0] = go(receiver2(chdup(ch12), chdup(ch13)));
+    assert(hndl6[0]);
+    hndl6[1] = go(receiver2(chdup(ch12), chdup(ch13)));
+    assert(hndl6[1]);
     rc = chdone(ch12);
     assert(rc == 0);
     rc = chrecv(ch13, &val, sizeof(val), -1);
@@ -290,7 +290,7 @@ int main() {
     assert(val == 0);
     chclose(ch13);
     chclose(ch12);
-    gocancel(cr6, 2, -1);
+    gocancel(hndl6, 2, -1);
 
     /* Test a combination of blocked sender and an item in the channel. */
     chan ch14 = channel(sizeof(int), 1);
@@ -298,8 +298,8 @@ int main() {
     val = 1;
     rc = chsend(ch14, &val, sizeof(val), -1);
     assert(rc == 0);
-    coro cr7 = go(sender(chdup(ch14), 0, 2));
-    assert(cr7);
+    handle hndl7 = go(sender(chdup(ch14), 0, 2));
+    assert(hndl7);
     rc = chrecv(ch14, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 1);
@@ -307,65 +307,65 @@ int main() {
     assert(rc == 0);
     assert(val == 2);
     chclose(ch14);
-    gocancel(&cr7, 1, -1);
+    gocancel(&hndl7, 1, -1);
 
     /* Test whether chdone() unblocks blocked senders. */
     chan ch15 = channel(sizeof(int), 0);
     assert(ch15);
-    coro cr8[3];
-    cr8[0] = go(sender2(chdup(ch15)));
-    assert(cr8[0]);
-    cr8[1] = go(sender2(chdup(ch15)));
-    assert(cr8[1]);
-    cr8[2] = go(sender2(chdup(ch15)));
-    assert(cr8[2]);
+    handle hndl8[3];
+    hndl8[0] = go(sender2(chdup(ch15)));
+    assert(hndl8[0]);
+    hndl8[1] = go(sender2(chdup(ch15)));
+    assert(hndl8[1]);
+    hndl8[2] = go(sender2(chdup(ch15)));
+    assert(hndl8[2]);
     rc = msleep(now() + 50);
     assert(rc == 0);
     rc = chdone(ch15);
     assert(rc == 0);
     chclose(ch15);
-    gocancel(cr8, 3, -1);
+    gocancel(hndl8, 3, -1);
 
     /* Test whether chclose() unblocks blocked senders and receivers. */
     chan ch16 = channel(sizeof(int), 0);
     assert(ch16);
-    coro cr9[2];
-    cr9[0] = go(receiver3(ch16));
-    assert(cr9[0]);
-    cr9[1] = go(receiver3(ch16));
-    assert(cr9[2]);
+    handle hndl9[2];
+    hndl9[0] = go(receiver3(ch16));
+    assert(hndl9[0]);
+    hndl9[1] = go(receiver3(ch16));
+    assert(hndl9[2]);
     rc = msleep(now() + 50);
     assert(rc == 0);
     chclose(ch16);
-    gocancel(cr9, 2, -1);
+    gocancel(hndl9, 2, -1);
 
     /* Test cancelation. */
     chan ch17 = channel(sizeof(int), 0);
     assert(ch17);
-    coro cr10 = go(cancel(chdup(ch17)));
-    assert(cr10);
-    gocancel(&cr10, 1, 0);
+    handle hndl10 = go(cancel(chdup(ch17)));
+    assert(hndl10);
+    gocancel(&hndl10, 1, 0);
     chclose(ch17);
 
     /* Receiver waits for sender (zero-byte message). */
     chan ch18 = channel(0, 0);
     assert(ch18);
-    coro cr11 = go(sender3(chdup(ch1), 1));
-    assert(cr11);
+    handle hndl11 = go(sender3(chdup(ch1), 1));
+    assert(hndl11);
     rc = chrecv(ch18, NULL, 0, -1);
     assert(rc == 0);
     chclose(ch18);
-    gocancel(&cr11, 1, -1);
+    gocancel(&hndl11, 1, -1);
 
     /* Sender waits for receiver (zero-byte message). */
     chan ch19 = channel(0, 0);
     assert(ch19);
-    coro cr12 = go(sender3(chdup(ch2), 0));
-    assert(cr12);
+    handle hndl12 = go(sender3(chdup(ch2), 0));
+    assert(hndl12);
     rc = chrecv(ch19, NULL, 0, -1);
     assert(rc == 0);
     chclose(ch19);
-    gocancel(&cr12, 1, -1);
+    gocancel(&hndl12, 1, -1);
 
     /* Store multiple zero-byte messages in a buffered channel. */
     chan ch20 = channel(0, 100);

@@ -36,8 +36,8 @@
 
 /* Used to store debug info while gocancel() is blocked. */
 struct dill_gocanceldata {
-    struct dill_cr **crs;
-    int ncrs;
+    struct dill_cr **hndls;
+    int nhndls;
 };
 
 /* For now use longjmp. Replace by a different mechanism as needed. */
