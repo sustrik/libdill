@@ -80,6 +80,18 @@
 DILL_EXPORT int64_t now(void);
 
 /******************************************************************************/
+/*  Handles                                                                   */
+/******************************************************************************/
+
+typedef void (*hndlstop_fn)(int h);
+
+DILL_EXPORT int hndl(void *type, void *data, hndlstop_fn stop);
+DILL_EXPORT void *hndltype(int h);
+DILL_EXPORT void *hndldata(int h);
+DILL_EXPORT int hndldone(int h);
+DILL_EXPORT int hndlclose(int h);
+
+/******************************************************************************/
 /*  Coroutines                                                                */
 /******************************************************************************/
 

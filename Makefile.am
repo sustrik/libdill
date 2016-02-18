@@ -38,6 +38,7 @@ libdill_la_SOURCES = \
     cr.c \
     debug.h \
     debug.c \
+    handle.c \
     list.h \
     list.c \
     poller.h \
