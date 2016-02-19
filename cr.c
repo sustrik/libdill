@@ -118,7 +118,7 @@ int dill_prologue(int *hndl, const char *created) {
     cr->unblock_cb = NULL;
     cr->finished = 0;
     cr->ctx.valid = 0;
-    dill_trace(created, "{%d}=go()", (int)cr->debug.id);
+    dill_trace(created, "{%d}=go()", (int)cr->hndl);
     /* Suspend the parent coroutine and make the new one running. */
     if(dill_setjmp(&dill_running->ctx))
         return 0;

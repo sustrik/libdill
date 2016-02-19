@@ -42,8 +42,6 @@ enum dill_op {
 struct dill_debug_cr {
     /* List of all coroutines. */
     struct dill_list_item item;
-    /* Unique ID of the coroutine. */
-    int id;
     /* Operation being processed at the moment. Used for debugging. */
     enum dill_op op;
     /* File and line where the coroutine was launched. */
