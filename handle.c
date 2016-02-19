@@ -67,22 +67,29 @@ int handle(void *type, void *data, hndlstop_fn stop) {
     dill_handles[h].stop = stop;
     dill_handles[h].done = 0;
     dill_handles[h].next = -1;
-    return h;
+    /* 0 is never returned. It is reserved to refer to the main routine. */
+    return h + 1;
 }
 
 void *handletype(int h) {
+    if(dill_slow(!h)) return NULL;
+    h--;
     if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return NULL;}
     return dill_handles[h].type;
 }
 
 void *handledata(int h) {
+    if(dill_slow(!h)) return NULL;
+    h--;
     if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return NULL;}
     return dill_handles[h].data;
 }
 
 int handledone(int h) {
+    if(dill_slow(!h)) return 0;
+    h--;
     if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return -1;}
     dill_handles[h].done = 1;
@@ -90,6 +97,8 @@ int handledone(int h) {
 }
 
 int handleclose(int h) {
+    if(dill_slow(!h)) {errno = EINVAL; return -1;}
+    h--;
     if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return -1;}
     /* Return the handle to the list of unused handles. */
