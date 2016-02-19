@@ -72,8 +72,8 @@ int main() {
     assert(diff > -20 && diff < 20);
 
     /* Check cancelation. */
-    handle hndl1 = go(cancel(fds[0]));
-    assert(hndl1);
+    int hndl1 = go(cancel(fds[0]));
+    assert(hndl1 >= 0);
     rc = stop(&hndl1, 1, 0);
     assert(rc == 0);
 
@@ -97,8 +97,8 @@ int main() {
 
     /* Two interleaved deadlines. */
     int64_t start = now();
-    handle hndl2 = go(trigger(fds[0], start + 50));
-    assert(hndl2);
+    int hndl2 = go(trigger(fds[0], start + 50));
+    assert(hndl2 >= 0);
     rc = fdwait(fds[1], FDW_IN, start + 90);
     assert(rc >= 0);
     assert(rc == FDW_IN);

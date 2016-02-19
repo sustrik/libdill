@@ -155,8 +155,9 @@ void goredump(void) {
                             first = 0;
                         else
                             pos += sprintf(&buf[pos], ",");
-                        pos += sprintf(&buf[pos], "{%d}",
-                            sd->hndls[i]->debug.id);
+                        struct dill_cr *cr =
+                            (struct dill_cr*)handledata(sd->hndls[i]);
+                        pos += sprintf(&buf[pos], "{%d}", cr->debug.id);
                     }
                     sprintf(&buf[pos], ")");
                 }

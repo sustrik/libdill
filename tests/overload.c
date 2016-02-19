@@ -44,11 +44,11 @@ int main() {
     assert(left);
     chan right = channel(sizeof(int), 0);
     assert(right);
-    handle hndls[2];
+    int hndls[2];
     hndls[0] = go(relay(left, right));
-    assert(hndls[0]);
+    assert(hndls[0] >= 0);
     hndls[1] = go(relay(right, left));
-    assert(hndls[1]);
+    assert(hndls[1] >= 0);
     int val = 42;
     int rc = chsend(left, &val, sizeof(val), -1);
     assert(rc == 0);

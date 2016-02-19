@@ -100,8 +100,8 @@ int main() {
     /* Non-blocking receiver case. */
     chan ch1 = channel(sizeof(int), 0);
     assert(ch1);
-    handle hndl1 = go(sender1(chdup(ch1), 555));
-    assert(hndl1);
+    int hndl1 = go(sender1(chdup(ch1), 555));
+    assert(hndl1 >= 0);
     struct chclause cls1[] = {{ch1, CHRECV, &val, sizeof(val)}};
     rc = choose(cls1, 1, -1);
     assert(rc == 0);
@@ -113,8 +113,8 @@ int main() {
     /* Blocking receiver case. */
     chan ch2 = channel(sizeof(int), 0);
     assert(ch2);
-    handle hndl2 = go(sender2(chdup(ch2), 666));
-    assert(hndl2);
+    int hndl2 = go(sender2(chdup(ch2), 666));
+    assert(hndl2 >= 0);
     struct chclause cls2[] = {{ch2, CHRECV, &val, sizeof(val)}};
     rc = choose(cls2, 1, -1);
     assert(rc == 0);
@@ -126,8 +126,8 @@ int main() {
     /* Non-blocking sender case. */
     chan ch3 = channel(sizeof(int), 0);
     assert(ch3);
-    handle hndl3 = go(receiver1(chdup(ch3), 777));
-    assert(hndl3);
+    int hndl3 = go(receiver1(chdup(ch3), 777));
+    assert(hndl3 >= 0);
     val = 777;
     struct chclause cls3[] = {{ch3, CHSEND, &val, sizeof(val)}};
     rc = choose(cls3, 1, -1);
@@ -139,8 +139,8 @@ int main() {
     /* Blocking sender case. */
     chan ch4 = channel(sizeof(int), 0);
     assert(ch4);
-    handle hndl4 = go(receiver2(chdup(ch4), 888));
-    assert(hndl4);
+    int hndl4 = go(receiver2(chdup(ch4), 888));
+    assert(hndl4 >= 0);
     val = 888;
     struct chclause cls4[] = {{ch4, CHSEND, &val, sizeof(val)}};
     rc = choose(cls4, 1, -1);
@@ -150,13 +150,13 @@ int main() {
     assert(rc == 0);
 
     /* Check with two channels. */
-    handle hndl5[2];
+    int hndl5[2];
     chan ch5 = channel(sizeof(int), 0);
     assert(ch5);
     chan ch6 = channel(sizeof(int), 0);
     assert(ch6);
     hndl5[0] = go(sender1(chdup(ch6), 555));
-    assert(hndl5);
+    assert(hndl5 >= 0);
     struct chclause cls5[] = {
         {ch5, CHRECV, &val, sizeof(val)},
         {ch6, CHRECV, &val, sizeof(val)}
@@ -165,7 +165,7 @@ int main() {
     assert(rc == 1);
     assert(val == 555);
     hndl5[1] = go(sender2(chdup(ch5), 666));
-    assert(hndl5);
+    assert(hndl5 >= 0);
     rc = choose(cls5, 2, -1);
     assert(rc == 0);
     assert(val == 666);
@@ -179,11 +179,11 @@ int main() {
     assert(ch7);
     chan ch8 = channel(sizeof(int), 0);
     assert(ch8);
-    handle hndl6[2];
+    int hndl6[2];
     hndl6[0] = go(feeder(chdup(ch7), 111));
-    assert(hndl6[0]);
+    assert(hndl6[0] >= 0);
     hndl6[1] = go(feeder(chdup(ch8), 222));
-    assert(hndl6[1]);
+    assert(hndl6[1] >= 0);
     int i;
     int first = 0;
     int second = 0;
@@ -225,11 +225,11 @@ int main() {
     /* Test two simultaneous senders vs. choose statement. */
     chan ch10 = channel(sizeof(int), 0);
     assert(ch10);
-    handle hndl7[2];
+    int hndl7[2];
     hndl7[0] = go(sender1(chdup(ch10), 888));
-    assert(hndl7[0]);
+    assert(hndl7[0] >= 0);
     hndl7[1] = go(sender1(chdup(ch10), 999));
-    assert(hndl7[1]);
+    assert(hndl7[1] >= 0);
     val = 0;
     struct chclause cls8[] = {{ch10, CHRECV, &val, sizeof(val)}};
     rc = choose(cls8, 1, -1);
@@ -246,11 +246,11 @@ int main() {
     /* Test two simultaneous receivers vs. choose statement. */
     chan ch11 = channel(sizeof(int), 0);
     assert(ch11);
-    handle hndl8[2];
+    int hndl8[2];
     hndl8[0] = go(receiver1(chdup(ch11), 333));
-    assert(hndl8[0]);
+    assert(hndl8[0] >= 0);
     hndl8[1] = go(receiver1(chdup(ch11), 444));
-    assert(hndl8[1]);
+    assert(hndl8[1] >= 0);
     val = 333;
     struct chclause cls9[] = {{ch11, CHSEND, &val, sizeof(val)}};
     rc = choose(cls9, 1, -1);
@@ -265,8 +265,8 @@ int main() {
     /* Choose vs. choose. */
     chan ch12 = channel(sizeof(int), 0);
     assert(ch12);
-    handle hndl9 = go(choosesender(chdup(ch12), 111));
-    assert(hndl9);
+    int hndl9 = go(choosesender(chdup(ch12), 111));
+    assert(hndl9 >= 0);
     struct chclause cls10[] = {{ch12, CHRECV, &val, sizeof(val)}};
     rc = choose(cls10, 1, -1);
     assert(rc == 0);
@@ -293,8 +293,8 @@ int main() {
     assert(ch15);
     chan ch16 = channel(sizeof(int), 1);
     assert(ch16);
-    handle hndl10 = go(sender2(chdup(ch16), 1111));
-    assert(hndl10);
+    int hndl10 = go(sender2(chdup(ch16), 1111));
+    assert(hndl10 >= 0);
     goredump();
     struct large lrg;
     struct chclause cls13[] = {
@@ -345,8 +345,8 @@ int main() {
     chan ch22 = channel(sizeof(int), 0);
     assert(ch22);
     start = now();
-    handle hndl11 = go(sender3(chdup(ch22), 4444, start + 50));
-    assert(hndl11);
+    int hndl11 = go(sender3(chdup(ch22), 4444, start + 50));
+    assert(hndl11 >= 0);
     struct chclause cls18[] = {{ch22, CHRECV, &val, sizeof(val)}};
     rc = choose(cls17, 1, start + 1000);
     assert(rc == 0);
