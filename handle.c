@@ -102,9 +102,9 @@ int handledone(int h) {
     struct dill_handle *hndl = &dill_handles[h];
     hndl->done = 1;
     if(hndl->canceler) {
-        /* If there's stop() already waiting for this handle,
-           remove it from the list of waiting handles and if there's no other
-           handle left in the list resume the stopper. */
+        /* If there's stop() already waiting for this coroutine,
+           remove it from its list and resume it if there's no other
+           coroutine left it the list. */
         dill_list_erase(&hndl->canceler->tocancel,
             &dill_running->tocancel_item);
         if(dill_list_empty(&hndl->canceler->tocancel))
