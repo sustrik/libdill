@@ -41,8 +41,6 @@ struct dill_handle {
     /* Coroutine that performs the cancelation of this handle.
        NULL if the handle is not being canceled. */
     struct dill_cr *canceler;
-    /* Pointer to canceler's list of handles to cancel. */
-    struct dill_list *tocancel;
     /* A member of the stop() function's list of handles to cancel. */
     struct dill_list_item item;
     int next;
@@ -78,7 +76,6 @@ int handle(void *type, void *data, hndlstop_fn stop) {
     dill_handles[h].stop = stop;
     dill_handles[h].done = 0;
     dill_handles[h].canceler = NULL;
-    dill_handles[h].tocancel = NULL;
     dill_list_item_init(&dill_handles[h].item);
     dill_handles[h].next = -1;
     /* 0 is never returned. It is reserved to refer to the main routine. */
@@ -112,8 +109,8 @@ int handledone(int h) {
         /* If there's stop() already waiting for this handle,
            remove it from the list of waiting handles and if there's no other
            handle left in the list resume the stopper. */
-        dill_list_erase(hndl->tocancel, &hndl->item);
-        if(dill_list_empty(hndl->tocancel))
+        dill_list_erase(&hndl->canceler->tocancel, &hndl->item);
+        if(dill_list_empty(&hndl->canceler->tocancel))
             dill_resume(hndl->canceler, 0);
     }
     else {
@@ -149,10 +146,9 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline,
     struct dill_stopdata *sd = (struct dill_stopdata*)dill_running->opaque;
     sd->hndls = hndls;
     sd->nhndls = nhndls;
-    /* Add all not yet finished handles to a list. Let finished ones
+    /* Add all not yet finished coroutines to a list. Let finished ones
        deallocate themselves. */
-    struct dill_list tocancel;
-    dill_list_init(&tocancel);
+    dill_list_init(&dill_running->tocancel);
     int i;
     for(i = 0; i != nhndls; ++i) {
         struct dill_handle *hndl = &dill_handles[hndls[i] - 1];
@@ -161,12 +157,11 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline,
             continue;
         }
         hndl->canceler = dill_running;
-        hndl->tocancel = &tocancel;
-        dill_list_insert(&tocancel, &hndl->item, NULL);
+        dill_list_insert(&dill_running->tocancel, &hndl->item, NULL);
     }
     /* If all coroutines are finished return straight away. */
     int canceled = dill_running->canceled;
-    if(dill_list_empty(&tocancel))
+    if(dill_list_empty(&dill_running->tocancel))
         goto finish;
     /* If user requested immediate cancelation or if this coroutine was already
        canceled by its owner we can skip the grace period. */
@@ -191,7 +186,8 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline,
     }
     /* Send cancel signal to the remaining coroutines. */
     struct dill_list_item *it;
-    for(it = dill_list_begin(&tocancel); it; it = dill_list_next(it)) {
+    for(it = dill_list_begin(&dill_running->tocancel); it;
+          it = dill_list_next(it)) {
         struct dill_handle *hndl = dill_cont(it, struct dill_handle, item);
         struct dill_cr *cr = (struct dill_cr*)hndl->data;
         cr->canceled = 1;

@@ -80,6 +80,8 @@ struct dill_cr {
 
     /* 1 if blocking functions should return ECANCELED. */
     int canceled;
+    /* List of coroutines being canceled at the moment. */
+    struct dill_list tocancel;
 
     /* Coroutine-local storage. */
     void *cls;
