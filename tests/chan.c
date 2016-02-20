@@ -341,7 +341,7 @@ int main() {
     hndl9[0] = go(receiver3(ch16));
     assert(hndl9[0] >= 0);
     hndl9[1] = go(receiver3(ch16));
-    assert(hndl9[2] >= 0);
+    assert(hndl9[1] >= 0);
     rc = msleep(now() + 50);
     assert(rc == 0);
     chclose(ch16);

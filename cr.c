@@ -99,10 +99,17 @@ void dill_resume(struct dill_cr *cr, int result) {
 /* dill_prologue() and dill_epilogue() live in the same scope with
    libdill's stack-switching black magic. As such, they are extremely
    fragile. Therefore, the optimiser is prohibited to touch them. */
+#if defined __clang__
+#define dill_noopt __attribute__((optnone))
+#elif defined __GNUC__
+#define dill_noopt __attribute__((optimize("O0")))
+#else
+#error Unsupported compiler!
+#endif
 
 /* The intial part of go(). Starts the new coroutine.  Returns 1 in the
    new coroutine, 0 in the old one. */
-__attribute__((noinline)) __attribute__((optimize("O0")))
+__attribute__((noinline)) dill_noopt
 int dill_prologue(int *hndl, const char *created) {
     /* Ensure that debug functions are available whenever a single go()
        statement is present in the user's code. */
@@ -129,7 +136,7 @@ int dill_prologue(int *hndl, const char *created) {
 }
 
 /* The final part of go(). Cleans up after the coroutine is finished. */
-__attribute__((noinline)) __attribute__((optimize("O0")))
+__attribute__((noinline)) dill_noopt
 void dill_epilogue(void) {
     dill_trace(NULL, "go() done");
     dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
