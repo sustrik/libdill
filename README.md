@@ -26,7 +26,7 @@ Keep in mind that each coroutine handle has to be closed using `stop()`
 otherwise it will result in a memory leak.
 
 If there's not enough memory available to allocate the stack for the new
-coroutine `go()` returns `NULL`.
+coroutine `go()` returns `NULL` and sets `errno` to `ENOMEM`.
 
 ## Cancel a coroutine
 
