@@ -96,8 +96,13 @@ void dill_resume(struct dill_cr *cr, int result) {
     dill_slist_push_back(&dill_ready, &cr->ready);
 }
 
+/* dill_prologue() and dill_epilogue() live in the same scope with
+   libdill's stack-switching black magic. As such, they are extremely
+   fragile. Therefore, the optimiser is prohibited to touch them. */
+
 /* The intial part of go(). Starts the new coroutine.  Returns 1 in the
    new coroutine, 0 in the old one. */
+__attribute__((noinline)) __attribute__((optimize("O0")))
 int dill_prologue(int *hndl, const char *created) {
     /* Ensure that debug functions are available whenever a single go()
        statement is present in the user's code. */
@@ -106,7 +111,7 @@ int dill_prologue(int *hndl, const char *created) {
     struct dill_cr *cr = ((struct dill_cr*)dill_allocstack()) - 1;
     if(dill_slow(!cr)) {*hndl = -1; return 0;}
     *hndl = handle(NULL, cr, NULL);
-    if(dill_slow(*hndl < 0)) {dill_freestack(cr); return 0;}
+    if(dill_slow(*hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return 0;}
     dill_register_cr(&cr->debug, created);
     dill_slist_item_init(&cr->ready);
     cr->canceled = 0;
@@ -124,6 +129,7 @@ int dill_prologue(int *hndl, const char *created) {
 }
 
 /* The final part of go(). Cleans up after the coroutine is finished. */
+__attribute__((noinline)) __attribute__((optimize("O0")))
 void dill_epilogue(void) {
     dill_trace(NULL, "go() done");
     dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
