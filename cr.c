@@ -33,8 +33,6 @@
 #include "stack.h"
 #include "utils.h"
 
-DILL_CT_ASSERT(sizeof(struct dill_stopdata) <= DILL_OPAQUE_SIZE);
-
 volatile int dill_unoptimisable1 = 1;
 volatile void *dill_unoptimisable2 = NULL;
 
@@ -172,86 +170,6 @@ int dill_yield(const char *current) {
     dill_assert(rc < 0);
     errno = -rc;
     return -1;
-}
-
-int dill_stop(int *hndls, int nhndls, int64_t deadline,
-      const char *current) {
-    dill_trace(current, "stop()");
-    if(dill_slow(nhndls == 0))
-        return 0;
-    if(dill_slow(!hndls)) {
-        errno = EINVAL;
-        return -1;
-    }
-    /* Set debug info. */
-    dill_startop(&dill_running->debug, DILL_STOP, current);
-    struct dill_stopdata *sd = (struct dill_stopdata*)dill_running->opaque;
-    sd->hndls = hndls;
-    sd->nhndls = nhndls;
-    /* Add all not yet finished coroutines to a list. Let finished ones
-       deallocate themselves. */
-    dill_list_init(&dill_running->tocancel);
-    int i;
-    for(i = 0; i != nhndls; ++i) {
-        struct dill_cr *cr = (struct dill_cr*)handledata(hndls[i]);
-        if(handleisdone(cr->hndl)) {
-            dill_resume(cr, 0);
-            continue;
-        }
-        cr->canceler = dill_running;
-        dill_list_insert(&dill_running->tocancel, &cr->tocancel_item, NULL);
-    }
-    /* If all coroutines are finished return straight away. */
-    int canceled = dill_running->canceled;
-    if(dill_list_empty(&dill_running->tocancel))
-        goto finish;
-    /* If user requested immediate cancelation or if this coroutine was already
-       canceled by its owner we can skip the grace period. */
-    if(deadline != 0 || dill_running->canceled) {
-      /* If required, start waiting for the timeout. */
-      if(deadline > 0)
-          dill_timer_add(&dill_running->timer, deadline);
-      /* Wait till all coroutines are finished. */
-      int rc = dill_suspend(NULL);
-      if(rc == 0) {
-          /* All coroutines have finished. We are done. */
-          if(deadline > 0)
-              dill_timer_rm(&dill_running->timer);
-          goto finish;
-      }
-      /* We'll have to force coroutines to exit. No need for timer any more. */
-      dill_assert(rc == -ECANCELED || rc == -ETIMEDOUT);
-      if(rc != -ETIMEDOUT && deadline > 0)
-          dill_timer_rm(&dill_running->timer);
-      if(rc == -ECANCELED)
-          canceled = 1;
-    }
-    /* Send cancel signal to the remaining coroutines. */
-    struct dill_list_item *it;
-    for(it = dill_list_begin(&dill_running->tocancel); it;
-          it = dill_list_next(it)) {
-        struct dill_cr *cr = dill_cont(it, struct dill_cr, tocancel_item);
-        cr->canceled = 1;
-        if(!dill_slist_item_inlist(&cr->ready))
-            dill_resume(cr, -ECANCELED);
-    }
-    /* Wait till they all finish. Waiting may be interrupted if this
-       coroutine itself is asked to cancel itself, but there's nothing
-       much to do there anyway. It'll just continue waiting. */
-    while(1) {
-        int rc = dill_suspend(NULL);
-        if(rc == 0)
-            break;
-        dill_assert(rc == -ECANCELED);
-        canceled = 1;
-    }
-finish:
-    if(canceled) {
-        /* This coroutine was canceled by its owner. */
-        errno = ECANCELED;
-        return -1;
-    }
-    return 0;
 }
 
 void *cls(void) {
