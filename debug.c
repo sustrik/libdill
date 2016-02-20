@@ -37,9 +37,6 @@
 #include "stack.h"
 #include "utils.h"
 
-/* ID to be assigned to next launched coroutine. */
-static int dill_next_cr_id = 1;
-
 /* List of all coroutines. */
 static struct dill_list dill_all_crs = {
     &dill_main.debug.item, &dill_main.debug.item};
@@ -52,8 +49,6 @@ static struct dill_list dill_all_chans = {0};
 
 void dill_register_cr(struct dill_debug_cr *cr, const char *created) {
     dill_list_insert(&dill_all_crs, &cr->item, NULL);
-    cr->id = dill_next_cr_id;
-    ++dill_next_cr_id;
     cr->created = created;
     cr->current = NULL;
 }
@@ -157,7 +152,7 @@ void goredump(void) {
                             pos += sprintf(&buf[pos], ",");
                         struct dill_cr *cr =
                             (struct dill_cr*)handledata(sd->hndls[i]);
-                        pos += sprintf(&buf[pos], "{%d}", cr->debug.id);
+                        pos += sprintf(&buf[pos], "{%d}", cr->hndl);
                     }
                     sprintf(&buf[pos], ")");
                 }
@@ -169,7 +164,7 @@ void goredump(void) {
                 assert(0);
             }
         }
-        snprintf(idbuf, sizeof(idbuf), "{%d}", (int)cr->debug.id);
+        snprintf(idbuf, sizeof(idbuf), "{%d}", (int)cr->hndl);
         fprintf(stderr, "%-8s   %-42s %-40s %s\n",
             idbuf,
             cr == dill_running ? "RUNNING" : buf,
@@ -220,7 +215,7 @@ void goredump(void) {
                 first = 0;
             else
                 pos += sprintf(&buf[pos], ",");
-            pos += sprintf(&buf[pos], "{%d}", (int)cl->cr->debug.id);
+            pos += sprintf(&buf[pos], "{%d}", (int)cl->cr->hndl);
             cl = dill_cont(dill_list_next(&cl->epitem),
                 struct dill_clause, epitem);
         }
@@ -254,7 +249,7 @@ void dill_trace_(const char *location, const char *format, ...) {
     fprintf(stderr, "==> %s.%06d ", buf, (int)nw.tv_usec);
 
     /* Coroutine ID. */
-    snprintf(buf, sizeof(buf), "{%d}", (int)dill_running->debug.id);
+    snprintf(buf, sizeof(buf), "{%d}", (int)dill_running->hndl);
     fprintf(stderr, "%-8s ", buf);
 
     va_list va;
