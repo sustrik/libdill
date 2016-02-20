@@ -100,17 +100,16 @@ typedef struct dill_cr *handle;
 DILL_EXPORT extern volatile int dill_unoptimisable1;
 DILL_EXPORT extern volatile void *dill_unoptimisable2;
 
-DILL_EXPORT int dill_prologue(handle *cr, const char *created);
-DILL_EXPORT void dill_epilogue(void);
+DILL_EXPORT __attribute__((noinline)) int dill_prologue(handle *cr,
+    const char *created);
+DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 
 #define dill_string2(x) #x
 #define dill_string(x) dill_string2(x)
 
-#if defined __GNUC__ || defined __clang__
+/* This may not work for some compilers, but we are not going to
+   support those. Tough luck. */
 #define coroutine __attribute__((noinline))
-#else
-#define coroutine
-#endif
 
 /* Statement expressions are a gcc-ism but they are also supported by clang.
    Given that there's no other way to do this, screw other compilers for now.
