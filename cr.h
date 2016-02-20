@@ -80,9 +80,6 @@ struct dill_cr {
 
     /* 1 if blocking functions should return ECANCELED. */
     int canceled;
-    /* If the coroutine is being canceled, the coroutine that performs
-       the cancelation. */
-    struct dill_cr *canceler;
     /* List of coroutines being canceled at the moment. */
     struct dill_list tocancel;
     /* A member of the above list. */

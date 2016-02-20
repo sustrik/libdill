@@ -37,6 +37,9 @@ struct dill_handle {
     void *data;
     hndlstop_fn stop;
     int done;
+    /* Coroutine that performs the cancelation of this handle.
+       NULL if the handle is not being canceled. */
+    struct dill_cr *canceler;
     int next;
 };
 
@@ -69,6 +72,7 @@ int handle(void *type, void *data, hndlstop_fn stop) {
     dill_handles[h].data = data;
     dill_handles[h].stop = stop;
     dill_handles[h].done = 0;
+    dill_handles[h].canceler = NULL;
     dill_handles[h].next = -1;
     /* 0 is never returned. It is reserved to refer to the main routine. */
     return h + 1;
@@ -95,7 +99,22 @@ int handledone(int h) {
     h--;
     if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return -1;}
-    dill_handles[h].done = 1;
+    struct dill_handle *hndl = &dill_handles[h];
+    hndl->done = 1;
+    if(hndl->canceler) {
+        /* If there's stop() already waiting for this coroutine,
+           remove it from its list and resume it if there's no other
+           coroutine left it the list. */
+        dill_list_erase(&hndl->canceler->tocancel,
+            &dill_running->tocancel_item);
+        if(dill_list_empty(&hndl->canceler->tocancel))
+            dill_resume(hndl->canceler, 0);
+    }
+    else {
+        /* If stop() wasn't call yet wait for it. */
+        int rc = dill_suspend(NULL);
+        dill_assert(rc == 0);
+    }
     return 0;
 }
 
@@ -134,7 +153,7 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline,
             dill_resume(cr, 0);
             continue;
         }
-        cr->canceler = dill_running;
+        dill_handles[cr->hndl - 1].canceler = dill_running;
         dill_list_insert(&dill_running->tocancel, &cr->tocancel_item, NULL);
     }
     /* If all coroutines are finished return straight away. */
