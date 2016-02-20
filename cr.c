@@ -110,6 +110,7 @@ int dill_prologue(int *hndl, const char *created) {
     dill_register_cr(&cr->debug, created);
     dill_slist_item_init(&cr->ready);
     cr->canceled = 0;
+    cr->canceler = NULL;
     cr->cls = NULL;
     cr->hndl = *hndl;
     cr->unblock_cb = NULL;
@@ -128,6 +129,21 @@ void dill_epilogue(void) {
     dill_trace(NULL, "go() done");
     dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
     handledone(dill_running->hndl);
+    if(dill_running->canceler) {
+        /* If there's stop() already waiting for this coroutine,
+           remove it from its list and resume it if there's no other
+           coroutine left it the list. */
+        dill_list_erase(&dill_running->canceler->tocancel,
+            &dill_running->tocancel_item);
+        if(dill_list_empty(&dill_running->canceler->tocancel))
+            dill_resume(dill_running->canceler, 0);
+    }
+    else {
+        /* If stop() wasn't call yet wait for it. */
+        int rc = dill_suspend(NULL);
+        dill_assert(rc == 0);
+    }
+    /* Return the handle to the common pool. */
     handleclose(dill_running->hndl);
     /* Stop the coroutine and deallocate the resources. */
     dill_unregister_cr(&dill_running->debug);
