@@ -82,8 +82,6 @@ struct dill_cr {
     int canceled;
     /* List of coroutines being canceled at the moment. */
     struct dill_list tocancel;
-    /* A member of the above list. */
-    struct dill_list_item tocancel_item;
 
     /* Coroutine-local storage. */
     void *cls;
