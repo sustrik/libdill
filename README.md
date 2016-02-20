@@ -15,7 +15,7 @@ coroutine void foo(int arg1, int arg2, int arg3) {
 To start a coroutine use `go` keyword. Expression returns a coroutine handle.
 
 ```
-int h = go(foo(1, 2, 3));
+handle h = go(foo(1, 2, 3));
 ```
 
 Coroutines are cooperatively scheduled. Following functions are used as
@@ -36,7 +36,7 @@ coroutines that have already finished executing. Failure to do so results
 in resource leak.
 
 ```
-int stop(int *hndls, int nhndls, int64_t deadline);
+int stop(handle *hndls, int nhndls, int64_t deadline);
 ```
 
 The function cancels `nhndls` coroutines in the array pointed to be `hndls`.
@@ -46,7 +46,7 @@ Third argument is a deadline. For detailed information about deadlines check
 Example:
 
 ```
-int hndls[2];
+handle hndls[2];
 hndls[0] = go(fx());
 hndls[1] = go(fx());
 int rc = stop(hndls, 2, now() + 1000);
