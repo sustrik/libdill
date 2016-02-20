@@ -29,7 +29,7 @@
 #include "libdill.h"
 #include "utils.h"
 
-struct dill_handle {
+struct dill_hndl {
     void *type;
     void *data;
     hndlstop_fn stop;
@@ -37,63 +37,63 @@ struct dill_handle {
     int next;
 };
 
-static struct dill_handle *dill_handles = NULL;
-static int dill_nhandles = 0;
+static struct dill_hndl *dill_hndls = NULL;
+static int dill_nhndls = 0;
 static int dill_unused = -1;
 
-int handle(void *type, void *data, hndlstop_fn stop) {
+int hndl(void *type, void *data, hndlstop_fn stop) {
     /* If there's no space for the new handle expand the array. */
     if(dill_slow(dill_unused == -1)) {
         /* Start with 256 handles, double the size when needed. */
-        int sz = dill_nhandles ? dill_nhandles * 2 : 256;
-        struct dill_handle *hndls =
-            realloc(dill_handles, sz * sizeof(struct dill_handle));
+        int sz = dill_nhndls ? dill_nhndls * 2 : 256;
+        struct dill_hndl *hndls =
+            realloc(dill_hndls, sz * sizeof(struct dill_hndl));
         if(dill_slow(!hndls)) {errno = ENOMEM; return -1;}
         /* Add newly allocated handles to the list of unused handles. */
         int i;
-        for(i = dill_nhandles; i != sz - 1; ++i)
+        for(i = dill_nhndls; i != sz - 1; ++i)
             hndls[i].next = i + 1;
         hndls[sz - 1].next = -1;
-        dill_unused = dill_nhandles;
+        dill_unused = dill_nhndls;
         /* Adjust the array. */
-        dill_handles = hndls;
-        dill_nhandles = sz;
+        dill_hndls = hndls;
+        dill_nhndls = sz;
     }
     /* Return first handle from the list of unused hadles. */
     int h = dill_unused;
-    dill_unused = dill_handles[h].next;
-    dill_handles[h].type = type;
-    dill_handles[h].data = data;
-    dill_handles[h].stop = stop;
-    dill_handles[h].done = 0;
-    dill_handles[h].next = -1;
+    dill_unused = dill_hndls[h].next;
+    dill_hndls[h].type = type;
+    dill_hndls[h].data = data;
+    dill_hndls[h].stop = stop;
+    dill_hndls[h].done = 0;
+    dill_hndls[h].next = -1;
     return h;
 }
 
-void *handletype(int h) {
-    if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
+void *hndltype(int h) {
+    if(dill_slow(h >= dill_nhndls || dill_hndls[h].next != -1)) {
         errno = EBADF; return NULL;}
-    return dill_handles[h].type;
+    return dill_hndls[h].type;
 }
 
-void *handledata(int h) {
-    if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
+void *hndldata(int h) {
+    if(dill_slow(h >= dill_nhndls || dill_hndls[h].next != -1)) {
         errno = EBADF; return NULL;}
-    return dill_handles[h].data;
+    return dill_hndls[h].data;
 }
 
-int handledone(int h) {
-    if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
+int hndldone(int h) {
+    if(dill_slow(h >= dill_nhndls || dill_hndls[h].next != -1)) {
         errno = EBADF; return -1;}
-    dill_handles[h].done = 1;
+    dill_hndls[h].done = 1;
     return 0;
 }
 
-int handleclose(int h) {
-    if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
+int hndlclose(int h) {
+    if(dill_slow(h >= dill_nhndls || dill_hndls[h].next != -1)) {
         errno = EBADF; return -1;}
     /* Return the handle to the list of unused handles. */
-    dill_handles[h].next = dill_unused;
+    dill_hndls[h].next = dill_unused;
     dill_unused = h;
     return 0;
 }

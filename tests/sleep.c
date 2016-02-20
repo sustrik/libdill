@@ -47,15 +47,15 @@ int main() {
     /* msleep-sort */
     chan ch = channel(sizeof(int), 0);
     assert(ch);
-    int hndls[4];
+    handle hndls[4];
     hndls[0] = go(delay(30, ch));
-    assert(hndls[0] >= 0);
+    assert(hndls[0]);
     hndls[1] = go(delay(40, ch));
-    assert(hndls[1] >= 0);
+    assert(hndls[1]);
     hndls[2] = go(delay(10, ch));
-    assert(hndls[2] >= 0);
+    assert(hndls[2]);
     hndls[3] = go(delay(20, ch));
-    assert(hndls[3] >= 0);
+    assert(hndls[3]);
     int val;
     rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);

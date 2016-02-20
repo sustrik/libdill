@@ -100,30 +100,28 @@ void dill_resume(struct dill_cr *cr, int result) {
 
 /* The intial part of go(). Starts the new coroutine.  Returns 1 in the
    new coroutine, 0 in the old one. */
-int dill_prologue(int *hndl, const char *created) {
+int dill_prologue(struct dill_cr **cr, const char *created) {
     /* Ensure that debug functions are available whenever a single go()
        statement is present in the user's code. */
     dill_preserve_debug();
     /* Allocate and initialise new stack. */
-    struct dill_cr *cr = ((struct dill_cr*)dill_allocstack()) - 1;
-    if(dill_slow(!cr)) {*hndl = -1; return 0;}
-    *hndl = handle(NULL, cr, NULL);
-    if(dill_slow(*hndl < 0)) {dill_freestack(cr); return 0;}
-    dill_register_cr(&cr->debug, created);
-    dill_slist_item_init(&cr->ready);
-    cr->canceled = 0;
-    cr->canceler = NULL;
-    cr->cls = NULL;
-    cr->hndl = *hndl;
-    cr->unblock_cb = NULL;
-    cr->finished = 0;
-    cr->ctx.valid = 0;
-    dill_trace(created, "{%d}=go()", (int)cr->debug.id);
+    *cr = ((struct dill_cr*)dill_allocstack()) - 1;
+    if(dill_slow(!*cr))
+        return 0;
+    dill_register_cr(&(*cr)->debug, created);
+    dill_slist_item_init(&(*cr)->ready);
+    (*cr)->canceled = 0;
+    (*cr)->canceler = NULL;
+    (*cr)->cls = NULL;
+    (*cr)->unblock_cb = NULL;
+    (*cr)->finished = 0;
+    (*cr)->ctx.valid = 0;
+    dill_trace(created, "{%d}=go()", (int)(*cr)->debug.id);
     /* Suspend the parent coroutine and make the new one running. */
     if(dill_setjmp(&dill_running->ctx))
         return 0;
     dill_resume(dill_running, 0);    
-    dill_running = cr;
+    dill_running = *cr;
     return 1;
 }
 
@@ -146,8 +144,6 @@ void dill_epilogue(void) {
         int rc = dill_suspend(NULL);
         dill_assert(rc == 0);
     }
-    /* Return the handle to the common pool. */
-    handleclose(dill_running->hndl);
     /* Stop the coroutine and deallocate the resources. */
     dill_unregister_cr(&dill_running->debug);
     dill_freestack(dill_running + 1);
@@ -175,7 +171,7 @@ int dill_yield(const char *current) {
     return -1;
 }
 
-int dill_stop(int *hndls, int nhndls, int64_t deadline,
+int dill_stop(handle *hndls, int nhndls, int64_t deadline,
       const char *current) {
     dill_trace(current, "stop()");
     if(dill_slow(nhndls == 0))
@@ -194,13 +190,13 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline,
     dill_list_init(&dill_running->tocancel);
     int i;
     for(i = 0; i != nhndls; ++i) {
-        struct dill_cr *cr = (struct dill_cr*)handledata(hndls[i]);
-        if(cr->finished) {
-            dill_resume(cr, 0);
+        if(hndls[i]->finished) {
+            dill_resume(hndls[i], 0);
             continue;
         }
-        cr->canceler = dill_running;
-        dill_list_insert(&dill_running->tocancel, &cr->tocancel_item, NULL);
+        hndls[i]->canceler = dill_running;
+        dill_list_insert(&dill_running->tocancel,
+            &hndls[i]->tocancel_item, NULL);
     }
     /* If all coroutines are finished return straight away. */
     int canceled = dill_running->canceled;

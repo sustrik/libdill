@@ -34,7 +34,7 @@
 
 static int signal_pipe[2];
 
-void signal_intr(int signo) {
+void signal_handler(int signo) {
     assert(signo == SIGNAL);
     char b = signo;
     ssize_t sz = write(signal_pipe[1], &b, 1);
@@ -66,7 +66,7 @@ int main() {
     int err = pipe(signal_pipe);
     assert(err == 0);
 
-    signal(SIGNAL, signal_intr);
+    signal(SIGNAL, signal_handler);
 
     chan sendch = channel(sizeof(char), 0);
     assert(sendch);
@@ -75,11 +75,11 @@ int main() {
 
     int i;
     for(i = 0; i < COUNT; ++i) {
-        int hndls[2];
+        handle hndls[2];
         hndls[0] = go(sender(sendch));
-        assert(hndls[0] >= 0);
+        assert(hndls[0]);
         hndls[1] = go(receiver(recvch));
-        assert(hndls[1] >= 0);
+        assert(hndls[1]);
         char c = SIGNAL;
         int rc = chsend(sendch, &c, sizeof(c), -1);
         assert(rc == 0);

@@ -85,20 +85,22 @@ DILL_EXPORT int64_t now(void);
 
 typedef void (*hndlstop_fn)(int h);
 
-DILL_EXPORT int handle(void *type, void *data, hndlstop_fn stop);
-DILL_EXPORT void *handletype(int h);
-DILL_EXPORT void *handledata(int h);
-DILL_EXPORT int handledone(int h);
-DILL_EXPORT int handleclose(int h);
+DILL_EXPORT int hndl(void *type, void *data, hndlstop_fn stop);
+DILL_EXPORT void *hndltype(int h);
+DILL_EXPORT void *hndldata(int h);
+DILL_EXPORT int hndldone(int h);
+DILL_EXPORT int hndlclose(int h);
 
 /******************************************************************************/
 /*  Coroutines                                                                */
 /******************************************************************************/
 
+typedef struct dill_cr *handle;
+
 DILL_EXPORT extern volatile int dill_unoptimisable1;
 DILL_EXPORT extern volatile void *dill_unoptimisable2;
 
-DILL_EXPORT int dill_prologue(int *hndl, const char *created);
+DILL_EXPORT int dill_prologue(handle *cr, const char *created);
 DILL_EXPORT void dill_epilogue(void);
 
 #define dill_string2(x) #x
@@ -115,16 +117,16 @@ DILL_EXPORT void dill_epilogue(void);
    See https://gcc.gnu.org/onlinedocs/gcc-3.2/gcc/Statement-Exprs.html */
 #define go(fn) \
     ({\
-        int hndl;\
-        if(dill_prologue(&hndl, __FILE__ ":" dill_string(__LINE__))) {\
+        struct dill_cr *dill_sp;\
+        if(dill_prologue(&dill_sp, __FILE__ ":" dill_string(__LINE__))) {\
             int dill_anchor[dill_unoptimisable1];\
             dill_unoptimisable2 = &dill_anchor;\
-            char dill_filler[(char*)&dill_anchor - (char*)handledata(hndl)];\
+            char dill_filler[(char*)&dill_anchor - (char*)(dill_sp)];\
             dill_unoptimisable2 = &dill_filler;\
             fn;\
             dill_epilogue();\
         }\
-        hndl;\
+        dill_sp;\
     })
 
 #define FDW_IN 1
@@ -140,7 +142,7 @@ DILL_EXPORT void dill_epilogue(void);
     __FILE__ ":" dill_string(__LINE__))
 
 DILL_EXPORT int dill_yield(const char *current);
-DILL_EXPORT int dill_stop(int *hndls, int nhndls, int64_t deadline,
+DILL_EXPORT int dill_stop(handle *hndls, int nhndls, int64_t deadline,
     const char *current);
 DILL_EXPORT int dill_msleep(int64_t deadline, const char *current);
 DILL_EXPORT void fdclean(int fd);

@@ -36,7 +36,7 @@
 
 /* Used to store debug info while stop() is blocked. */
 struct dill_stopdata {
-    int *hndls;
+    struct dill_cr **hndls;
     int nhndls;
 };
 
@@ -92,8 +92,6 @@ struct dill_cr {
     int finished;
     /* Coroutine-local storage. */
     void *cls;
-    /* Handle of the coroutine. */
-    int hndl;
     /* Debugging info. */
     struct dill_debug_cr debug;
     /* Opaque storage for whatever data the current blocking operation
