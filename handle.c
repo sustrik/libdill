@@ -99,14 +99,6 @@ int handledone(int h) {
     return 0;
 }
 
-int handleisdone(int h) {
-    if(dill_slow(!h)) return 0;
-    h--;
-    if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
-        errno = EBADF; return -1;}
-    return dill_handles[h].done;
-}
-
 int handleclose(int h) {
     if(dill_slow(!h)) {errno = EINVAL; return -1;}
     h--;
@@ -138,7 +130,7 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline,
     int i;
     for(i = 0; i != nhndls; ++i) {
         struct dill_cr *cr = (struct dill_cr*)handledata(hndls[i]);
-        if(handleisdone(cr->hndl)) {
+        if(dill_handles[cr->hndl - 1].done) {
             dill_resume(cr, 0);
             continue;
         }
