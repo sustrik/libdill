@@ -52,8 +52,8 @@ int main() {
     assert(cls() == &dummy1);
 
     /* Check whether CLS is not messed up by launching a new coroutine. */
-    handle hndl = go(worker());
-    assert(hndl);
+    int hndl = go(worker());
+    assert(hndl >= 0);
     assert(cls() == &dummy1);
     int rc = yield();
     assert(rc == 0);
