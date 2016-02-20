@@ -88,6 +88,8 @@ struct dill_cr {
     /* A member of the above list. */
     struct dill_list_item tocancel_item;
 
+    /* 1 if coroutine is done waiting only to be canceled. */
+    int finished;
     /* Coroutine-local storage. */
     void *cls;
     /* Handle of the coroutine. */

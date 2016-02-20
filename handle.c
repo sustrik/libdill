@@ -96,14 +96,6 @@ int handledone(int h) {
     return 0;
 }
 
-int handleisdone(int h) {
-    if(dill_slow(!h)) return 0;
-    h--;
-    if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
-        errno = EBADF; return -1;}
-    return dill_handles[h].done;
-}
-
 int handleclose(int h) {
     if(dill_slow(!h)) {errno = EINVAL; return -1;}
     h--;

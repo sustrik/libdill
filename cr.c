@@ -116,6 +116,7 @@ int dill_prologue(int *hndl, const char *created) {
     cr->cls = NULL;
     cr->hndl = *hndl;
     cr->unblock_cb = NULL;
+    cr->finished = 0;
     cr->ctx.valid = 0;
     dill_trace(created, "{%d}=go()", (int)cr->hndl);
     /* Suspend the parent coroutine and make the new one running. */
@@ -130,7 +131,7 @@ int dill_prologue(int *hndl, const char *created) {
 void dill_epilogue(void) {
     dill_trace(NULL, "go() done");
     dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
-    handledone(dill_running->hndl);
+    dill_running->finished = 1;
     if(dill_running->canceler) {
         /* If there's stop() already waiting for this coroutine,
            remove it from its list and resume it if there's no other
@@ -194,7 +195,7 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline,
     int i;
     for(i = 0; i != nhndls; ++i) {
         struct dill_cr *cr = (struct dill_cr*)handledata(hndls[i]);
-        if(handleisdone(cr->hndl)) {
+        if(cr->finished) {
             dill_resume(cr, 0);
             continue;
         }
