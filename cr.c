@@ -98,7 +98,7 @@ void dill_resume(struct dill_cr *cr, int result) {
 
 /* The intial part of go(). Starts the new coroutine.  Returns 1 in the
    new coroutine, 0 in the old one. */
-int dill_prologue(int *hndl, const char *created) {
+__attribute__((noinline)) int dill_prologue(int *hndl, const char *created) {
     /* Ensure that debug functions are available whenever a single go()
        statement is present in the user's code. */
     dill_preserve_debug();
@@ -124,7 +124,7 @@ int dill_prologue(int *hndl, const char *created) {
 }
 
 /* The final part of go(). Cleans up after the coroutine is finished. */
-void dill_epilogue(void) {
+__attribute__((noinline)) void dill_epilogue(void) {
     dill_trace(NULL, "go() done");
     dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
     handledone(dill_running->hndl);
