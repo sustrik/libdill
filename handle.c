@@ -129,6 +129,15 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline,
         errno = EINVAL;
         return -1;
     }
+    /* Check whether all the handles in the array are valid. */
+    int i;
+    for(i = 0; i != nhndls; ++i) {
+        /* Main coroutine cannot be stopped. */
+        if(dill_slow(hndls[i] == 0)) {errno = EBADF; return -1;}
+        int h = hndls[i] - 1;
+        if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
+            errno = EBADF; return -1;}
+    }
     /* Set debug info. */
     dill_startop(&dill_running->debug, DILL_STOP, current);
     struct dill_stopdata *sd = (struct dill_stopdata*)dill_running->opaque;
@@ -138,7 +147,6 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline,
        deallocate themselves. */
     struct dill_list tocancel;
     dill_list_init(&tocancel);
-    int i;
     for(i = 0; i != nhndls; ++i) {
         struct dill_handle *hndl = &dill_handles[hndls[i] - 1];
         if(hndl->done) {
