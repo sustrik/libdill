@@ -38,6 +38,13 @@ void stop_fn2(int h) {
     assert(rc == 0);
 }
 
+coroutine void worker1(int h) {
+    int rc = msleep(now() + 100);
+    assert(rc == 0);
+    rc = handledone(h);
+    assert(rc == 0);
+}
+
 int main(void) {
     /* Handle is done before stop is called. */
     int h = handle(&type, &data, stop_fn1);
@@ -53,6 +60,15 @@ int main(void) {
     h = handle(&type, &data, stop_fn2);
     assert(h >= 0);
     rc = stop(&h, 1, 0);
+    assert(rc == 0);
+
+    /* Handle finishes asynchronously, no cancellation. */
+    h = handle(&type, &data, stop_fn1);
+    assert(h >= 0);
+    int w = go(worker1(h));
+    rc = stop(&h, 1, -1);
+    assert(rc == 0);
+    rc = stop(&w, 1, -1);
     assert(rc == 0);
 
     return 0;
