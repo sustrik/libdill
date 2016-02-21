@@ -36,7 +36,8 @@ DILL_CT_ASSERT(sizeof(struct dill_stopdata) <= DILL_OPAQUE_SIZE);
 struct dill_handle {
     const void *type;
     void *data;
-    /* Virtual function that gets called when the handle is being stopped. */
+    /* Virtual function that gets called when the handle is being stopped.
+       After it's called, this field is set to NULL. */
     hndlstop_fn stop_fn;
     int done;
     /* Coroutine that performs the cancelation of this handle.
@@ -183,12 +184,20 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline, const char *current) {
       if(rc == -ECANCELED)
           canceled = 1;
     }
-    /* Send stop signal to the remaining handles. */
+    /* Send stop signal to the remaining handles. It's tricky because sending
+       the signal may result in removal of arbitrary number of handles from 
+       the list. Thus the O(n^2) algorithm. It should be improved. */
     struct dill_list_item *it;
-    for(it = dill_list_begin(&tocancel); it; it = dill_list_next(it)) {
-        struct dill_handle *hndl = dill_cont(it, struct dill_handle, item);
-        hndl->stop_fn((hndl - dill_handles) + 1);
-    }
+    do {
+        for(it = dill_list_begin(&tocancel); it; it = dill_list_next(it)) {
+            struct dill_handle *hndl = dill_cont(it, struct dill_handle, item);
+            if(!hndl->stop_fn)
+                continue;
+            hndl->stop_fn((hndl - dill_handles) + 1);
+            hndl->stop_fn = NULL;
+            break;
+        }
+    } while(it);
     /* Wait till they all finish. Waiting may be interrupted if this
        coroutine itself is asked to cancel itself, but there's nothing
        much to do there anyway. It'll just continue waiting. */

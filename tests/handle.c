@@ -27,18 +27,33 @@
 #include "../libdill.h"
 
 static int type = 0;
+static int data = 0;
 
 void stop_fn1(int h) {
     assert(0);
 }
 
+void stop_fn2(int h) {
+    int rc = handledone(h);
+    assert(rc == 0);
+}
+
 int main(void) {
     /* Handle is done before stop is called. */
-    int h = handle(&type, NULL, stop_fn1);
+    int h = handle(&type, &data, stop_fn1);
     assert(h >= 0);
     int rc = handledone(h);
+    void *data = handledata(h);
+    assert(!data);
     assert(rc == 0);
     rc = stop(&h, 1, -1);
     assert(rc == 0);
+
+    /* Handle finishes synchronously when stop is called. */
+    h = handle(&type, &data, stop_fn2);
+    assert(h >= 0);
+    rc = stop(&h, 1, 0);
+    assert(rc == 0);
+
     return 0;
 }
