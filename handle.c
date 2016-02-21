@@ -54,6 +54,7 @@ static int dill_nhandles = 0;
 static int dill_unused = -1;
 
 int handle(const void *type, void *data, hndlstop_fn stop_fn) {
+    if(dill_slow(!type || !stop_fn)) {errno = EINVAL; return -1;}
     /* If there's no space for the new handle expand the array. */
     if(dill_slow(dill_unused == -1)) {
         /* Start with 256 handles, double the size when needed. */
