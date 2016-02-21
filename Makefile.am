@@ -79,7 +79,8 @@ check_PROGRAMS = \
     tests/sleep \
     tests/fdwait \
     tests/signals \
-    tests/overload
+    tests/overload \
+    tests/handle
 
 LDADD = libdill.la
 
