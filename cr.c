@@ -147,12 +147,8 @@ void dill_epilogue(void) {
     dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
     int rc = handledone(dill_running->hndl);
     dill_assert(rc >= 0);
-    if(!dill_running->canceled) {
-        /* If stop() wasn't call yet wait for it. */
-        rc = dill_suspend(NULL);
-        dill_assert(rc == 0);
-    }
-    /* Deallocate the resources. */
+    /* Handle will remain valid past this point but we can deallocate
+       the coroutine itself. */
     dill_unregister_cr(&dill_running->debug);
     dill_freestack(dill_running + 1);
     dill_running = NULL;

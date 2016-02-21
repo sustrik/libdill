@@ -121,8 +121,7 @@ int handledone(int h) {
     return 0;
 }
 
-int dill_stop(int *hndls, int nhndls, int64_t deadline,
-      const char *current) {
+int dill_stop(int *hndls, int nhndls, int64_t deadline, const char *current) {
     dill_trace(current, "stop()");
     if(dill_slow(nhndls == 0))
         return 0;
@@ -150,10 +149,8 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline,
     dill_list_init(&tocancel);
     for(i = 0; i != nhndls; ++i) {
         struct dill_handle *hndl = &dill_handles[hndls[i] - 1];
-        if(hndl->done) {
-            dill_resume((struct dill_cr*)hndl->data, 0);
+        if(hndl->done)
             continue;
-        }
         hndl->canceler = dill_running;
         hndl->tocancel = &tocancel;
         dill_list_insert(&tocancel, &hndl->item, NULL);
