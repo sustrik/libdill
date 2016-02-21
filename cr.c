@@ -144,7 +144,7 @@ void dill_epilogue(void) {
     dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
     int rc = handledone(dill_running->hndl);
     dill_assert(rc >= 0);
-    if(rc == 0) {
+    if(!dill_running->canceled) {
         /* If stop() wasn't call yet wait for it. */
         rc = dill_suspend(NULL);
         dill_assert(rc == 0);

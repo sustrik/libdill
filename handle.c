@@ -117,7 +117,7 @@ int handledone(int h) {
     dill_list_erase(hndl->tocancel, &hndl->item);
     if(dill_list_empty(hndl->tocancel))
         dill_resume(hndl->canceler, 0);
-    return 1;
+    return 0;
 }
 
 int dill_stop(int *hndls, int nhndls, int64_t deadline,
