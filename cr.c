@@ -141,7 +141,6 @@ void dill_epilogue(void) {
     dill_trace(NULL, "go() done");
     dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
     handledone(dill_running->hndl);
-    handleclose(dill_running->hndl);
     /* Stop the coroutine and deallocate the resources. */
     dill_unregister_cr(&dill_running->debug);
     dill_freestack(dill_running + 1);

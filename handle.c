@@ -124,17 +124,6 @@ int handledone(int h) {
     return 0;
 }
 
-int handleclose(int h) {
-    if(dill_slow(!h)) {errno = EINVAL; return -1;}
-    h--;
-    if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
-        errno = EBADF; return -1;}
-    /* Return the handle to the list of unused handles. */
-    dill_handles[h].next = dill_unused;
-    dill_unused = h;
-    return 0;
-}
-
 int dill_stop(int *hndls, int nhndls, int64_t deadline,
       const char *current) {
     dill_trace(current, "stop()");
@@ -209,8 +198,14 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline,
         canceled = 1;
     }
 finish:
+    /* Return all the handles back to the shared pool. */
+    for(i = 0; i != nhndls; ++i) {
+        int h = hndls[i] - 1;
+        dill_handles[h].next = dill_unused;
+        dill_unused = h;
+    }
+    /* if current coroutine was canceled by its owner. */
     if(canceled) {
-        /* This coroutine was canceled by its owner. */
         errno = ECANCELED;
         return -1;
     }

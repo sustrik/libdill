@@ -89,7 +89,6 @@ DILL_EXPORT int handle(void *type, void *data, hndlstop_fn stop);
 DILL_EXPORT void *handletype(int h);
 DILL_EXPORT void *handledata(int h);
 DILL_EXPORT int handledone(int h);
-DILL_EXPORT int handleclose(int h);
 
 /******************************************************************************/
 /*  Coroutines                                                                */
