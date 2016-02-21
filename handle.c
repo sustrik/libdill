@@ -36,7 +36,8 @@ DILL_CT_ASSERT(sizeof(struct dill_stopdata) <= DILL_OPAQUE_SIZE);
 struct dill_handle {
     void *type;
     void *data;
-    hndlstop_fn stop;
+    /* Virtual function that gets called when the handle is being stopped. */
+    hndlstop_fn stop_fn;
     int done;
     /* Coroutine that performs the cancelation of this handle.
        NULL if the handle is not being canceled. */
@@ -52,7 +53,7 @@ static struct dill_handle *dill_handles = NULL;
 static int dill_nhandles = 0;
 static int dill_unused = -1;
 
-int handle(void *type, void *data, hndlstop_fn stop) {
+int handle(void *type, void *data, hndlstop_fn stop_fn) {
     /* If there's no space for the new handle expand the array. */
     if(dill_slow(dill_unused == -1)) {
         /* Start with 256 handles, double the size when needed. */
@@ -75,7 +76,7 @@ int handle(void *type, void *data, hndlstop_fn stop) {
     dill_unused = dill_handles[h].next;
     dill_handles[h].type = type;
     dill_handles[h].data = data;
-    dill_handles[h].stop = stop;
+    dill_handles[h].stop_fn = stop_fn;
     dill_handles[h].done = 0;
     dill_handles[h].canceler = NULL;
     dill_handles[h].tocancel = NULL;
@@ -178,14 +179,11 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline,
       if(rc == -ECANCELED)
           canceled = 1;
     }
-    /* Send cancel signal to the remaining coroutines. */
+    /* Send stop signal to the remaining handles. */
     struct dill_list_item *it;
     for(it = dill_list_begin(&tocancel); it; it = dill_list_next(it)) {
         struct dill_handle *hndl = dill_cont(it, struct dill_handle, item);
-        struct dill_cr *cr = (struct dill_cr*)hndl->data;
-        cr->canceled = 1;
-        if(!dill_slist_item_inlist(&cr->ready))
-            dill_resume(cr, -ECANCELED);
+        hndl->stop_fn((hndl - dill_handles) + 1);
     }
     /* Wait till they all finish. Waiting may be interrupted if this
        coroutine itself is asked to cancel itself, but there's nothing

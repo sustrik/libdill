@@ -107,6 +107,8 @@ void dill_resume(struct dill_cr *cr, int result) {
 #error Unsupported compiler!
 #endif
 
+static void dill_cr_stop(int h);
+
 /* The intial part of go(). Starts the new coroutine.  Returns 1 in the
    new coroutine, 0 in the old one. */
 __attribute__((noinline)) dill_noopt
@@ -117,7 +119,7 @@ int dill_prologue(int *hndl, const char *created) {
     /* Allocate and initialise new stack. */
     struct dill_cr *cr = ((struct dill_cr*)dill_allocstack()) - 1;
     if(dill_slow(!cr)) {*hndl = -1; return 0;}
-    *hndl = handle(NULL, cr, NULL);
+    *hndl = handle(NULL, cr, dill_cr_stop);
     if(dill_slow(*hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return 0;}
     dill_register_cr(&cr->debug, created);
     dill_slist_item_init(&cr->ready);
@@ -166,6 +168,13 @@ int dill_yield(const char *current) {
     dill_assert(rc < 0);
     errno = -rc;
     return -1;
+}
+
+static void dill_cr_stop(int h) {
+    struct dill_cr *cr = (struct dill_cr*)handledata(h);
+    cr->canceled = 1;
+    if(!dill_slist_item_inlist(&cr->ready))
+        dill_resume(cr, -ECANCELED);
 }
 
 void *cls(void) {
