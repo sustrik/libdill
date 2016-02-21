@@ -142,8 +142,14 @@ __attribute__((noinline)) dill_noopt
 void dill_epilogue(void) {
     dill_trace(NULL, "go() done");
     dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
-    handledone(dill_running->hndl);
-    /* Stop the coroutine and deallocate the resources. */
+    int rc = handledone(dill_running->hndl);
+    dill_assert(rc >= 0);
+    if(rc == 0) {
+        /* If stop() wasn't call yet wait for it. */
+        rc = dill_suspend(NULL);
+        dill_assert(rc == 0);
+    }
+    /* Deallocate the resources. */
     dill_unregister_cr(&dill_running->debug);
     dill_freestack(dill_running + 1);
     dill_running = NULL;

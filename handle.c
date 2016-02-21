@@ -109,20 +109,15 @@ int handledone(int h) {
         errno = EBADF; return -1;}
     struct dill_handle *hndl = &dill_handles[h];
     hndl->done = 1;
-    if(hndl->canceler) {
-        /* If there's stop() already waiting for this handle,
-           remove it from the list of waiting handles and if there's no other
-           handle left in the list resume the stopper. */
-        dill_list_erase(hndl->tocancel, &hndl->item);
-        if(dill_list_empty(hndl->tocancel))
-            dill_resume(hndl->canceler, 0);
-    }
-    else {
-        /* If stop() wasn't call yet wait for it. */
-        int rc = dill_suspend(NULL);
-        dill_assert(rc == 0);
-    }
-    return 0;
+    if(!hndl->canceler)
+        return 0;
+    /* If there's stop() already waiting for this handle,
+       remove it from the list of waiting handles and if there's no other
+       handle left in the list resume the stopper. */
+    dill_list_erase(hndl->tocancel, &hndl->item);
+    if(dill_list_empty(hndl->tocancel))
+        dill_resume(hndl->canceler, 0);
+    return 1;
 }
 
 int dill_stop(int *hndls, int nhndls, int64_t deadline,
