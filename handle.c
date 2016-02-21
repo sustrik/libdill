@@ -34,7 +34,7 @@
 DILL_CT_ASSERT(sizeof(struct dill_stopdata) <= DILL_OPAQUE_SIZE);
 
 struct dill_handle {
-    void *type;
+    const void *type;
     void *data;
     /* Virtual function that gets called when the handle is being stopped. */
     hndlstop_fn stop_fn;
@@ -53,7 +53,7 @@ static struct dill_handle *dill_handles = NULL;
 static int dill_nhandles = 0;
 static int dill_unused = -1;
 
-int handle(void *type, void *data, hndlstop_fn stop_fn) {
+int handle(const void *type, void *data, hndlstop_fn stop_fn) {
     /* If there's no space for the new handle expand the array. */
     if(dill_slow(dill_unused == -1)) {
         /* Start with 256 handles, double the size when needed. */
@@ -86,7 +86,7 @@ int handle(void *type, void *data, hndlstop_fn stop_fn) {
     return h + 1;
 }
 
-void *handletype(int h) {
+const void *handletype(int h) {
     if(dill_slow(!h)) return NULL;
     h--;
     if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {

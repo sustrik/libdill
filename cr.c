@@ -33,6 +33,9 @@
 #include "stack.h"
 #include "utils.h"
 
+static const int dill_type_placeholder = 0;
+static const void *dill_cr_type = &dill_type_placeholder;
+
 volatile int dill_unoptimisable1 = 1;
 volatile void *dill_unoptimisable2 = NULL;
 
@@ -119,7 +122,7 @@ int dill_prologue(int *hndl, const char *created) {
     /* Allocate and initialise new stack. */
     struct dill_cr *cr = ((struct dill_cr*)dill_allocstack()) - 1;
     if(dill_slow(!cr)) {*hndl = -1; return 0;}
-    *hndl = handle(NULL, cr, dill_cr_stop);
+    *hndl = handle(dill_cr_type, cr, dill_cr_stop);
     if(dill_slow(*hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return 0;}
     dill_register_cr(&cr->debug, created);
     dill_slist_item_init(&cr->ready);
