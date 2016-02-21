@@ -110,6 +110,9 @@ int handledone(int h) {
         errno = EBADF; return -1;}
     struct dill_handle *hndl = &dill_handles[h];
     hndl->done = 1;
+    /* The data can be deallocated past this point. It's safer to set this
+       pointer to NULL so that it's easier to debug if used by accident. */
+    hndl->data = NULL;
     if(!hndl->canceler)
         return 0;
     /* If there's stop() already waiting for this handle,
