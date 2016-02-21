@@ -309,6 +309,74 @@ void *cls();
 When new coroutine is launched the value of coroutine-local storage is
 guaranteed to be `NULL`.
 
+## Handles
+
+Handles provide a mechanism to create asynchronously cancelable objects, i.e.
+objects that can be stopped using `stop()` function.
+
+Handle is created by `handle()` function.
+
+```
+typedef void (*hndlstop_fn)(int h);
+int handle(const void *type, void *data, hndlstop_fn stop_fn);
+```
+
+`type` is a unique pointer identifying the type of the object. It can be
+retrieved later on via `handletype()` function.
+
+`data` is an opaque pointer. It is not used by libdill. It can be retrieved
+later on via `handledata()` function.
+
+`stop_fn` is a function that will be called when the object is supposed to
+terminate. The implementation should try to stop the object as soon as possible
+offering it no grace period. It should call `handledone()` once the object
+is stopped. Once `handledone()` is called the object can be deallocated and
+any associated resources can be freed.
+
+On success, `handle()` function returns a newly allocated handle. The handle
+can be later used as argument to `stop()` function.
+
+On error, -1 is returned and `errno` is set to one of the following values:
+
+* `EINVAL`: Invalid argument.
+* `ENOMEM`: Not enough memory to create the handle.
+
+`handletype()` function returns the type pointer as it was supplied to
+`handle()` function when the handle was created.
+
+```
+const void *handletype(int h);
+```
+
+In case of error the function returns `NULL` and sets `errno` to one of
+the following values:
+
+* `EBADF`: The specified handle does not exist.
+
+`handledata()` function returns the data pointer as it was supplied to
+`handle()` function when the handle was created.
+
+```
+void *handledata(int h);
+```
+
+In case of error the function returns `NULL` and sets `errno` to one of
+the following values:
+
+* `EBADF`: The specified handle does not exist.
+
+`handledone()` should be called by the object when it is done doing its
+work. Once the function is called, the object can be safely deallocated.
+
+```
+int handledone(int h);
+```
+
+In case of success 0 is returned. In case of error -1 is returned and `errno`
+is set to one of the following values:
+
+* `EBADF`: The specified handle does not exist.
+
 ## Debugging
 
 Debugging:

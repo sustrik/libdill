@@ -55,7 +55,7 @@ static int dill_nhandles = 0;
 static int dill_unused = -1;
 
 int handle(const void *type, void *data, hndlstop_fn stop_fn) {
-    if(dill_slow(!type || !stop_fn)) {errno = EINVAL; return -1;}
+    if(dill_slow(!type || !data || !stop_fn)) {errno = EINVAL; return -1;}
     /* If there's no space for the new handle expand the array. */
     if(dill_slow(dill_unused == -1)) {
         /* Start with 256 handles, double the size when needed. */
@@ -89,7 +89,7 @@ int handle(const void *type, void *data, hndlstop_fn stop_fn) {
 }
 
 const void *handletype(int h) {
-    if(dill_slow(!h)) return NULL;
+    if(dill_slow(!h)) return NULL; /* TODO: return coroutine type */
     h--;
     if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return NULL;}
@@ -97,7 +97,7 @@ const void *handletype(int h) {
 }
 
 void *handledata(int h) {
-    if(dill_slow(!h)) return NULL;
+    if(dill_slow(!h)) return NULL; /* TODO */
     h--;
     if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return NULL;}
