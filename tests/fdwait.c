@@ -107,8 +107,34 @@ int main() {
     rc = stop(&hndl2, 1, -1);
     assert(rc == 0);
 
-    close(fds[0]);
-    close(fds[1]);
+    /* Check whether closing the connection is reported. */
+    fdclean(fds[1]);
+    rc = close(fds[1]);
+    assert(rc == 0);
+    rc = msleep(now() + 50);
+    assert(rc == 0);
+    rc = fdwait(fds[0], FDW_IN | FDW_OUT, -1);
+    assert(rc >= 0);
+    assert(rc == FDW_IN | FDW_OUT | FDW_ERR);
+    fdclean(fds[0]);
+    rc = close(fds[0]);
+    assert(rc == 0);
+
+    /* Check whether half-closing the connection is reported. */
+    rc = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+    assert(rc == 0);
+    rc = shutdown(fds[1], SHUT_WR);
+    assert(rc == 0);
+    rc = msleep(now() + 50);
+    assert(rc == 0);
+    rc = fdwait(fds[0], FDW_IN | FDW_OUT, -1);
+    assert(rc >= 0);
+    assert(rc == FDW_IN | FDW_OUT | FDW_ERR);
+    fdclean(fds[0]);
+    rc = close(fds[0]);
+    assert(rc == 0);
+    rc = close(fds[1]);
+    assert(rc == 0);
 
     return 0;
 }
