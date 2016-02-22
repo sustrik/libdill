@@ -88,7 +88,7 @@ pid_t dill_fork(void) {
            survive a fork. However, implementations seem to diverge.
            On FreeBSD the following function succeeds. On OSX it returns
            EACCESS. Therefore we ignore the return value. */
-        close(mill_kfd);
+        close(dill_kfd);
         dill_kfd = kqueue();
         dill_assert(dill_kfd >= 0);
         struct kevent chngs[DILL_CHNGSSIZE];
