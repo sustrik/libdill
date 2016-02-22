@@ -329,7 +329,8 @@ later on via `handledata()` function.
 
 `stop_fn` is a function that will be called when the object is supposed to
 terminate. The implementation should try to stop the object as soon as possible
-offering it no grace period. It should call `handledone()` once the object
+offering it no grace period. All blocking functions return ECANCELED if called
+inside `stop_fn` context. `stop_fn` should call `handledone()` once the object
 is stopped. Once `handledone()` is called the object can be deallocated and
 any associated resources can be freed.
 
