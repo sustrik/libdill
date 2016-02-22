@@ -85,11 +85,10 @@ pid_t dill_fork(void) {
        destiny. */
     if(dill_kfd != -1) {
         /* TODO: kqueue documentation says that a kqueue descriptor won't
-           survive a fork. If that was so, one would expect following close()
-           to fail with EBADF error. Yet, at least on FreeBSD, the call
-           succeeds. */
-        int rc = close(dill_kfd);
-        dill_assert(rc == 0);
+           survive a fork. However, implementations seem to diverge.
+           On FreeBSD the following function succeeds. On OSX it returns
+           EACCESS. Therefore we ignore the return value. */
+        close(mill_kfd);
         dill_kfd = kqueue();
         dill_assert(dill_kfd >= 0);
         struct kevent chngs[DILL_CHNGSSIZE];
@@ -98,7 +97,7 @@ pid_t dill_fork(void) {
         for(fd = 0; fd != dill_ncrpairs; ++fd) {
             struct dill_crpair *crp = &dill_crpairs[fd];
             if(nchngs >= DILL_CHNGSSIZE - 1) {
-                rc = kevent(dill_kfd, chngs, nchngs, NULL, 0, NULL);
+                int rc = kevent(dill_kfd, chngs, nchngs, NULL, 0, NULL);
                 dill_assert(rc != -1);
                 nchngs = 0;
             }
