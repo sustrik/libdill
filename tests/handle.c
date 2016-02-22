@@ -37,6 +37,17 @@ void stop_fn2(int h) {
     /* Check whether blocking functions are disabled inside stop functions. */
     int rc = yield();
     assert(rc == -1 && errno == ECANCELED);
+    rc = msleep(now() + 100);
+    assert(rc == -1 && errno == ECANCELED);
+    rc = fdwait(0, FDW_IN, -1);
+    assert(rc == -1 && errno == ECANCELED);
+    chan ch = channel(0, 0);
+    assert(ch);
+    rc = chsend(ch, NULL, 0, -1);
+    assert(rc == -1 && errno == ECANCELED);
+    rc = chrecv(ch, NULL, 0, -1);
+    assert(rc == -1 && errno == ECANCELED);
+    chclose(ch);
     rc = handledone(h);
     assert(rc == 0);
 }
