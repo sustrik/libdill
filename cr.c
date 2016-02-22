@@ -127,6 +127,7 @@ int dill_prologue(int *hndl, const char *created) {
     dill_register_cr(&cr->debug, created);
     dill_slist_item_init(&cr->ready);
     cr->canceled = 0;
+    cr->stopping = 0;
     cr->cls = NULL;
     cr->hndl = *hndl;
     cr->unblock_cb = NULL;
@@ -159,7 +160,7 @@ void dill_epilogue(void) {
 
 int dill_yield(const char *current) {
     dill_trace(current, "yield()");
-    if(dill_slow(dill_running->canceled)) {
+    if(dill_slow(dill_running->canceled || dill_running->stopping)) {
         errno = ECANCELED;
         return -1;
     }

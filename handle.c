@@ -160,12 +160,11 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline, const char *current) {
         dill_list_insert(&tocancel, &hndl->item, NULL);
     }
     /* If all coroutines are finished return straight away. */
-    int canceled = dill_running->canceled;
     if(dill_list_empty(&tocancel))
         goto finish;
     /* If user requested immediate cancelation or if this coroutine was already
        canceled by its owner we can skip the grace period. */
-    if(deadline != 0 || dill_running->canceled) {
+    if(deadline != 0 || dill_running->canceled || dill_running->stopping) {
       /* If required, start waiting for the timeout. */
       if(deadline > 0)
           dill_timer_add(&dill_running->timer, deadline);
@@ -181,12 +180,12 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline, const char *current) {
       dill_assert(rc == -ECANCELED || rc == -ETIMEDOUT);
       if(rc != -ETIMEDOUT && deadline > 0)
           dill_timer_rm(&dill_running->timer);
-      if(rc == -ECANCELED)
-          canceled = 1;
     }
     /* Send stop signal to the remaining handles. It's tricky because sending
        the signal may result in removal of arbitrary number of handles from 
        the list. Thus the O(n^2) algorithm. It should be improved. */
+    int was_stopping = dill_running->stopping;
+    dill_running->stopping = 1;
     struct dill_list_item *it;
     do {
         for(it = dill_list_begin(&tocancel); it; it = dill_list_next(it)) {
@@ -198,6 +197,7 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline, const char *current) {
             break;
         }
     } while(it);
+    dill_running->stopping = was_stopping;
     /* Wait till they all finish. Waiting may be interrupted if this
        coroutine itself is asked to cancel itself, but there's nothing
        much to do there anyway. It'll just continue waiting. */
@@ -206,7 +206,6 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline, const char *current) {
         if(rc == 0)
             break;
         dill_assert(rc == -ECANCELED);
-        canceled = 1;
     }
 finish:
     /* Return all the handles back to the shared pool. */
@@ -216,7 +215,7 @@ finish:
         dill_unused = h;
     }
     /* if current coroutine was canceled by its owner. */
-    if(canceled) {
+    if(dill_slow(dill_running->canceled || dill_running->stopping)) {
         errno = ECANCELED;
         return -1;
     }

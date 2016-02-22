@@ -34,7 +34,10 @@ void stop_fn1(int h) {
 }
 
 void stop_fn2(int h) {
-    int rc = handledone(h);
+    /* Check whether blocking functions are disabled in stop functions. */
+    int rc = yield();
+    assert(rc == -1 && errno == ECANCELED);
+    rc = handledone(h);
     assert(rc == 0);
 }
 

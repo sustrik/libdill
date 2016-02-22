@@ -78,8 +78,10 @@ struct dill_cr {
     dill_unblock_cb unblock_cb;
     int result;
 
-    /* 1 if blocking functions should return ECANCELED. */
+    /* 1 if this corotine was stopped by its owner. */
     int canceled;
+    /* 1 is execution is inside a 'stop' function. */
+    int stopping;
 
     /* Coroutine-local storage. */
     void *cls;
