@@ -108,11 +108,19 @@ int main() {
     assert(rc == 0);
 
     /* Check whether closing the connection is reported. */
+    ssize_t nbytes = send(fds[1], "ABC", 3, 0);
+    assert(nbytes == 3);
     fdclean(fds[1]);
     rc = close(fds[1]);
     assert(rc == 0);
     rc = msleep(now() + 50);
     assert(rc == 0);
+    rc = fdwait(fds[0], FDW_IN | FDW_OUT, -1);
+    assert(rc >= 0);
+    assert(rc == FDW_IN | FDW_OUT | FDW_ERR);
+    char buf[10];
+    nbytes = recv(fds[0], buf, sizeof(buf), 0);
+    assert(nbytes == 3);
     rc = fdwait(fds[0], FDW_IN | FDW_OUT, -1);
     assert(rc >= 0);
     assert(rc == FDW_IN | FDW_OUT | FDW_ERR);
