@@ -146,7 +146,7 @@ __attribute__((noinline)) dill_noopt
 void dill_epilogue(int result) {
     dill_trace(NULL, "go() done");
     dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
-    int rc = handledone(dill_running->hndl);
+    int rc = handledone(dill_running->hndl, result);
     dill_assert(rc >= 0);
     /* Handle will remain valid past this point but we can deallocate
        the coroutine itself. */

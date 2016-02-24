@@ -82,8 +82,6 @@ struct dill_cr {
     int canceled;
     /* 1 is execution is inside a 'stop' function. */
     int stopping;
-    /* Result returned by the coroutine. */
-    int result;
 
     /* Coroutine-local storage. */
     void *cls;

@@ -88,7 +88,7 @@ typedef void (*hndlstop_fn)(int h);
 DILL_EXPORT int handle(const void *type, void *data, hndlstop_fn stop_fn);
 DILL_EXPORT const void *handletype(int h);
 DILL_EXPORT void *handledata(int h);
-DILL_EXPORT int handledone(int h);
+DILL_EXPORT int handledone(int h, int result);
 
 /******************************************************************************/
 /*  Coroutines                                                                */

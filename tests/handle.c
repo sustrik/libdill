@@ -48,14 +48,14 @@ void stop_fn2(int h) {
     rc = chrecv(ch, NULL, 0, -1);
     assert(rc == -1 && errno == ECANCELED);
     chclose(ch);
-    rc = handledone(h);
+    rc = handledone(h, 0);
     assert(rc == 0);
 }
 
 coroutine int worker1(int h) {
     int rc = msleep(now() + 100);
     assert(rc == 0);
-    rc = handledone(h);
+    rc = handledone(h, 0);
     assert(rc == 0);
     return 0;
 }
@@ -64,7 +64,7 @@ int main(void) {
     /* Handle is done before stop is called. */
     int h = handle(&type, &data, stop_fn1);
     assert(h >= 0);
-    int rc = handledone(h);
+    int rc = handledone(h, 0);
     void *data = handledata(h);
     assert(!data);
     assert(rc == 0);

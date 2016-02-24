@@ -40,6 +40,7 @@ struct dill_handle {
        After it's called, this field is set to NULL. */
     hndlstop_fn stop_fn;
     int done;
+    int result;
     /* Coroutine that performs the cancelation of this handle.
        NULL if the handle is not being canceled. */
     struct dill_cr *canceler;
@@ -104,13 +105,14 @@ void *handledata(int h) {
     return dill_handles[h].data;
 }
 
-int handledone(int h) {
+int handledone(int h, int result) {
     if(dill_slow(!h)) return 0;
     h--;
     if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return -1;}
     struct dill_handle *hndl = &dill_handles[h];
     hndl->done = 1;
+    hndl->result = result;
     /* The data can be deallocated past this point. It's safer to set this
        pointer to NULL so that it's easier to debug if used by accident. */
     hndl->data = NULL;
