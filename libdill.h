@@ -189,15 +189,13 @@ struct chclause {
     dill_choose((clauses), (nclauses), (deadline), \
     __FILE__ ":" dill_string(__LINE__))
 
-DILL_EXPORT chan dill_channel(size_t itemsz, size_t bufsz,
-    const char *created);
+DILL_EXPORT chan dill_channel(size_t itemsz, size_t bufsz, const char *created);
 DILL_EXPORT int dill_chsend(chan ch, const void *val, size_t len,
     int64_t deadline, const char *current);
 DILL_EXPORT int dill_chrecv(chan ch, void *val, size_t len,
     int64_t deadline, const char *current);
 DILL_EXPORT int dill_chdone(chan ch, const char *current);
-DILL_EXPORT void dill_chclose(chan ch,
-    const char *current);
+DILL_EXPORT void dill_chclose(chan ch, const char *current);
 DILL_EXPORT int dill_choose(struct chclause *clauses, int nclauses,
     int64_t deadline, const char *current);
 

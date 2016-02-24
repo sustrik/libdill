@@ -33,7 +33,7 @@ by the coroutine.
 
 To cancel a coroutine use `hclose()` function. Note that when coroutine handle
 is closed, all blocking calls in the coroutine start failing with
-`ECANCELED` error. `hclose()` will return coroutine's return value.
+`ECANCELED` error.
 
 ## Yield CPU to other coroutines
 
@@ -327,7 +327,7 @@ the following values:
 `hdone()` should be called by the object when it is done doing its
 work. Once the function is called, the object can be safely deallocated.
 `result` parameter will be eventually passed to the owner of the handle
-when it calls `hwait()` or `hclose()`.
+when it calls `hwait()`.
 
 ```
 int hdone(int h, int result);
@@ -362,8 +362,10 @@ the object it refers to and deallocates any associated resources.
 int hclose(int h);
 ```
 
-The function never fails. It returns handle's return value as passed by
-the implementation to `hdone()` function.
+If the function succeeds it reutrns 0. Otherwise it returns -1 and
+sets `errno` to one of the following values:
+
+* `EBADF`: The specified handle does not exist.
 
 ## Debugging
 

@@ -188,7 +188,6 @@ int hclose(int h) {
     /* Return the handle to the shared pool. */
     hndl->next = dill_unused;
     dill_unused = h;
-    /* Return the result value provided by handledone() function. */
-    return hndl->result;
+    return 0;
 }
 
