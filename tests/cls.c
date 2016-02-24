@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -30,7 +30,7 @@
 static int dummy1 = 0;
 static int dummy2 = 0;
 
-coroutine void worker(void) {
+coroutine int worker(void) {
     /* Test whether newly created coroutine has CLS set to NULL. */
     assert(cls() == NULL);
 
@@ -41,6 +41,7 @@ coroutine void worker(void) {
     int rc = yield();
     assert(rc == 0);
     assert(cls() == &dummy2);
+    return 0;
 }
 
 int main() {

@@ -28,67 +28,73 @@
 
 #include "../libdill.h"
 
-coroutine void dummy(void) {
+coroutine int dummy(void) {
     int rc = msleep(now() + 50);
     assert(rc == 0);
+    return 0;
 }
 
 int sum = 0;
 
-coroutine void worker(int count, int n) {
+coroutine int worker(int count, int n) {
     int i;
     for(i = 0; i != count; ++i) {
         sum += n;
         int rc = yield();
         assert(rc == 0);
     }
+    return 0;
 }
 
 static int worker2_done = 0;
 
-coroutine void worker2(void) {
+coroutine int worker2(void) {
     int rc = msleep(now() + 1000);
     assert(rc == -1 && errno == ECANCELED);
     /* Try again to test whether subsequent calls fail as well. */
     rc = msleep(now() + 1000);
     assert(rc == -1 && errno == ECANCELED);
     ++worker2_done;
+    return 0;
 }
 
 static int worker3_done = 0;
 
-coroutine void worker3(void) {
+coroutine int worker3(void) {
     int rc = msleep(now() + 100);
     assert(rc == 0);
     ++worker3_done;
+    return 0;
 }
 
 static int worker4_finished = 0;
 static int worker4_canceled = 0;
 
-coroutine void worker4(int64_t deadline) {
+coroutine int worker4(int64_t deadline) {
     int rc = msleep(deadline);
     if(rc == 0) {
         ++worker4_finished;
-        return;
+        return 0;
     }
     if(rc == -1 && errno == ECANCELED) {
         ++worker4_canceled;
-        return;
+        return 0;
     }
     assert(0);
 }
 
-coroutine void worker6(void) {
+coroutine int worker6(void) {
     int rc = msleep(now() + 2000);
     assert(rc == -1 && errno == ECANCELED);
+    return 0;
 }
 
-coroutine void worker5(void) {
+coroutine int worker5(void) {
     int hndl = go(worker6());
     assert(hndl >= 0);
     int rc = stop(&hndl, 1, now() + 1000);
     assert(rc == -1 && errno == ECANCELED);
+    return 0;
 }
 
 int main() {

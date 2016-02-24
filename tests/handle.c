@@ -52,11 +52,12 @@ void stop_fn2(int h) {
     assert(rc == 0);
 }
 
-coroutine void worker1(int h) {
+coroutine int worker1(int h) {
     int rc = msleep(now() + 100);
     assert(rc == 0);
     rc = handledone(h);
     assert(rc == 0);
+    return 0;
 }
 
 int main(void) {

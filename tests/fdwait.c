@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -32,18 +32,20 @@
 
 #include "../libdill.h"
 
-coroutine void cancel(int fd) {
+coroutine int cancel(int fd) {
     int rc = fdwait(fd, FDW_IN, -1);
     assert(rc == -1 && errno == ECANCELED);
     rc = fdwait(fd, FDW_IN, -1);
     assert(rc == -1 && errno == ECANCELED);
+    return 0;
 }
 
-coroutine void trigger(int fd, int64_t deadline) {
+coroutine int trigger(int fd, int64_t deadline) {
     int rc = msleep(deadline);
     assert(rc == 0);
     ssize_t sz = send(fd, "A", 1, 0);
     assert(sz == 1);
+    return 0;
 }
 
 int main() {

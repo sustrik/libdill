@@ -41,15 +41,16 @@ void signal_intr(int signo) {
     assert(sz == 1);
 }
 
-coroutine void sender(chan ch) {
+coroutine int sender(chan ch) {
     char signo;
     int rc = chrecv(ch, &signo, sizeof(signo), -1);
     assert(rc == 0);
     rc = kill(getpid(), signo);
     assert(rc == 0);
+    return 0;
 }
 
-coroutine void receiver(chan ch) {
+coroutine int receiver(chan ch) {
     int events = fdwait(signal_pipe[0], FDW_IN, -1);
     assert(events == FDW_IN);
 
@@ -60,6 +61,8 @@ coroutine void receiver(chan ch) {
 
     int rc = chsend(ch, &signo, sizeof(signo), -1);
     assert(rc == 0);
+
+    return 0;
 }
 
 int main() {

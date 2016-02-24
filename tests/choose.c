@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -27,37 +27,41 @@
 
 #include "../libdill.h"
 
-coroutine void sender1(chan ch, int val) {
+coroutine int sender1(chan ch, int val) {
     int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch);
+    return 0;
 }
 
-coroutine void sender2(chan ch, int val) {
+coroutine int sender2(chan ch, int val) {
     int rc = yield();
     assert(rc == 0);
     rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch);
+    return 0;
 }
 
-coroutine void sender3(chan ch, int val, int64_t deadline) {
+coroutine int sender3(chan ch, int val, int64_t deadline) {
     int rc = msleep(deadline);
     assert(rc == 0);
     rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch);
+    return 0;
 }
 
-coroutine void receiver1(chan ch, int expected) {
+coroutine int receiver1(chan ch, int expected) {
     int val;
     int rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == expected);
     chclose(ch);
+    return 0;
 }
 
-coroutine void receiver2(chan ch, int expected) {
+coroutine int receiver2(chan ch, int expected) {
     int rc = yield();
     assert(rc == 0);
     int val;
@@ -65,22 +69,24 @@ coroutine void receiver2(chan ch, int expected) {
     assert(rc == 0);
     assert(val == expected);
     chclose(ch);
+    return 0;
 }
 
-coroutine void choosesender(chan ch, int val) {
+coroutine int choosesender(chan ch, int val) {
     struct chclause cl = {ch, CHSEND, &val, sizeof(val)};
     int rc = choose(&cl, 1, -1);
     assert(rc == 0);
     chclose(ch);
+    return 0;
 }
 
-coroutine void feeder(chan ch, int val) {
+coroutine int feeder(chan ch, int val) {
     while(1) {
         int rc = chsend(ch, &val, sizeof(val), -1);
-        if(rc == -1 && errno == ECANCELED) return;
+        if(rc == -1 && errno == ECANCELED) return 0;
         assert(rc == 0);
         rc = yield();
-        if(rc == -1 && errno == ECANCELED) return;
+        if(rc == -1 && errno == ECANCELED) return 0;
         assert(rc == 0);
     }
 }

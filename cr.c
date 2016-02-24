@@ -72,7 +72,7 @@ int dill_suspend(dill_unblock_cb unblock_cb) {
     if(dill_running) {
         dill_running->unblock_cb = unblock_cb;
         if(dill_setjmp(&dill_running->ctx))
-            return dill_running->result;
+            return dill_running->sresult;
     }
     while(1) {
         /* If there's a coroutine ready to be executed go for it. */
@@ -95,7 +95,7 @@ void dill_resume(struct dill_cr *cr, int result) {
         cr->unblock_cb(cr);
         cr->unblock_cb = NULL;
     }
-    cr->result = result;
+    cr->sresult = result;
     dill_slist_push_back(&dill_ready, &cr->ready);
 }
 
@@ -143,7 +143,7 @@ int dill_prologue(int *hndl, const char *created) {
 
 /* The final part of go(). Cleans up after the coroutine is finished. */
 __attribute__((noinline)) dill_noopt
-void dill_epilogue(void) {
+void dill_epilogue(int result) {
     dill_trace(NULL, "go() done");
     dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
     int rc = handledone(dill_running->hndl);

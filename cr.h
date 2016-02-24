@@ -72,16 +72,18 @@ struct dill_cr {
 
     /* When coroutine is suspended 'ctx' holds the context (registers and such),
        'unblock_cb' is a function to be called when the coroutine is moved back
-       to the list of ready coroutines and 'result' is the value to be returned
+       to the list of ready coroutines and 'sresult' is the value to be returned
        from the suspend function. */
     struct dill_ctx ctx;
     dill_unblock_cb unblock_cb;
-    int result;
+    int sresult;
 
     /* 1 if this corotine was stopped by its owner. */
     int canceled;
     /* 1 is execution is inside a 'stop' function. */
     int stopping;
+    /* Result returned by the coroutine. */
+    int result;
 
     /* Coroutine-local storage. */
     void *cls;

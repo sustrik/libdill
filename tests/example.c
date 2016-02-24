@@ -27,13 +27,14 @@
 
 #include "../libdill.h"
 
-coroutine void worker(int count, const char *text) {
+coroutine int worker(int count, const char *text) {
     int i;
     for(i = 0; i != count; ++i) {
         printf("%s\n", text);
         int rc = msleep(10);
         assert(rc == 0);
     }
+    return 0;
 }
 
 int main() {

@@ -97,9 +97,9 @@ DILL_EXPORT int handledone(int h);
 DILL_EXPORT extern volatile int dill_unoptimisable1;
 DILL_EXPORT extern volatile void *dill_unoptimisable2;
 
-DILL_EXPORT __attribute__((noinline))int dill_prologue(int *hndl,
+DILL_EXPORT __attribute__((noinline)) int dill_prologue(int *hndl,
     const char *created);
-DILL_EXPORT __attribute__((noinline))void dill_epilogue(void);
+DILL_EXPORT __attribute__((noinline)) void dill_epilogue(int result);
 
 #define dill_string2(x) #x
 #define dill_string(x) dill_string2(x)
@@ -121,8 +121,7 @@ DILL_EXPORT __attribute__((noinline))void dill_epilogue(void);
             dill_unoptimisable2 = &dill_anchor;\
             char dill_filler[(char*)&dill_anchor - (char*)handledata(hndl)];\
             dill_unoptimisable2 = &dill_filler;\
-            fn;\
-            dill_epilogue();\
+            dill_epilogue(fn);\
         }\
         hndl;\
     })

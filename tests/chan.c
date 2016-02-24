@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -35,7 +35,7 @@ struct foo {
     int second;
 };
 
-coroutine void sender(chan ch, int doyield, int val) {
+coroutine int sender(chan ch, int doyield, int val) {
     if(doyield) {
         int rc = yield();
         assert(rc == 0);
@@ -43,17 +43,19 @@ coroutine void sender(chan ch, int doyield, int val) {
     int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch);
+    return 0;
 }
 
-coroutine void receiver(chan ch, int expected) {
+coroutine int receiver(chan ch, int expected) {
     int val;
     int rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == expected);
     chclose(ch);
+    return 0;
 }
 
-coroutine void receiver2(chan ch, chan back) {
+coroutine int receiver2(chan ch, chan back) {
     int val;
     int rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == -1 && errno == EPIPE);
@@ -62,43 +64,49 @@ coroutine void receiver2(chan ch, chan back) {
     rc = chsend(back, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(back);
+    return 0;
 }
 
-coroutine void charsender(chan ch, char val) {
+coroutine int charsender(chan ch, char val) {
     int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch);
+    return 0;
 }
 
-coroutine void structsender(chan ch, struct foo val) {
+coroutine int structsender(chan ch, struct foo val) {
     int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch);
+    return 0;
 }
 
-coroutine void sender2(chan ch) {
+coroutine int sender2(chan ch) {
     int val = 0;
     int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == -1 && errno == EPIPE);
     chclose(ch);
+    return 0;
 }
 
-coroutine void receiver3(chan ch) {
+coroutine int receiver3(chan ch) {
     int val;
     int rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == -1 && errno == EPIPE);
+    return 0;
 }
 
-coroutine void cancel(chan ch) {
+coroutine int cancel(chan ch) {
     int val;
     int rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == -1 && errno == ECANCELED);
     rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == -1 && errno == ECANCELED);
     chclose(ch);
+    return 0;
 }
 
-coroutine void sender3(chan ch, int doyield) {
+coroutine int sender3(chan ch, int doyield) {
     if(doyield) {
         int rc = yield();
         assert(rc == 0);
@@ -106,6 +114,7 @@ coroutine void sender3(chan ch, int doyield) {
     int rc = chsend(ch, NULL, 0, -1);
     assert(rc == 0);
     chclose(ch);
+    return 0;
 }
 
 int main() {
