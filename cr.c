@@ -146,7 +146,7 @@ __attribute__((noinline)) dill_noopt
 void dill_epilogue(int result) {
     dill_trace(NULL, "go() done");
     dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
-    int rc = handledone(dill_running->hndl, result);
+    int rc = hdone(dill_running->hndl, result);
     dill_assert(rc >= 0);
     /* Handle will remain valid past this point but we can deallocate
        the coroutine itself. */
@@ -177,7 +177,7 @@ int dill_yield(const char *current) {
 }
 
 static void dill_cr_stop(int h) {
-    struct dill_cr *cr = (struct dill_cr*)handledata(h);
+    struct dill_cr *cr = (struct dill_cr*)hdata(h);
     cr->canceled = 1;
     if(!dill_slist_item_inlist(&cr->ready))
         dill_resume(cr, -ECANCELED);

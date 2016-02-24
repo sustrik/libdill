@@ -129,7 +129,7 @@ int main() {
     assert(rc == 0);
     assert(val == 333);
     chclose(ch1);
-    rc = stop(&hndl1, 1, -1);
+    rc = hwait(hndl1, NULL, -1);
     assert(rc == 0);
 
     /* Sender waits for receiver. */
@@ -141,7 +141,7 @@ int main() {
     assert(rc == 0);
     assert(val == 444);
     chclose(ch2);
-    rc = stop(&hndl2, 1, -1);
+    rc = hwait(hndl2, NULL, -1);
     assert(rc == 0);
 
     /* Test two simultaneous senders. */
@@ -161,7 +161,9 @@ int main() {
     assert(rc == 0);
     assert(val == 999);
     chclose(ch3);
-    rc = stop(hndl3, 2, -1);
+    rc = hwait(hndl3[0], NULL, -1);
+    assert(rc == 0);
+    rc = hwait(hndl3[1], NULL, -1);
     assert(rc == 0);
 
     /* Test two simultaneous receivers. */
@@ -179,7 +181,9 @@ int main() {
     rc = chsend(ch4, &val, sizeof(val), -1);
     assert(rc == 0);
     chclose(ch4);
-    rc = stop(hndl4, 2, -1);
+    rc = hwait(hndl4[0], NULL, -1);
+    assert(rc == 0);
+    rc = hwait(hndl4[1], NULL, -1);
     assert(rc == 0);
 
     /* Test typed channels. */
@@ -203,7 +207,9 @@ int main() {
     assert(rc == 0);
     assert(foo2.first == 555 && foo2.second == 222);
     chclose(ch6);
-    rc = stop(hndl5, 2, -1);
+    rc = hwait(hndl5[0], NULL, -1);
+    assert(rc == 0);
+    rc = hwait(hndl5[1], NULL, -1);
     assert(rc == 0);
 
     /* Test message buffering. */
@@ -304,7 +310,9 @@ int main() {
     assert(val == 0);
     chclose(ch13);
     chclose(ch12);
-    rc = stop(hndl6, 2, -1);
+    rc = hwait(hndl6[0], NULL, -1);
+    assert(rc == 0);
+    rc = hwait(hndl6[1], NULL, -1);
     assert(rc == 0);
 
     /* Test a combination of blocked sender and an item in the channel. */
@@ -322,7 +330,7 @@ int main() {
     assert(rc == 0);
     assert(val == 2);
     chclose(ch14);
-    rc = stop(&hndl7, 1, -1);
+    rc = hwait(hndl7, NULL, -1);
     assert(rc == 0);
 
     /* Test whether chdone() unblocks blocked senders. */
@@ -340,7 +348,11 @@ int main() {
     rc = chdone(ch15);
     assert(rc == 0);
     chclose(ch15);
-    rc = stop(hndl8, 3, -1);
+    rc = hwait(hndl8[0], NULL, -1);
+    assert(rc == 0);
+    rc = hwait(hndl8[1], NULL, -1);
+    assert(rc == 0);
+    rc = hwait(hndl8[2], NULL, -1);
     assert(rc == 0);
 
     /* Test whether chclose() unblocks blocked senders and receivers. */
@@ -354,7 +366,9 @@ int main() {
     rc = msleep(now() + 50);
     assert(rc == 0);
     chclose(ch16);
-    rc = stop(hndl9, 2, -1);
+    rc = hwait(hndl9[0], NULL, -1);
+    assert(rc == 0);
+    rc = hwait(hndl9[1], NULL, -1);
     assert(rc == 0);
 
     /* Test cancelation. */
@@ -362,8 +376,7 @@ int main() {
     assert(ch17);
     int hndl10 = go(cancel(chdup(ch17)));
     assert(hndl10 >= 0);
-    rc = stop(&hndl10, 1, 0);
-    assert(rc == 0);
+    hclose(hndl10);
     chclose(ch17);
 
     /* Receiver waits for sender (zero-byte message). */
@@ -374,7 +387,7 @@ int main() {
     rc = chrecv(ch18, NULL, 0, -1);
     assert(rc == 0);
     chclose(ch18);
-    rc = stop(&hndl11, 1, -1);
+    rc = hwait(hndl11, NULL, -1);
     assert(rc == 0);
 
     /* Sender waits for receiver (zero-byte message). */
@@ -385,7 +398,7 @@ int main() {
     rc = chrecv(ch19, NULL, 0, -1);
     assert(rc == 0);
     chclose(ch19);
-    rc = stop(&hndl12, 1, -1);
+    rc = hwait(hndl12, NULL, -1);
     assert(rc == 0);
 
     /* Store multiple zero-byte messages in a buffered channel. */

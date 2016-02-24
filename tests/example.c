@@ -46,9 +46,9 @@ int main() {
     assert(cr3 >= 0);
     int rc = msleep(now() + 100);
     assert(rc == 0); 
-    stop(cr1);
-    stop(cr2);
-    stop(cr3);
+    hclose(cr1);
+    hclose(cr2);
+    hclose(cr3);
     return 0;
 }
 

@@ -67,22 +67,6 @@ coroutine int worker3(void) {
     return 0;
 }
 
-static int worker4_finished = 0;
-static int worker4_canceled = 0;
-
-coroutine int worker4(int64_t deadline) {
-    int rc = msleep(deadline);
-    if(rc == 0) {
-        ++worker4_finished;
-        return 0;
-    }
-    if(rc == -1 && errno == ECANCELED) {
-        ++worker4_canceled;
-        return 0;
-    }
-    assert(0);
-}
-
 coroutine int worker6(void) {
     int rc = msleep(now() + 2000);
     assert(rc == -1 && errno == ECANCELED);
@@ -92,7 +76,8 @@ coroutine int worker6(void) {
 coroutine int worker5(void) {
     int cr = go(worker6());
     assert(cr >= 0);
-    stop(cr);
+    int rc = hwait(cr, NULL, now() + 1000);
+    assert(rc == -1 && errno == ECANCELED);
     return 0;
 }
 
@@ -103,7 +88,11 @@ int main() {
     assert(cr2 >= 0);
     int cr3 = go(worker(2, 5));
     assert(cr3 >= 0);
-    int rc = stop(hndls3, 3, -1);
+    int rc = hwait(cr1, NULL, -1);
+    assert(rc == 0);
+    rc = hwait(cr2, NULL, -1);
+    assert(rc == 0);
+    rc = hwait(cr3, NULL, -1);
     assert(rc == 0);
     assert(sum == 42);
 
@@ -116,61 +105,47 @@ int main() {
     }
     rc = msleep(now() + 100);
     assert(rc == 0);
-    rc = stop(hndls2, 20, -1);
-    assert(rc == 0);
-
-    int hndls[6];
+    for(i = 0; i != 20; ++i) {
+        rc = hwait(hndls2[i], NULL, -1);
+        assert(rc == 0);
+    }
 
     /* Test whether immediate cancelation works. */
-    hndls[0] = go(worker2());
-    assert(hndls[0] >= 0);
-    hndls[1] = go(worker2());
-    assert(hndls[1] >= 0);
-    hndls[2] = go(worker2());
-    assert(hndls[2] >= 0);
+    cr1 = go(worker2());
+    assert(cr1 >= 0);
+    cr2 = go(worker2());
+    assert(cr2 >= 0);
+    cr3 = go(worker2());
+    assert(cr3 >= 0);
     rc = msleep(now() + 30);
     assert(rc == 0);
-    rc = stop(hndls, 3, 0);
-    assert(rc == 0);
+    hclose(cr1);
+    hclose(cr2);
+    hclose(cr3);
     assert(worker2_done == 3);
 
-    /* Test cancelation with infinite deadline. */
-    hndls[0] = go(worker3());
-    assert(hndls[0] >= 0);
-    hndls[1] = go(worker3());
-    assert(hndls[1] >= 0);
-    hndls[2] = go(worker3());
-    assert(hndls[2] >= 0);
-    rc = stop(hndls, 3, -1);
+    /* Test waiting for coroutines. */
+    cr1 = go(worker3());
+    assert(cr1 >= 0);
+    cr2 = go(worker3());
+    assert(cr2 >= 0);
+    cr3 = go(worker3());
+    assert(cr3 >= 0);
+    rc = hwait(cr1, NULL, -1);
+    assert(rc == 0);
+    rc = hwait(cr2, NULL, -1);
+    assert(rc == 0);
+    rc = hwait(cr3, NULL, -1);
     assert(rc == 0);
     assert(worker3_done == 3);
 
-    /* Test cancelation with a finite deadline. */
-    hndls[0] = go(worker4(now() + 50));
-    assert(hndls[0] >= 0);
-    hndls[1] = go(worker4(now() + 50));
-    assert(hndls[1] >= 0);
-    hndls[2] = go(worker4(now() + 50));
-    assert(hndls[2] >= 0);
-    hndls[3] = go(worker4(now() + 200));
-    assert(hndls[3] >= 0);
-    hndls[4] = go(worker4(now() + 200));
-    assert(hndls[4] >= 0);
-    hndls[5] = go(worker4(now() + 200));
-    assert(hndls[5] >= 0);
-    rc = stop(hndls, 6, now() + 100);
-    assert(rc == 0);
-    assert(worker4_finished == 3);
-    assert(worker4_canceled == 3);
-
     /* Test canceling a cancelation. */
-    int hndl = go(worker5());
-    assert(hndl >= 0);
-    rc = stop(&hndl, 1, now() + 50);
-    assert(rc == 0);
+    cr1 = go(worker5());
+    assert(cr1 >= 0);
+    hclose(cr1);
 
-    /* Let the test running for a while to detect possible errors in
-       independently running coroutines. */
+    /* Let the test running for a while to detect possible errors if there
+       was a bug that left any corotines running. */
     rc = msleep(now() + 100);
     assert(rc == 0);
 

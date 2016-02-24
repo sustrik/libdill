@@ -54,8 +54,8 @@ int main() {
     assert(rc == 0);
     /* Fail with exit code 128+SIGALRM if we deadlock */
     alarm(1);
-    rc = stop(hndls, 2, now() + 500);
-    assert(rc == 0);
+    hclose(hndls[0]);
+    hclose(hndls[1]);
 
     return 0;
 }

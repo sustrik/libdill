@@ -83,13 +83,14 @@ DILL_EXPORT int64_t now(void);
 /*  Handles                                                                   */
 /******************************************************************************/
 
-typedef void (*hndlstop_fn)(int h);
+typedef void (*hstop_fn)(int h);
 
-DILL_EXPORT int handle(const void *type, void *data, hndlstop_fn stop_fn);
-DILL_EXPORT const void *handletype(int h);
-DILL_EXPORT void *handledata(int h);
-DILL_EXPORT int handledone(int h, int result);
-DILL_EXPORT int stop(int h);
+DILL_EXPORT int handle(const void *type, void *data, hstop_fn stop_fn);
+DILL_EXPORT const void *htype(int h);
+DILL_EXPORT void *hdata(int h);
+DILL_EXPORT int hdone(int h, int result);
+DILL_EXPORT int hwait(int h, int *result, int64_t deadline);
+DILL_EXPORT int hclose(int h);
 
 /******************************************************************************/
 /*  Coroutines                                                                */
@@ -120,7 +121,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(int result);
         if(dill_prologue(&hndl, __FILE__ ":" dill_string(__LINE__))) {\
             int dill_anchor[dill_unoptimisable1];\
             dill_unoptimisable2 = &dill_anchor;\
-            char dill_filler[(char*)&dill_anchor - (char*)handledata(hndl)];\
+            char dill_filler[(char*)&dill_anchor - (char*)hdata(hndl)];\
             dill_unoptimisable2 = &dill_filler;\
             dill_epilogue(fn);\
         }\

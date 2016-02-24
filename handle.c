@@ -24,6 +24,7 @@
 
 #include <errno.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #include "cr.h"
@@ -37,7 +38,7 @@ struct dill_handle {
        handledone() is called. */
     void *data;
     /* Virtual function that gets called when the handle is being stopped. */
-    hndlstop_fn stop_fn;
+    hstop_fn stop_fn;
     /* Return value as supplied by handledone() function. */
     int result;
     /* Coroutine that performs the cancelation of this handle.
@@ -51,7 +52,7 @@ static struct dill_handle *dill_handles = NULL;
 static int dill_nhandles = 0;
 static int dill_unused = -1;
 
-int handle(const void *type, void *data, hndlstop_fn stop_fn) {
+int handle(const void *type, void *data, hstop_fn stop_fn) {
     if(dill_slow(!type || !data || !stop_fn)) {errno = EINVAL; return -1;}
     /* If there's no space for the new handle expand the array. */
     if(dill_slow(dill_unused == -1)) {
@@ -83,7 +84,7 @@ int handle(const void *type, void *data, hndlstop_fn stop_fn) {
     return h + 1;
 }
 
-const void *handletype(int h) {
+const void *htype(int h) {
     if(dill_slow(!h)) return NULL; /* TODO: return coroutine type */
     h--;
     if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
@@ -91,7 +92,7 @@ const void *handletype(int h) {
     return dill_handles[h].type;
 }
 
-void *handledata(int h) {
+void *hdata(int h) {
     if(dill_slow(!h)) return NULL; /* TODO */
     h--;
     if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
@@ -99,7 +100,7 @@ void *handledata(int h) {
     return dill_handles[h].data;
 }
 
-int handledone(int h, int result) {
+int hdone(int h, int result) {
     /* Marking main routine as done has no effect. */
     if(dill_slow(!h)) return 0;
     h--;
@@ -116,7 +117,44 @@ int handledone(int h, int result) {
     return 0;
 }
 
-int stop(int h) {
+int hwait(int h, int *result, int64_t deadline) {
+    /* Main routine cannot be waited for. */
+    if(dill_slow(h == 0)) {errno = EOPNOTSUPP; return -1;}
+    --h;
+    if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
+        errno = EBADF; return -1;}
+    struct dill_handle *hndl = &dill_handles[h];
+    /* If current coroutine is already stopping. */
+    if(dill_slow(dill_running->canceled || dill_running->stopping)) {
+        errno = ECANCELED; return -1;}
+    /* If the handle is already done, skip the waiting. */
+    if(hndl->data) {
+        /* If immediate execution is requested. */
+        if(deadline == 0) {errno = ETIMEDOUT; return -1;}
+        /* TODO: Debug info! */
+        /* Wait for the coroutine to finish. */
+        if(deadline > 0)
+            dill_timer_add(&dill_running->timer, deadline);
+        hndl->canceler = dill_running;
+        int rc = dill_suspend(NULL);
+        hndl->canceler = NULL;
+        if(deadline > 0)
+            dill_timer_rm(&dill_running->timer);
+        if(dill_slow(rc < 0)) {
+            dill_assert(rc == -ECANCELED || rc == -ETIMEDOUT);
+            errno = -rc;
+            return -1;
+        }
+    }
+    dill_assert(!hndl->data);
+    /* Return the handle to the shared pool. */
+    hndl->next = dill_unused;
+    dill_unused = h;
+    /* Return the result value provided by handledone() function. */
+    return hndl->result;
+}
+
+int hclose(int h) {
     /* Main routine cannot be stopped. */
     if(dill_slow(h == 0)) {errno = EOPNOTSUPP; return -1;}
     --h;
@@ -125,6 +163,7 @@ int stop(int h) {
     struct dill_handle *hndl = &dill_handles[h];
     /* Stop function is called only if handledone() wasn't called before. */
     if(hndl->data) {
+        hndl->canceler = dill_running;
         /* This will guarantee that blocking functions cannot be called from
            within stop_fn. */
         int was_stopping = dill_running->stopping;

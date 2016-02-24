@@ -90,7 +90,9 @@ int main() {
         rc = chrecv(recvch, &signo, sizeof(signo), -1);
         assert(rc == 0);
         assert(signo == SIGNAL);
-        rc = stop(hndls, 2, -1);
+        rc = hwait(hndls[0], NULL, -1);
+        assert(rc == 0);
+        rc = hwait(hndls[1], NULL, -1);
         assert(rc == 0);
     }
 

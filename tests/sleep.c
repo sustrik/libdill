@@ -70,8 +70,10 @@ int main() {
     rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 40);
-    rc = stop(hndls, 4, 1000);
-    assert(rc == 0);
+    hclose(hndls[0]);
+    hclose(hndls[1]);
+    hclose(hndls[2]);
+    hclose(hndls[3]);
 
     return 0;
 }

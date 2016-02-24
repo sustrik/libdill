@@ -113,7 +113,7 @@ int main() {
     assert(rc == 0);
     assert(val == 555);
     chclose(ch1);
-    rc = stop(&hndl1, 1, -1);
+    rc = hwait(hndl1, NULL, -1);
     assert(rc == 0);
 
     /* Blocking receiver case. */
@@ -126,7 +126,7 @@ int main() {
     assert(rc == 0);
     assert(val == 666);
     chclose(ch2);
-    rc = stop(&hndl2, 1, -1);
+    rc = hwait(hndl2, NULL, -1);
     assert(rc == 0);
 
     /* Non-blocking sender case. */
@@ -139,7 +139,7 @@ int main() {
     rc = choose(cls3, 1, -1);
     assert(rc == 0);
     chclose(ch3);
-    rc = stop(&hndl3, 1, -1);
+    rc = hwait(hndl3, NULL, -1);
     assert(rc == 0);
 
     /* Blocking sender case. */
@@ -152,7 +152,7 @@ int main() {
     rc = choose(cls4, 1, -1);
     assert(rc == 0);
     chclose(ch4);
-    rc = stop(&hndl4, 1, -1);
+    rc = hwait(hndl4, NULL, -1);
     assert(rc == 0);
 
     /* Check with two channels. */
@@ -177,7 +177,9 @@ int main() {
     assert(val == 666);
     chclose(ch5);
     chclose(ch6);
-    rc = stop(hndl5, 2, -1);
+    rc = hwait(hndl5[0], NULL, -1);
+    assert(rc == 0);
+    rc = hwait(hndl5[1], NULL, -1);
     assert(rc == 0);
 
     /* Test whether selection of in channels is random. */
@@ -215,8 +217,8 @@ int main() {
     assert(first > 1 && second > 1);
     chclose(ch7);
     chclose(ch8);
-    rc = stop(hndl6, 2, 0);
-    assert(rc == 0);
+    hclose(hndl6[0]);
+    hclose(hndl6[1]);
 
     /* Test 'otherwise' clause. */
     chan ch9 = channel(sizeof(int), 0);
@@ -246,7 +248,9 @@ int main() {
     assert(rc == 0);
     assert(val == 999);
     chclose(ch10);
-    rc = stop(hndl7, 2, -1);
+    rc = hwait(hndl7[0], NULL, -1);
+    assert(rc == 0);
+    rc = hwait(hndl7[1], NULL, -1);
     assert(rc == 0);
 
     /* Test two simultaneous receivers vs. choose statement. */
@@ -265,7 +269,9 @@ int main() {
     rc = choose(cls9, 1, -1);
     assert(rc == 0);
     chclose(ch11);
-    rc = stop(hndl8, 2, -1);
+    rc = hwait(hndl8[0], NULL, -1);
+    assert(rc == 0);
+    rc = hwait(hndl8[1], NULL, -1);
     assert(rc == 0);
 
     /* Choose vs. choose. */
@@ -278,7 +284,7 @@ int main() {
     assert(rc == 0);
     assert(val == 111);
     chclose(ch12);
-    rc = stop(&hndl9, 1, -1);
+    rc = hwait(hndl9, NULL, -1);
     assert(rc == 0);
 
     /* Choose vs. buffered channels. */
@@ -312,7 +318,7 @@ int main() {
     assert(val == 1111);
     chclose(ch16);
     chclose(ch15);
-    rc = stop(&hndl10, 1, -1);
+    rc = hwait(hndl10, NULL, -1);
     assert(rc == 0);
 
     /* Test transferring a large object. */
@@ -360,7 +366,7 @@ int main() {
     diff = now() - start;
     assert(diff > 30 && diff < 70);
     chclose(ch22);
-    rc = stop(&hndl11, 1, -1);
+    rc = hwait(hndl11, NULL, -1);
     assert(rc == 0);
 
     return 0;

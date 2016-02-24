@@ -2,11 +2,13 @@
 
 ## Define a coroutine
 
-Coroutine is a standard C function with `coroutine` modifier applied:
+Coroutine is a standard C function returning `int` with `coroutine` modifier
+applied:
 
 ```
-coroutine void foo(int arg1, int arg2, int arg3) {
+coroutine int foo(int arg1, int arg2, int arg3) {
     printf("Hello world!\n");
+    return 0;
 }
 ```
 
@@ -19,60 +21,19 @@ int h = go(foo(1, 2, 3));
 ```
 
 Coroutines are cooperatively scheduled. Following functions are used as
-scheduler switching points: `go()`, `yield()`, `stop()`, `chsend()`,
+scheduler switching points: `go()`, `yield()`, `hwait()`, `chsend()`,
 `chrecv()`, `choose()`, `msleep()` and `fdwait()`.
-
-Keep in mind that each coroutine handle has to be closed using `stop()`
-otherwise it will result in a memory leak.
 
 If there's not enough memory available to allocate the stack for the new
 coroutine `go()` returns `NULL` and sets `errno` to `ENOMEM`.
 
-## Cancel a coroutine
+You can wait for coroutine termination via `hwait()` function. If successful
+the `result` parameter of `hwait` function will be set to the value returned
+by the coroutine.
 
-To cancel a coroutine use `stop()` function. This function deallocates
-resources owned by the coroutine, therefore it has to be called even for
-coroutines that have already finished executing. Failure to do so results
-in resource leak.
-
-```
-int stop(int *hndls, int nhndls, int64_t deadline);
-```
-
-The function cancels `nhndls` coroutines in the array pointed to be `hndls`.
-Third argument is a deadline. For detailed information about deadlines check
-"Deadlines" section of this manual.
-
-Example:
-
-```
-int hndls[2];
-hndls[0] = go(fx());
-hndls[1] = go(fx());
-int rc = stop(hndls, 2, now() + 1000);
-```
-
-Coroutines being canceled will get grace period to run until the deadline
-expires. Afterwards they will be canceled by force, i.e. all blocking calls
-in the coroutine will return `ECANCELED` error.
-
-The exact algorithm for this function is as follows:
-
-1. If all the coroutines are already finished it succeeds straight away.
-2. If not so it waits until the deadline. If all coroutines finish during
-   this grace period the function succeeds immediately afterwards.
-3. Otherwise it "kills" the remaining coroutines. What that means is that
-   all function calls inside the coroutine in question from that point on will
-   fail with `ECANCELED` error.
-4. Finally, `stop()` waits until all the "killed" coroutines exit.
-   It itself will succeed immediately afterwards.
-
-In case of success `stop()` returns 0. In case or error it returns -1 and
-sets errno to one of the following values:
-
-* `EINVAL`: Invalid arguments.
-* `ECANCELED`: Current coroutine was canceled by its owner. Coroutines in
-   `hndls` array are cleanly canceled even in the case of this error.
+To cancel a coroutine use `hclose()` function. Note that when coroutine handle
+is closed, all blocking calls in the coroutine start failing with
+`ECANCELED` error. `hclose()` will return coroutine's return value.
 
 ## Yield CPU to other coroutines
 
@@ -311,42 +272,39 @@ guaranteed to be `NULL`.
 
 ## Handles
 
-Handles provide a mechanism to create asynchronously cancelable objects, i.e.
-objects that can be stopped using `stop()` function.
+Handles provide a mechanism to create asynchronous objects.
 
 Handle is created by `handle()` function.
 
 ```
-typedef void (*hndlstop_fn)(int h);
-int handle(const void *type, void *data, hndlstop_fn stop_fn);
+typedef void (*hclose_fn)(int h);
+int handle(const void *type, void *data, hclose_fn close_fn);
 ```
 
 `type` is a unique pointer identifying the type of the object. It can be
-retrieved later on via `handletype()` function.
+retrieved later on via `htype()` function.
 
 `data` is an opaque pointer. It is not used by libdill. It can be retrieved
-later on via `handledata()` function.
+later on via `hdata()` function.
 
-`stop_fn` is a function that will be called when the object is supposed to
-terminate. The implementation should try to stop the object as soon as possible
+`close_fn` is a function that will be called when the handle is closed.
+The implementation should try to stop the object as soon as possible
 offering it no grace period. All blocking functions return ECANCELED if called
-inside `stop_fn` context. `stop_fn` should call `handledone()` once the object
-is stopped. Once `handledone()` is called the object can be deallocated and
-any associated resources can be freed.
+within the context of `close_fn`. `close_fn` should call `hdone()` once
+the object is stopped. Once `hdone()` is called the object can be deallocated
+and any associated resources can be freed.
 
-On success, `handle()` function returns a newly allocated handle. The handle
-can be later used as argument to `stop()` function.
-
-On error, -1 is returned and `errno` is set to one of the following values:
+On success, `handle()` function returns a newly allocated handle. On error,
+-1 is returned and `errno` is set to one of the following values:
 
 * `EINVAL`: Invalid argument.
 * `ENOMEM`: Not enough memory to create the handle.
 
-`handletype()` function returns the type pointer as it was supplied to
+`htype()` function returns the type pointer as it was supplied to
 `handle()` function when the handle was created.
 
 ```
-const void *handletype(int h);
+const void *htype(int h);
 ```
 
 In case of error the function returns `NULL` and sets `errno` to one of
@@ -354,11 +312,11 @@ the following values:
 
 * `EBADF`: The specified handle does not exist.
 
-`handledata()` function returns the data pointer as it was supplied to
-`handle()` function when the handle was created.
+`hdata()` function returns the data pointer as it was supplied to `handle()`
+function when the handle was created.
 
 ```
-void *handledata(int h);
+void *hdata(int h);
 ```
 
 In case of error the function returns `NULL` and sets `errno` to one of
@@ -366,17 +324,46 @@ the following values:
 
 * `EBADF`: The specified handle does not exist.
 
-`handledone()` should be called by the object when it is done doing its
+`hdone()` should be called by the object when it is done doing its
 work. Once the function is called, the object can be safely deallocated.
+`result` parameter will be eventually passed to the owner of the handle
+when it calls `hwait()` or `hclose()`.
 
 ```
-int handledone(int h);
+int hdone(int h, int result);
 ```
 
 In case of success 0 is returned. In case of error -1 is returned and `errno`
 is set to one of the following values:
 
 * `EBADF`: The specified handle does not exist.
+
+`hwait()` is used to wait while handle finishes its work:
+
+```
+int hwait(int h, int *result, int64_t deadline);
+```
+
+In case of success `hwait()` returns 0. Handle is closed and cannot be used
+any more. `result` parameter is set to handle's return value as it is supplied
+by the implementation to `hdone()` function.
+
+In case of error -1. Handle remains open. `errno` is set to one of the following
+values:
+
+* `EBADF`: The specified handle does not exist.
+* `ETIMEDOUT`: The deadline was reached before the handle finished.
+* `ECANCELED`: Current coroutine was closed by its owner.
+
+`hclose()` is used to close the handle. The function immediately closes
+the object it refers to and deallocates any associated resources.
+
+```
+int hclose(int h);
+```
+
+The function never fails. It returns handle's return value as passed by
+the implementation to `hdone()` function.
 
 ## Debugging
 

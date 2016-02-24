@@ -48,14 +48,14 @@ void stop_fn2(int h) {
     rc = chrecv(ch, NULL, 0, -1);
     assert(rc == -1 && errno == ECANCELED);
     chclose(ch);
-    rc = handledone(h, 0);
+    rc = hdone(h, 0);
     assert(rc == 0);
 }
 
 coroutine int worker1(int h) {
     int rc = msleep(now() + 100);
     assert(rc == 0);
-    rc = handledone(h, 0);
+    rc = hdone(h, 0);
     assert(rc == 0);
     return 0;
 }
@@ -64,26 +64,25 @@ int main(void) {
     /* Handle is done before stop is called. */
     int h = handle(&type, &data, stop_fn1);
     assert(h >= 0);
-    int rc = handledone(h, 0);
-    void *data = handledata(h);
+    int rc = hdone(h, 0);
+    void *data = hdata(h);
     assert(!data);
     assert(rc == 0);
-    rc = stop(&h, 1, -1);
+    rc = hwait(h, NULL, -1);
     assert(rc == 0);
 
     /* Handle finishes synchronously when stop is called. */
     h = handle(&type, &data, stop_fn2);
     assert(h >= 0);
-    rc = stop(&h, 1, 0);
-    assert(rc == 0);
+    hclose(h);
 
     /* Handle finishes asynchronously, no cancellation. */
     h = handle(&type, &data, stop_fn1);
     assert(h >= 0);
     int w = go(worker1(h));
-    rc = stop(&h, 1, -1);
+    rc = hwait(h, NULL, -1);
     assert(rc == 0);
-    rc = stop(&w, 1, -1);
+    rc = hwait(w, NULL, -1);
     assert(rc == 0);
 
     return 0;
