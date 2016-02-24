@@ -300,6 +300,18 @@ On success, `handle()` function returns a newly allocated handle. On error,
 * `EINVAL`: Invalid argument.
 * `ENOMEM`: Not enough memory to create the handle.
 
+`hdup()` function duplicates a handle. The object is deallocated only after
+the last handle referring to it is closed.
+
+```
+int hdup(int h);
+```
+
+In case of success the function returns duplicated handle. In case of error
+it returns -1 and sets `errno` to one of the following values:
+
+* `EBADF`: The specified handle does not exist.
+
 `htype()` function returns the type pointer as it was supplied to
 `handle()` function when the handle was created.
 

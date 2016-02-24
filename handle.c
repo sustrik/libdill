@@ -37,6 +37,8 @@ struct dill_handle {
     /* Opaque implemetor-specified pointer. It is set to NULL when
        handledone() is called. */
     void *data;
+    /* Number of duplicates of this handle. */
+    int refcount;
     /* Virtual function that gets called when the handle is being stopped. */
     hstop_fn stop_fn;
     /* Return value as supplied by handledone() function. */
@@ -76,12 +78,23 @@ int handle(const void *type, void *data, hstop_fn stop_fn) {
     dill_unused = dill_handles[h].next;
     dill_handles[h].type = type;
     dill_handles[h].data = data;
+    dill_handles[h].refcount = 1;
     dill_handles[h].stop_fn = stop_fn;
     dill_handles[h].result = -1;
     dill_handles[h].canceler = NULL;
     dill_handles[h].next = -1;
     /* 0 is never returned. It is reserved to refer to the main routine. */
     return h + 1;
+}
+
+int hdup(int h) {
+    /*  Duplicates of the main routine handle can be made ad libitum. */
+    if(dill_slow(!h)) return 0;
+    h--;
+    if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
+        errno = EBADF; return -1;}
+    ++dill_handles[h].refcount;
+    return h;
 }
 
 const void *htype(int h) {
@@ -161,6 +174,12 @@ int hclose(int h) {
     if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return -1;}
     struct dill_handle *hndl = &dill_handles[h];
+    /* If there are multiple duplicates of this handle just remove one
+       reference. */
+    if(hndl->refcount > 1) {
+        --hndl->refcount;
+        return 0;
+    }
     /* Stop function is called only if handledone() wasn't called before. */
     if(hndl->data) {
         hndl->canceler = dill_running;

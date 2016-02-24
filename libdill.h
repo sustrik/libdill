@@ -86,6 +86,7 @@ DILL_EXPORT int64_t now(void);
 typedef void (*hstop_fn)(int h);
 
 DILL_EXPORT int handle(const void *type, void *data, hstop_fn stop_fn);
+DILL_EXPORT int hdup(int h);
 DILL_EXPORT const void *htype(int h);
 DILL_EXPORT void *hdata(int h);
 DILL_EXPORT int hdone(int h, int result);
