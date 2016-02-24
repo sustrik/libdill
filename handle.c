@@ -164,7 +164,7 @@ int dill_stop(int *hndls, int nhndls, int64_t deadline, const char *current) {
         goto finish;
     /* If user requested immediate cancelation or if this coroutine was already
        canceled by its owner we can skip the grace period. */
-    if(deadline != 0 || dill_running->canceled || dill_running->stopping) {
+    if(deadline != 0 && !dill_running->canceled && !dill_running->stopping) {
       /* If required, start waiting for the timeout. */
       if(deadline > 0)
           dill_timer_add(&dill_running->timer, deadline);
