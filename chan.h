@@ -58,8 +58,6 @@ struct dill_chan {
        of clauses waiting to receive. */
     struct dill_ep sender;
     struct dill_ep receiver;
-    /* Number of open handles to this channel. */
-    int refcount;
     /* 1 is chdone() was already called. 0 otherwise. */
     int done;
 

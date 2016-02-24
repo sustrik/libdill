@@ -54,21 +54,12 @@ chan dill_channel(size_t itemsz, size_t bufsz, const char *created) {
     dill_list_init(&ch->sender.clauses);
     ch->receiver.seq = 0;
     dill_list_init(&ch->receiver.clauses);
-    ch->refcount = 1;
     ch->done = 0;
     ch->bufsz = bufsz;
     ch->items = 0;
     ch->first = 0;
     dill_trace(created, "<%d>=channel(%d, %d)", (int)ch->debug.id,
         (int)itemsz, (int)bufsz);
-    return ch;
-}
-
-chan dill_chdup(chan ch, const char *current) {
-    if(dill_slow(!ch))
-       return NULL;
-    dill_trace(current, "chdup(<%d>)", (int)ch->debug.id);
-    ++ch->refcount;
     return ch;
 }
 
@@ -82,10 +73,6 @@ void dill_chclose(chan ch, const char *current) {
     if(dill_slow(!ch))
         return;
     dill_trace(current, "chclose(<%d>)", (int)ch->debug.id);
-    assert(ch->refcount > 0);
-    --ch->refcount;
-    if(ch->refcount)
-        return;
     /* Resume any remaining senders and receivers on the channel
        with EPIPE error. */
     while(!dill_list_empty(&ch->sender.clauses)) {

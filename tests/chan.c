@@ -42,7 +42,6 @@ coroutine int sender(chan ch, int doyield, int val) {
     }
     int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
-    chclose(ch);
     return 0;
 }
 
@@ -51,7 +50,6 @@ coroutine int receiver(chan ch, int expected) {
     int rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == expected);
-    chclose(ch);
     return 0;
 }
 
@@ -59,25 +57,21 @@ coroutine int receiver2(chan ch, chan back) {
     int val;
     int rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == -1 && errno == EPIPE);
-    chclose(ch);
     val = 0;
     rc = chsend(back, &val, sizeof(val), -1);
     assert(rc == 0);
-    chclose(back);
     return 0;
 }
 
 coroutine int charsender(chan ch, char val) {
     int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
-    chclose(ch);
     return 0;
 }
 
 coroutine int structsender(chan ch, struct foo val) {
     int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
-    chclose(ch);
     return 0;
 }
 
@@ -85,7 +79,6 @@ coroutine int sender2(chan ch) {
     int val = 0;
     int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == -1 && errno == EPIPE);
-    chclose(ch);
     return 0;
 }
 
@@ -102,7 +95,6 @@ coroutine int cancel(chan ch) {
     assert(rc == -1 && errno == ECANCELED);
     rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == -1 && errno == ECANCELED);
-    chclose(ch);
     return 0;
 }
 
@@ -113,7 +105,6 @@ coroutine int sender3(chan ch, int doyield) {
     }
     int rc = chsend(ch, NULL, 0, -1);
     assert(rc == 0);
-    chclose(ch);
     return 0;
 }
 
@@ -123,7 +114,7 @@ int main() {
     /* Receiver waits for sender. */
     chan ch1 = channel(sizeof(int), 0);
     assert(ch1);
-    int hndl1 = go(sender(chdup(ch1), 1, 333));
+    int hndl1 = go(sender(ch1, 1, 333));
     assert(hndl1 >= 0);
     int rc = chrecv(ch1, &val, sizeof(val), -1);
     assert(rc == 0);
@@ -135,7 +126,7 @@ int main() {
     /* Sender waits for receiver. */
     chan ch2 = channel(sizeof(int), 0);
     assert(ch2);
-    int hndl2 = go(sender(chdup(ch2), 0, 444));
+    int hndl2 = go(sender(ch2, 0, 444));
     assert(hndl2 >= 0);
     rc = chrecv(ch2, &val, sizeof(val), -1);
     assert(rc == 0);
@@ -148,9 +139,9 @@ int main() {
     chan ch3 = channel(sizeof(int), 0);
     assert(ch3);
     int hndl3[2];
-    hndl3[0] = go(sender(chdup(ch3), 0, 888));
+    hndl3[0] = go(sender(ch3, 0, 888));
     assert(hndl3[0] >= 0);
-    hndl3[1] = go(sender(chdup(ch3), 0, 999));
+    hndl3[1] = go(sender(ch3, 0, 999));
     assert(hndl3[1] >= 0);
     rc = chrecv(ch3, &val, sizeof(val), -1);
     assert(rc == 0);
@@ -170,9 +161,9 @@ int main() {
     chan ch4 = channel(sizeof(int), 0);
     assert(ch4);
     int hndl4[2];
-    hndl4[0] = go(receiver(chdup(ch4), 333));
+    hndl4[0] = go(receiver(ch4, 333));
     assert(hndl4[0] >= 0);
-    hndl4[1] = go(receiver(chdup(ch4), 444));
+    hndl4[1] = go(receiver(ch4, 444));
     assert(hndl4[1] >= 0);
     val = 333;
     rc = chsend(ch4, &val, sizeof(val), -1);
@@ -190,7 +181,7 @@ int main() {
     int hndl5[2];
     chan ch5 = channel(sizeof(char), 0);
     assert(ch5);
-    hndl5[0] = go(charsender(chdup(ch5), 111));
+    hndl5[0] = go(charsender(ch5, 111));
     assert(hndl5[0] >= 0);
     char charval;
     rc = chrecv(ch5, &charval, sizeof(charval), -1);
@@ -200,7 +191,7 @@ int main() {
     chan ch6 = channel(sizeof(struct foo), 0);
     assert(ch6);
     struct foo foo1 = {555, 222};
-    hndl5[1] = go(structsender(chdup(ch6), foo1));
+    hndl5[1] = go(structsender(ch6, foo1));
     assert(hndl5[1] >= 0);
     struct foo foo2;
     rc = chrecv(ch6, &foo2, sizeof(foo2), -1);
@@ -296,9 +287,9 @@ int main() {
     chan ch13 = channel(sizeof(int), 0);
     assert(ch13);
     int hndl6[2];
-    hndl6[0] = go(receiver2(chdup(ch12), chdup(ch13)));
+    hndl6[0] = go(receiver2(ch12, ch13));
     assert(hndl6[0] >= 0);
-    hndl6[1] = go(receiver2(chdup(ch12), chdup(ch13)));
+    hndl6[1] = go(receiver2(ch12, ch13));
     assert(hndl6[1] >= 0);
     rc = chdone(ch12);
     assert(rc == 0);
@@ -321,7 +312,7 @@ int main() {
     val = 1;
     rc = chsend(ch14, &val, sizeof(val), -1);
     assert(rc == 0);
-    int hndl7 = go(sender(chdup(ch14), 0, 2));
+    int hndl7 = go(sender(ch14, 0, 2));
     assert(hndl7 >= 0);
     rc = chrecv(ch14, &val, sizeof(val), -1);
     assert(rc == 0);
@@ -337,11 +328,11 @@ int main() {
     chan ch15 = channel(sizeof(int), 0);
     assert(ch15);
     int hndl8[3];
-    hndl8[0] = go(sender2(chdup(ch15)));
+    hndl8[0] = go(sender2(ch15));
     assert(hndl8[0] >= 0);
-    hndl8[1] = go(sender2(chdup(ch15)));
+    hndl8[1] = go(sender2(ch15));
     assert(hndl8[1] >= 0);
-    hndl8[2] = go(sender2(chdup(ch15)));
+    hndl8[2] = go(sender2(ch15));
     assert(hndl8[2] >= 0);
     rc = msleep(now() + 50);
     assert(rc == 0);
@@ -374,7 +365,7 @@ int main() {
     /* Test cancelation. */
     chan ch17 = channel(sizeof(int), 0);
     assert(ch17);
-    int hndl10 = go(cancel(chdup(ch17)));
+    int hndl10 = go(cancel(ch17));
     assert(hndl10 >= 0);
     hclose(hndl10);
     chclose(ch17);
@@ -382,7 +373,7 @@ int main() {
     /* Receiver waits for sender (zero-byte message). */
     chan ch18 = channel(0, 0);
     assert(ch18);
-    int hndl11 = go(sender3(chdup(ch1), 1));
+    int hndl11 = go(sender3(ch1, 1));
     assert(hndl11 >= 0);
     rc = chrecv(ch18, NULL, 0, -1);
     assert(rc == 0);
@@ -393,7 +384,7 @@ int main() {
     /* Sender waits for receiver (zero-byte message). */
     chan ch19 = channel(0, 0);
     assert(ch19);
-    int hndl12 = go(sender3(chdup(ch2), 0));
+    int hndl12 = go(sender3(ch2, 0));
     assert(hndl12 >= 0);
     rc = chrecv(ch19, NULL, 0, -1);
     assert(rc == 0);

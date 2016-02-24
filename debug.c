@@ -199,9 +199,8 @@ void goredump(void) {
             cl = dill_cont(dill_list_next(&cl->epitem),
                 struct dill_clause, epitem);
         }
-        fprintf(stderr, "%-42s %-5d %-5s %s\n",
+        fprintf(stderr, "%-42s       %-5s %s\n",
             buf,
-            (int)ch->refcount,
             ch->done ? "yes" : "no",
             ch->debug.created);
     }

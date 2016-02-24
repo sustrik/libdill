@@ -171,9 +171,6 @@ struct chclause {
 #define channel(itemsz, bufsz) \
     dill_channel((itemsz), (bufsz), __FILE__ ":" dill_string(__LINE__))
 
-#define chdup(channel) \
-   dill_chdup((channel), __FILE__ ":" dill_string(__LINE__))
-
 #define chsend(channel, val, len, deadline) \
     dill_chsend((channel), (val), (len), (deadline), \
     __FILE__ ":" dill_string(__LINE__))
@@ -193,8 +190,6 @@ struct chclause {
     __FILE__ ":" dill_string(__LINE__))
 
 DILL_EXPORT chan dill_channel(size_t itemsz, size_t bufsz,
-    const char *created);
-DILL_EXPORT chan dill_chdup(chan ch,
     const char *created);
 DILL_EXPORT int dill_chsend(chan ch, const void *val, size_t len,
     int64_t deadline, const char *current);
