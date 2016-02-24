@@ -89,6 +89,7 @@ DILL_EXPORT int handle(const void *type, void *data, hndlstop_fn stop_fn);
 DILL_EXPORT const void *handletype(int h);
 DILL_EXPORT void *handledata(int h);
 DILL_EXPORT int handledone(int h, int result);
+DILL_EXPORT int stop(int h);
 
 /******************************************************************************/
 /*  Coroutines                                                                */
@@ -131,16 +132,12 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(int result);
 #define FDW_ERR 4
 
 #define yield() dill_yield(__FILE__ ":" dill_string(__LINE__))
-#define stop(crs, ncrs, deadline) dill_stop((crs), (ncrs), (deadline), \
-    __FILE__ ":" dill_string(__LINE__))
 #define msleep(deadline) dill_msleep((deadline),\
     __FILE__ ":" dill_string(__LINE__))
 #define fdwait(fd, events, deadline) dill_fdwait((fd), (events), (deadline),\
     __FILE__ ":" dill_string(__LINE__))
 
 DILL_EXPORT int dill_yield(const char *current);
-DILL_EXPORT int dill_stop(int *hndls, int nhndls, int64_t deadline,
-    const char *current);
 DILL_EXPORT int dill_msleep(int64_t deadline, const char *current);
 DILL_EXPORT void fdclean(int fd);
 DILL_EXPORT int dill_fdwait(int fd, int events, int64_t deadline,

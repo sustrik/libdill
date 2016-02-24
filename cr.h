@@ -34,12 +34,6 @@
 #include "timer.h"
 #include "utils.h"
 
-/* Used to store debug info while stop() is blocked. */
-struct dill_stopdata {
-    int *hndls;
-    int nhndls;
-};
-
 /* For now use longjmp. Replace by a different mechanism as needed. */
 struct dill_ctx {
     int valid;

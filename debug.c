@@ -137,26 +137,6 @@ void goredump(void) {
                     sprintf(&buf[pos], ")");
                 }
                 break;
-            case DILL_STOP:
-                {
-                    struct dill_stopdata *sd =
-                        (struct dill_stopdata*)cr->opaque;
-                    int pos = 0;
-                    pos += sprintf(&buf[pos], "stop(");
-                    int first = 1;
-                    int i;
-                    for(i = 0; i != sd->nhndls; ++i) {
-                        if(first)
-                            first = 0;
-                        else
-                            pos += sprintf(&buf[pos], ",");
-                        struct dill_cr *cr =
-                            (struct dill_cr*)handledata(sd->hndls[i]);
-                        pos += sprintf(&buf[pos], "{%d}", cr->hndl);
-                    }
-                    sprintf(&buf[pos], ")");
-                }
-                break;
             case DILL_FINISHED:
                 sprintf(buf, " finished");
                 break;

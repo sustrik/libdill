@@ -38,15 +38,17 @@ coroutine int worker(int count, const char *text) {
 }
 
 int main() {
-    int hndls[3];
-    hndls[0] = go(worker(4, "a"));
-    assert(hndls[0] >= 0);
-    hndls[1] = go(worker(2, "b"));
-    assert(hndls[1] >= 0);
-    hndls[2] = go(worker(3, "c"));
-    assert(hndls[2] >= 0);
-    int rc = stop(hndls, 3, -1);
-    assert(rc == 0);
+    int cr1 = go(worker(4, "a "));
+    assert(cr1 >= 0);
+    int cr2 = go(worker(2, "b"));
+    assert(cr2 >= 0);
+    int cr3 = go(worker(3, "c"));
+    assert(cr3 >= 0);
+    int rc = msleep(now() + 100);
+    assert(rc == 0); 
+    stop(cr1);
+    stop(cr2);
+    stop(cr3);
     return 0;
 }
 

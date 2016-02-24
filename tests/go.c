@@ -90,21 +90,19 @@ coroutine int worker6(void) {
 }
 
 coroutine int worker5(void) {
-    int hndl = go(worker6());
-    assert(hndl >= 0);
-    int rc = stop(&hndl, 1, now() + 1000);
-    assert(rc == -1 && errno == ECANCELED);
+    int cr = go(worker6());
+    assert(cr >= 0);
+    stop(cr);
     return 0;
 }
 
 int main() {
-    int hndls3[3];
-    hndls3[0] = go(worker(3, 7));
-    assert(hndls3[0] >= 0);
-    hndls3[1] = go(worker(1, 11));
-    assert(hndls3[1] >= 0);
-    hndls3[2] = go(worker(2, 5));
-    assert(hndls3[2] >= 0);
+    int cr1 = go(worker(3, 7));
+    assert(cr1 >= 0);
+    int cr2 = go(worker(1, 11));
+    assert(cr2 >= 0);
+    int cr3 = go(worker(2, 5));
+    assert(cr3 >= 0);
     int rc = stop(hndls3, 3, -1);
     assert(rc == 0);
     assert(sum == 42);
