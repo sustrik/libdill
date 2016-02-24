@@ -107,7 +107,7 @@ void dill_resume(struct dill_cr *cr, int result) {
 #elif defined __GNUC__
 #define dill_noopt __attribute__((optimize("O0")))
 #else
-#error Unsupported compiler!
+#error "Unsupported compiler!"
 #endif
 
 static void dill_cr_stop(int h);

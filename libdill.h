@@ -104,7 +104,11 @@ DILL_EXPORT __attribute__((noinline))void dill_epilogue(void);
 #define dill_string2(x) #x
 #define dill_string(x) dill_string2(x)
 
+#if defined __GNUC__ || defined __clang__
 #define coroutine __attribute__((noinline))
+#else
+#error "Unsupported compiler!"
+#endif
 
 /* Statement expressions are a gcc-ism but they are also supported by clang.
    Given that there's no other way to do this, screw other compilers for now.
