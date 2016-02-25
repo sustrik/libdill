@@ -38,14 +38,9 @@ static int dill_poller_add(int fd, int events);
 static void dill_poller_rm(int fd, int events);
 static void dill_poller_clean(int fd);
 static int dill_poller_wait(int timeout);
-static pid_t dill_fork(void);
 
 /* If 1, dill_poller_init was already called. */
 static int dill_poller_initialised = 0;
-
-pid_t mfork(void) {
-    return dill_fork();
-}
 
 static int dill_fdwait_(int fd, int events, int64_t deadline,
       const char *current) {

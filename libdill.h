@@ -102,6 +102,8 @@ DILL_EXPORT extern volatile void *dill_unoptimisable2;
 DILL_EXPORT __attribute__((noinline)) int dill_prologue(int *hndl,
     const char *created);
 DILL_EXPORT __attribute__((noinline)) void dill_epilogue(int result);
+DILL_EXPORT int dill_fork_prologue(int *hndl, const char *created);
+DILL_EXPORT void dill_fork_epilogue(int result);
 
 #define dill_string2(x) #x
 #define dill_string(x) dill_string2(x)
@@ -128,6 +130,14 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(int result);
         hndl;\
     })
 
+#define gofork(fn) \
+    ({\
+        int hndl;\
+        if(dill_fork_prologue(&hndl, __FILE__ ":" dill_string(__LINE__)))\
+            dill_fork_epilogue(fn);\
+        hndl;\
+    })
+
 #define FDW_IN 1
 #define FDW_OUT 2
 #define FDW_ERR 4
@@ -143,7 +153,6 @@ DILL_EXPORT int dill_msleep(int64_t deadline, const char *current);
 DILL_EXPORT void fdclean(int fd);
 DILL_EXPORT int dill_fdwait(int fd, int events, int64_t deadline,
     const char *current);
-DILL_EXPORT pid_t mfork(void);
 DILL_EXPORT void *cls(void);
 DILL_EXPORT void setcls(void *val);
 

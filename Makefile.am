@@ -43,6 +43,7 @@ libdill_la_SOURCES = \
     list.c \
     poller.h \
     poller.c \
+    proc.c \
     slist.h \
     slist.c \
     stack.h \

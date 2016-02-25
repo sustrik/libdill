@@ -25,6 +25,8 @@
 #ifndef DILL_POLLER_INCLUDED
 #define DILL_POLLER_INCLUDED
 
+#include <sys/types.h>
+
 void dill_poller_init(void);
 
 /* poller.c also implements dill_wait() and dill_fdwait() declared
@@ -34,6 +36,8 @@ void dill_poller_init(void);
    function will poll for events and return immediately. If it is set to 1
    it will block until there's at least one event to process. */
 void dill_wait(int block);
+
+pid_t dill_fork(void);
 
 #endif
 
