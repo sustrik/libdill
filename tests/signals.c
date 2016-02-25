@@ -41,7 +41,7 @@ void signal_intr(int signo) {
     assert(sz == 1);
 }
 
-coroutine int sender(chan ch) {
+coroutine int sender(int ch) {
     char signo;
     int rc = chrecv(ch, &signo, sizeof(signo), -1);
     assert(rc == 0);
@@ -50,7 +50,7 @@ coroutine int sender(chan ch) {
     return 0;
 }
 
-coroutine int receiver(chan ch) {
+coroutine int receiver(int ch) {
     int events = fdwait(signal_pipe[0], FDW_IN, -1);
     assert(events == FDW_IN);
 
@@ -71,10 +71,10 @@ int main() {
 
     signal(SIGNAL, signal_intr);
 
-    chan sendch = channel(sizeof(char), 0);
-    assert(sendch);
-    chan recvch = channel(sizeof(char), 0);
-    assert(recvch);
+    int sendch = channel(sizeof(char), 0);
+    assert(sendch >= 0);
+    int recvch = channel(sizeof(char), 0);
+    assert(recvch >= 0);
 
     int i;
     for(i = 0; i < COUNT; ++i) {
@@ -95,6 +95,9 @@ int main() {
         rc = hwait(hndls[1], NULL, -1);
         assert(rc == 0);
     }
+
+    hclose(sendch);
+    hclose(recvch);
 
     return 0;
 }

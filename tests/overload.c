@@ -27,7 +27,7 @@
 
 #include "../libdill.h"
 
-coroutine int relay(chan src, chan dst) {
+coroutine int relay(int src, int dst) {
     while(1) {
        int val;
        int rc = chrecv(src, &val, sizeof(val), -1);
@@ -40,10 +40,10 @@ coroutine int relay(chan src, chan dst) {
 }
 
 int main() {
-    chan left = channel(sizeof(int), 0);
-    assert(left);
-    chan right = channel(sizeof(int), 0);
-    assert(right);
+    int left = channel(sizeof(int), 0);
+    assert(left >= 0);
+    int right = channel(sizeof(int), 0);
+    assert(right >= 0);
     int hndls[2];
     hndls[0] = go(relay(left, right));
     assert(hndls[0] >= 0);
@@ -56,6 +56,8 @@ int main() {
     alarm(1);
     hclose(hndls[0]);
     hclose(hndls[1]);
+    hclose(left);
+    hclose(right);
 
     return 0;
 }

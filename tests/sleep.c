@@ -29,7 +29,7 @@
 
 #include "../libdill.h"
 
-coroutine static int delay(int n, chan ch) {
+coroutine static int delay(int n, int ch) {
     int rc = msleep(now() + n);
     assert(rc == 0);
     rc = chsend(ch, &n, sizeof(n), -1);
@@ -46,8 +46,8 @@ int main() {
     assert(diff > -20 && diff < 20);
 
     /* msleep-sort */
-    chan ch = channel(sizeof(int), 0);
-    assert(ch);
+    int ch = channel(sizeof(int), 0);
+    assert(ch >= 0);
     int hndls[4];
     hndls[0] = go(delay(30, ch));
     assert(hndls[0] >= 0);
@@ -74,6 +74,7 @@ int main() {
     hclose(hndls[1]);
     hclose(hndls[2]);
     hclose(hndls[3]);
+    hclose(ch);
 
     return 0;
 }

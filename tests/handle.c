@@ -41,13 +41,13 @@ void stop_fn2(int h) {
     assert(rc == -1 && errno == ECANCELED);
     rc = fdwait(0, FDW_IN, -1);
     assert(rc == -1 && errno == ECANCELED);
-    chan ch = channel(0, 0);
-    assert(ch);
+    int ch = channel(0, 0);
+    assert(ch >= 0);
     rc = chsend(ch, NULL, 0, -1);
     assert(rc == -1 && errno == ECANCELED);
     rc = chrecv(ch, NULL, 0, -1);
     assert(rc == -1 && errno == ECANCELED);
-    chclose(ch);
+    hclose(ch);
     rc = hdone(h, 0);
     assert(rc == 0);
 }

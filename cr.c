@@ -33,8 +33,8 @@
 #include "stack.h"
 #include "utils.h"
 
-static const int dill_type_placeholder = 0;
-static const void *dill_cr_type = &dill_type_placeholder;
+static const int dill_cr_type_placeholder = 0;
+static const void *dill_cr_type = &dill_cr_type_placeholder;
 
 volatile int dill_unoptimisable1 = 1;
 volatile void *dill_unoptimisable2 = NULL;
