@@ -48,7 +48,6 @@ chan dill_channel(size_t itemsz, size_t bufsz, const char *created) {
         errno = ENOMEM;
         return NULL;
     }
-    dill_register_chan(&ch->debug, created);
     ch->sz = itemsz;
     ch->sender.seq = 0;
     dill_list_init(&ch->sender.clauses);
@@ -58,8 +57,6 @@ chan dill_channel(size_t itemsz, size_t bufsz, const char *created) {
     ch->bufsz = bufsz;
     ch->items = 0;
     ch->first = 0;
-    dill_trace(created, "<%d>=channel(%d, %d)", (int)ch->debug.id,
-        (int)itemsz, (int)bufsz);
     return ch;
 }
 
@@ -72,7 +69,6 @@ static int dill_choose_index(struct dill_clause *cl) {
 void dill_chclose(chan ch, const char *current) {
     if(dill_slow(!ch))
         return;
-    dill_trace(current, "chclose(<%d>)", (int)ch->debug.id);
     /* Resume any remaining senders and receivers on the channel
        with EPIPE error. */
     while(!dill_list_empty(&ch->sender.clauses)) {
@@ -87,7 +83,6 @@ void dill_chclose(chan ch, const char *current) {
         cl->error = EPIPE;
         dill_resume(cl->cr, dill_choose_index(cl));
     }
-    dill_unregister_chan(&ch->debug);
     free(ch);
 }
 
@@ -284,15 +279,11 @@ finish:
 
 int dill_choose(struct chclause *clauses, int nclauses, int64_t deadline,
       const char *current) {
-    dill_trace(current, "choose()");
-    dill_startop(&dill_running->debug, DILL_CHOOSE, current);
     return dill_choose_(clauses, nclauses, deadline);
 }
 
 int dill_chsend(chan ch, const void *val, size_t len, int64_t deadline,
       const char *current) {
-    dill_trace(current, "chsend(<%d>)", (int)ch->debug.id);
-    dill_startop(&dill_running->debug, DILL_CHSEND, current);
     struct chclause cl = {ch, CHSEND, (void*)val, len};
     int res = dill_choose_(&cl, 1, deadline);
     if(dill_slow(res == 0 && errno != 0))
@@ -302,8 +293,6 @@ int dill_chsend(chan ch, const void *val, size_t len, int64_t deadline,
 
 int dill_chrecv(chan ch, void *val, size_t len, int64_t deadline,
       const char *current) {
-    dill_trace(current, "chrecv(<%d>)", (int)ch->debug.id);
-    dill_startop(&dill_running->debug, DILL_CHRECV, current);
     struct chclause cl = {ch, CHRECV, val, len};
     int res = dill_choose_(&cl, 1, deadline);
     if(dill_slow(res == 0 && errno != 0))
@@ -316,7 +305,6 @@ int dill_chdone(chan ch, const char *current) {
         errno = EINVAL;
         return -1;
     }
-    dill_trace(current, "chdone(<%d>)", (int)ch->debug.id);
     if(dill_slow(ch->done)) {
         errno = EPIPE;
         return -1;

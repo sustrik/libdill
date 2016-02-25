@@ -95,7 +95,7 @@ int main() {
 
     /* In this test we are also going to make sure that the debugging support
        doesn't hndlash the application. */
-    gotrace(1);
+    dotrace(1);
 
     /* Non-blocking receiver case. */
     chan ch1 = channel(sizeof(int), 0);

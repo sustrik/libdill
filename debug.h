@@ -25,56 +25,9 @@
 #ifndef DILL_DEBUG_INCLUDED
 #define DILL_DEBUG_INCLUDED
 
-#include "list.h"
 #include "utils.h"
-
-enum dill_op {
-    DILL_YIELD,
-    DILL_MSLEEP,
-    DILL_FDWAIT,
-    DILL_CHSEND,
-    DILL_CHRECV,
-    DILL_CHOOSE,
-    DILL_FINISHED
-};
-
-struct dill_debug_cr {
-    /* List of all coroutines. */
-    struct dill_list_item item;
-    /* Operation being processed at the moment. Used for debugging. */
-    enum dill_op op;
-    /* File and line where the coroutine was launched. */
-    const char *created;
-    /* File and line where the current blocking operation was invoked from. */
-    const char *current;
-};
-
-struct dill_debug_chan {
-    /* List of all channels. */
-    struct dill_list_item item;
-    /* Unique ID of the channel. */
-    int id;
-    /* File and line where the channel was created. */
-    const char *created;
-};
 
 /* No-op, but ensures that debugging functions get compiled into the binary. */
 void dill_preserve_debug(void);
-
-/* (Un)register coroutines and channels with the debugging subsystem. */
-void dill_register_cr(struct dill_debug_cr *cr, const char *created);
-void dill_unregister_cr(struct dill_debug_cr *cr);
-void dill_register_chan(struct dill_debug_chan *ch, const char *created);
-void dill_unregister_chan(struct dill_debug_chan *ch);
-
-/* While doing a blocking operation coroutine should register itself. */
-void dill_startop(struct dill_debug_cr *cr, enum dill_op op,
-    const char *current);
-
-extern int dill_tracelevel;
-
-/* Create a trace record. */
-#define dill_trace if(dill_slow(dill_tracelevel)) dill_trace_
-void dill_trace_(const char *location, const char *format, ...);
 
 #endif

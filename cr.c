@@ -124,7 +124,6 @@ int dill_prologue(int *hndl, const char *created) {
     if(dill_slow(!cr)) {*hndl = -1; return 0;}
     *hndl = handle(dill_cr_type, cr, dill_cr_stop);
     if(dill_slow(*hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return 0;}
-    dill_register_cr(&cr->debug, created);
     dill_slist_item_init(&cr->ready);
     cr->canceled = 0;
     cr->stopping = 0;
@@ -132,7 +131,6 @@ int dill_prologue(int *hndl, const char *created) {
     cr->hndl = *hndl;
     cr->unblock_cb = NULL;
     cr->ctx.valid = 0;
-    dill_trace(created, "{%d}=go()", (int)cr->hndl);
     /* Suspend the parent coroutine and make the new one running. */
     if(dill_setjmp(&dill_running->ctx))
         return 0;
@@ -144,13 +142,10 @@ int dill_prologue(int *hndl, const char *created) {
 /* The final part of go(). Cleans up after the coroutine is finished. */
 __attribute__((noinline)) dill_noopt
 void dill_epilogue(int result) {
-    dill_trace(NULL, "go() done");
-    dill_startop(&dill_running->debug, DILL_FINISHED, NULL);
     int rc = hdone(dill_running->hndl, result);
     dill_assert(rc >= 0);
     /* Handle will remain valid past this point but we can deallocate
        the coroutine itself. */
-    dill_unregister_cr(&dill_running->debug);
     dill_freestack(dill_running + 1);
     dill_running = NULL;
     /* Given that there's no running coroutine at this point
@@ -159,12 +154,8 @@ void dill_epilogue(int result) {
 }
 
 int dill_yield(const char *current) {
-    dill_trace(current, "yield()");
     if(dill_slow(dill_running->canceled || dill_running->stopping)) {
-        errno = ECANCELED;
-        return -1;
-    }
-    dill_startop(&dill_running->debug, DILL_YIELD, current);
+        errno = ECANCELED; return -1;}
     /* This looks fishy, but yes, we can resume the coroutine even before
        suspending it. */
     dill_resume(dill_running, 0);

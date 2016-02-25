@@ -384,7 +384,7 @@ sets `errno` to one of the following values:
 Debugging:
 
 ```
-gotrace(1); /* starts tracing */
+dotrace(1); /* starts tracing */
 goredump(); /* dumps info about current coroutines and channels */
 ```
 

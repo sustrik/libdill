@@ -205,7 +205,7 @@ DILL_EXPORT int dill_choose(struct chclause *clauses, int nclauses,
 /******************************************************************************/
 
 DILL_EXPORT void goredump(void);
-DILL_EXPORT void gotrace(int level);
+DILL_EXPORT void dotrace(int level);
 
 #endif
 

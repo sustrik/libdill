@@ -69,9 +69,6 @@ struct dill_chan {
     size_t bufsz;
     size_t items;
     size_t first;
-
-    /* Debugging info. */
-    struct dill_debug_chan debug;
 };
 
 /* This structure represents a single clause in a choose statement.

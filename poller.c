@@ -74,8 +74,6 @@ static int dill_fdwait_(int fd, int events, int64_t deadline,
     /* Do actual waiting. */
     fdata->fd = fd;
     fdata->events = events;
-    dill_startop(&dill_running->debug, fd < 0 ? DILL_MSLEEP : DILL_FDWAIT,
-        current);
     int rc = dill_suspend(NULL);
     /* Handle file descriptor events. */
     if(rc >= 0) {
