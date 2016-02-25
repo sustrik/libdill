@@ -83,41 +83,30 @@ int handle(const void *type, void *data, hstop_fn stop_fn) {
     dill_handles[h].result = -1;
     dill_handles[h].canceler = NULL;
     dill_handles[h].next = -1;
-    /* 0 is never returned. It is reserved to refer to the main routine. */
-    return h + 1;
+    return h;
 }
 
 int hdup(int h) {
-    /*  Duplicates of the main routine handle can be made ad libitum. */
-    if(dill_slow(!h)) return 0;
-    h--;
-    if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
+    if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return -1;}
     ++dill_handles[h].refcount;
     return h;
 }
 
 const void *htype(int h) {
-    if(dill_slow(!h)) return NULL; /* TODO: return coroutine type */
-    h--;
-    if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
+    if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return NULL;}
     return dill_handles[h].type;
 }
 
 void *hdata(int h) {
-    if(dill_slow(!h)) return NULL; /* TODO */
-    h--;
-    if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
+    if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return NULL;}
     return dill_handles[h].data;
 }
 
 int hdone(int h, int result) {
-    /* Marking main routine as done has no effect. */
-    if(dill_slow(!h)) return 0;
-    h--;
-    if(dill_slow(h >= dill_nhandles || dill_handles[h].next != -1)) {
+    if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return -1;}
     struct dill_handle *hndl = &dill_handles[h];
     hndl->result = result;
@@ -131,9 +120,6 @@ int hdone(int h, int result) {
 }
 
 int hwait(int h, int *result, int64_t deadline) {
-    /* Main routine cannot be waited for. */
-    if(dill_slow(h == 0)) {errno = EOPNOTSUPP; return -1;}
-    --h;
     if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return -1;}
     struct dill_handle *hndl = &dill_handles[h];
@@ -168,9 +154,6 @@ int hwait(int h, int *result, int64_t deadline) {
 }
 
 int hclose(int h) {
-    /* Main routine cannot be stopped. */
-    if(dill_slow(h == 0)) {errno = EOPNOTSUPP; return -1;}
-    --h;
     if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return -1;}
     struct dill_handle *hndl = &dill_handles[h];
@@ -189,7 +172,7 @@ int hclose(int h) {
         dill_running->stopping = 1;
         /* Send stop signal to the handle. */
         dill_assert(hndl->stop_fn);
-        hndl->stop_fn(h + 1);
+        hndl->stop_fn(h);
         dill_running->stopping = was_stopping;
         /* Better be paraniod and delete the function pointer here. */
         hndl->stop_fn = NULL;
