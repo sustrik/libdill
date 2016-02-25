@@ -168,7 +168,8 @@ int dill_yield(const char *current) {
 }
 
 static void dill_cr_stop(int h) {
-    struct dill_cr *cr = (struct dill_cr*)hdata(h);
+    struct dill_cr *cr = (struct dill_cr*)hdata(h, dill_cr_type);
+    dill_assert(cr);
     cr->canceled = 1;
     if(!dill_slist_item_inlist(&cr->ready))
         dill_resume(cr, -ECANCELED);

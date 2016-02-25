@@ -93,15 +93,11 @@ int hdup(int h) {
     return h;
 }
 
-const void *htype(int h) {
+void *hdata(int h, const void *type) {
     if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
         errno = EBADF; return NULL;}
-    return dill_handles[h].type;
-}
-
-void *hdata(int h) {
-    if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
-        errno = EBADF; return NULL;}
+    if(dill_slow(type && dill_handles[h].type != type)) {
+        errno = ENOTSUP; return NULL;}
     return dill_handles[h].data;
 }
 

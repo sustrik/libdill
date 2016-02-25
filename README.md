@@ -281,8 +281,7 @@ typedef void (*hclose_fn)(int h);
 int handle(const void *type, void *data, hclose_fn close_fn);
 ```
 
-`type` is a unique pointer identifying the type of the object. It can be
-retrieved later on via `htype()` function.
+`type` is a unique pointer identifying the type of the object.
 
 `data` is an opaque pointer. It is not used by libdill. It can be retrieved
 later on via `hdata()` function.
@@ -312,29 +311,21 @@ it returns -1 and sets `errno` to one of the following values:
 
 * `EBADF`: The specified handle does not exist.
 
-`htype()` function returns the type pointer as it was supplied to
-`handle()` function when the handle was created.
+`hdata()` function checks whether handle is of a particular type and if so it
+returns the data pointer as it was supplied to `handle()` function when
+the handle was created. 
 
 ```
-const void *htype(int h);
+void *hdata(int h, const void *type);
 ```
+
+If `type` is `NULL` no type check is performed.
 
 In case of error the function returns `NULL` and sets `errno` to one of
 the following values:
 
 * `EBADF`: The specified handle does not exist.
-
-`hdata()` function returns the data pointer as it was supplied to `handle()`
-function when the handle was created.
-
-```
-void *hdata(int h);
-```
-
-In case of error the function returns `NULL` and sets `errno` to one of
-the following values:
-
-* `EBADF`: The specified handle does not exist.
+* `ENOTSUP`: The type of the handle doesn't match `type` parameter.
 
 `hdone()` should be called by the object when it is done doing its
 work. Once the function is called, the object can be safely deallocated.

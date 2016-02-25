@@ -64,9 +64,11 @@ int main(void) {
     /* Handle is done before stop is called. */
     int h = handle(&type, &data, stop_fn1);
     assert(h >= 0);
+    void *dt = hdata(h, &type);
+    assert(dt == &data);
     int rc = hdone(h, 0);
-    void *data = hdata(h);
-    assert(!data);
+    dt = hdata(h, &type);
+    assert(!dt);
     assert(rc == 0);
     rc = hwait(h, NULL, -1);
     assert(rc == 0);
