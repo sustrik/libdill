@@ -31,8 +31,6 @@
 #include "poller.h"
 #include "timer.h"
 
-DILL_CT_ASSERT(sizeof(struct dill_fdwaitdata) <= DILL_OPAQUE_SIZE);
-
 /* Forward declarations for the functions implemented by specific poller
    mechanisms (poll, epoll, kqueue). */
 void dill_poller_init(void);
@@ -60,8 +58,6 @@ static int dill_fdwait_(int fd, int events, int64_t deadline,
         dill_assert(errno == 0);
         dill_poller_initialised = 1;
     }
-    struct dill_fdwaitdata *fdata =
-        (struct dill_fdwaitdata*)dill_running->opaque;
     /* If required, start waiting for the file descriptor. */
     if(fd >= 0) {
         int rc = dill_poller_add(fd, events);
@@ -72,8 +68,6 @@ static int dill_fdwait_(int fd, int events, int64_t deadline,
     if(deadline >= 0)
         dill_timer_add(&dill_running->timer, deadline);
     /* Do actual waiting. */
-    fdata->fd = fd;
-    fdata->events = events;
     int rc = dill_suspend(NULL);
     /* Handle file descriptor events. */
     if(rc >= 0) {
