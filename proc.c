@@ -38,9 +38,6 @@ struct dill_proc {
     pid_t pid;
 };
 
-/* TODO: At the moment hwait() doesn't work for processes. Either call
-         waitpid() periodically, or create a pipe to send the signal. */
-
 static void dill_proc_close(int h) {
     struct dill_proc *proc = hdata(h, dill_proc_type);
     dill_assert(proc);
@@ -57,7 +54,27 @@ static void dill_proc_close(int h) {
 }
 
 static int dill_proc_wait(int h, int *result, int64_t deadline) {
-    dill_assert(0);
+    struct dill_proc *proc = hdata(h, dill_proc_type);
+    dill_assert(proc);
+    /* There's no simple way to wait for a process with a deadline, unless
+       one wants to mess with SIGCHLD. Communicating the termination via
+       pipe doesn't work if process coredumps. Therefore, we'll do this
+       silly loop here. */
+    while(1) {
+        pid_t pid = waitpid(proc->pid, result, WNOHANG);
+        dill_assert(pid >= 0);
+        if(pid > 0) return 0;
+        /* The process haven't finished yet. Sleep for a while before checking
+           again. */
+        int64_t ddline = now() + 100;
+        if(deadline != -1 && deadline < ddline)
+            ddline = deadline;
+        int rc = msleep(ddline);
+        if(rc == 0)
+            continue;
+        dill_assert(errno == ETIMEDOUT || errno == ECANCELED);
+        return -1;
+    }
 }
 
 static void dill_proc_dump(int h) {
