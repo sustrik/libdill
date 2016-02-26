@@ -39,3 +39,4 @@ tests/sleep
 tests/overload
 tests/signals
 tests/handle
+tests/proc
