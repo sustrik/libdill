@@ -61,15 +61,20 @@ static int dill_proc_wait(int h, int *result, int64_t deadline) {
        pipe doesn't work if process coredumps. Therefore, we'll do this
        silly loop here. */
     while(1) {
-        pid_t pid = waitpid(proc->pid, result, WNOHANG);
-        dill_assert(pid >= 0);
-        if(pid > 0) return 0;
+        siginfo_t info;
+        int rc = waitid(P_PID, proc->pid, &info, WEXITED | WNOHANG);
+        dill_assert(rc == 0);
+        if(info.si_pid > 0) {
+            if(result)
+                *result = info.si_status;
+            return 0;
+        }
         /* The process haven't finished yet. Sleep for a while before checking
            again. */
         int64_t ddline = now() + 100;
         if(deadline != -1 && deadline < ddline)
             ddline = deadline;
-        int rc = msleep(ddline);
+        rc = msleep(ddline);
         if(rc == 0)
             continue;
         dill_assert(errno == ETIMEDOUT || errno == ECANCELED);
