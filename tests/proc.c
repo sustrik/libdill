@@ -30,6 +30,12 @@ coroutine int foo(int a, int b) {
     return a + b;
 }
 
+coroutine int bar(void) {
+    int rc = msleep(now() + 100000);
+    assert(rc == 0);
+    return 0;
+}
+
 int main(void) {
     int h, rc, result;
 
@@ -44,6 +50,12 @@ int main(void) {
     rc = hwait(h, &result, -1);
     assert(rc == 0);
     assert(result == 7);
+
+    /* Mess with a process while it is executing. */
+    h = gofork(bar());
+    rc = hwait(h, &result, now() + 50);
+    assert(rc == -1 && errno == ETIMEDOUT);
+    hclose(h);
 
     return 0;
 }

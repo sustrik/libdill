@@ -60,6 +60,7 @@ static int dill_proc_wait(int h, int *result, int64_t deadline) {
        one wants to mess with SIGCHLD. Communicating the termination via
        pipe doesn't work if process coredumps. Therefore, we'll do this
        silly loop here. */
+    int timeout = 0;
     while(1) {
         siginfo_t info;
         int rc = waitid(P_PID, proc->pid, &info, WEXITED | WNOHANG);
@@ -71,13 +72,16 @@ static int dill_proc_wait(int h, int *result, int64_t deadline) {
         }
         /* The process haven't finished yet. Sleep for a while before checking
            again. */
+        if(timeout) {errno == ETIMEDOUT; return -1;}
         int64_t ddline = now() + 100;
-        if(deadline != -1 && deadline < ddline)
+        if(deadline != -1 && deadline < ddline) {
             ddline = deadline;
+            timeout = 1;
+        }
         rc = msleep(ddline);
         if(rc == 0)
             continue;
-        dill_assert(errno == ETIMEDOUT || errno == ECANCELED);
+        dill_assert(errno == ECANCELED);
         return -1;
     }
 }
