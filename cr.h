@@ -63,7 +63,8 @@ struct dill_cr {
     struct dill_slist_item ready;
     /* If the coroutine is waiting for a deadline, it uses this timer. */
     struct dill_timer timer;
-
+    /* Handle of this coroutine. */
+    int hndl;
     /* When coroutine is suspended 'ctx' holds the context (registers and such),
        'unblock_cb' is a function to be called when the coroutine is moved back
        to the list of ready coroutines and 'sresult' is the value to be returned
@@ -71,16 +72,15 @@ struct dill_cr {
     struct dill_ctx ctx;
     dill_unblock_cb unblock_cb;
     int sresult;
-
     /* 1 if this corotine was stopped by its owner. */
     int canceled;
     /* 1 is execution is inside a 'stop' function. */
     int stopping;
-
+    /* When coroutine is being waited for using hwait() this is the pointer
+       to the waiting coroutine. */
+    struct dill_cr *waiter;
     /* Coroutine-local storage. */
     void *cls;
-    /* Handle of the coroutine. */
-    int hndl;
     /* Opaque storage for whatever data the current blocking operation
        needs to store while it is suspended. */
     uint8_t opaque[DILL_OPAQUE_SIZE];

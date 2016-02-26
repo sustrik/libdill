@@ -83,12 +83,17 @@ DILL_EXPORT int64_t now(void);
 /*  Handles                                                                   */
 /******************************************************************************/
 
-typedef void (*hstop_fn)(int h);
+struct hvfptrs {
+    void (*close)(int h);
+    int (*wait)(int h, int *result, int64_t deadline);
+    void (*dump)(int h);
+};
 
-DILL_EXPORT int handle(const void *type, void *data, hstop_fn stop_fn);
+DILL_EXPORT int handle(const void *type, void *data,
+    const struct hvfptrs *vfptrs);
 DILL_EXPORT int hdup(int h);
 DILL_EXPORT void *hdata(int h, const void *type);
-DILL_EXPORT int hdone(int h, int result);
+DILL_EXPORT void hdump(int h);
 DILL_EXPORT int hwait(int h, int *result, int64_t deadline);
 DILL_EXPORT int hclose(int h);
 

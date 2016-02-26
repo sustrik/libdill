@@ -23,6 +23,7 @@
 */
 
 #include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
 
@@ -40,11 +41,11 @@ struct dill_proc {
 /* TODO: At the moment hwait() doesn't work for processes. Either call
          waitpid() periodically, or create a pipe to send the signal. */
 
-static void dill_proc_stop_fn(int h) {
+static void dill_proc_close(int h) {
     struct dill_proc *proc = hdata(h, dill_proc_type);
     dill_assert(proc);
     /* This may happen if forking failed. */
-    if(dill_slow(proc->pid < 0)) goto error1;
+    if(dill_slow(proc->pid < 0)) {free(proc); return;}
     /* There is a child running. Let's send it a kill signal. */
     int rc = kill(proc->pid, SIGKILL);
     dill_assert(rc == 0);
@@ -52,17 +53,30 @@ static void dill_proc_stop_fn(int h) {
     /* TODO: For how long can this block? */
     rc = waitpid(proc->pid, NULL, 0);
     dill_assert(rc >= 0);
-error1:
-    rc = hdone(h, 0);
-    dill_assert(rc >= 0);
     free(proc);
 }
+
+static int dill_proc_wait(int h, int *result, int64_t deadline) {
+    dill_assert(0);
+}
+
+static void dill_proc_dump(int h) {
+    struct dill_proc *proc = hdata(h, dill_proc_type);
+    dill_assert(proc);
+    fprintf(stderr, "  PROCESS pid:%d\n", (int)proc->pid);
+}
+
+static const struct hvfptrs dill_proc_vfptrs = {
+    dill_proc_close,
+    dill_proc_wait,
+    dill_proc_dump
+};
 
 int dill_fork_prologue(int *hndl, const char *created) {
     struct dill_proc *proc = malloc(sizeof(struct dill_proc));
     if(dill_slow(!proc)) {errno = ENOMEM; *hndl = -1; return 0;}
     proc->pid = -1;
-    int h = handle(dill_proc_type, proc, dill_proc_stop_fn);
+    int h = handle(dill_proc_type, proc, &dill_proc_vfptrs);
     if(dill_slow(h < 0)) {
         int err = errno;
         free(proc);

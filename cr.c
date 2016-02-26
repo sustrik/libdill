@@ -28,6 +28,7 @@
 
 #include "cr.h"
 #include "debug.h"
+#include "handle.h"
 #include "libdill.h"
 #include "poller.h"
 #include "stack.h"
@@ -35,6 +36,16 @@
 
 static const int dill_cr_type_placeholder = 0;
 static const void *dill_cr_type = &dill_cr_type_placeholder;
+
+static void dill_cr_close(int h);
+static int dill_cr_wait(int h, int *status, int64_t deadline);
+static void dill_cr_dump(int h);
+
+static const struct hvfptrs dill_cr_vfptrs = {
+    dill_cr_close,
+    dill_cr_wait,
+    dill_cr_dump
+};
 
 volatile int dill_unoptimisable1 = 1;
 volatile void *dill_unoptimisable2 = NULL;
@@ -110,8 +121,6 @@ void dill_resume(struct dill_cr *cr, int result) {
 #error "Unsupported compiler!"
 #endif
 
-static void dill_cr_stop(int h);
-
 /* The intial part of go(). Starts the new coroutine.  Returns 1 in the
    new coroutine, 0 in the old one. */
 __attribute__((noinline)) dill_noopt
@@ -122,13 +131,14 @@ int dill_prologue(int *hndl, const char *created) {
     /* Allocate and initialise new stack. */
     struct dill_cr *cr = ((struct dill_cr*)dill_allocstack()) - 1;
     if(dill_slow(!cr)) {*hndl = -1; return 0;}
-    *hndl = handle(dill_cr_type, cr, dill_cr_stop);
+    *hndl = handle(dill_cr_type, cr, &dill_cr_vfptrs);
     if(dill_slow(*hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return 0;}
     dill_slist_item_init(&cr->ready);
+    cr->hndl = *hndl;
     cr->canceled = 0;
     cr->stopping = 0;
+    cr->waiter = NULL;
     cr->cls = NULL;
-    cr->hndl = *hndl;
     cr->unblock_cb = NULL;
     cr->ctx.valid = 0;
     /* Suspend the parent coroutine and make the new one running. */
@@ -142,15 +152,59 @@ int dill_prologue(int *hndl, const char *created) {
 /* The final part of go(). Cleans up after the coroutine is finished. */
 __attribute__((noinline)) dill_noopt
 void dill_epilogue(int result) {
-    int rc = hdone(dill_running->hndl, result);
-    dill_assert(rc >= 0);
-    /* Handle will remain valid past this point but we can deallocate
-       the coroutine itself. */
+    /* Result is stored in the handle so that it is available even after
+       the stack is deallocated. */
+    dill_handle_setcrresult(dill_running->hndl, result);
+    /* Resume a coroutine stuck in hwait(), if any. */
+    if(dill_running->waiter)
+        dill_resume(dill_running->waiter, 0);
+    /* Deallocate. */
     dill_freestack(dill_running + 1);
     dill_running = NULL;
     /* Given that there's no running coroutine at this point
        this call will never return. */
     dill_suspend(NULL);
+}
+
+static int dill_cr_wait(int h, int *status, int64_t deadline) {
+    struct dill_cr *cr = (struct dill_cr*)hdata(h, dill_cr_type);
+    /* If cr is NULL, the coroutine have already finished. */
+    if(cr) {
+        /* If not so and immediate deadline is requested,
+           return straight away. */
+        if(deadline == 0) {errno = ETIMEDOUT; return -1;}
+        /* Wait till the coroutine finishes. */
+        if(deadline > 0)
+            dill_timer_add(&dill_running->timer, deadline);
+        cr->waiter = dill_running;
+        int rc = dill_suspend(NULL);
+        cr->waiter = NULL;
+        if(deadline > 0 && rc != -ETIMEDOUT)
+            dill_timer_rm(&dill_running->timer);
+        if(dill_slow(rc < 0)) {errno = -rc; return -1;}
+    }
+    if(status)
+        *status = dill_handle_getcrresult(h);
+    return 0; 
+}
+
+static void dill_cr_close(int h) {
+    struct dill_cr *cr = (struct dill_cr*)hdata(h, dill_cr_type);
+    /* If the coroutine have already finished, we are done. */
+    if(!cr) return;
+    /* Ask coroutine to cancel. */
+    cr->canceled = 1;
+    if(!dill_slist_item_inlist(&cr->ready))
+        dill_resume(cr, -ECANCELED);
+    /* Wait till it finishes cancelling. */
+    int rc = dill_cr_wait(h, NULL, -1);
+    dill_assert(rc == 0);
+}
+
+static void dill_cr_dump(int h) {
+    struct dill_cr *cr = (struct dill_cr*)hdata(h, dill_cr_type);
+    dill_assert(cr);
+    fprintf(stderr, "  COROUTINE\n");
 }
 
 int dill_yield(const char *current) {
@@ -165,14 +219,6 @@ int dill_yield(const char *current) {
     dill_assert(rc < 0);
     errno = -rc;
     return -1;
-}
-
-static void dill_cr_stop(int h) {
-    struct dill_cr *cr = (struct dill_cr*)hdata(h, dill_cr_type);
-    dill_assert(cr);
-    cr->canceled = 1;
-    if(!dill_slist_item_inlist(&cr->ready))
-        dill_resume(cr, -ECANCELED);
 }
 
 void *cls(void) {

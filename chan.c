@@ -40,7 +40,15 @@ DILL_CT_ASSERT(sizeof(struct dill_choosedata) <= DILL_OPAQUE_SIZE);
 static const int dill_chan_type_placeholder = 0;
 static const void *dill_chan_type = &dill_chan_type_placeholder;
 
-void dill_chan_stop_fn(int h);
+static void dill_chan_close(int h);
+static int dill_chan_wait(int h, int *status, int64_t deadline);
+static void dill_chan_dump(int h);
+
+static const struct hvfptrs dill_chan_vfptrs = {
+    dill_chan_close,
+    dill_chan_wait,
+    dill_chan_dump
+};
 
 int dill_channel(size_t itemsz, size_t bufsz, const char *created) {
     /* If there's at least one channel created in the user's code
@@ -60,7 +68,7 @@ int dill_channel(size_t itemsz, size_t bufsz, const char *created) {
     ch->items = 0;
     ch->first = 0;
     /* Allocate a handle to point to the channel. */
-    int h = handle(dill_chan_type, ch, dill_chan_stop_fn);
+    int h = handle(dill_chan_type, ch, &dill_chan_vfptrs);
     if(dill_slow(h < 0)) {
         int err = errno;
         free(ch);
@@ -76,7 +84,7 @@ static int dill_choose_index(struct dill_clause *cl) {
     return cl - cd->clauses;
 }
 
-void dill_chan_stop_fn(int h) {
+static void dill_chan_close(int h) {
     struct dill_chan *ch = hdata(h, dill_chan_type);
     dill_assert(ch);
     /* Resume any remaining senders and receivers on the channel
@@ -93,9 +101,25 @@ void dill_chan_stop_fn(int h) {
         cl->error = EPIPE;
         dill_resume(cl->cr, dill_choose_index(cl));
     }
-    int rc = hdone(h, 0);
-    dill_assert(rc == 0);
     free(ch);
+}
+
+static int dill_chan_wait(int h, int *status, int64_t deadline) {
+    /* It's not clear what waiting for a channel means.
+       Let's just assume that it never finishes for now. */
+    if(status)
+        *status = 0;
+    int rc = msleep(deadline);
+    if(dill_slow(rc < 0)) return -1;
+    errno = ETIMEDOUT;
+    return -1;
+}
+
+static void dill_chan_dump(int h) {
+    struct dill_chan *ch = hdata(h, dill_chan_type);
+    dill_assert(ch);
+    fprintf(stderr, "CHANNEL item-size:%zu items:%zu/%zu done:%d\n",
+        ch->sz, ch->items, ch->bufsz, ch->done);
 }
 
 static struct dill_ep *dill_getep(struct dill_clause *cl) {

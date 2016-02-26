@@ -25,37 +25,39 @@
 #include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "cr.h"
+#include "handle.h"
 #include "libdill.h"
 #include "utils.h"
 
-struct dill_handle {
-    /* Implemetor-specified type of the handle. */
-    const void *type;
-    /* Opaque implemetor-specified pointer. It is set to NULL when
-       handledone() is called. */
-    void *data;
-    /* Number of duplicates of this handle. */
-    int refcount;
-    /* Virtual function that gets called when the handle is being stopped. */
-    hstop_fn stop_fn;
-    /* Return value as supplied by handledone() function. */
-    int result;
-    /* Coroutine that performs the cancelation of this handle.
-       NULL if the handle is not being canceled. */
-    struct dill_cr *canceler;
-    /* Index of the next handle in the linked list of unused handles. */
-    int next;
-};
+#define CHECKHANDLE(h, err) \
+    if(dill_slow((h) < 0 || (h) >= dill_nhandles ||\
+          dill_handles[(h)].next != -1)) {\
+        errno = EBADF; return (err);}\
+    struct dill_handle *hndl = &dill_handles[(h)];
+
+#define CHECKHANDLEVOID(h) \
+    if(dill_slow((h) < 0 || (h) >= dill_nhandles ||\
+          dill_handles[(h)].next != -1)) {\
+        errno = EBADF; return;}\
+    struct dill_handle *hndl = &dill_handles[(h)];
+
+#define CHECKHANDLEASSERT(h) \
+    dill_assert(!dill_slow((h) < 0 && (h) < dill_nhandles &&\
+          dill_handles[(h)].next == -1));\
+    struct dill_handle *hndl = &dill_handles[(h)];
 
 static struct dill_handle *dill_handles = NULL;
 static int dill_nhandles = 0;
 static int dill_unused = -1;
 
-int handle(const void *type, void *data, hstop_fn stop_fn) {
-    if(dill_slow(!type || !data || !stop_fn)) {errno = EINVAL; return -1;}
+int handle(const void *type, void *data, const struct hvfptrs *vfptrs) {
+    if(dill_slow(!type || !data || !vfptrs)) {errno = EINVAL; return -1;}
+    /* Check mandatory virtual functions. */
+    if(dill_slow(!vfptrs->close || !vfptrs->wait)) {errno = EINVAL; return -1;}
     /* If there's no space for the new handle expand the array. */
     if(dill_slow(dill_unused == -1)) {
         /* Start with 256 handles, double the size when needed. */
@@ -78,114 +80,78 @@ int handle(const void *type, void *data, hstop_fn stop_fn) {
     dill_unused = dill_handles[h].next;
     dill_handles[h].type = type;
     dill_handles[h].data = data;
-    dill_handles[h].refcount = 1;
-    dill_handles[h].stop_fn = stop_fn;
     dill_handles[h].result = -1;
-    dill_handles[h].canceler = NULL;
+    dill_handles[h].refcount = 1;
+    dill_handles[h].vfptrs = *vfptrs;
     dill_handles[h].next = -1;
     return h;
 }
 
 int hdup(int h) {
-    if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
-        errno = EBADF; return -1;}
-    ++dill_handles[h].refcount;
+    CHECKHANDLE(h, -1);
+    ++hndl->refcount;
     return h;
 }
 
 void *hdata(int h, const void *type) {
-    if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
-        errno = EBADF; return NULL;}
-    if(dill_slow(type && dill_handles[h].type != type)) {
-        errno = ENOTSUP; return NULL;}
-    return dill_handles[h].data;
+    CHECKHANDLE(h, NULL);
+    if(dill_slow(type && hndl->type != type)) {errno = ENOTSUP; return NULL;}
+    return hndl->data;
 }
 
-int hdone(int h, int result) {
-    if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
-        errno = EBADF; return -1;}
-    struct dill_handle *hndl = &dill_handles[h];
-    hndl->result = result;
-    /* The data can be deallocated past this point. It's safer to set this
-       pointer to NULL so that it's easier to debug if used by accident. */
-    hndl->data = NULL;
-    /* If there's stop() already waiting for this handle, resume it. */
-    if(hndl->canceler)
-        dill_resume(hndl->canceler, 0);
-    return 0;
+void hdump(int h) {
+    CHECKHANDLEVOID(h);
+    fprintf(stderr, "Handle:{%d} Type:%p Data:%p Refcount:%d\n",
+        h, hndl->type, hndl->data, hndl->refcount);
+    if(hndl->vfptrs.dump)
+        hndl->vfptrs.dump(h);
 }
 
 int hwait(int h, int *result, int64_t deadline) {
-    if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
-        errno = EBADF; return -1;}
-    struct dill_handle *hndl = &dill_handles[h];
+    CHECKHANDLE(h, -1);
     /* If current coroutine is already stopping. */
     if(dill_slow(dill_running->canceled || dill_running->stopping)) {
         errno = ECANCELED; return -1;}
-    /* If the handle is already done, skip the waiting. */
-    if(hndl->data) {
-        /* If immediate execution is requested. */
-        if(deadline == 0) {errno = ETIMEDOUT; return -1;}
-        /* TODO: Debug info! */
-        /* Wait for the coroutine to finish. */
-        if(deadline > 0)
-            dill_timer_add(&dill_running->timer, deadline);
-        hndl->canceler = dill_running;
-        int rc = dill_suspend(NULL);
-        hndl->canceler = NULL;
-        if(deadline > 0)
-            dill_timer_rm(&dill_running->timer);
-        if(dill_slow(rc < 0)) {
-            dill_assert(rc == -ECANCELED || rc == -ETIMEDOUT);
-            errno = -rc;
-            return -1;
-        }
-    }
-    dill_assert(!hndl->data);
+    int rc = hndl->vfptrs.wait(h, result, deadline);
+    if(dill_slow(rc < 0)) return -1;
     /* Return the handle to the shared pool. */
     hndl->next = dill_unused;
     dill_unused = h;
-    /* Return the result value provided by handledone() function. */
-    return hndl->result;
+    return 0;
 }
 
 int hclose(int h) {
-    if(dill_slow(h < 0 || h >= dill_nhandles || dill_handles[h].next != -1)) {
-        errno = EBADF; return -1;}
-    struct dill_handle *hndl = &dill_handles[h];
+    CHECKHANDLE(h, -1);
     /* If there are multiple duplicates of this handle just remove one
        reference. */
     if(hndl->refcount > 1) {
         --hndl->refcount;
         return 0;
     }
-    /* Stop function is called only if handledone() wasn't called before. */
-    if(hndl->data) {
-        hndl->canceler = dill_running;
-        /* This will guarantee that blocking functions cannot be called from
-           within stop_fn. */
-        int was_stopping = dill_running->stopping;
-        dill_running->stopping = 1;
-        /* Send stop signal to the handle. */
-        dill_assert(hndl->stop_fn);
-        hndl->stop_fn(h);
-        dill_running->stopping = was_stopping;
-        /* Better be paraniod and delete the function pointer here. */
-        hndl->stop_fn = NULL;
-        /* Wait till cancellation finishes. */
-        while(1) {
-            int rc = dill_suspend(NULL);
-            if(rc == 0)
-                break;
-            /* Owner of this coroutine stopped it. We'll ignore that. stop()
-               is not strictly a blocking function and thus it is supposed to be
-               immune to cancellation. */
-            dill_assert(rc == -ECANCELED);
-        }
-    }
+    /* This will guarantee that blocking functions cannot be called anywhere
+       inside the context of the close. */
+    int was_stopping = dill_running->stopping;
+    dill_running->stopping = 1;
+    /* Send stop signal to the handle. */
+    dill_assert(hndl->vfptrs.close);
+    hndl->vfptrs.close(h);
+    dill_running->stopping = was_stopping;
+    /* Better be paraniod and delete the function pointer here. */
+    hndl->vfptrs.close = NULL;
     /* Return the handle to the shared pool. */
     hndl->next = dill_unused;
     dill_unused = h;
     return 0;
+}
+
+void dill_handle_setcrresult(int h, int result) {
+    CHECKHANDLEASSERT(h);
+    hndl->data = NULL;
+    hndl->result = result;
+}
+
+int dill_handle_getcrresult(int h) {
+    CHECKHANDLEASSERT(h);
+    return hndl->result;
 }
 

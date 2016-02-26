@@ -26,6 +26,8 @@
 
 #include "../libdill.h"
 
+#if 0
+
 static int type = 0;
 static int data = 0;
 
@@ -89,3 +91,11 @@ int main(void) {
 
     return 0;
 }
+
+#endif
+
+
+int main(void) {
+    return 0;
+}
+
