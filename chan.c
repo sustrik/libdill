@@ -237,7 +237,8 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     int i;
     for(i = 0; i != nclauses; ++i) {
         cls[i].ch = hdata(cls[i].h, dill_chan_type);
-        if(dill_slow(!cls[i].ch || cls[i].ch->sz != cls[i].len ||
+        if(dill_slow(!cls[i].ch)) return -1;
+        if(dill_slow(cls[i].ch->sz != cls[i].len ||
               (cls[i].len > 0 && !cls[i].val) ||
               (cls[i].op != CHSEND && cls[i].op != CHRECV))) {
             errno = EINVAL;
