@@ -26,6 +26,10 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#if defined DILL_VALGRIND
+#include <valgrind/valgrind.h>
+#endif
+
 #include "cr.h"
 #include "debug.h"
 #include "handle.h"
@@ -116,7 +120,8 @@ int dill_prologue(int *hndl, const char *created) {
        statement is present in the user's code. */
     dill_preserve_debug();
     /* Allocate and initialise new stack. */
-    struct dill_cr *cr = ((struct dill_cr*)dill_allocstack()) - 1;
+    size_t stack_size;
+    struct dill_cr *cr = ((struct dill_cr*)dill_allocstack(&stack_size)) - 1;
     if(dill_slow(!cr)) {*hndl = -1; return 0;}
     *hndl = handle(dill_cr_type, cr, &dill_cr_vfptrs);
     if(dill_slow(*hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return 0;}
@@ -127,6 +132,9 @@ int dill_prologue(int *hndl, const char *created) {
     cr->waiter = NULL;
     cr->cls = NULL;
     cr->unblock_cb = NULL;
+#if defined DILL_VALGRIND
+    cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stack_size, cr);
+#endif
     /* Suspend the parent coroutine and make the new one running. */
     if(sigsetjmp(dill_running->ctx, 0))
         return 0;
@@ -144,6 +152,9 @@ void dill_epilogue(int result) {
     /* Resume a coroutine stuck in hwait(), if any. */
     if(dill_running->waiter)
         dill_resume(dill_running->waiter, 0);
+#if defined DILL_VALGRIND
+    VALGRIND_STACK_DEREGISTER(dill_running->sid);
+#endif
     /* Deallocate. */
     dill_freestack(dill_running + 1);
     dill_running = NULL;

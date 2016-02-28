@@ -75,6 +75,10 @@ struct dill_cr {
     struct dill_cr *waiter;
     /* Coroutine-local storage. */
     void *cls;
+#if defined DILL_VALGRIND
+    /* Valgrind stack identifier. */
+    int sid;
+#endif
     /* Opaque storage for whatever data the current blocking operation
        needs to store while it is suspended. */
     uint8_t opaque[DILL_OPAQUE_SIZE];

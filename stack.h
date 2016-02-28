@@ -29,7 +29,7 @@
 
 /* Allocates new stack. Returns pointer to the *top* of the stack.
    For now we assume that the stack grows downwards. */
-void *dill_allocstack(void);
+void *dill_allocstack(size_t *stack_size);
 
 /* Deallocates a stack. The argument is pointer to the top of the stack. */
 void dill_freestack(void *stack);

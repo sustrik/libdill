@@ -79,7 +79,7 @@ static int dill_max_cached_stacks = 64;
 static int dill_num_cached_stacks = 0;
 static struct dill_slist dill_cached_stacks = {0};
 
-void *dill_allocstack(void) {
+void *dill_allocstack(size_t *stack_size) {
     if(!dill_slist_empty(&dill_cached_stacks)) {
         --dill_num_cached_stacks;
         return (void*)(dill_slist_pop(&dill_cached_stacks) + 1);
@@ -108,6 +108,8 @@ void *dill_allocstack(void) {
         return NULL;
     }
 #endif
+    if(stack_size)
+        *stack_size = dill_get_stack_size() - dill_page_size();
     return (void*)(((char*)ptr) + dill_get_stack_size());
 }
 

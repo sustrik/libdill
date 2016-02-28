@@ -72,6 +72,17 @@ if test "x$enable_debug" = "xyes"; then
 fi
 
 ################################################################################
+#  --enable-valgrind                                                           #
+################################################################################
+
+AC_ARG_ENABLE([valgrind], [AS_HELP_STRING([--enable-valgrind],
+    [Provide information about coroutine stacks to valgrind [default=no]])])
+
+if test "x$enable_valgrind" = "xyes"; then
+    AC_DEFINE(DILL_VALGRIND)
+fi
+
+################################################################################
 #  Feature checks.                                                             #
 ################################################################################
 
