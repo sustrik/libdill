@@ -62,22 +62,22 @@ To launch the function in the same process as the caller use `go` keyword:
 go(foo(34, "ABC"));
 ```
 
-To launch it in a separate process use `gofork` keyword:
+To launch it in a separate process use `proc` keyword:
 
 ```c
-gofork(foo(34, "ABC"));
+proc(foo(34, "ABC"));
 ```
 
 Following table explains the trade-offs between the two mechanisms:
 
-|                         | go()                   | gofork()               |
+|                         | go()                   | proc()                 |
 | ----------------------- | ---------------------- | ---------------------- |
 | **lightweight**         | yes                    | no                     |
 | **parallel**            | no                     | yes                    |
 | **scheduling**          | cooperative            | preemptive             |
 | **failure isolation**   | no                     | yes                    |
 
-Launching a concurrent function -- a `coroutine` in libdill terminology -- using `go` construct is extremely fast, if requires only few machine instructions. `gofork` launches a separate OS process with its own address space and so on. It is much slower.
+Launching a concurrent function -- a `coroutine` in libdill terminology -- using `go` construct is extremely fast, if requires only few machine instructions. `proc` launches a separate OS process with its own address space and so on. It is much slower.
 
 Same applies to switching between different coroutines. While switching from one coroutine to other inside a single process is super fast, switching between processes is slow. OS scheduler gets involved, TLBs are switched and so on. Context switch between processes is a system hiccup and it often takes many thousands cycles to get back to speed.
 
@@ -116,7 +116,7 @@ As with everything that's idiomatic C you have to do it by hand.
 
 The good news is that it's easy to do.
 
-Both `go` and `gofork` return a handle. The handle can be closed thus killing the concurrent function.
+Both `go` and `proc` return a handle. The handle can be closed thus killing the concurrent function.
 
 ```c
 int h = go(foo());
