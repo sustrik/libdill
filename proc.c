@@ -98,7 +98,7 @@ static const struct hvfptrs dill_proc_vfptrs = {
     dill_proc_dump
 };
 
-int dill_fork_prologue(int *hndl, const char *created) {
+int dill_proc_prologue(int *hndl, const char *created) {
     struct dill_proc *proc = malloc(sizeof(struct dill_proc));
     if(dill_slow(!proc)) {errno = ENOMEM; *hndl = -1; return 0;}
     proc->pid = -1;
@@ -126,7 +126,7 @@ int dill_fork_prologue(int *hndl, const char *created) {
     return 0;
 }
 
-void dill_fork_epilogue(int result) {
+void dill_proc_epilogue(int result) {
     exit(result);
 }
 

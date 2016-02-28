@@ -46,13 +46,13 @@ int main(void) {
     assert(result == 7);
 
     /* Launch the coroutine in a separate process. */
-    h = gofork(foo(3, 4));
+    h = proc(foo(3, 4));
     rc = hwait(h, &result, -1);
     assert(rc == 0);
     assert(result == 7);
 
     /* Mess with a process while it is executing. */
-    h = gofork(bar());
+    h = proc(bar());
     rc = hwait(h, &result, now() + 50);
     assert(rc == -1 && errno == ETIMEDOUT);
     hclose(h);

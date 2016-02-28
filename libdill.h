@@ -108,8 +108,8 @@ DILL_EXPORT extern volatile void *dill_unoptimisable2;
 DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
     const char *created);
 DILL_EXPORT __attribute__((noinline)) void dill_epilogue(int result);
-DILL_EXPORT int dill_fork_prologue(int *hndl, const char *created);
-DILL_EXPORT void dill_fork_epilogue(int result);
+DILL_EXPORT int dill_proc_prologue(int *hndl, const char *created);
+DILL_EXPORT void dill_proc_epilogue(int result);
 
 #define dill_string2(x) #x
 #define dill_string(x) dill_string2(x)
@@ -139,11 +139,11 @@ DILL_EXPORT void dill_fork_epilogue(int result);
         h;\
     })
 
-#define gofork(fn) \
+#define proc(fn) \
     ({\
         int hndl;\
-        if(dill_fork_prologue(&hndl, __FILE__ ":" dill_string(__LINE__)))\
-            dill_fork_epilogue(fn);\
+        if(dill_proc_prologue(&hndl, __FILE__ ":" dill_string(__LINE__)))\
+            dill_proc_epilogue(fn);\
         hndl;\
     })
 
