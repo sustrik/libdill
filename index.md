@@ -1,5 +1,3 @@
-<link rel="stylesheet" type="text/css" href="main.css">
-
 # libdill: Structured Concurrency for C
 
 Libdill is a C library that makes writing concurrent programs easy.
@@ -31,7 +29,7 @@ int main() {
 
 ## Installation
 
-```
+```bash
 $ git clone git@github.com:sustrik/libdill.git
 $ cd libdill
 $ ./autogen.sh
@@ -45,7 +43,7 @@ $ sudo make install
 Code using libdill is compiled in standard C way. The only additional
 requirement is to link it with libdill library:
 
-```
+```bash
 gcc -ldill -o hello hello.c
 ```
 
@@ -62,19 +60,19 @@ Functions that are meant to run concurrently can have arbitrary parameters
 (even elipsis works) but the return type must be `int`. They must also be
 annotated by `coroutine` modifier.
 
-```
+```c
 coroutine int foo(int arg1, const char *arg2);
 ```
 
 To launch the function in the same process as the caller use `go` keyword:
 
-```
+```c
 go(foo(34, "ABC"));
 ```
 
 To launch it in a separate process use `gofork` keyword:
 
-```
+```c
 gofork(foo(34, "ABC"));
 ```
 
@@ -147,7 +145,7 @@ running in the background.
 
 What you end up with is a tree of coroutines rooted in the main function and
 spreading out toward the smallest worker functions. You also think of it as
-a generalisation of call stack, a call tree, really, in which you can walk
+a generalisation of call stack, a call tree, if you will, in which you can walk
 from any particular function up until you reach its root, the main function:
 
 ![](index3.jpeg)
@@ -161,7 +159,7 @@ The good news is that it's easy to do.
 Both `go` and `gofork` return a handle. The handle can be closed thus killing
 the concurrent function.
 
-```
+```c
 int h = go(foo());
 do_work();
 hclose(h);
@@ -169,7 +167,7 @@ hclose(h);
 
 Alternatively, you can wait till the function finishes:
 
-```
+```c
 int h = go(foo());
 do_work();
 hwait(h, NULL, -1);
@@ -180,7 +178,7 @@ reached and the function haven't finished yet it is left running.
 
 Additionally, `hwait` function provides a way to get function's return value:
 
-```
+```c
 int h = go(foo());
 do_work();
 int result;
@@ -196,7 +194,7 @@ calls start returning `ECANCELED` error. That on one hand forces the function
 to finish quickly (there's no much you can do without blocking functions anyway)
 but it also provides a way to clean up:
 
-```
+```c
 coroutine int foo(void) {
     void *resource = malloc(1000);
     while(1) {

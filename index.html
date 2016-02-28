@@ -1,20 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-  
-<meta charset="utf-8">
-<title>
-libdill
-</title>
-  
-<link rel="stylesheet" type="text/css" href="main.css">
-</head>
-<body>
-
-<p><link rel="stylesheet" type="text/css" href="main.css"></p>
+<p><!DOCTYPE html><br /><html><br /><head><br /> <meta charset="utf-8"><br /> <title>libdill</title><br /> <link rel="stylesheet" type="text/css" href="main.css"><br /></head><br /><body></p>
 <h1 id="libdill-structured-concurrency-for-c">libdill: Structured Concurrency for C</h1>
 <p>Libdill is a C library that makes writing concurrent programs easy.</p>
-<p>The following example launches two concurrent worker functions that print &quot;Hello!&quot; or &quot;World!&quot;, respectively, in random intervals. Program runs for five seconds, then it shuts down.</p>
+<p>The following example launches two concurrent worker functions that print<br />&quot;Hello!&quot; or &quot;World!&quot;, respectively, in random intervals. Program runs for<br />five seconds, then it shuts down.</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
 <span class="ot">#include &lt;stdio.h&gt;</span>
 <span class="ot">#include &lt;stdlib.h&gt;</span>
@@ -34,24 +21,24 @@ coroutine <span class="dt">int</span> worker(<span class="dt">const</span> <span
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
 <h2 id="installation">Installation</h2>
-<pre><code>$ git clone git@github.com:sustrik/libdill.git
-$ cd libdill
-$ ./autogen.sh
-$ ./configure
-$ make
-$ sudo make install</code></pre>
+<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">git</span> clone git@github.com:sustrik/libdill.git
+$ <span class="kw">cd</span> libdill
+$ <span class="kw">./autogen.sh</span>
+$ <span class="kw">./configure</span>
+$ <span class="kw">make</span>
+$ <span class="kw">sudo</span> make install</code></pre>
 <h2 id="compilation">Compilation</h2>
-<p>Code using libdill is compiled in standard C way. The only additional requirement is to link it with libdill library:</p>
-<pre><code>gcc -ldill -o hello hello.c</code></pre>
+<p>Code using libdill is compiled in standard C way. The only additional<br />requirement is to link it with libdill library:</p>
+<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">gcc</span> -ldill -o hello hello.c</code></pre>
 <h2 id="what-is-concurrency">What is concurrency?</h2>
-<p>Concurrency means that multiple functions can run independently of each another. It can mean that they are running in parallel on multiple CPU cores. It can also mean that they are running on a single CPU core and the system is transparently switching between them.</p>
+<p>Concurrency means that multiple functions can run independently of each another.<br />It can mean that they are running in parallel on multiple CPU cores.<br />It can also mean that they are running on a single CPU core and the system<br />is transparently switching between them.</p>
 <h2 id="how-is-concurrency-implemented-in-libdill">How is concurrency implemented in libdill?</h2>
-<p>Functions that are meant to run concurrently can have arbitrary parameters (even elipsis works) but the return type must be <code>int</code>. They must also be annotated by <code>coroutine</code> modifier.</p>
-<pre><code>coroutine int foo(int arg1, const char *arg2);</code></pre>
+<p>Functions that are meant to run concurrently can have arbitrary parameters<br />(even elipsis works) but the return type must be <code>int</code>. They must also be<br />annotated by <code>coroutine</code> modifier.</p>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">int</span> foo(<span class="dt">int</span> arg1, <span class="dt">const</span> <span class="dt">char</span> *arg2);</code></pre>
 <p>To launch the function in the same process as the caller use <code>go</code> keyword:</p>
-<pre><code>go(foo(34, &quot;ABC&quot;));</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c">go(foo(<span class="dv">34</span>, <span class="st">&quot;ABC&quot;</span>));</code></pre>
 <p>To launch it in a separate process use <code>gofork</code> keyword:</p>
-<pre><code>gofork(foo(34, &quot;ABC&quot;));</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c">gofork(foo(<span class="dv">34</span>, <span class="st">&quot;ABC&quot;</span>));</code></pre>
 <p>Following table explains the trade-offs between the two mechanisms:</p>
 <table>
 <thead>
@@ -84,57 +71,52 @@ $ sudo make install</code></pre>
 </tr>
 </tbody>
 </table>
-<p>Launching a concurrent function -- a <code>coroutine</code> in libdill terminology -- using <code>go</code> construct is extremely fast, if requires only few machine instructions. <code>gofork</code> launches a separate OS process with its own address space and so on. It is much slower.</p>
-<p>Same applies to switching between different coroutines. While switching from one coroutine to other inside a single process is super fast, switching between processes is slow. OS scheduler gets involved, TLBs are switched and so on. Context switch between processes is a system hiccup and it often takes many thousands cycles to get back to speed.</p>
-<p>However, there's one huge advantage of using separate processes. They may run in parallel, meaning that they can utilise multiple CPU cores. Launching the coroutine inside of the process, on the other hand, means that it shares CPU with the parent coroutine. If you are using <code>go</code> exclusively your program will use only a single CPU core even on a 32-core machine.</p>
-<p>From the performance point of view, the best strategy is to have as many processes as there are CPU cores and deal with any remaining concurrency needs inside the process via <code>go</code> mechanism.</p>
-<p>It's also worth noting that scheduling between different processes is preemptive, in other words that switch from one process to another can happen at any point of time.</p>
-<p>Coroutines within a single process are scheduled cooperatively. What that means is that one coroutine has to explicitly yield control of the CPU to allow a different coroutine to run. In the typical case this is done transparently to the user: When coroutine invokes a function that would block (like <code>msleep</code> or<code>chrecv</code>) the CPU is automatically yielded. However, if a coroutine does work without calling any blocking functions it may hold the CPU forever. For these cases there's a <code>yield</code> function to yield the CPU to other coroutines manually.</p>
-<p>Finally, there's a difference in how failures are handled. If a corutine crashes it takes down entire process along with all the other coroutines running inside it. However, if two coroutines are running in two different processes the fact that one of them crashes has no effect on the other one.</p>
+<p>Launching a concurrent function -- a <code>coroutine</code> in libdill terminology -- using<br /><code>go</code> construct is extremely fast, if requires only few machine instructions.<br /><code>gofork</code> launches a separate OS process with its own address space and so on.<br />It is much slower.</p>
+<p>Same applies to switching between different coroutines. While switching from<br />one coroutine to other inside a single process is super fast, switching between<br />processes is slow. OS scheduler gets involved, TLBs are switched and so on.<br />Context switch between processes is a system hiccup and it often takes many<br />thousands cycles to get back to speed.</p>
+<p>However, there's one huge advantage of using separate processes. They may run<br />in parallel, meaning that they can utilise multiple CPU cores. Launching the<br />coroutine inside of the process, on the other hand, means that it shares CPU<br />with the parent coroutine. If you are using <code>go</code> exclusively your program will<br />use only a single CPU core even on a 32-core machine.</p>
+<p>From the performance point of view, the best strategy is to have as many<br />processes as there are CPU cores and deal with any remaining concurrency needs<br />inside the process via <code>go</code> mechanism.</p>
+<p>It's also worth noting that scheduling between different processes is<br />preemptive, in other words that switch from one process to another can happen<br />at any point of time.</p>
+<p>Coroutines within a single process are scheduled cooperatively. What that means<br />is that one coroutine has to explicitly yield control of the CPU to allow<br />a different coroutine to run. In the typical case this is done transparently<br />to the user: When coroutine invokes a function that would block (like <code>msleep</code><br />or<code>chrecv</code>) the CPU is automatically yielded. However, if a coroutine does<br />work without calling any blocking functions it may hold the CPU forever.<br />For these cases there's a <code>yield</code> function to yield the CPU to other coroutines<br />manually.</p>
+<p>Finally, there's a difference in how failures are handled. If a corutine crashes<br />it takes down entire process along with all the other coroutines running inside<br />it. However, if two coroutines are running in two different processes the fact<br />that one of them crashes has no effect on the other one.</p>
 <h2 id="what-is-structured-concurrency">What is structured concurrency?</h2>
-<p>Structured concurrency means that lifetimes of concurrent functions are cleanly nested one inside another. If coroutine <code>foo</code> launches coroutine <code>bar</code> then <code>bar</code> must finish before <code>foo</code> finishes.</p>
+<p>Structured concurrency means that lifetimes of concurrent functions are cleanly<br />nested one inside another. If coroutine <code>foo</code> launches coroutine <code>bar</code> then<br /><code>bar</code> must finish before <code>foo</code> finishes.</p>
 <p>This is not structured concurrency:</p>
-<div class="figure">
-<img src="index1.jpeg" />
-</div>
+<p><img src="index1.jpeg" /></p>
 <p>On the other hand, this is structured concurrency:</p>
-<div class="figure">
-<img src="index2.jpeg" />
-</div>
-<p>The goal of structured concurrency is to guarantee encapsulation. If main function calls <code>foo</code> which in turn launches <code>bar</code> in concurrent fashion, main is guaranteed that after <code>foo</code> finishes there are no leftover functions still running in the background.</p>
-<p>What you end up with is a tree of coroutines rooted in the main function and spreading out toward the smallest worker functions. You also think of it as a generalisation of call stack, a call tree, really, in which you can walk from any particular function up until you reach its root, the main function:</p>
-<div class="figure">
-<img src="index3.jpeg" />
-</div>
+<p><img src="index2.jpeg" /></p>
+<p>The goal of structured concurrency is to guarantee encapsulation. If main<br />function calls <code>foo</code> which in turn launches <code>bar</code> in concurrent fashion, main is<br />guaranteed that after <code>foo</code> finishes there are no leftover functions still<br />running in the background.</p>
+<p>What you end up with is a tree of coroutines rooted in the main function and<br />spreading out toward the smallest worker functions. You also think of it as<br />a generalisation of call stack, a call tree, if you will, in which you can walk<br />from any particular function up until you reach its root, the main function:</p>
+<p><img src="index3.jpeg" /></p>
 <h2 id="how-is-structured-concurrency-implemented-in-libdill">How is structured concurrency implemented in libdill?</h2>
 <p>As with everything that's idiomatic C you have to do it by hand.</p>
 <p>The good news is that it's easy to do.</p>
-<p>Both <code>go</code> and <code>gofork</code> return a handle. The handle can be closed thus killing the concurrent function.</p>
-<pre><code>int h = go(foo());
+<p>Both <code>go</code> and <code>gofork</code> return a handle. The handle can be closed thus killing<br />the concurrent function.</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> h = go(foo());
 do_work();
 hclose(h);</code></pre>
 <p>Alternatively, you can wait till the function finishes:</p>
-<pre><code>int h = go(foo());
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> h = go(foo());
 do_work();
-hwait(h, NULL, -1);</code></pre>
-<p>In the later case, it's possible to specify a deadline. If the deadline is reached and the function haven't finished yet it is left running.</p>
+hwait(h, NULL, -<span class="dv">1</span>);</code></pre>
+<p>In the later case, it's possible to specify a deadline. If the deadline is<br />reached and the function haven't finished yet it is left running.</p>
 <p>Additionally, <code>hwait</code> function provides a way to get function's return value:</p>
-<pre><code>int h = go(foo());
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> h = go(foo());
 do_work();
-int result;
-hwait(h, &amp;result, now() + 1000);</code></pre>
-<p>That being said, what about function being killed? It may have some resources allocated and we want it to finish cleanly, not leaving any memory or resource leak behind.</p>
-<p>The mechanism is simple. In function being killed by <code>hclose</code> all the blocking calls start returning <code>ECANCELED</code> error. That on one hand forces the function to finish quickly (there's no much you can do without blocking functions anyway) but it also provides a way to clean up:</p>
-<pre><code>coroutine int foo(void) {
-    void *resource = malloc(1000);
-    while(1) {
-        int rc = msleep(now() + 100);
-        if(rc == -1 &amp;&amp; errno == ECANCELED) {
+<span class="dt">int</span> result;
+hwait(h, &amp;result, now() + <span class="dv">1000</span>);</code></pre>
+<p>That being said, what about function being killed? It may have some resources<br />allocated and we want it to finish cleanly, not leaving any memory or resource<br />leak behind.</p>
+<p>The mechanism is simple. In function being killed by <code>hclose</code> all the blocking<br />calls start returning <code>ECANCELED</code> error. That on one hand forces the function<br />to finish quickly (there's no much you can do without blocking functions anyway)<br />but it also provides a way to clean up:</p>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">int</span> foo(<span class="dt">void</span>) {
+    <span class="dt">void</span> *resource = malloc(<span class="dv">1000</span>);
+    <span class="kw">while</span>(<span class="dv">1</span>) {
+        <span class="dt">int</span> rc = msleep(now() + <span class="dv">100</span>);
+        <span class="kw">if</span>(rc == -<span class="dv">1</span> &amp;&amp; errno == ECANCELED) {
             free(resource);
-            return 0;
+            <span class="kw">return</span> <span class="dv">0</span>;
         }
     }
 }</code></pre>
 </body>
+
 
 
