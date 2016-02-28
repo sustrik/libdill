@@ -41,7 +41,7 @@ $ sudo make install
 Code using libdill is compiled in standard C way. The only additional requirement is to link it with libdill library:
 
 ```
-gcc -ldill -o hello hello.c
+$ gcc -ldill -o hello hello.c
 ```
 
 ## What is concurrency?

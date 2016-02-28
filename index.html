@@ -29,7 +29,7 @@ $ make
 $ sudo make install</code></pre>
 <h2 id="compilation">Compilation</h2>
 <p>Code using libdill is compiled in standard C way. The only additional requirement is to link it with libdill library:</p>
-<pre><code>gcc -ldill -o hello hello.c</code></pre>
+<pre><code>$ gcc -ldill -o hello hello.c</code></pre>
 <h2 id="what-is-concurrency">What is concurrency?</h2>
 <p>Concurrency means that multiple functions can run independently of each another. It can mean that they are running in parallel on multiple CPU cores. It can also mean that they are running on a single CPU core and the system is transparently switching between them.</p>
 <h2 id="how-is-concurrency-implemented-in-libdill">How is concurrency implemented in libdill?</h2>
