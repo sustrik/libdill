@@ -8,7 +8,7 @@ The following example launches two concurrent worker functions that print
 "Hello!" or "World!", respectively, in random intervals. Program runs for
 five seconds, then it shuts down.
 
-```
+```c
 #include <libdill.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -144,4 +144,61 @@ The goal of structured concurrency is to guarantee encapsulation. If main
 function calls `foo` which in turn launches `bar` in concurrent fashion, main is
 guaranteed that after `foo` finishes there are no leftover functions still
 running in the background.
+
+## How is structured concurrency implemented in libdill?
+
+As with everything that's idiomatic C you have to do it by hand.
+
+The good news is that it's easy to do.
+
+Both `go` and `gofork` return a handle. The handle can be closed thus killing
+the concurrent function.
+
+```
+int h = go(foo());
+do_work();
+hclose(h);
+```
+
+Alternatively, you can wait till the function finishes:
+
+```
+int h = go(foo());
+do_work();
+hwait(h, NULL, -1);
+```
+
+In the later case, it's possible to specify a deadline. If the deadline is
+reached and the function haven't finished yet it is left running.
+
+Additionally, `hwait` function provides a way to get function's return value:
+
+```
+int h = go(foo());
+do_work();
+int result;
+hwait(h, &result, now() + 1000);
+```
+
+That being said, what about function being killed? It may have some resources
+allocated and we want it to finish cleanly, not leaving any memory or resource
+leak behind.
+
+The mechanism is simple. In function being killed by `hclose` all the blocking
+calls start returning `ECANCELED` error. That on one hand forces the function
+to finish quickly (there's no much you can do without blocking functions anyway)
+but it also provides a way to clean up:
+
+```
+coroutine int foo(void) {
+    void *resource = malloc(1000);
+    while(1) {
+        int rc = msleep(now() + 100);
+        if(rc == -1 && errno == ECANCELED) {
+            free(resource);
+            return 0;
+        }
+    }
+}
+```
 
