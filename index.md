@@ -145,6 +145,13 @@ function calls `foo` which in turn launches `bar` in concurrent fashion, main is
 guaranteed that after `foo` finishes there are no leftover functions still
 running in the background.
 
+What you end up with is a tree of coroutines rooted in the main function and
+spreading out toward the smallest worker functions. You also think of it as
+a generalisation of call stack, a call tree, really, in which you can walk
+from any particular function up until you reach its root, the main function:
+
+![](index3.jpeg)
+
 ## How is structured concurrency implemented in libdill?
 
 As with everything that's idiomatic C you have to do it by hand.
