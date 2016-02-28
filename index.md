@@ -99,10 +99,10 @@ Context switch between processes is a system hiccup and it often takes many
 thousands cycles to get back to speed.
 
 However, there's one huge advantage of using separate processes. They may run
-in parallel, typically on two different CPU cores. Launching the coroutine
-inside of the process, on the other hand, means that it shares CPU with the
-parent coroutine. If you are using `go` exclusively your program will use only
-a single CPU core even on a 32-core machine.
+in parallel, meaning that they can utilise multiple CPU cores. Launching the
+coroutine inside of the process, on the other hand, means that it shares CPU
+with the parent coroutine. If you are using `go` exclusively your program will
+use only a single CPU core even on a 32-core machine.
 
 From the performance point of view, the best strategy is to have as many
 processes as there are CPU cores and deal with any remaining concurrency needs
@@ -125,4 +125,23 @@ Finally, there's a difference in how failures are handled. If a corutine crashes
 it takes down entire process along with all the other coroutines running inside
 it. However, if two coroutines are running in two different processes the fact
 that one of them crashes has no effect on the other one.
+
+## What is structured concurrency?
+
+Structured concurrency means that lifetimes of concurrent functions are cleanly
+nested one inside another. If coroutine `foo` launches coroutine `bar` then
+`bar` must finish before `foo` finishes.
+
+This is not structured concurrency:
+
+![](index1.jpeg)
+
+On the other hand, this is structured concurrency:
+
+![](index2.jpeg)
+
+The goal of structured concurrency is to guarantee encapsulation. If main
+function calls `foo` which in turn launches `bar` in concurrent fashion, main is
+guaranteed that after `foo` finishes there are no leftover functions still
+running in the background.
 

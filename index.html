@@ -86,11 +86,22 @@ $ sudo make install</code></pre>
 </table>
 <p>Launching a concurrent function -- a <code>coroutine</code> in libdill terminology -- using <code>go</code> construct is extremely fast, if requires only few machine instructions. <code>gofork</code> launches a separate OS process with its own address space and so on. It is much slower.</p>
 <p>Same applies to switching between different coroutines. While switching from one coroutine to other inside a single process is super fast, switching between processes is slow. OS scheduler gets involved, TLBs are switched and so on. Context switch between processes is a system hiccup and it often takes many thousands cycles to get back to speed.</p>
-<p>However, there's one huge advantage of using separate processes. They may run in parallel, typically on two different CPU cores. Launching the coroutine inside of the process, on the other hand, means that it shares CPU with the parent coroutine. If you are using <code>go</code> exclusively your program will use only a single CPU core even on a 32-core machine.</p>
+<p>However, there's one huge advantage of using separate processes. They may run in parallel, meaning that they can utilise multiple CPU cores. Launching the coroutine inside of the process, on the other hand, means that it shares CPU with the parent coroutine. If you are using <code>go</code> exclusively your program will use only a single CPU core even on a 32-core machine.</p>
 <p>From the performance point of view, the best strategy is to have as many processes as there are CPU cores and deal with any remaining concurrency needs inside the process via <code>go</code> mechanism.</p>
 <p>It's also worth noting that scheduling between different processes is preemptive, in other words that switch from one process to another can happen at any point of time.</p>
 <p>Coroutines within a single process are scheduled cooperatively. What that means is that one coroutine has to explicitly yield control of the CPU to allow a different coroutine to run. In the typical case this is done transparently to the user: When coroutine invokes a function that would block (like <code>msleep</code> or<code>chrecv</code>) the CPU is automatically yielded. However, if a coroutine does work without calling any blocking functions it may hold the CPU forever. For these cases there's a <code>yield</code> function to yield the CPU to other coroutines manually.</p>
 <p>Finally, there's a difference in how failures are handled. If a corutine crashes it takes down entire process along with all the other coroutines running inside it. However, if two coroutines are running in two different processes the fact that one of them crashes has no effect on the other one.</p>
+<h2 id="what-is-structured-concurrency">What is structured concurrency?</h2>
+<p>Structured concurrency means that lifetimes of concurrent functions are cleanly nested one inside another. If coroutine <code>foo</code> launches coroutine <code>bar</code> then <code>bar</code> must finish before <code>foo</code> finishes.</p>
+<p>This is not structured concurrency:</p>
+<div class="figure">
+<img src="index1.jpeg" />
+</div>
+<p>On the other hand, this is structured concurrency:</p>
+<div class="figure">
+<img src="index2.jpeg" />
+</div>
+<p>The goal of structured concurrency is to guarantee encapsulation. If main function calls <code>foo</code> which in turn launches <code>bar</code> in concurrent fashion, main is guaranteed that after <code>foo</code> finishes there are no leftover functions still running in the background.</p>
 </body>
 
 
