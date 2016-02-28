@@ -24,6 +24,7 @@ coroutine int worker(const char *text) {
         printf(&quot;%s\n&quot;, text);
         msleep(now() + random() % 500);
     }
+    return 0;
 }
 
 int main() {
@@ -42,6 +43,54 @@ $ sudo make install</code></pre>
 <h2 id="compilation">Compilation</h2>
 <p>Code using libdill is compiled in standard C way. The only additional requirement is to link it with libdill library:</p>
 <pre><code>gcc -ldill -o hello hello.c</code></pre>
+<h2 id="what-is-concurrency">What is concurrency?</h2>
+<p>Concurrency means that multiple functions can run independently of each another. It can mean that they are running in parallel on multiple CPU cores. It can also mean that they are running on a single CPU core and the system is transparently switching between them.</p>
+<h2 id="how-is-concurrency-implemented-in-libdill">How is concurrency implemented in libdill?</h2>
+<p>Functions that are meant to run concurrently can have arbitrary parameters (even elipsis works) but the return type must be <code>int</code>. They must also be annotated by <code>coroutine</code> modifier.</p>
+<pre><code>coroutine int foo(int arg1, const char *arg2);</code></pre>
+<p>To launch the function in the same process as the caller use <code>go</code> keyword:</p>
+<pre><code>go(foo(34, &quot;ABC&quot;));</code></pre>
+<p>To launch it in a separate process use <code>gofork</code> keyword:</p>
+<pre><code>gofork(foo(34, &quot;ABC&quot;));</code></pre>
+<p>Following table explains the trade-offs between the two mechanisms:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">go()</th>
+<th align="left">gofork()</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">lightweight</td>
+<td align="left">yes</td>
+<td align="left">no</td>
+</tr>
+<tr class="even">
+<td align="left">parallel</td>
+<td align="left">no</td>
+<td align="left">yes</td>
+</tr>
+<tr class="odd">
+<td align="left">scheduling</td>
+<td align="left">cooperative</td>
+<td align="left">preemptive</td>
+</tr>
+<tr class="even">
+<td align="left">failure isolation</td>
+<td align="left">no</td>
+<td align="left">yes</td>
+</tr>
+</tbody>
+</table>
+<p>Launching a concurrent function -- a <code>coroutine</code> in libdill terminology -- using <code>go</code> construct is extremely fast, if requires only few machine instructions. <code>gofork</code> launches a separate OS process with its own address space and so on. It is much slower.</p>
+<p>Same applies to switching between different coroutines. While switching from one coroutine to other inside a single process is super fast, switching between processes is slow. OS scheduler gets involved, TLBs are switched and so on. Context switch between processes is a system hiccup and it often takes many thousands cycles to get back to speed.</p>
+<p>However, there's one huge advantage of using separate processes. They may run in parallel, typically on two different CPU cores. Launching the coroutine inside of the process, on the other hand, means that it shares CPU with the parent coroutine. If you are using <code>go</code> exclusively your program will use only a single CPU core even on a 32-core machine.</p>
+<p>From the performance point of view, the best strategy is to have as many processes as there are CPU cores and deal with any remaining concurrency needs inside the process via <code>go</code> mechanism.</p>
+<p>It's also worth noting that scheduling between different processes is preemptive, in other words that switch from one process to another can happen at any point of time.</p>
+<p>Coroutines within a single process are scheduled cooperatively. What that means is that one coroutine has to explicitly yield control of the CPU to allow a different coroutine to run. In the typical case this is done transparently to the user: When coroutine invokes a function that would block (like <code>msleep</code> or<code>chrecv</code>) the CPU is automatically yielded. However, if a coroutine does work without calling any blocking functions it may hold the CPU forever. For these cases there's a <code>yield</code> function to yield the CPU to other coroutines manually.</p>
+<p>Finally, there's a difference in how failures are handled. If a corutine crashes it takes down entire process along with all the other coroutines running inside it. However, if two coroutines are running in two different processes the fact that one of them crashes has no effect on the other one.</p>
 </body>
 
 
