@@ -80,4 +80,17 @@ th, td {
     padding-right: 2em;
 }
 
+.kw,.dt {
+    color: indianRed;
+}
+
+.dv,.st {
+    color: teal;
+}
+
+.ot {
+    color: grey;
+}
+
+
 

@@ -21,15 +21,15 @@ coroutine <span class="dt">int</span> worker(<span class="dt">const</span> <span
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
 <h2 id="installation">Installation</h2>
-<pre class="sourceCode bash"><code class="sourceCode bash">$ <span class="kw">git</span> clone git@github.com:sustrik/libdill.git
-$ <span class="kw">cd</span> libdill
-$ <span class="kw">./autogen.sh</span>
-$ <span class="kw">./configure</span>
-$ <span class="kw">make</span>
-$ <span class="kw">sudo</span> make install</code></pre>
+<pre><code>$ git clone git@github.com:sustrik/libdill.git
+$ cd libdill
+$ ./autogen.sh
+$ ./configure
+$ make
+$ sudo make install</code></pre>
 <h2 id="compilation">Compilation</h2>
 <p>Code using libdill is compiled in standard C way. The only additional requirement is to link it with libdill library:</p>
-<pre class="sourceCode bash"><code class="sourceCode bash"><span class="kw">gcc</span> -ldill -o hello hello.c</code></pre>
+<pre><code>gcc -ldill -o hello hello.c</code></pre>
 <h2 id="what-is-concurrency">What is concurrency?</h2>
 <p>Concurrency means that multiple functions can run independently of each another. It can mean that they are running in parallel on multiple CPU cores. It can also mean that they are running on a single CPU core and the system is transparently switching between them.</p>
 <h2 id="how-is-concurrency-implemented-in-libdill">How is concurrency implemented in libdill?</h2>

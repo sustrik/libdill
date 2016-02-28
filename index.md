@@ -27,7 +27,7 @@ int main() {
 
 ## Installation
 
-```bash
+```
 $ git clone git@github.com:sustrik/libdill.git
 $ cd libdill
 $ ./autogen.sh
@@ -40,7 +40,7 @@ $ sudo make install
 
 Code using libdill is compiled in standard C way. The only additional requirement is to link it with libdill library:
 
-```bash
+```
 gcc -ldill -o hello hello.c
 ```
 
