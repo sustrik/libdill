@@ -13,7 +13,35 @@ libdill
 
 <p><link rel="stylesheet" type="text/css" href="main.css"></p>
 <h1 id="libdill-structured-concurrency-for-c">libdill: Structured Concurrency for C</h1>
-<pre><code>Under construction.</code></pre>
+<p>Libdill is a C library that makes writing concurrent programs easy.</p>
+<p>The following example launches two concurrent worker functions that print &quot;Hello!&quot; or &quot;World!&quot;, respectively, in random intervals. Program runs for five seconds, then it shuts down.</p>
+<pre><code>#include &lt;libdill.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+coroutine int worker(const char *text) {
+    while(1) {
+        printf(&quot;%s\n&quot;, text);
+        msleep(now() + random() % 500);
+    }
+}
+
+int main() {
+    go(worker(&quot;Hello!&quot;));
+    go(worker(&quot;World!&quot;));
+    msleep(now() + 5000);
+    return 0;
+}</code></pre>
+<h2 id="installation">Installation</h2>
+<pre><code>$ git clone git@github.com:sustrik/libdill.git
+$ cd libdill
+$ ./autogen.sh
+$ ./configure
+$ make
+$ sudo make install</code></pre>
+<h2 id="compilation">Compilation</h2>
+<p>Code using libdill is compiled in standard C way. The only additional requirement is to link it with libdill library:</p>
+<pre><code>gcc -ldill -o hello hello.c</code></pre>
 </body>
 
 
