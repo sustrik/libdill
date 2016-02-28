@@ -73,5 +73,11 @@ pre {
     padding: 20px;
     border: 1px dotted;
     font-size: 120%
-} 
+}
+
+th, td {
+    padding-bottom: 0.3em;
+    padding-right: 2em;
+}
+
 

@@ -80,10 +80,10 @@ Following table explains the trade-offs between the two mechanisms:
 
 |                         | go()                   | gofork()               |
 | ----------------------- | ---------------------- | ---------------------- |
-| lightweight             | yes                    | no                     |
-| parallel                | no                     | yes                    |
-| scheduling              | cooperative            | preemptive             |
-| failure isolation       | no                     | yes                    |
+| **lightweight**         | yes                    | no                     |
+| **parallel**            | no                     | yes                    |
+| **scheduling**          | cooperative            | preemptive             |
+| **failure isolation**   | no                     | yes                    |
 
 Launching a concurrent function -- a `coroutine` in libdill terminology -- using
 `go` construct is extremely fast, if requires only few machine instructions.
