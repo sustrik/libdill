@@ -160,3 +160,31 @@ coroutine int foo(void) {
 }
 ```
 
+## What about asynchronous objects?
+
+Sometimes you don't want to launch a coroutine but rather to create an object that runs coroutines in the background. For example, an object called "tcp_connection" may run two coroutines, one for reading data from the network, one for sending data to the network.
+
+Still, it would be nice if the object was a node in the calltree, just like a coroutine is.
+
+In other words, you want a guarantee that once the object is deallocated there are no leftover coroutines running:
+
+![](index4.jpeg)
+
+And there's no trick there. Just do it in the most straightforward way. Launch the coroutines in function that opens the object and close them in the function the closes the object. Once main function closes the connection object, both sender and receiver corotuines will be automatically stopped.
+
+```c
+struct tcp_connection {
+    int sender;
+    int receiver;
+}
+
+void tcp_connection_open(struct tcp_connection *self) {
+    self->sender = go(tcp_sender(self));
+    self->receiver = go(tcp_receiver(self));
+}
+
+void tcp_connection_close(struct tcp_connection *self) {
+    hclose(self->sender);
+    hclose(self->receiver);
+}
+```

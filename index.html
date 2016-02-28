@@ -116,6 +116,26 @@ hwait(h, &amp;result, now() + <span class="dv">1000</span>);</code></pre>
         }
     }
 }</code></pre>
+<h2 id="what-about-asynchronous-objects">What about asynchronous objects?</h2>
+<p>Sometimes you don't want to launch a coroutine but rather to create an object that runs coroutines in the background. For example, an object called &quot;tcp_connection&quot; may run two coroutines, one for reading data from the network, one for sending data to the network.</p>
+<p>Still, it would be nice if the object was a node in the calltree, just like a coroutine is.</p>
+<p>In other words, you want a guarantee that once the object is deallocated there are no leftover coroutines running:</p>
+<p><img src="index4.jpeg" /></p>
+<p>And there's no trick there. Just do it in the most straightforward way. Launch the coroutines in function that opens the object and close them in the function the closes the object. Once main function closes the connection object, both sender and receiver corotuines will be automatically stopped.</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> tcp_connection {
+    <span class="dt">int</span> sender;
+    <span class="dt">int</span> receiver;
+}
+
+<span class="dt">void</span> tcp_connection_open(<span class="kw">struct</span> tcp_connection *self) {
+    self-&gt;sender = go(tcp_sender(self));
+    self-&gt;receiver = go(tcp_receiver(self));
+}
+
+<span class="dt">void</span> tcp_connection_close(<span class="kw">struct</span> tcp_connection *self) {
+    hclose(self-&gt;sender);
+    hclose(self-&gt;receiver);
+}</code></pre>
 </body>
 
 
