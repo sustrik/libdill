@@ -26,6 +26,7 @@
 #define LIBDILL_H_INCLUDED
 
 #include <errno.h>
+#include <setjmp.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -104,7 +105,7 @@ DILL_EXPORT int hclose(int h);
 DILL_EXPORT extern volatile int dill_unoptimisable1;
 DILL_EXPORT extern volatile void *dill_unoptimisable2;
 
-DILL_EXPORT __attribute__((noinline)) int dill_prologue(int *hndl,
+DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
     const char *created);
 DILL_EXPORT __attribute__((noinline)) void dill_epilogue(int result);
 DILL_EXPORT int dill_fork_prologue(int *hndl, const char *created);
@@ -124,15 +125,18 @@ DILL_EXPORT void dill_fork_epilogue(int result);
    See https://gcc.gnu.org/onlinedocs/gcc-3.2/gcc/Statement-Exprs.html */
 #define go(fn) \
     ({\
-        int hndl;\
-        if(dill_prologue(&hndl, __FILE__ ":" dill_string(__LINE__))) {\
-            int dill_anchor[dill_unoptimisable1];\
-            dill_unoptimisable2 = &dill_anchor;\
-            char dill_filler[(char*)&dill_anchor - (char*)hdata(hndl, NULL)];\
-            dill_unoptimisable2 = &dill_filler;\
-            dill_epilogue(fn);\
+        sigjmp_buf *ctx;\
+        int h = dill_prologue(&ctx, __FILE__ ":" dill_string(__LINE__));\
+        if(h >= 0) {\
+            if(!sigsetjmp(*ctx, 0)) {\
+                int dill_anchor[dill_unoptimisable1];\
+                dill_unoptimisable2 = &dill_anchor;\
+                char dill_filler[(char*)&dill_anchor - (char*)hdata(h, NULL)];\
+                dill_unoptimisable2 = &dill_filler;\
+                dill_epilogue(fn);\
+            }\
         }\
-        hndl;\
+        h;\
     })
 
 #define gofork(fn) \

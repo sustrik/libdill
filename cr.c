@@ -112,21 +112,19 @@ void dill_resume(struct dill_cr *cr, int result) {
 #error "Unsupported compiler!"
 #endif
 
-/* The intial part of go(). Starts the new coroutine.  Returns 1 in the
-   new coroutine, 0 in the old one. */
+/* The intial part of go(). Allocates a new stack and handle. */
 __attribute__((noinline)) dill_noopt
-int dill_prologue(int *hndl, const char *created) {
+int dill_prologue(sigjmp_buf **ctx, const char *created) {
     /* Ensure that debug functions are available whenever a single go()
        statement is present in the user's code. */
     dill_preserve_debug();
     /* Allocate and initialise new stack. */
     size_t stack_size;
     struct dill_cr *cr = ((struct dill_cr*)dill_allocstack(&stack_size)) - 1;
-    if(dill_slow(!cr)) {*hndl = -1; return 0;}
-    *hndl = handle(dill_cr_type, cr, &dill_cr_vfptrs);
-    if(dill_slow(*hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return 0;}
+    if(dill_slow(!cr)) return -1;
+    cr->hndl = handle(dill_cr_type, cr, &dill_cr_vfptrs);
+    if(dill_slow(cr->hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return -1;}
     dill_slist_item_init(&cr->ready);
-    cr->hndl = *hndl;
     cr->canceled = 0;
     cr->stopping = 0;
     cr->waiter = NULL;
@@ -136,11 +134,10 @@ int dill_prologue(int *hndl, const char *created) {
     cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stack_size, cr);
 #endif
     /* Suspend the parent coroutine and make the new one running. */
-    if(sigsetjmp(dill_running->ctx, 0))
-        return 0;
+    *ctx = &dill_running->ctx;
     dill_resume(dill_running, 0);    
     dill_running = cr;
-    return 1;
+    return cr->hndl;
 }
 
 /* The final part of go(). Cleans up after the coroutine is finished. */
