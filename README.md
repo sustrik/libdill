@@ -5,7 +5,7 @@
 Coroutine is a standard C function returning `int` with `coroutine` modifier
 applied:
 
-```
+```c
 coroutine int foo(int arg1, int arg2, int arg3) {
     printf("Hello world!\n");
     return 0;
@@ -16,7 +16,7 @@ coroutine int foo(int arg1, int arg2, int arg3) {
 
 To start a coroutine use `go` keyword. Expression returns a coroutine handle.
 
-```
+```c
 int h = go(foo(1, 2, 3));
 ```
 
@@ -42,7 +42,7 @@ coroutine switching points. Such calculation can block other coroutines from
 executing for a long interval of time. To mitigate this problem call `yield()`
 function once in a while.
 
-```
+```c
 int yield(void);
 ```
 
@@ -57,7 +57,7 @@ Semantics of channel are identical to semantics of channels in Go language.
 
 To create a channel use `channel()` function:
 
-```
+```c
 chan channel(size_t item_size, size_t buffer_size);
 ```
 
@@ -68,7 +68,7 @@ channel set the second parameter to zero.
 For example, this line creates a channel of int-sized elements able to hold
 100 items:
 
-```
+```c
 chan ch = channel(sizeof(int), 100);
 ```
 
@@ -83,7 +83,7 @@ values:
 
 Send a message to channel:
 
-```
+```c
 int val = 42;
 int rc = chsend(ch, &val, sizeof(val), -1);
 ```
@@ -95,12 +95,12 @@ sets `errno` to one of the following values:
 * `ETIMEDOUT`: The deadline expired before the message was sent.
 * `EPIPE`: Communication was terminated via `chdone()` function.
 * `ECANCELED`: The coroutine was canceled by its owner.
-  
+
 ## Receiving from a channel
 
 Receive a message from channel:
 
-```
+```c
 int val;
 int rc = chrecv(ch, &val, sizeof(val), -1);
 ```
@@ -116,7 +116,7 @@ sets `errno` to one of the following values:
 
 Mark a channel as non-functional:
 
-```
+```c
 int chdone(chan ch);
 ```
 
@@ -134,7 +134,7 @@ sets `errno` to one of the following values:
 
 To duplicate a channel handle:
 
-```
+```c
 chan chdup(chan ch);
 ```
 
@@ -144,7 +144,7 @@ The channel is deallocated only after all handles referring to it are closed.
 
 To close a channel handle use `chclose()` function.
 
-```
+```c
 void chclose(chan ch);
 ```
 
@@ -155,7 +155,7 @@ The channel is deallocated only after all handles referring to it are closed.
 To multiplex several channel operations use `choose()` function. Its semantics
 closely mimic semantics of Go's `select` statement.
 
-```
+```c
 struct chclause {
     chan channel;
     int op;
@@ -168,7 +168,7 @@ int choose(struct chclause *cls, int ncls, int64_t deadline);
 
 Example:
 
-```
+```c
 int val1;
 int val2 = 42;
 struct chclause clauses[] = {
@@ -257,13 +257,13 @@ A single pointer can be stored in coroutine-local storage.
 
 To set it use `setcls()` function:
 
-```
+```c
 void setcls(void *p);
 ```
 
 To retrieve it use `cls()` function:
 
-```
+```c
 void *cls();
 ```
 
@@ -276,7 +276,7 @@ Handles provide a mechanism to create asynchronous objects.
 
 Handle is created by `handle()` function.
 
-```
+```c
 typedef void (*hclose_fn)(int h);
 int handle(const void *type, void *data, hclose_fn close_fn);
 ```
@@ -302,7 +302,7 @@ On success, `handle()` function returns a newly allocated handle. On error,
 `hdup()` function duplicates a handle. The object is deallocated only after
 the last handle referring to it is closed.
 
-```
+```c
 int hdup(int h);
 ```
 
@@ -313,9 +313,9 @@ it returns -1 and sets `errno` to one of the following values:
 
 `hdata()` function checks whether handle is of a particular type and if so it
 returns the data pointer as it was supplied to `handle()` function when
-the handle was created. 
+the handle was created.
 
-```
+```c
 void *hdata(int h, const void *type);
 ```
 
@@ -332,7 +332,7 @@ work. Once the function is called, the object can be safely deallocated.
 `result` parameter will be eventually passed to the owner of the handle
 when it calls `hwait()`.
 
-```
+```c
 int hdone(int h, int result);
 ```
 
@@ -343,7 +343,7 @@ is set to one of the following values:
 
 `hwait()` is used to wait while handle finishes its work:
 
-```
+```c
 int hwait(int h, int *result, int64_t deadline);
 ```
 
@@ -361,7 +361,7 @@ values:
 `hclose()` is used to close the handle. The function immediately closes
 the object it refers to and deallocates any associated resources.
 
-```
+```c
 int hclose(int h);
 ```
 
@@ -374,7 +374,7 @@ sets `errno` to one of the following values:
 
 Debugging:
 
-```
+```c
 dotrace(1); /* starts tracing */
 goredump(); /* dumps info about current coroutines and channels */
 ```
@@ -384,4 +384,3 @@ If need be, both functions can be invoked directly from the debugger.
 ## License
 
 The library is licensed under MIT/X11 license.
-
