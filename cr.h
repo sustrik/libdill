@@ -34,12 +34,6 @@
 #include "timer.h"
 #include "utils.h"
 
-/* For now use longjmp. Replace by a different mechanism as needed. */
-struct dill_ctx {
-    int valid;
-    sigjmp_buf jbuf;
-};
-
 #define DILL_OPAQUE_SIZE 48
 
 struct dill_cr;
@@ -69,7 +63,7 @@ struct dill_cr {
        'unblock_cb' is a function to be called when the coroutine is moved back
        to the list of ready coroutines and 'sresult' is the value to be returned
        from the suspend function. */
-    struct dill_ctx ctx;
+    sigjmp_buf ctx;
     dill_unblock_cb unblock_cb;
     int sresult;
     /* 1 if this corotine was stopped by its owner. */

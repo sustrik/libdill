@@ -57,19 +57,6 @@ struct dill_cr *dill_running = &dill_main;
 /* Queue of coroutines scheduled for execution. */
 static struct dill_slist dill_ready = {0};
 
-#define dill_setjmp(ctx) \
-    ({\
-        dill_assert(!(ctx)->valid);\
-        (ctx)->valid = 1;\
-        sigsetjmp((ctx)->jbuf, 0);\
-    })
-#define dill_jmp(ctx) \
-    do{\
-        dill_assert((ctx)->valid);\
-        (ctx)->valid = 0;\
-        siglongjmp((ctx)->jbuf, 1);\
-    } while(0)
-
 int dill_suspend(dill_unblock_cb unblock_cb) {
     /* Even if process never gets idle, we have to process external events
        once in a while. The external signal may very well be a deadline or
@@ -82,7 +69,7 @@ int dill_suspend(dill_unblock_cb unblock_cb) {
     /* Store the context of the current coroutine, if any. */
     if(dill_running) {
         dill_running->unblock_cb = unblock_cb;
-        if(dill_setjmp(&dill_running->ctx))
+        if(sigsetjmp(dill_running->ctx,0))
             return dill_running->sresult;
     }
     while(1) {
@@ -91,7 +78,7 @@ int dill_suspend(dill_unblock_cb unblock_cb) {
             ++counter;
             struct dill_slist_item *it = dill_slist_pop(&dill_ready);
             dill_running = dill_cont(it, struct dill_cr, ready);
-            dill_jmp(&dill_running->ctx);
+            siglongjmp(dill_running->ctx, 1);
         }
         /* Otherwise, we are going to wait for sleeping coroutines
            and for external events. */
@@ -140,9 +127,8 @@ int dill_prologue(int *hndl, const char *created) {
     cr->waiter = NULL;
     cr->cls = NULL;
     cr->unblock_cb = NULL;
-    cr->ctx.valid = 0;
     /* Suspend the parent coroutine and make the new one running. */
-    if(dill_setjmp(&dill_running->ctx))
+    if(sigsetjmp(dill_running->ctx, 0))
         return 0;
     dill_resume(dill_running, 0);    
     dill_running = cr;
