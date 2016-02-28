@@ -162,7 +162,7 @@ coroutine int foo(void) {
 
 ## What about asynchronous objects?
 
-Sometimes you don't want to launch a coroutine but rather to create an object that runs coroutines in the background. For example, an object called "tcp_connection" may run two coroutines, one for reading data from the network, one for sending data to the network.
+Sometimes you don't want to launch a coroutine but rather to create an object that runs coroutines in the background. For example, an object called "tcp_connection" may run two coroutines, one for asynchronously reading data from the network, one for sending data to the network.
 
 Still, it would be nice if the object was a node in the calltree, just like a coroutine is.
 
