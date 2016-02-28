@@ -110,6 +110,10 @@ What you end up with is a tree of coroutines rooted in the main function and spr
 
 ![](index3.jpeg)
 
+It should be noted that the call tree, via `proc` mechanism, can span multiple processes:
+
+![](index5.jpeg)
+
 ## How is structured concurrency implemented in libdill?
 
 As with everything that's idiomatic C you have to do it by hand.
