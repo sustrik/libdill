@@ -84,14 +84,20 @@ DILL_EXPORT int64_t now(void);
 /*  Handles                                                                   */
 /******************************************************************************/
 
+#define dill_string2(x) #x
+#define dill_string(x) dill_string2(x)
+
+#define handle(type, data, vfptrs) \
+    dill_handle((type), (data), (vfptrs), __FILE__ ":" dill_string(__LINE__))
+
 struct hvfptrs {
     void (*close)(int h);
     int (*wait)(int h, int *result, int64_t deadline);
     void (*dump)(int h);
 };
 
-DILL_EXPORT int handle(const void *type, void *data,
-    const struct hvfptrs *vfptrs);
+DILL_EXPORT int dill_handle(const void *type, void *data,
+    const struct hvfptrs *vfptrs, const char *created);
 DILL_EXPORT int hdup(int h);
 DILL_EXPORT void *hdata(int h, const void *type);
 DILL_EXPORT void hdump(int h);
@@ -110,9 +116,6 @@ DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
 DILL_EXPORT __attribute__((noinline)) void dill_epilogue(int result);
 DILL_EXPORT int dill_proc_prologue(int *hndl, const char *created);
 DILL_EXPORT void dill_proc_epilogue(int result);
-
-#define dill_string2(x) #x
-#define dill_string(x) dill_string2(x)
 
 #if defined __GNUC__ || defined __clang__
 #define coroutine __attribute__((noinline))

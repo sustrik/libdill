@@ -68,7 +68,7 @@ int dill_channel(size_t itemsz, size_t bufsz, const char *created) {
     ch->items = 0;
     ch->first = 0;
     /* Allocate a handle to point to the channel. */
-    int h = handle(dill_chan_type, ch, &dill_chan_vfptrs);
+    int h = dill_handle(dill_chan_type, ch, &dill_chan_vfptrs, created);
     if(dill_slow(h < 0)) {
         int err = errno;
         free(ch);

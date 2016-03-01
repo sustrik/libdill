@@ -122,7 +122,7 @@ int dill_prologue(sigjmp_buf **ctx, const char *created) {
     size_t stack_size;
     struct dill_cr *cr = ((struct dill_cr*)dill_allocstack(&stack_size)) - 1;
     if(dill_slow(!cr)) return -1;
-    cr->hndl = handle(dill_cr_type, cr, &dill_cr_vfptrs);
+    cr->hndl = dill_handle(dill_cr_type, cr, &dill_cr_vfptrs, created);
     if(dill_slow(cr->hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return -1;}
     dill_slist_item_init(&cr->ready);
     cr->canceled = 0;

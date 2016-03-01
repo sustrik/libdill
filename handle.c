@@ -54,7 +54,8 @@ static struct dill_handle *dill_handles = NULL;
 static int dill_nhandles = 0;
 static int dill_unused = -1;
 
-int handle(const void *type, void *data, const struct hvfptrs *vfptrs) {
+int dill_handle(const void *type, void *data, const struct hvfptrs *vfptrs,
+      const char *created) {
     if(dill_slow(!type || !data || !vfptrs)) {errno = EINVAL; return -1;}
     /* Check mandatory virtual functions. */
     if(dill_slow(!vfptrs->close || !vfptrs->wait)) {errno = EINVAL; return -1;}
@@ -83,6 +84,7 @@ int handle(const void *type, void *data, const struct hvfptrs *vfptrs) {
     dill_handles[h].result = -1;
     dill_handles[h].refcount = 1;
     dill_handles[h].vfptrs = *vfptrs;
+    dill_handles[h].created = created;
     dill_handles[h].next = -2;
     return h;
 }
@@ -101,8 +103,8 @@ void *hdata(int h, const void *type) {
 
 void hdump(int h) {
     CHECKHANDLEVOID(h);
-    fprintf(stderr, "Handle:{%d} Type:%p Data:%p Refcount:%d\n",
-        h, hndl->type, hndl->data, hndl->refcount);
+    fprintf(stderr, "Handle:{%d} Type:%p Data:%p Refcount:%d Created: %s\n",
+        h, hndl->type, hndl->data, hndl->refcount, hndl->created);
     if(hndl->vfptrs.dump)
         hndl->vfptrs.dump(h);
 }

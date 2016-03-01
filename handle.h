@@ -40,6 +40,9 @@ struct dill_handle {
     int refcount;
     /* Table of virtual functions. */
     struct hvfptrs vfptrs;
+    /* The location where the handle was created. The string it points to must
+       be static. */
+    const char *created;
     /* Index of the next handle in the linked list of unused handles. -1 means
        'end of the list'. -2 means 'active handle'. */
     int next;

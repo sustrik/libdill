@@ -102,7 +102,7 @@ int dill_proc_prologue(int *hndl, const char *created) {
     struct dill_proc *proc = malloc(sizeof(struct dill_proc));
     if(dill_slow(!proc)) {errno = ENOMEM; *hndl = -1; return 0;}
     proc->pid = -1;
-    int h = handle(dill_proc_type, proc, &dill_proc_vfptrs);
+    int h = dill_handle(dill_proc_type, proc, &dill_proc_vfptrs, created);
     if(dill_slow(h < 0)) {
         int err = errno;
         free(proc);
