@@ -54,6 +54,11 @@ static struct dill_handle *dill_handles = NULL;
 static int dill_nhandles = 0;
 static int dill_unused = -1;
 
+static void dill_handle_atexit(void) {
+    if(dill_handles)
+        free(dill_handles);
+}
+
 int dill_handle(const void *type, void *data, const struct hvfptrs *vfptrs,
       const char *created) {
     if(dill_slow(!type || !data || !vfptrs)) {errno = EINVAL; return -1;}
@@ -66,6 +71,12 @@ int dill_handle(const void *type, void *data, const struct hvfptrs *vfptrs,
         struct dill_handle *hndls =
             realloc(dill_handles, sz * sizeof(struct dill_handle));
         if(dill_slow(!hndls)) {errno = ENOMEM; return -1;}
+        /* Clean-up function to delete the array at exit. It is not strictly
+           necessary but valgrind will be happy about it. */
+        if(dill_slow(!dill_handles)) {
+            int rc = atexit(dill_handle_atexit);
+            dill_assert(rc == 0);
+        }
         /* Add newly allocated handles to the list of unused handles. */
         int i;
         for(i = dill_nhandles; i != sz - 1; ++i)
