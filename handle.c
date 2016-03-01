@@ -35,19 +35,19 @@
 
 #define CHECKHANDLE(h, err) \
     if(dill_slow((h) < 0 || (h) >= dill_nhandles ||\
-          dill_handles[(h)].next != -1)) {\
+          dill_handles[(h)].next != -2)) {\
         errno = EBADF; return (err);}\
     struct dill_handle *hndl = &dill_handles[(h)];
 
 #define CHECKHANDLEVOID(h) \
     if(dill_slow((h) < 0 || (h) >= dill_nhandles ||\
-          dill_handles[(h)].next != -1)) {\
+          dill_handles[(h)].next != -2)) {\
         errno = EBADF; return;}\
     struct dill_handle *hndl = &dill_handles[(h)];
 
 #define CHECKHANDLEASSERT(h) \
     dill_assert(!dill_slow((h) < 0 && (h) < dill_nhandles &&\
-          dill_handles[(h)].next == -1));\
+          dill_handles[(h)].next == -2));\
     struct dill_handle *hndl = &dill_handles[(h)];
 
 static struct dill_handle *dill_handles = NULL;
@@ -83,7 +83,7 @@ int handle(const void *type, void *data, const struct hvfptrs *vfptrs) {
     dill_handles[h].result = -1;
     dill_handles[h].refcount = 1;
     dill_handles[h].vfptrs = *vfptrs;
-    dill_handles[h].next = -1;
+    dill_handles[h].next = -2;
     return h;
 }
 
@@ -153,5 +153,14 @@ void dill_handle_setcrresult(int h, int result) {
 int dill_handle_getcrresult(int h) {
     CHECKHANDLEASSERT(h);
     return hndl->result;
+}
+
+void goredump(void) {
+    if(dill_slow(!dill_handles)) return;
+    int i;
+    for(i = 0; i != dill_nhandles; ++i) {
+        if(dill_handles[i].next == -2)
+            hdump(i);
+    }
 }
 

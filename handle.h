@@ -40,7 +40,8 @@ struct dill_handle {
     int refcount;
     /* Table of virtual functions. */
     struct hvfptrs vfptrs;
-    /* Index of the next handle in the linked list of unused handles. */
+    /* Index of the next handle in the linked list of unused handles. -1 means
+       'end of the list'. -2 means 'active handle'. */
     int next;
 };
 

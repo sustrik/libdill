@@ -197,8 +197,11 @@ static void dill_cr_close(int h) {
 
 static void dill_cr_dump(int h) {
     struct dill_cr *cr = (struct dill_cr*)hdata(h, dill_cr_type);
-    dill_assert(cr);
-    fprintf(stderr, "  COROUTINE\n");
+    if(!cr) {
+        fprintf(stderr, "  COROUTINE state:finished\n");
+        return;
+    }
+    fprintf(stderr, "  COROUTINE state:running\n");
 }
 
 int dill_yield(const char *current) {

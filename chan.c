@@ -118,7 +118,7 @@ static int dill_chan_wait(int h, int *status, int64_t deadline) {
 static void dill_chan_dump(int h) {
     struct dill_chan *ch = hdata(h, dill_chan_type);
     dill_assert(ch);
-    fprintf(stderr, "CHANNEL item-size:%zu items:%zu/%zu done:%d\n",
+    fprintf(stderr, "  CHANNEL item-size:%zu items:%zu/%zu done:%d\n",
         ch->sz, ch->items, ch->bufsz, ch->done);
 }
 

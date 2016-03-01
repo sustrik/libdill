@@ -31,9 +31,6 @@ void dotrace(int level) {
     dill_tracelevel = level;
 }
 
-void goredump(void) {
-}
-
 void dill_preserve_debug(void) {
     /* Do nothing, but trick the compiler into thinking that the debug
        functions are being used so that it does not optimise them away. */
