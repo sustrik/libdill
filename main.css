@@ -5,22 +5,6 @@ body {
     font-family: sans-serif;
 }
 
-#toplist {
-    padding-left: 0px;
-}
-
-#toplist li {
-    display: inline;
-    list-style-type: none;
-    padding-right: 15px;
-}
-
-#toplist a {
-    font-weight: bold;
-    color: red;
-    text-decoration: none;
-}
-
 h1 {
     font-size: 200%;
 }

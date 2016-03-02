@@ -1,3 +1,5 @@
+![](libdill.png)
+
 # libdill: Structured Concurrency for C
 
 Libdill is a C library that makes writing concurrent programs easy.

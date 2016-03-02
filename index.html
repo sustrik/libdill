@@ -1,4 +1,12 @@
-<p><!DOCTYPE html><br /><html><br /><head><br /> <meta charset="utf-8"><br /> <title>libdill</title><br /> <link rel="stylesheet" type="text/css" href="main.css"><br /></head><br /><body></p>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+<p><img src="libdill.png" /></p>
 <h1 id="libdill-structured-concurrency-for-c">libdill: Structured Concurrency for C</h1>
 <p>Libdill is a C library that makes writing concurrent programs easy.</p>
 <p>The following example launches two concurrent worker functions that print &quot;Hello!&quot; or &quot;World!&quot;, respectively, in random intervals. Program runs for five seconds, then it shuts down.</p>
@@ -139,6 +147,3 @@ hwait(h, &amp;result, now() + <span class="dv">1000</span>);</code></pre>
     hclose(self-&gt;receiver);
 }</code></pre>
 </body>
-
-
-
