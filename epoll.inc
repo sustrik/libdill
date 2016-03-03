@@ -56,6 +56,11 @@ static struct dill_crpair *dill_crpairs = NULL;
 static int dill_ncrpairs = 0;
 static uint32_t dill_changelist = DILL_ENDLIST;
 
+static void dill_poller_atexit(void) {
+    if(dill_crpairs)
+        free(dill_crpairs);
+}
+
 void dill_poller_init(void) {
     struct rlimit rlim;
     int rc = getrlimit(RLIMIT_NOFILE, &rlim);
@@ -70,6 +75,8 @@ void dill_poller_init(void) {
         dill_crpairs = NULL;
         return;
     }
+    rc = atexit(dill_poller_atexit);
+    dill_assert(rc == 0);
     errno = 0;
 }
 

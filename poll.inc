@@ -1,4 +1,4 @@
-/*
+ /*
 
   Copyright (c) 2016 Martin Sustrik
 
@@ -44,6 +44,13 @@ struct dill_pollset_item {
 };
 static struct dill_pollset_item *dill_pollset_items = NULL;
 
+static void dill_poller_atexit(void) {
+    if(dill_pollset_fds)
+        free(dill_pollset_fds);
+    if(dill_pollset_items)
+        free(dill_pollset_items);
+}
+
 /* Find pollset index by fd. If fd is not in pollset, return the index after
    the last item. TODO: This is O(n) operation! */
 static int dill_find_pollset(int fd) {
@@ -56,6 +63,8 @@ static int dill_find_pollset(int fd) {
 }
 
 void dill_poller_init(void) {
+    int rc = atexit(dill_poller_atexit);
+    dill_assert(rc == 0);
     errno = 0;
 }
 
