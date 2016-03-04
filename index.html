@@ -104,17 +104,7 @@ $ sudo make install</code></pre>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> h = go(foo());
 do_work();
 hclose(h);</code></pre>
-<p>Alternatively, you can wait till the function finishes:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> h = go(foo());
-do_work();
-hwait(h, NULL, -<span class="dv">1</span>);</code></pre>
-<p>In the later case, it's possible to specify a deadline. If the deadline is reached and the function haven't finished yet it is left running.</p>
-<p>Additionally, <code>hwait</code> function provides a way to get function's return value:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> h = go(foo());
-do_work();
-<span class="dt">int</span> result;
-hwait(h, &amp;result, now() + <span class="dv">1000</span>);</code></pre>
-<p>That being said, what about function being killed? It may have some resources allocated and we want it to finish cleanly, not leaving any memory or resource leak behind.</p>
+<p>What about function being killed? It may have some resources allocated and we want it to finish cleanly, not leaving any memory or resource leak behind.</p>
 <p>The mechanism is simple. In function being killed by <code>hclose</code> all the blocking calls start returning <code>ECANCELED</code> error. That on one hand forces the function to finish quickly (there's no much you can do without blocking functions anyway) but it also provides a way to clean up:</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">int</span> foo(<span class="dt">void</span>) {
     <span class="dt">void</span> *resource = malloc(<span class="dv">1000</span>);
