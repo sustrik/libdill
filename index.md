@@ -130,26 +130,7 @@ do_work();
 hclose(h);
 ```
 
-Alternatively, you can wait till the function finishes:
-
-```c
-int h = go(foo());
-do_work();
-hwait(h, NULL, -1);
-```
-
-In the later case, it's possible to specify a deadline. If the deadline is reached and the function haven't finished yet it is left running.
-
-Additionally, `hwait` function provides a way to get function's return value:
-
-```c
-int h = go(foo());
-do_work();
-int result;
-hwait(h, &result, now() + 1000);
-```
-
-That being said, what about function being killed? It may have some resources allocated and we want it to finish cleanly, not leaving any memory or resource leak behind.
+What about function being killed? It may have some resources allocated and we want it to finish cleanly, not leaving any memory or resource leak behind.
 
 The mechanism is simple. In function being killed by `hclose` all the blocking calls start returning `ECANCELED` error. That on one hand forces the function to finish quickly (there's no much you can do without blocking functions anyway) but it also provides a way to clean up:
 
