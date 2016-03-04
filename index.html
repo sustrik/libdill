@@ -41,8 +41,8 @@ $ sudo make install</code></pre>
 <h2 id="what-is-concurrency">What is concurrency?</h2>
 <p>Concurrency means that multiple functions can run independently of each another. It can mean that they are running in parallel on multiple CPU cores. It can also mean that they are running on a single CPU core and the system is transparently switching between them.</p>
 <h2 id="how-is-concurrency-implemented-in-libdill">How is concurrency implemented in libdill?</h2>
-<p>Functions that are meant to run concurrently can have arbitrary parameters (even elipsis works) but the return type must be <code>int</code>. They must also be annotated by <code>coroutine</code> modifier.</p>
-<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">int</span> foo(<span class="dt">int</span> arg1, <span class="dt">const</span> <span class="dt">char</span> *arg2);</code></pre>
+<p>Functions that are meant to run concurrently must be annotated by <code>coroutine</code> modifier.</p>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> foo(<span class="dt">int</span> arg1, <span class="dt">const</span> <span class="dt">char</span> *arg2);</code></pre>
 <p>To launch the function in the same process as the caller use <code>go</code> keyword:</p>
 <pre class="sourceCode c"><code class="sourceCode c">go(foo(<span class="dv">34</span>, <span class="st">&quot;ABC&quot;</span>));</code></pre>
 <p>To launch it in a separate process use <code>proc</code> keyword:</p>
@@ -106,13 +106,13 @@ do_work();
 hclose(h);</code></pre>
 <p>What about function being killed? It may have some resources allocated and we want it to finish cleanly, not leaving any memory or resource leak behind.</p>
 <p>The mechanism is simple. In function being killed by <code>hclose</code> all the blocking calls start returning <code>ECANCELED</code> error. That on one hand forces the function to finish quickly (there's no much you can do without blocking functions anyway) but it also provides a way to clean up:</p>
-<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">int</span> foo(<span class="dt">void</span>) {
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> foo(<span class="dt">void</span>) {
     <span class="dt">void</span> *resource = malloc(<span class="dv">1000</span>);
     <span class="kw">while</span>(<span class="dv">1</span>) {
         <span class="dt">int</span> rc = msleep(now() + <span class="dv">100</span>);
         <span class="kw">if</span>(rc == -<span class="dv">1</span> &amp;&amp; errno == ECANCELED) {
             free(resource);
-            <span class="kw">return</span> <span class="dv">0</span>;
+            <span class="kw">return</span>;
         }
     }
 }</code></pre>

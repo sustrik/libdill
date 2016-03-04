@@ -52,10 +52,10 @@ Concurrency means that multiple functions can run independently of each another.
 
 ## How is concurrency implemented in libdill?
 
-Functions that are meant to run concurrently can have arbitrary parameters (even elipsis works) but the return type must be `int`. They must also be annotated by `coroutine` modifier.
+Functions that are meant to run concurrently must be annotated by `coroutine` modifier.
 
 ```c
-coroutine int foo(int arg1, const char *arg2);
+coroutine void foo(int arg1, const char *arg2);
 ```
 
 To launch the function in the same process as the caller use `go` keyword:
@@ -135,13 +135,13 @@ What about function being killed? It may have some resources allocated and we wa
 The mechanism is simple. In function being killed by `hclose` all the blocking calls start returning `ECANCELED` error. That on one hand forces the function to finish quickly (there's no much you can do without blocking functions anyway) but it also provides a way to clean up:
 
 ```c
-coroutine int foo(void) {
+coroutine void foo(void) {
     void *resource = malloc(1000);
     while(1) {
         int rc = msleep(now() + 100);
         if(rc == -1 && errno == ECANCELED) {
             free(resource);
-            return 0;
+            return;
         }
     }
 }
