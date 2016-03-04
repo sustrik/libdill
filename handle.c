@@ -63,7 +63,7 @@ int dill_handle(const void *type, void *data, const struct hvfptrs *vfptrs,
       const char *created) {
     if(dill_slow(!type || !data || !vfptrs)) {errno = EINVAL; return -1;}
     /* Check mandatory virtual functions. */
-    if(dill_slow(!vfptrs->close || !vfptrs->wait)) {errno = EINVAL; return -1;}
+    if(dill_slow(!vfptrs->close)) {errno = EINVAL; return -1;}
     /* If there's no space for the new handle expand the array. */
     if(dill_slow(dill_unused == -1)) {
         /* Start with 256 handles, double the size when needed. */
@@ -92,7 +92,6 @@ int dill_handle(const void *type, void *data, const struct hvfptrs *vfptrs,
     dill_unused = dill_handles[h].next;
     dill_handles[h].type = type;
     dill_handles[h].data = data;
-    dill_handles[h].result = -1;
     dill_handles[h].refcount = 1;
     dill_handles[h].vfptrs = *vfptrs;
     dill_handles[h].created = created;
@@ -120,19 +119,6 @@ void hdump(int h) {
         hndl->vfptrs.dump(h);
 }
 
-int hwait(int h, int *result, int64_t deadline) {
-    CHECKHANDLE(h, -1);
-    /* If current coroutine is already stopping. */
-    if(dill_slow(dill_running->canceled || dill_running->stopping)) {
-        errno = ECANCELED; return -1;}
-    int rc = hndl->vfptrs.wait(h, result, deadline);
-    if(dill_slow(rc < 0)) return -1;
-    /* Return the handle to the shared pool. */
-    hndl->next = dill_unused;
-    dill_unused = h;
-    return 0;
-}
-
 int hclose(int h) {
     CHECKHANDLE(h, -1);
     /* If there are multiple duplicates of this handle just remove one
@@ -157,15 +143,9 @@ int hclose(int h) {
     return 0;
 }
 
-void dill_handle_setcrresult(int h, int result) {
+void dill_handle_done(int h) {
     CHECKHANDLEASSERT(h);
     hndl->data = NULL;
-    hndl->result = result;
-}
-
-int dill_handle_getcrresult(int h) {
-    CHECKHANDLEASSERT(h);
-    return hndl->result;
 }
 
 void goredump(void) {

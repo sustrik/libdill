@@ -41,12 +41,10 @@ static const int dill_chan_type_placeholder = 0;
 static const void *dill_chan_type = &dill_chan_type_placeholder;
 
 static void dill_chan_close(int h);
-static int dill_chan_wait(int h, int *status, int64_t deadline);
 static void dill_chan_dump(int h);
 
 static const struct hvfptrs dill_chan_vfptrs = {
     dill_chan_close,
-    dill_chan_wait,
     dill_chan_dump
 };
 
@@ -102,17 +100,6 @@ static void dill_chan_close(int h) {
         dill_resume(cl->cr, dill_choose_index(cl));
     }
     free(ch);
-}
-
-static int dill_chan_wait(int h, int *status, int64_t deadline) {
-    /* It's not clear what waiting for a channel means.
-       Let's just assume that it never finishes for now. */
-    if(status)
-        *status = 0;
-    int rc = msleep(deadline);
-    if(dill_slow(rc < 0)) return -1;
-    errno = ETIMEDOUT;
-    return -1;
 }
 
 static void dill_chan_dump(int h) {

@@ -30,7 +30,7 @@
 static int dummy1 = 0;
 static int dummy2 = 0;
 
-coroutine int worker(void) {
+coroutine void worker(void) {
     /* Test whether newly created coroutine has CLS set to NULL. */
     assert(cls() == NULL);
 
@@ -41,7 +41,6 @@ coroutine int worker(void) {
     int rc = yield();
     assert(rc == 0);
     assert(cls() == &dummy2);
-    return 0;
 }
 
 int main() {
@@ -56,9 +55,9 @@ int main() {
     int hndl = go(worker());
     assert(hndl >= 0);
     assert(cls() == &dummy1);
-    int rc = yield();
+    int rc = msleep(now() + 50);
     assert(rc == 0);
-    rc = hwait(hndl, NULL, -1);
+    rc = hclose(hndl);
     assert(rc == 0);
 
     /* Check whether CLS is not messed up when coroutine terminates. */

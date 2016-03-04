@@ -27,60 +27,54 @@
 
 #include "../libdill.h"
 
-coroutine int sender1(int ch, int val) {
+coroutine void sender1(int ch, int val) {
     int rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
-    return 0;
 }
 
-coroutine int sender2(int ch, int val) {
+coroutine void sender2(int ch, int val) {
     int rc = yield();
     assert(rc == 0);
     rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
-    return 0;
 }
 
-coroutine int sender3(int ch, int val, int64_t deadline) {
+coroutine void sender3(int ch, int val, int64_t deadline) {
     int rc = msleep(deadline);
     assert(rc == 0);
     rc = chsend(ch, &val, sizeof(val), -1);
     assert(rc == 0);
-    return 0;
 }
 
-coroutine int receiver1(int ch, int expected) {
+coroutine void receiver1(int ch, int expected) {
     int val;
     int rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == expected);
-    return 0;
 }
 
-coroutine int receiver2(int ch, int expected) {
+coroutine void receiver2(int ch, int expected) {
     int rc = yield();
     assert(rc == 0);
     int val;
     rc = chrecv(ch, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == expected);
-    return 0;
 }
 
-coroutine int choosesender(int ch, int val) {
+coroutine void choosesender(int ch, int val) {
     struct chclause cl = {ch, CHSEND, &val, sizeof(val)};
     int rc = choose(&cl, 1, -1);
     assert(rc == 0);
-    return 0;
 }
 
-coroutine int feeder(int ch, int val) {
+coroutine void feeder(int ch, int val) {
     while(1) {
         int rc = chsend(ch, &val, sizeof(val), -1);
-        if(rc == -1 && errno == ECANCELED) return 0;
+        if(rc == -1 && errno == ECANCELED) return;
         assert(rc == 0);
         rc = yield();
-        if(rc == -1 && errno == ECANCELED) return 0;
+        if(rc == -1 && errno == ECANCELED) return;
         assert(rc == 0);
     }
 }
@@ -107,7 +101,7 @@ int main() {
     assert(rc == 0);
     assert(val == 555);
     hclose(ch1);
-    rc = hwait(hndl1, NULL, -1);
+    rc = hclose(hndl1);
     assert(rc == 0);
 
     /* Blocking receiver case. */
@@ -120,7 +114,7 @@ int main() {
     assert(rc == 0);
     assert(val == 666);
     hclose(ch2);
-    rc = hwait(hndl2, NULL, -1);
+    rc = hclose(hndl2);
     assert(rc == 0);
 
     /* Non-blocking sender case. */
@@ -133,7 +127,7 @@ int main() {
     rc = choose(cls3, 1, -1);
     assert(rc == 0);
     hclose(ch3);
-    rc = hwait(hndl3, NULL, -1);
+    rc = hclose(hndl3);
     assert(rc == 0);
 
     /* Blocking sender case. */
@@ -146,7 +140,7 @@ int main() {
     rc = choose(cls4, 1, -1);
     assert(rc == 0);
     hclose(ch4);
-    rc = hwait(hndl4, NULL, -1);
+    rc = hclose(hndl4);
     assert(rc == 0);
 
     /* Check with two channels. */
@@ -171,9 +165,9 @@ int main() {
     assert(val == 666);
     hclose(ch5);
     hclose(ch6);
-    rc = hwait(hndl5[0], NULL, -1);
+    rc = hclose(hndl5[0]);
     assert(rc == 0);
-    rc = hwait(hndl5[1], NULL, -1);
+    rc = hclose(hndl5[1]);
     assert(rc == 0);
 
     /* Test whether selection of in channels is random. */
@@ -242,9 +236,9 @@ int main() {
     assert(rc == 0);
     assert(val == 999);
     hclose(ch10);
-    rc = hwait(hndl7[0], NULL, -1);
+    rc = hclose(hndl7[0]);
     assert(rc == 0);
-    rc = hwait(hndl7[1], NULL, -1);
+    rc = hclose(hndl7[1]);
     assert(rc == 0);
 
     /* Test two simultaneous receivers vs. choose statement. */
@@ -263,9 +257,9 @@ int main() {
     rc = choose(cls9, 1, -1);
     assert(rc == 0);
     hclose(ch11);
-    rc = hwait(hndl8[0], NULL, -1);
+    rc = hclose(hndl8[0]);
     assert(rc == 0);
-    rc = hwait(hndl8[1], NULL, -1);
+    rc = hclose(hndl8[1]);
     assert(rc == 0);
 
     /* Choose vs. choose. */
@@ -278,7 +272,7 @@ int main() {
     assert(rc == 0);
     assert(val == 111);
     hclose(ch12);
-    rc = hwait(hndl9, NULL, -1);
+    rc = hclose(hndl9);
     assert(rc == 0);
 
     /* Choose vs. buffered channels. */
@@ -312,7 +306,7 @@ int main() {
     assert(val == 1111);
     hclose(ch16);
     hclose(ch15);
-    rc = hwait(hndl10, NULL, -1);
+    rc = hclose(hndl10);
     assert(rc == 0);
 
     /* Test transferring a large object. */
@@ -360,7 +354,7 @@ int main() {
     diff = now() - start;
     assert(diff > 30 && diff < 70);
     hclose(ch22);
-    rc = hwait(hndl11, NULL, -1);
+    rc = hclose(hndl11);
     assert(rc == 0);
 
     return 0;

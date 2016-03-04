@@ -32,20 +32,18 @@
 
 #include "../libdill.h"
 
-coroutine int cancel(int fd) {
+coroutine void cancel(int fd) {
     int rc = fdwait(fd, FDW_IN, -1);
     assert(rc == -1 && errno == ECANCELED);
     rc = fdwait(fd, FDW_IN, -1);
     assert(rc == -1 && errno == ECANCELED);
-    return 0;
 }
 
-coroutine int trigger(int fd, int64_t deadline) {
+coroutine void trigger(int fd, int64_t deadline) {
     int rc = msleep(deadline);
     assert(rc == 0);
     ssize_t sz = send(fd, "A", 1, 0);
     assert(sz == 1);
-    return 0;
 }
 
 int main() {
@@ -76,7 +74,8 @@ int main() {
     /* Check cancelation. */
     int hndl1 = go(cancel(fds[0]));
     assert(hndl1 >= 0);
-    hclose(hndl1);
+    rc = hclose(hndl1);
+    assert(rc == 0);
 
     /* Check for in. */
     ssize_t sz = send(fds[1], "A", 1, 0);
@@ -105,7 +104,7 @@ int main() {
     assert(rc == FDW_IN);
     diff = now() - start;
     assert(diff > 30 && diff < 70);
-    rc = hwait(hndl2, NULL, -1);
+    rc = hclose(hndl2);
     assert(rc == 0);
 
     /* Check whether closing the connection is reported. */

@@ -92,7 +92,6 @@ DILL_EXPORT int64_t now(void);
 
 struct hvfptrs {
     void (*close)(int h);
-    int (*wait)(int h, int *result, int64_t deadline);
     void (*dump)(int h);
 };
 
@@ -101,7 +100,6 @@ DILL_EXPORT int dill_handle(const void *type, void *data,
 DILL_EXPORT int hdup(int h);
 DILL_EXPORT void *hdata(int h, const void *type);
 DILL_EXPORT void hdump(int h);
-DILL_EXPORT int hwait(int h, int *result, int64_t deadline);
 DILL_EXPORT int hclose(int h);
 
 /******************************************************************************/
@@ -113,9 +111,9 @@ DILL_EXPORT extern volatile void *dill_unoptimisable2;
 
 DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
     const char *created);
-DILL_EXPORT __attribute__((noinline)) void dill_epilogue(int result);
+DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 DILL_EXPORT int dill_proc_prologue(int *hndl, const char *created);
-DILL_EXPORT void dill_proc_epilogue(int result);
+DILL_EXPORT void dill_proc_epilogue(void);
 
 #if defined __GNUC__ || defined __clang__
 #define coroutine __attribute__((noinline))
@@ -136,7 +134,8 @@ DILL_EXPORT void dill_proc_epilogue(int result);
                 dill_unoptimisable2 = &dill_anchor;\
                 char dill_filler[(char*)&dill_anchor - (char*)hdata(h, NULL)];\
                 dill_unoptimisable2 = &dill_filler;\
-                dill_epilogue(fn);\
+                fn;\
+                dill_epilogue();\
             }\
         }\
         h;\
@@ -145,8 +144,10 @@ DILL_EXPORT void dill_proc_epilogue(int result);
 #define proc(fn) \
     ({\
         int hndl;\
-        if(dill_proc_prologue(&hndl, __FILE__ ":" dill_string(__LINE__)))\
-            dill_proc_epilogue(fn);\
+        if(dill_proc_prologue(&hndl, __FILE__ ":" dill_string(__LINE__))) {\
+            fn;\
+            dill_proc_epilogue();\
+        }\
         hndl;\
     })
 

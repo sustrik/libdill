@@ -27,14 +27,14 @@
 
 #include "../libdill.h"
 
-coroutine int relay(int src, int dst) {
+coroutine void relay(int src, int dst) {
     while(1) {
        int val;
        int rc = chrecv(src, &val, sizeof(val), -1);
-       if(rc == -1 && errno == ECANCELED) return 0;
+       if(rc == -1 && errno == ECANCELED) return;
        assert(rc == 0);
        rc = chsend(dst, &val, sizeof(val), -1);
-       if(rc == -1 && errno == ECANCELED) return 0;
+       if(rc == -1 && errno == ECANCELED) return;
        assert(rc == 0);
     }
 }

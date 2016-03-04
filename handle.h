@@ -32,10 +32,6 @@ struct dill_handle {
     const void *type;
     /* Opaque implemetor-specified pointer. */
     void *data;
-    /* This field is not used by handle implementation. It is a trick to
-       allow coroutines to deallocate themselves even before hclose() or
-       hwait() was called. */
-    int result;
     /* Number of duplicates of this handle. */
     int refcount;
     /* Table of virtual functions. */
@@ -48,8 +44,7 @@ struct dill_handle {
     int next;
 };
 
-void dill_handle_setcrresult(int h, int result);
-int dill_handle_getcrresult(int h);
+void dill_handle_done(int h);
 
 #endif
 

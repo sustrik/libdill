@@ -26,14 +26,14 @@
 
 #include "../libdill.h"
 
-coroutine int foo(int a, int b) {
-    return a + b;
+coroutine void foo(int a, int b) {
+    assert(a == 3);
+    assert(b == 4);
 }
 
-coroutine int bar(void) {
+coroutine void bar(void) {
     int rc = msleep(now() + 100000);
     assert(rc == 0);
-    return 0;
 }
 
 int main(void) {
@@ -41,21 +41,18 @@ int main(void) {
 
     /* Launch the coroutine locally. */
     h = go(foo(3, 4));
-    rc = hwait(h, &result, -1);
+    rc = msleep(now() + 50);
     assert(rc == 0);
-    assert(result == 7);
+    rc = hclose(h);
+    assert(rc == 0);
 
     /* Launch the coroutine in a separate process. */
     h = proc(foo(3, 4));
-    rc = hwait(h, &result, -1);
+    rc = msleep(now() + 100);
     assert(rc == 0);
-    assert(result == 7);
-
-    /* Mess with a process while it is executing. */
-    h = proc(bar());
-    rc = hwait(h, &result, now() + 50);
-    assert(rc == -1 && errno == ETIMEDOUT);
-    hclose(h);
+    rc = hclose(h);
+    assert(rc == 0);
 
     return 0;
 }
+

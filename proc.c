@@ -53,39 +53,6 @@ static void dill_proc_close(int h) {
     free(proc);
 }
 
-static int dill_proc_wait(int h, int *result, int64_t deadline) {
-    struct dill_proc *proc = hdata(h, dill_proc_type);
-    dill_assert(proc);
-    /* There's no simple way to wait for a process with a deadline, unless
-       one wants to mess with SIGCHLD. Communicating the termination via
-       pipe doesn't work if process coredumps. Therefore, we'll do this
-       silly loop here. */
-    int timeout = 0;
-    while(1) {
-        siginfo_t info;
-        int rc = waitid(P_PID, proc->pid, &info, WEXITED | WNOHANG);
-        dill_assert(rc == 0);
-        if(info.si_pid > 0) {
-            if(result)
-                *result = info.si_status;
-            return 0;
-        }
-        /* The process haven't finished yet. Sleep for a while before checking
-           again. */
-        if(timeout) {errno == ETIMEDOUT; return -1;}
-        int64_t ddline = now() + 100;
-        if(deadline != -1 && deadline < ddline) {
-            ddline = deadline;
-            timeout = 1;
-        }
-        rc = msleep(ddline);
-        if(rc == 0)
-            continue;
-        dill_assert(errno == ECANCELED);
-        return -1;
-    }
-}
-
 static void dill_proc_dump(int h) {
     struct dill_proc *proc = hdata(h, dill_proc_type);
     dill_assert(proc);
@@ -94,7 +61,6 @@ static void dill_proc_dump(int h) {
 
 static const struct hvfptrs dill_proc_vfptrs = {
     dill_proc_close,
-    dill_proc_wait,
     dill_proc_dump
 };
 
@@ -126,7 +92,7 @@ int dill_proc_prologue(int *hndl, const char *created) {
     return 0;
 }
 
-void dill_proc_epilogue(int result) {
-    exit(result);
+void dill_proc_epilogue(void) {
+    exit(0);
 }
 

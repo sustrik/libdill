@@ -28,71 +28,53 @@
 
 #include "../libdill.h"
 
-coroutine int dummy(void) {
+coroutine void dummy(void) {
     int rc = msleep(now() + 50);
     assert(rc == 0);
-    return 0;
 }
 
 int sum = 0;
 
-coroutine int worker(int count, int n) {
+coroutine void worker(int count, int n) {
     int i;
     for(i = 0; i != count; ++i) {
         sum += n;
         int rc = yield();
         assert(rc == 0);
     }
-    return 0;
 }
 
 static int worker2_done = 0;
 
-coroutine int worker2(void) {
+coroutine void worker2(void) {
     int rc = msleep(now() + 1000);
     assert(rc == -1 && errno == ECANCELED);
     /* Try again to test whether subsequent calls fail as well. */
     rc = msleep(now() + 1000);
     assert(rc == -1 && errno == ECANCELED);
     ++worker2_done;
-    return 0;
 }
 
-static int worker3_done = 0;
-
-coroutine int worker3(void) {
-    int rc = msleep(now() + 100);
-    assert(rc == 0);
-    ++worker3_done;
-    return 0;
-}
-
-coroutine int worker6(void) {
+coroutine void worker6(void) {
     int rc = msleep(now() + 2000);
     assert(rc == -1 && errno == ECANCELED);
-    return 0;
-}
-
-coroutine int worker5(void) {
-    int cr = go(worker6());
-    assert(cr >= 0);
-    int rc = hwait(cr, NULL, now() + 1000);
-    assert(rc == -1 && errno == ECANCELED);
-    return 0;
 }
 
 int main() {
+    /* Basic test. Run some coroutines. */
     int cr1 = go(worker(3, 7));
     assert(cr1 >= 0);
     int cr2 = go(worker(1, 11));
     assert(cr2 >= 0);
     int cr3 = go(worker(2, 5));
     assert(cr3 >= 0);
-    int rc = hwait(cr1, NULL, -1);
+    int rc = msleep(now() + 100);
     assert(rc == 0);
-    rc = hwait(cr2, NULL, -1);
+    rc = hclose(cr1);
     assert(rc == 0);
-    rc = hwait(cr3, NULL, -1);
+    rc = hclose(cr2);
+    assert(rc == 0);
+    rc = hclose(cr3);
     assert(rc == 0);
     assert(sum == 42);
 
@@ -106,7 +88,7 @@ int main() {
     rc = msleep(now() + 100);
     assert(rc == 0);
     for(i = 0; i != 20; ++i) {
-        rc = hwait(hndls2[i], NULL, -1);
+        rc = hclose(hndls2[i]);
         assert(rc == 0);
     }
 
@@ -123,26 +105,6 @@ int main() {
     hclose(cr2);
     hclose(cr3);
     assert(worker2_done == 3);
-
-    /* Test waiting for coroutines. */
-    cr1 = go(worker3());
-    assert(cr1 >= 0);
-    cr2 = go(worker3());
-    assert(cr2 >= 0);
-    cr3 = go(worker3());
-    assert(cr3 >= 0);
-    rc = hwait(cr1, NULL, -1);
-    assert(rc == 0);
-    rc = hwait(cr2, NULL, -1);
-    assert(rc == 0);
-    rc = hwait(cr3, NULL, -1);
-    assert(rc == 0);
-    assert(worker3_done == 3);
-
-    /* Test canceling a cancelation. */
-    cr1 = go(worker5());
-    assert(cr1 >= 0);
-    hclose(cr1);
 
     /* Let the test running for a while to detect possible errors if there
        was a bug that left any corotines running. */

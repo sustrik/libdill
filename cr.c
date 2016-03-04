@@ -42,12 +42,10 @@ static const int dill_cr_type_placeholder = 0;
 static const void *dill_cr_type = &dill_cr_type_placeholder;
 
 static void dill_cr_close(int h);
-static int dill_cr_wait(int h, int *status, int64_t deadline);
 static void dill_cr_dump(int h);
 
 static const struct hvfptrs dill_cr_vfptrs = {
     dill_cr_close,
-    dill_cr_wait,
     dill_cr_dump
 };
 
@@ -141,12 +139,11 @@ int dill_prologue(sigjmp_buf **ctx, const char *created) {
 }
 
 /* The final part of go(). Cleans up after the coroutine is finished. */
-__attribute__((noinline)) dill_noopt
-void dill_epilogue(int result) {
+__attribute__((noinline)) dill_noopt void dill_epilogue(void) {
     /* Result is stored in the handle so that it is available even after
        the stack is deallocated. */
-    dill_handle_setcrresult(dill_running->hndl, result);
-    /* Resume a coroutine stuck in hwait(), if any. */
+    dill_handle_done(dill_running->hndl);
+    /* Resume a coroutine stuck in hclose(). */
     if(dill_running->waiter)
         dill_resume(dill_running->waiter, 0);
 #if defined DILL_VALGRIND
@@ -160,28 +157,6 @@ void dill_epilogue(int result) {
     dill_suspend(NULL);
 }
 
-static int dill_cr_wait(int h, int *status, int64_t deadline) {
-    struct dill_cr *cr = (struct dill_cr*)hdata(h, dill_cr_type);
-    /* If cr is NULL, the coroutine have already finished. */
-    if(cr) {
-        /* If not so and immediate deadline is requested,
-           return straight away. */
-        if(deadline == 0) {errno = ETIMEDOUT; return -1;}
-        /* Wait till the coroutine finishes. */
-        if(deadline > 0)
-            dill_timer_add(&dill_running->timer, deadline);
-        cr->waiter = dill_running;
-        int rc = dill_suspend(NULL);
-        cr->waiter = NULL;
-        if(deadline > 0 && rc != -ETIMEDOUT)
-            dill_timer_rm(&dill_running->timer);
-        if(dill_slow(rc < 0)) {errno = -rc; return -1;}
-    }
-    if(status)
-        *status = dill_handle_getcrresult(h);
-    return 0; 
-}
-
 static void dill_cr_close(int h) {
     struct dill_cr *cr = (struct dill_cr*)hdata(h, dill_cr_type);
     /* If the coroutine have already finished, we are done. */
@@ -191,8 +166,10 @@ static void dill_cr_close(int h) {
     if(!dill_slist_item_inlist(&cr->ready))
         dill_resume(cr, -ECANCELED);
     /* Wait till it finishes cancelling. */
-    int rc = dill_cr_wait(h, NULL, -1);
+    cr->waiter = dill_running;
+    int rc = dill_suspend(NULL);
     dill_assert(rc == 0);
+    cr->waiter = NULL;
 }
 
 static void dill_cr_dump(int h) {

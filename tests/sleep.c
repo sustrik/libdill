@@ -29,12 +29,11 @@
 
 #include "../libdill.h"
 
-coroutine static int delay(int n, int ch) {
+coroutine static void delay(int n, int ch) {
     int rc = msleep(now() + n);
     assert(rc == 0);
     rc = chsend(ch, &n, sizeof(n), -1);
     assert(rc == 0);
-    return 0;
 }
 
 int main() {
