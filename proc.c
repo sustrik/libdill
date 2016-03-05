@@ -76,7 +76,7 @@ int dill_proc_prologue(int *hndl, const char *created) {
         *hndl = -1;
         return 0;
     }
-    pid_t pid = dill_fork();
+    pid_t pid = dill_poller_fork();
     if(dill_slow(pid < 0)) {
         int err = errno;
         hclose(h);
