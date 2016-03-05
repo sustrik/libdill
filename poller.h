@@ -37,7 +37,7 @@ void dill_poller_init(void);
    it will block until there's at least one event to process. */
 void dill_wait(int block);
 
-pid_t dill_fork(void);
+pid_t dill_poller_fork(void);
 
 #endif
 

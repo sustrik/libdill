@@ -83,7 +83,7 @@ void dill_poller_init(void) {
     errno = 0;
 }
 
-pid_t dill_fork(void) {
+pid_t dill_poller_fork(void) {
     pid_t pid = fork();
     if(pid != 0)
         return pid;
