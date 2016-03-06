@@ -45,8 +45,8 @@ tests/proc2
 tests/proc3
 perf/.dirstamp
 perf/chan
-perf/chr
-perf/chs
+perf/chrecv
+perf/chsend
 perf/ctxswitch
 perf/go
 perf/whispers
