@@ -30,25 +30,16 @@
 
 #include "../libdill.h"
 
-int forked = 0;
-int worker_running = 0;
+int timeout = 0;
 
 coroutine void worker(void) {
-    while(1) {
-        if(forked)
-            break;
-        yield();
-    }
-    worker_running = 1;
+    msleep(now() + 100);
+    timeout = 1;
 }
 
 coroutine void child(int fd) {
-    /* Make sure that there's only one coroutine running. */
-    forked = 1; 
-    int i;
-    for(i = 0; i != 20; ++i)
-        yield();
-    assert(!worker_running);
+    msleep(now() + 200);
+    assert(!timeout);
     ssize_t sz = write(fd, "A", 1);
     assert(sz == 1);
     close(fd);

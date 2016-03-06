@@ -31,6 +31,7 @@
 #include "cr.h"
 #include "libdill.h"
 #include "poller.h"
+#include "timer.h"
 #include "utils.h"
 
 static const int dill_proc_type_placeholder = 0;
@@ -82,6 +83,7 @@ int dill_proc_prologue(int *hndl, const char *created) {
     /* Child. */
     if(pid == 0) {
         dill_cr_postfork();
+        dill_timer_postfork();
         dill_poller_postfork();
         return 1;
     }

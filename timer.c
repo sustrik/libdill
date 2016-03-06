@@ -147,3 +147,7 @@ int dill_timer_fire(void) {
     return fired;
 }
 
+void dill_timer_postfork(void) {
+    dill_list_init(&dill_timers);
+}
+

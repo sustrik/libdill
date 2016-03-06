@@ -84,7 +84,8 @@ check_PROGRAMS = \
     tests/overload \
     tests/handle \
     tests/proc \
-    tests/proc1
+    tests/proc1 \
+    tests/proc2
 
 LDADD = libdill.la
 
