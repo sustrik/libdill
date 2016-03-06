@@ -102,3 +102,4 @@ int dill_suspend(dill_unblock_cb unblock_cb);
 void dill_resume(struct dill_cr *cr, int result);
 
 #endif
+
