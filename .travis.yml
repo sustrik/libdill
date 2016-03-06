@@ -12,8 +12,9 @@ compiler:
 
 env:
   matrix:
-   - CONF="autotools-shared"
-   - CONF="autotools-static"
+   - CONF="shared"
+   - CONF="static"
+   - CONF="shared-poll"
 
 addons:
   apt:
@@ -28,8 +29,9 @@ branches:
     - master
 
 install:
-  - if [[ $CONF == "autotools-shared" ]]; then ./autogen.sh && ./configure && make; fi
-  - if [[ $CONF == "autotools-static" ]]; then ./autogen.sh && ./configure --disable-shared && make; fi
+  - if [[ $CONF == "shared" ]]; then ./autogen.sh && ./configure && make; fi
+  - if [[ $CONF == "static" ]]; then ./autogen.sh && ./configure --disable-shared && make; fi
+  - if [[ $CONF == "shared-poll" ]]; then ./autogen.sh && ./configure CFLAGS=-DDILL_POLL && make; fi
 
 script:
   - make check
