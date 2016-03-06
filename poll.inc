@@ -69,6 +69,10 @@ void dill_poller_init(void) {
 }
 
 void dill_poller_postfork(void) {
+    dill_pollset_size = 0;
+    dill_pollset_capacity = 0;
+    dill_pollset_fds = NULL;
+    dill_pollset_items = NULL;
 }
 
 static int dill_poller_add(int fd, int events) {

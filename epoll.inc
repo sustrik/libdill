@@ -81,29 +81,15 @@ void dill_poller_init(void) {
 }
 
 void dill_poller_postfork(void) {
-    /* In the child process we have to create a new kernel-side pollset,
-       identical to the one in the parent process, yet not sharing its
-       destiny. */
     if(dill_efd != -1) {
         int rc = close(dill_efd);
         dill_assert(rc == 0);
-        dill_efd = epoll_create(1);
-        dill_assert(dill_efd >= 0);
-        int fd;
-        for(fd = 0; fd != dill_ncrpairs; ++fd) {
-            if(dill_crpairs[fd].currevs) {
-                struct epoll_event ev;
-                ev.data.fd = fd;
-                ev.events = 0;
-                if(dill_crpairs[fd].currevs & FDW_IN)
-                    ev.events |= EPOLLIN;
-                if(dill_crpairs[fd].currevs & FDW_OUT)
-                    ev.events |= EPOLLOUT;
-                rc = epoll_ctl(dill_efd, EPOLL_CTL_ADD, fd, &ev);
-                dill_assert(rc == 0);
-            }
-        }
     }
+    dill_efd = -1;
+    dill_crpairs = NULL;
+    dill_ncrpairs = 0;
+    dill_changelist = DILL_ENDLIST;
+    dill_poller_init();
 }
 
 static int dill_poller_add(int fd, int events) {
