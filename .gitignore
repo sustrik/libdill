@@ -43,3 +43,10 @@ tests/proc
 tests/proc1
 tests/proc2
 tests/proc3
+perf/.dirstamp
+perf/chan
+perf/chr
+perf/chs
+perf/ctxswitch
+perf/go
+perf/whispers
