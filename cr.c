@@ -204,3 +204,8 @@ void setcls(void *val) {
     dill_running->cls = val;
 }
 
+void dill_cr_postfork(void) {
+    /* Drop all coroutines in the "ready to execute" list. */
+    dill_slist_init(&dill_ready);
+}
+

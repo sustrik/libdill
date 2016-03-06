@@ -40,3 +40,6 @@ tests/overload
 tests/signals
 tests/handle
 tests/proc
+tests/proc1
+tests/proc2
+tests/proc3

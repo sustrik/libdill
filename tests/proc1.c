@@ -22,24 +22,52 @@
 
 */
 
-#ifndef DILL_POLLER_INCLUDED
-#define DILL_POLLER_INCLUDED
+#include <errno.h>
+#include <assert.h>
+#include <stdio.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
-#include <sys/types.h>
+#include "../libdill.h"
 
-void dill_poller_init(void);
+int forked = 0;
+int worker_running = 0;
 
-/* poller.c also implements dill_wait() and dill_fdwait() declared
-   in libdill.h. */
+coroutine void worker(void) {
+    while(1) {
+        if(forked)
+            break;
+        yield();
+    }
+    worker_running = 1;
+}
 
-/* Wait till at least one coroutine is resumed. If block is set to 0 the
-   function will poll for events and return immediately. If it is set to 1
-   it will block until there's at least one event to process. */
-void dill_wait(int block);
+coroutine void child(int fd) {
+    /* Make sure that there's only one coroutine running. */
+    forked = 1; 
+    int i;
+    for(i = 0; i != 20; ++i)
+        yield();
+    assert(!worker_running);
+    ssize_t sz = write(fd, "A", 1);
+    assert(sz == 1);
+    close(fd);
+}
 
-/*  This function is called in the child process after the fork.
-    It stops polling for the file descriptors. */
-void dill_poller_postfork(void);
+int main() {
+    /* Pipe to check whether child have failed. */
+    int fds[2];
+    int rc = pipe(fds);
+    assert(rc == 0);
+    /* Start second coroutine before forking. */
+    go(worker());
+    /* Fork. */
+    proc(child(fds[1]));
+    close(fds[1]);
+    /* Parent waits for the child. */
+    rc = fdwait(fds[0], FDW_IN, -1);
+    assert(rc & FDW_IN);
 
-#endif
+    return 0;
+}
 

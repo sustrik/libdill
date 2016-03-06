@@ -68,7 +68,7 @@ void dill_poller_init(void) {
     errno = 0;
 }
 
-pid_t dill_poller_fork(void) {
+pid_t dill_poller_postfork(void) {
 }
 
 static int dill_poller_add(int fd, int events) {

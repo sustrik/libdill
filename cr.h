@@ -101,5 +101,9 @@ int dill_suspend(dill_unblock_cb unblock_cb);
    coroutines. */
 void dill_resume(struct dill_cr *cr, int result);
 
+/* Called in the child process after fork to stop all the coroutines 
+   inherited from the parent. */
+void dill_cr_postfork(void);
+
 #endif
 

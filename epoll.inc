@@ -80,10 +80,7 @@ void dill_poller_init(void) {
     errno = 0;
 }
 
-pid_t dill_poller_fork(void) {
-    pid_t pid = fork();
-    if(pid != 0)
-        return pid;
+void dill_poller_postfork(void) {
     /* In the child process we have to create a new kernel-side pollset,
        identical to the one in the parent process, yet not sharing its
        destiny. */
@@ -107,8 +104,6 @@ pid_t dill_poller_fork(void) {
             }
         }
     }
-    errno = 0;
-    return 0;
 }
 
 static int dill_poller_add(int fd, int events) {

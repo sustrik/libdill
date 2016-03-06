@@ -26,7 +26,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
+#include "cr.h"
 #include "libdill.h"
 #include "poller.h"
 #include "utils.h"
@@ -76,16 +78,13 @@ int dill_proc_prologue(int *hndl, const char *created) {
         *hndl = -1;
         return 0;
     }
-    pid_t pid = dill_poller_fork();
-    if(dill_slow(pid < 0)) {
-        int err = errno;
-        hclose(h);
-        errno = err;
-        *hndl = -1;
-        return 0;
-    }
+    pid_t pid = fork();
     /* Child. */
-    if(pid == 0) return 1;
+    if(pid == 0) {
+        dill_cr_postfork();
+        dill_poller_postfork();
+        return 1;
+    }
     /* Parent. */
     proc->pid = pid;
     *hndl = h;
