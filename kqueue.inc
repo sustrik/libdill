@@ -62,7 +62,7 @@ static void dill_poller_atexit(void) {
 }
 
 void dill_poller_init(void) {
-    if(dill_fast(kfd >= 0))
+    if(dill_fast(dill_kfd >= 0))
         return;
     struct rlimit rlim;
     int rc = getrlimit(RLIMIT_NOFILE, &rlim);
