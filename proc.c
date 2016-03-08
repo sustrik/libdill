@@ -39,6 +39,10 @@ static const void *dill_proc_type = &dill_proc_type_placeholder;
 
 struct dill_proc {
     pid_t pid;
+    /* File descriptor to signal when we want the child process to exit.
+       In case of parent failure it's signaled with ERR automatically when
+       the fd is closed by the OS. */
+    int closepipe;
 };
 
 static void dill_proc_close(int h) {
@@ -47,7 +51,7 @@ static void dill_proc_close(int h) {
     /* This may happen if forking failed. */
     if(dill_slow(proc->pid < 0)) {free(proc); return;}
     /* There is a child running. Let's send it a kill signal. */
-    int rc = kill(proc->pid, SIGKILL);
+    int rc = close(proc->closepipe);
     dill_assert(rc == 0);
     /* Wait till it finishes. */
     /* TODO: For how long can this block? */
@@ -68,28 +72,44 @@ static const struct hvfptrs dill_proc_vfptrs = {
 };
 
 int dill_proc_prologue(int *hndl, const char *created) {
+    int err;
     struct dill_proc *proc = malloc(sizeof(struct dill_proc));
-    if(dill_slow(!proc)) {errno = ENOMEM; *hndl = -1; return 0;}
+    if(dill_slow(!proc)) {err = ENOMEM; goto error1;}
     proc->pid = -1;
+    int closepipe[2];
+    int rc = pipe(closepipe);
+    if(dill_slow(rc < 0)) {err = errno; goto error2;}
+    proc->closepipe = closepipe[1];
     int h = dill_handle(dill_proc_type, proc, &dill_proc_vfptrs, created);
-    if(dill_slow(h < 0)) {
-        int err = errno;
-        free(proc);
-        errno = err;
-        *hndl = -1;
-        return 0;
-    }
+    if(dill_slow(h < 0)) {err = errno; goto error3;}
     pid_t pid = fork();
+    if(dill_slow(pid < 0)) {err = errno; goto error4;}
     /* Child. */
     if(pid == 0) {
+        /* Currently executing coroutine becomes main coroutine
+           of the child process. */
+        dill_main = dill_running;
+        close(closepipe[1]);
         dill_cr_postfork();
         dill_timer_postfork();
-        dill_poller_postfork();
+        dill_poller_postfork(closepipe[0]);
         return 1;
     }
     /* Parent. */
+    close(closepipe[0]);
     proc->pid = pid;
     *hndl = h;
+    return 0;
+error4:
+    hclose(h);
+error3:
+    close(closepipe[0]);
+    close(closepipe[1]);
+error2:
+    free(proc);
+error1:
+    errno = err;
+    *hndl = -1;
     return 0;
 }
 

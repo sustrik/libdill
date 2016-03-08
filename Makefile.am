@@ -86,7 +86,8 @@ check_PROGRAMS = \
     tests/proc \
     tests/proc1 \
     tests/proc2 \
-    tests/proc3
+    tests/proc3 \
+     tests/proc4
 
 LDADD = libdill.la
 

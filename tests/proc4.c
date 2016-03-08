@@ -22,26 +22,41 @@
 
 */
 
-#ifndef DILL_POLLER_INCLUDED
-#define DILL_POLLER_INCLUDED
+#include <assert.h>
+#include <unistd.h>
 
-#include <sys/types.h>
+#include "../libdill.h"
 
-void dill_poller_init(void);
+coroutine void child(int fd) {
+    while(1) {
+        int rc = yield();
+        if(rc < 0 && errno == ECANCELED)
+            break;
+        assert(rc == 0);
+    }
+    char c = 55;
+    ssize_t sz = write(fd, &c, 1);
+    assert(sz == 1);
+    close(fd);
+}
 
-/* poller.c also implements dill_wait() and dill_fdwait() declared
-   in libdill.h. */
-
-/* Wait till at least one coroutine is resumed. If block is set to 0 the
-   function will poll for events and return immediately. If it is set to 1
-   it will block until there's at least one event to process. */
-void dill_wait(int block);
-
-/*  This function is called in the child process after the fork.
-    It stops polling for the file descriptors. If closepipe is not -1 it
-    is an fd what will signal IN and/or ERR if the parent process
-    exits/fails. */
-void dill_poller_postfork(int parent);
-
-#endif
+int main() {
+    /* Pipe to check whether child have failed. */
+    int fds[2];
+    int rc = pipe(fds);
+    assert(rc == 0);
+    /* Fork. */
+    int h = proc(child(fds[1]));
+    assert(h >= 0);
+    /* Send close signal to the child and wait till it finishes. */
+    hclose(h);
+    /* Check whether child finished decently. */
+    char c;
+    ssize_t sz = read(fds[0], &c, 1);
+    assert(sz == 1);
+    assert(c == 55);
+    close(fds[0]);
+    close(fds[1]);
+    return 0;
+}
 

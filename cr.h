@@ -85,7 +85,7 @@ struct dill_cr {
 };
 
 /* Fake coroutine corresponding to the main thread of execution. */
-extern struct dill_cr dill_main;
+extern struct dill_cr *dill_main;
 
 /* The coroutine that is running at the moment. */
 extern struct dill_cr *dill_running;
@@ -104,6 +104,9 @@ void dill_resume(struct dill_cr *cr, int result);
 /* Called in the child process after fork to stop all the coroutines 
    inherited from the parent. */
 void dill_cr_postfork(void);
+
+/* Starts cancellation of the main coroutine. */
+void dill_cr_close_main(void);
 
 #endif
 

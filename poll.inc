@@ -32,6 +32,8 @@
 #include "utils.h"
 
 /* Pollset used for waiting for file descriptors. */
+static int dill_parent = -1;
+static int dill_poller_initialised = 0;
 static int dill_pollset_size = 0;
 static int dill_pollset_capacity = 0;
 static struct pollfd *dill_pollset_fds = NULL;
@@ -63,16 +65,12 @@ static int dill_find_pollset(int fd) {
 }
 
 void dill_poller_init(void) {
+    if(dill_fast(dill_poller_initialised))
+        return;
+    dill_poller_initialised = 1;
     int rc = atexit(dill_poller_atexit);
     dill_assert(rc == 0);
     errno = 0;
-}
-
-void dill_poller_postfork(void) {
-    dill_pollset_size = 0;
-    dill_pollset_capacity = 0;
-    dill_pollset_fds = NULL;
-    dill_pollset_items = NULL;
 }
 
 static int dill_poller_add(int fd, int events) {
@@ -109,6 +107,15 @@ static int dill_poller_add(int fd, int events) {
         dill_pollset_items[i].out = dill_running;
     }
     return 0;
+}
+
+void dill_poller_postfork(int parent) {
+    dill_parent = parent;
+    dill_pollset_size = 0;
+    dill_pollset_capacity = 0;
+    dill_pollset_fds = NULL;
+    dill_pollset_items = NULL;
+    dill_poller_add(parent, FDW_IN);
 }
 
 static void dill_poller_rm(int fd, int events) {
@@ -170,10 +177,15 @@ static int dill_poller_wait(int timeout) {
         }
         else {
             if(dill_pollset_items[i].in && inevents) {
-                struct dill_cr *cr = dill_pollset_items[i].in;
-                dill_resume(cr, inevents);
-                dill_pollset_fds[i].events &= ~POLLIN;
-                dill_pollset_items[i].in = NULL;
+                if(dill_slow(dill_pollset_fds[i].fd == dill_parent)) {
+                    dill_cr_close_main();
+                }
+                else {
+                    struct dill_cr *cr = dill_pollset_items[i].in;
+                    dill_resume(cr, inevents);
+                    dill_pollset_fds[i].events &= ~POLLIN;
+                    dill_pollset_items[i].in = NULL;
+                }
             }
             else if(dill_pollset_items[i].out && outevents) {
                 struct dill_cr *cr = dill_pollset_items[i].out;

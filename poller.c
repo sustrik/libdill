@@ -39,19 +39,11 @@ static void dill_poller_rm(int fd, int events);
 static void dill_poller_clean(int fd);
 static int dill_poller_wait(int timeout);
 
-/* If 1, dill_poller_init was already called. */
-static int dill_poller_initialised = 0;
-
 static int dill_fdwait_(int fd, int events, int64_t deadline,
       const char *current) {
     if(dill_slow(dill_running->canceled || dill_running->stopping)) {
         errno = ECANCELED;
         return -1;
-    }
-    if(dill_slow(!dill_poller_initialised)) {
-        dill_poller_init();
-        dill_assert(errno == 0);
-        dill_poller_initialised = 1;
     }
     /* If required, start waiting for the file descriptor. */
     if(fd >= 0) {
@@ -83,6 +75,7 @@ static int dill_fdwait_(int fd, int events, int64_t deadline,
 }
 
 int dill_msleep(int64_t deadline, const char *current) {
+    dill_poller_init();
     int rc = dill_fdwait_(-1, 0, deadline, current);
     dill_assert(rc == -1);
     if(errno == ETIMEDOUT)
@@ -91,6 +84,7 @@ int dill_msleep(int64_t deadline, const char *current) {
 }
 
 int dill_fdwait(int fd, int events, int64_t deadline, const char *current) {
+    dill_poller_init();
     if(dill_slow(fd < 0 || events < 0))  {
         errno = EINVAL;
         return -1;
@@ -99,20 +93,12 @@ int dill_fdwait(int fd, int events, int64_t deadline, const char *current) {
 }
 
 void fdclean(int fd) {
-    if(dill_slow(!dill_poller_initialised)) {
-        dill_poller_init();
-        dill_assert(errno == 0);
-        dill_poller_initialised = 1;
-    }
+    dill_poller_init();
     dill_poller_clean(fd);
 }
 
 void dill_wait(int block) {
-    if(dill_slow(!dill_poller_initialised)) {
-        dill_poller_init();
-        dill_assert(errno == 0);
-        dill_poller_initialised = 1;
-    }
+    dill_poller_init();
     while(1) {
         /* Compute timeout for the subsequent poll. */
         int timeout = block ? dill_timer_next() : 0;

@@ -55,6 +55,7 @@ struct dill_crpair {
 static struct dill_crpair *dill_crpairs = NULL;
 static int dill_ncrpairs = 0;
 static uint32_t dill_changelist = DILL_ENDLIST;
+static struct dill_crpair *dill_parent = NULL;
 
 static void dill_poller_atexit(void) {
     if(dill_crpairs)
@@ -62,6 +63,8 @@ static void dill_poller_atexit(void) {
 }
 
 void dill_poller_init(void) {
+    if(dill_fast(dill_efd >= 0))
+        return;
     struct rlimit rlim;
     int rc = getrlimit(RLIMIT_NOFILE, &rlim);
     if(dill_slow(rc < 0)) return;
@@ -80,7 +83,7 @@ void dill_poller_init(void) {
     errno = 0;
 }
 
-void dill_poller_postfork(void) {
+void dill_poller_postfork(int parent) {
     if(dill_efd != -1) {
         int rc = close(dill_efd);
         dill_assert(rc == 0);
@@ -90,6 +93,13 @@ void dill_poller_postfork(void) {
     dill_ncrpairs = 0;
     dill_changelist = DILL_ENDLIST;
     dill_poller_init();
+    /* Start polling for signals from the parent. */
+    dill_parent = &dill_crpairs[parent];
+    dill_assert(!dill_parent->in);
+    dill_parent->in = dill_running;
+    dill_assert(!dill_parent->next);
+    dill_parent->next = dill_changelist;
+    dill_changelist = parent + 1;
 }
 
 static int dill_poller_add(int fd, int events) {
@@ -189,6 +199,11 @@ static int dill_poller_wait(int timeout) {
     int i;
     for(i = 0; i != numevs; ++i) {
         struct dill_crpair *crp = &dill_crpairs[evs[i].data.fd];
+        /* Signal from parent. */
+        if(dill_slow(crp == dill_parent)) {
+            dill_cr_close_main();
+            continue;
+        }
         int inevents = 0;
         int outevents = 0;
         /* Set the result values. */

@@ -54,6 +54,7 @@ struct dill_crpair {
 static struct dill_crpair *dill_crpairs = NULL;
 static int dill_ncrpairs = 0;
 static uint32_t dill_changelist = DILL_ENDLIST;
+static struct dill_crpair *dill_parent = NULL;
 
 static void dill_poller_atexit(void) {
     if(dill_crpairs)
@@ -61,6 +62,8 @@ static void dill_poller_atexit(void) {
 }
 
 void dill_poller_init(void) {
+    if(dill_fast(kfd >= 0))
+        return;
     struct rlimit rlim;
     int rc = getrlimit(RLIMIT_NOFILE, &rlim);
     if(dill_slow(rc < 0)) return;
@@ -83,7 +86,7 @@ void dill_poller_init(void) {
     errno = 0;
 }
 
-void dill_poller_postfork(void) {
+void dill_poller_postfork(int parent) {
     if(dill_kfd != -1) {
         /* TODO: kqueue documentation says that a kqueue descriptor won't
            survive a fork. However, implementations seem to diverge.
@@ -96,6 +99,13 @@ void dill_poller_postfork(void) {
     dill_ncrpairs = 0;
     dill_changelist = DILL_ENDLIST;
     dill_poller_init();
+    /* Start polling for signals from the parent. */
+    dill_parent = &dill_crpairs[parent];
+    dill_assert(!dill_parent->in);
+    dill_parent->in = dill_running;
+    dill_assert(!dill_parent->next);
+    dill_parent->next = dill_changelist;
+    dill_changelist = parent + 1;
 }
 
 static int dill_poller_add(int fd, int events) {
@@ -244,20 +254,26 @@ static int dill_poller_wait(int timeout) {
     while(chl != DILL_ENDLIST) {
         int fd = chl - 1;
         struct dill_crpair *crp = &dill_crpairs[fd];
-        if(crp->in == crp->out) {
-            dill_assert(crp->in);
-            dill_resume(crp->in, crp->firing);
-            crp->in = NULL;
-            crp->out = NULL;
+        /* Signal from parent. */
+        if(dill_slow(crp == dill_parent)) {
+            dill_cr_close_main();
         }
         else {
-            if(crp->in) {
-                dill_resume(crp->in, crp->firing & (FDW_IN | FDW_ERR));
+            if(crp->in == crp->out) {
+                dill_assert(crp->in);
+                dill_resume(crp->in, crp->firing);
                 crp->in = NULL;
-            }
-            if(crp->out) {
-                dill_resume(crp->out, crp->firing & (FDW_OUT | FDW_ERR));
                 crp->out = NULL;
+            }
+            else {
+                if(crp->in) {
+                    dill_resume(crp->in, crp->firing & (FDW_IN | FDW_ERR));
+                    crp->in = NULL;
+                }
+                if(crp->out) {
+                    dill_resume(crp->out, crp->firing & (FDW_OUT | FDW_ERR));
+                    crp->out = NULL;
+                }
             }
         }
         crp->firing = 0;

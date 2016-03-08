@@ -52,9 +52,9 @@ static const struct hvfptrs dill_cr_vfptrs = {
 volatile int dill_unoptimisable1 = 1;
 volatile void *dill_unoptimisable2 = NULL;
 
-struct dill_cr dill_main = {DILL_SLIST_ITEM_INITIALISER};
-
-struct dill_cr *dill_running = &dill_main;
+struct dill_cr dill_main_data = {DILL_SLIST_ITEM_INITIALISER};
+struct dill_cr *dill_main = &dill_main_data;
+struct dill_cr *dill_running = &dill_main_data;
 
 /* Queue of coroutines scheduled for execution. */
 static struct dill_slist dill_ready = {0};
@@ -207,5 +207,11 @@ void setcls(void *val) {
 void dill_cr_postfork(void) {
     /* Drop all coroutines in the "ready to execute" list. */
     dill_slist_init(&dill_ready);
+}
+
+void dill_cr_close_main(void) {
+    dill_main->canceled = 1;
+    if(!dill_slist_item_inlist(&dill_main->ready))
+        dill_resume(dill_main, -ECANCELED);
 }
 
