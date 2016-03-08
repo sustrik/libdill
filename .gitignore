@@ -44,6 +44,7 @@ tests/proc1
 tests/proc2
 tests/proc3
 tests/proc4
+tests/proc5
 perf/.dirstamp
 perf/chan
 perf/chrecv

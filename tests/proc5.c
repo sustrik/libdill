@@ -23,6 +23,8 @@
 */
 
 #include <assert.h>
+#include <signal.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "../libdill.h"
@@ -45,12 +47,21 @@ int main() {
     int fds[2];
     int rc = pipe(fds);
     assert(rc == 0);
-    /* Fork. */
-    int h = proc(child(fds[1]));
-    assert(h >= 0);
-    /* Send close signal to the child and wait till it finishes. */
-    hclose(h);
-    /* Check whether child finished decently. */
+    /* Fork an intermediate process. */
+    pid_t pid = fork();
+    assert(pid >= 0);
+    if(pid == 0) {
+        /* Intermediate process. */
+        int h = proc(child(fds[1]));
+        assert(h >= 0);
+        rc = msleep(now() + 1000000);
+        assert(0);
+    }
+    /* Parent process. */
+    rc = msleep(now() + 200);
+    assert(rc == 0);
+    rc = kill(pid, SIGKILL);
+    assert(rc == 0);
     char c;
     ssize_t sz = read(fds[0], &c, 1);
     assert(sz == 1);
