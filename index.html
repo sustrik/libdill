@@ -117,6 +117,9 @@ hclose(h);</code></pre>
         }
     }
 }</code></pre>
+<p>Processes launched by <code>proc</code> behave similarly. When <code>hclose</code> is called they are not killed immediately. Rather, blocking calls in the main coroutine start failing with <code>ECANCELED</code> error.</p>
+<p>If one of the processes in the process tree fails because of a bug or when it is killed by hand, all its child processes behave as if they were closed using <code>hclose</code>, i.e. blocking calls in the main coroutine start failing with <code>ECANCELED</code> error:</p>
+<p><img src="index6.jpeg" /></p>
 <h2 id="what-about-asynchronous-objects">What about asynchronous objects?</h2>
 <p>Sometimes you don't want to launch a coroutine but rather to create an object that runs coroutines in the background. For example, an object called &quot;tcp_connection&quot; may run two coroutines, one for asynchronously reading data from the network, one for sending data to the network.</p>
 <p>Still, it would be nice if the object was a node in the calltree, just like a coroutine is.</p>
