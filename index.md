@@ -26,6 +26,7 @@ int main() {
     return 0;
 }
 ```
+**NOTE: libdill is experimental and unstable. If you are looking for a stable concurrency library try [libmill](http://libmill.org).**
 
 ## Installation
 
