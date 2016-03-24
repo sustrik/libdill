@@ -32,7 +32,6 @@
 
 #include "cr.h"
 #include "debug.h"
-#include "handle.h"
 #include "libdill.h"
 #include "poller.h"
 #include "stack.h"

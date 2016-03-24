@@ -29,9 +29,25 @@
 #include <stdlib.h>
 
 #include "cr.h"
-#include "handle.h"
 #include "libdill.h"
 #include "utils.h"
+
+struct dill_handle {
+    /* Implemetor-specified type of the handle. */
+    const void *type;
+    /* Opaque implemetor-specified pointer. */
+    void *data;
+    /* Number of duplicates of this handle. */
+    int refcount;
+    /* Table of virtual functions. */
+    struct hvfptrs vfptrs;
+    /* The location where the handle was created. The string it points to must
+       be static. */
+    const char *created;
+    /* Index of the next handle in the linked list of unused handles. -1 means
+       'end of the list'. -2 means 'active handle'. */
+    int next;
+};
 
 #define CHECKHANDLE(h, err) \
     if(dill_slow((h) < 0 || (h) >= dill_nhandles ||\
