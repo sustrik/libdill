@@ -114,19 +114,15 @@ void *dill_allocstack(size_t *stack_size) {
 }
 
 void dill_freestack(void *stack) {
-    /* Put the stack to the list of cached stacks. */
     struct dill_slist_item *item = ((struct dill_slist_item*)stack) - 1;
-    dill_slist_item_init(item);
-    dill_slist_push_back(&dill_cached_stacks, item);
     if(dill_num_cached_stacks < dill_max_cached_stacks) {
+        /* Put the stack to the list of cached stacks. */
+        dill_slist_item_init(item);
+        dill_slist_push_back(&dill_cached_stacks, item);
         ++dill_num_cached_stacks;
         return;
     }
-    /* We can't deallocate the stack we are running on at the moment.
-       Standard C free() is not required to work when it deallocates its
-       own stack from underneath itself. Instead, we'll deallocate one of
-       the unused cached stacks. */
-    item = dill_slist_pop(&dill_cached_stacks);
+    /* If the stack cache is full deallocate the stack. */
     void *ptr = ((char*)(item + 1)) - dill_get_stack_size();
 #if HAVE_POSIX_MEMALIGN && HAVE_MPROTECT
     int rc = mprotect(ptr, dill_page_size(), PROT_READ|PROT_WRITE);
