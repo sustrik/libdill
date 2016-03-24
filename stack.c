@@ -40,9 +40,7 @@
 
 /* Stack size in bytes. */
 static size_t dill_stack_size = 256 * 1024;
-/* Maximum number of unused cached stacks. Keep in mind that we can't
-   deallocate the stack you are running on. Thus we need at least one cached
-   stack. */
+/* Maximum number of unused cached stacks. */
 static int dill_max_cached_stacks = 64;
 /* A stack of unused coroutine stacks. This allows for extra-fast allocation
    of a new stack. The LIFO nature of this structure minimises cache misses.
