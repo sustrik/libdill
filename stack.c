@@ -34,6 +34,28 @@
 #include "stack.h"
 #include "utils.h"
 
+/* The stacks are cached. The advantage is twofold. First, caching is
+   faster than malloc(). Second, it results in smaller number of calls to
+   mprotect(). */
+
+/* Stack size in bytes. */
+static size_t dill_stack_size = 256 * 1024;
+/* Maximum number of unused cached stacks. Keep in mind that we can't
+   deallocate the stack you are running on. Thus we need at least one cached
+   stack. */
+static int dill_max_cached_stacks = 64;
+/* A stack of unused coroutine stacks. This allows for extra-fast allocation
+   of a new stack. The LIFO nature of this structure minimises cache misses.
+   When the stack is cached its dill_slist_item is placed on its top rather
+   then on the bottom. That way we minimise page misses. */
+static int dill_num_cached_stacks = 0;
+static struct dill_slist dill_cached_stacks = {0};
+
+/* Returns smallest value greater than val that is a multiply of unit. */
+static size_t dill_align(size_t val, size_t unit) {
+    return val + unit - val % unit;
+}
+
 /* Get memory page size. The query is done once only. The value is cached. */
 static size_t dill_page_size(void) {
     static long pgsz = 0;
@@ -44,50 +66,21 @@ static size_t dill_page_size(void) {
     return (size_t)pgsz;
 }
 
-/* Stack size, as specified by the user. */
-static size_t dill_stack_size = 256 * 1024 - 256;
-/* Actual stack size. */
-static size_t dill_sanitised_stack_size = 0;
-
-static size_t dill_get_stack_size(void) {
-#if defined HAVE_POSIX_MEMALIGN && HAVE_MPROTECT
-    /* If sanitisation was already done, return the precomputed size. */
-    if(dill_fast(dill_sanitised_stack_size))
-        return dill_sanitised_stack_size;
-    dill_assert(dill_stack_size > dill_page_size());
-    /* Amount of memory allocated must be multiply of the page size otherwise
-       the behaviour of posix_memalign() is undefined. */
-    size_t sz = (dill_stack_size + dill_page_size() - 1) &
-        ~(dill_page_size() - 1);
-    /* Allocate one additional guard page. */
-    dill_sanitised_stack_size = sz + dill_page_size();
-    return dill_sanitised_stack_size;
-#else
-    return dill_stack_size;
-#endif
-}
-
-/* Maximum number of unused cached stacks. Keep in mind that we can't
-   deallocate the stack you are running on. Thus we need at least one cached
-   stack. */
-static int dill_max_cached_stacks = 64;
-
-/* A stack of unused coroutine stacks. This allows for extra-fast allocation
-   of a new stack. The FIFO nature of this structure minimises cache misses.
-   When the stack is cached its dill_slist_item is placed on its top rather
-   then on the bottom. That way we minimise page misses. */
-static int dill_num_cached_stacks = 0;
-static struct dill_slist dill_cached_stacks = {0};
-
 void *dill_allocstack(size_t *stack_size) {
+    /* If there's a cached stack, use it. */
     if(!dill_slist_empty(&dill_cached_stacks)) {
         --dill_num_cached_stacks;
         return (void*)(dill_slist_pop(&dill_cached_stacks) + 1);
     }
-    void *ptr;
-#if defined HAVE_POSIX_MEMALIGN && HAVE_MPROTECT
-    /* Allocate the stack so that it's memory-page-aligned. */
-    int rc = posix_memalign(&ptr, dill_page_size(), dill_get_stack_size());
+    /* Allocate a new stack. */
+    uint8_t *top;
+#if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD
+    /* Allocate the stack so that it's memory-page-aligned.
+       Add one page as stack overflow guard. */
+    size_t sz = dill_align(dill_stack_size, dill_page_size()) +
+        dill_page_size();
+    uint8_t *ptr;
+    int rc = posix_memalign((void**)&ptr, dill_page_size(), sz);
     if(dill_slow(rc != 0)) {
         errno = rc;
         return NULL;
@@ -101,33 +94,39 @@ void *dill_allocstack(size_t *stack_size) {
         errno = err;
         return NULL;
     }
+    top = ptr + dill_page_size() + dill_stack_size;
 #else
-    ptr = malloc(dill_get_stack_size());
+    /* Simple allocation without a guard page. */
+    uint8_t *ptr = malloc(dill_stack_size);
     if(dill_slow(!ptr)) {
         errno = ENOMEM;
         return NULL;
     }
+    top = ptr + dill_stack_size;
 #endif
     if(stack_size)
-        *stack_size = dill_get_stack_size() - dill_page_size();
-    return (void*)(((char*)ptr) + dill_get_stack_size());
+        *stack_size = dill_stack_size;
+    return top;
 }
 
 void dill_freestack(void *stack) {
     struct dill_slist_item *item = ((struct dill_slist_item*)stack) - 1;
+    /* If there are free slots in the cache put the stack to the cache. */
     if(dill_num_cached_stacks < dill_max_cached_stacks) {
-        /* Put the stack to the list of cached stacks. */
         dill_slist_item_init(item);
         dill_slist_push_back(&dill_cached_stacks, item);
         ++dill_num_cached_stacks;
         return;
     }
     /* If the stack cache is full deallocate the stack. */
-    void *ptr = ((char*)(item + 1)) - dill_get_stack_size();
-#if HAVE_POSIX_MEMALIGN && HAVE_MPROTECT
+#if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD
+    void *ptr = ((uint8_t*)(item + 1)) - dill_stack_size - dill_page_size();
     int rc = mprotect(ptr, dill_page_size(), PROT_READ|PROT_WRITE);
     dill_assert(rc == 0);
-#endif
     free(ptr);
+#else
+    void *ptr = ((uint8_t*)(item + 1)) - dill_stack_size;
+    free(ptr);
+#endif
 }
 
