@@ -45,11 +45,6 @@
         errno = EBADF; return;}\
     struct dill_handle *hndl = &dill_handles[(h)];
 
-#define CHECKHANDLEASSERT(h) \
-    dill_assert(!dill_slow((h) < 0 && (h) < dill_nhandles &&\
-          dill_handles[(h)].next == -2));\
-    struct dill_handle *hndl = &dill_handles[(h)];
-
 static struct dill_handle *dill_handles = NULL;
 static int dill_nhandles = 0;
 static int dill_unused = -1;
@@ -141,11 +136,6 @@ int hclose(int h) {
     hndl->next = dill_unused;
     dill_unused = h;
     return 0;
-}
-
-void dill_handle_done(int h) {
-    CHECKHANDLEASSERT(h);
-    hndl->data = NULL;
 }
 
 void goredump(void) {

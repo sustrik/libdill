@@ -114,6 +114,7 @@ int dill_prologue(sigjmp_buf **ctx, const char *created) {
     dill_slist_item_init(&cr->ready);
     cr->canceled = 0;
     cr->stopping = 0;
+    cr->done = 0;
     cr->waiter = NULL;
     cr->cls = NULL;
     cr->unblock_cb = NULL;
@@ -129,36 +130,29 @@ int dill_prologue(sigjmp_buf **ctx, const char *created) {
 
 /* The final part of go(). Cleans up after the coroutine is finished. */
 void dill_epilogue(void) {
-    /* Result is stored in the handle so that it is available even after
-       the stack is deallocated. */
-    dill_handle_done(dill_running->hndl);
     /* Resume a coroutine stuck in hclose(). */
     if(dill_running->waiter)
         dill_resume(dill_running->waiter, 0);
-#if defined DILL_VALGRIND
-    VALGRIND_STACK_DEREGISTER(dill_running->sid);
-#endif
-    /* Deallocate. */
-    dill_freestack(dill_running + 1);
-    dill_running = NULL;
-    /* Given that there's no running coroutine at this point
-       this call will never return. */
+    dill_running->done = 1;
+    /* This call will never return. */
     dill_suspend(NULL);
 }
 
 static void dill_cr_close(int h) {
     struct dill_cr *cr = (struct dill_cr*)hdata(h, dill_cr_type);
     /* If the coroutine have already finished, we are done. */
-    if(!cr) return;
-    /* Ask coroutine to cancel. */
-    cr->canceled = 1;
-    if(!dill_slist_item_inlist(&cr->ready))
-        dill_resume(cr, -ECANCELED);
-    /* Wait till it finishes cancelling. */
-    cr->waiter = dill_running;
-    int rc = dill_suspend(NULL);
-    dill_assert(rc == 0);
-    cr->waiter = NULL;
+    if(!cr->done) {
+        /* Ask coroutine to cancel. */
+        cr->canceled = 1;
+        if(!dill_slist_item_inlist(&cr->ready))
+            dill_resume(cr, -ECANCELED);
+        /* Wait till it finishes cancelling. */
+        cr->waiter = dill_running;
+        int rc = dill_suspend(NULL);
+        dill_assert(rc == 0);
+    }
+    /* Now the coroutine is finished. Deallocate it. */
+    dill_freestack(cr + 1);
 }
 
 static void dill_cr_dump(int h) {

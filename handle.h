@@ -44,7 +44,5 @@ struct dill_handle {
     int next;
 };
 
-void dill_handle_done(int h);
-
 #endif
 

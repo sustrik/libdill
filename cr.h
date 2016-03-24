@@ -68,9 +68,11 @@ struct dill_cr {
     int sresult;
     /* 1 if this corotine was stopped by its owner. */
     int canceled;
-    /* 1 is execution is inside a 'stop' function. */
+    /* 1 if execution is inside a 'stop' function. */
     int stopping;
-    /* When coroutine is being waited for using hwait() this is the pointer
+    /* 1 if the coroutine have already finished its execution. */
+    int done;
+    /* When coroutine is being closed using hclose() this is the pointer
        to the waiting coroutine. */
     struct dill_cr *waiter;
     /* Coroutine-local storage. */
