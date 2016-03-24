@@ -100,19 +100,7 @@ void dill_resume(struct dill_cr *cr, int result) {
     dill_slist_push_back(&dill_ready, &cr->ready);
 }
 
-/* dill_prologue() and dill_epilogue() live in the same scope with
-   libdill's stack-switching black magic. As such, they are extremely
-   fragile. Therefore, the optimiser is prohibited to touch them. */
-#if defined __clang__
-#define dill_noopt __attribute__((optnone))
-#elif defined __GNUC__
-#define dill_noopt __attribute__((optimize("O0")))
-#else
-#error "Unsupported compiler!"
-#endif
-
 /* The intial part of go(). Allocates a new stack and handle. */
-__attribute__((noinline)) dill_noopt
 int dill_prologue(sigjmp_buf **ctx, const char *created) {
     /* Ensure that debug functions are available whenever a single go()
        statement is present in the user's code. */
@@ -140,7 +128,7 @@ int dill_prologue(sigjmp_buf **ctx, const char *created) {
 }
 
 /* The final part of go(). Cleans up after the coroutine is finished. */
-__attribute__((noinline)) dill_noopt void dill_epilogue(void) {
+void dill_epilogue(void) {
     /* Result is stored in the handle so that it is available even after
        the stack is deallocated. */
     dill_handle_done(dill_running->hndl);
