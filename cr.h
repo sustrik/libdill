@@ -92,6 +92,9 @@ extern struct dill_cr *dill_main;
 /* The coroutine that is running at the moment. */
 extern struct dill_cr *dill_running;
 
+/* Returns 1 if all blocking calls should return ECANCELED. */
+int dill_cr_isstopped(void);
+
 /* Suspend running coroutine. Move to executing different coroutines. Once
    someone resumes this coroutine using dill_resume(), unblock_cb is
    invoked immediately. dill_suspend() returns the argument passed

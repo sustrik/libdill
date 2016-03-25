@@ -41,7 +41,7 @@ static int dill_poller_wait(int timeout);
 
 static int dill_fdwait_(int fd, int events, int64_t deadline,
       const char *current) {
-    if(dill_slow(dill_running->canceled || dill_running->stopping)) {
+    if(dill_slow(dill_cr_isstopped())) {
         errno = ECANCELED;
         return -1;
     }

@@ -164,7 +164,7 @@ static void dill_cr_dump(int h) {
 }
 
 int dill_yield(const char *current) {
-    if(dill_slow(dill_running->canceled || dill_running->stopping)) {
+    if(dill_slow(dill_cr_isstopped())) {
         errno = ECANCELED; return -1;}
     /* This looks fishy, but yes, we can resume the coroutine even before
        suspending it. */
@@ -183,6 +183,10 @@ void *cls(void) {
 
 void setcls(void *val) {
     dill_running->cls = val;
+}
+
+int dill_cr_isstopped(void) {
+    return dill_running->canceled || dill_running->stopping;
 }
 
 void dill_cr_postfork(void) {

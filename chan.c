@@ -207,7 +207,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
       int64_t deadline) {
     if(dill_slow(nclauses < 0 || (nclauses && !clauses))) {
         errno = EINVAL; return -1;}
-    if(dill_slow(dill_running->canceled || dill_running->stopping)) {
+    if(dill_slow(dill_cr_isstopped())) {
         errno = ECANCELED; return -1;}
     /* Create unique ID for each invocation of choose(). It is used to
        identify and ignore duplicate entries in the pollset. */
