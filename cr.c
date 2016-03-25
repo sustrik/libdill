@@ -156,7 +156,7 @@ static void dill_cr_close(int h) {
 
 static void dill_cr_dump(int h) {
     struct dill_cr *cr = (struct dill_cr*)hdata(h, dill_cr_type);
-    if(!cr) {
+    if(cr->done) {
         fprintf(stderr, "  COROUTINE state:finished\n");
         return;
     }
