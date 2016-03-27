@@ -41,80 +41,74 @@ static void dill_poller_rmout(int fd);
 static void dill_poller_clean(int fd);
 static int dill_poller_wait(int timeout);
 
-static int dill_fdwait_(int fd, int events, int64_t deadline,
-      const char *current) {
-    if(dill_slow(dill_cr_isstopped())) {
-        errno = ECANCELED;
-        return -1;
-    }
-    /* If required, start waiting for the file descriptor. */
-    if(fd >= 0) {
-        int rc;
-        if(events == FDW_IN)
-            rc = dill_poller_addin(fd);
-        else
-            rc = dill_poller_addout(fd);
-        if(dill_slow(rc < 0))
-            return -1;
-    }
-    /* If required, start waiting for the timeout. */
-    if(deadline >= 0)
-        dill_timer_add(&dill_running->timer, deadline);
-    /* Do actual waiting. */
-    int rc = dill_suspend(NULL);
-    /* Handle file descriptor events. */
-    if(rc >= 0) {
-        if(deadline >= 0)
-            dill_timer_rm(&dill_running->timer);
-        return rc;
-    }
-    /* Clean up the pollset and the timer. */
-    if(rc < 0 && fd >= 0) {
-        if(events == FDW_IN)
-            dill_poller_rmin(fd);
-        else
-            dill_poller_rmout(fd);
-    }
-    if(deadline >= 0 && rc != -ETIMEDOUT)
-        dill_timer_rm(&dill_running->timer);
-    if(dill_slow(rc < 0)) {
-        errno = -rc;
-        return -1;
-    }
-    return rc;
-}
-
 int dill_msleep(int64_t deadline, const char *current) {
     dill_poller_init();
-    int rc = dill_fdwait_(-1, 0, deadline, current);
-    dill_assert(rc == -1);
-    if(errno == ETIMEDOUT)
-        return 0;
+    if(dill_slow(dill_cr_isstopped())) {errno = ECANCELED; return -1;}
+    if(dill_slow(deadline == 0)) return 0;
+    if(deadline >= 0)
+        dill_timer_add(&dill_running->timer, deadline);
+    int rc = dill_suspend(NULL);
+    if(dill_fast(rc == -ETIMEDOUT)) return 0;
+    dill_timer_rm(&dill_running->timer);
+    dill_assert(rc < 0);
+    errno = -rc;
     return -1;
 }
 
 int dill_fdin(int fd, int64_t deadline, const char *current) {
     dill_poller_init();
-    if(dill_slow(fd < 0))  {
-        errno = EBADF;
+    if(dill_slow(dill_cr_isstopped())) {errno = ECANCELED; return -1;}
+    if(dill_slow(fd < 0)) {errno = EBADF; return -1;}
+    int rc = dill_poller_addin(fd);
+    if(dill_slow(rc < 0)) return -1;
+    if(deadline >= 0)
+        dill_timer_add(&dill_running->timer, deadline);
+    rc = dill_suspend(NULL);
+    /* Handle file descriptor event. */
+    if(rc >= 0) {
+        if(deadline >= 0)
+            dill_timer_rm(&dill_running->timer);
+        return 0;
+    }
+    dill_poller_rmin(fd);
+    /* Handle timeout. */
+    if(rc == -ETIMEDOUT) {
+        errno = ETIMEDOUT;
         return -1;
     }
-    int rc = dill_fdwait_(fd, FDW_IN, deadline, current);
-    if(dill_slow(rc < 0)) return -1;
-    dill_assert((rc & FDW_IN) || (rc & FDW_ERR));
-    return 0;
+    if(deadline >= 0)
+        dill_timer_rm(&dill_running->timer);
+    /* Handle error. */
+    errno = -rc;
+    return -1;
 }
 
 int dill_fdout(int fd, int64_t deadline, const char *current) {
     dill_poller_init();
-    if(dill_slow(fd < 0))  {
-        errno = EBADF;
+    if(dill_slow(dill_cr_isstopped())) {errno = ECANCELED; return -1;}
+    if(dill_slow(fd < 0)) {errno = EBADF; return -1;}
+    int rc = dill_poller_addout(fd);
+    if(dill_slow(rc < 0)) return -1;
+    if(deadline >= 0)
+        dill_timer_add(&dill_running->timer, deadline);
+    rc = dill_suspend(NULL);
+    /* Handle file descriptor event. */
+    if(rc >= 0) {
+        if(deadline >= 0)
+            dill_timer_rm(&dill_running->timer);
+        return 0;
+    }
+    dill_poller_rmout(fd);
+    /* Handle timeout. */
+    if(rc == -ETIMEDOUT) {
+        errno = ETIMEDOUT;
         return -1;
     }
-    int rc = dill_fdwait_(fd, FDW_OUT, deadline, current);
-    if(dill_slow(rc < 0)) return -1;
-    dill_assert((rc & FDW_OUT) || (rc & FDW_ERR));
-    return 0;
+    if(deadline >= 0)
+        dill_timer_rm(&dill_running->timer);
+    /* Handle error. */
+    errno = -rc;
+    return -1;
 }
 
 void fdclean(int fd) {
