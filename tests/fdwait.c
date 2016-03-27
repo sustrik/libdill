@@ -110,6 +110,7 @@ int main() {
     rc = fdin(fds[0], -1);
     assert(rc == 0);
     rc = fdout(fds[0], -1);
+fprintf(stderr, "rc=%d errno=%d\n", rc, errno);
     assert(rc == -1 && errno == EPIPE);
     char buf[10];
     nbytes = recv(fds[0], buf, sizeof(buf), 0);
