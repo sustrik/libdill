@@ -50,8 +50,8 @@ coroutine void sender(int ch) {
 }
 
 coroutine void receiver(int ch) {
-    int events = fdwait(signal_pipe[0], FDW_IN, -1);
-    assert(events == FDW_IN);
+    int events = fdin(signal_pipe[0], -1);
+    assert(events == 0);
 
     char signo;
     ssize_t sz = read(signal_pipe[0], &signo, 1);

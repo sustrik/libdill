@@ -29,8 +29,8 @@
 
 void dill_poller_init(void);
 
-/* poller.c also implements dill_wait() and dill_fdwait() declared
-   in libdill.h. */
+/* poller.c also implements dill_msleep(), dill_fdin() and dill_fdout()
+   declared in libdill.h. */
 
 /* Wait till at least one coroutine is resumed. If block is set to 0 the
    function will poll for events and return immediately. If it is set to 1

@@ -158,14 +158,16 @@ DILL_EXPORT void dill_proc_epilogue(void);
 #define yield() dill_yield(__FILE__ ":" dill_string(__LINE__))
 #define msleep(deadline) dill_msleep((deadline),\
     __FILE__ ":" dill_string(__LINE__))
-#define fdwait(fd, events, deadline) dill_fdwait((fd), (events), (deadline),\
+#define fdin(fd, deadline) dill_fdin((fd), (deadline),\
+    __FILE__ ":" dill_string(__LINE__))
+#define fdout(fd, deadline) dill_fdout((fd), (deadline),\
     __FILE__ ":" dill_string(__LINE__))
 
 DILL_EXPORT int dill_yield(const char *current);
 DILL_EXPORT int dill_msleep(int64_t deadline, const char *current);
 DILL_EXPORT void fdclean(int fd);
-DILL_EXPORT int dill_fdwait(int fd, int events, int64_t deadline,
-    const char *current);
+DILL_EXPORT int dill_fdin(int fd, int64_t deadline, const char *current);
+DILL_EXPORT int dill_fdout(int fd, int64_t deadline, const char *current);
 DILL_EXPORT void *cls(void);
 DILL_EXPORT void setcls(void *val);
 

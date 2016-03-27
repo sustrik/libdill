@@ -83,13 +83,29 @@ int dill_msleep(int64_t deadline, const char *current) {
     return -1;
 }
 
-int dill_fdwait(int fd, int events, int64_t deadline, const char *current) {
+int dill_fdin(int fd, int64_t deadline, const char *current) {
     dill_poller_init();
-    if(dill_slow(fd < 0 || events < 0))  {
-        errno = EINVAL;
+    if(dill_slow(fd < 0))  {
+        errno = EBADF;
         return -1;
     }
-    return dill_fdwait_(fd, events, deadline, current);
+    int rc = dill_fdwait_(fd, FDW_IN, deadline, current);
+    if(dill_slow(rc < 0)) return -1;
+    dill_assert((rc & FDW_IN) || (rc & FDW_ERR));
+    return 0;
+}
+
+int dill_fdout(int fd, int64_t deadline, const char *current) {
+    dill_poller_init();
+    if(dill_slow(fd < 0))  {
+        errno = EBADF;
+        return -1;
+    }
+    int rc = dill_fdwait_(fd, FDW_OUT, deadline, current);
+    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc & FDW_ERR)) {errno = EPIPE; return -1;}
+    dill_assert(rc & FDW_OUT);
+    return 0;
 }
 
 void fdclean(int fd) {

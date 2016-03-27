@@ -67,8 +67,8 @@ int main() {
     assert(h >= 0);
     close(fds[1]);
     /* Parent waits for the child. */
-    rc = fdwait(fds[0], FDW_IN, -1);
-    assert(rc & FDW_IN);
+    rc = fdin(fds[0], -1);
+    assert(rc == 0);
 
     return 0;
 }

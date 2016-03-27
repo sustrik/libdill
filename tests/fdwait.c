@@ -32,10 +32,12 @@
 
 #include "../libdill.h"
 
+
+
 coroutine void cancel(int fd) {
-    int rc = fdwait(fd, FDW_IN, -1);
+    int rc = fdin(fd, -1);
     assert(rc == -1 && errno == ECANCELED);
-    rc = fdwait(fd, FDW_IN, -1);
+    rc = fdin(fd, -1);
     assert(rc == -1 && errno == ECANCELED);
 }
 
@@ -53,20 +55,20 @@ int main() {
     assert(rc == 0);
 
     /* Check for out. */
-    rc = fdwait(fds[0], FDW_OUT, -1);
-    assert(rc >= 0);
-    assert(rc & FDW_OUT);
-    assert(!(rc & ~FDW_OUT));
+//    rc = fdout(fds[0], 0);
+//    assert(rc == 0);
+
+    /* Check with infinite timeout. */
+    rc = fdout(fds[0], -1);
+    assert(rc == 0);
 
     /* Check with the timeout that doesn't expire. */
-    rc = fdwait(fds[0], FDW_OUT, now() + 100);
-    assert(rc >= 0);
-    assert(rc & FDW_OUT);
-    assert(!(rc & ~FDW_OUT));
+    rc = fdout(fds[0], now() + 100);
+    assert(rc == 0);
 
     /* Check with the timeout that does expire. */
     int64_t deadline = now() + 100;
-    rc = fdwait(fds[0], FDW_IN, deadline);
+    rc = fdin(fds[0], deadline);
     assert(rc == -1 && errno == ETIMEDOUT);
     int64_t diff = now() - deadline;
     assert(diff > -20 && diff < 20);
@@ -80,17 +82,8 @@ int main() {
     /* Check for in. */
     ssize_t sz = send(fds[1], "A", 1, 0);
     assert(sz == 1);
-    rc = fdwait(fds[0], FDW_IN, -1);
-    assert(rc >= 0);
-    assert(rc & FDW_IN);
-    assert(!(rc & ~FDW_IN));
-
-    /* Check for both in and out. */
-    rc = fdwait(fds[0], FDW_IN | FDW_OUT, -1);
-    assert(rc >= 0);
-    assert(rc & FDW_IN);
-    assert(rc & FDW_OUT);
-    assert(!(rc & ~(FDW_IN | FDW_OUT)));
+    rc = fdin(fds[0], -1);
+    assert(rc == 0);
     char c;
     sz = recv(fds[0], &c, 1, 0);
     assert(sz == 1);
@@ -99,9 +92,8 @@ int main() {
     int64_t start = now();
     int hndl2 = go(trigger(fds[0], start + 50));
     assert(hndl2 >= 0);
-    rc = fdwait(fds[1], FDW_IN, start + 90);
-    assert(rc >= 0);
-    assert(rc == FDW_IN);
+    rc = fdin(fds[1], start + 90);
+    assert(rc == 0);
     diff = now() - start;
     assert(diff > 30 && diff < 70);
     rc = hclose(hndl2);
@@ -115,33 +107,19 @@ int main() {
     assert(rc == 0);
     rc = msleep(now() + 50);
     assert(rc == 0);
-    rc = fdwait(fds[0], FDW_IN | FDW_OUT, -1);
-    assert(rc >= 0);
-    assert(rc == FDW_IN | FDW_OUT | FDW_ERR);
+    rc = fdin(fds[0], -1);
+    assert(rc == 0);
+    rc = fdout(fds[0], -1);
+    assert(rc == -1 && errno == EPIPE);
     char buf[10];
     nbytes = recv(fds[0], buf, sizeof(buf), 0);
     assert(nbytes == 3);
-    rc = fdwait(fds[0], FDW_IN | FDW_OUT, -1);
-    assert(rc >= 0);
-    assert(rc == FDW_IN | FDW_OUT | FDW_ERR);
+    rc = fdin(fds[0], -1);
+    assert(rc == 0);
+    nbytes = recv(fds[0], buf, sizeof(buf), 0);
+    assert(nbytes == 0 || (nbytes == -1 && errno == ECONNRESET));
     fdclean(fds[0]);
     rc = close(fds[0]);
-    assert(rc == 0);
-
-    /* Check whether half-closing the connection is reported. */
-    rc = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
-    assert(rc == 0);
-    rc = shutdown(fds[1], SHUT_WR);
-    assert(rc == 0);
-    rc = msleep(now() + 50);
-    assert(rc == 0);
-    rc = fdwait(fds[0], FDW_IN | FDW_OUT, -1);
-    assert(rc >= 0);
-    assert(rc == FDW_IN | FDW_OUT | FDW_ERR);
-    fdclean(fds[0]);
-    rc = close(fds[0]);
-    assert(rc == 0);
-    rc = close(fds[1]);
     assert(rc == 0);
 
     return 0;

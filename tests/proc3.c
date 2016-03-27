@@ -33,8 +33,8 @@
 int event = 0;
 
 coroutine void worker(int fd) {
-    int rc = fdwait(fd, FDW_IN, -1);
-    assert(rc == FDW_IN);
+    int rc = fdin(fd, -1);
+    assert(rc == 0);
     event = 1;
 }
 
@@ -65,8 +65,8 @@ int main() {
     ssize_t sz = write(test[1], "A", 1);
     assert(sz == 1);
     /* Parent waits for the child. */
-    rc = fdwait(fds[0], FDW_IN, -1);
-    assert(rc & FDW_IN);
+    rc = fdin(fds[0], -1);
+    assert(rc == 0);
   
     return 0;
 }
