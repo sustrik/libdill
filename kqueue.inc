@@ -108,17 +108,10 @@ void dill_poller_postfork(int parent) {
     dill_changelist = parent + 1;
 }
 
-static int dill_poller_add(int fd, int events) {
+static int dill_poller_addin(int fd) {
     struct dill_crpair *crp = &dill_crpairs[fd];
-    if(dill_slow((events & FDW_IN && crp->in) ||
-          (events & FDW_OUT && crp->out))) {
-        errno = EEXIST;
-        return -1;
-    }
-    if(events & FDW_IN)
-        crp->in = dill_running;
-    if(events & FDW_OUT)
-        crp->out = dill_running;
+    if(dill_slow(crp->in)) {errno = EEXIST; return -1;}
+    crp->in = dill_running;
     if(!crp->next) {
         crp->next = dill_changelist;
         dill_changelist = fd + 1;
@@ -126,12 +119,29 @@ static int dill_poller_add(int fd, int events) {
     return 0;
 }
 
-static void dill_poller_rm(int fd, int events) {
+static int dill_poller_addout(int fd) {
     struct dill_crpair *crp = &dill_crpairs[fd];
-    if(events & FDW_IN)
-        crp->in = NULL;
-    if(events & FDW_OUT)
-        crp->out = NULL;
+    if(dill_slow(crp->out)) {errno = EEXIST; return -1;}
+    crp->out = dill_running;
+    if(!crp->next) {
+        crp->next = dill_changelist;
+        dill_changelist = fd + 1;
+    }
+    return 0;
+}
+
+static void dill_poller_rmin(int fd) {
+    struct dill_crpair *crp = &dill_crpairs[fd];
+    crp->in = NULL;
+    if(!crp->next) {
+        crp->next = dill_changelist;
+        dill_changelist = fd + 1;
+    }
+}
+
+static void dill_poller_rmout(int fd) {
+    struct dill_crpair *crp = &dill_crpairs[fd];
+    crp->out = NULL;
     if(!crp->next) {
         crp->next = dill_changelist;
         dill_changelist = fd + 1;

@@ -1,4 +1,4 @@
- /*
+/*
 
   Copyright (c) 2016 Martin Sustrik
 
@@ -73,39 +73,41 @@ void dill_poller_init(void) {
     errno = 0;
 }
 
-static int dill_poller_add(int fd, int events) {
-    int i = dill_find_pollset(fd);
+static int dill_poller_getindex(int fd) {
+   int i = dill_find_pollset(fd);
+    if(i < dill_pollset_size)
+        return i; 
     /* Grow the pollset as needed. */
-    if(i == dill_pollset_size) {
-        if(dill_pollset_size == dill_pollset_capacity) {
-            dill_pollset_capacity = dill_pollset_capacity ?
-                dill_pollset_capacity * 2 : 64;
-            dill_pollset_fds = realloc(dill_pollset_fds,
-                dill_pollset_capacity * sizeof(struct pollfd));
-            dill_pollset_items = realloc(dill_pollset_items,
-                dill_pollset_capacity * sizeof(struct dill_pollset_item));
-        }
-        ++dill_pollset_size;
-        dill_pollset_fds[i].fd = fd;
-        dill_pollset_fds[i].events = 0;
-        dill_pollset_fds[i].revents = 0;
-        dill_pollset_items[i].in = NULL;
-        dill_pollset_items[i].out = NULL;
+    if(dill_pollset_size == dill_pollset_capacity) {
+        dill_pollset_capacity = dill_pollset_capacity ?
+            dill_pollset_capacity * 2 : 64;
+        dill_pollset_fds = realloc(dill_pollset_fds,
+            dill_pollset_capacity * sizeof(struct pollfd));
+        dill_pollset_items = realloc(dill_pollset_items,
+            dill_pollset_capacity * sizeof(struct dill_pollset_item));
     }
-    /* Register the new file descriptor in the pollset. */
-    if(dill_slow((events & FDW_IN && dill_pollset_items[i].in) ||
-          (events & FDW_OUT && dill_pollset_items[i].out))) {
-        errno = EEXIST;
-        return -1;
-    }
-    if(events & FDW_IN) {
-        dill_pollset_fds[i].events |= POLLIN;
-        dill_pollset_items[i].in = dill_running;
-    }
-    if(events & FDW_OUT) {
-        dill_pollset_fds[i].events |= POLLOUT;
-        dill_pollset_items[i].out = dill_running;
-    }
+    ++dill_pollset_size;
+    dill_pollset_fds[i].fd = fd;
+    dill_pollset_fds[i].events = 0;
+    dill_pollset_fds[i].revents = 0;
+    dill_pollset_items[i].in = NULL;
+    dill_pollset_items[i].out = NULL;
+    return i;
+}
+
+static int dill_poller_addin(int fd) {
+    int i = dill_poller_getindex(fd);
+    if(dill_slow(dill_pollset_items[i].in)) {errno = EEXIST; return -1;}
+    dill_pollset_fds[i].events |= POLLIN;
+    dill_pollset_items[i].in = dill_running;
+    return 0;
+}
+
+static int dill_poller_addout(int fd) {
+    int i = dill_poller_getindex(fd);
+    if(dill_slow(dill_pollset_items[i].out)) {errno = EEXIST; return -1;}
+    dill_pollset_fds[i].events |= POLLOUT;
+    dill_pollset_items[i].out = dill_running;
     return 0;
 }
 
@@ -115,20 +117,30 @@ void dill_poller_postfork(int parent) {
     dill_pollset_capacity = 0;
     dill_pollset_fds = NULL;
     dill_pollset_items = NULL;
-    dill_poller_add(parent, FDW_IN);
+    dill_poller_addin(parent);
 }
 
-static void dill_poller_rm(int fd, int events) {
+static void dill_poller_rmin(int fd) {
     int i = dill_find_pollset(fd);
     dill_assert(i < dill_pollset_size);
-    if(dill_pollset_items[i].in == dill_running) {
-        dill_pollset_items[i].in = NULL;
-        dill_pollset_fds[i].events &= ~POLLIN;
+    dill_assert(dill_pollset_items[i].in == dill_running);
+    dill_pollset_items[i].in = NULL;
+    dill_pollset_fds[i].events &= ~POLLIN;
+    if(!dill_pollset_fds[i].events) {
+        --dill_pollset_size;
+        if(i < dill_pollset_size) {
+            dill_pollset_items[i] = dill_pollset_items[dill_pollset_size];
+            dill_pollset_fds[i] = dill_pollset_fds[dill_pollset_size];
+        }
     }
-    if(dill_pollset_items[i].out == dill_running) {
-        dill_pollset_items[i].out = NULL;
-        dill_pollset_fds[i].events &= ~POLLOUT;
-    }
+}
+
+static void dill_poller_rmout(int fd) {
+    int i = dill_find_pollset(fd);
+    dill_assert(i < dill_pollset_size);
+    dill_assert(dill_pollset_items[i].out == dill_running);
+    dill_pollset_items[i].out = NULL;
+    dill_pollset_fds[i].events &= ~POLLOUT;
     if(!dill_pollset_fds[i].events) {
         --dill_pollset_size;
         if(i < dill_pollset_size) {

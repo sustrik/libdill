@@ -34,8 +34,10 @@
 /* Forward declarations for the functions implemented by specific poller
    mechanisms (poll, epoll, kqueue). */
 void dill_poller_init(void);
-static int dill_poller_add(int fd, int events);
-static void dill_poller_rm(int fd, int events);
+static int dill_poller_addin(int fd);
+static void dill_poller_rmin(int fd);
+static int dill_poller_addout(int fd);
+static void dill_poller_rmout(int fd);
 static void dill_poller_clean(int fd);
 static int dill_poller_wait(int timeout);
 
@@ -47,7 +49,11 @@ static int dill_fdwait_(int fd, int events, int64_t deadline,
     }
     /* If required, start waiting for the file descriptor. */
     if(fd >= 0) {
-        int rc = dill_poller_add(fd, events);
+        int rc;
+        if(events == FDW_IN)
+            rc = dill_poller_addin(fd);
+        else
+            rc = dill_poller_addout(fd);
         if(dill_slow(rc < 0))
             return -1;
     }
@@ -63,8 +69,12 @@ static int dill_fdwait_(int fd, int events, int64_t deadline,
         return rc;
     }
     /* Clean up the pollset and the timer. */
-    if(rc < 0 && fd >= 0)
-        dill_poller_rm(fd, events);
+    if(rc < 0 && fd >= 0) {
+        if(events == FDW_IN)
+            dill_poller_rmin(fd);
+        else
+            dill_poller_rmout(fd);
+    }
     if(deadline >= 0 && rc != -ETIMEDOUT)
         dill_timer_rm(&dill_running->timer);
     if(dill_slow(rc < 0)) {
