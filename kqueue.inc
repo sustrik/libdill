@@ -39,6 +39,10 @@
 #define DILL_CHNGSSIZE 128
 #define DILL_EVSSIZE 128
 
+#define FDW_IN 1
+#define FDW_OUT 2
+#define FDW_ERR 4
+
 static int dill_kfd = -1;
 
 struct dill_crpair {

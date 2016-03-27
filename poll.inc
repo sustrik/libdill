@@ -167,44 +167,25 @@ static int dill_poller_wait(int timeout) {
     int result = numevs > 0 ? 1 : 0;
     int i;
     for(i = 0; i != dill_pollset_size && numevs; ++i) {
-        int inevents = 0;
-        int outevents = 0;
-        /* Set the result values. */
-        if(dill_pollset_fds[i].revents & POLLIN)
-            inevents |= FDW_IN;
-        if(dill_pollset_fds[i].revents & POLLOUT)
-            outevents |= FDW_OUT;
-        if(dill_pollset_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-            inevents |= FDW_ERR;
-            outevents |= FDW_ERR;
-        }
         /* Resume the blocked coroutines. */
-        if(dill_pollset_items[i].in &&
-              dill_pollset_items[i].in == dill_pollset_items[i].out) {
-            struct dill_cr *cr = dill_pollset_items[i].in;
-            dill_resume(cr, inevents | outevents);
-            dill_pollset_fds[i].events = 0;
-            dill_pollset_items[i].in = NULL;
-            dill_pollset_items[i].out = NULL;
+        if(dill_pollset_items[i].in && dill_pollset_fds[i].revents &
+              (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
+            if(dill_slow(dill_pollset_fds[i].fd == dill_parent)) {
+                dill_cr_close_main();
+            }
+            else {
+                struct dill_cr *cr = dill_pollset_items[i].in;
+                dill_resume(cr, 0);
+                dill_pollset_fds[i].events &= ~POLLIN;
+                dill_pollset_items[i].in = NULL;
+            }
         }
-        else {
-            if(dill_pollset_items[i].in && inevents) {
-                if(dill_slow(dill_pollset_fds[i].fd == dill_parent)) {
-                    dill_cr_close_main();
-                }
-                else {
-                    struct dill_cr *cr = dill_pollset_items[i].in;
-                    dill_resume(cr, inevents);
-                    dill_pollset_fds[i].events &= ~POLLIN;
-                    dill_pollset_items[i].in = NULL;
-                }
-            }
-            else if(dill_pollset_items[i].out && outevents) {
-                struct dill_cr *cr = dill_pollset_items[i].out;
-                dill_resume(cr, outevents);
-                dill_pollset_fds[i].events &= ~POLLOUT;
-                dill_pollset_items[i].out = NULL;
-            }
+        if(dill_pollset_items[i].out && dill_pollset_fds[i].revents &
+              (POLLOUT | POLLERR | POLLHUP | POLLNVAL)) {
+            struct dill_cr *cr = dill_pollset_items[i].out;
+            dill_resume(cr, 0);
+            dill_pollset_fds[i].events &= ~POLLOUT;
+            dill_pollset_items[i].out = NULL;
         }
         /* If nobody is polling for the fd remove it from the pollset. */
         if(!dill_pollset_fds[i].events) {

@@ -215,24 +215,13 @@ static int dill_poller_wait(int timeout) {
             dill_cr_close_main();
             continue;
         }
-        int inevents = 0;
-        int outevents = 0;
-        /* Set the result values. */
-        if(evs[i].events & EPOLLIN)
-            inevents |= FDW_IN;
-        if(evs[i].events & EPOLLOUT)
-            outevents |= FDW_OUT;
-        if(evs[i].events & (EPOLLERR | EPOLLHUP)) {
-            inevents |= FDW_ERR;
-            outevents |= FDW_ERR;
-        }
-        /* Resume the blocked coroutines. */  
-        if(crp->in && inevents) {
-            dill_resume(crp->in, inevents);
+        /* Resume the blocked coroutines. */
+        if(crp->in && (evs[i].events & (EPOLLIN | EPOLLERR | EPOLLHUP))) {
+            dill_resume(crp->in, 0);
             dill_poller_rmin(evs[i].data.fd);
         }
-        if(crp->out && outevents) {
-            dill_resume(crp->out, outevents);
+        if(crp->out && (evs[i].events & (EPOLLOUT | EPOLLERR | EPOLLHUP))) {
+            dill_resume(crp->out, 0);
             dill_poller_rmout(evs[i].data.fd);
         }
     }

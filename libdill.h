@@ -151,10 +151,6 @@ DILL_EXPORT void dill_proc_epilogue(void);
         hndl;\
     })
 
-#define FDW_IN 1
-#define FDW_OUT 2
-#define FDW_ERR 4
-
 #define yield() dill_yield(__FILE__ ":" dill_string(__LINE__))
 #define msleep(deadline) dill_msleep((deadline),\
     __FILE__ ":" dill_string(__LINE__))
