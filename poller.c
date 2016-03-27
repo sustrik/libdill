@@ -103,8 +103,7 @@ int dill_fdout(int fd, int64_t deadline, const char *current) {
     }
     int rc = dill_fdwait_(fd, FDW_OUT, deadline, current);
     if(dill_slow(rc < 0)) return -1;
-    if(dill_slow(rc & FDW_ERR)) {errno = EPIPE; return -1;}
-    dill_assert(rc & FDW_OUT);
+    dill_assert((rc & FDW_OUT) || (rc & FDW_ERR));
     return 0;
 }
 
