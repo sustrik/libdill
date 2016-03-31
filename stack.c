@@ -51,7 +51,7 @@ static struct dill_slist dill_cached_stacks = {0};
 
 /* Returns smallest value greater than val that is a multiply of unit. */
 static size_t dill_align(size_t val, size_t unit) {
-    return val + unit - val % unit;
+    return val % unit ? val + unit - val % unit : val;
 }
 
 /* Get memory page size. The query is done once only. The value is cached. */
