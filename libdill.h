@@ -185,9 +185,8 @@ struct chclause {
     void *reserved1;
     void *reserved2;
     void *reserved3;
-    void *reserver4;
+    int reserved4;
     int reserved5;
-    int reserved6;
 };
 
 #define channel(itemsz, bufsz) \

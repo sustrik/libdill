@@ -70,8 +70,6 @@ struct dill_clause {
     int64_t i;
     void *p;
     size_t sz;
-    /* Pointer to the channel, retrieved from the handle. */
-    struct dill_chan *ch;
     /* Member of list of clauses waiting for a channel endpoint. */
     struct dill_list_item epitem;
     /* The coroutine which created the clause. */

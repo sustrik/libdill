@@ -107,8 +107,8 @@ static void dill_chan_dump(int h) {
 }
 
 static struct dill_ep *dill_getep(struct dill_clause *cl) {
-    return cl->op == CHSEND ?
-        &cl->ch->sender : &cl->ch->receiver;
+    struct dill_chan *ch = hdata(cl->i, dill_chan_type);
+    return cl->op == CHSEND ? &ch->sender : &ch->receiver;
 }
 
 static void dill_choose_unblock_cb(struct dill_cr *cr) {
@@ -179,19 +179,19 @@ static void dill_dequeue(struct dill_chan *ch, void *val) {
    EAGAIN if it would block.
    EPIPE if it would return EPIPE. */
 static int dill_choose_error(struct dill_clause *cl) {
+    struct dill_chan *ch = hdata(cl->i, dill_chan_type);
     switch(cl->op) {
     case CHSEND:
-        if(cl->ch->done)
+        if(ch->done)
             return EPIPE;
-        if(dill_list_empty(&cl->ch->receiver.clauses) &&
-              cl->ch->items == cl->ch->bufsz)
+        if(dill_list_empty(&ch->receiver.clauses) &&
+              ch->items == ch->bufsz)
             return EAGAIN;
         return 0;
     case CHRECV:
-        if(!dill_list_empty(&cl->ch->sender.clauses) ||
-              cl->ch->items > 0)
+        if(!dill_list_empty(&ch->sender.clauses) || ch->items > 0)
             return 0;
-        if(cl->ch->done)
+        if(ch->done)
             return EPIPE;
         return EAGAIN;
     default:
@@ -218,9 +218,9 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     int available = 0;
     int i;
     for(i = 0; i != nclauses; ++i) {
-        cls[i].ch = hdata(cls[i].i, dill_chan_type);
-        if(dill_slow(!cls[i].ch)) return -1;
-        if(dill_slow(cls[i].ch->sz != cls[i].sz ||
+        struct dill_chan *ch = hdata(cls[i].i, dill_chan_type);
+        if(dill_slow(!ch)) return -1;
+        if(dill_slow(ch->sz != cls[i].sz ||
               (cls[i].sz > 0 && !cls[i].p) ||
               (cls[i].op != CHSEND && cls[i].op != CHRECV))) {
             errno = EINVAL;
@@ -243,11 +243,12 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     if(available > 0) {
         int chosen = available == 1 ? 0 : (int)(random() % available);
         struct dill_clause *cl = &cls[cls[chosen].aidx];
+        struct dill_chan *ch = hdata(cl->i, dill_chan_type);
         if(cl->error == 0) {
             if(cl->op == CHSEND)
-                dill_enqueue(cl->ch, cl->p);
+                dill_enqueue(ch, cl->p);
             else
-                dill_dequeue(cl->ch, cl->p);
+                dill_dequeue(ch, cl->p);
         }
         dill_resume(dill_running, dill_choose_index(cl));
         res = dill_suspend(NULL);
