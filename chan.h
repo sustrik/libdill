@@ -62,24 +62,5 @@ struct dill_chan {
     size_t first;
 };
 
-/* This structure represents a single clause in a choose statement.
-   Similarly, both chs() and chr() each create a single clause. */
-struct dill_clause {
-    /* Publicly visible members. */
-    int op;
-    int64_t i;
-    void *p;
-    size_t sz;
-    /* Member of list of clauses waiting for a channel endpoint. */
-    struct dill_list_item epitem;
-    /* The coroutine which created the clause. */
-    struct dill_cr *cr;
-    /* Error that would be returned by this operation. */
-    int error;
-    /* This field within a pollset forms an array of indices of all immediately
-       available clauses. */
-    int aidx;
-};
-
 #endif
 
