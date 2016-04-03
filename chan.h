@@ -75,10 +75,10 @@ struct dill_chan {
    Similarly, both chs() and chr() each create a single clause. */
 struct dill_clause {
     /* Publicly visible members. */
-    int h;
     int op;
-    void *val;
-    size_t len;
+    int64_t i;
+    void *p;
+    size_t sz;
     /* Pointer to the channel, retrieved from the handle. */
     struct dill_chan *ch;
     /* Member of list of clauses waiting for a channel endpoint. */

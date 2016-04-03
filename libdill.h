@@ -173,12 +173,15 @@ DILL_EXPORT void setcls(void *val);
 
 #define CHSEND 1
 #define CHRECV 2
+#define FDIN 3
+#define FDOUT 4
+#define MSLEEP 5
 
 struct chclause {
-    int h;
     int op;
-    void *val;
-    size_t len;
+    int64_t i;
+    void *p;
+    size_t sz;
     void *reserved1;
     void *reserved2;
     void *reserved3;

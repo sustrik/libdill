@@ -132,7 +132,7 @@ static void dill_enqueue(struct dill_chan *ch, void *val) {
         dill_assert(ch->items == 0);
         struct dill_clause *cl = dill_cont(
             dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
-        memcpy(cl->val, val, ch->sz);
+        memcpy(cl->p, val, ch->sz);
         cl->error = 0;
         dill_resume(cl->cr, dill_choose_index(cl));
         return;
@@ -159,7 +159,7 @@ static void dill_dequeue(struct dill_chan *ch, void *val) {
         }
         /* Otherwise there must be a sender waiting to send. */
         dill_assert(cl);
-        memcpy(val, cl->val, ch->sz);
+        memcpy(val, cl->p, ch->sz);
         cl->error = 0;
         dill_resume(cl->cr, dill_choose_index(cl));
         return;
@@ -172,7 +172,7 @@ static void dill_dequeue(struct dill_chan *ch, void *val) {
     if(cl) {
         assert(ch->items < ch->bufsz);
         size_t pos = (ch->first + ch->items) % ch->bufsz;
-        memcpy(((char*)(ch + 1)) + (pos * ch->sz) , cl->val, ch->sz);
+        memcpy(((char*)(ch + 1)) + (pos * ch->sz) , cl->p, ch->sz);
         ++ch->items;
         cl->error = 0;
         dill_resume(cl->cr, dill_choose_index(cl));
@@ -223,10 +223,10 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     int available = 0;
     int i;
     for(i = 0; i != nclauses; ++i) {
-        cls[i].ch = hdata(cls[i].h, dill_chan_type);
+        cls[i].ch = hdata(cls[i].i, dill_chan_type);
         if(dill_slow(!cls[i].ch)) return -1;
-        if(dill_slow(cls[i].ch->sz != cls[i].len ||
-              (cls[i].len > 0 && !cls[i].val) ||
+        if(dill_slow(cls[i].ch->sz != cls[i].sz ||
+              (cls[i].sz > 0 && !cls[i].p) ||
               (cls[i].op != CHSEND && cls[i].op != CHRECV))) {
             errno = EINVAL;
             return -1;
@@ -250,9 +250,9 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         struct dill_clause *cl = &cls[cls[chosen].aidx];
         if(cl->error == 0) {
             if(cl->op == CHSEND)
-                dill_enqueue(cl->ch, cl->val);
+                dill_enqueue(cl->ch, cl->p);
             else
-                dill_dequeue(cl->ch, cl->val);
+                dill_dequeue(cl->ch, cl->p);
         }
         dill_resume(dill_running, dill_choose_index(cl));
         res = dill_suspend(NULL);
@@ -295,7 +295,7 @@ int dill_choose(struct chclause *clauses, int nclauses, int64_t deadline,
 
 int dill_chsend(int ch, const void *val, size_t len, int64_t deadline,
       const char *current) {
-    struct chclause cl = {ch, CHSEND, (void*)val, len};
+    struct chclause cl = {CHSEND, ch, (void*)val, len};
     int res = dill_choose_(&cl, 1, deadline);
     if(dill_slow(res == 0 && errno != 0))
         res = -1;
@@ -304,7 +304,7 @@ int dill_chsend(int ch, const void *val, size_t len, int64_t deadline,
 
 int dill_chrecv(int ch, void *val, size_t len, int64_t deadline,
       const char *current) {
-    struct chclause cl = {ch, CHRECV, val, len};
+    struct chclause cl = {CHRECV, ch, val, len};
     int res = dill_choose_(&cl, 1, deadline);
     if(dill_slow(res == 0 && errno != 0))
         res = -1;
