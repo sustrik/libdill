@@ -216,6 +216,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     dill_running->ddline = -1;
     /* Find out which clauses are immediately available. */
     int available = 0;
+    int chosen = -1;
     int i;
     for(i = 0; i != nclauses; ++i) {
         struct dill_chan *ch = hdata(cls[i].i, dill_chan_type);
@@ -233,16 +234,16 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
         ep->seq = seq;
         cls[i].error = dill_choose_error(&cls[i]);
         if(cls[i].error != EAGAIN) {
-            cls[available].aidx = i;
             ++available;
+            if(chosen < 0 || random() % available == 0)
+                chosen = i;
         }
     }
     /* If there are clauses that are immediately available
        randomly choose one of them. */
     int res;
     if(available > 0) {
-        int chosen = available == 1 ? 0 : (int)(random() % available);
-        struct dill_clause *cl = &cls[cls[chosen].aidx];
+        struct dill_clause *cl = &cls[chosen];
         struct dill_chan *ch = hdata(cl->i, dill_chan_type);
         if(cl->error == 0) {
             if(cl->op == CHSEND)
