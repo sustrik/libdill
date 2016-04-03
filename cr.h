@@ -98,6 +98,8 @@ struct dill_clause {
     struct dill_list_item epitem;
     /* The coroutine which created the clause. */
     struct dill_cr *cr;
+    /* The index to be returned by choose() if this clause triggers. */
+    int idx;
     /* Error that would be returned by this operation. */
     int error;
 };

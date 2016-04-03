@@ -74,11 +74,6 @@ int dill_channel(size_t itemsz, size_t bufsz, const char *created) {
     return h;
 }
 
-/* Returns index of the clause in the pollset. */
-static int dill_choose_index(struct dill_clause *cl) {
-    return cl - cl->cr->clauses;
-}
-
 static void dill_chan_close(int h) {
     struct dill_chan *ch = hdata(h, dill_chan_type);
     dill_assert(ch);
@@ -88,13 +83,13 @@ static void dill_chan_close(int h) {
         struct dill_clause *cl = dill_cont(dill_list_begin(
             &ch->sender.clauses), struct dill_clause, epitem);
         cl->error = EPIPE;
-        dill_resume(cl->cr, dill_choose_index(cl));
+        dill_resume(cl->cr, cl->idx);
     }
     while(!dill_list_empty(&ch->receiver.clauses)) {
         struct dill_clause *cl = dill_cont(
             dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
         cl->error = EPIPE;
-        dill_resume(cl->cr, dill_choose_index(cl));
+        dill_resume(cl->cr, cl->idx);
     }
     free(ch);
 }
@@ -130,7 +125,7 @@ static void dill_enqueue(struct dill_chan *ch, void *val) {
             dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
         memcpy(cl->p, val, ch->sz);
         cl->error = 0;
-        dill_resume(cl->cr, dill_choose_index(cl));
+        dill_resume(cl->cr, cl->idx);
         return;
     }
     /* Write the value to the buffer. */
@@ -157,7 +152,7 @@ static void dill_dequeue(struct dill_chan *ch, void *val) {
         dill_assert(cl);
         memcpy(val, cl->p, ch->sz);
         cl->error = 0;
-        dill_resume(cl->cr, dill_choose_index(cl));
+        dill_resume(cl->cr, cl->idx);
         return;
     }
     /* If there's a value in the buffer start by retrieving it. */
@@ -171,7 +166,7 @@ static void dill_dequeue(struct dill_chan *ch, void *val) {
         memcpy(((char*)(ch + 1)) + (pos * ch->sz) , cl->p, ch->sz);
         ++ch->items;
         cl->error = 0;
-        dill_resume(cl->cr, dill_choose_index(cl));
+        dill_resume(cl->cr, cl->idx);
     }
 }
 
@@ -227,6 +222,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
             errno = EINVAL;
             return -1;
         }
+        cls[i].idx = i;
         cls[i].cr = dill_running;
         struct dill_ep *ep = dill_getep(&cls[i]);
         if(ep->seq == seq)
@@ -251,7 +247,7 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
             else
                 dill_dequeue(ch, cl->p);
         }
-        dill_resume(dill_running, dill_choose_index(cl));
+        dill_resume(dill_running, cl->idx);
         res = dill_suspend(NULL);
         goto finish;
     }
@@ -319,14 +315,14 @@ int dill_chdone(int h, const char *current) {
         struct dill_clause *cl = dill_cont(dill_list_begin(&ch->sender.clauses),
             struct dill_clause, epitem);
         cl->error = EPIPE;
-        dill_resume(cl->cr, dill_choose_index(cl));
+        dill_resume(cl->cr, cl->idx);
     }
     /* Resume all the receivers currently waiting on the channel. */
     while(!dill_list_empty(&ch->receiver.clauses)) {
         struct dill_clause *cl = dill_cont(
             dill_list_begin(&ch->receiver.clauses), struct dill_clause, epitem);
         cl->error = EPIPE;
-        dill_resume(cl->cr, dill_choose_index(cl));
+        dill_resume(cl->cr, cl->idx);
     }
     return 0;
 }
