@@ -82,8 +82,7 @@ struct dill_cr {
     int sid;
 #endif
     /* Following members are used while corotine is stuck inside choose(). */
-    int nclauses;
-    struct dill_clause *clauses;
+    struct dill_slist clauses;
     int64_t ddline;
 };
 
@@ -94,6 +93,8 @@ struct dill_clause {
     int64_t i;
     void *p;
     size_t sz;
+    /* Member of coroutine's list of active clauses. */
+    struct dill_slist_item item;
     /* Member of list of clauses waiting for an endpoint. */
     struct dill_list_item epitem;
     /* The coroutine which created the clause. */

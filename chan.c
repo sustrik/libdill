@@ -107,9 +107,9 @@ static struct dill_ep *dill_getep(struct dill_clause *cl) {
 }
 
 static void dill_choose_unblock_cb(struct dill_cr *cr) {
-    int i;
-    for(i = 0; i != cr->nclauses; ++i) {
-        struct dill_clause *cl = &cr->clauses[i];
+    struct dill_slist_item *it;
+    for(it = dill_slist_begin(&cr->clauses); it; it = dill_slist_next(it)) {
+        struct dill_clause *cl = dill_cont(it, struct dill_clause, item);
         dill_list_erase(&dill_getep(cl)->clauses, &cl->epitem);
     }
     if(cr->ddline > 0)
@@ -206,14 +206,15 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     ++seq;
     /* Initialise the operation. */
     struct dill_clause *cls = (struct dill_clause*)clauses;
-    dill_running->nclauses = nclauses;
-    dill_running->clauses = cls;
+    dill_slist_init(&dill_running->clauses);
     dill_running->ddline = -1;
     /* Find out which clauses are immediately available. */
     int available = 0;
     int chosen = -1;
     int i;
     for(i = 0; i != nclauses; ++i) {
+        dill_slist_item_init(&cls[i].item);
+        dill_slist_push_back(&dill_running->clauses, &cls[i].item);
         struct dill_chan *ch = hdata(cls[i].i, dill_chan_type);
         if(dill_slow(!ch)) return -1;
         if(dill_slow(ch->sz != cls[i].sz ||
@@ -265,8 +266,10 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     }
     /* In all other cases register this coroutine with the queried channels
        and wait till one of the clauses unblocks. */
-    for(i = 0; i != dill_running->nclauses; ++i) {
-        struct dill_clause *cl = &dill_running->clauses[i];
+    struct dill_slist_item *it;
+    for(it = dill_slist_begin(&dill_running->clauses); it;
+          it = dill_slist_next(it)) {
+        struct dill_clause *cl = dill_cont(it, struct dill_clause, item);
         dill_list_insert(&dill_getep(cl)->clauses, &cl->epitem, NULL);
     }
     /* If there are multiple parallel chooses done from different coroutines
