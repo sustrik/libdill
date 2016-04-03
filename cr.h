@@ -81,9 +81,10 @@ struct dill_cr {
     /* Valgrind stack identifier. */
     int sid;
 #endif
-    /* Opaque storage for whatever data the current blocking operation
-       needs to store while it is suspended. */
-    uint8_t opaque[DILL_OPAQUE_SIZE];
+    /* Following members are used while corotine is stuck inside choose(). */
+    int nclauses;
+    struct dill_clause *clauses;
+    int64_t ddline;
 };
 
 /* Fake coroutine corresponding to the main thread of execution. */

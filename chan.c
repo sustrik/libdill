@@ -35,8 +35,6 @@
 #include "libdill.h"
 #include "utils.h"
 
-DILL_CT_ASSERT(sizeof(struct dill_choosedata) <= DILL_OPAQUE_SIZE);
-
 static const int dill_chan_type_placeholder = 0;
 static const void *dill_chan_type = &dill_chan_type_placeholder;
 
@@ -78,8 +76,7 @@ int dill_channel(size_t itemsz, size_t bufsz, const char *created) {
 
 /* Returns index of the clause in the pollset. */
 static int dill_choose_index(struct dill_clause *cl) {
-    struct dill_choosedata *cd = (struct dill_choosedata*)cl->cr->opaque;
-    return cl - cd->clauses;
+    return cl - cl->cr->clauses;
 }
 
 static void dill_chan_close(int h) {
@@ -115,13 +112,12 @@ static struct dill_ep *dill_getep(struct dill_clause *cl) {
 }
 
 static void dill_choose_unblock_cb(struct dill_cr *cr) {
-    struct dill_choosedata *cd = (struct dill_choosedata*)cr->opaque;
     int i;
-    for(i = 0; i != cd->nclauses; ++i) {
-        struct dill_clause *cl = &cd->clauses[i];
+    for(i = 0; i != cr->nclauses; ++i) {
+        struct dill_clause *cl = &cr->clauses[i];
         dill_list_erase(&dill_getep(cl)->clauses, &cl->epitem);
     }
-    if(cd->ddline > 0)
+    if(cr->ddline > 0)
         dill_timer_rm(&cr->timer);
 }
 
@@ -215,10 +211,9 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     ++seq;
     /* Initialise the operation. */
     struct dill_clause *cls = (struct dill_clause*)clauses;
-    struct dill_choosedata *cd = (struct dill_choosedata*)dill_running->opaque;
-    cd->nclauses = nclauses;
-    cd->clauses = cls;
-    cd->ddline = -1;
+    dill_running->nclauses = nclauses;
+    dill_running->clauses = cls;
+    dill_running->ddline = -1;
     /* Find out which clauses are immediately available. */
     int available = 0;
     int i;
@@ -267,13 +262,13 @@ static int dill_choose_(struct chclause *clauses, int nclauses,
     }
     /* If deadline was specified, start the timer. */
     if(deadline > 0) {
-        cd->ddline = deadline;
+        dill_running->ddline = deadline;
         dill_timer_add(&dill_running->timer, deadline);
     }
     /* In all other cases register this coroutine with the queried channels
        and wait till one of the clauses unblocks. */
-    for(i = 0; i != cd->nclauses; ++i) {
-        struct dill_clause *cl = &cd->clauses[i];
+    for(i = 0; i != dill_running->nclauses; ++i) {
+        struct dill_clause *cl = &dill_running->clauses[i];
         dill_list_insert(&dill_getep(cl)->clauses, &cl->epitem, NULL);
     }
     /* If there are multiple parallel chooses done from different coroutines

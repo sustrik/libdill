@@ -31,15 +31,6 @@
 #include "debug.h"
 #include "list.h"
 
-/* Per-coroutine data. Used to store info while choose() is blocked. */
-struct dill_choosedata {
-    /* Pollset, ase passed to the choose() function. */
-    int nclauses;
-    struct dill_clause *clauses;
-    /* Deadline specified in 'deadline' clause. -1 if none. */
-    int64_t ddline;
-};
-
 /* Channel endpoint. */
 struct dill_ep {
     /* Sequence number of the choose operation being initialised.
