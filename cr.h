@@ -58,6 +58,9 @@ struct dill_cr {
     unsigned int no_blocking2 : 1;
     /* Set once coroutine has finished its execution. */
     unsigned int done : 1;
+    /* When coroutine handle is being closed, this is the pointer to the
+       coroutine that is doing the hclose() call. */
+    struct dill_cr *closer;
 #if defined DILL_VALGRIND
     /* Valgrind stack identifier. This way valgrind knows which areas of
        memory are used as a stacks and doesn't produce spurious warnings.

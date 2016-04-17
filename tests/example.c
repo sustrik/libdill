@@ -29,13 +29,15 @@
 
 coroutine void worker(int count, const char *text) {
     printf("%s\n", text);
+    yield();
+    printf("b\n");
 }
 
 int main() {
     int cr1 = go(worker(4, "a "));
     assert(cr1 >= 0);
-    int rc = hclose(cr1);
-    assert(rc == 0);
+    //int rc = hclose(cr1);
+    //assert(rc == 0);
     return 0;
 }
 

@@ -75,6 +75,7 @@ int dill_prologue(sigjmp_buf **ctx, const char *created) {
     if(dill_slow(hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return -1;}
     dill_slist_item_init(&cr->ready);
     dill_slist_init(&cr->clauses);
+    cr->closer = NULL;
     cr->cls = NULL;
 #if defined DILL_VALGRIND
     cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stacksz, cr);
@@ -94,6 +95,9 @@ int dill_prologue(sigjmp_buf **ctx, const char *created) {
 void dill_epilogue(void) {
     /* Mark the coroutine as finished. */
     dill_r->done = 1;
+    /* If there's a coroutine waiting till we finish, unblock it now. */
+    if(dill_r->closer)
+        dill_cancel(dill_r->closer, 0);
     /* With no clauses added, this call will never return. */
     dill_assert(dill_slist_empty(&dill_r->clauses));
     dill_wait();
@@ -104,8 +108,18 @@ static void dill_cr_close(int h) {
     struct dill_cr *cr = (struct dill_cr*)hdata(h, dill_cr_type);
     /* If the coroutine have already finished, we are done. */
     if(!cr->done) {
-        /* TODO */
-        dill_assert(0);
+        /* No blocking calls from this point on. */
+        cr->no_blocking1 = 1;
+        /* Resume the coroutine if it was blocked. */
+        if(!dill_slist_item_inlist(&cr->ready))
+            dill_cancel(cr, -ECANCELED);
+        /* Wait till the coroutine finishes execution. */
+        dill_r->closer = dill_r;
+        dill_r->id = 0;
+        dill_r->err = 0;
+        dill_slist_push_back(&dill_ready, &dill_r->ready);
+        int rc = dill_wait();
+        dill_assert(rc == 0);
     }
     /* Now that the coroutine is finished deallocate it. */
     dill_freestack(cr + 1);
@@ -183,6 +197,17 @@ void dill_cancel(struct dill_cr *cr, int err) {
     cr->id = -1;
     cr->err = err;
     dill_docancel(cr);
+}
+
+int dill_yield(const char *current) {
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) return -1;
+    /* Put the current coroutine into the ready queue. */
+    dill_r->id = 0;
+    dill_r->err = 0;
+    dill_slist_push_back(&dill_ready, &dill_r->ready);
+    /* Suspend. */
+    return dill_wait();
 }
 
 /******************************************************************************/
