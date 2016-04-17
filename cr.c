@@ -47,6 +47,30 @@ struct dill_cr *dill_r = &dill_main_data;
 struct dill_slist dill_ready = {0};
 
 /******************************************************************************/
+/*  Helpers.                                                                  */
+/******************************************************************************/
+
+void dill_resume(struct dill_cr *cr, int id, int err) {
+    cr->id = id;
+    cr->err = err;
+    dill_slist_push_back(&dill_ready, &cr->ready);
+}
+
+int dill_canblock(void) {
+    if(dill_r->no_blocking1 || dill_r->no_blocking2) {
+        errno = ECANCELED;
+        return -1;
+    }
+    return 0;
+}
+
+int dill_no_blocking2(int val) {
+    int old = dill_r->no_blocking2;
+    dill_r->no_blocking2 = val;
+    return old;
+}
+
+/******************************************************************************/
 /*  Handle implementation.                                                    */
 /******************************************************************************/
 
@@ -85,7 +109,7 @@ int dill_prologue(sigjmp_buf **ctx, const char *created) {
        wrong stack frame here. */
     *ctx = &dill_r->ctx;
     /* Add parent coroutine to the list of coroutines ready for execution. */
-    dill_slist_push_back(&dill_ready, &dill_r->ready);
+    dill_resume(dill_r, 0, 0);
     /* Mark the new coroutine as running. */
     dill_r = cr;
     return hndl;
@@ -100,6 +124,7 @@ void dill_epilogue(void) {
         dill_cancel(dill_r->closer, 0);
     /* With no clauses added, this call will never return. */
     dill_assert(dill_slist_empty(&dill_r->clauses));
+printf("+++ child done\n");
     dill_wait();
 }
 
@@ -114,12 +139,10 @@ static void dill_cr_close(int h) {
         if(!dill_slist_item_inlist(&cr->ready))
             dill_cancel(cr, -ECANCELED);
         /* Wait till the coroutine finishes execution. */
-        dill_r->closer = dill_r;
-        dill_r->id = 0;
-        dill_r->err = 0;
-        dill_slist_push_back(&dill_ready, &dill_r->ready);
+        cr->closer = dill_r;
+printf("+++ wait for child\n");
         int rc = dill_wait();
-        dill_assert(rc == 0);
+        dill_assert(rc == -1);
     }
     /* Now that the coroutine is finished deallocate it. */
     dill_freestack(cr + 1);
@@ -172,7 +195,7 @@ int dill_wait(void)  {
     }
 }
 
-static void dill_docancel(struct dill_cr *cr) {
+static void dill_docancel(struct dill_cr *cr, int id, int err) {
     /* Sanity check: Make sure that the coroutine was really suspended. */
     dill_assert(!dill_slist_item_inlist(&cr->ready));
     /* Remove the clauses from endpoints' lists of waiting coroutines. */
@@ -183,29 +206,22 @@ static void dill_docancel(struct dill_cr *cr) {
             dill_list_erase(cl->eplist, &cl->epitem);
     }
     /* Schedule the newly unblocked coroutine for execution. */
-    dill_slist_push_back(&dill_ready, &cr->ready);
+    dill_resume(cr, id, err);
 }
 
 void dill_trigger(struct dill_clause *cl, int err) {
-    struct dill_cr *cr = cl->cr;
-    cr->id = cl->id;
-    cr->err = err;
-    dill_docancel(cr);
+    dill_docancel(cl->cr, cl->cr->id, err);
 }
 
 void dill_cancel(struct dill_cr *cr, int err) {
-    cr->id = -1;
-    cr->err = err;
-    dill_docancel(cr);
+    dill_docancel(cr, -1, err);
 }
 
 int dill_yield(const char *current) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Put the current coroutine into the ready queue. */
-    dill_r->id = 0;
-    dill_r->err = 0;
-    dill_slist_push_back(&dill_ready, &dill_r->ready);
+    dill_resume(dill_r, 0, 0);
     /* Suspend. */
     return dill_wait();
 }
@@ -220,23 +236,5 @@ void *cls(void) {
 
 void setcls(void *val) {
     dill_r->cls = val;
-}
-
-/******************************************************************************/
-/*  Helpers.                                                                  */
-/******************************************************************************/
-
-int dill_canblock(void) {
-    if(dill_r->no_blocking1 || dill_r->no_blocking2) {
-        errno = ECANCELED;
-        return -1;
-    }
-    return 0;
-}
-
-int dill_no_blocking2(int val) {
-    int old = dill_r->no_blocking2;
-    dill_r->no_blocking2 = val;
-    return old;
 }
 

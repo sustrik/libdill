@@ -36,8 +36,8 @@ coroutine void worker(int count, const char *text) {
 int main() {
     int cr1 = go(worker(4, "a "));
     assert(cr1 >= 0);
-    //int rc = hclose(cr1);
-    //assert(rc == 0);
+    int rc = hclose(cr1);
+    assert(rc == 0);
     return 0;
 }
 
