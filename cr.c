@@ -124,7 +124,6 @@ void dill_epilogue(void) {
         dill_cancel(dill_r->closer, 0);
     /* With no clauses added, this call will never return. */
     dill_assert(dill_slist_empty(&dill_r->clauses));
-printf("+++ child done\n");
     dill_wait();
 }
 
@@ -138,11 +137,11 @@ static void dill_cr_close(int h) {
         /* Resume the coroutine if it was blocked. */
         if(!dill_slist_item_inlist(&cr->ready))
             dill_cancel(cr, -ECANCELED);
-        /* Wait till the coroutine finishes execution. */
+        /* Wait till the coroutine finishes execution. With no clauses added
+           the only mechanism to resume is dill_cancel(). */
         cr->closer = dill_r;
-printf("+++ wait for child\n");
         int rc = dill_wait();
-        dill_assert(rc == -1);
+        dill_assert(rc == -1 && errno == 0);
     }
     /* Now that the coroutine is finished deallocate it. */
     dill_freestack(cr + 1);
