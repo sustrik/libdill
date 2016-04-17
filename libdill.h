@@ -192,12 +192,5 @@ DILL_EXPORT int dill_chrecv(int ch, void *val, size_t len,
     int64_t deadline, const char *current);
 DILL_EXPORT int dill_chdone(int ch, const char *current);
 
-/******************************************************************************/
-/*  Debugging                                                                 */
-/******************************************************************************/
-
-DILL_EXPORT void goredump(void);
-DILL_EXPORT void dotrace(int level);
-
 #endif
 
