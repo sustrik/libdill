@@ -43,6 +43,7 @@
 #define DILL_CT_ASSERT(x) \
     typedef int DILL_CT_ASSERT_HELPER1(ct_assert_,__COUNTER__) [(x) ? 1 : -1]
 
+/* Optimisation hints. */
 #if defined __GNUC__ || defined __llvm__
 #define dill_fast(x) __builtin_expect(!!(x), 1)
 #define dill_slow(x) __builtin_expect(!!(x), 0)
@@ -52,7 +53,8 @@
 #endif
 
 /* Define our own assert. This way we are sure that it stays in place even
-   if the standard C assert would be thrown away by the compiler. */
+   if the standard C assert would be thrown away by the compiler. It also
+   allows us to overload it as needed. */
 #define dill_assert(x) \
     do {\
         if (dill_slow(!(x))) {\

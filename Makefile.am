@@ -32,6 +32,8 @@ dillinclude_HEADERS = libdill.h
 lib_LTLIBRARIES = libdill.la
 
 libdill_la_SOURCES = \
+    cr.h \
+    cr.c \
     list.h \
     list.c \
     now.c \
