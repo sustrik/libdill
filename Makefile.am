@@ -32,29 +32,14 @@ dillinclude_HEADERS = libdill.h
 lib_LTLIBRARIES = libdill.la
 
 libdill_la_SOURCES = \
-    chan.h \
-    chan.c \
-    cr.h \
-    cr.c \
-    debug.h \
-    debug.c \
-    handle.c \
     list.h \
     list.c \
     now.c \
-    poller.h \
-    poller.c \
-    proc.c \
     slist.h \
     slist.c \
     stack.h \
     stack.c \
-    timer.h \
-    timer.c \
-    utils.h \
-    poll.inc \
-    epoll.inc \
-    kqueue.inc
+    utils.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libdill.pc
