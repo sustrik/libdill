@@ -1,4 +1,5 @@
 /*
+
   Copyright (c) 2016 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -16,6 +17,7 @@
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
   IN THE SOFTWARE.
+
 */
 
 #ifndef DILL_CR_INCLUDED
@@ -23,6 +25,7 @@
 
 #include <setjmp.h>
 
+#include "list.h"
 #include "slist.h"
 
 /* The coroutine. The memory layout looks like this:
@@ -58,10 +61,18 @@ struct dill_cr {
 };
 
 struct dill_clause {
-    /* See dill_cr's 'clauses' field. */
+    /* The coroutine that owns this clause. */
+    struct dill_cr *cr;
+    /* List of clauses coroutine is waiting for. See dill_cr::clauses. */
     struct dill_slist_item item;
     /* Number to return from dill_wait() if this clause triggers. */
     int id;
+    /* These two fields are completely opaque to the coroutine. They are meant
+       to be used by endpoints. The only thing coroutine does with it is, just
+       before dill_wait() exits, it removes 'epitem' from 'eplist' for each
+       clause. 'eplist' can be NULL in which case removal doesn't happen. */
+    struct dill_list_item epitem;
+    struct dill_list *eplist;
 };
 
 /* When dill_wait() is called next time, the coroutine will wait
