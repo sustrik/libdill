@@ -171,25 +171,6 @@ DILL_EXPORT void setcls(void *val);
 /*  Channels                                                                  */
 /******************************************************************************/
 
-#define CHSEND 1
-#define CHRECV 2
-#define FDIN 3
-#define FDOUT 4
-#define MSLEEP 5
-
-struct chclause {
-    int op;
-    int64_t i;
-    void *p;
-    size_t sz;
-    void *reserved1;
-    void *reserved2;
-    void *reserved3;
-    void *reserved4;
-    int reserved5;
-    int reserved6;
-};
-
 #define channel(itemsz, bufsz) \
     dill_channel((itemsz), (bufsz), __FILE__ ":" dill_string(__LINE__))
 
@@ -204,18 +185,12 @@ struct chclause {
 #define chdone(channel) \
     dill_chdone((channel), __FILE__ ":" dill_string(__LINE__))
 
-#define choose(clauses, nclauses, deadline) \
-    dill_choose((clauses), (nclauses), (deadline), \
-    __FILE__ ":" dill_string(__LINE__))
-
 DILL_EXPORT int dill_channel(size_t itemsz, size_t bufsz, const char *created);
 DILL_EXPORT int dill_chsend(int ch, const void *val, size_t len,
     int64_t deadline, const char *current);
 DILL_EXPORT int dill_chrecv(int ch, void *val, size_t len,
     int64_t deadline, const char *current);
 DILL_EXPORT int dill_chdone(int ch, const char *current);
-DILL_EXPORT int dill_choose(struct chclause *clauses, int nclauses,
-    int64_t deadline, const char *current);
 
 /******************************************************************************/
 /*  Debugging                                                                 */
