@@ -53,13 +53,8 @@ struct dill_slist dill_ready = {0};
 static const int dill_cr_type_placeholder = 0;
 static const void *dill_cr_type = &dill_cr_type_placeholder;
 
-static void dill_cr_close(int h) {
-    dill_assert(0);
-}
-
-static void dill_cr_dump(int h) {
-    dill_assert(0);
-}
+static void dill_cr_close(int h);
+static void dill_cr_dump(int h) {dill_assert(0);}
 
 static const struct hvfptrs dill_cr_vfptrs = {
     dill_cr_close,
@@ -95,11 +90,25 @@ int dill_prologue(sigjmp_buf **ctx, const char *created) {
     return hndl;
 }
 
-/* The final part of go(). Cleans up after the coroutine is finished. */
+/* The final part of go(). Gets called one the coroutine is finished. */
 void dill_epilogue(void) {
+    /* Mark the coroutine as finished. */
+    dill_r->done = 1;
     /* With no clauses added, this call will never return. */
     dill_assert(dill_slist_empty(&dill_r->clauses));
     dill_wait();
+}
+
+/* Gets called when coroutine handle is closed. */
+static void dill_cr_close(int h) {
+    struct dill_cr *cr = (struct dill_cr*)hdata(h, dill_cr_type);
+    /* If the coroutine have already finished, we are done. */
+    if(!cr->done) {
+        /* TODO */
+        dill_assert(0);
+    }
+    /* Now that the coroutine is finished deallocate it. */
+    dill_freestack(cr + 1);
 }
 
 /******************************************************************************/
@@ -186,5 +195,23 @@ void *cls(void) {
 
 void setcls(void *val) {
     dill_r->cls = val;
+}
+
+/******************************************************************************/
+/*  Helpers.                                                                  */
+/******************************************************************************/
+
+int dill_canblock(void) {
+    if(dill_r->no_blocking1 || dill_r->no_blocking2) {
+        errno = ECANCELED;
+        return -1;
+    }
+    return 0;
+}
+
+int dill_no_blocking2(int val) {
+    int old = dill_r->no_blocking2;
+    dill_r->no_blocking2 = val;
+    return old;
 }
 

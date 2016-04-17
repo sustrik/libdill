@@ -51,6 +51,13 @@ struct dill_cr {
     struct dill_slist clauses;
     /* Coroutine-local storage. */
     void *cls;
+    /* There are two possible reasons to disable blocking calls.
+       1. The coroutine is being closed by its owner.
+       2. The execution is happenin within a context of hclose() function. */
+    unsigned int no_blocking1 : 1;
+    unsigned int no_blocking2 : 1;
+    /* Set once coroutine has finished its execution. */
+    unsigned int done : 1;
 #if defined DILL_VALGRIND
     /* Valgrind stack identifier. This way valgrind knows which areas of
        memory are used as a stacks and doesn't produce spurious warnings.
@@ -95,6 +102,13 @@ int dill_wait(void);
    'err' is used to set errno in the resumed coroutine. */
 void dill_trigger(struct dill_clause *cl, int err);
 void dill_cancel(struct dill_cr *cr, int err);
+
+/* Returns 0 if blocking functions are allowed.
+   Returns -1 and sets errno to ECANCELED otherwise. */
+int dill_canblock(void);
+
+/* TODO: Can we get rid of this function? */
+int dill_no_blocking2(int val);
 
 #endif
 

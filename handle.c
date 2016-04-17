@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "cr.h"
 #include "libdill.h"
 #include "utils.h"
 
@@ -121,11 +122,31 @@ void *hdata(int h, const void *type) {
     return hndl->data;
 }
 
-void hdump(int h) {
-    dill_assert(0);
+int hclose(int h) {
+    CHECKHANDLE(h, -1);
+    /* If there are multiple duplicates of this handle just remove one
+       reference. */
+    if(hndl->refcount > 1) {
+        --hndl->refcount;
+        return 0;
+    }
+    /* This will guarantee that blocking functions cannot be called anywhere
+       inside the context of the close. */
+    int old = dill_no_blocking2(1);
+    /* Send stop signal to the handle. */
+    dill_assert(hndl->vfptrs.close);
+    hndl->vfptrs.close(h);
+    /* Better be paraniod and delete the function pointer once it was used. */
+    hndl->vfptrs.close = NULL;
+    /* Restore the previous state. */
+    dill_no_blocking2(old);
+    /* Return the handle to the shared pool. */
+    hndl->next = dill_unused;
+    dill_unused = h;
+    return 0;
 }
 
-int hclose(int h) {
+void hdump(int h) {
     dill_assert(0);
 }
 
