@@ -34,6 +34,7 @@ lib_LTLIBRARIES = libdill.la
 libdill_la_SOURCES = \
     cr.h \
     cr.c \
+    handle.c \
     list.h \
     list.c \
     now.c \
@@ -62,22 +63,23 @@ libdill_la_CFLAGS = \
 ################################################################################
 
 check_PROGRAMS = \
-    tests/example \
-    tests/go \
-    tests/cls \
-    tests/chan \
-    tests/choose \
-    tests/sleep \
-    tests/fdwait \
-    tests/signals \
-    tests/overload \
-    tests/handle \
-    tests/proc \
-    tests/proc1 \
-    tests/proc2 \
-    tests/proc3 \
-    tests/proc4 \
-    tests/proc5
+    tests/example
+
+#    tests/go \
+#    tests/cls \
+#    tests/chan \
+#    tests/choose \
+#    tests/sleep \
+#    tests/fdwait \
+#    tests/signals \
+#    tests/overload \
+#    tests/handle \
+#    tests/proc \
+#    tests/proc1 \
+#    tests/proc2 \
+#    tests/proc3 \
+#    tests/proc4 \
+#    tests/proc5
 
 LDADD = libdill.la
 

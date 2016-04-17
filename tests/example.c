@@ -28,26 +28,11 @@
 #include "../libdill.h"
 
 coroutine void worker(int count, const char *text) {
-    int i;
-    for(i = 0; i != count; ++i) {
-        printf("%s\n", text);
-        int rc = msleep(now() + 10);
-        assert(rc == 0);
-    }
 }
 
 int main() {
     int cr1 = go(worker(4, "a "));
     assert(cr1 >= 0);
-    int cr2 = go(worker(2, "b"));
-    assert(cr2 >= 0);
-    int cr3 = go(worker(3, "c"));
-    assert(cr3 >= 0);
-    int rc = msleep(now() + 100);
-    assert(rc == 0); 
-    hclose(cr1);
-    hclose(cr2);
-    hclose(cr3);
     return 0;
 }
 

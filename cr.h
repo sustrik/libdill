@@ -37,9 +37,6 @@
      doesn't support microarchitectures where stack grows upwards)
 */
 struct dill_cr {
-    /* When coroutine is suspended 'ctx' holds the context
-       (registers and such). */
-    sigjmp_buf ctx;
     /* When coroutine is ready for execution but not running yet,
        it lives in this list (dill_ready). 'id' is a result value to return
        from dill_wait() once the coroutine is resumed. Additionally, errno
@@ -47,6 +44,9 @@ struct dill_cr {
     struct dill_slist_item ready;
     int id;
     int err;
+    /* When coroutine is suspended 'ctx' holds the context
+       (registers and such). */
+    sigjmp_buf ctx;
     /* If coroutine is blocked, here's the list of clauses it waits for. */
     struct dill_slist clauses;
     /* Coroutine-local storage. */

@@ -27,14 +27,84 @@
 #endif
 
 #include "cr.h"
+#include "libdill.h"
 #include "poller.h"
+#include "stack.h"
 #include "utils.h"
 
+/* Storage for constants used by go() macro. */
+volatile int dill_unoptimisable1 = 1;
+volatile void *dill_unoptimisable2 = NULL;
+
+/* Main coroutine. */
+struct dill_cr dill_main_data = {DILL_SLIST_ITEM_INITIALISER};
+struct dill_cr *dill_main = &dill_main_data;
+
 /* Currently running coroutine. */
-static struct dill_cr *dill_r;
+struct dill_cr *dill_r = &dill_main_data;
 
 /* List of coroutines ready for execution. */
 struct dill_slist dill_ready = {0};
+
+/******************************************************************************/
+/*  Handle implementation.                                                    */
+/******************************************************************************/
+
+static const int dill_cr_type_placeholder = 0;
+static const void *dill_cr_type = &dill_cr_type_placeholder;
+
+static void dill_cr_close(int h) {
+    dill_assert(0);
+}
+
+static void dill_cr_dump(int h) {
+    dill_assert(0);
+}
+
+static const struct hvfptrs dill_cr_vfptrs = {
+    dill_cr_close,
+    dill_cr_dump
+};
+
+/******************************************************************************/
+/*  Creation and termination of coroutines.                                   */
+/******************************************************************************/
+
+/* The intial part of go(). Allocates a new stack and handle. */
+int dill_prologue(sigjmp_buf **ctx, const char *created) {
+    /* Allocate and initialise new stack. */
+    size_t stacksz;
+    struct dill_cr *cr = ((struct dill_cr*)dill_allocstack(&stacksz)) - 1;
+    if(dill_slow(!cr)) return -1;
+    int hndl = dill_handle(dill_cr_type, cr, &dill_cr_vfptrs, created);
+    if(dill_slow(hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return -1;}
+    dill_slist_item_init(&cr->ready);
+    dill_slist_init(&cr->clauses);
+    cr->cls = NULL;
+#if defined DILL_VALGRIND
+    cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stacksz, cr);
+#endif
+    /* Return the context of the parent coroutine to the caller so that it can
+       store its current state. It can't be done here becuse we are at the
+       wrong stack frame here. */
+    *ctx = &dill_r->ctx;
+    /* Add parent coroutine to the list of coroutines ready for execution. */
+    dill_slist_push_back(&dill_ready, &dill_r->ready);
+    /* Mark the new coroutine as running. */
+    dill_r = cr;
+    return hndl;
+}
+
+/* The final part of go(). Cleans up after the coroutine is finished. */
+void dill_epilogue(void) {
+    /* With no clauses added, this call will never return. */
+    dill_assert(dill_slist_empty(&dill_r->clauses));
+    dill_wait();
+}
+
+/******************************************************************************/
+/*  Suspend/resume functionality.                                             */
+/******************************************************************************/
 
 void dill_waitfor(struct dill_clause *cl, int id) {
     cl->cr = dill_r;
@@ -104,5 +174,17 @@ void dill_cancel(struct dill_cr *cr, int err) {
     cr->id = -1;
     cr->err = err;
     dill_docancel(cr);
+}
+
+/******************************************************************************/
+/*  Coroutine-local storage.                                                  */
+/******************************************************************************/
+
+void *cls(void) {
+    return dill_r->cls;
+}
+
+void setcls(void *val) {
+    dill_r->cls = val;
 }
 
