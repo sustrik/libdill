@@ -22,10 +22,17 @@
 
 */
 
+#include <stdint.h>
+
 #include "cr.h"
 #include "list.h"
 #include "poller.h"
 #include "utils.h"
+
+struct dill_tmcl {
+    struct dill_clause cl;
+    int64_t deadline;
+};
 
 /* Forward declarations for the functions implemented by specific poller
    mechanisms (poll, epoll, kqueue). */
@@ -40,21 +47,21 @@ static int dill_poller_poll(int timeout);
 static struct dill_list dill_timers = {0};
 
 /* Adds a timer clause to the list of waited for clauses. */
-void dill_addtimer(struct dill_clause *cl, int id, int64_t deadline) {
+void dill_addtimer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
     dill_assert(deadline >= 0);
-    cl->i = deadline;
+    tmcl->deadline = deadline;
     /* Move the timer into the right place in the ordered list
        of existing timers. TODO: This is an O(n) operation! */
     struct dill_list_item *it = dill_list_begin(&dill_timers);
     while(it) {
-        struct dill_clause *itcl = dill_cont(it, struct dill_clause, epitem);
+        struct dill_tmcl *itcl = dill_cont(it, struct dill_tmcl, cl.epitem);
         /* If multiple timers expire at the same momemt they will be fired
            in the order they were created in (> rather than >=). */
-        if(itcl->i > cl->i)
+        if(itcl->deadline > tmcl->deadline)
             break;
         it = dill_list_next(it);
     }
-    dill_waitfor(cl, id, &dill_timers, it);
+    dill_waitfor(&tmcl->cl, id, &dill_timers, it);
 }
 
 /* Returns number of milliseconds till next timer expiration.
@@ -63,9 +70,9 @@ static int dill_timer_next(void) {
     if(dill_list_empty(&dill_timers))
         return -1;
     int64_t nw = now();
-    int64_t expiry = dill_cont(dill_list_begin(&dill_timers),
-        struct dill_clause, epitem)->i;
-    return (int) (nw >= expiry ? 0 : expiry - nw);
+    int64_t deadline = dill_cont(dill_list_begin(&dill_timers),
+        struct dill_tmcl, cl.epitem)->deadline;
+    return (int) (nw >= deadline ? 0 : deadline - nw);
 }
 
 void dill_poller_wait(int block) {
@@ -80,12 +87,12 @@ void dill_poller_wait(int block) {
         if(!dill_list_empty(&dill_timers)) {
             int64_t nw = now();
             while(!dill_list_empty(&dill_timers)) {
-                struct dill_clause *cl = dill_cont(
-                    dill_list_begin(&dill_timers), struct dill_clause, epitem);
-                if(cl->i > nw)
+                struct dill_tmcl *tmcl = dill_cont(
+                    dill_list_begin(&dill_timers), struct dill_tmcl, cl.epitem);
+                if(tmcl->deadline > nw)
                     break;
                 dill_list_erase(&dill_timers, dill_list_begin(&dill_timers));
-                dill_trigger(cl, ETIMEDOUT);
+                dill_trigger(&tmcl->cl, ETIMEDOUT);
                 timer_fired = 1;
             }
         }
@@ -103,7 +110,7 @@ int dill_fdin(int fd, int64_t deadline, const char *current) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     struct dill_clause fdcl;
-    struct dill_clause tmcl;
+    struct dill_tmcl tmcl;
     dill_poller_addin(&fdcl, 1, fd);
     if(deadline > 0)
         dill_addtimer(&tmcl, 2, deadline);
@@ -120,7 +127,7 @@ int dill_fdout(int fd, int64_t deadline, const char *current) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     struct dill_clause fdcl;
-    struct dill_clause tmcl;
+    struct dill_tmcl tmcl;
     dill_poller_addout(&fdcl, 1, fd);
     if(deadline > 0)
         dill_addtimer(&tmcl, 2, deadline);
@@ -143,7 +150,7 @@ int dill_msleep(int64_t deadline, const char *current) {
     if(dill_slow(deadline == 0)) return yield();
     /* Actual waiting. */
     dill_poller_init();
-    struct dill_clause tmcl;
+    struct dill_tmcl tmcl;
     if(deadline > 0)
         dill_addtimer(&tmcl, 1, deadline);
     int id = dill_wait();

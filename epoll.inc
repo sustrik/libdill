@@ -90,7 +90,6 @@ static void dill_poller_addin(struct dill_clause *cl, int id, int fd) {
         dill_changelist = fd + 1;
     }
     /* Add the clause to the list of waited for clauses. */
-    cl->i = fd;
     dill_waitfor(cl, id, &fdi->in, NULL);
 }
 
@@ -102,7 +101,6 @@ static void dill_poller_addout(struct dill_clause *cl, int id, int fd) {
         dill_changelist = fd + 1;
     }
     /* Add the clause to the list of waited for clauses. */
-    cl->i = fd;
     dill_waitfor(cl, id, &fdi->out, NULL);
 }
 
@@ -168,7 +166,8 @@ static int dill_poller_poll(int timeout) {
     /* Fire file descriptor events. */
     int i;
     for(i = 0; i != numevs; ++i) {
-        struct dill_fdinfo *fdi = &dill_fdinfos[evs[i].data.fd];
+        int fd = evs[i].data.fd;
+        struct dill_fdinfo *fdi = &dill_fdinfos[fd];
         /* Resume the blocked coroutines. */
         if(!dill_list_empty(&fdi->in) &&
               (evs[i].events & (EPOLLIN | EPOLLERR | EPOLLHUP))) {
@@ -178,19 +177,18 @@ static int dill_poller_poll(int timeout) {
             /* Remove the fd from the pollset, if needed. */
             if(dill_list_empty(&fdi->in) && !fdi->next) {
                 fdi->next = dill_changelist;
-                dill_changelist = cl->i + 1;
+                dill_changelist = fd + 1;
             }
         }
         if(!dill_list_empty(&fdi->out) &&
               (evs[i].events & (EPOLLOUT | EPOLLERR | EPOLLHUP))) {
-printf("+++ out event\n");
             struct dill_clause *cl = dill_cont(dill_list_begin(&fdi->out),
                 struct dill_clause, epitem);
             dill_trigger(cl, 0);
             /* Remove the fd from the pollset, if needed. */
             if(dill_list_empty(&fdi->out) && !fdi->next) {
                 fdi->next = dill_changelist;
-                dill_changelist = cl->i + 1;
+                dill_changelist = fd + 1;
             }
         }
     }
