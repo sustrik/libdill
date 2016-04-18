@@ -174,6 +174,7 @@ int dill_wait(void)  {
     if(dill_r) {
         if(sigsetjmp(dill_r->ctx,0)) {
             /* We get here once the coroutine is resumed. */
+            dill_slist_init(&dill_r->clauses);
             errno = dill_r->err;
             return dill_r->id;
         }

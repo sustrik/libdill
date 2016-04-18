@@ -24,17 +24,30 @@
 
 #include <assert.h>
 #include <stdio.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 
 #include "../libdill.h"
 
+coroutine void worker(int count, const char *text) {
+    int i;
+    for(i = 0; i != count; ++i) {
+        printf("%s\n", text);
+        int rc = msleep(now() + 10);
+        assert(rc == 0);
+    }
+}
+
 int main() {
-    int fds[2];
-    int rc = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
-    assert(rc == 0);
-    rc = fdout(fds[0], -1);
-    assert(rc == 0);
+    int cr1 = go(worker(4, "a "));
+    assert(cr1 >= 0);
+    int cr2 = go(worker(2, "b"));
+    assert(cr2 >= 0);
+    int cr3 = go(worker(3, "c"));
+    assert(cr3 >= 0);
+    int rc = msleep(now() + 100);
+    assert(rc == 0); 
+    hclose(cr1);
+    hclose(cr2);
+    hclose(cr3);
     return 0;
 }
 
