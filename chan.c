@@ -134,6 +134,7 @@ int dill_chsend(int h, const void *val, size_t len, int64_t deadline,
     if(dill_slow(!ch)) return -1;
     if(dill_slow(len != ch->sz || (len > 0 && !val))) {
         errno = EINVAL; return -1;}
+    if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
     if(dill_list_empty(&ch->in)) {
         if(ch->items < ch->bufsz) {
             /* Write the item to the buffer. */
@@ -188,6 +189,7 @@ int dill_chrecv(int h, void *val, size_t len, int64_t deadline,
         }
         return 0;
     }
+    if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
     if(!dill_list_empty(&ch->out)) {
         /* Copy the message directly from a waiting sender. */
         struct dill_chcl *chcl = dill_cont(dill_list_begin(&ch->out),
@@ -211,7 +213,22 @@ int dill_chrecv(int h, void *val, size_t len, int64_t deadline,
     return errno == 0 ? 0 : -1;
 }
 
-int dill_chdone(int ch, const char *current) {
-    dill_assert(0);
+int dill_chdone(int h, const char *current) {
+    struct dill_chan *ch = hdata(h, dill_chan_type);
+    if(dill_slow(!ch)) return -1;
+    ch->done = 1;
+    /* Resume any remaining senders and receivers on the channel
+       with EPIPE error. */
+    while(!dill_list_empty(&ch->in)) {
+        struct dill_clause *cl = dill_cont(dill_list_begin(&ch->in),
+            struct dill_clause, epitem);
+        dill_trigger(cl, EPIPE);
+    }
+    while(!dill_list_empty(&ch->out)) {
+        struct dill_clause *cl = dill_cont(dill_list_begin(&ch->out),
+            struct dill_clause, epitem);
+        dill_trigger(cl, EPIPE);
+    }
+    return 0;
 }
 
