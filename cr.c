@@ -101,6 +101,9 @@ int dill_prologue(sigjmp_buf **ctx, const char *created) {
     dill_slist_init(&cr->clauses);
     cr->closer = NULL;
     cr->cls = NULL;
+    cr->no_blocking1 = 0;
+    cr->no_blocking2 = 0;
+    cr->done = 0;
 #if defined DILL_VALGRIND
     cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stacksz, cr);
 #endif
@@ -136,7 +139,7 @@ static void dill_cr_close(int h) {
         cr->no_blocking1 = 1;
         /* Resume the coroutine if it was blocked. */
         if(!dill_slist_item_inlist(&cr->ready))
-            dill_cancel(cr, -ECANCELED);
+            dill_cancel(cr, ECANCELED);
         /* Wait till the coroutine finishes execution. With no clauses added
            the only mechanism to resume is dill_cancel(). */
         /* TODO: What happens if another coroutine cancels the closer? */

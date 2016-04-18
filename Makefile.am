@@ -64,9 +64,8 @@ libdill_la_CFLAGS = \
 ################################################################################
 
 check_PROGRAMS = \
-    tests/example
-
-#    tests/go \
+    tests/example \
+    tests/go
 #    tests/cls \
 #    tests/chan \
 #    tests/choose \

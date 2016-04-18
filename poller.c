@@ -103,6 +103,8 @@ void dill_poller_wait(int block) {
 int dill_fdin(int fd, int64_t deadline, const char *current) {
     /* TODO: deadline == 0? */
     dill_poller_init();
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) return -1;
     struct dill_clause fdcl;
     struct dill_clause tmcl;
     dill_poller_addin(&fdcl, 1, fd);
@@ -118,6 +120,8 @@ int dill_fdin(int fd, int64_t deadline, const char *current) {
 int dill_fdout(int fd, int64_t deadline, const char *current) {
     /* TODO: deadline == 0? */
     dill_poller_init();
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) return -1;
     struct dill_clause fdcl;
     struct dill_clause tmcl;
     dill_poller_addout(&fdcl, 1, fd);
@@ -131,6 +135,8 @@ int dill_fdout(int fd, int64_t deadline, const char *current) {
 }
 
 int dill_msleep(int64_t deadline, const char *current) {
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) return -1;
     /* Trivial case. No waiting, but we do want a context switch. */
     if(dill_slow(deadline == 0)) return yield();
     /* Actual waiting. */
