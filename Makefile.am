@@ -70,11 +70,10 @@ check_PROGRAMS = \
     tests/fd \
     tests/cls \
     tests/handle \
-    tests/chan
-#    tests/choose \
-#    tests/sleep \
-#    tests/signals \
-#    tests/overload \
+    tests/chan \
+    tests/sleep \
+    tests/signals \
+    tests/overload
 #    tests/proc \
 #    tests/proc1 \
 #    tests/proc2 \
