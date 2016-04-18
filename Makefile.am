@@ -66,14 +66,14 @@ libdill_la_CFLAGS = \
 check_PROGRAMS = \
     tests/example \
     tests/go \
-    tests/fd
-#    tests/cls \
+    tests/fd \
+    tests/cls \
+    tests/handle
 #    tests/chan \
 #    tests/choose \
 #    tests/sleep \
 #    tests/signals \
 #    tests/overload \
-#    tests/handle \
 #    tests/proc \
 #    tests/proc1 \
 #    tests/proc2 \
