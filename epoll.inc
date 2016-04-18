@@ -196,3 +196,16 @@ static int dill_poller_poll(int timeout) {
     return numevs > 0 ? 1 : 0;
 }
 
+void dill_poller_pfork(void) {
+    /* Re-create the polling infrastructure. */
+    if(dill_efd != -1) {
+        int rc = close(dill_efd);
+        dill_assert(rc == 0);
+    }
+    dill_efd = -1;
+    dill_fdinfos = NULL;
+    dill_nfdinfos = 0;
+    dill_changelist = DILL_ENDLIST;
+    dill_poller_init();
+}
+

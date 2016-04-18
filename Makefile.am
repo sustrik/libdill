@@ -42,6 +42,7 @@ libdill_la_SOURCES = \
     now.c \
     poller.h \
     poller.c \
+    proc.c \
     slist.h \
     slist.c \
     stack.h \
@@ -73,11 +74,11 @@ check_PROGRAMS = \
     tests/chan \
     tests/sleep \
     tests/signals \
-    tests/overload
-#    tests/proc \
-#    tests/proc1 \
-#    tests/proc2 \
-#    tests/proc3 \
+    tests/overload \
+    tests/proc \
+    tests/proc1 \
+    tests/proc2 \
+    tests/proc3
 #    tests/proc4 \
 #    tests/proc5
 

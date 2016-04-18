@@ -116,6 +116,9 @@ void dill_cancel(struct dill_cr *cr, int err);
    Returns -1 and sets errno to ECANCELED otherwise. */
 int dill_canblock(void);
 
+/* Makes the current coroutine the main coroutine of the child process. */
+void dill_cr_postfork(void);
+
 /* TODO: Can we get rid of this function? */
 int dill_no_blocking2(int val);
 

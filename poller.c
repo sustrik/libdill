@@ -36,6 +36,7 @@ static void dill_poller_addin(struct dill_clause *cl, int id, int fd);
 static void dill_poller_addout(struct dill_clause *cl, int id, int fd);
 static void dill_poller_clean(int fd);
 static int dill_poller_poll(int timeout);
+static void dill_poller_pfork(void);
 
 /* Global linked list of all timers. The list is ordered.
    First timer to be resumed comes first and so on. */
@@ -152,6 +153,14 @@ int dill_msleep(int64_t deadline, const char *current) {
     if(dill_slow(id < 0)) return -1;
     dill_assert(id == 1);
     return 0;
+}
+
+void dill_poller_postfork(int closepipe) {
+    /* Get rid of all the timers inherited from the parent. */
+    dill_list_init(&dill_timers);
+    /* Clean up the pollset. */
+    dill_poller_pfork();
+    /* TODO: Do something with the closepipe. */
 }
 
 /* Include the poll-mechanism-specific stuff. */

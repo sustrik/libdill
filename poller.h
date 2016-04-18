@@ -37,4 +37,7 @@ void dill_addtimer(struct dill_tmcl *tmcl, int id, int64_t deadline);
    to 1 it will block until there's at least one event to process. */
 void dill_poller_wait(int block);
 
+/* Deallocates existing polling infrastructure and creates a new one. */
+void dill_poller_postfork(int closepipe);
+
 #endif

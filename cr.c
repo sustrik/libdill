@@ -64,6 +64,14 @@ int dill_canblock(void) {
     return 0;
 }
 
+void dill_cr_postfork(void) {
+    /* Currently running coroutine will become the new main. */
+    dill_main = dill_r;
+    /* Ignore all the scheduled coroutines. */
+    dill_slist_init(&dill_ready);
+    /* TODO: Re-create the stack cache. */
+}
+
 int dill_no_blocking2(int val) {
     int old = dill_r->no_blocking2;
     dill_r->no_blocking2 = val;
