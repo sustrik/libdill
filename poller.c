@@ -29,11 +29,6 @@
 #include "poller.h"
 #include "utils.h"
 
-struct dill_tmcl {
-    struct dill_clause cl;
-    int64_t deadline;
-};
-
 /* Forward declarations for the functions implemented by specific poller
    mechanisms (poll, epoll, kqueue). */
 void dill_poller_init(void);

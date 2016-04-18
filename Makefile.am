@@ -32,6 +32,7 @@ dillinclude_HEADERS = libdill.h
 lib_LTLIBRARIES = libdill.la
 
 libdill_la_SOURCES = \
+    chan.c \
     cr.h \
     cr.c \
     epoll.inc \
@@ -68,8 +69,8 @@ check_PROGRAMS = \
     tests/go \
     tests/fd \
     tests/cls \
-    tests/handle
-#    tests/chan \
+    tests/handle \
+    tests/chan
 #    tests/choose \
 #    tests/sleep \
 #    tests/signals \

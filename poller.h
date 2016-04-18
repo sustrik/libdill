@@ -23,6 +23,15 @@
 #ifndef DILL_POLLER_INCLUDED
 #define DILL_POLLER_INCLUDED
 
+/* Timer clause. */
+struct dill_tmcl {
+    struct dill_clause cl;
+    int64_t deadline;
+};
+
+/* Add timer to the list of active clauses. */
+void dill_addtimer(struct dill_tmcl *tmcl, int id, int64_t deadline);
+
 /* Wait for external events such as timers or file descriptors. If block is set
    to 0 the function will poll for events and return immediately. If it is set
    to 1 it will block until there's at least one event to process. */

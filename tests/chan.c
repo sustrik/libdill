@@ -101,13 +101,14 @@ coroutine void sender3(int ch, int doyield) {
 
 int main() {
     int val;
+    int rc;
 
     /* Receiver waits for sender. */
     int ch1 = channel(sizeof(int), 0);
     assert(ch1 >= 0);
     int hndl1 = go(sender(ch1, 1, 333));
     assert(hndl1 >= 0);
-    int rc = chrecv(ch1, &val, sizeof(val), -1);
+    rc = chrecv(ch1, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 333);
     hclose(ch1);
@@ -229,6 +230,7 @@ int main() {
     assert(val == 666);
     hclose(ch7);
 
+#if 0
     /* Test simple chdone() scenarios. */
     int ch8 = channel(sizeof(int), 0);
     assert(ch8 >= 0);
@@ -296,6 +298,7 @@ int main() {
     assert(rc == 0);
     rc = hclose(hndl6[1]);
     assert(rc == 0);
+#endif
 
     /* Test a combination of blocked sender and an item in the channel. */
     int ch14 = channel(sizeof(int), 1);
@@ -315,6 +318,7 @@ int main() {
     rc = hclose(hndl7);
     assert(rc == 0);
 
+#if 0
     /* Test whether chdone() unblocks blocked senders. */
     int ch15 = channel(sizeof(int), 0);
     assert(ch15 >= 0);
@@ -336,7 +340,9 @@ int main() {
     assert(rc == 0);
     rc = hclose(hndl8[2]);
     assert(rc == 0);
+#endif
 
+#if 0
     /* Test whether hclose() unblocks blocked senders and receivers. */
     int ch16 = channel(sizeof(int), 0);
     assert(ch16 >= 0);
@@ -352,6 +358,7 @@ int main() {
     assert(rc == 0);
     rc = hclose(hndl9[1]);
     assert(rc == 0);
+#endif
 
     /* Test cancelation. */
     int ch17 = channel(sizeof(int), 0);
