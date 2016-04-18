@@ -89,14 +89,13 @@ TESTS = $(check_PROGRAMS)
 #  performance tests                                                           #
 ################################################################################
 
-noinst_PROGRAMS =
-
-#    perf/go\
-#    perf/ctxswitch\
-#    perf/chan\
-#    perf/chsend\
-#    perf/chrecv\
-#    perf/whispers
+noinst_PROGRAMS = \
+    perf/go\
+    perf/ctxswitch\
+    perf/chan\
+    perf/chsend\
+    perf/chrecv\
+    perf/whispers
 
 ################################################################################
 #  additional packaging-related stuff                                          #
