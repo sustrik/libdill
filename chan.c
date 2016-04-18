@@ -154,7 +154,7 @@ int dill_chsend(int h, const void *val, size_t len, int64_t deadline,
         if(dill_slow(id < 0)) return -1;
         if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
         dill_assert(id == 1);
-        return 0;
+        return errno == 0 ? 0 : -1;
     }
     /* Copy the message directly to the waiting receiver. */
     struct dill_chcl *chcl = dill_cont(dill_list_begin(&ch->in),
@@ -208,7 +208,7 @@ int dill_chrecv(int h, void *val, size_t len, int64_t deadline,
     if(dill_slow(id < 0)) return -1;
     if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
     dill_assert(id == 1);
-    return 0;
+    return errno == 0 ? 0 : -1;
 }
 
 int dill_chdone(int ch, const char *current) {

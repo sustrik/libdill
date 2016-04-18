@@ -342,7 +342,6 @@ int main() {
     assert(rc == 0);
 #endif
 
-#if 0
     /* Test whether hclose() unblocks blocked senders and receivers. */
     int ch16 = channel(sizeof(int), 0);
     assert(ch16 >= 0);
@@ -358,7 +357,6 @@ int main() {
     assert(rc == 0);
     rc = hclose(hndl9[1]);
     assert(rc == 0);
-#endif
 
     /* Test cancelation. */
     int ch17 = channel(sizeof(int), 0);
