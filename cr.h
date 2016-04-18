@@ -90,14 +90,18 @@ struct dill_clause {
 };
 
 /* When dill_wait() is called next time, the coroutine will wait
-   (among other clauses) for this clause. 'id' must not be negative. */
-void dill_waitfor(struct dill_clause *cl, int id);
+   (among other clauses) for this clause. 'id' must not be negative.
+   'eplist' is the list to add the clause to (can be NULL). 'epitem' is the
+   item in the list to insert the clause before. If NULL it will be inserted
+   at the end of the list. Call to dill_wait() will remove the clause from
+   the list. */
+void dill_waitfor(struct dill_clause *cl, int id,
+    struct dill_list *eplist, struct dill_list_item *before);
 
 /* Suspend running coroutine. Move to executing different coroutines.
    The coroutine will be resumed once one of the clauses previously added by
    dill_waitfor() is triggered or dill_cancel() is called. Once that happens
-   all the clauses, whether triggered or not, will be canceled. If there was no
-   clause to wait for the coroutine will be suspended forever. Function returns
+   all the clauses, whether triggered or not, will be canceled. Function returns
    ID of the triggered clause or -1 in case dill_cancel() was called. In either
    case it sets errno to the value supplied in dill_trigger/dill_cancel. */
 int dill_wait(void);

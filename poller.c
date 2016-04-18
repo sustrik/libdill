@@ -54,10 +54,7 @@ void dill_addtimer(struct dill_clause *cl, int id, int64_t deadline) {
             break;
         it = dill_list_next(it);
     }
-    dill_list_item_init(&cl->epitem);
-    dill_list_insert(&dill_timers, &cl->epitem, it);
-    cl->eplist = &dill_timers;
-    dill_waitfor(cl, id);
+    dill_waitfor(cl, id, &dill_timers, it);
 }
 
 /* Returns number of milliseconds till next timer expiration.
