@@ -24,8 +24,10 @@
 #define DILL_CR_INCLUDED
 
 #include <setjmp.h>
+#include <stdint.h>
 
 #include "list.h"
+#include "libdill.h"
 #include "slist.h"
 
 /* The coroutine. The memory layout looks like this:
@@ -71,6 +73,8 @@ struct dill_cr {
 };
 
 struct dill_clause {
+    /* Opaque data members. */
+    int64_t i;
     /* The coroutine that owns this clause. */
     struct dill_cr *cr;
     /* List of clauses coroutine is waiting for. See dill_cr::clauses. */

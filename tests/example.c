@@ -24,19 +24,16 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #include "../libdill.h"
 
-coroutine void worker(int count, const char *text) {
-    printf("%s\n", text);
-    yield();
-    printf("b\n");
-}
-
 int main() {
-    int cr1 = go(worker(4, "a "));
-    assert(cr1 >= 0);
-    int rc = hclose(cr1);
+    int fds[2];
+    int rc = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+    assert(rc == 0);
+    rc = fdout(fds[0], -1);
     assert(rc == 0);
     return 0;
 }

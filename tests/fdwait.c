@@ -32,8 +32,6 @@
 
 #include "../libdill.h"
 
-
-
 coroutine void cancel(int fd) {
     int rc = fdin(fd, -1);
     assert(rc == -1 && errno == ECANCELED);

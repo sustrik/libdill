@@ -139,6 +139,7 @@ static void dill_cr_close(int h) {
             dill_cancel(cr, -ECANCELED);
         /* Wait till the coroutine finishes execution. With no clauses added
            the only mechanism to resume is dill_cancel(). */
+        /* TODO: What happens if another coroutine cancels the closer? */
         cr->closer = dill_r;
         int rc = dill_wait();
         dill_assert(rc == -1 && errno == 0);
@@ -153,6 +154,7 @@ static void dill_cr_close(int h) {
 
 void dill_waitfor(struct dill_clause *cl, int id) {
     cl->cr = dill_r;
+    dill_slist_item_init(&cl->item);
     dill_slist_push_back(&dill_r->clauses, &cl->item);
     cl->id = id;
 }
@@ -209,7 +211,7 @@ static void dill_docancel(struct dill_cr *cr, int id, int err) {
 }
 
 void dill_trigger(struct dill_clause *cl, int err) {
-    dill_docancel(cl->cr, cl->cr->id, err);
+    dill_docancel(cl->cr, cl->id, err);
 }
 
 void dill_cancel(struct dill_cr *cr, int err) {

@@ -34,6 +34,7 @@ lib_LTLIBRARIES = libdill.la
 libdill_la_SOURCES = \
     cr.h \
     cr.c \
+    epoll.inc \
     handle.c \
     list.h \
     list.c \
