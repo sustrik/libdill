@@ -33,7 +33,7 @@ tests/chan
 tests/choose
 tests/cls
 tests/example
-tests/fdwait
+tests/fd
 tests/go
 tests/sleep
 tests/overload

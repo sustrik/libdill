@@ -53,8 +53,8 @@ int main() {
     assert(rc == 0);
 
     /* Check for out. */
-//    rc = fdout(fds[0], 0);
-//    assert(rc == 0);
+    rc = fdout(fds[0], 0);
+    assert(rc == 0);
 
     /* Check with infinite timeout. */
     rc = fdout(fds[0], -1);

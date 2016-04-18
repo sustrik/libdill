@@ -131,6 +131,11 @@ int dill_fdout(int fd, int64_t deadline, const char *current) {
     return 0;
 }
 
+void fdclean(int fd) {
+    dill_poller_init();
+    dill_poller_clean(fd);
+}
+
 int dill_msleep(int64_t deadline, const char *current) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
