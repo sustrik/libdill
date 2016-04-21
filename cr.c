@@ -159,6 +159,12 @@ static void dill_cr_close(int h) {
     dill_freestack(cr + 1);
 }
 
+void dill_shutdown(void) {
+    dill_main->no_blocking1 = 1;
+    if(!dill_slist_item_inlist(&dill_main->ready))
+            dill_cancel(dill_main, ECANCELED);
+}
+
 /******************************************************************************/
 /*  Suspend/resume functionality.                                             */
 /******************************************************************************/

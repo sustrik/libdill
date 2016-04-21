@@ -55,6 +55,7 @@ struct dill_fdinfo {
 static struct dill_fdinfo *dill_fdinfos = NULL;
 static int dill_nfdinfos = 0;
 static uint32_t dill_changelist = DILL_ENDLIST;
+static struct dill_fdinfo *dill_parent = NULL;
 
 static void dill_poller_atexit(void) {
     if(dill_fdinfos)
@@ -134,7 +135,7 @@ static int dill_poller_poll(int timeout) {
         struct epoll_event ev;
         ev.data.fd = fd;
         ev.events = 0;
-        if(!dill_list_empty(&fdi->in))
+        if(!dill_list_empty(&fdi->in) || fdi == dill_parent)
             ev.events |= EPOLLIN;
         if(!dill_list_empty(&fdi->out))
             ev.events |= EPOLLOUT;
@@ -168,6 +169,11 @@ static int dill_poller_poll(int timeout) {
     for(i = 0; i != numevs; ++i) {
         int fd = evs[i].data.fd;
         struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+        /* Signal from parent. */
+        if(dill_slow(fdi == dill_parent)) {
+            dill_shutdown();
+            continue;
+        }
         /* Resume the blocked coroutines. */
         if(!dill_list_empty(&fdi->in) &&
               (evs[i].events & (EPOLLIN | EPOLLERR | EPOLLHUP))) {
@@ -196,7 +202,7 @@ static int dill_poller_poll(int timeout) {
     return numevs > 0 ? 1 : 0;
 }
 
-void dill_poller_pfork(void) {
+void dill_poller_pfork(int parent) {
     /* Re-create the polling infrastructure. */
     if(dill_efd != -1) {
         int rc = close(dill_efd);
@@ -207,5 +213,11 @@ void dill_poller_pfork(void) {
     dill_nfdinfos = 0;
     dill_changelist = DILL_ENDLIST;
     dill_poller_init();
+    /* Start polling for signals from the parent. */
+    dill_parent = &dill_fdinfos[parent];
+    dill_assert(dill_list_empty(&dill_parent->in));
+    dill_assert(!dill_parent->next);
+    dill_parent->next = dill_changelist;
+    dill_changelist = parent + 1;
 }
 

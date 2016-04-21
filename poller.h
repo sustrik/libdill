@@ -37,7 +37,9 @@ void dill_addtimer(struct dill_tmcl *tmcl, int id, int64_t deadline);
    to 1 it will block until there's at least one event to process. */
 void dill_poller_wait(int block);
 
-/* Deallocates existing polling infrastructure and creates a new one. */
-void dill_poller_postfork(int closepipe);
+/* Deallocates existing polling infrastructure and creates a new one.
+   'parent' is a file descriptor that will signal in and/or err if the process
+   is supposed to shut down. */
+void dill_poller_postfork(int parent);
 
 #endif

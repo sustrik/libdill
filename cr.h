@@ -112,6 +112,9 @@ int dill_wait(void);
 void dill_trigger(struct dill_clause *cl, int err);
 void dill_cancel(struct dill_cr *cr, int err);
 
+/* Starts canceling the main coroutine. */
+void dill_shutdown(void);
+
 /* Returns 0 if blocking functions are allowed.
    Returns -1 and sets errno to ECANCELED otherwise. */
 int dill_canblock(void);
