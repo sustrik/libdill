@@ -67,9 +67,11 @@ int dill_pollset_init(void) {
     if(dill_slow(dill_kfd < 0)) {err = errno; goto error2;}
     dill_changelist = DILL_ENDLIST;
     /* Start polling for signals from the parent. */
-    dill_parentinfo = &dill_fdinfos[dill_parent];
-    dill_parentinfo->next = dill_changelist;
-    dill_changelist = dill_parent + 1;
+    if(dill_parent >= 0) {
+        dill_parentinfo = &dill_fdinfos[dill_parent];
+        dill_parentinfo->next = dill_changelist;
+        dill_changelist = dill_parent + 1;
+    }
     return 0;
 error2:
     free(dill_fdinfos);
