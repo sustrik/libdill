@@ -28,19 +28,16 @@
 #include "../libdill.h"
 
 coroutine void child(int fd) {
-printf("+++1\n");
     while(1) {
         int rc = yield();
         if(rc < 0 && errno == ECANCELED)
             break;
         assert(rc == 0);
     }
-printf("+++2\n");
     char c = 55;
     ssize_t sz = write(fd, &c, 1);
     assert(sz == 1);
     close(fd);
-printf("+++3\n");
 }
 
 int main() {
