@@ -31,6 +31,7 @@
 #include <sys/time.h>
 
 #include "cr.h"
+#include "list.h"
 #include "utils.h"
 
 #define DILL_ENDLIST 0xffffffff
@@ -45,8 +46,8 @@
 static int dill_kfd = -1;
 
 struct dill_fdinfo {
-    struct dill_cr *in;
-    struct dill_cr *out;
+    struct dill_list in;
+    struct dill_list out;
     uint16_t currevs;
     uint16_t firing;
     /* 1-based index, 0 stands for "not part of the list", DILL_ENDLIST
