@@ -40,3 +40,46 @@ int dill_msleep(int64_t deadline, const char *current) {
     dill_assert(id == 1);
     return 0;
 }
+
+int dill_fdin(int fd, int64_t deadline, const char *current) {
+    /* TODO: deadline == 0? */
+    /* Return ECANCELED if shutting down. */
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) return -1;
+    /* Start waiting for the fd. */
+    struct dill_clause fdcl;
+    rc = dill_in(&fdcl, 1, fd);
+    if(dill_slow(rc < 0)) return -1;
+    /* Optionally, start waiting for a timer. */
+    struct dill_tmcl tmcl;
+    if(deadline > 0)
+        dill_timer(&tmcl, 2, deadline);
+    /* Block. */
+    int id = dill_wait();
+    if(dill_slow(id < 0)) return -1;
+    if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
+    dill_assert(id == 1);
+    return 0;
+}
+
+int dill_fdout(int fd, int64_t deadline, const char *current) {
+    /* TODO: deadline == 0? */
+    /* Return ECANCELED if shutting down. */
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) return -1;
+    /* Start waiting for the fd. */
+    struct dill_clause fdcl;
+    rc = dill_out(&fdcl, 1, fd);
+    if(dill_slow(rc < 0)) return -1;
+    /* Optionally, start waiting for a timer. */
+    struct dill_tmcl tmcl;
+    if(deadline > 0)
+        dill_timer(&tmcl, 2, deadline);
+    /* Block. */
+    int id = dill_wait();
+    if(dill_slow(id < 0)) return -1;
+    if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
+    dill_assert(id == 1);
+    return 0;
+}
+

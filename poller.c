@@ -110,42 +110,16 @@ static int dill_timer_next(void) {
     return (int) (nw >= deadline ? 0 : deadline - nw);
 }
 
-int dill_fdin(int fd, int64_t deadline, const char *current) {
-    /* TODO: deadline == 0? */
+int dill_in(struct dill_clause *cl, int id, int fd) {
     dill_poller_init();
-    int rc = dill_canblock();
-    if(dill_slow(rc < 0)) return -1;
     if(dill_slow(fd < 0 || fd >= dill_maxfds)) {errno = EBADF; return -1;}
-    struct dill_clause fdcl;
-    struct dill_tmcl tmcl;
-    rc = dill_pollset_addin(&fdcl, 1, fd);
-    if(dill_slow(rc < 0)) return -1;
-    if(deadline > 0)
-        dill_timer(&tmcl, 2, deadline);
-    int id = dill_wait();
-    if(dill_slow(id < 0)) return -1;
-    if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
-    dill_assert(id == 1);
-    return 0;
+    return dill_pollset_addin(cl, id, fd);
 }
 
-int dill_fdout(int fd, int64_t deadline, const char *current) {
-    /* TODO: deadline == 0? */
+int dill_out(struct dill_clause *cl, int id, int fd) {
     dill_poller_init();
-    int rc = dill_canblock();
-    if(dill_slow(rc < 0)) return -1;
     if(dill_slow(fd < 0 || fd >= dill_maxfds)) {errno = EBADF; return -1;}
-    struct dill_clause fdcl;
-    struct dill_tmcl tmcl;
-    rc = dill_pollset_addout(&fdcl, 1, fd);
-    if(dill_slow(rc < 0)) return -1;
-    if(deadline > 0)
-        dill_timer(&tmcl, 2, deadline);
-    int id = dill_wait();
-    if(dill_slow(id < 0)) return -1;
-    if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
-    dill_assert(id == 1);
-    return 0;
+    return dill_pollset_addout(cl, id, fd);
 }
 
 void fdclean(int fd) {
