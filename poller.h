@@ -23,6 +23,8 @@
 #ifndef DILL_POLLER_INCLUDED
 #define DILL_POLLER_INCLUDED
 
+#include "cr.h"
+
 /* Timer clause. */
 struct dill_tmcl {
     struct dill_clause cl;
