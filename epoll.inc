@@ -26,7 +26,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/epoll.h>
-#include <sys/resource.h>
 
 #include "cr.h"
 #include "list.h"
@@ -53,37 +52,66 @@ struct dill_fdinfo {
 };
 
 static struct dill_fdinfo *dill_fdinfos = NULL;
-static int dill_nfdinfos = 0;
 static uint32_t dill_changelist = DILL_ENDLIST;
-static struct dill_fdinfo *dill_parent = NULL;
+static struct dill_fdinfo *dill_parentinfo = NULL;
 
-static void dill_poller_atexit(void) {
-    if(dill_fdinfos)
-        free(dill_fdinfos);
-}
-
-void dill_poller_init(void) {
-    if(dill_fast(dill_efd >= 0))
-        return;
-    struct rlimit rlim;
-    int rc = getrlimit(RLIMIT_NOFILE, &rlim);
-    if(dill_slow(rc < 0)) return;
-    dill_nfdinfos = rlim.rlim_max;
+static int dill_pollset_init(void) {
+    int err;
+    /* Allocate one info per fd. */
     dill_fdinfos = (struct dill_fdinfo*)
-        calloc(dill_nfdinfos, sizeof(struct dill_fdinfo));
-    if(dill_slow(!dill_fdinfos)) {errno = ENOMEM; return;}
+        calloc(dill_maxfds, sizeof(struct dill_fdinfo));
+    if(dill_slow(!dill_fdinfos)) {err = ENOMEM; goto error1;}
+    /* Changelist is empty. */
+    dill_changelist = DILL_ENDLIST;
+    /* Create kernel-side pollset. */
     dill_efd = epoll_create(1);
-    if(dill_slow(dill_efd < 0)) {
-        free(dill_fdinfos);
-        dill_fdinfos = NULL;
-        return;
+    if(dill_slow(dill_efd < 0)) {err = errno; goto error2;}
+    /* Start polling for signals from the parent. */
+    if(dill_parent >= 0) {
+        dill_parentinfo = &dill_fdinfos[dill_parent];
+        dill_parentinfo->next = dill_changelist;
+        dill_changelist = dill_parent + 1;
     }
-    rc = atexit(dill_poller_atexit);
-    dill_assert(rc == 0);
-    errno = 0;
+    return 0;
+error2:
+    free(dill_fdinfos);
+    dill_fdinfos = NULL;
+error1:
+    errno = err;
+    return -1;
 }
 
-static int dill_poller_addin(struct dill_clause *cl, int id, int fd) {
+static void dill_pollset_term(void) {
+    if(dill_efd >= 0) {
+        int rc = close(dill_efd);
+        dill_assert(rc == 0);
+        dill_efd = -1;
+    }
+    free(dill_fdinfos);
+    dill_fdinfos = NULL;
+    dill_changelist = DILL_ENDLIST;
+    dill_parentinfo = NULL;
+}
+
+void dill_pollset_postfork(int parent) {
+    /* Re-create the polling infrastructure. */
+    if(dill_efd != -1) {
+        int rc = close(dill_efd);
+        dill_assert(rc == 0);
+    }
+    dill_efd = -1;
+    dill_fdinfos = NULL;
+    dill_changelist = DILL_ENDLIST;
+    dill_poller_init();
+    /* Start polling for signals from the parent. */
+    dill_parentinfo = &dill_fdinfos[parent];
+    dill_assert(dill_list_empty(&dill_parentinfo->in));
+    dill_assert(!dill_parentinfo->next);
+    dill_parentinfo->next = dill_changelist;
+    dill_changelist = parent + 1;
+}
+
+static int dill_pollset_addin(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
     /* If fd is not yet in the pollset add it there. */
@@ -96,7 +124,7 @@ static int dill_poller_addin(struct dill_clause *cl, int id, int fd) {
     return 0;
 }
 
-static int dill_poller_addout(struct dill_clause *cl, int id, int fd) {
+static int dill_pollset_addout(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
     /* If fd is not yet in the pollset add it there. */
@@ -109,7 +137,7 @@ static int dill_poller_addout(struct dill_clause *cl, int id, int fd) {
     return 0;
 }
 
-static void dill_poller_clean(int fd) {
+static void dill_pollset_clean(int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     /* We cannot clean an fd that someone is waiting for. */
     dill_assert(dill_list_empty(&fdi->in));
@@ -130,7 +158,7 @@ static void dill_poller_clean(int fd) {
     }
 }
 
-static int dill_poller_poll(int timeout) {
+static int dill_pollset_poll(int timeout) {
     /* Apply any changes to the pollset.
        TODO: Use epoll_ctl_batch once available. */
     while(dill_changelist != DILL_ENDLIST) {
@@ -139,7 +167,7 @@ static int dill_poller_poll(int timeout) {
         struct epoll_event ev;
         ev.data.fd = fd;
         ev.events = 0;
-        if(!dill_list_empty(&fdi->in) || fdi == dill_parent)
+        if(!dill_list_empty(&fdi->in) || fdi == dill_parentinfo)
             ev.events |= EPOLLIN;
         if(!dill_list_empty(&fdi->out))
             ev.events |= EPOLLOUT;
@@ -173,8 +201,9 @@ static int dill_poller_poll(int timeout) {
     for(i = 0; i != numevs; ++i) {
         int fd = evs[i].data.fd;
         struct dill_fdinfo *fdi = &dill_fdinfos[fd];
-        /* Signal from parent. */
-        if(dill_slow(fdi == dill_parent)) {
+        /* Signal from parent process. */
+        if(dill_slow(fdi == dill_parentinfo)) {
+            dill_parentinfo = NULL;
             dill_shutdown();
             continue;
         }
@@ -204,24 +233,5 @@ static int dill_poller_poll(int timeout) {
     }
     /* Return 0 in case of time out. 1 if at least one coroutine was resumed. */
     return numevs > 0 ? 1 : 0;
-}
-
-void dill_poller_pfork(int parent) {
-    /* Re-create the polling infrastructure. */
-    if(dill_efd != -1) {
-        int rc = close(dill_efd);
-        dill_assert(rc == 0);
-    }
-    dill_efd = -1;
-    dill_fdinfos = NULL;
-    dill_nfdinfos = 0;
-    dill_changelist = DILL_ENDLIST;
-    dill_poller_init();
-    /* Start polling for signals from the parent. */
-    dill_parent = &dill_fdinfos[parent];
-    dill_assert(dill_list_empty(&dill_parent->in));
-    dill_assert(!dill_parent->next);
-    dill_parent->next = dill_changelist;
-    dill_changelist = parent + 1;
 }
 

@@ -23,24 +23,62 @@
 */
 
 #include <stdint.h>
+#include <sys/resource.h>
 
 #include "cr.h"
 #include "list.h"
 #include "poller.h"
 #include "utils.h"
 
+/* Max possible number of file descriptors. */
+static int dill_maxfds = -1;
+
+/* File descriptor that becomes readable when parent died or when it is
+   shutting down. */
+static int dill_parent = -1;
+
 /* Forward declarations for the functions implemented by specific poller
    mechanisms (poll, epoll, kqueue). */
-void dill_poller_init(void);
-static int dill_poller_addin(struct dill_clause *cl, int id, int fd);
-static int dill_poller_addout(struct dill_clause *cl, int id, int fd);
-static void dill_poller_clean(int fd);
-static int dill_poller_poll(int timeout);
-static void dill_poller_pfork(int parent);
+static int dill_pollset_init(void);
+static void dill_pollset_term(void);
+static int dill_pollset_addin(struct dill_clause *cl, int id, int fd);
+static int dill_pollset_addout(struct dill_clause *cl, int id, int fd);
+static void dill_pollset_clean(int fd);
+static int dill_pollset_poll(int timeout);
 
 /* Global linked list of all timers. The list is ordered.
    First timer to be resumed comes first and so on. */
-static struct dill_list dill_timers = {0};
+static struct dill_list dill_timers;
+
+static void dill_poller_init() {
+    /* If intialisation was already done, do nothing. */
+    if(dill_fast(dill_maxfds >= 0)) return;
+    /* Get the max number of file descriptors. */
+    struct rlimit rlim;
+    int rc = getrlimit(RLIMIT_NOFILE, &rlim);
+    dill_assert(rc == 0);
+    dill_maxfds = rlim.rlim_max;
+    /* Timers. */
+    dill_list_init(&dill_timers);
+    /* Polling-mechanism-specific intitialisation. */
+    rc = dill_pollset_init();
+    dill_assert(rc == 0);
+}
+
+static void dill_poller_term(void) {
+    /* Polling-mechanism-specific termination. */
+    dill_pollset_term();
+    /* Get rid of all the timers inherited from the parent. */
+    dill_list_init(&dill_timers);
+    /* This has to be recomputed, just in case. */
+    dill_maxfds = -1;
+}
+
+void dill_poller_postfork(int parent) {
+    dill_poller_term();
+    dill_parent = parent;
+    dill_poller_init();
+}
 
 /* Adds a timer clause to the list of waited for clauses. */
 void dill_addtimer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
@@ -71,13 +109,72 @@ static int dill_timer_next(void) {
     return (int) (nw >= deadline ? 0 : deadline - nw);
 }
 
+int dill_fdin(int fd, int64_t deadline, const char *current) {
+    /* TODO: deadline == 0? */
+    dill_poller_init();
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(fd < 0 || fd >= dill_maxfds)) {errno = EBADF; return -1;}
+    struct dill_clause fdcl;
+    struct dill_tmcl tmcl;
+    rc = dill_pollset_addin(&fdcl, 1, fd);
+    if(dill_slow(rc < 0)) return -1;
+    if(deadline > 0)
+        dill_addtimer(&tmcl, 2, deadline);
+    int id = dill_wait();
+    if(dill_slow(id < 0)) return -1;
+    if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
+    dill_assert(id == 1);
+    return 0;
+}
+
+int dill_fdout(int fd, int64_t deadline, const char *current) {
+    /* TODO: deadline == 0? */
+    dill_poller_init();
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(fd < 0 || fd >= dill_maxfds)) {errno = EBADF; return -1;}
+    struct dill_clause fdcl;
+    struct dill_tmcl tmcl;
+    rc = dill_pollset_addout(&fdcl, 1, fd);
+    if(dill_slow(rc < 0)) return -1;
+    if(deadline > 0)
+        dill_addtimer(&tmcl, 2, deadline);
+    int id = dill_wait();
+    if(dill_slow(id < 0)) return -1;
+    if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
+    dill_assert(id == 1);
+    return 0;
+}
+
+void fdclean(int fd) {
+    dill_poller_init();
+    dill_pollset_clean(fd);
+}
+
+int dill_msleep(int64_t deadline, const char *current) {
+    dill_poller_init();
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) return -1;
+    /* Trivial case. No waiting, but we do want a context switch. */
+    if(dill_slow(deadline == 0)) return yield();
+    /* Actual waiting. */
+    struct dill_tmcl tmcl;
+    if(deadline > 0)
+        dill_addtimer(&tmcl, 1, deadline);
+    int id = dill_wait();
+    if(dill_slow(id < 0)) return -1;
+    dill_assert(id == 1);
+    return 0;
+}
+
 void dill_poller_wait(int block) {
     dill_poller_init();
     while(1) {
         /* Compute timeout for the subsequent poll. */
         int timeout = block ? dill_timer_next() : 0;
         /* Wait for events. */
-        int fd_fired = dill_poller_poll(timeout);
+        int fd_fired = dill_pollset_poll(timeout);
         /* Fire all expired timers. */
         int timer_fired = 0;
         if(!dill_list_empty(&dill_timers)) {
@@ -98,70 +195,6 @@ void dill_poller_wait(int block) {
         /* If timeout was hit but there were no expired timers do the poll
            again. It can happen if the timers were canceled in the meantime. */
     }
-}
-
-int dill_fdin(int fd, int64_t deadline, const char *current) {
-    /* TODO: deadline == 0? */
-    dill_poller_init();
-    int rc = dill_canblock();
-    if(dill_slow(rc < 0)) return -1;
-    struct dill_clause fdcl;
-    struct dill_tmcl tmcl;
-    rc = dill_poller_addin(&fdcl, 1, fd);
-    if(dill_slow(rc < 0)) return -1;
-    if(deadline > 0)
-        dill_addtimer(&tmcl, 2, deadline);
-    int id = dill_wait();
-    if(dill_slow(id < 0)) return -1;
-    if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
-    dill_assert(id == 1);
-    return 0;
-}
-
-int dill_fdout(int fd, int64_t deadline, const char *current) {
-    /* TODO: deadline == 0? */
-    dill_poller_init();
-    int rc = dill_canblock();
-    if(dill_slow(rc < 0)) return -1;
-    struct dill_clause fdcl;
-    struct dill_tmcl tmcl;
-    rc = dill_poller_addout(&fdcl, 1, fd);
-    if(dill_slow(rc < 0)) return -1;
-    if(deadline > 0)
-        dill_addtimer(&tmcl, 2, deadline);
-    int id = dill_wait();
-    if(dill_slow(id < 0)) return -1;
-    if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
-    dill_assert(id == 1);
-    return 0;
-}
-
-void fdclean(int fd) {
-    dill_poller_init();
-    dill_poller_clean(fd);
-}
-
-int dill_msleep(int64_t deadline, const char *current) {
-    int rc = dill_canblock();
-    if(dill_slow(rc < 0)) return -1;
-    /* Trivial case. No waiting, but we do want a context switch. */
-    if(dill_slow(deadline == 0)) return yield();
-    /* Actual waiting. */
-    dill_poller_init();
-    struct dill_tmcl tmcl;
-    if(deadline > 0)
-        dill_addtimer(&tmcl, 1, deadline);
-    int id = dill_wait();
-    if(dill_slow(id < 0)) return -1;
-    dill_assert(id == 1);
-    return 0;
-}
-
-void dill_poller_postfork(int parent) {
-    /* Get rid of all the timers inherited from the parent. */
-    dill_list_init(&dill_timers);
-    /* Clean up the pollset. */
-    dill_poller_pfork(parent);
 }
 
 /* Include the poll-mechanism-specific stuff. */
