@@ -157,7 +157,7 @@ static void dill_pollset_clean(int fd) {
     }
 }
 
-static int dill_pollset_wait(int timeout) {
+static int dill_pollset_poll(int timeout) {
     /* Apply any changes to the pollset. */
     struct kevent chngs[DILL_CHNGSSIZE];
     int nchngs = 0;
