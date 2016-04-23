@@ -41,7 +41,6 @@
 
 #define FDW_IN 1
 #define FDW_OUT 2
-#define FDW_ERR 4
 
 static int dill_kfd = -1;
 
@@ -221,8 +220,10 @@ static int dill_pollset_wait(int timeout) {
             continue;
         dill_assert(nevs >= 0);
         break;
+        /* TODO: Decrease timeout! */
     }
-    /* Join events on file descriptor basis. */
+    /* Join events on file descriptor basis.
+       Put all the firing fds into the changelist. */
     int i;
     for(i = 0; i != nevs; ++i) {
         dill_assert(evs[i].flags != EV_ERROR);
@@ -230,7 +231,7 @@ static int dill_pollset_wait(int timeout) {
         struct dill_fdinfo *fdi = &dill_fdinfos[fd];
         /* Add firing event to the result list. */
         if(evs[i].flags == EV_EOF)
-            fdi->firing |= FDW_ERR;
+            fdi->firing |= (FDW_IN | FDW_OUT);
         else {
             if(evs[i].filter == EVFILT_READ)
                 fdi->firing |= FDW_IN;
@@ -248,18 +249,20 @@ static int dill_pollset_wait(int timeout) {
         int fd = chl - 1;
         struct dill_fdinfo *fdi = &dill_fdinfos[fd];
         /* Signal from parent. */
-        if(dill_slow(fdi == dill_parent)) {
+        if(dill_slow(fdi == dill_parentinfo)) {
             dill_parentinfo = NULL;
             dill_shutdown();
         }
         else {            
-            if(!dill_list_empty(&fdi->in)) {
-                dill_resume(fdi->in, fdi->firing & (FDW_IN | FDW_ERR));
-                fdi->in = NULL;
+            if(!dill_list_empty(&fdi->in) && (fdi->firing & FDW_IN)) {
+                struct dill_clause *cl = dill_cont(dill_list_begin(&fdi->in),
+                    struct dill_clause, epitem);
+                dill_trigger(cl, 0);
             }
-            if(!dill_list_empty(&fdi->out)) {
-                dill_resume(fdi->out, fdi->firing & (FDW_OUT | FDW_ERR));
-                fdi->out = NULL;
+            if(!dill_list_empty(&fdi->out) && (fdi->firing & FDW_OUT)) {
+                struct dill_clause *cl = dill_cont(dill_list_begin(&fdi->in),
+                    struct dill_clause, epitem);
+                dill_trigger(cl, 0);
             }
         }
         fdi->firing = 0;

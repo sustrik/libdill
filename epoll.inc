@@ -177,6 +177,7 @@ static int dill_pollset_poll(int timeout) {
             continue;
         dill_assert(numevs >= 0);
         break;
+        /* TODO: Decrease timeout! */
     }
     /* Fire file descriptor events. */
     int i;
