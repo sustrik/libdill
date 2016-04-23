@@ -32,8 +32,8 @@
 /* Forward declarations for the functions implemented by specific poller
    mechanisms (poll, epoll, kqueue). */
 void dill_poller_init(void);
-static void dill_poller_addin(struct dill_clause *cl, int id, int fd);
-static void dill_poller_addout(struct dill_clause *cl, int id, int fd);
+static int dill_poller_addin(struct dill_clause *cl, int id, int fd);
+static int dill_poller_addout(struct dill_clause *cl, int id, int fd);
 static void dill_poller_clean(int fd);
 static int dill_poller_poll(int timeout);
 static void dill_poller_pfork(int parent);
@@ -107,7 +107,8 @@ int dill_fdin(int fd, int64_t deadline, const char *current) {
     if(dill_slow(rc < 0)) return -1;
     struct dill_clause fdcl;
     struct dill_tmcl tmcl;
-    dill_poller_addin(&fdcl, 1, fd);
+    rc = dill_poller_addin(&fdcl, 1, fd);
+    if(dill_slow(rc < 0)) return -1;
     if(deadline > 0)
         dill_addtimer(&tmcl, 2, deadline);
     int id = dill_wait();
@@ -124,7 +125,8 @@ int dill_fdout(int fd, int64_t deadline, const char *current) {
     if(dill_slow(rc < 0)) return -1;
     struct dill_clause fdcl;
     struct dill_tmcl tmcl;
-    dill_poller_addout(&fdcl, 1, fd);
+    rc = dill_poller_addout(&fdcl, 1, fd);
+    if(dill_slow(rc < 0)) return -1;
     if(deadline > 0)
         dill_addtimer(&tmcl, 2, deadline);
     int id = dill_wait();

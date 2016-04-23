@@ -83,8 +83,9 @@ void dill_poller_init(void) {
     errno = 0;
 }
 
-static void dill_poller_addin(struct dill_clause *cl, int id, int fd) {
+static int dill_poller_addin(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
     /* If fd is not yet in the pollset add it there. */
     if(!fdi->next) {
         fdi->next = dill_changelist;
@@ -92,10 +93,12 @@ static void dill_poller_addin(struct dill_clause *cl, int id, int fd) {
     }
     /* Add the clause to the list of waited for clauses. */
     dill_waitfor(cl, id, &fdi->in, NULL);
+    return 0;
 }
 
-static void dill_poller_addout(struct dill_clause *cl, int id, int fd) {
+static int dill_poller_addout(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
     /* If fd is not yet in the pollset add it there. */
     if(!fdi->next) {
         fdi->next = dill_changelist;
@@ -103,6 +106,7 @@ static void dill_poller_addout(struct dill_clause *cl, int id, int fd) {
     }
     /* Add the clause to the list of waited for clauses. */
     dill_waitfor(cl, id, &fdi->out, NULL);
+    return 0;
 }
 
 static void dill_poller_clean(int fd) {
