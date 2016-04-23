@@ -262,7 +262,7 @@ static int dill_pollset_poll(int timeout) {
                 dill_trigger(cl, 0);
             }
             if(!dill_list_empty(&fdi->out) && (fdi->firing & FDW_OUT)) {
-                struct dill_clause *cl = dill_cont(dill_list_begin(&fdi->in),
+                struct dill_clause *cl = dill_cont(dill_list_begin(&fdi->out),
                     struct dill_clause, epitem);
                 dill_trigger(cl, 0);
             }
