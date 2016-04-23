@@ -20,26 +20,23 @@
 
 */
 
-#ifndef DILL_POLLER_INCLUDED
-#define DILL_POLLER_INCLUDED
+#include "cr.h"
+#include "libdill.h"
+#include "poller.h"
+#include "utils.h"
 
-/* Timer clause. */
-struct dill_tmcl {
-    struct dill_clause cl;
-    int64_t deadline;
-};
-
-/* Add timer to the list of active clauses. */
-void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline);
-
-/* Wait for external events such as timers or file descriptors. If block is set
-   to 0 the function will poll for events and return immediately. If it is set
-   to 1 it will block until there's at least one event to process. */
-void dill_poller_wait(int block);
-
-/* Deallocates existing polling infrastructure and creates a new one.
-   'parent' is a file descriptor that will signal in and/or err if the process
-   is supposed to shut down. */
-void dill_poller_postfork(int parent);
-
-#endif
+int dill_msleep(int64_t deadline, const char *current) {
+    /* Return ECANCELED if shutting down. */
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) return -1;
+    /* Trivial case. No waiting, but we do want a context switch. */
+    if(dill_slow(deadline == 0)) return yield();
+    /* Actual waiting. */
+    struct dill_tmcl tmcl;
+    if(deadline > 0)
+        dill_timer(&tmcl, 1, deadline);
+    int id = dill_wait();
+    if(dill_slow(id < 0)) return -1;
+    dill_assert(id == 1);
+    return 0;
+}

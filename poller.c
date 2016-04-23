@@ -81,7 +81,8 @@ void dill_poller_postfork(int parent) {
 }
 
 /* Adds a timer clause to the list of waited for clauses. */
-void dill_addtimer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
+void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
+    dill_poller_init();
     dill_assert(deadline >= 0);
     tmcl->deadline = deadline;
     /* Move the timer into the right place in the ordered list
@@ -120,7 +121,7 @@ int dill_fdin(int fd, int64_t deadline, const char *current) {
     rc = dill_pollset_addin(&fdcl, 1, fd);
     if(dill_slow(rc < 0)) return -1;
     if(deadline > 0)
-        dill_addtimer(&tmcl, 2, deadline);
+        dill_timer(&tmcl, 2, deadline);
     int id = dill_wait();
     if(dill_slow(id < 0)) return -1;
     if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
@@ -139,7 +140,7 @@ int dill_fdout(int fd, int64_t deadline, const char *current) {
     rc = dill_pollset_addout(&fdcl, 1, fd);
     if(dill_slow(rc < 0)) return -1;
     if(deadline > 0)
-        dill_addtimer(&tmcl, 2, deadline);
+        dill_timer(&tmcl, 2, deadline);
     int id = dill_wait();
     if(dill_slow(id < 0)) return -1;
     if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
@@ -150,22 +151,6 @@ int dill_fdout(int fd, int64_t deadline, const char *current) {
 void fdclean(int fd) {
     dill_poller_init();
     dill_pollset_clean(fd);
-}
-
-int dill_msleep(int64_t deadline, const char *current) {
-    dill_poller_init();
-    int rc = dill_canblock();
-    if(dill_slow(rc < 0)) return -1;
-    /* Trivial case. No waiting, but we do want a context switch. */
-    if(dill_slow(deadline == 0)) return yield();
-    /* Actual waiting. */
-    struct dill_tmcl tmcl;
-    if(deadline > 0)
-        dill_addtimer(&tmcl, 1, deadline);
-    int id = dill_wait();
-    if(dill_slow(id < 0)) return -1;
-    dill_assert(id == 1);
-    return 0;
 }
 
 void dill_poller_wait(int block) {

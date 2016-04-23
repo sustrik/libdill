@@ -37,6 +37,7 @@ libdill_la_SOURCES = \
     cr.c \
     epoll.inc \
     handle.c \
+    libdill.c \
     list.h \
     list.c \
     now.c \
