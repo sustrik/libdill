@@ -30,6 +30,8 @@
 #include "libdill.h"
 #include "slist.h"
 
+struct dill_cr;
+
 struct dill_clause {
     /* The coroutine that owns this clause. */
     struct dill_cr *cr;
