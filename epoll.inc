@@ -93,24 +93,6 @@ static void dill_pollset_term(void) {
     dill_parentinfo = NULL;
 }
 
-void dill_pollset_postfork(int parent) {
-    /* Re-create the polling infrastructure. */
-    if(dill_efd != -1) {
-        int rc = close(dill_efd);
-        dill_assert(rc == 0);
-    }
-    dill_efd = -1;
-    dill_fdinfos = NULL;
-    dill_changelist = DILL_ENDLIST;
-    dill_poller_init();
-    /* Start polling for signals from the parent. */
-    dill_parentinfo = &dill_fdinfos[parent];
-    dill_assert(dill_list_empty(&dill_parentinfo->in));
-    dill_assert(!dill_parentinfo->next);
-    dill_parentinfo->next = dill_changelist;
-    dill_changelist = parent + 1;
-}
-
 static int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}

@@ -174,12 +174,10 @@ void dill_poller_wait(int block) {
 #include "poll.inc"
 /* Defaults. */
 #elif defined __linux__ && !defined DILL_NO_EPOLL
-#error
 #include "epoll.inc"
 #elif defined BSD && !defined DILL_NO_KQUEUE
 #include "kqueue.inc"
 #else
-#error
 #include "poll.inc"
 #endif
 
