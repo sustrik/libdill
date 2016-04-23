@@ -111,7 +111,7 @@ void dill_pollset_postfork(int parent) {
     dill_changelist = parent + 1;
 }
 
-static int dill_pollset_addin(struct dill_clause *cl, int id, int fd) {
+static int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
     /* If fd is not yet in the pollset add it there. */
@@ -124,7 +124,7 @@ static int dill_pollset_addin(struct dill_clause *cl, int id, int fd) {
     return 0;
 }
 
-static int dill_pollset_addout(struct dill_clause *cl, int id, int fd) {
+static int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
     /* If fd is not yet in the pollset add it there. */

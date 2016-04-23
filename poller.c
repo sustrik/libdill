@@ -41,8 +41,8 @@ static int dill_parent = -1;
    mechanisms (poll, epoll, kqueue). */
 static int dill_pollset_init(void);
 static void dill_pollset_term(void);
-static int dill_pollset_addin(struct dill_clause *cl, int id, int fd);
-static int dill_pollset_addout(struct dill_clause *cl, int id, int fd);
+static int dill_pollset_in(struct dill_clause *cl, int id, int fd);
+static int dill_pollset_out(struct dill_clause *cl, int id, int fd);
 static void dill_pollset_clean(int fd);
 static int dill_pollset_poll(int timeout);
 
@@ -113,13 +113,13 @@ static int dill_timer_next(void) {
 int dill_in(struct dill_clause *cl, int id, int fd) {
     dill_poller_init();
     if(dill_slow(fd < 0 || fd >= dill_maxfds)) {errno = EBADF; return -1;}
-    return dill_pollset_addin(cl, id, fd);
+    return dill_pollset_in(cl, id, fd);
 }
 
 int dill_out(struct dill_clause *cl, int id, int fd) {
     dill_poller_init();
     if(dill_slow(fd < 0 || fd >= dill_maxfds)) {errno = EBADF; return -1;}
-    return dill_pollset_addout(cl, id, fd);
+    return dill_pollset_out(cl, id, fd);
 }
 
 void fdclean(int fd) {

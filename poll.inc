@@ -109,7 +109,7 @@ static void dill_pollset_term(void) {
     dill_fdinfos = NULL;
 }
 
-static int dill_pollset_addin(struct dill_clause *cl, int id, int fd) {
+static int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(fdi->idx < 0) {
         dill_assert(dill_pollset_size < dill_maxfds);
@@ -123,7 +123,7 @@ static int dill_pollset_addin(struct dill_clause *cl, int id, int fd) {
     return 0;
 }
 
-static int dill_pollset_addout(struct dill_clause *cl, int id, int fd) {
+static int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(fdi->idx < 0) {
         dill_assert(dill_pollset_size < dill_maxfds);
