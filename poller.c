@@ -122,7 +122,7 @@ int dill_out(struct dill_clause *cl, int id, int fd) {
     return dill_pollset_out(cl, id, fd);
 }
 
-void fdclean(int fd) {
+void dill_clean(int fd) {
     dill_poller_init();
     dill_pollset_clean(fd);
 }

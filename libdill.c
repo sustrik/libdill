@@ -83,3 +83,7 @@ int dill_fdout(int fd, int64_t deadline, const char *current) {
     return 0;
 }
 
+void fdclean(int fd) {
+    dill_clean(fd);
+}
+

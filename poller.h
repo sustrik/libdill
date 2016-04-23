@@ -38,6 +38,9 @@ int dill_in(struct dill_clause *cl, int id, int fd);
 /* Wait for out event on a file descriptor. */
 int dill_out(struct dill_clause *cl, int id, int fd);
 
+/* Cleans cached info about the fd. */
+void dill_clean(int fd);
+
 /* Wait for external events such as timers or file descriptors. If block is set
    to 0 the function will poll for events and return immediately. If it is set
    to 1 it will block until there's at least one event to process. */
