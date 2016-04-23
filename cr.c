@@ -32,6 +32,48 @@
 #include "stack.h"
 #include "utils.h"
 
+/* The coroutine. The memory layout looks like this:
+   +-------------------------------------------------------------+---------+
+   |                                                      stack  | dill_cr |
+   +-------------------------------------------------------------+---------+
+   - dill_cr contains generic book-keeping info about the coroutine
+   - stack is a standard C stack; it grows downwards (at the moment libdill
+     doesn't support microarchitectures where stack grows upwards)
+*/
+struct dill_cr {
+    /* When coroutine is ready for execution but not running yet,
+       it lives in this list (dill_ready). 'id' is a result value to return
+       from dill_wait() once the coroutine is resumed. Additionally, errno
+       will be set to value of 'err'. */
+    struct dill_slist_item ready;
+    int id;
+    int err;
+    /* When coroutine is suspended 'ctx' holds the context
+       (registers and such). */
+    sigjmp_buf ctx;
+    /* If coroutine is blocked, here's the list of clauses it waits for. */
+    struct dill_slist clauses;
+    /* Coroutine-local storage. */
+    void *cls;
+    /* There are two possible reasons to disable blocking calls.
+       1. The coroutine is being closed by its owner.
+       2. The execution is happenin within a context of hclose() function. */
+    unsigned int no_blocking1 : 1;
+    unsigned int no_blocking2 : 1;
+    /* Set once coroutine has finished its execution. */
+    unsigned int done : 1;
+    /* When coroutine handle is being closed, this is the pointer to the
+       coroutine that is doing the hclose() call. */
+    struct dill_cr *closer;
+#if defined DILL_VALGRIND
+    /* Valgrind stack identifier. This way valgrind knows which areas of
+       memory are used as a stacks and doesn't produce spurious warnings.
+       Well, sort of. The mechanism is not perfect, but it's still better
+       than nothing. */
+    int sid;
+#endif
+};
+
 /* Storage for constants used by go() macro. */
 volatile int dill_unoptimisable1 = 1;
 volatile void *dill_unoptimisable2 = NULL;
