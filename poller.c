@@ -58,6 +58,12 @@ static void dill_poller_init() {
     int rc = getrlimit(RLIMIT_NOFILE, &rlim);
     dill_assert(rc == 0);
     dill_maxfds = rlim.rlim_max;
+#if defined BSD
+    /* The above behaves weirdly on newer versions of OSX, ruturning limit
+       of -1. Fix it by using OPEN_MAX instead. */
+    if(dill_maxfds < 0)
+        dill_maxfds = OPEN_MAX;
+#endif
     /* Timers. */
     dill_list_init(&dill_timers);
     /* Polling-mechanism-specific intitialisation. */

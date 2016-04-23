@@ -37,10 +37,12 @@ libdill_la_SOURCES = \
     cr.c \
     epoll.inc \
     handle.c \
+    kqueue.inc \
     libdill.c \
     list.h \
     list.c \
     now.c \
+    poll.inc \
     poller.h \
     poller.c \
     proc.c \
