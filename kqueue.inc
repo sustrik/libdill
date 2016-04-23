@@ -92,25 +92,29 @@ void dill_pollset_term(void) {
     dill_kfd = -1;
 }
 
-static int dill_poller_in(int fd) {
-    struct dill_fdinfo *crp = &dill_fdinfos[fd];
-    if(dill_slow(crp->in)) {errno = EEXIST; return -1;}
-    crp->in = dill_running;
-    if(!crp->next) {
-        crp->next = dill_changelist;
+static int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
+    struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
+    /* If fd is not yet in the pollset add it there. */
+    if(!fdi->next) {
+        fdi->next = dill_changelist;
         dill_changelist = fd + 1;
     }
+    /* Add the clause to the list of waited for clauses. */
+    dill_waitfor(cl, id, &fdi->in, NULL);
     return 0;
 }
 
-static int dill_poller_out(int fd) {
-    struct dill_fdinfo *crp = &dill_fdinfos[fd];
-    if(dill_slow(crp->out)) {errno = EEXIST; return -1;}
-    crp->out = dill_running;
-    if(!crp->next) {
-        crp->next = dill_changelist;
+static int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
+    struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
+    /* If fd is not yet in the pollset add it there. */
+    if(!fdi->next) {
+        fdi->next = dill_changelist;
         dill_changelist = fd + 1;
     }
+    /* Add the clause to the list of waited for clauses. */
+    dill_waitfor(cl, id, &fdi->out, NULL);
     return 0;
 }
 
@@ -123,29 +127,21 @@ static void dill_poller_rmin(int fd) {
         dill_changelist = fd + 1;
     }
 }
-
-static void dill_poller_rmout(int fd) {
-    struct dill_fdinfo *crp = &dill_fdinfos[fd];
-    crp->out = NULL;
-    if(!crp->next) {
-        crp->next = dill_changelist;
-        dill_changelist = fd + 1;
-    }
-}
 #endif
 
 static void dill_pollset_clean(int fd) {
-    struct dill_fdinfo *crp = &dill_fdinfos[fd];
-    dill_assert(!crp->in);
-    dill_assert(!crp->out);
+    struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    /* We cannot clean an fd that someone is waiting for. */
+    dill_assert(dill_list_empty(&fdi->in));
+    dill_assert(dill_list_empty(&fdi->out));
     /* Remove the file descriptor from the pollset, if it is still there. */
     int nevs = 0;
     struct kevent evs[2];
-    if(crp->currevs & FDW_IN) {
+    if(fdi->currevs & FDW_IN) {
         EV_SET(&evs[nevs], fd, EVFILT_READ, EV_DELETE, 0, 0, 0);
         ++nevs;
     }
-    if(crp->currevs & FDW_OUT) {
+    if(fdi->currevs & FDW_OUT) {
         EV_SET(&evs[nevs], fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
         ++nevs;
     }
@@ -154,9 +150,9 @@ static void dill_pollset_clean(int fd) {
         dill_assert(rc != -1);
     }
     /* Clean up the cache. */
-    crp->currevs = 0;
-    if(!crp->next) {
-        crp->next = dill_changelist;
+    fdi->currevs = 0;
+    if(!fdi->next) {
+        fdi->next = dill_changelist;
         dill_changelist = fd + 1;
     }
 }
@@ -176,38 +172,38 @@ static int dill_pollset_wait(int timeout) {
             nchngs = 0;
         }
         int fd = dill_changelist - 1;
-        struct dill_fdinfo *crp = &dill_fdinfos[fd];
-        if(crp->in) {
-            if(!(crp->currevs & FDW_IN)) {
+        struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+        if(!dill_list_empty(&fdi->in)) {
+            if(!(fdi->currevs & FDW_IN)) {
                 EV_SET(&chngs[nchngs], fd, EVFILT_READ, EV_ADD, 0, 0, 0);
-                crp->currevs |= FDW_IN;
+                fdi->currevs |= FDW_IN;
                 ++nchngs;
             }
         }
         else {
-            if(crp->currevs & FDW_IN) {
+            if(fdi->currevs & FDW_IN) {
                 EV_SET(&chngs[nchngs], fd, EVFILT_READ, EV_DELETE, 0, 0, 0);
-                crp->currevs &= ~FDW_IN;
+                fdi->currevs &= ~FDW_IN;
                 ++nchngs;
             }
         }
-        if(crp->out) {
-            if(!(crp->currevs & FDW_OUT)) {
+        if(!dill_list_empty(&fdi->out)) {
+            if(!(fdi->currevs & FDW_OUT)) {
                 EV_SET(&chngs[nchngs], fd, EVFILT_WRITE, EV_ADD, 0, 0, 0);
-                crp->currevs |= FDW_OUT;
+                fdi->currevs |= FDW_OUT;
                 ++nchngs;
            }
         }
         else {
-            if(crp->currevs & FDW_OUT) {
+            if(fdi->currevs & FDW_OUT) {
                 EV_SET(&chngs[nchngs], fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
-                crp->currevs &= ~FDW_OUT;
+                fdi->currevs &= ~FDW_OUT;
                 ++nchngs;
             }
         }
-        crp->firing = 0;
-        dill_changelist = crp->next;
-        crp->next = 0;
+        fdi->firing = 0;
+        dill_changelist = fdi->next;
+        fdi->next = 0;
     }
     /* Wait for events. */
     struct kevent evs[DILL_EVSSIZE];
@@ -230,18 +226,18 @@ static int dill_pollset_wait(int timeout) {
     for(i = 0; i != nevs; ++i) {
         dill_assert(evs[i].flags != EV_ERROR);
         int fd = (int)evs[i].ident;
-        struct dill_fdinfo *crp = &dill_fdinfos[fd];
+        struct dill_fdinfo *fdi = &dill_fdinfos[fd];
         /* Add firing event to the result list. */
         if(evs[i].flags == EV_EOF)
-            crp->firing |= FDW_ERR;
+            fdi->firing |= FDW_ERR;
         else {
             if(evs[i].filter == EVFILT_READ)
-                crp->firing |= FDW_IN;
+                fdi->firing |= FDW_IN;
             if(evs[i].filter == EVFILT_WRITE)
-                crp->firing |= FDW_OUT;
+                fdi->firing |= FDW_OUT;
         }
-        if(!crp->next) {
-            crp->next = dill_changelist;
+        if(!fdi->next) {
+            fdi->next = dill_changelist;
             dill_changelist = fd + 1;
         }
     }
@@ -249,31 +245,24 @@ static int dill_pollset_wait(int timeout) {
     uint32_t chl = dill_changelist;
     while(chl != DILL_ENDLIST) {
         int fd = chl - 1;
-        struct dill_fdinfo *crp = &dill_fdinfos[fd];
+        struct dill_fdinfo *fdi = &dill_fdinfos[fd];
         /* Signal from parent. */
-        if(dill_slow(crp == dill_parent)) {
-            dill_cr_close_main();
+        if(dill_slow(fdi == dill_parent)) {
+            dill_parentinfo = NULL;
+            dill_shutdown();
         }
-        else {
-            if(crp->in == crp->out) {
-                dill_assert(crp->in);
-                dill_resume(crp->in, crp->firing);
-                crp->in = NULL;
-                crp->out = NULL;
+        else {            
+            if(!dill_list_empty(&fdi->in)) {
+                dill_resume(fdi->in, fdi->firing & (FDW_IN | FDW_ERR));
+                fdi->in = NULL;
             }
-            else {
-                if(crp->in) {
-                    dill_resume(crp->in, crp->firing & (FDW_IN | FDW_ERR));
-                    crp->in = NULL;
-                }
-                if(crp->out) {
-                    dill_resume(crp->out, crp->firing & (FDW_OUT | FDW_ERR));
-                    crp->out = NULL;
-                }
+            if(!dill_list_empty(&fdi->out)) {
+                dill_resume(fdi->out, fdi->firing & (FDW_OUT | FDW_ERR));
+                fdi->out = NULL;
             }
         }
-        crp->firing = 0;
-        chl = crp->next;
+        fdi->firing = 0;
+        chl = fdi->next;
     }    
     /* Return 0 in case of time out. 1 if at least one coroutine was resumed. */
     return nevs > 0 ? 1 : 0;
