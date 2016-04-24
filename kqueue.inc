@@ -31,6 +31,7 @@
 #include <sys/time.h>
 
 #include "cr.h"
+#include "fd.h"
 #include "list.h"
 #include "utils.h"
 
@@ -61,7 +62,7 @@ static struct dill_fdinfo *dill_parentinfo = NULL;
 int dill_pollset_init(void) {
     int err;
     dill_fdinfos = (struct dill_fdinfo*)
-        calloc(dill_maxfds, sizeof(struct dill_fdinfo));
+        calloc(dill_maxfds(), sizeof(struct dill_fdinfo));
     if(dill_slow(!dill_fdinfos)) {err = ENOMEM; goto error1;}
     dill_kfd = kqueue();
     if(dill_slow(dill_kfd < 0)) {err = errno; goto error2;}

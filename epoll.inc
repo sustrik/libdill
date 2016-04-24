@@ -28,6 +28,7 @@
 #include <sys/epoll.h>
 
 #include "cr.h"
+#include "fd.h"
 #include "list.h"
 #include "utils.h"
 
@@ -59,7 +60,7 @@ static int dill_pollset_init(void) {
     int err;
     /* Allocate one info per fd. */
     dill_fdinfos = (struct dill_fdinfo*)
-        calloc(dill_maxfds, sizeof(struct dill_fdinfo));
+        calloc(dill_maxfds(), sizeof(struct dill_fdinfo));
     if(dill_slow(!dill_fdinfos)) {err = ENOMEM; goto error1;}
     /* Changelist is empty. */
     dill_changelist = DILL_ENDLIST;

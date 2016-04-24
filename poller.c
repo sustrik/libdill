@@ -23,16 +23,15 @@
 */
 
 #include <stdint.h>
-#include <sys/param.h>
-#include <sys/resource.h>
 
 #include "cr.h"
+#include "fd.h"
 #include "list.h"
 #include "poller.h"
 #include "utils.h"
 
-/* Max possible number of file descriptors. */
-static int dill_maxfds = -1;
+/* 1 if dill_poller_init() was already run. */
+static int dill_poller_initialised = 0;
 
 /* File descriptor that becomes readable when parent died or when it is
    shutting down. */
@@ -53,32 +52,21 @@ static struct dill_list dill_timers;
 
 static void dill_poller_init() {
     /* If intialisation was already done, do nothing. */
-    if(dill_fast(dill_maxfds >= 0)) return;
-    /* Get the max number of file descriptors. */
-    struct rlimit rlim;
-    int rc = getrlimit(RLIMIT_NOFILE, &rlim);
-    dill_assert(rc == 0);
-    dill_maxfds = rlim.rlim_max;
-#if defined BSD
-    /* The above behaves weirdly on newer versions of OSX, ruturning limit
-       of -1. Fix it by using OPEN_MAX instead. */
-    if(dill_maxfds < 0)
-        dill_maxfds = OPEN_MAX;
-#endif
+    if(dill_fast(dill_poller_initialised)) return;
+    dill_poller_initialised = 1;
     /* Timers. */
     dill_list_init(&dill_timers);
     /* Polling-mechanism-specific intitialisation. */
-    rc = dill_pollset_init();
+    int rc = dill_pollset_init();
     dill_assert(rc == 0);
 }
 
 static void dill_poller_term(void) {
+    dill_poller_initialised = 0;
     /* Polling-mechanism-specific termination. */
     dill_pollset_term();
     /* Get rid of all the timers inherited from the parent. */
     dill_list_init(&dill_timers);
-    /* This has to be recomputed, just in case. */
-    dill_maxfds = -1;
 }
 
 void dill_poller_postfork(int parent) {
@@ -119,13 +107,13 @@ static int dill_timer_next(void) {
 
 int dill_in(struct dill_clause *cl, int id, int fd) {
     dill_poller_init();
-    if(dill_slow(fd < 0 || fd >= dill_maxfds)) {errno = EBADF; return -1;}
+    if(dill_slow(fd < 0 || fd >= dill_maxfds())) {errno = EBADF; return -1;}
     return dill_pollset_in(cl, id, fd);
 }
 
 int dill_out(struct dill_clause *cl, int id, int fd) {
     dill_poller_init();
-    if(dill_slow(fd < 0 || fd >= dill_maxfds)) {errno = EBADF; return -1;}
+    if(dill_slow(fd < 0 || fd >= dill_maxfds())) {errno = EBADF; return -1;}
     return dill_pollset_out(cl, id, fd);
 }
 
@@ -173,7 +161,7 @@ void dill_poller_wait(int block) {
 #elif defined DILL_POLL
 #include "poll.inc"
 /* Defaults. */
-#elif defined __linux__ && !defined DILL_NO_EPOLL
+#elif 00 && defined __linux__ && !defined DILL_NO_EPOLL
 #include "epoll.inc"
 #elif defined BSD && !defined DILL_NO_KQUEUE
 #include "kqueue.inc"

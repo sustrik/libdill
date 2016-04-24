@@ -28,6 +28,7 @@
 #include <stdlib.h>
 
 #include "cr.h"
+#include "fd.h"
 #include "list.h"
 #include "utils.h"
 
@@ -75,14 +76,14 @@ static int dill_pollset_init(void) {
     int err;
     /* Allocate largest possible pollset. */
     dill_pollset_size = 0;
-    dill_pollset = malloc(sizeof(struct pollfd) * dill_maxfds);
+    dill_pollset = malloc(sizeof(struct pollfd) * dill_maxfds());
     if(dill_slow(!dill_pollset)) {err = ENOMEM; goto error1;}
-    dill_fdinfos = malloc(sizeof(struct dill_fdinfo) * dill_maxfds);
+    dill_fdinfos = malloc(sizeof(struct dill_fdinfo) * dill_maxfds());
     if(dill_slow(!dill_fdinfos)) {err = ENOMEM; goto error2;}
     /* Intialise fd infos. There's no fd in the pollset,
        so set all indices to -1. */
     int i;
-    for(i = 0; i != dill_maxfds; ++i) {
+    for(i = 0; i != dill_maxfds(); ++i) {
         dill_fdinfos[i].idx = -1;
         dill_list_init(&dill_fdinfos[i].in);
         dill_list_init(&dill_fdinfos[i].out);
@@ -112,7 +113,7 @@ static void dill_pollset_term(void) {
 static int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(fdi->idx < 0) {
-        dill_assert(dill_pollset_size < dill_maxfds);
+        dill_assert(dill_pollset_size < dill_maxfds());
         fdi->idx = dill_pollset_size;
         ++dill_pollset_size;
         dill_pollset[fdi->idx].fd = fd;
@@ -126,7 +127,7 @@ static int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
 static int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(fdi->idx < 0) {
-        dill_assert(dill_pollset_size < dill_maxfds);
+        dill_assert(dill_pollset_size < dill_maxfds());
         fdi->idx = dill_pollset_size;
         ++dill_pollset_size;
         dill_pollset[fdi->idx].fd = fd;
