@@ -59,7 +59,7 @@ static struct dill_fdinfo *dill_fdinfos = NULL;
 static uint32_t dill_changelist = DILL_ENDLIST;
 static struct dill_fdinfo *dill_parentinfo = NULL;
 
-int dill_pollset_init(void) {
+int dill_pollset_init(int parent) {
     int err;
     dill_fdinfos = (struct dill_fdinfo*)
         calloc(dill_maxfds(), sizeof(struct dill_fdinfo));
@@ -68,10 +68,10 @@ int dill_pollset_init(void) {
     if(dill_slow(dill_kfd < 0)) {err = errno; goto error2;}
     dill_changelist = DILL_ENDLIST;
     /* Start polling for signals from the parent. */
-    if(dill_parent >= 0) {
-        dill_parentinfo = &dill_fdinfos[dill_parent];
+    if(parent >= 0) {
+        dill_parentinfo = &dill_fdinfos[parent];
         dill_parentinfo->next = dill_changelist;
-        dill_changelist = dill_parent + 1;
+        dill_changelist = parent + 1;
     }
     return 0;
 error2:
@@ -95,7 +95,7 @@ void dill_pollset_term(void) {
     dill_kfd = -1;
 }
 
-static int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
+int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
     /* If fd is not yet in the pollset add it there. */
@@ -108,7 +108,7 @@ static int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     return 0;
 }
 
-static int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
+int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
     /* If fd is not yet in the pollset add it there. */
@@ -121,18 +121,7 @@ static int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     return 0;
 }
 
-#if 0
-static void dill_poller_rmin(int fd) {
-    struct dill_fdinfo *crp = &dill_fdinfos[fd];
-    crp->in = NULL;
-    if(!crp->next) {
-        crp->next = dill_changelist;
-        dill_changelist = fd + 1;
-    }
-}
-#endif
-
-static void dill_pollset_clean(int fd) {
+void dill_pollset_clean(int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     /* We cannot clean an fd that someone is waiting for. */
     dill_assert(dill_list_empty(&fdi->in));
@@ -160,7 +149,7 @@ static void dill_pollset_clean(int fd) {
     }
 }
 
-static int dill_pollset_poll(int timeout) {
+int dill_pollset_poll(int timeout) {
     /* Apply any changes to the pollset. */
     struct kevent chngs[DILL_CHNGSSIZE];
     int nchngs = 0;

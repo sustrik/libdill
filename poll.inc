@@ -53,6 +53,8 @@
 
 */
 
+static int dill_parent = -1;
+
 /* Pollset, as used by poll(2). */
 static int dill_pollset_size = 0;
 static struct pollfd *dill_pollset = NULL;
@@ -72,7 +74,7 @@ struct dill_fdinfo {
    File descriptors are used as indices in this array. */
 static struct dill_fdinfo *dill_fdinfos = NULL;
 
-static int dill_pollset_init(void) {
+int dill_pollset_init(int parent) {
     int err;
     /* Allocate largest possible pollset. */
     dill_pollset_size = 0;
@@ -89,8 +91,9 @@ static int dill_pollset_init(void) {
         dill_list_init(&dill_fdinfos[i].out);
     }
     /* Start waiting for a signal from the parent process. */
-    if(dill_parent >= 0) {
-        dill_pollset[0].fd = dill_parent;
+    if(parent >= 0) {
+        dill_parent = parent;
+        dill_pollset[0].fd = parent;
         dill_pollset[0].events = POLLIN;
         dill_pollset_size = 1;
     }
@@ -103,14 +106,14 @@ error1:
     return -1;
 }
 
-static void dill_pollset_term(void) {
+void dill_pollset_term(void) {
     free(dill_pollset);
     dill_pollset = NULL;
     free(dill_fdinfos);
     dill_fdinfos = NULL;
 }
 
-static int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
+int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(fdi->idx < 0) {
         dill_assert(dill_pollset_size < dill_maxfds());
@@ -124,7 +127,7 @@ static int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     return 0;
 }
 
-static int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
+int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(fdi->idx < 0) {
         dill_assert(dill_pollset_size < dill_maxfds());
@@ -138,10 +141,10 @@ static int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     return 0;
 }
 
-static void dill_pollset_clean(int fd) {
+void dill_pollset_clean(int fd) {
 }
 
-static int dill_pollset_poll(int timeout) {
+int dill_pollset_poll(int timeout) {
     /* Wait for events. */
     int numevs;
     while(1) {

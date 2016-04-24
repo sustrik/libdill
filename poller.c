@@ -28,36 +28,24 @@
 #include "fd.h"
 #include "list.h"
 #include "poller.h"
+#include "pollset.h"
 #include "utils.h"
 
 /* 1 if dill_poller_init() was already run. */
 static int dill_poller_initialised = 0;
 
-/* File descriptor that becomes readable when parent died or when it is
-   shutting down. */
-static int dill_parent = -1;
-
-/* Forward declarations for the functions implemented by specific poller
-   mechanisms (poll, epoll, kqueue). */
-static int dill_pollset_init(void);
-static void dill_pollset_term(void);
-static int dill_pollset_in(struct dill_clause *cl, int id, int fd);
-static int dill_pollset_out(struct dill_clause *cl, int id, int fd);
-static void dill_pollset_clean(int fd);
-static int dill_pollset_poll(int timeout);
-
 /* Global linked list of all timers. The list is ordered.
    First timer to be resumed comes first and so on. */
 static struct dill_list dill_timers;
 
-static void dill_poller_init() {
+static void dill_poller_init(int parent) {
     /* If intialisation was already done, do nothing. */
     if(dill_fast(dill_poller_initialised)) return;
     dill_poller_initialised = 1;
     /* Timers. */
     dill_list_init(&dill_timers);
     /* Polling-mechanism-specific intitialisation. */
-    int rc = dill_pollset_init();
+    int rc = dill_pollset_init(parent);
     dill_assert(rc == 0);
 }
 
@@ -71,13 +59,12 @@ static void dill_poller_term(void) {
 
 void dill_poller_postfork(int parent) {
     dill_poller_term();
-    dill_parent = parent;
-    dill_poller_init();
+    dill_poller_init(parent);
 }
 
 /* Adds a timer clause to the list of waited for clauses. */
 void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
-    dill_poller_init();
+    dill_poller_init(-1);
     dill_assert(deadline >= 0);
     tmcl->deadline = deadline;
     /* Move the timer into the right place in the ordered list
@@ -106,24 +93,24 @@ static int dill_timer_next(void) {
 }
 
 int dill_in(struct dill_clause *cl, int id, int fd) {
-    dill_poller_init();
+    dill_poller_init(-1);
     if(dill_slow(fd < 0 || fd >= dill_maxfds())) {errno = EBADF; return -1;}
     return dill_pollset_in(cl, id, fd);
 }
 
 int dill_out(struct dill_clause *cl, int id, int fd) {
-    dill_poller_init();
+    dill_poller_init(-1);
     if(dill_slow(fd < 0 || fd >= dill_maxfds())) {errno = EBADF; return -1;}
     return dill_pollset_out(cl, id, fd);
 }
 
 void dill_clean(int fd) {
-    dill_poller_init();
+    dill_poller_init(-1);
     dill_pollset_clean(fd);
 }
 
 void dill_poller_wait(int block) {
-    dill_poller_init();
+    dill_poller_init(-1);
     while(1) {
         /* Compute timeout for the subsequent poll. */
         int timeout = block ? dill_timer_next() : 0;
@@ -150,22 +137,4 @@ void dill_poller_wait(int block) {
            again. It can happen if the timers were canceled in the meantime. */
     }
 }
-
-/* Include the poll-mechanism-specific stuff. */
-
-/* User overloads. */
-#if defined DILL_EPOLL
-#include "epoll.inc"
-#elif defined DILL_KQUEUE
-#include "kqueue.inc"
-#elif defined DILL_POLL
-#include "poll.inc"
-/* Defaults. */
-#elif 00 && defined __linux__ && !defined DILL_NO_EPOLL
-#include "epoll.inc"
-#elif defined BSD && !defined DILL_NO_KQUEUE
-#include "kqueue.inc"
-#else
-#include "poll.inc"
-#endif
 

@@ -47,6 +47,8 @@ libdill_la_SOURCES = \
     poll.inc \
     poller.h \
     poller.c \
+    pollset.h \
+    pollset.c \
     proc.c \
     slist.h \
     slist.c \

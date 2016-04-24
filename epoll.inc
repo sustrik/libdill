@@ -56,7 +56,7 @@ static struct dill_fdinfo *dill_fdinfos = NULL;
 static uint32_t dill_changelist = DILL_ENDLIST;
 static struct dill_fdinfo *dill_parentinfo = NULL;
 
-static int dill_pollset_init(void) {
+int dill_pollset_init(int parent) {
     int err;
     /* Allocate one info per fd. */
     dill_fdinfos = (struct dill_fdinfo*)
@@ -68,10 +68,10 @@ static int dill_pollset_init(void) {
     dill_efd = epoll_create(1);
     if(dill_slow(dill_efd < 0)) {err = errno; goto error2;}
     /* Start polling for signals from the parent. */
-    if(dill_parent >= 0) {
-        dill_parentinfo = &dill_fdinfos[dill_parent];
+    if(parent >= 0) {
+        dill_parentinfo = &dill_fdinfos[parent];
         dill_parentinfo->next = dill_changelist;
-        dill_changelist = dill_parent + 1;
+        dill_changelist = parent + 1;
     }
     return 0;
 error2:
@@ -82,7 +82,7 @@ error1:
     return -1;
 }
 
-static void dill_pollset_term(void) {
+void dill_pollset_term(void) {
     if(dill_efd >= 0) {
         int rc = close(dill_efd);
         dill_assert(rc == 0);
@@ -94,7 +94,7 @@ static void dill_pollset_term(void) {
     dill_parentinfo = NULL;
 }
 
-static int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
+int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
     /* If fd is not yet in the pollset add it there. */
@@ -107,7 +107,7 @@ static int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     return 0;
 }
 
-static int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
+int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
     /* If fd is not yet in the pollset add it there. */
@@ -120,7 +120,7 @@ static int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     return 0;
 }
 
-static void dill_pollset_clean(int fd) {
+void dill_pollset_clean(int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     /* We cannot clean an fd that someone is waiting for. */
     dill_assert(dill_list_empty(&fdi->in));
@@ -141,7 +141,7 @@ static void dill_pollset_clean(int fd) {
     }
 }
 
-static int dill_pollset_poll(int timeout) {
+int dill_pollset_poll(int timeout) {
     /* Apply any changes to the pollset.
        TODO: Use epoll_ctl_batch once available. */
     while(dill_changelist != DILL_ENDLIST) {
