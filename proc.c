@@ -30,7 +30,6 @@
 
 #include "cr.h"
 #include "libdill.h"
-#include "poller.h"
 #include "utils.h"
 
 struct dill_proc {
@@ -79,10 +78,7 @@ int dill_proc_prologue(int *hndl, const char *created) {
         close(closepipe[1]);
         /* This call will also promote currently running coroutine to the
            position of main coroutine in the process. */
-        dill_cr_postfork();
-        /* Closes all the existing polling infrastructure tied to the parent
-           process and creates a fresh one for the child. */
-        dill_poller_postfork(closepipe[0]);
+        dill_postfork(closepipe[0]);
         return 1;
     }
     /* Parent. */

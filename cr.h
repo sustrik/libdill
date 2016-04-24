@@ -47,6 +47,12 @@ struct dill_clause {
     struct dill_list *eplist;
 };
 
+/* Timer clause. */
+struct dill_tmcl {
+    struct dill_clause cl;
+    int64_t deadline;
+};
+
 /* When dill_wait() is called next time, the coroutine will wait
    (among other clauses) for this clause. 'id' must not be negative.
    'eplist' is the list to add the clause to (can be NULL). 'epitem' is the
@@ -72,6 +78,15 @@ int dill_wait(void);
 void dill_trigger(struct dill_clause *cl, int err);
 void dill_cancel(struct dill_cr *cr, int err);
 
+/* Add timer to the list of active clauses. */
+void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline);
+
+/* Wait for in event on a file descriptor. */
+int dill_in(struct dill_clause *cl, int id, int fd);
+
+/* Wait for out event on a file descriptor. */
+int dill_out(struct dill_clause *cl, int id, int fd);
+
 /* Starts canceling the main coroutine. */
 void dill_shutdown(void);
 
@@ -79,11 +94,16 @@ void dill_shutdown(void);
    Returns -1 and sets errno to ECANCELED otherwise. */
 int dill_canblock(void);
 
-/* Makes the current coroutine the main coroutine of the child process. */
-void dill_cr_postfork(void);
-
 /* TODO: Can we get rid of this function? */
 int dill_no_blocking2(int val);
+
+/* Cleans cached info about the fd. */
+void dill_clean(int fd);
+
+/* Makes the current coroutine the main coroutine of the child process.
+   'parent' is a file descriptor that will signal in and/or err if the process
+   is supposed to shut down. */
+void dill_postfork(int parent);
 
 #endif
 

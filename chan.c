@@ -29,7 +29,6 @@
 #include "cr.h"
 #include "libdill.h"
 #include "list.h"
-#include "poller.h"
 #include "utils.h"
 
 /* The channl. Memory layout of a channel looks like this:

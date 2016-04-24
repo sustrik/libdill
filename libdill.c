@@ -22,7 +22,6 @@
 
 #include "cr.h"
 #include "libdill.h"
-#include "poller.h"
 #include "utils.h"
 
 int dill_msleep(int64_t deadline, const char *current) {
