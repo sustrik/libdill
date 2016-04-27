@@ -199,9 +199,8 @@ static void dill_poller_wait(int block) {
             }
         }
         /* Wait for events. */
-        int fd_fired = dill_pollset_poll(timeout);
+        int fired = dill_pollset_poll(timeout);
         /* Fire all expired timers. */
-        int timer_fired = 0;
         if(!dill_list_empty(&dill_timers)) {
             int64_t nw = now();
             while(!dill_list_empty(&dill_timers)) {
@@ -211,11 +210,11 @@ static void dill_poller_wait(int block) {
                     break;
                 dill_list_erase(&dill_timers, dill_list_begin(&dill_timers));
                 dill_trigger(&tmcl->cl, ETIMEDOUT);
-                timer_fired = 1;
+                fired = 1;
             }
         }
         /* Never retry the poll in non-blocking mode. */
-        if(!block || fd_fired || timer_fired)
+        if(!block || fired)
             break;
         /* If timeout was hit but there were no expired timers do the poll
            again. It can happen if the timers were canceled in the meantime. */
