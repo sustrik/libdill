@@ -62,10 +62,10 @@ void dill_waitfor(struct dill_clause *cl, int id,
 
 /* Suspend running coroutine. Move to executing different coroutines.
    The coroutine will be resumed once one of the clauses previously added by
-   dill_waitfor() is triggered or dill_cancel() is called. Once that happens
-   all the clauses, whether triggered or not, will be canceled. Function returns
-   ID of the triggered clause or -1 in case dill_cancel() was called. In either
-   case it sets errno to the value supplied in dill_trigger/dill_cancel. */
+   dill_waitfor() is triggered. Once that happens all the clauses, whether
+   triggered or not, will be canceled. Function returns ID of the triggered
+   clause or -1 in case of error. In either case it sets errno to 0 indicate
+   success or non-zero value to indicate error. */
 int dill_wait(void);
 
 /* Schedule previously suspended coroutine for execution. Keep in mind that it
