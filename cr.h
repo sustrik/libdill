@@ -66,7 +66,7 @@ void dill_waitfor(struct dill_clause *cl, int id,
    triggered or not, will be canceled. Function returns ID of the triggered
    clause or -1 in case of error. In either case it sets errno to 0 indicate
    success or non-zero value to indicate error. */
-int dill_wait(void);
+int dill_wait(const char *where);
 
 /* Schedule previously suspended coroutine for execution. Keep in mind that it
    doesn't immediately run it, just put it into the queue of ready coroutines.

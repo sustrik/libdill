@@ -150,7 +150,7 @@ int dill_chsend(int h, const void *val, size_t len, int64_t deadline,
         dill_waitfor(&chcl.cl, 1, &ch->out, NULL);
         if(deadline > 0)
             dill_timer(&tmcl, 2, deadline);
-        int id = dill_wait();
+        int id = dill_wait(where);
         if(dill_slow(id < 0)) return -1;
         if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
         dill_assert(id == 1);
@@ -205,7 +205,7 @@ int dill_chrecv(int h, void *val, size_t len, int64_t deadline,
     dill_waitfor(&chcl.cl, 1, &ch->in, NULL);
     if(deadline > 0)
         dill_timer(&tmcl, 2, deadline);
-    int id = dill_wait();
+    int id = dill_wait(where);
     if(dill_slow(id < 0)) return -1;
     if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
     dill_assert(id == 1);

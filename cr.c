@@ -67,6 +67,9 @@ struct dill_cr {
     /* When coroutine handle is being closed, this is the pointer to the
        coroutine that is doing the hclose() call. */
     struct dill_cr *closer;
+    /* While, blocking here's debug string pointing to the line of code in
+       the user's code that causing the blocking. */
+    const char *where;
 #if defined DILL_VALGRIND
     /* Valgrind stack identifier. This way valgrind knows which areas of
        memory are used as a stacks and doesn't produce spurious warnings.
@@ -257,6 +260,7 @@ int dill_prologue(sigjmp_buf **ctx, const char *created) {
     cr->no_blocking1 = 0;
     cr->no_blocking2 = 0;
     cr->done = 0;
+    cr->where = NULL;
 #if defined DILL_VALGRIND
     cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stacksz, cr);
 #endif
@@ -280,7 +284,7 @@ void dill_epilogue(void) {
         dill_cancel(dill_r->closer, 0);
     /* With no clauses added, this call will never return. */
     dill_assert(dill_slist_empty(&dill_r->clauses));
-    dill_wait();
+    dill_wait(NULL);
 }
 
 /* Gets called when coroutine handle is closed. */
@@ -294,10 +298,12 @@ static void dill_cr_close(int h) {
         if(!dill_slist_item_inlist(&cr->ready))
             dill_cancel(cr, ECANCELED);
         /* Wait till the coroutine finishes execution. With no clauses added
-           the only mechanism to resume is dill_cancel(). */
-        /* TODO: What happens if another coroutine cancels the closer? */
+           the only mechanism to resume is dill_cancel(). This is not really
+           a blocking call although it looks like one. Given that the coroutine
+           that is being shut down is not permitted to block we should get
+           control back pretty quickly. */
         cr->closer = dill_r;
-        int rc = dill_wait();
+        int rc = dill_wait(NULL);
         dill_assert(rc == -1 && errno == 0);
     }
     /* Now that the coroutine is finished deallocate it. */
@@ -338,7 +344,7 @@ void dill_waitfor(struct dill_clause *cl, int id,
     cl->id = id;
 }
 
-int dill_wait(void)  {
+int dill_wait(const char *where)  {
     /* Even if process never gets idle, we have to process external events
        once in a while. The external signal may very well be a deadline or
        a user-issued command that cancels the CPU intensive operation. */
@@ -351,8 +357,10 @@ int dill_wait(void)  {
     }
     /* Store the context of the current coroutine, if any. */
     if(dill_r) {
+        dill_r->where = where;
         if(sigsetjmp(dill_r->ctx,0)) {
             /* We get here once the coroutine is resumed. */
+            dill_r->where = NULL;
             dill_slist_init(&dill_r->clauses);
             errno = dill_r->err;
             return dill_r->id;
@@ -404,7 +412,7 @@ int dill_yield(const char *where) {
     /* Put the current coroutine into the ready queue. */
     dill_resume(dill_r, 0, 0);
     /* Suspend. */
-    return dill_wait();
+    return dill_wait(where);
 }
 
 /******************************************************************************/
