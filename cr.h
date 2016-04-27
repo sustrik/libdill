@@ -68,11 +68,9 @@ void dill_waitfor(struct dill_clause *cl, int id,
    case it sets errno to the value supplied in dill_trigger/dill_cancel. */
 int dill_wait(void);
 
-/* Following two functions schedule previously suspended coroutine for
-   execution. Keep in mind that they don't immediately run it, just put it into
-   the queue of ready coroutines. First one will cause dill_wait() return
-   the id supplied in dill_waitfor(). Second one will cause it to return -1.
-   'err' is used to set errno in the resumed coroutine. */
+/* Schedule previously suspended coroutine for execution. Keep in mind that it
+   doesn't immediately run it, just put it into the queue of ready coroutines.
+   It will cause dill_wait() return the id supplied in dill_waitfor(). */
 void dill_trigger(struct dill_clause *cl, int err);
 
 /* Add timer to the list of active clauses. */
