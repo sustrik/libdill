@@ -24,7 +24,7 @@
 #include "libdill.h"
 #include "utils.h"
 
-int dill_msleep(int64_t deadline, const char *current) {
+int dill_msleep(int64_t deadline, const char *where) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
@@ -40,7 +40,7 @@ int dill_msleep(int64_t deadline, const char *current) {
     return 0;
 }
 
-int dill_fdin(int fd, int64_t deadline, const char *current) {
+int dill_fdin(int fd, int64_t deadline, const char *where) {
     /* TODO: deadline == 0? */
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
@@ -61,7 +61,7 @@ int dill_fdin(int fd, int64_t deadline, const char *current) {
     return 0;
 }
 
-int dill_fdout(int fd, int64_t deadline, const char *current) {
+int dill_fdout(int fd, int64_t deadline, const char *where) {
     /* TODO: deadline == 0? */
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();

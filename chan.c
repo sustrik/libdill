@@ -126,7 +126,7 @@ static void dill_chan_close(int h) {
 /******************************************************************************/
 
 int dill_chsend(int h, const void *val, size_t len, int64_t deadline,
-      const char *current) {
+      const char *where) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     struct dill_chan *ch = hdata(h, dill_chan_type);
@@ -165,7 +165,7 @@ int dill_chsend(int h, const void *val, size_t len, int64_t deadline,
 }
 
 int dill_chrecv(int h, void *val, size_t len, int64_t deadline,
-      const char *current) {
+      const char *where) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     struct dill_chan *ch = hdata(h, dill_chan_type);
@@ -212,7 +212,7 @@ int dill_chrecv(int h, void *val, size_t len, int64_t deadline,
     return errno == 0 ? 0 : -1;
 }
 
-int dill_chdone(int h, const char *current) {
+int dill_chdone(int h, const char *where) {
     struct dill_chan *ch = hdata(h, dill_chan_type);
     if(dill_slow(!ch)) return -1;
     ch->done = 1;

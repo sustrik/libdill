@@ -398,7 +398,7 @@ static void dill_cancel(struct dill_cr *cr, int err) {
     dill_docancel(cr, -1, err);
 }
 
-int dill_yield(const char *current) {
+int dill_yield(const char *where) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Put the current coroutine into the ready queue. */

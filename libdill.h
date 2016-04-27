@@ -159,11 +159,11 @@ DILL_EXPORT void dill_proc_epilogue(void);
 #define fdout(fd, deadline) dill_fdout((fd), (deadline),\
     __FILE__ ":" dill_string(__LINE__))
 
-DILL_EXPORT int dill_yield(const char *current);
-DILL_EXPORT int dill_msleep(int64_t deadline, const char *current);
+DILL_EXPORT int dill_yield(const char *where);
+DILL_EXPORT int dill_msleep(int64_t deadline, const char *where);
 DILL_EXPORT void fdclean(int fd);
-DILL_EXPORT int dill_fdin(int fd, int64_t deadline, const char *current);
-DILL_EXPORT int dill_fdout(int fd, int64_t deadline, const char *current);
+DILL_EXPORT int dill_fdin(int fd, int64_t deadline, const char *where);
+DILL_EXPORT int dill_fdout(int fd, int64_t deadline, const char *where);
 DILL_EXPORT void *cls(void);
 DILL_EXPORT void setcls(void *val);
 
@@ -187,10 +187,10 @@ DILL_EXPORT void setcls(void *val);
 
 DILL_EXPORT int dill_channel(size_t itemsz, size_t bufsz, const char *created);
 DILL_EXPORT int dill_chsend(int ch, const void *val, size_t len,
-    int64_t deadline, const char *current);
+    int64_t deadline, const char *where);
 DILL_EXPORT int dill_chrecv(int ch, void *val, size_t len,
-    int64_t deadline, const char *current);
-DILL_EXPORT int dill_chdone(int ch, const char *current);
+    int64_t deadline, const char *where);
+DILL_EXPORT int dill_chdone(int ch, const char *where);
 
 #endif
 
