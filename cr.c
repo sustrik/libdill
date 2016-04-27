@@ -180,17 +180,6 @@ void dill_clean(int fd) {
     dill_pollset_clean(fd);
 }
 
-/* Returns number of milliseconds till next timer expiration.
-   -1 stands for infinity. */
-static int dill_timer_next(void) {
-    if(dill_list_empty(&dill_timers))
-        return -1;
-    int64_t nw = now();
-    int64_t deadline = dill_cont(dill_list_begin(&dill_timers),
-        struct dill_tmcl, cl.epitem)->deadline;
-    return (int) (nw >= deadline ? 0 : deadline - nw);
-}
-
 /* Wait for external events such as timers or file descriptors. If block is set
    to 0 the function will poll for events and return immediately. If it is set
    to 1 it will block until there's at least one event to process. */
@@ -198,7 +187,17 @@ static void dill_poller_wait(int block) {
     dill_poller_init(-1);
     while(1) {
         /* Compute timeout for the subsequent poll. */
-        int timeout = block ? dill_timer_next() : 0;
+        int timeout = 0;
+        if(block) {
+            if(dill_list_empty(&dill_timers))
+                timeout = -1;
+            else {
+                int64_t nw = now();
+                int64_t deadline = dill_cont(dill_list_begin(&dill_timers),
+                    struct dill_tmcl, cl.epitem)->deadline;
+                timeout = (int) (nw >= deadline ? 0 : deadline - nw);
+            }
+        }
         /* Wait for events. */
         int fd_fired = dill_pollset_poll(timeout);
         /* Fire all expired timers. */
