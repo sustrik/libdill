@@ -242,6 +242,8 @@ static const struct hvfptrs dill_cr_vfptrs = {
 /*  Creation and termination of coroutines.                                   */
 /******************************************************************************/
 
+static void dill_cancel(struct dill_cr *cr, int err);
+
 /* The intial part of go(). Allocates a new stack and handle. */
 int dill_prologue(sigjmp_buf **ctx, const char *created) {
     /* Allocate and initialise new stack. */
@@ -394,7 +396,7 @@ void dill_trigger(struct dill_clause *cl, int err) {
     dill_docancel(cl->cr, cl->id, err);
 }
 
-void dill_cancel(struct dill_cr *cr, int err) {
+static void dill_cancel(struct dill_cr *cr, int err) {
     dill_docancel(cr, -1, err);
 }
 

@@ -74,7 +74,6 @@ int dill_wait(void);
    the id supplied in dill_waitfor(). Second one will cause it to return -1.
    'err' is used to set errno in the resumed coroutine. */
 void dill_trigger(struct dill_clause *cl, int err);
-void dill_cancel(struct dill_cr *cr, int err);
 
 /* Add timer to the list of active clauses. */
 void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline);
