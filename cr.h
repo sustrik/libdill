@@ -27,7 +27,6 @@
 #include <stdint.h>
 
 #include "list.h"
-#include "libdill.h"
 #include "slist.h"
 
 struct dill_cr;

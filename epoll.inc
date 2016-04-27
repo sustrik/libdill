@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/epoll.h>
+#include <unistd.h>
 
 #include "cr.h"
 #include "fd.h"
