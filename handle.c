@@ -55,12 +55,6 @@ struct dill_handle {
         errno = EBADF; return (err);}\
     struct dill_handle *hndl = &dill_handles[(h)];
 
-#define CHECKHANDLEVOID(h) \
-    if(dill_slow((h) < 0 || (h) >= dill_nhandles ||\
-          dill_handles[(h)].next != -2)) {\
-        errno = EBADF; return;}\
-    struct dill_handle *hndl = &dill_handles[(h)];
-
 static struct dill_handle *dill_handles = NULL;
 static int dill_nhandles = 0;
 static int dill_unused = -1;
