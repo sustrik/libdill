@@ -23,7 +23,6 @@
 #ifndef DILL_CR_INCLUDED
 #define DILL_CR_INCLUDED
 
-#include <setjmp.h>
 #include <stdint.h>
 
 #include "list.h"

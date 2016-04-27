@@ -21,6 +21,7 @@
 */
 
 #include <errno.h>
+#include <setjmp.h>
 
 #if defined DILL_VALGRIND
 #include <valgrind/valgrind.h>
