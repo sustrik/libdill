@@ -67,7 +67,7 @@ struct dill_cr {
     /* When coroutine handle is being closed, this is the pointer to the
        coroutine that is doing the hclose() call. */
     struct dill_cr *closer;
-    /* While, blocking here's debug string pointing to the line of code in
+    /* While blocking here's debug string pointing to the line of code in
        the user's code that causing the blocking. */
     const char *where;
 #if defined DILL_VALGRIND
@@ -104,7 +104,7 @@ static struct dill_list dill_timers;
 /*  Helpers.                                                                  */
 /******************************************************************************/
 
-void dill_resume(struct dill_cr *cr, int id, int err) {
+static void dill_resume(struct dill_cr *cr, int id, int err) {
     cr->id = id;
     cr->err = err;
     dill_slist_push_back(&dill_ready, &cr->ready);
