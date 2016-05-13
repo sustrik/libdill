@@ -74,11 +74,9 @@ static const int dill_chan_type_placeholder = 0;
 static const void *dill_chan_type = &dill_chan_type_placeholder;
 
 static void dill_chan_close(int h);
-static void dill_chan_dump(int h) {dill_assert(0);}
 
 static const struct hvfptrs dill_chan_vfptrs = {
-    dill_chan_close,
-    dill_chan_dump
+    dill_chan_close
 };
 
 /******************************************************************************/

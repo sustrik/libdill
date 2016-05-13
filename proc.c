@@ -48,11 +48,9 @@ static const int dill_proc_type_placeholder = 0;
 static const void *dill_proc_type = &dill_proc_type_placeholder;
 
 static void dill_proc_close(int h);
-static void dill_proc_dump(int h) {dill_assert(0);}
 
 static const struct hvfptrs dill_proc_vfptrs = {
-    dill_proc_close,
-    dill_proc_dump
+    dill_proc_close
 };
 
 /******************************************************************************/

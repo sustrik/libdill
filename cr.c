@@ -232,11 +232,9 @@ static const int dill_cr_type_placeholder = 0;
 static const void *dill_cr_type = &dill_cr_type_placeholder;
 
 static void dill_cr_close(int h);
-static void dill_cr_dump(int h) {dill_assert(0);}
 
 static const struct hvfptrs dill_cr_vfptrs = {
-    dill_cr_close,
-    dill_cr_dump
+    dill_cr_close
 };
 
 /******************************************************************************/

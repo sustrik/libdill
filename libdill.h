@@ -92,14 +92,12 @@ DILL_EXPORT int64_t now(void);
 
 struct hvfptrs {
     void (*close)(int h);
-    void (*dump)(int h);
 };
 
 DILL_EXPORT int dill_handle(const void *type, void *data,
     const struct hvfptrs *vfptrs, const char *created);
 DILL_EXPORT int hdup(int h);
 DILL_EXPORT void *hdata(int h, const void *type);
-DILL_EXPORT void hdump(int h);
 DILL_EXPORT int hclose(int h);
 
 /******************************************************************************/
