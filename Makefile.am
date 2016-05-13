@@ -77,6 +77,7 @@ check_PROGRAMS = \
     tests/cls \
     tests/handle \
     tests/chan \
+    tests/choose \
     tests/sleep \
     tests/signals \
     tests/overload \

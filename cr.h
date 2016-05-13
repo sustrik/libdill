@@ -35,14 +35,14 @@ struct dill_clause {
     struct dill_cr *cr;
     /* List of clauses coroutine is waiting for. See dill_cr::clauses. */
     struct dill_slist_item item;
-    /* Number to return from dill_wait() if this clause triggers. */
-    int id;
     /* These two fields are completely opaque to the coroutine. They are meant
        to be used by endpoints. The only thing coroutine does with it is, just
        before dill_wait() exits, it removes 'epitem' from 'eplist' for each
        clause. 'eplist' can be NULL in which case removal doesn't happen. */
     struct dill_list_item epitem;
     struct dill_list *eplist;
+    /* Number to return from dill_wait() if this clause triggers. */
+    int id;
 };
 
 /* Timer clause. */
