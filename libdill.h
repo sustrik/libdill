@@ -53,25 +53,20 @@
 /*  Symbol visibility                                                         */
 /******************************************************************************/
 
-#if defined DILL_NO_EXPORTS
-#   define DILL_EXPORT
+#if !defined __GNUC__ && !defined __clang__
+#error "Unsupported compiler!"
+#endif
+
+#if DILL_NO_EXPORTS
+#define DILL_EXPORT
 #else
-#   if defined _WIN32
-#      if defined DILL_EXPORTS
-#          define DILL_EXPORT __declspec(dllexport)
-#      else
-#          define DILL_EXPORT __declspec(dllimport)
-#      endif
-#   else
-#      if defined __SUNPRO_C
-#          define DILL_EXPORT __global
-#      elif (defined __GNUC__ && __GNUC__ >= 4) || \
-             defined __INTEL_COMPILER || defined __clang__
-#          define DILL_EXPORT __attribute__ ((visibility("default")))
-#      else
-#          define DILL_EXPORT
-#      endif
-#   endif
+#define DILL_EXPORT __attribute__ ((visibility("default")))
+#endif
+
+/* Old version of GCC don't support visibility attribute. */
+#if defined __GNUC__ && __GNUC__ < 4
+#undef DILL_EXPORT
+#define DILL_EXPORT
 #endif
 
 /******************************************************************************/
@@ -98,11 +93,7 @@ DILL_EXPORT int hclose(int h);
 /*  Coroutines                                                                */
 /******************************************************************************/
 
-#if defined __GNUC__ || defined __clang__
 #define coroutine __attribute__((noinline))
-#else
-#error "Unsupported compiler!"
-#endif
 
 DILL_EXPORT extern volatile int dill_unoptimisable1;
 DILL_EXPORT extern volatile void *dill_unoptimisable2;
