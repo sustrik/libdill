@@ -83,7 +83,7 @@ static const struct hvfptrs dill_chan_vfptrs = {
 /*  Channel creation and deallocation.                                        */
 /******************************************************************************/
 
-int dill_channel(size_t itemsz, size_t bufsz, const char *created) {
+int channel(size_t itemsz, size_t bufsz) {
     /* Allocate the channel structure followed by the item buffer. */
     struct dill_chan *ch = (struct dill_chan*)
         malloc(sizeof(struct dill_chan) + (itemsz * bufsz));
@@ -96,7 +96,7 @@ int dill_channel(size_t itemsz, size_t bufsz, const char *created) {
     ch->items = 0;
     ch->first = 0;
     /* Allocate a handle to point to the channel. */
-    int h = dill_handle(dill_chan_type, ch, &dill_chan_vfptrs, created);
+    int h = handle(dill_chan_type, ch, &dill_chan_vfptrs);
     if(dill_slow(h < 0)) {
         int err = errno;
         free(ch);
@@ -128,23 +128,21 @@ static void dill_chan_close(int h) {
 /*  Sending and receiving.                                                    */
 /******************************************************************************/
 
-int dill_chsend(int h, const void *val, size_t len, int64_t deadline,
-      const char *where) {
+int chsend(int h, const void *val, size_t len, int64_t deadline) {
     struct chclause cl = {CHSEND, h, (void*)val, len};
-    int rc = dill_choose(&cl, 1, deadline, where);
+    int rc = choose(&cl, 1, deadline);
     if(dill_slow(rc < 0 || errno != 0)) return -1;
     return 0;
 }
 
-int dill_chrecv(int h, void *val, size_t len, int64_t deadline,
-      const char *where) {
+int chrecv(int h, void *val, size_t len, int64_t deadline) {
     struct chclause cl = {CHRECV, h, val, len};
-    int rc = dill_choose(&cl, 1, deadline, where);
+    int rc = choose(&cl, 1, deadline);
     if(dill_slow(rc < 0 || errno != 0)) return -1;
     return 0;
 }
 
-int dill_chdone(int h, const char *where) {
+int chdone(int h) {
     struct dill_chan *ch = hdata(h, dill_chan_type);
     if(dill_slow(!ch)) return -1;
     ch->done = 1;
@@ -163,8 +161,7 @@ int dill_chdone(int h, const char *where) {
     return 0;
 }
 
-int dill_choose(struct chclause *clauses, int nclauses,
-      int64_t deadline, const char *where) {
+int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     if(dill_slow(nclauses < 0 || (nclauses != 0 && !clauses))) {
@@ -265,7 +262,7 @@ int dill_choose(struct chclause *clauses, int nclauses,
     struct dill_tmcl tmcl;
     if(deadline > 0)
         dill_timer(&tmcl, nclauses, deadline);
-    int id = dill_wait(where);
+    int id = dill_wait();
     if(dill_slow(id < 0)) return -1;
     if(dill_slow(id == nclauses)) {errno = ETIMEDOUT; return -1;}
     return id;

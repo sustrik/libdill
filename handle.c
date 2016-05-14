@@ -41,9 +41,6 @@ struct dill_handle {
     int refcount;
     /* Table of virtual functions. */
     struct hvfptrs vfptrs;
-    /* The location where the handle was created. The string it points to must
-       be static. */
-    const char *created;
     /* Index of the next handle in the linked list of unused handles. -1 means
        'end of the list'. -2 means 'active handle'. */
     int next;
@@ -64,8 +61,7 @@ static void dill_handle_atexit(void) {
         free(dill_handles);
 }
 
-int dill_handle(const void *type, void *data, const struct hvfptrs *vfptrs,
-      const char *created) {
+int handle(const void *type, void *data, const struct hvfptrs *vfptrs) {
     if(dill_slow(!type || !data || !vfptrs)) {errno = EINVAL; return -1;}
     /* Check mandatory virtual functions. */
     if(dill_slow(!vfptrs->close)) {errno = EINVAL; return -1;}
@@ -99,7 +95,6 @@ int dill_handle(const void *type, void *data, const struct hvfptrs *vfptrs,
     dill_handles[h].data = data;
     dill_handles[h].refcount = 1;
     dill_handles[h].vfptrs = *vfptrs;
-    dill_handles[h].created = created;
     dill_handles[h].next = -2;
     return h;
 }

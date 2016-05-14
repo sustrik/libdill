@@ -84,18 +84,12 @@ DILL_EXPORT int64_t now(void);
 /*  Handles                                                                   */
 /******************************************************************************/
 
-#define dill_string2(x) #x
-#define dill_string(x) dill_string2(x)
-
-#define handle(type, data, vfptrs) \
-    dill_handle((type), (data), (vfptrs), __FILE__ ":" dill_string(__LINE__))
-
 struct hvfptrs {
     void (*close)(int h);
 };
 
-DILL_EXPORT int dill_handle(const void *type, void *data,
-    const struct hvfptrs *vfptrs, const char *created);
+DILL_EXPORT int handle(const void *type, void *data,
+    const struct hvfptrs *vfptrs);
 DILL_EXPORT int hdup(int h);
 DILL_EXPORT void *hdata(int h, const void *type);
 DILL_EXPORT int hclose(int h);
@@ -104,20 +98,19 @@ DILL_EXPORT int hclose(int h);
 /*  Coroutines                                                                */
 /******************************************************************************/
 
-DILL_EXPORT extern volatile int dill_unoptimisable1;
-DILL_EXPORT extern volatile void *dill_unoptimisable2;
-
-DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
-    const char *created);
-DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
-DILL_EXPORT int dill_proc_prologue(int *hndl, const char *created);
-DILL_EXPORT void dill_proc_epilogue(void);
-
 #if defined __GNUC__ || defined __clang__
 #define coroutine __attribute__((noinline))
 #else
 #error "Unsupported compiler!"
 #endif
+
+DILL_EXPORT extern volatile int dill_unoptimisable1;
+DILL_EXPORT extern volatile void *dill_unoptimisable2;
+
+DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx);
+DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
+DILL_EXPORT int dill_proc_prologue(int *hndl);
+DILL_EXPORT void dill_proc_epilogue(void);
 
 /* Statement expressions are a gcc-ism but they are also supported by clang.
    Given that there's no other way to do this, screw other compilers for now.
@@ -125,7 +118,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
 #define go(fn) \
     ({\
         sigjmp_buf *ctx;\
-        int h = dill_prologue(&ctx, __FILE__ ":" dill_string(__LINE__));\
+        int h = dill_prologue(&ctx);\
         if(h >= 0) {\
             if(!sigsetjmp(*ctx, 0)) {\
                 int dill_anchor[dill_unoptimisable1];\
@@ -141,27 +134,19 @@ DILL_EXPORT void dill_proc_epilogue(void);
 
 #define proc(fn) \
     ({\
-        int hndl;\
-        if(dill_proc_prologue(&hndl, __FILE__ ":" dill_string(__LINE__))) {\
+        int h;\
+        if(dill_proc_prologue(&h)) {\
             fn;\
             dill_proc_epilogue();\
         }\
-        hndl;\
+        h;\
     })
 
-#define yield() dill_yield(__FILE__ ":" dill_string(__LINE__))
-#define msleep(deadline) dill_msleep((deadline),\
-    __FILE__ ":" dill_string(__LINE__))
-#define fdin(fd, deadline) dill_fdin((fd), (deadline),\
-    __FILE__ ":" dill_string(__LINE__))
-#define fdout(fd, deadline) dill_fdout((fd), (deadline),\
-    __FILE__ ":" dill_string(__LINE__))
-
-DILL_EXPORT int dill_yield(const char *where);
-DILL_EXPORT int dill_msleep(int64_t deadline, const char *where);
+DILL_EXPORT int yield(void);
+DILL_EXPORT int msleep(int64_t deadline);
 DILL_EXPORT void fdclean(int fd);
-DILL_EXPORT int dill_fdin(int fd, int64_t deadline, const char *where);
-DILL_EXPORT int dill_fdout(int fd, int64_t deadline, const char *where);
+DILL_EXPORT int fdin(int fd, int64_t deadline);
+DILL_EXPORT int fdout(int fd, int64_t deadline);
 DILL_EXPORT void *cls(void);
 DILL_EXPORT void setcls(void *val);
 
@@ -180,33 +165,12 @@ struct chclause {
     char reserved[64];
 };
 
-#define channel(itemsz, bufsz) \
-    dill_channel((itemsz), (bufsz), __FILE__ ":" dill_string(__LINE__))
-
-#define chsend(channel, val, len, deadline) \
-    dill_chsend((channel), (val), (len), (deadline), \
-    __FILE__ ":" dill_string(__LINE__))
-
-#define chrecv(channel, val, len, deadline) \
-    dill_chrecv((channel), (val), (len), (deadline), \
-    __FILE__ ":" dill_string(__LINE__))
-
-#define chdone(channel) \
-    dill_chdone((channel), __FILE__ ":" dill_string(__LINE__))
-
-#define choose(clauses, nclauses, deadline) \
-    dill_choose((clauses), (nclauses), (deadline), \
-    __FILE__ ":" dill_string(__LINE__))
-
-DILL_EXPORT int dill_channel(size_t itemsz, size_t bufsz, const char *created);
-DILL_EXPORT int dill_chsend(int ch, const void *val, size_t len,
-    int64_t deadline, const char *where);
-DILL_EXPORT int dill_chrecv(int ch, void *val, size_t len,
-    int64_t deadline, const char *where);
-DILL_EXPORT int dill_chdone(int ch, const char *where);
-DILL_EXPORT int dill_choose(struct chclause *clauses, int nclauses,
-    int64_t deadline, const char *where);
-
+DILL_EXPORT int channel(size_t itemsz, size_t bufsz);
+DILL_EXPORT int chsend(int ch, const void *val, size_t len, int64_t deadline);
+DILL_EXPORT int chrecv(int ch, void *val, size_t len, int64_t deadline);
+DILL_EXPORT int chdone(int ch);
+DILL_EXPORT int choose(struct chclause *clauses, int nclauses,
+    int64_t deadline);
 
 #endif
 

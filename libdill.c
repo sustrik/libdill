@@ -24,7 +24,7 @@
 #include "libdill.h"
 #include "utils.h"
 
-int dill_msleep(int64_t deadline, const char *where) {
+int msleep(int64_t deadline) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
@@ -34,13 +34,12 @@ int dill_msleep(int64_t deadline, const char *where) {
     struct dill_tmcl tmcl;
     if(deadline > 0)
         dill_timer(&tmcl, 1, deadline);
-    int id = dill_wait(where);
+    int id = dill_wait();
     if(dill_slow(id < 0)) return -1;
-    dill_assert(id == 1);
     return 0;
 }
 
-int dill_fdin(int fd, int64_t deadline, const char *where) {
+int fdin(int fd, int64_t deadline) {
     /* TODO: deadline == 0? */
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
@@ -54,14 +53,13 @@ int dill_fdin(int fd, int64_t deadline, const char *where) {
     if(deadline > 0)
         dill_timer(&tmcl, 2, deadline);
     /* Block. */
-    int id = dill_wait(where);
+    int id = dill_wait();
     if(dill_slow(id < 0)) return -1;
     if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
-    dill_assert(id == 1);
     return 0;
 }
 
-int dill_fdout(int fd, int64_t deadline, const char *where) {
+int fdout(int fd, int64_t deadline) {
     /* TODO: deadline == 0? */
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
@@ -75,10 +73,9 @@ int dill_fdout(int fd, int64_t deadline, const char *where) {
     if(deadline > 0)
         dill_timer(&tmcl, 2, deadline);
     /* Block. */
-    int id = dill_wait(where);
+    int id = dill_wait();
     if(dill_slow(id < 0)) return -1;
     if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
-    dill_assert(id == 1);
     return 0;
 }
 

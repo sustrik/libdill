@@ -57,7 +57,7 @@ static const struct hvfptrs dill_proc_vfptrs = {
 /*  Creating and terminating processes.                                       */
 /******************************************************************************/
 
-int dill_proc_prologue(int *hndl, const char *created) {
+int dill_proc_prologue(int *hndl) {
     int err;
     struct dill_proc *proc = malloc(sizeof(struct dill_proc));
     if(dill_slow(!proc)) {err = ENOMEM; goto error1;}
@@ -66,7 +66,7 @@ int dill_proc_prologue(int *hndl, const char *created) {
     int rc = pipe(closepipe);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     proc->closepipe = closepipe[1];
-    int h = dill_handle(dill_proc_type, proc, &dill_proc_vfptrs, created);
+    int h = handle(dill_proc_type, proc, &dill_proc_vfptrs);
     if(dill_slow(h < 0)) {err = errno; goto error3;}
     pid_t pid = fork();
     if(dill_slow(pid < 0)) {err = errno; goto error4;}
