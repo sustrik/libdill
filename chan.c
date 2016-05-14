@@ -32,7 +32,7 @@
 #include "list.h"
 #include "utils.h"
 
-/* The channl. Memory layout of a channel looks like this:
+/* The channel. Memory layout of a channel looks like this:
    +-----------+-------+--------+---------------------------------+--------+
    | dill_chan | item1 | item 2 |             ...                 | item N |
    +-----------+-------+--------+---------------------------------+--------+
