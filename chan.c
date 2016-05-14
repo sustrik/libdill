@@ -130,89 +130,18 @@ static void dill_chan_close(int h) {
 
 int dill_chsend(int h, const void *val, size_t len, int64_t deadline,
       const char *where) {
-    int rc = dill_canblock();
-    if(dill_slow(rc < 0)) return -1;
-    struct dill_chan *ch = hdata(h, dill_chan_type);
-    if(dill_slow(!ch)) return -1;
-    if(dill_slow(len != ch->sz || (len > 0 && !val))) {
-        errno = EINVAL; return -1;}
-    if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
-    if(dill_list_empty(&ch->in)) {
-        if(ch->items < ch->bufsz) {
-            /* Write the item to the buffer. */
-            size_t pos = (ch->first + ch->items) % ch->bufsz;
-            memcpy(((char*)(ch + 1)) + (pos * ch->sz) , val, len);
-            ++ch->items;
-            return 0;
-        }
-        /* Block. */
-        if(dill_slow(deadline == 0)) {errno == ETIMEDOUT; return -1;}
-        struct dill_chcl chcl;
-        struct dill_tmcl tmcl;
-        chcl.val = (void*)val;
-        dill_waitfor(&chcl.cl, 1, &ch->out, NULL);
-        if(deadline > 0)
-            dill_timer(&tmcl, 2, deadline);
-        int id = dill_wait(where);
-        if(dill_slow(id < 0)) return -1;
-        if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
-        dill_assert(id == 1);
-        return errno == 0 ? 0 : -1;
-    }
-    /* Copy the message directly to the waiting receiver. */
-    struct dill_chcl *chcl = dill_cont(dill_list_begin(&ch->in),
-        struct dill_chcl, cl.epitem);
-    memcpy(chcl->val, val, len);
-    dill_trigger(&chcl->cl, 0);
+    struct chclause cl = {CHSEND, h, (void*)val, len};
+    int rc = dill_choose(&cl, 1, deadline, where);
+    if(dill_slow(rc < 0 || errno != 0)) return -1;
     return 0;
 }
 
 int dill_chrecv(int h, void *val, size_t len, int64_t deadline,
       const char *where) {
-    int rc = dill_canblock();
-    if(dill_slow(rc < 0)) return -1;
-    struct dill_chan *ch = hdata(h, dill_chan_type);
-    if(dill_slow(!ch)) return -1;
-    if(dill_slow(len != ch->sz || (len > 0 && !val))) {
-        errno = EINVAL; return -1;}
-    if(ch->items) {        
-        /* Read an item from the buffer. */
-        memcpy(val, ((char*)(ch + 1)) + (ch->first * ch->sz), ch->sz);
-        ch->first = (ch->first + 1) % ch->bufsz;
-        --ch->items;
-        /* If there was a waiting sender, unblock it. */
-        if(!dill_list_empty(&ch->out)) {
-            struct dill_chcl *chcl = dill_cont(dill_list_begin(&ch->out),
-                struct dill_chcl, cl.epitem);
-            size_t pos = (ch->first + ch->items) % ch->bufsz;
-            memcpy(((char*)(ch + 1)) + (pos * ch->sz) , chcl->val, ch->sz);
-            ++ch->items;
-            dill_trigger(&chcl->cl, 0);
-        }
-        return 0;
-    }
-    if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
-    if(!dill_list_empty(&ch->out)) {
-        /* Copy the message directly from a waiting sender. */
-        struct dill_chcl *chcl = dill_cont(dill_list_begin(&ch->out),
-            struct dill_chcl, cl.epitem);
-        memcpy(val, chcl->val, ch->sz);
-        dill_trigger(&chcl->cl, 0);
-        return 0;
-    }
-    /* Block. */
-    if(dill_slow(deadline == 0)) {errno == ETIMEDOUT; return -1;}
-    struct dill_chcl chcl;
-    struct dill_tmcl tmcl;
-    chcl.val = val;
-    dill_waitfor(&chcl.cl, 1, &ch->in, NULL);
-    if(deadline > 0)
-        dill_timer(&tmcl, 2, deadline);
-    int id = dill_wait(where);
-    if(dill_slow(id < 0)) return -1;
-    if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
-    dill_assert(id == 1);
-    return errno == 0 ? 0 : -1;
+    struct chclause cl = {CHRECV, h, val, len};
+    int rc = dill_choose(&cl, 1, deadline, where);
+    if(dill_slow(rc < 0 || errno != 0)) return -1;
+    return 0;
 }
 
 int dill_chdone(int h, const char *where) {
