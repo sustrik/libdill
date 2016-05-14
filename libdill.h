@@ -172,8 +172,6 @@ DILL_EXPORT void setcls(void *val);
 #define CHSEND 1
 #define CHRECV 2
 
-struct dill_resvd {void *a1; void *a2; void *a3; void *a4; void *a5; int a6;};
-
 struct chclause {
     int op;
     int ch;
