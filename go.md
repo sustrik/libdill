@@ -21,7 +21,7 @@ The return value of the coroutine, if any, is discarded and cannot be retrieved 
 
 Any function to be invoked unsing go() must be declared with `coroutine` specifier.
 
-*WARNING*: Coroutine will most likely work even without coroutine specifier. However, it may fail in random non-deterministic fashion, depending on a particular combination of compiler, optimisation level and code in question.
+*WARNING*: Coroutine will most likely work even without `coroutine` specifier. However, it may fail in random non-deterministic fashion, depending on a particular combination of compiler, optimisation level and code in question.
 
 ## RETURN VALUE
 
