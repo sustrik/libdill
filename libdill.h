@@ -63,7 +63,7 @@
 #define DILL_EXPORT __attribute__ ((visibility("default")))
 #endif
 
-/* Old version of GCC don't support visibility attribute. */
+/* Old versions of GCC don't support visibility attribute. */
 #if defined __GNUC__ && __GNUC__ < 4
 #undef DILL_EXPORT
 #define DILL_EXPORT
