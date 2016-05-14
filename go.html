@@ -17,7 +17,7 @@ int go(expression);</code></pre>
 <p>Coroutine is executed in concurrent manner and its lifetime may exceed the lifetime of the caller.</p>
 <p>The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.</p>
 <p>Any function to be invoked unsing go() must be declared with <code>coroutine</code> specifier.</p>
-<p><em>WARNING</em>: Coroutine will most likely work even without coroutine specifier. However, it may fail in random non-deterministic fashion, depending on a particular combination of compiler, optimisation level and code in question.</p>
+<p><em>WARNING</em>: Coroutine will most likely work even without <code>coroutine</code> specifier. However, it may fail in random non-deterministic fashion, depending on a particular combination of compiler, optimisation level and code in question.</p>
 <h2 id="return-value">RETURN VALUE</h2>
 <p>Returns a coroutine handle. In the case of error it returns -1 and sets <code>errno</code> to one of the values below.</p>
 <h2 id="errors">ERRORS</h2>
