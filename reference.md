@@ -1,12 +1,11 @@
 # libdill reference
 
 * [channel](channel.html)
-* [chdone](chdone.hml)
+* [chdone](chdone.html)
 * [choose](choose.html)
 * [chrecv](chrecv.html)
 * [chsend](chsend.html)
 * [cls](cls.html)
-* [coroutine](coroutine.html)
 * [fdclean](fdclean.html)
 * [fdin](fdin.html)
 * [fdout](fdout.html)

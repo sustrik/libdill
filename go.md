@@ -46,9 +46,8 @@ int h = go(add(1, 2));
 
 ## SEE ALSO
 
-* coroutine(3)
-* hclose(3)
-* proc(3)
+* [hclose(3)](hclose.html)
+* [proc(3)](proc.html)
 
 ## AUTHORS
 

@@ -10,7 +10,6 @@ all: \
     chrecv.html \
     chsend.html \
     cls.html \
-    coroutine.html \
     fdclean.html \
     fdin.html \
     fdout.html \
@@ -22,6 +21,7 @@ all: \
     index.html \
     msleep.html \
     now.html \
+    proc.html \
     reference.html \
     setcls.html \
     yield.html

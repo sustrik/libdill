@@ -13,6 +13,8 @@ int channel(size_t itemsz, size_t bufsz);
 
 ## DESCRIPTION
 
+Creates a channel. First parameter is the size of the items to be sent through the channel, in bytes. Second parameter is number of items that will fit into the channel. Setting this argument to zero creates an unbuffered channel.
+
 ## RETURN VALUE
 
 Returns a channel handle. In the case of error it returns -1 and sets `errno` to one of the values below.
@@ -24,7 +26,16 @@ Returns a channel handle. In the case of error it returns -1 and sets `errno` to
 
 ## EXAMPLE
 
+```
+int ch = channel(sizeof(int), 100);
+```
+
 ## SEE ALSO
+
+* [chdone(3)](chdone.html)
+* [chrecv(3)](chrecv.html)
+* [chsend(3)](chsend.html)
+* [hclose(3)](hclose.html)
 
 ## AUTHORS
 
