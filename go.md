@@ -17,7 +17,7 @@ Launches a coroutine that executes the function invocation passed as the argumen
 
 Coroutine is executed in concurrent manner and its lifetime may exceed the lifetime of the caller.
 
-The return value of the function is discarded and cannot be retrieved by the caller.
+The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.
 
 Any function to be invoked unsing go() must be declared with `coroutine` specifier.
 
