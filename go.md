@@ -49,3 +49,8 @@ int h = go(add(1, 2));
 * coroutine(3)
 * hclose(3)
 * proc(3)
+
+## AUTHORS
+
+Martin Sustrik <sustrik@250bpm.com>
+
