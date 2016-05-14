@@ -72,12 +72,8 @@ DILL_CT_ASSERT(sizeof(struct dill_chcl) <= 64);
 
 static const int dill_chan_type_placeholder = 0;
 static const void *dill_chan_type = &dill_chan_type_placeholder;
-
 static void dill_chan_close(int h);
-
-static const struct hvfptrs dill_chan_vfptrs = {
-    dill_chan_close
-};
+static const struct hvfptrs dill_chan_vfptrs = {dill_chan_close};
 
 /******************************************************************************/
 /*  Channel creation and deallocation.                                        */

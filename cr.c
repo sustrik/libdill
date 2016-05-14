@@ -227,12 +227,8 @@ static void dill_poller_wait(int block) {
 
 static const int dill_cr_type_placeholder = 0;
 static const void *dill_cr_type = &dill_cr_type_placeholder;
-
 static void dill_cr_close(int h);
-
-static const struct hvfptrs dill_cr_vfptrs = {
-    dill_cr_close
-};
+static const struct hvfptrs dill_cr_vfptrs = {dill_cr_close};
 
 /******************************************************************************/
 /*  Creation and termination of coroutines.                                   */

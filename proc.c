@@ -46,12 +46,8 @@ struct dill_proc {
 
 static const int dill_proc_type_placeholder = 0;
 static const void *dill_proc_type = &dill_proc_type_placeholder;
-
 static void dill_proc_close(int h);
-
-static const struct hvfptrs dill_proc_vfptrs = {
-    dill_proc_close
-};
+static const struct hvfptrs dill_proc_vfptrs = {dill_proc_close};
 
 /******************************************************************************/
 /*  Creating and terminating processes.                                       */
