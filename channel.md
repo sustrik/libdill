@@ -2,7 +2,7 @@
 
 ## NAME
 
-channel() - create a channel
+channel - create a channel
 
 ## SYNOPSIS
 

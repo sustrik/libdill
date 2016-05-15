@@ -2,7 +2,7 @@
 
 ## NAME
 
-chsend() - send a message to a channel
+chsend - send a message to a channel
 
 ## SYNOPSIS
 

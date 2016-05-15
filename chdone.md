@@ -2,7 +2,7 @@
 
 ## NAME
 
-chdone() - mark the channel as closed for sending
+chdone - mark the channel as closed for sending
 
 ## SYNOPSIS
 

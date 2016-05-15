@@ -2,7 +2,7 @@
 
 ## NAME
 
-proc() - start a process
+proc - start a process
 
 ## SYNOPSIS
 

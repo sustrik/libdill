@@ -2,7 +2,7 @@
 
 ## NAME
 
-cls() - get coroutine-local storage
+cls - get coroutine-local storage
 
 ## SYNOPSIS
 

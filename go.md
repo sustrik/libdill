@@ -2,7 +2,7 @@
 
 ## NAME
 
-go() - start a coroutine
+go - start a coroutine
 
 ## SYNOPSIS
 

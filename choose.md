@@ -2,7 +2,7 @@
 
 ## NAME
 
-choose() - perform one of multiple channel operations
+choose - perform one of multiple channel operations
 
 ## SYNOPSIS
 

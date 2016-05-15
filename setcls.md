@@ -2,7 +2,7 @@
 
 ## NAME
 
-setcls() - set coroutine-local storage
+setcls - set coroutine-local storage
 
 ## SYNOPSIS
 

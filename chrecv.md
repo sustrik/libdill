@@ -2,7 +2,7 @@
 
 ## NAME
 
-chrecv() - receive a message from a channel
+chrecv - receive a message from a channel
 
 ## SYNOPSIS
 
