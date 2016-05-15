@@ -108,6 +108,8 @@ int main() {
     assert(ch1 >= 0);
     int hndl1 = go(sender(ch1, 1, 333));
     assert(hndl1 >= 0);
+    rc = chdone(hndl1);
+    assert(rc == -1 && errno == ENOTSUP);
     rc = chrecv(ch1, &val, sizeof(val), -1);
     assert(rc == 0);
     assert(val == 333);
@@ -230,7 +232,6 @@ int main() {
     assert(val == 666);
     hclose(ch7);
 
-#if 0
     /* Test simple chdone() scenarios. */
     int ch8 = channel(sizeof(int), 0);
     assert(ch8 >= 0);
@@ -244,6 +245,7 @@ int main() {
     assert(rc == -1 && errno == EPIPE);
     hclose(ch8);
 
+#if 0
     int ch10 = channel(sizeof(int), 10);
     assert(ch10 >= 0);
     val = 999;
@@ -273,6 +275,7 @@ int main() {
     rc = chrecv(ch11, &val, sizeof(val), -1);
     assert(rc == -1 && errno == EPIPE);
     hclose(ch11);
+#endif
 
     /* Test whether chdone() unblocks all receivers. */
     int ch12 = channel(sizeof(int), 0);
@@ -298,7 +301,6 @@ int main() {
     assert(rc == 0);
     rc = hclose(hndl6[1]);
     assert(rc == 0);
-#endif
 
     /* Test a combination of blocked sender and an item in the channel. */
     int ch14 = channel(sizeof(int), 1);
@@ -318,7 +320,6 @@ int main() {
     rc = hclose(hndl7);
     assert(rc == 0);
 
-#if 0
     /* Test whether chdone() unblocks blocked senders. */
     int ch15 = channel(sizeof(int), 0);
     assert(ch15 >= 0);
@@ -340,7 +341,6 @@ int main() {
     assert(rc == 0);
     rc = hclose(hndl8[2]);
     assert(rc == 0);
-#endif
 
     /* Test whether hclose() unblocks blocked senders and receivers. */
     int ch16 = channel(sizeof(int), 0);
