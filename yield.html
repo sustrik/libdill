@@ -13,10 +13,18 @@
 <pre><code>#include &lt;libdill.h&gt;
 int yield(void);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
+<p>By calling this function you give other coroutines a chance to run.</p>
+<p>You should consider using yield() when doing lengthy computations which don't involve natural coroutine switching points such as <code>chsend</code>, <code>chrecv</code>, <code>fdin</code>, <code>fdout</code> or <code>msleep</code>.</p>
 <h2 id="return-value">RETURN VALUE</h2>
+<p>The function returns 0 in case of success or -1 in case of error. In the latter case it sets <code>errno</code> to one of the following values.</p>
 <h2 id="errors">ERRORS</h2>
+<ul>
+<li><code>ECANCELED</code>: Current coroutine is being shut down.</li>
+</ul>
 <h2 id="example">EXAMPLE</h2>
+<pre><code>yield();</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<p><a href="go.html">go(3)</a></p>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--
