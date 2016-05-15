@@ -1,7 +1,26 @@
 
+#toplist {
+    padding-left: 0px;
+    padding-bottom: 1em;
+}
+
+#toplist li {
+    display: inline;
+    list-style-type: none;
+    padding-right: 15px;
+}
+
+#toplist a {
+    font-weight: bold;
+    text-decoration: none;
+}
+
 body {
     width:50em;
-    padding: 5em;
+    padding-top: 2em;
+    padding-bottom: 2em;
+    padding-left: 5em;
+    padding-right: 5em;
     font-family: sans-serif;
 }
 
@@ -51,7 +70,7 @@ p.lang {
 
 tt {
     font-size: 120%
-}
+  }
 
 pre {
     padding: 20px;
@@ -75,6 +94,4 @@ th, td {
 .ot {
     color: grey;
 }
-
-
 

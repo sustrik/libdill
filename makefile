@@ -10,6 +10,10 @@ all: \
     chrecv.html \
     chsend.html \
     cls.html \
+    community.html \
+    development.html \
+    documentation.html \
+    download.html \
     fdclean.html \
     fdin.html \
     fdout.html \
