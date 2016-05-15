@@ -13,10 +13,17 @@
 <pre><code>#include &lt;libdill.h&gt;
 void setcls(void *val);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
+<p>Set coroutine-local storage, a single pointer that will be accessible from anywhere within the same coroutine using <code>cls</code> function.</p>
 <h2 id="return-value">RETURN VALUE</h2>
+<p>None.</p>
 <h2 id="errors">ERRORS</h2>
+<p>None.</p>
 <h2 id="example">EXAMPLE</h2>
+<pre><code>char *str = &quot;Hello, world!&quot;;
+setcls(str);
+printf(&quot;%s\n&quot;, (char*)cls());</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<p><a href="cls.html">cls(3)</a><br /><a href="go.html">go(3)</a></p>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--
