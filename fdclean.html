@@ -13,10 +13,16 @@
 <pre><code>#include &lt;libdill.h&gt;
 void fdclean(int fd);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
+<p>This function drops any state cached by <code>libdill</code> associated with the file descriptor. It has to be called before the file descriptor is closed. If it is not, undefined behaviour may ensue.</p>
+<p>It should also be used when you are temporarily provided with a file descriptor by a third party library, just before returning the descriptor back to the original owner.</p>
 <h2 id="return-value">RETURN VALUE</h2>
+<p>None.</p>
 <h2 id="errors">ERRORS</h2>
+<p>None.</p>
 <h2 id="example">EXAMPLE</h2>
+<pre><code>fdclean(fd);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<p><a href="fdin.html">fdin(3)</a><br /><a href="fdout.html">fdout(3)</a></p>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--

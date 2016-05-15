@@ -8,15 +8,25 @@
 <body>
 <h1 id="fdin3-manual-page">fdin(3) manual page</h1>
 <h2 id="name">NAME</h2>
-<p>fdin - waits while file descriptor becomes readable</p>
+<p>fdin - waits until file descriptor becomes readable</p>
 <h2 id="synopsis">SYNOPSIS</h2>
 <pre><code>#include &lt;libdill.h&gt;
 int fdin(int fd, int64_t deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
+<p>Waits until file descriptor becomes readable or until it gets into an error state. Both options cause succeful return from the function. To distinguish between them you have to do subsequent read operation on the file descriptor.</p>
+<p>The function also exits if deadline expires.</p>
 <h2 id="return-value">RETURN VALUE</h2>
+<p>The function returns 0 in case of success or -1 in case of error. In the latter case is sets <code>errno</code> to one of the following values.</p>
 <h2 id="errors">ERRORS</h2>
+<ul>
+<li><code>ECANCELED</code>: Current coroutine is being shut down.<br /></li>
+<li><code>EEXIST</code>: Another coroutine is already doing <code>fdin</code> on the file descriptor.<br /></li>
+<li><code>ETIMEDOUT</code>: Deadline expired while waiting for the file descriptor.</li>
+</ul>
 <h2 id="example">EXAMPLE</h2>
+<pre><code>fdin(fd);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<p><a href="fdclean.html">fdclean(3)</a><br /><a href="fdout.html">fdout(3)</a></p>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--
