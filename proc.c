@@ -63,12 +63,12 @@ int dill_proc_prologue(int *hndl) {
     proc->pid = -1;
     int closepipe[2];
     rc = pipe(closepipe);
-    if(dill_slow(rc < 0)) {err = errno; goto error2;}
+    if(dill_slow(rc < 0)) {err = ENOMEM; goto error2;}
     proc->closepipe = closepipe[1];
     int h = handle(dill_proc_type, proc, &dill_proc_vfptrs);
     if(dill_slow(h < 0)) {err = errno; goto error3;}
     pid_t pid = fork();
-    if(dill_slow(pid < 0)) {err = errno; goto error4;}
+    if(dill_slow(pid < 0)) {err = ENOMEM; goto error4;}
     /* Child. */
     if(pid == 0) {
         /* We don't need the sending end of the pipe. */
