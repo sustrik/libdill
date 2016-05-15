@@ -18,10 +18,42 @@ struct hvfptrs {
 
 int handle(const void *type, void *data, const struct hvfptrs *vfptrs);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
+<p>Handle is a user-space equivalent of a file descriptor. Coroutines, processes and channels are represented by handles.</p>
+<p>Unlike with file descriptors though, you can create your own handle type. To do so use <code>handle</code> function.</p>
+<p>First argument is an opaque pointer that uniquely represents the handle type. Second argument is an opaque pointer pointing to the handle instance. Third argument is a virtual function table of operations associated with the handle. At the moment the only supported operation is closing the handle.</p>
+<p>When implementing the close operation keep in mind that it is not allowed to invoke blocking operations. Blocking operations invoked in the context of close operation will fail with <code>ECANCELED</code> error.</p>
+<p>To close a handle use <code>hclose</code> function.</p>
 <h2 id="return-value">RETURN VALUE</h2>
+<p>In case of success the function returns a newly allocated handle. In case of failure it returns -1 and sets <code>errno</code> to one of the values below.</p>
 <h2 id="errors">ERRORS</h2>
+<ul>
+<li><code>ECANCELED</code>: Current coroutine is being shut down.<br /></li>
+<li><code>EINVAL</code>: Invalid argument.<br /></li>
+<li><code>ENOMEM</code>: Not enough free memory to create the handle.</li>
+</ul>
 <h2 id="example">EXAMPLE</h2>
+<pre><code>static const int foo_type_placeholder = 0;
+static const void *foo_type = &amp;foo_type_placeholder;
+static void foo_close(int h);
+static const struct hvfptrs foo_vfptrs = {foo_close};
+
+struct foo_data {
+    ...
+};
+
+int foo_create() {
+    struct foo_data *data = malloc(sizeof(struct foo_data));
+    ...
+    return handle(foo_type, foodata, &amp;foo_vfptrs);
+}
+
+static void foo_close(int h) {
+    struct foo_data *data = hdata(h, foo_type);
+    ...
+    free(data);
+}</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<p><a href="hclose.html">hclose(3)</a><br /><a href="hdata.html">hdata(3)</a><br /><a href="hdup.html">hdup(3)</a></p>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--

@@ -13,10 +13,18 @@
 <pre><code>#include &lt;libdill.h&gt;
 int hdup(int h);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
+<p>Duplicates a handle. Both handles will refer to the same underlying object.</p>
+<p>Each duplicate of the handle requires it's own call to <code>hclose</code>. The underlying object is deallocated once all the handles pointing to it are closed.</p>
 <h2 id="return-value">RETURN VALUE</h2>
+<p>The duplicated handle in case of success or -1 in case of failure. In the latter case <code>errno</code> is set to one of the following values.</p>
 <h2 id="errors">ERRORS</h2>
+<ul>
+<li><code>EBADF</code>: Invalid handle.</li>
+</ul>
 <h2 id="example">EXAMPLE</h2>
+<pre><code>int h2 = hdup(h1);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<p><a href="handle.html">handle(3)</a><br /><a href="hclose.html">hclose(3)</a><br /><a href="hdata.html">hdata(3)</a></p>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--
