@@ -245,7 +245,6 @@ int main() {
     assert(rc == -1 && errno == EPIPE);
     hclose(ch8);
 
-#if 0
     int ch10 = channel(sizeof(int), 10);
     assert(ch10 >= 0);
     val = 999;
@@ -275,7 +274,6 @@ int main() {
     rc = chrecv(ch11, &val, sizeof(val), -1);
     assert(rc == -1 && errno == EPIPE);
     hclose(ch11);
-#endif
 
     /* Test whether chdone() unblocks all receivers. */
     int ch12 = channel(sizeof(int), 0);

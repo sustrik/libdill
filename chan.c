@@ -199,9 +199,9 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
         struct chclause *cl = &clauses[chosen];
         struct dill_chan *ch = hdata(cl->ch, dill_chan_type);
         dill_assert(ch);
-        if(dill_slow(ch->done)) {errno = EPIPE; return chosen;}
         switch(cl->op) {
         case CHSEND:
+            if(dill_slow(ch->done)) {errno = EPIPE; return chosen;}
             if(!dill_list_empty(&ch->in)) {
                 /* Copy the message directly to the waiting receiver. */
                 struct dill_chcl *chcl = dill_cont(dill_list_begin(&ch->in),
@@ -219,6 +219,8 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
             errno = 0;
             return chosen;
         case CHRECV:
+            if(dill_slow(ch->done && !ch->items)) {
+                errno = EPIPE; return chosen;}
             if(!ch->items) {
                 /* Unbuffered channel. But there's a sender waiting to send.
                    Copy the message directly from a waiting sender. */
