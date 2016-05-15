@@ -1,4 +1,4 @@
-%.html: %.md
+%.html: %.md header.html footer.html
 	pandoc -f markdown_github $< > $@.tmp
 	cat header.html $@.tmp footer.html > $@
 	rm $@.tmp
@@ -10,7 +10,6 @@ all: \
     chrecv.html \
     chsend.html \
     cls.html \
-    development.html \
     documentation.html \
     download.html \
     fdclean.html \
