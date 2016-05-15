@@ -23,9 +23,8 @@ int main() {
     return 0;
 }
 ```
-**NOTE: libdill is experimental and unstable. If you are looking for a stable concurrency library try [libmill](http://libmill.org).**
 
-## Installation
+To build and install the library:
 
 ```
 $ git clone git@github.com:sustrik/libdill.git
@@ -36,13 +35,15 @@ $ make
 $ sudo make install
 ```
 
-## Compilation
-
 Code using libdill is compiled in standard C way. The only additional requirement is to link it with libdill library:
 
 ```
 $ gcc -ldill -o hello hello.c
 ```
+
+Libdill is licensed under MIT/X11 license.
+
+<!--
 
 ## What is concurrency?
 
@@ -179,3 +180,5 @@ void tcp_connection_close(struct tcp_connection *self) {
     hclose(self->receiver);
 }
 ```
+
+-->

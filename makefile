@@ -26,7 +26,6 @@ all: \
     msleep.html \
     now.html \
     proc.html \
-    reference.html \
     setcls.html \
     yield.html
 
