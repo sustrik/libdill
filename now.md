@@ -17,7 +17,7 @@ Returns current time, in milliseconds.
 
 The function is meant to be used for creating deadlines. For example, a point of time one second on from now can be expressed as `now() + 1000`.
 
-Following values have speacial meaning and cannot be returned by the function:
+Following values have special meaning and cannot be returned by the function:
 
 * *0*: Immediate.
 * *-1*: Infinite.
