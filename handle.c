@@ -63,6 +63,9 @@ static void dill_handle_atexit(void) {
 
 int handle(const void *type, void *data, const struct hvfptrs *vfptrs) {
     if(dill_slow(!type || !data || !vfptrs)) {errno = EINVAL; return -1;}
+    /* Return ECANCELED if shutting down. */
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) return -1;
     /* Check mandatory virtual functions. */
     if(dill_slow(!vfptrs->close)) {errno = EINVAL; return -1;}
     /* If there's no space for the new handle expand the array. */
