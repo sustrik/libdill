@@ -13,10 +13,17 @@
 <pre><code>#include &lt;libdill.h&gt;
 int msleep(int64_t deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
+<p>Waits until the deadline expires.</p>
 <h2 id="return-value">RETURN VALUE</h2>
+<p>Returns 0 in case of success, -1 in case of error. In the latter case it sets <code>errno</code> to one of the values below.</p>
 <h2 id="errors">ERRORS</h2>
+<ul>
+<li><code>ECANCELED</code>: Current coroutine is being shut down.</li>
+</ul>
 <h2 id="example">EXAMPLE</h2>
+<pre><code>msleep(now() + 1000);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<p><a href="now.html">now(3)</a></p>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--
