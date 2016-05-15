@@ -55,11 +55,14 @@ static const struct hvfptrs dill_proc_vfptrs = {dill_proc_close};
 
 int dill_proc_prologue(int *hndl) {
     int err;
+    /* Return ECANCELED if shutting down. */
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) {err = ECANCELED; goto error1;}
     struct dill_proc *proc = malloc(sizeof(struct dill_proc));
     if(dill_slow(!proc)) {err = ENOMEM; goto error1;}
     proc->pid = -1;
     int closepipe[2];
-    int rc = pipe(closepipe);
+    rc = pipe(closepipe);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     proc->closepipe = closepipe[1];
     int h = handle(dill_proc_type, proc, &dill_proc_vfptrs);

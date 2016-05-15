@@ -80,6 +80,9 @@ static const struct hvfptrs dill_chan_vfptrs = {dill_chan_close};
 /******************************************************************************/
 
 int channel(size_t itemsz, size_t bufsz) {
+    /* Return ECANCELED if shutting down. */
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) return -1;
     /* Allocate the channel structure followed by the item buffer. */
     struct dill_chan *ch = (struct dill_chan*)
         malloc(sizeof(struct dill_chan) + (itemsz * bufsz));

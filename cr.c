@@ -238,6 +238,9 @@ static void dill_cancel(struct dill_cr *cr, int err);
 
 /* The intial part of go(). Allocates a new stack and handle. */
 int dill_prologue(sigjmp_buf **ctx) {
+    /* Return ECANCELED if shutting down. */
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) {errno = ECANCELED; return -1;}
     /* Allocate and initialise new stack. */
     size_t stacksz;
     struct dill_cr *cr = ((struct dill_cr*)dill_allocstack(&stacksz)) - 1;
