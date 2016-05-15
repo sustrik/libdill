@@ -13,8 +13,16 @@
 <pre><code>#include &lt;libdill.h&gt;
 int chdone(int ch);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
+<p>This function is used to let all the users of the channel, that there will be no new messages on the channel, ever.</p>
+<p>After <code>chdone</code> is called, all attempts to <code>chsend</code> to the channel will fail with <code>EPIPE</code> error.</p>
+<p>After <code>chode</code> is called and all remaining messages are read from the channel all further attempts to <code>chrecv</code> from the channel will faile with <code>EPIPE</code> error.</p>
 <h2 id="return-value">RETURN VALUE</h2>
+<p>The function returns 0 in case of success. In case of failure it returns -1 and sets <code>errno</code> to one of the following values.</p>
 <h2 id="errors">ERRORS</h2>
+<ul>
+<li><code>EBADF</code>: Not a valid handle.<br /></li>
+<li><code>ENOTSUP</code>: Operation not supported. Presumably, the handle isn't a channel.</li>
+</ul>
 <h2 id="example">EXAMPLE</h2>
 <h2 id="see-also">SEE ALSO</h2>
 <h2 id="authors">AUTHORS</h2>
