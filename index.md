@@ -24,17 +24,6 @@ int main() {
 }
 ```
 
-To build and install the library:
-
-```
-$ git clone git@github.com:sustrik/libdill.git
-$ cd libdill
-$ ./autogen.sh
-$ ./configure
-$ make
-$ sudo make install
-```
-
 Code using libdill is compiled in standard C way. The only additional requirement is to link it with libdill library:
 
 ```
