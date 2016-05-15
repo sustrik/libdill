@@ -66,7 +66,7 @@ int result = choose(clauses, 2, now() + 1000);
 ## SEE ALSO
 
 [channel(3)](channel.html)
-[chdup(3)](chdup.html)
+[chdone(3)](chdone.html)
 [chrecv(3)](chrecv.html)
 [chsend(3)](chsend.html)
 
