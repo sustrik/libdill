@@ -22,13 +22,22 @@
 * [yield](yield.html)
 
 
-## Reporting bugs
+## FAQ: How can I report a bug?
 
 Report a bug here:
 
 <https://github.com/sustrik/libdill/issues>
 
-## Accessing source code
+## FAQ: How does libdill differ from libmill?
+
+1. It's C-idiomatic. Whereas libmill takes Go's concurrency API a implements them in almost 1:1 manner in C, libdill tries to provide the same functionality via more C-like and POSIX-y API. For example, `choose` is a function rather than a language construct, Go-style panic is replaced by returning an error code and so on.
+2. Coroutines and processes can be canceled (see [hclose(3)](hclose.html)). This creates a foundation for "structured concurrency".
+3. `chdone` causes blocked `recv` on the channel to return `EPIPE` error rather than a value.
+4. `chdone` will signal senders to the channel as well as receivers. This allows for scenarios like multiple senders and single receiver communicating via single channel. The receiver can let the senders know that it's terminating via `chdone`.
+5. libmill's `fdwait` was replaced by `fdin` and `fdout`. The idea is that if we want data to flow via the connection in both directions in parallel we should use two coroutines rather than single one.
+6. There's no networking library in libdill. This is meant to be a separate project.
+
+## FAQ: How can I access source code?
 
 To clone the repository:
 
@@ -36,7 +45,7 @@ To clone the repository:
 $ git clone https://github.com/sustrik/libdill.git
 ```
 
-## Building from source
+To build from the source (you'll need automake and libtool):
 
 ```
 $ ./autogen.sh
@@ -46,8 +55,6 @@ $ make check
 $ sudo make install
 ```
 
-## Debugging
-
 For easy debugging use the following configure options:
 
 ```
@@ -56,20 +63,20 @@ $ ./configure --disable-shared --enable-debug --enable-valgrind
 
 The above will turn the optimisation out, generate debug symbols and link all the tests with the static version of the library. The second option means that the executables in `tests` subdirectory will be actual debuggable binaries rather that wrapper shell scripts. The last option instructs valgrind about where are the coroutine stacks located and thus prevents spurios valgrind warnings.
 
-## Continuous integration
+## FAQ: Is there continuous integration for libdill?
 
 <iframe width="100%" height="20" frameBorder="0"
 src="https://api.travis-ci.org/sustrik/libdill.svg?branch=master"></iframe>
 
 Travis: <https://travis-ci.org/sustrik/libdill>
 
-## Contributing
+## FAQ: How can I contribute?
 
 To contribute to libdill send your patch to the mailing list or, alternatively, send a GitHub pull request. In either case you have to state that your patch is submitted under MIT/X11 license, so that it can be incorporated into the mainline codebase without licesing issues.
 
 If you make a substantial contribution to a file, add your copyright to the file header. Irrespective of whether you do so, your name will be added to the AUTHORS file to indicate you own copyright to a part of the codebase.
 
-## Release process
+## FAQ: What is the release process?
 
 These instructions are intended for the project maintainers:
 
