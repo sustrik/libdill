@@ -72,7 +72,7 @@ Travis: <https://travis-ci.org/sustrik/libdill>
 
 ## FAQ: How can I contribute?
 
-To contribute to libdill send your patch to the mailing list or, alternatively, send a GitHub pull request. In either case you have to state that your patch is submitted under MIT/X11 license, so that it can be incorporated into the mainline codebase without licesing issues.
+To contribute to libdill create a GitHub pull request. You have to state that your patch is submitted under MIT/X11 license, so that it can be incorporated into the mainline codebase without licesing issues.
 
 If you make a substantial contribution to a file, add your copyright to the file header. Irrespective of whether you do so, your name will be added to the AUTHORS file to indicate you own copyright to a part of the codebase.
 
@@ -90,5 +90,5 @@ These instructions are intended for the project maintainers:
 * Add the package to `gh-pages` branch.
 * Adjust the download.html web page in `gh-pages` branch.
 * Commit and push to `gh-pages`.
-* Send the announcement about the release to the project mailing list.
+* Announce the release on twitter, etc.
 
