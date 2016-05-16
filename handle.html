@@ -52,7 +52,7 @@ struct foo_data {
 int foo_create() {
     struct foo_data *data = malloc(sizeof(struct foo_data));
     ...
-    return handle(foo_type, foodata, &amp;foo_vfptrs);
+    return handle(foo_type, data, &amp;foo_vfptrs);
 }
 
 static void foo_close(int h) {
