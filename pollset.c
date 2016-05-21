@@ -32,7 +32,7 @@
 #elif defined DILL_POLL
 #include "poll.inc"
 /* Defaults. */
-#elif defined __linux__ && !defined DILL_NO_EPOLL
+#elif 0 && defined __linux__ && !defined DILL_NO_EPOLL
 #include "epoll.inc"
 #elif defined BSD && !defined DILL_NO_KQUEUE
 #include "kqueue.inc"

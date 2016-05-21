@@ -68,6 +68,8 @@ struct dill_fdinfo {
     struct dill_list in;
     /* Clauses waiting for out. */
     struct dill_list out;
+    /* 1 if the file descriptor is cached. 0 otherwise. */
+    unsigned int cached : 1;
 };
 
 /* Info about all file descriptors.
@@ -89,6 +91,7 @@ int dill_pollset_init(int parent) {
         dill_fdinfos[i].idx = -1;
         dill_list_init(&dill_fdinfos[i].in);
         dill_list_init(&dill_fdinfos[i].out);
+        dill_fdinfos[i].cached = 0;
     }
     /* Start waiting for a signal from the parent process. */
     if(parent >= 0) {

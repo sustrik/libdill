@@ -105,6 +105,7 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
         struct kevent ev;
         EV_SET(&ev, fd, EVFILT_READ, EV_ADD, 0, 0, 0);
         int rc = kevent(dill_kfd, &ev, 1, NULL, 0, NULL);
+printf("rc=%d errno=%d\n", rc, errno);
         dill_assert(rc != -1);
         fdi->currevs = FDW_IN;
         fdi->firing = 0;
