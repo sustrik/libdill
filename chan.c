@@ -44,8 +44,6 @@ struct dill_chan {
     struct dill_list in;
     /* List of clauses wanting to send to the channel. */
     struct dill_list out;
-    /* 1 is chdone() was already called. 0 otherwise. */
-    int done;
     /* The message buffer directly follows the chan structure. 'bufsz' specifies
        the maximum capacity of the buffer. 'items' is the number of messages
        currently in the buffer. 'first' is the index of the next message to
@@ -54,6 +52,8 @@ struct dill_chan {
     size_t bufsz;
     size_t items;
     size_t first;
+    /* 1 is chdone() was already called. 0 otherwise. */
+    unsigned int done : 1;
 };
 
 /* Channel clause. */
