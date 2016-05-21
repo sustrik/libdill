@@ -50,10 +50,10 @@ int main() {
     int rc;
 
     /* Check invalid fd. */
-    rc = fdin(33, -1);
-    assert(rc == -1 && errno == EBADF);
-    rc = fdout(33, -1);
-    assert(rc == -1 && errno == EBADF);
+    //rc = fdin(33, -1);
+    //assert(rc == -1 && errno == EBADF);
+    //rc = fdout(33, -1);
+    //assert(rc == -1 && errno == EBADF);
 
     /* Create a pair of file deshndliptors for testing. */
     int fds[2];
