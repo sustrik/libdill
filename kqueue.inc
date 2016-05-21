@@ -100,7 +100,8 @@ void dill_pollset_term(void) {
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
-    /* If not yet cached check whether fd exists and if so add it to pollset. */    
+    /* If not yet cached check whether fd exists and if so add it to pollset. */
+printf("cached=%d\n", (int)fdi->cached);
     if(dill_slow(!fdi->cached)) {
         struct kevent ev;
         EV_SET(&ev, fd, EVFILT_READ, EV_ADD, 0, 0, 0);
