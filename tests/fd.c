@@ -47,9 +47,17 @@ coroutine void trigger(int fd, int64_t deadline) {
 }
 
 int main() {
+    int rc;
+
+    /* Check invalid fd. */
+    rc = fdin(-4567, -1);
+    assert(rc == -1 && errno == EBADF);
+    rc = fdout(-4567, -1);
+    assert(rc == -1 && errno == EBADF);
+
     /* Create a pair of file deshndliptors for testing. */
     int fds[2];
-    int rc = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+    rc = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
     assert(rc == 0);
 
     /* Check for out. */
