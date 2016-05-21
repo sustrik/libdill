@@ -43,8 +43,10 @@ int main(int argc, char *argv[]) {
     int64_t start = now();
 
     long i;
-    for(i = 0; i != count; ++i)
-        go(worker());
+    for(i = 0; i != count; ++i) {
+        int h = go(worker());
+        hclose(h);
+    }
 
     int64_t stop = now();
     long duration = (long)(stop - start);

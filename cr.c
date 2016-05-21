@@ -243,8 +243,9 @@ int dill_prologue(sigjmp_buf **ctx) {
     if(dill_slow(rc < 0)) {errno = ECANCELED; return -1;}
     /* Allocate and initialise new stack. */
     size_t stacksz;
-    struct dill_cr *cr = ((struct dill_cr*)dill_allocstack(&stacksz)) - 1;
+    struct dill_cr *cr = (struct dill_cr*)dill_allocstack(&stacksz);
     if(dill_slow(!cr)) return -1;
+    --cr;
     int hndl = handle(dill_cr_type, cr, &dill_cr_vfptrs);
     if(dill_slow(hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return -1;}
     dill_slist_item_init(&cr->ready);
