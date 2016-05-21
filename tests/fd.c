@@ -50,9 +50,9 @@ int main() {
     int rc;
 
     /* Check invalid fd. */
-    rc = fdin(-4567, -1);
+    rc = fdin(33, -1);
     assert(rc == -1 && errno == EBADF);
-    rc = fdout(-4567, -1);
+    rc = fdout(33, -1);
     assert(rc == -1 && errno == EBADF);
 
     /* Create a pair of file deshndliptors for testing. */

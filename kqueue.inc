@@ -53,6 +53,8 @@ struct dill_fdinfo {
     /* 1-based index, 0 stands for "not part of the list", DILL_ENDLIST
        stads for "no more elements in the list. */
     uint32_t next;
+    /* 1 if the file descriptor is cached. 0 otherwise. */
+    unsigned int cached : 1;
 };
 
 static struct dill_fdinfo *dill_fdinfos = NULL;
@@ -98,8 +100,19 @@ void dill_pollset_term(void) {
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
+    /* If not yet cached check whether fd exists and if so add it to pollset. */    
+    if(dill_slow(!fdi->cached)) {
+        struct kevent ev;
+        EV_SET(&ev, fd, EVFILT_READ, EV_ADD, 0, 0, 0);
+        int rc = kevent(dill_kfd, &ev, 1, NULL, 0, NULL);
+        dill_assert(rc != -1);
+        fdi->currevs = FDW_IN;
+        fdi->firing = 0;
+        fdi->next = 0;
+        fdi->cached = 1;
+    }
     /* If fd is not yet in the pollset add it there. */
-    if(!fdi->next) {
+    else if(!fdi->next) {
         fdi->next = dill_changelist;
         dill_changelist = fd + 1;
     }
@@ -111,8 +124,19 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
 int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
     if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
+    /* If not yet cached check whether fd exists and if so add it to pollset. */    
+    if(dill_slow(!fdi->cached)) {
+        struct kevent ev;
+        EV_SET(&ev, fd, EVFILT_WRITE, EV_ADD, 0, 0, 0);
+        int rc = kevent(dill_kfd, &ev, 1, NULL, 0, NULL);
+        dill_assert(rc != -1);
+        fdi->currevs = FDW_OUT;
+        fdi->firing = 0;
+        fdi->next = 0;
+        fdi->cached = 1;
+    }
     /* If fd is not yet in the pollset add it there. */
-    if(!fdi->next) {
+    else if(!fdi->next) {
         fdi->next = dill_changelist;
         dill_changelist = fd + 1;
     }
@@ -147,6 +171,7 @@ void dill_pollset_clean(int fd) {
         fdi->next = dill_changelist;
         dill_changelist = fd + 1;
     }
+    fdi->cached = 0;
 }
 
 int dill_pollset_poll(int timeout) {
