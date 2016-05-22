@@ -23,6 +23,7 @@
 */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -68,6 +69,8 @@ struct dill_fdinfo {
     struct dill_list in;
     /* Clauses waiting for out. */
     struct dill_list out;
+    /* 1 is the file descriptor was used before, 0 otherwise. */
+    unsigned int cached : 1;
 };
 
 /* Info about all file descriptors.
@@ -89,6 +92,7 @@ int dill_pollset_init(int parent) {
         dill_fdinfos[i].idx = -1;
         dill_list_init(&dill_fdinfos[i].in);
         dill_list_init(&dill_fdinfos[i].out);
+        dill_fdinfos[i].cached = 0;
     }
     /* Start waiting for a signal from the parent process. */
     if(parent >= 0) {
@@ -115,6 +119,12 @@ void dill_pollset_term(void) {
 
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    if(dill_slow(!fdi->cached)) {
+        int flags = fcntl(fd, F_GETFD);
+        if(flags < 0 && errno == EBADF) return -1;
+        dill_assert(flags >= 0);
+        fdi->cached = 1;
+    }
     if(fdi->idx < 0) {
         dill_assert(dill_pollset_size < dill_maxfds());
         fdi->idx = dill_pollset_size;
@@ -129,6 +139,12 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
 
 int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    if(dill_slow(!fdi->cached)) {
+        int flags = fcntl(fd, F_GETFD);
+        if(flags < 0 && errno == EBADF) return -1;
+        dill_assert(flags >= 0);
+        fdi->cached = 1;
+    }
     if(fdi->idx < 0) {
         dill_assert(dill_pollset_size < dill_maxfds());
         fdi->idx = dill_pollset_size;
@@ -142,6 +158,8 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
 }
 
 void dill_pollset_clean(int fd) {
+    struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    fdi->cached = 0;
 }
 
 int dill_pollset_poll(int timeout) {
