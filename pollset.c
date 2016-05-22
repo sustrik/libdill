@@ -34,7 +34,7 @@
 /* Defaults. */
 #elif defined __linux__ && !defined DILL_NO_EPOLL
 #include "epoll.inc"
-#elif defined BSD && !defined DILL_NO_KQUEUE
+#elif (defined BSD || defined __APPLE__) && !defined DILL_NO_KQUEUE
 #include "kqueue.inc"
 #else
 #include "poll.inc"
