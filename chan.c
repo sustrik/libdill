@@ -261,8 +261,7 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
             clauses[i].op == CHRECV ? &ch->in : &ch->out, NULL);
     }
     struct dill_tmcl tmcl;
-    if(deadline > 0)
-        dill_timer(&tmcl, nclauses, deadline);
+    dill_timer(&tmcl, nclauses, deadline);
     int id = dill_wait();
     if(dill_slow(id < 0)) return -1;
     if(dill_slow(id == nclauses)) {errno = ETIMEDOUT; return -1;}

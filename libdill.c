@@ -58,19 +58,15 @@ int msleep(int64_t deadline) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
-    /* Trivial case. No waiting, but we do want a context switch. */
-    if(dill_slow(deadline == 0)) return yield();
     /* Actual waiting. */
     struct dill_tmcl tmcl;
-    if(deadline > 0)
-        dill_timer(&tmcl, 1, deadline);
+    dill_timer(&tmcl, 1, deadline);
     int id = dill_wait();
     if(dill_slow(id < 0)) return -1;
     return 0;
 }
 
 int fdin(int fd, int64_t deadline) {
-    /* TODO: deadline == 0? */
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
@@ -80,8 +76,7 @@ int fdin(int fd, int64_t deadline) {
     if(dill_slow(rc < 0)) return -1;
     /* Optionally, start waiting for a timer. */
     struct dill_tmcl tmcl;
-    if(deadline > 0)
-        dill_timer(&tmcl, 2, deadline);
+    dill_timer(&tmcl, 2, deadline);
     /* Block. */
     int id = dill_wait();
     if(dill_slow(id < 0)) return -1;
@@ -90,7 +85,6 @@ int fdin(int fd, int64_t deadline) {
 }
 
 int fdout(int fd, int64_t deadline) {
-    /* TODO: deadline == 0? */
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
@@ -100,8 +94,7 @@ int fdout(int fd, int64_t deadline) {
     if(dill_slow(rc < 0)) return -1;
     /* Optionally, start waiting for a timer. */
     struct dill_tmcl tmcl;
-    if(deadline > 0)
-        dill_timer(&tmcl, 2, deadline);
+    dill_timer(&tmcl, 2, deadline);
     /* Block. */
     int id = dill_wait();
     if(dill_slow(id < 0)) return -1;

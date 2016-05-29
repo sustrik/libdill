@@ -147,7 +147,9 @@ static void dill_poller_term(void) {
 /* Adds a timer clause to the list of waited for clauses. */
 void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
     dill_poller_init(-1);
-    dill_assert(deadline >= 0);
+    /* If the deadline is infinite there's nothing to wait for. */
+    if(deadline < 0) return;
+    /* Finite deadline. */
     tmcl->deadline = deadline;
     /* Move the timer into the right place in the ordered list
        of existing timers. TODO: This is an O(n) operation! */

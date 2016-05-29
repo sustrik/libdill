@@ -60,9 +60,11 @@ int main() {
     rc = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
     assert(rc == 0);
 
-    /* Check for out. */
+    /* Check for in & out. */
     rc = fdout(fds[0], 0);
     assert(rc == 0);
+    rc = fdin(fds[0], 0);
+    assert(rc == -1 && errno == ETIMEDOUT);
 
     /* Check with infinite timeout. */
     rc = fdout(fds[0], -1);
