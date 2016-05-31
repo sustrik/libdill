@@ -90,10 +90,10 @@ int channel(size_t itemsz, size_t bufsz) {
     ch->sz = itemsz;
     dill_list_init(&ch->in);
     dill_list_init(&ch->out);
-    ch->done = 0;
     ch->bufsz = bufsz;
     ch->items = 0;
     ch->first = 0;
+    ch->done = 0;
     /* Allocate a handle to point to the channel. */
     int h = handle(dill_chan_type, ch, &dill_chan_vfptrs);
     if(dill_slow(h < 0)) {
@@ -144,6 +144,7 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
 int chdone(int h) {
     struct dill_chan *ch = hdata(h, dill_chan_type);
     if(dill_slow(!ch)) return -1;
+    if(ch->done) {errno = EPIPE; return -1;}
     ch->done = 1;
     /* Resume any remaining senders and receivers on the channel
        with EPIPE error. */
