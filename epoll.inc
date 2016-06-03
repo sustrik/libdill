@@ -163,13 +163,20 @@ void dill_pollset_clean(int fd) {
         ev.events = 0;
         int rc = epoll_ctl(dill_efd, EPOLL_CTL_DEL, fd, &ev);
         dill_assert(rc == 0 || errno == ENOENT);
+        fdi->currevs = 0;
     }
-    /* Clean the cache. */
-    fdi->currevs = 0;
-    if(!fdi->next) {
-        fdi->next = dill_changelist;
-        dill_changelist = fd + 1;
+    /* If needed, remove the fd from the changelist. */
+    if(fdi->next) {
+        int *pidx = &dill_changelist;
+        while(1) {
+            dill_assert(*pidx != 0 && *pidx != DILL_ENDLIST);
+            if(*pidx - 1 == fd) break;
+            pidx = &dill_fdinfos[*pidx - 1].next;
+        }
+        *pidx = fdi->next;
+        fdi->next = 0;
     }
+    /* Mark the fd as not used. */
     fdi->cached = 0;
 }
 
