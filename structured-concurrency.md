@@ -101,7 +101,7 @@ coroutine void foo(void) {
 
 Processes launched by `proc` behave similarly. When `hclose` is called they are not killed immediately. Rather, blocking calls in the main coroutine start failing with `ECANCELED` error.
 
-If one of the processes in the process tree fails because of a bug or when it is killed by hand, all its child processes behave as if they were closed using `hclose`, i.e. blocking calls in the main coroutine start failing with `ECANCELED` error:
+If one of the processes in the process tree crashes or if it is killed, all its child processes behave as if they were closed using `hclose`, i.e. blocking calls in the main coroutine start failing with `ECANCELED` error:
 
 ![](index6.jpeg)
 
