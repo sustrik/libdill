@@ -29,7 +29,7 @@ Returns 0 in case of success. In case of failure it returns -1 and sets `errno` 
 ## EXAMPLE
 
 ```
-hclose(h);
+hfinish(h, now() + 1000);
 ```
 
 ## SEE ALSO

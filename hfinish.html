@@ -31,7 +31,7 @@ int hfinished(int h, int64_t deadline);</code></pre>
 <li><code>ETIMEDOUT</code>: Timeout expired. The underlying object was closed forcefully and may have not finished its work.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>hclose(h);</code></pre>
+<pre><code>hfinish(h, now() + 1000);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
 <p><a href="handle.html">handle(3)</a><br /><a href="hclose.html">hclose(3)</a><br /><a href="hdata.html">hdata(3)</a><br /><a href="hdup.html">hdup(3)</a></p>
 <h2 id="authors">AUTHORS</h2>
