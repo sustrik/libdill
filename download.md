@@ -10,6 +10,14 @@ $ make
 $ sudo make install
 ```
 
+## Version 0.5-beta
+
+Released on Jun 3rd, 2016.
+
+<http://libdill.org/libdill-0.5-beta.tar.gz>
+
+SH1 checksum: d8fc8ce823ee1ad3840df066286003c006d39e08
+
 ## Version 0.4-beta
 
 Released on May 22nd, 2016.
