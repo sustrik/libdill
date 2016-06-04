@@ -2,7 +2,7 @@
 
 ## NAME
 
-hclose - closes a handle
+hclose - hard-cancels a handle
 
 ## SYNOPSIS
 
@@ -15,9 +15,9 @@ int hclose(int h);
 
 Closes a handle.
 
-Once all handles pointing to the same underlying object are closed the object is deallocated.
+Once all handles pointing to the same underlying object are closed the object is deallocated immediately.
 
-NOTE: Given that implementations of close for various handle types are not allowed to do blocking calls, this function is non-blocking.
+The function guarantees that all resources will be deallocated, however, it does not guarantee that handle's work will be fully finished. E.g. it may not flush data to network or similar.
 
 ## RETURN VALUE
 
@@ -38,6 +38,7 @@ hclose(h);
 [handle(3)](handle.html)
 [hdata(3)](hdata.html)
 [hdup(3)](hdup.html)
+[hfinish(3)](hfinish.html)
 
 ## AUTHORS
 

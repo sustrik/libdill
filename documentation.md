@@ -15,6 +15,7 @@
 * [hclose](hclose.html)
 * [hdata](hdata.html)
 * [hdup](hdup.html)
+* [hfinish](hfinish.html)
 * [msleep](msleep.html)
 * [now](now.html)
 * [proc](proc.html)

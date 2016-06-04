@@ -23,8 +23,9 @@ The function returns 0 in case of success or -1 in case of error. In the latter 
 
 ## ERRORS
 
+* `EBADF`: Not a file descriptor.
 * `ECANCELED`: Current coroutine is being shut down.
-* `EEXIST`: Another coroutine is already doing `fdout` on the file descriptor.
+* `EEXIST`: Another coroutine is already blocked on `fdout` with this file descriptor.
 * `ETIMEDOUT`: Deadline expired while waiting for the file descriptor.
 
 ## EXAMPLE

@@ -29,7 +29,8 @@ int chdone(int ch);</code></pre>
 <h2 id="errors">ERRORS</h2>
 <ul>
 <li><code>EBADF</code>: Not a valid handle.<br /></li>
-<li><code>ENOTSUP</code>: Operation not supported. Presumably, the handle isn't a channel.</li>
+<li><code>ENOTSUP</code>: Operation not supported. Presumably, the handle isn't a channel.<br /></li>
+<li><code>EPIPE</code>: <code>chdone</code> was already called for this channel.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
 <h2 id="see-also">SEE ALSO</h2>

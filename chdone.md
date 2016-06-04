@@ -27,6 +27,7 @@ The function returns 0 in case of success. In case of failure it returns -1 and 
 
 * `EBADF`: Not a valid handle.
 * `ENOTSUP`: Operation not supported. Presumably, the handle isn't a channel.
+* `EPIPE`:  `chdone` was already called for this channel.
 
 ## EXAMPLE
 
