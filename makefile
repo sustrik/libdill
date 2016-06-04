@@ -20,6 +20,7 @@ all: \
     hclose.html \
     hdata.html \
     hdup.html \
+    hfinish.html \
     index.html \
     msleep.html \
     now.html \
