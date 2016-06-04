@@ -31,9 +31,9 @@ Following table explains the trade-offs between the two mechanisms:
 | **scheduling**          | cooperative            | preemptive             |
 | **failure isolation**   | no                     | yes                    |
 
-Launching a concurrent function -- a `coroutine` in libdill terminology -- using `go` construct is extremely fast, if requires only few machine instructions. `proc` launches a separate OS process with its own address space and so on. It is much slower.
+Launching a concurrent function -- a `coroutine` in libdill terminology -- using `go` construct is extremely fast, if requires only few machine instructions. In other words, coroutines can be used as flow control mechanism, similar to `if` or `while`. The performance is comparable. `proc`, on the other hand, launches a separate OS process with its own address space and so on. It is much slower.
 
-Same applies to switching between different coroutines. While switching from one coroutine to other inside a single process is super fast, switching between processes is slow. OS scheduler gets involved, TLBs are switched and so on. Context switch between processes is a system hiccup and it often takes many thousands cycles to get back to speed.
+Same applies to switching between different coroutines. While switching from one coroutine to other inside a single process is super fast, switching between processes is slow. OS scheduler gets involved, TLBs are switched and so on. Context switch between processes is a system hiccup and it often takes many thousands cycles to get back up to speed.
 
 However, there's one huge advantage of using separate processes. They may run in parallel, meaning that they can utilise multiple CPU cores. Launching the coroutine inside of the process, on the other hand, means that it shares CPU with the parent coroutine. If you are using `go` exclusively your program will use only a single CPU core even on a 32-core machine.
 
