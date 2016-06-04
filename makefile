@@ -26,5 +26,6 @@ all: \
     now.html \
     proc.html \
     setcls.html \
+    structured-concurrency.html \
     yield.html
 

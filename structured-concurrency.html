@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+</ul>
+<h2 id="what-is-concurrency">What is concurrency?</h2>
+<p>Concurrency means that multiple functions can run independently of each another. It can mean that they are running in parallel on multiple CPU cores. It can also mean that they are running on a single CPU core and the system is transparently switching between them.</p>
+<h2 id="how-is-concurrency-implemented-in-libdill">How is concurrency implemented in libdill?</h2>
+<p>Functions that are meant to run concurrently must be annotated by <code>coroutine</code> modifier.</p>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> foo(<span class="dt">int</span> arg1, <span class="dt">const</span> <span class="dt">char</span> *arg2);</code></pre>
+<p>To launch the function in the same process as the caller use <code>go</code> keyword:</p>
+<pre class="sourceCode c"><code class="sourceCode c">go(foo(<span class="dv">34</span>, <span class="st">&quot;ABC&quot;</span>));</code></pre>
+<p>To launch it in a separate process use <code>proc</code> keyword:</p>
+<pre class="sourceCode c"><code class="sourceCode c">proc(foo(<span class="dv">34</span>, <span class="st">&quot;ABC&quot;</span>));</code></pre>
+<p>Following table explains the trade-offs between the two mechanisms:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="left">go()</th>
+<th align="left">proc()</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><strong>lightweight</strong></td>
+<td align="left">yes</td>
+<td align="left">no</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>parallel</strong></td>
+<td align="left">no</td>
+<td align="left">yes</td>
+</tr>
+<tr class="odd">
+<td align="left"><strong>scheduling</strong></td>
+<td align="left">cooperative</td>
+<td align="left">preemptive</td>
+</tr>
+<tr class="even">
+<td align="left"><strong>failure isolation</strong></td>
+<td align="left">no</td>
+<td align="left">yes</td>
+</tr>
+</tbody>
+</table>
+<p>Launching a concurrent function -- a <code>coroutine</code> in libdill terminology -- using <code>go</code> construct is extremely fast, if requires only few machine instructions. <code>proc</code> launches a separate OS process with its own address space and so on. It is much slower.</p>
+<p>Same applies to switching between different coroutines. While switching from one coroutine to other inside a single process is super fast, switching between processes is slow. OS scheduler gets involved, TLBs are switched and so on. Context switch between processes is a system hiccup and it often takes many thousands cycles to get back to speed.</p>
+<p>However, there's one huge advantage of using separate processes. They may run in parallel, meaning that they can utilise multiple CPU cores. Launching the coroutine inside of the process, on the other hand, means that it shares CPU with the parent coroutine. If you are using <code>go</code> exclusively your program will use only a single CPU core even on a 32-core machine.</p>
+<p>From the performance point of view, the best strategy is to have as many processes as there are CPU cores and deal with any remaining concurrency needs inside the process via <code>go</code> mechanism.</p>
+<p>It's also worth noting that scheduling between different processes is preemptive, in other words that switch from one process to another can happen at any point of time.</p>
+<p>Coroutines within a single process are scheduled cooperatively. What that means is that one coroutine has to explicitly yield control of the CPU to allow a different coroutine to run. In the typical case this is done transparently to the user: When coroutine invokes a function that would block (like <code>msleep</code> or<code>chrecv</code>) the CPU is automatically yielded. However, if a coroutine does<br />work without calling any blocking functions it may hold the CPU forever. For these cases there's a <code>yield</code> function to yield the CPU to other coroutines manually.</p>
+<p>Finally, there's a difference in how failures are handled. If a corutine crashes it takes down entire process along with all the other coroutines running inside it. However, if two coroutines are running in two different processes the fact that one of them crashes has no effect on the other one.</p>
+<h2 id="what-is-structured-concurrency">What is structured concurrency?</h2>
+<p>Structured concurrency means that lifetimes of concurrent functions are cleanly nested one inside another. If coroutine <code>foo</code> launches coroutine <code>bar</code> then <code>bar</code> must finish before <code>foo</code> finishes.</p>
+<p>This is not structured concurrency:</p>
+<p><img src="index1.jpeg" /></p>
+<p>On the other hand, this is structured concurrency:</p>
+<p><img src="index2.jpeg" /></p>
+<p>The goal of structured concurrency is to guarantee encapsulation. If main function calls <code>foo</code> which in turn launches <code>bar</code> in concurrent fashion, main is guaranteed that after <code>foo</code> finishes there are no leftover functions still running in the background.</p>
+<p>What you end up with is a tree of coroutines rooted in the main function and spreading out toward the smallest worker functions. You also think of it as a generalisation of call stack, a call tree, if you will, in which you can walk from any particular function towards the root until you reach the main function:</p>
+<p><img src="index3.jpeg" /></p>
+<p>It should be noted that the call tree, via <code>proc</code> mechanism, can span multiple processes:</p>
+<p><img src="index5.jpeg" /></p>
+<h2 id="how-is-structured-concurrency-implemented-in-libdill">How is structured concurrency implemented in libdill?</h2>
+<p>As with everything that's idiomatic C you have to do it by hand.</p>
+<p>The good news is that it's easy to do.</p>
+<p>Both <code>go</code> and <code>proc</code> return a handle. The handle can be closed thus killing the concurrent function.</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> h = go(foo());
+do_work();
+hclose(h);</code></pre>
+<p>What about function being killed? It may have some resources allocated and we want it to finish cleanly, not leaving any memory or resource leak behind.</p>
+<p>The mechanism is simple. In function being killed by <code>hclose</code> all the blocking calls start returning <code>ECANCELED</code> error. That on one hand forces the function to finish quickly (there's no much you can do without blocking functions anyway) but it also provides a way to clean up:</p>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> foo(<span class="dt">void</span>) {
+    <span class="dt">void</span> *resource = malloc(<span class="dv">1000</span>);
+    <span class="kw">while</span>(<span class="dv">1</span>) {
+        <span class="dt">int</span> rc = msleep(now() + <span class="dv">100</span>);
+        <span class="kw">if</span>(rc == -<span class="dv">1</span> &amp;&amp; errno == ECANCELED) {
+            free(resource);
+            <span class="kw">return</span>;
+        }
+    }
+}</code></pre>
+<p>Processes launched by <code>proc</code> behave similarly. When <code>hclose</code> is called they are not killed immediately. Rather, blocking calls in the main coroutine start failing with <code>ECANCELED</code> error.</p>
+<p>If one of the processes in the process tree fails because of a bug or when it is killed by hand, all its child processes behave as if they were closed using <code>hclose</code>, i.e. blocking calls in the main coroutine start failing with <code>ECANCELED</code> error:</p>
+<p><img src="index6.jpeg" /></p>
+<h2 id="what-about-asynchronous-objects">What about asynchronous objects?</h2>
+<p>Sometimes you don't want to launch a coroutine but rather to create an object that runs coroutines in the background. For example, an object called &quot;tcp_connection&quot; may run two coroutines, one for asynchronously reading data from the network, one for sending data to the network.</p>
+<p>Still, it would be nice if the object was a node in the calltree, just like a coroutine is.</p>
+<p>In other words, you want a guarantee that once the object is deallocated there are no leftover coroutines running:</p>
+<p><img src="index4.jpeg" /></p>
+<p>And there's no trick there. Just do it in the most straightforward way. Launch the coroutines in function that opens the object and close them in the function the closes the object. Once main function closes the connection object, both sender and receiver corotuines will be automatically stopped.</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> tcp_connection {
+    <span class="dt">int</span> sender;
+    <span class="dt">int</span> receiver;
+}
+
+<span class="dt">void</span> tcp_connection_open(<span class="kw">struct</span> tcp_connection *self) {
+    self-&gt;sender = go(tcp_sender(self));
+    self-&gt;receiver = go(tcp_receiver(self));
+}
+
+<span class="dt">void</span> tcp_connection_close(<span class="kw">struct</span> tcp_connection *self) {
+    hclose(self-&gt;sender);
+    hclose(self-&gt;receiver);
+}</code></pre>
+</body>

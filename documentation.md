@@ -29,6 +29,10 @@ Report a bug here:
 
 <https://github.com/sustrik/libdill/issues>
 
+## FAQ: What's structured concurrency?
+
+Check this short introductory [article](structured-concurrency.html) about structured concurrency.
+
 ## FAQ: How does libdill differ from libmill?
 
 1. It's C-idiomatic. Whereas libmill takes Go's concurrency API a implements them in almost 1:1 manner in C, libdill tries to provide the same functionality via more C-like and POSIX-y API. For example, `choose` is a function rather than a language construct, Go-style panic is replaced by returning an error code and so on.
