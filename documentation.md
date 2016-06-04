@@ -35,7 +35,13 @@ Check this short introductory [article](structured-concurrency.html) about struc
 
 ## FAQ: How does libdill differ from libmill?
 
-1. It's C-idiomatic. Whereas libmill takes Go's concurrency API a implements them in almost 1:1 manner in C, libdill tries to provide the same functionality via more C-like and POSIX-y API. For example, `choose` is a function rather than a language construct, Go-style panic is replaced by returning an error code and so on.
+`libmill` was a project to copy Go's concurrency model to C 1:1 without introducing any innovations or experiments. The project is finished now. It will be maintained but won't change in the future.
+
+`libdill` is a follow-up project that diverges from the Go model and experiments with structured concurrency. It is not stable yet and it may change a bit in the future.
+
+Technically, there are following differences:
+
+1. It's C-idiomatic. Whereas libmill takes Go's concurrency API a implements them in almost identical manner in C, libdill tries to provide the same functionality via more C-like and POSIX-y API. For example, `choose` is a function rather than a language construct, Go-style panic is replaced by returning an error code and so on.
 2. Coroutines and processes can be canceled. This creates a foundation for "structured concurrency".
 3. `chdone` causes blocked `recv` on the channel to return `EPIPE` error rather than a value.
 4. `chdone` will signal senders to the channel as well as receivers. This allows for scenarios like multiple senders and single receiver communicating via single channel. The receiver can let the senders know that it's terminating via `chdone`.
