@@ -2,9 +2,9 @@
 ## Installation
 
 ```
-$ wget http://libdill.org/libdill-0.3-beta.tar.gz
-$ tar -xzf libdill-0.4-beta.tar.gz 
-$ cd libdill-0.4-beta
+$ wget http://libdill.org/libdill-0.5-beta.tar.gz
+$ tar -xzf libdill-0.5-beta.tar.gz 
+$ cd libdill-0.5-beta
 $ ./configure
 $ make
 $ sudo make install
