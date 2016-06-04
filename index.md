@@ -27,7 +27,7 @@ int main() {
 Code using libdill is compiled in standard C way. The only additional requirement is to link it with libdill library:
 
 ```
-$ gcc -ldill -o hello hello.c
+$ cc -ldill -o hello hello.c
 ```
 
 Libdill is licensed under MIT/X11 license.
