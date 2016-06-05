@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <sys/event.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "cr.h"
 #include "fd.h"
@@ -170,7 +171,7 @@ void dill_pollset_clean(int fd) {
     fdi->currevs = 0;
     /* If needed, remove the fd from the changelist. */
     if(fdi->next) {
-        int *pidx = &dill_changelist;
+        uint32_t *pidx = &dill_changelist->next;
         while(1) {
             dill_assert(*pidx != 0 && *pidx != DILL_ENDLIST);
             if(*pidx - 1 == fd) break;
