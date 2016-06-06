@@ -200,7 +200,7 @@ int dill_pollset_poll(int timeout) {
         }
         int fd = dill_changelist - 1;
         struct dill_fdinfo *fdi = &dill_fdinfos[fd];
-        if(!dill_list_empty(&fdi->in) | fdi == dill_parentinfo) {
+        if(!dill_list_empty(&fdi->in) || fdi == dill_parentinfo) {
             if(!(fdi->currevs & FDW_IN)) {
                 EV_SET(&chngs[nchngs], fd, EVFILT_READ, EV_ADD, 0, 0, 0);
                 fdi->currevs |= FDW_IN;
