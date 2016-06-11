@@ -11,4 +11,3 @@ http://libdill.org
 ## License
 
 Libdill is licensed under MIT/X11 license.
-
