@@ -5,7 +5,7 @@ includedir=@includedir@
 
 Name: libdill
 Description: coroutine library
-URL: http://example.org/
+URL: http://libdill.org/
 Version: @DILL_ABI_VERSION@
 Requires:
 Libs: -L${libdir} -ldill @LIBS@
