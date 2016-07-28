@@ -46,12 +46,8 @@ struct dill_proc {
 
 static const int dill_proc_type_placeholder = 0;
 static const void *dill_proc_type = &dill_proc_type_placeholder;
-static int dill_proc_finish(int h, int64_t deadline);
 static void dill_proc_close(int h);
-static const struct hvfptrs dill_proc_vfptrs = {
-    dill_proc_finish,
-    dill_proc_close
-};
+static const struct hvfptrs dill_proc_vfptrs = {dill_proc_close};
 
 /******************************************************************************/
 /*  Creating and terminating processes.                                       */
@@ -103,11 +99,6 @@ error1:
 void dill_proc_epilogue(void) {
     /* Terminate the process. */
     exit(0);
-}
-
-static int dill_proc_finish(int h, int64_t deadline) {
-    dill_proc_close(h);
-    return 0;
 }
 
 static void dill_proc_close(int h) {

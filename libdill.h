@@ -80,7 +80,6 @@ DILL_EXPORT int64_t now(void);
 /******************************************************************************/
 
 struct hvfptrs {
-    int (*finish)(int h, int64_t deadline);
     void (*close)(int h);
 };
 
@@ -88,7 +87,6 @@ DILL_EXPORT int handle(const void *type, void *data,
     const struct hvfptrs *vfptrs);
 DILL_EXPORT int hdup(int h);
 DILL_EXPORT void *hdata(int h, const void *type);
-DILL_EXPORT int hfinish(int h, int64_t deadline);
 DILL_EXPORT int hclose(int h);
 
 /******************************************************************************/

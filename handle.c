@@ -114,12 +114,6 @@ void *hdata(int h, const void *type) {
     return hndl->data;
 }
 
-int hfinish(int h, int64_t deadline) {
-    CHECKHANDLE(h, -1);
-    if(dill_slow(!hndl->vfptrs.finish)) {errno = ENOTSUP; return -1;}
-    return hndl->vfptrs.finish(h, deadline);
-}
-
 int hclose(int h) {
     CHECKHANDLE(h, -1);
     /* If there are multiple duplicates of this handle just remove one

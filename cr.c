@@ -229,9 +229,8 @@ static void dill_poller_wait(int block) {
 
 static const int dill_cr_type_placeholder = 0;
 static const void *dill_cr_type = &dill_cr_type_placeholder;
-static int dill_cr_finish(int h, int64_t deadline);
 static void dill_cr_close(int h);
-static const struct hvfptrs dill_cr_vfptrs = {dill_cr_finish, dill_cr_close};
+static const struct hvfptrs dill_cr_vfptrs = {dill_cr_close};
 
 /******************************************************************************/
 /*  Creation and termination of coroutines.                                   */
@@ -282,11 +281,6 @@ void dill_epilogue(void) {
     /* With no clauses added, this call will never return. */
     dill_assert(dill_slist_empty(&dill_r->clauses));
     dill_wait();
-}
-
-static int dill_cr_finish(int h, int64_t deadline) {
-    dill_cr_close(h);
-    return 0;
 }
 
 /* Gets called when coroutine handle is closed. */
