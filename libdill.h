@@ -103,6 +103,46 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 DILL_EXPORT int dill_proc_prologue(int *hndl);
 DILL_EXPORT void dill_proc_epilogue(void);
 
+#if defined(__x86_64__)
+#define dill_setjmp(ctx) ({\
+    int ret;\
+    asm ("lea     LJMPRET%=(%%rip), %%rcx\n\t"\
+        "xor     %%rax, %%rax\n\t"\
+        "mov     %%rbx, (%%rdx)\n\t"\
+        "mov     %%rbp, 8(%%rdx)\n\t"\
+        "mov     %%r12, 16(%%rdx)\n\t"\
+        "mov     %%rsp, 24(%%rdx)\n\t"\
+        "mov     %%r13, 32(%%rdx)\n\t"\
+        "mov     %%r14, 40(%%rdx)\n\t"\
+        "mov     %%r15, 48(%%rdx)\n\t"\
+        "mov     %%rcx, 56(%%rdx)\n\t"\
+        "mov     %%rdi, 64(%%rdx)\n\t"\
+        "mov     %%rsi, 72(%%rdx)\n\t"\
+        "LJMPRET%=:\n\t"\
+        : "=a" (ret)\
+        : "d" (ctx) : "memory");\
+    ret;\
+})
+#define dill_longjmp(ctx) \
+    asm("movq   (%%rax), %%rbx\n\t"\
+	    "movq   8(%%rax), %%rbp\n\t"\
+	    "movq   16(%%rax), %%r12\n\t"\
+	    "movq   24(%%rax), %%rdx\n\t"\
+	    "movq   32(%%rax), %%r13\n\t"\
+	    "movq   40(%%rax), %%r14\n\t"\
+	    "mov    %%rdx, %%rsp\n\t"\
+	    "movq   48(%%rax), %%r15\n\t"\
+	    "movq   56(%%rax), %%rdx\n\t"\
+	    "movq   64(%%rax), %%rdi\n\t"\
+	    "movq   72(%%rax), %%rsi\n\t"\
+	    "jmp    *%%rdx\n\t"\
+        : : "a" (ctx) : "rdx" \
+    )
+#else
+#define dill_setjmp(ctx) sigsetjmp(*ctx, 0)
+#define dill_longjmp(ctx) siglongjmp(*ctx, 1)
+#endif
+
 /* Statement expressions are a gcc-ism but they are also supported by clang.
    Given that there's no other way to do this, screw other compilers for now.
    See https://gcc.gnu.org/onlinedocs/gcc-3.2/gcc/Statement-Exprs.html */
@@ -111,7 +151,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
         sigjmp_buf *ctx;\
         int h = dill_prologue(&ctx);\
         if(h >= 0) {\
-            if(!sigsetjmp(*ctx, 0)) {\
+            if(!dill_setjmp(*ctx)) {\
                 int dill_anchor[dill_unoptimisable1];\
                 dill_unoptimisable2 = &dill_anchor;\
                 char dill_filler[(char*)&dill_anchor - (char*)hdata(h, NULL)];\
