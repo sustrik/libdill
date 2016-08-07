@@ -16,19 +16,26 @@
 </ul>
 <h1 id="unixconnect3-manual-page">unixconnect(3) manual page</h1>
 <h2 id="name">NAME</h2>
-<p>unixconnect - connect to a UNIX domain endpoint</p>
+<p>unixconnect - connect to remote UNIX domain endpoint</p>
 <h2 id="synopsis">SYNOPSIS</h2>
 <pre><code>#include &lt;dsock.h&gt;
 int unixconnect(const char *addr, int64_t deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Connects to a remote UNIX domain endpoint. <code>addr</code> is the filename to connect to.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>TOO</p>
+<p>Handle of the created socket. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <p>TODO</p>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>int s = unixconnect(&quot;/tmp/unix.test&quot;, -1);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<ul>
+<li><a href="ipremote.html">ipremote(3)</a><br /></li>
+<li><a href="unixaccept.html">unixaccept(3)</a><br /></li>
+<li><a href="unixlisten.html">unixlisten(3)</a><br /></li>
+<li><a href="unixrecv.html">unixrecv(3)</a><br /></li>
+<li><a href="unixsend.html">unixsend(3)</a></li>
+</ul>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--

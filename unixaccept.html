@@ -16,19 +16,27 @@
 </ul>
 <h1 id="unixaccept3-manual-page">unixaccept(3) manual page</h1>
 <h2 id="name">NAME</h2>
-<p>unixaccept - accept incoming UNIX domain connection</p>
+<p>unixaccept - accept an incoming UNIX domain connection</p>
 <h2 id="synopsis">SYNOPSIS</h2>
 <pre><code>#include &lt;dsock.h&gt;
 int unixaccept(int s, int64_t deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Accepts an incoming connection from a listening UNIX domain socket.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>TOO</p>
+<p>Returns handle of the accepted connection. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <p>TODO</p>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>int listener = unixlisten(&quot;/tmp/unix.test&quot;, 10);
+int connection = unixaccept(listener, -1);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<ul>
+<li><a href="unixconnect.html">unixconnect(3)</a><br /></li>
+<li><a href="unixlisten.html">unixlisten(3)</a><br /></li>
+<li><a href="unixpair.html">unixpair(3)</a><br /></li>
+<li><a href="unixrecv.html">unixrecv(3)</a><br /></li>
+<li><a href="unixsend.html">unixsend(3)</a></li>
+</ul>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--

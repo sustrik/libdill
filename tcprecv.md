@@ -27,7 +27,7 @@ TODO
 
 ```
 char buf[256];
-ssize_t sz = brecv(s, buf, sizeof(buf), -1);
+ssize_t sz = tcprecv(s, buf, sizeof(buf), -1);
 ```
 
 ## SEE ALSO

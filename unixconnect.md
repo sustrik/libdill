@@ -2,7 +2,7 @@
 
 ## NAME
 
-unixconnect - connect to a UNIX domain endpoint
+unixconnect - connect to remote UNIX domain endpoint
 
 ## SYNOPSIS
 
@@ -13,11 +13,11 @@ int unixconnect(const char *addr, int64_t deadline);
 
 ## DESCRIPTION
 
-TODO
+Connects to a remote UNIX domain endpoint. `addr` is the filename to connect to.
 
 ## RETURN VALUE
 
-TOO
+Handle of the created socket. In case of error -1 is returned and `errno` is set to one of the error codes below.
 
 ## ERRORS
 
@@ -25,9 +25,17 @@ TODO
 
 ## EXAMPLE
 
-TODO
+```
+int s = unixconnect("/tmp/unix.test", -1);
+```
 
 ## SEE ALSO
+
+* [ipremote(3)](ipremote.html)
+* [unixaccept(3)](unixaccept.html)
+* [unixlisten(3)](unixlisten.html)
+* [unixrecv(3)](unixrecv.html)
+* [unixsend(3)](unixsend.html)
 
 ## AUTHORS
 

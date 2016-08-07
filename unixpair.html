@@ -19,16 +19,25 @@
 <p>unixpair - create a pair of mutually connected UNIX domain sockets</p>
 <h2 id="synopsis">SYNOPSIS</h2>
 <pre><code>#include &lt;dsock.h&gt;
-int unixpair(int s[2]);</code></pre>
+int unixpair(
+int s[2]);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Creates a pair of mutually connected UNIX domain sockets.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>TOO</p>
+<p>Zero in case of success. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <p>TODO</p>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>int s[2];
+int rc = unixpair(s);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<ul>
+<li><a href="unixaccept.html">unixaccept(3)</a><br /></li>
+<li><a href="unixconnect.html">unixconnect(3)</a><br /></li>
+<li><a href="unixlisten.html">unixlisten(3)</a><br /></li>
+<li><a href="unixrecv.html">unixrecv(3)</a><br /></li>
+<li><a href="unixsend.html">unixsend(3)</a></li>
+</ul>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--

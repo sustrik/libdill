@@ -2,7 +2,7 @@
 
 ## NAME
 
-unixaccept - accept incoming UNIX domain connection
+unixaccept - accept an incoming UNIX domain connection
 
 ## SYNOPSIS
 
@@ -13,11 +13,11 @@ int unixaccept(int s, int64_t deadline);
 
 ## DESCRIPTION
 
-TODO
+Accepts an incoming connection from a listening UNIX domain socket.
 
 ## RETURN VALUE
 
-TOO
+Returns handle of the accepted connection. In case of error -1 is returned and `errno` is set to one of the error codes below.
 
 ## ERRORS
 
@@ -25,9 +25,18 @@ TODO
 
 ## EXAMPLE
 
-TODO
+```
+int listener = unixlisten("/tmp/unix.test", 10);
+int connection = unixaccept(listener, -1);
+```
 
 ## SEE ALSO
+
+* [unixconnect(3)](unixconnect.html)
+* [unixlisten(3)](unixlisten.html)
+* [unixpair(3)](unixpair.html)
+* [unixrecv(3)](unixrecv.html)
+* [unixsend(3)](unixsend.html)
 
 ## AUTHORS
 

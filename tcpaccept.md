@@ -17,7 +17,7 @@ Accepts an incoming connection from a listening TCP socket. If `addr` is not `NU
 
 ## RETURN VALUE
 
-Zero in case of success. In case of error -1 is returned and `errno` is set to one of the error codes below.
+Returns handle of the accepted connection. In case of error -1 is returned and `errno` is set to one of the error codes below.
 
 ## ERRORS
 
