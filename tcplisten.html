@@ -21,14 +21,23 @@
 <pre><code>#include &lt;dsock.h&gt;
 int tcplisten(ipaddr *addr, int backlog);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Starts listening for incoming TCP connections. <code>addr</code> is an IP address to<br />listen on (see <a href="iplocal.html"><code>iplocal(3)</code></a>), <code>backlog</code> is the maximum number<br />of received but not yet accepted connections.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>TOO</p>
+<p>Handle of the created socket. In case of error -1 is returned and <code>errno</code><br />is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <p>TODO</p>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>ipaddr addr;
+int rc = iplocal(&amp;addr, NULL, 5555, 0);
+int s = tcplisten(&amp;addr, 10);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<ul>
+<li><a href="iplocal.html">iplocal(3)</a><br /></li>
+<li><a href="tcpaccept.html">tcpaccept(3)</a><br /></li>
+<li><a href="tcpconnect.html">tcpconnect(3)</a><br /></li>
+<li><a href="tcprecv.html">tcprecv(3)</a><br /></li>
+<li><a href="tcpsend.html">tcpsend(3)</a></li>
+</ul>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--

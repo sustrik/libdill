@@ -21,14 +21,18 @@
 <pre><code>#include &lt;dsock.h&gt;
 ssize_t mrecv(int s, void *buf, size_t len, int64_t deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Reads a message from a message socket, such as UDP or WebSocket socket.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>TOO</p>
+<p>Number of bytes read. In case of error -1 is returned and <code>errno</code><br />is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <p>TODO</p>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>char buf[256];
+ssize_t sz = mrecv(s, buf, sizeof(buf), -1);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<ul>
+<li><a href="msend.html">msend(3)</a></li>
+</ul>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--

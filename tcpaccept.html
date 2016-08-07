@@ -16,19 +16,28 @@
 </ul>
 <h1 id="tcpaccept3-manual-page">tcpaccept(3) manual page</h1>
 <h2 id="name">NAME</h2>
-<p>tcpaccept - accept incoming TCP connection</p>
+<p>tcpaccept - accept an incoming TCP connection</p>
 <h2 id="synopsis">SYNOPSIS</h2>
 <pre><code>#include &lt;dsock.h&gt;
 int tcpaccept(int s, ipaddr *addr, int64_t deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Accepts an incoming connection from a listening TCP socket. If <code>addr</code> is not<br /><code>NULL</code> the address of the peer will be filled in.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>TOO</p>
+<p>Zero in case of success. In case of error -1 is returned and <code>errno</code><br />is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <p>TODO</p>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>ipaddr addr;
+int rc = iplocal(&amp;addr, NULL, 5555, 0);
+int listener = tcplisten(&amp;addr, 10);
+int connection = tcpaccept(listener, NULL, -1);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<ul>
+<li><a href="tcpconnect.html">tcpconnect(3)</a><br /></li>
+<li><a href="tcplisten.html">tcplisten(3)</a><br /></li>
+<li><a href="tcprecv.html">tcprecv(3)</a><br /></li>
+<li><a href="tcpsend.html">tcpsend(3)</a></li>
+</ul>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--
