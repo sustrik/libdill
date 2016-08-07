@@ -13,8 +13,7 @@ int tcpconnect(const ipaddr *addr, int64_t deadline);
 
 ## DESCRIPTION
 
-Connects to a remote TCP endpoint. `addr` is the IP address to connect to
-(see [ipremote(3)](ipremote.html)).
+Connects to a remote TCP endpoint. `addr` is the IP address to connect to (see [ipremote(3)](ipremote.html)).
 
 ## RETURN VALUE
 
