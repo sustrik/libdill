@@ -97,7 +97,6 @@ These instructions are intended for the project maintainers:
 * Tag the new version and push the tag to GitHub (e.g. `git tag -a 0.3-beta; git push origin 0.3-beta`).
 * Clone a clean repo from GitHub.
 * Build the package (`./autogen.sh; ./configure; make distcheck`).
-* Get the checksum (`sha1sum`) of the package.
 * Add the package to `gh-pages` branch.
 * Adjust the download.html web page in `gh-pages` branch.
 * Commit and push to `gh-pages`.
