@@ -21,7 +21,7 @@
 <pre><code>#include &lt;dsock.h&gt;
 int tcplisten(ipaddr *addr, int backlog);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>Starts listening for incoming TCP connections. <code>addr</code> is an IP address to listen on (see <a href="iplocal.html"><code>iplocal(3)</code></a>), <code>backlog</code> is the maximum number of received but not yet accepted connections.</p>
+<p>Starts listening for incoming TCP connections. <code>addr</code> is an IP address to listen on (see <a href="iplocal.html"><code>iplocal(3)</code></a>), <code>backlog</code> is the maximum number of received but not yet accepted connections. If port is set to zero a random unused port will be selected instead and <code>addr</code> will be adjusted accordingly.</p>
 <h2 id="return-value">RETURN VALUE</h2>
 <p>Handle of the created socket. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>

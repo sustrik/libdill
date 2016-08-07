@@ -13,7 +13,7 @@ int tcplisten(ipaddr *addr, int backlog);
 
 ## DESCRIPTION
 
-Starts listening for incoming TCP connections. `addr` is an IP address to listen on (see [`iplocal(3)`](iplocal.html)), `backlog` is the maximum number of received but not yet accepted connections.
+Starts listening for incoming TCP connections. `addr` is an IP address to listen on (see [`iplocal(3)`](iplocal.html)), `backlog` is the maximum number of received but not yet accepted connections. If port is set to zero a random unused port will be selected instead and `addr` will be adjusted accordingly.
 
 ## RETURN VALUE
 
