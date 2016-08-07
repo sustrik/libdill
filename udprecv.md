@@ -29,6 +29,12 @@ TODO
 
 ## SEE ALSO
 
+```
+* [mrecv(3)](mrecv.html)
+* [udpsend(3)](udpsend.html)
+* [udpsocket(3)](udpsocket.html)
+```
+
 ## AUTHORS
 
 Martin Sustrik <sustrik@250bpm.com>

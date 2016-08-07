@@ -21,14 +21,22 @@
 <pre><code>#include &lt;dsock.h&gt;
 int udpsocket(ipaddr *local, const ipaddr *remote);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Creates a UDP socket listening on <code>local</code> IP address. If <code>local</code> is <code>NULL</code> the socket won't listen for incoming packets. If <code>remote</code> IP address is not <code>NULL</code> it will be stored and use to send packets to when <code>udpsend</code> is invoked without a destination address or when <code>msend</code> is called on the socket.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>TOO</p>
+<p>Handle of the created socket. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <p>TODO</p>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>ipaddr addr;
+int rc = iplocal(&amp;addr, NULL, 5555, 0);
+int s = udpsocket(&amp;addr, NULL);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<ul>
+<li><a href="mrecv.html">mrecv(3)</a><br /></li>
+<li><a href="msend.html">msend(3)</a><br /></li>
+<li><a href="udprecv.html">udprecv(3)</a><br /></li>
+<li><a href="udpsend.html">udpsend(3)</a></li>
+</ul>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--
