@@ -21,14 +21,35 @@
 <pre><code>#include &lt;dsock.h&gt;
 int ipremote(ipaddr *addr, const char *name, int port, int mode, int64_t deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Converts an IP address in human-readable format, or a name of a remote host into an ipaddr object:</p>
+<pre><code>ipaddr a1 = ipremote(&quot;192.168.0.111&quot;, 5555, 0, -1);
+ipaddr a2 = ipremote(&quot;www.expamle.org&quot;, 80, 0, -1); </code></pre>
+<p>First argument is the destination <code>ipaddr</code> object. <code>name</code> is the string to convert. <code>port</code> is the port number. <code>mode</code> specifies which kind of addresses should be returned. Possible values are:</p>
+<ul>
+<li><code>IPADDR_IPV4</code>: get IPv4 address or error if it's not available<br /></li>
+<li><code>IPADDR_IPV6</code>: get IPv6 address or error if it's not available<br /></li>
+<li><code>IPADDR_PREF_IPV4</code>: get IPv4 address if possible, IPv6 address otherwise; error if none is available<br /></li>
+<li><code>IPADDR_PREF_IPV6</code>: get IPv6 address if possible, IPv4 address otherwise; error if none is available</li>
+</ul>
+<p>Setting the argument to zero invokes default behaviour, which, at the present, is <code>IPADDR_PREF_IPV4</code>. However, in the future when IPv6 becomes more common it may be switched to <code>IPADDR_PREF_IPV6</code>.</p>
+<p>Finally, the fourth argument is the deadline. It allows to deal with situations where resolving a remote host name requires a DNS query and the query is taking substantial amount of time to complete.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>TOO</p>
+<p>Zero in case of success. In case of error -1 is returned and <code>errno</code> is set to one of the following values.</p>
 <h2 id="errors">ERRORS</h2>
-<p>TODO</p>
+<p>As the functionality is not covered by POSIX and rather implemented by OS-specific means there's no definitive list of possible error codes the function can return. You have to make the error handling as generic as possible.</p>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>ipaddr addr;
+int rc = ipremote(&amp;addr, &quot;www.example.org&quot;, 5555, 0, -1);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<ul>
+<li><a href="ipaddrstr.html">ipaddrstr(3)</a><br /></li>
+<li><a href="ipfamily.html">ipfamily(3)</a><br /></li>
+<li><a href="iplen.html">iplen(3)</a><br /></li>
+<li><a href="iplocal.html">iplocal(3)</a><br /></li>
+<li><a href="ipport.html">ipport(3)</a><br /></li>
+<li><a href="ipsetport.html">ipsetport(3)</a><br /></li>
+<li><a href="ipsockaddr.html">ipsockaddr(3)</a></li>
+</ul>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--

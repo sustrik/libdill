@@ -21,14 +21,27 @@
 <pre><code>#include &lt;dsock.h&gt;
 int ipport(const ipaddr *addr);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Returns port number of the IP address.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>TOO</p>
+<p>Port number.</p>
 <h2 id="errors">ERRORS</h2>
-<p>TODO</p>
+<p>No errors.</p>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>/* Listen on ephemeral port. */
+ipaddr addr;
+int rc = iplocal(&amp;addr, NULL, 0, 0);
+int s = tcplisten(&amp;addr, 10);
+int port = ipport(&amp;addr);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<ul>
+<li><a href="ipaddrstr.html">ipaddrstr(3)</a><br /></li>
+<li><a href="ipfamily.html">ipfamily(3)</a><br /></li>
+<li><a href="iplen.html">iplen(3)</a><br /></li>
+<li><a href="iplocal.html">iplocal(3)</a><br /></li>
+<li><a href="ipremote.html">ipremote(3)</a><br /></li>
+<li><a href="ipsetport.html">ipsetport(3)</a><br /></li>
+<li><a href="ipsockaddr.html">ipsockaddr(3)</a></li>
+</ul>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--

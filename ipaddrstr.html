@@ -16,19 +16,31 @@
 </ul>
 <h1 id="ipaddrstr3-manual-page">ipaddrstr(3) manual page</h1>
 <h2 id="name">NAME</h2>
-<p>ipaddrstr - converts IP address into a string</p>
+<p>ipaddrstr - formats ipaddr as a human-readable string</p>
 <h2 id="synopsis">SYNOPSIS</h2>
 <pre><code>#include &lt;dsock.h&gt;
 const char *ipaddrstr(const ipaddr *addr, char *ipstr);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Formats ipaddr as a human-readable string.</p>
+<p>First argument is the IP address to format, second is the buffer to store the result it. The buffer must be at least <code>IPADDR_MAXSTRLEN</code> bytes long.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>TOO</p>
+<p>The function returns pointer to the formatted string.</p>
 <h2 id="errors">ERRORS</h2>
-<p>TODO</p>
+<p>No errors.</p>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>char buf[IPADDR_MAXSTRLEN];
+ipaddrstr(&amp;addr, buf);
+printf(&quot;address=%s\n&quot;, buf);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<ul>
+<li><a href="ipfamily.html">ipfamily(3)</a><br /></li>
+<li><a href="iplen.html">iplen(3)</a><br /></li>
+<li><a href="iplocal.html">iplocal(3)</a><br /></li>
+<li><a href="ipport.html">ipport(3)</a><br /></li>
+<li><a href="ipremote.html">ipremote(3)</a><br /></li>
+<li><a href="ipsetport.html">ipsetport(3)</a><br /></li>
+<li><a href="ipsockaddr.html">ipsockaddr(3)</a></li>
+</ul>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--

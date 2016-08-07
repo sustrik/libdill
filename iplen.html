@@ -21,14 +21,25 @@
 <pre><code>#include &lt;dsock.h&gt;
 int iplen(const ipaddr *addr);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Returns the length of the embedded IP address.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>TOO</p>
+<p>Size of the address in bytes.</p>
 <h2 id="errors">ERRORS</h2>
-<p>TODO</p>
+<p>No errors.</p>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>ipaddr addr;
+rc = ipremote(&amp;addr, &quot;www.example.org&quot;, 5555, 0, -1);
+rc = connect(s, ipsockaddr(&amp;addr), iplen(&amp;addr));</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
+<ul>
+<li><a href="ipaddrstr.html">ipaddrstr(3)</a><br /></li>
+<li><a href="ipfamily.html">ipfamily(3)</a><br /></li>
+<li><a href="iplocal.html">iplocal(3)</a><br /></li>
+<li><a href="ipport.html">ipport(3)</a><br /></li>
+<li><a href="ipremote.html">ipremote(3)</a><br /></li>
+<li><a href="ipsetport.html">ipsetport(3)</a><br /></li>
+<li><a href="ipsockaddr.html">ipsockaddr(3)</a></li>
+</ul>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--
