@@ -1,6 +1,8 @@
 
 ## Reference
 
+##### libdill
+
 * [channel](channel.html)
 * [chdone](chdone.html)
 * [choose](choose.html)
@@ -15,13 +17,40 @@
 * [hclose](hclose.html)
 * [hdata](hdata.html)
 * [hdup](hdup.html)
-* [hfinish](hfinish.html)
 * [msleep](msleep.html)
 * [now](now.html)
 * [proc](proc.html)
 * [setcls](setcls.html)
 * [yield](yield.html)
 
+##### dsock
+
+* [brecv](brecv.html)
+* [bsend](bsend.html)
+* [ipaddrstr](ipaddrstr.html)
+* [ipfamily](ipfamily.html)
+* [iplen](iplen.html)
+* [iplocal](iplocal.html)
+* [ipport](ipport.html)
+* [ipremote](ipremote.html)
+* [ipsetport](ipsetport.html)
+* [ipsockaddr](ipsockaddr.html)
+* [mrecv](mrecv.h)
+* [msend](msend.h)
+* [tcpaccept](tcpaccept.html)
+* [tcpconnect](tcpconnect.html)
+* [tcplisten](tcplisten.html)
+* [tcprecv](tcprecv.html)
+* [tcpsend](tcpsend.html)
+* [udprecv](udprecv.html)
+* [udpsend](udpsend.html)
+* [udpsocket](udpsocket.html)
+* [unixaccept](unixaccept.html)
+* [unixconnect](unixconnect.html)
+* [unixlisten](unixlisten.html)
+* [unixpair](unixpair.html)
+* [unixrecv](unixrecv.html)
+* [unixsend](unixsend.html) 
 
 ## FAQ: How can I report a bug?
 

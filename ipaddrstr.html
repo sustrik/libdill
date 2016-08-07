@@ -14,26 +14,21 @@
 <li><a href="download.html">Download</a></li>
 <li><a href="documentation.html">Documentation</a></li>
 </ul>
-<h1 id="hfinish3-manual-page">hfinish(3) manual page</h1>
+<h1 id="ipaddrstr3-manual-page">ipaddrstr(3) manual page</h1>
 <h2 id="name">NAME</h2>
-<p>hfinish - soft-cancels a handle</p>
+<p>ipaddrstr - converts IP address into a string</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
-int hfinished(int h, int64_t deadline);</code></pre>
+<pre><code>#include &lt;dsock.h&gt;
+const char *ipaddrstr(const ipaddr *addr, char *ipstr);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>Closes a handle.</p>
-<p>Once all handles pointing to the same underlying object are closed the object starts to shut down. It tries to finish its work, for example, to flush outstanding data to the network. If it's not able to shut down gracefully within the deadline it is closed forcefully.</p>
+<p>TODO</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>Returns 0 in case of success. In case of failure it returns -1 and sets <code>errno</code> to one of the following values.</p>
+<p>TOO</p>
 <h2 id="errors">ERRORS</h2>
-<ul>
-<li><code>EBADF</code>: Invalid handle.<br /></li>
-<li><code>ETIMEDOUT</code>: Timeout expired. The underlying object was closed forcefully and may have not finished its work.</li>
-</ul>
+<p>TODO</p>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>hfinish(h, now() + 1000);</code></pre>
+<p>TODO</p>
 <h2 id="see-also">SEE ALSO</h2>
-<p><a href="handle.html">handle(3)</a><br /><a href="hclose.html">hclose(3)</a><br /><a href="hdata.html">hdata(3)</a><br /><a href="hdup.html">hdup(3)</a></p>
 <h2 id="authors">AUTHORS</h2>
 <p>Martin Sustrik <script type="text/javascript">
 <!--
