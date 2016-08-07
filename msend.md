@@ -17,8 +17,7 @@ Writes message to a message socket, such as UDP or WebSocket socket.
 
 ## RETURN VALUE
 
-Number of bytes written. In case of error -1 is returned and `errno`
-is set to one of the error codes below.
+Number of bytes written. In case of error -1 is returned and `errno` is set to one of the error codes below.
 
 ## ERRORS
 

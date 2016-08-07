@@ -13,8 +13,7 @@ int tcpaccept(int s, ipaddr *addr, int64_t deadline);
 
 ## DESCRIPTION
 
-Accepts an incoming connection from a listening TCP socket. If `addr` is not
-`NULL` the address of the peer will be filled in.
+Accepts an incoming connection from a listening TCP socket. If `addr` is not `NULL` the address of the peer will be filled in.
 
 ## RETURN VALUE
 

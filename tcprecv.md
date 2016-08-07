@@ -17,7 +17,7 @@ Reads data from a TCP socket.
 
 ## RETURN VALUE
 
-Number of bytes read or -1 in case of error.
+Number of bytes read. In case of error -1 is returned and `errno` is set to one of the error codes below.
 
 ## ERRORS
 

@@ -18,8 +18,7 @@ Connects to a remote TCP endpoint. `addr` is the IP address to connect to
 
 ## RETURN VALUE
 
-Handle of the created socket. In case of error -1 is returned and `errno`
-is set to one of the error codes below.
+Handle of the created socket. In case of error -1 is returned and `errno` is set to one of the error codes below.
 
 ## ERRORS
 

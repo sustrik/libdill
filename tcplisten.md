@@ -19,8 +19,7 @@ of received but not yet accepted connections.
 
 ## RETURN VALUE
 
-Handle of the created socket. In case of error -1 is returned and `errno`
-is set to one of the error codes below.
+Handle of the created socket. In case of error -1 is returned and `errno` is set to one of the error codes below.
 
 ## ERRORS
 

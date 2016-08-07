@@ -17,7 +17,7 @@ Write data to TCP socket.
 
 ## RETURN VALUE
 
-Number of bytes written or -1 in case of error.
+Number of bytes written. In case of error -1 is returned and `errno` is set to one of the error codes below.
 
 ## ERRORS
 
