@@ -353,7 +353,7 @@ int dill_wait(void)  {
     }
     /* Store the context of the current coroutine, if any. */
     if(dill_r) {
-        if(sigsetjmp(dill_r->ctx,0)) {
+        if(dill_setjmp(dill_r->ctx)) {
             /* We get here once the coroutine is resumed. */
             dill_slist_init(&dill_r->clauses);
             errno = dill_r->err;
@@ -366,7 +366,7 @@ int dill_wait(void)  {
             ++counter;
             struct dill_slist_item *it = dill_slist_pop(&dill_ready);
             dill_r = dill_cont(it, struct dill_cr, ready);
-            siglongjmp(dill_r->ctx, 1);
+            dill_longjmp(dill_r->ctx);
         }
         /* Otherwise, we are going to wait for sleeping coroutines
            and for external events. */
