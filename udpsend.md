@@ -13,11 +13,11 @@ ssize_t udpsend(int s, const ipaddr *addr, const void *buf, size_t len);
 
 ## DESCRIPTION
 
-TODO
+Send a UDP packet. If `addr` is not `NULL` the packet will be sent to that address. If it is `NULL` remote address specified in the call to `udpsocket` will be used instead. If even remote address wasn't specified the function will fail with `EINVAL` error.
 
 ## RETURN VALUE
 
-TOO
+Number of bytes sent. In case of error -1 is returned and `errno` is set to one of the error codes below.
 
 ## ERRORS
 
@@ -25,7 +25,9 @@ TODO
 
 ## EXAMPLE
 
-TODO
+```
+ssize_t sz = udpsend(s, NULL, "ABC", 3, -1);
+```
 
 ## SEE ALSO
 

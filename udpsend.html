@@ -21,13 +21,13 @@
 <pre><code>#include &lt;dsock.h&gt;
 ssize_t udpsend(int s, const ipaddr *addr, const void *buf, size_t len);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Send a UDP packet. If <code>addr</code> is not <code>NULL</code> the packet will be sent to that address. If it is <code>NULL</code> remote address specified in the call to <code>udpsocket</code> will be used instead. If even remote address wasn't specified the function will fail with <code>EINVAL</code> error.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>TOO</p>
+<p>Number of bytes sent. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <p>TODO</p>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>ssize_t sz = udpsend(s, NULL, &quot;ABC&quot;, 3, -1);</code></pre>
 <h2 id="see-also">SEE ALSO</h2>
 <pre><code>* [msend(3)](msend.html)
 * [udprecv(3)](udprecv.html)
