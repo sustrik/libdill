@@ -81,7 +81,7 @@
 <li><code>chdone</code> causes blocked <code>recv</code> on the channel to return <code>EPIPE</code> error rather than a value.<br /></li>
 <li><code>chdone</code> will signal senders to the channel as well as receivers. This allows for scenarios like multiple senders and single receiver communicating via single channel. The receiver can let the senders know that it's terminating via <code>chdone</code>.<br /></li>
 <li>libmill's <code>fdwait</code> was replaced by <code>fdin</code> and <code>fdout</code>. The idea is that if we want data to flow via the connection in both directions in parallel we should use two coroutines rather than single one.<br /></li>
-<li>There's no networking library in libdill. This is meant to be a separate project.</li>
+<li>There's no networking library in libdill itself. It is a separate library (dsock).</li>
 </ol>
 <h2 id="faq-how-can-i-access-source-code">FAQ: How can I access source code?</h2>
 <p>To clone the repository:</p>
