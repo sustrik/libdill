@@ -25,7 +25,15 @@ int unixaccept(int s, int64_t deadline);</code></pre>
 <h2 id="return-value">RETURN VALUE</h2>
 <p>Returns handle of the accepted connection. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
-<p>TODO</p>
+<ul>
+<li><em>ECONNABORTED</em>: A connection has been aborted.<br /></li>
+<li><em>EINTR</em>: The function was interrupted by a signal.<br /></li>
+<li><em>EMFILE</em>: The maximum number of file descriptors in the process are already open.<br /></li>
+<li><em>ENFILE</em>: The maximum number of file descriptors in the system are already open.<br /></li>
+<li><em>ENOBUFS</em>: No buffer space is available.<br /></li>
+<li><em>ENOMEM</em>: There was insufficient memory available to complete the operation.<br /></li>
+<li><em>ETIMEDOUT</em>: Deadline was reached.</li>
+</ul>
 <h2 id="example">EXAMPLE</h2>
 <pre><code>int listener = unixlisten(&quot;/tmp/unix.test&quot;, 10);
 int connection = unixaccept(listener, -1);</code></pre>
