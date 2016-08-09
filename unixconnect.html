@@ -26,19 +26,19 @@ int unixconnect(const char *addr, int64_t deadline);</code></pre>
 <p>Handle of the created socket. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <ul>
-<li><em>ECONNREFUSED</em>: The target address was not listening for connections or refused the connection request.<br /></li>
-<li><em>ECONNRESET</em>: Remote host reset the connection request.<br /></li>
-<li><em>EIO</em>: An I/O error occurred while reading from or writing to the file system.<br /></li>
-<li><em>ELOOP</em>: A loop exists in symbolic links encountered during resolution of the pathname in address.<br /></li>
-<li><em>ENAMETOOLONG</em>: A component of a pathname exceeded NAME_MAX characters, or an entire pathname exceeded PATH_MAX characters.<br /></li>
-<li><em>ENOENT</em>: A component of the pathname does not name an existing file or the pathname is an empty string.<br /></li>
-<li><em>ENOTDIR</em>: A component of the path prefix of the pathname in address is not a directory.<br /></li>
-<li><em>EINTR</em>: The function was interrupted by a signal.<br /></li>
-<li><em>EMFILE</em>: The maximum number of file descriptors in the process are already open.<br /></li>
-<li><em>ENFILE</em>: The maximum number of file descriptors in the system are already open.<br /></li>
-<li><em>EACCES</em>: The process does not have appropriate privileges.<br /></li>
-<li><em>ENOBUFS</em>: No buffer space is available.<br /></li>
-<li><em>ENOMEM</em>: There was insufficient memory available to complete the operation.</li>
+<li><code>ECONNREFUSED</code>: The target address was not listening for connections or refused the connection request.<br /></li>
+<li><code>ECONNRESET</code>: Remote host reset the connection request.<br /></li>
+<li><code>EIO</code>: An I/O error occurred while reading from or writing to the file system.<br /></li>
+<li><code>ELOOP</code>: A loop exists in symbolic links encountered during resolution of the pathname in address.<br /></li>
+<li><code>ENAMETOOLONG</code>: A component of a pathname exceeded NAME_MAX characters, or an entire pathname exceeded PATH_MAX characters.<br /></li>
+<li><code>ENOENT</code>: A component of the pathname does not name an existing file or the pathname is an empty string.<br /></li>
+<li><code>ENOTDIR</code>: A component of the path prefix of the pathname in address is not a directory.<br /></li>
+<li><code>EINTR</code>: The function was interrupted by a signal.<br /></li>
+<li><code>EMFILE</code>: The maximum number of file descriptors in the process are already open.<br /></li>
+<li><code>ENFILE</code>: The maximum number of file descriptors in the system are already open.<br /></li>
+<li><code>EACCES</code>: The process does not have appropriate privileges.<br /></li>
+<li><code>ENOBUFS</code>: No buffer space is available.<br /></li>
+<li><code>ENOMEM</code>: There was insufficient memory available to complete the operation.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
 <pre><code>int s = unixconnect(&quot;/tmp/unix.test&quot;, -1);</code></pre>

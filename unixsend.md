@@ -23,7 +23,7 @@ Number of bytes written. In case of error -1 is returned and `errno` is set to o
 
 TODO
 
-* `EDADF`: Invalid handle.
+* `EBADF`: Invalid handle.
 * `ENOTSUP`: Handle is not a UNIX domain socket.
 
 ## EXAMPLE

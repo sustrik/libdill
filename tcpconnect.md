@@ -21,18 +21,18 @@ Handle of the created socket. In case of error -1 is returned and `errno` is set
 
 ## ERRORS
 
-* *ECONNREFUSED*: The target address was not listening for connections or refused the connection request.
-* *ECONNRESET*: Remote host reset the connection request.
-* *EHOSTUNREACH*: The destination host cannot be reached.
-* *ENETDOWN*: The local network interface used to reach the destination is down.
-* *ENETUNREACH*: No route to the network is present.
-* *EINTR*: The function was interrupted by a signal.
-* *EMFILE*: The maximum number of file descriptors in the process are already open.
-* *ENFILE:* The maximum number of file descriptors in the system are already open.
-* *EACCES*: The process does not have appropriate privileges.
-* *ENOBUFS*: No buffer space is available.
-* *ENOMEM*: There was insufficient memory available to complete the operation.
-* *ETIMEDOUT*: Deadline was reached.
+* `ECONNREFUSED`: The target address was not listening for connections or refused the connection request.
+* `ECONNRESET`: Remote host reset the connection request.
+* `EHOSTUNREACH`: The destination host cannot be reached.
+* `ENETDOWN`: The local network interface used to reach the destination is down.
+* `ENETUNREACH`: No route to the network is present.
+* `EINTR`: The function was interrupted by a signal.
+* `EMFILE`: The maximum number of file descriptors in the process are already open.
+* `ENFILE`: The maximum number of file descriptors in the system are already open.
+* `EACCES`: The process does not have appropriate privileges.
+* `ENOBUFS`: No buffer space is available.
+* `ENOMEM`: There was insufficient memory available to complete the operation.
+* `ETIMEDOUT`: Deadline was reached.
 
 ## EXAMPLE
 

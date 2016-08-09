@@ -26,19 +26,19 @@ int unixlisten(const char *addr, int backlog);</code></pre>
 <p>Handle of the created socket. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <ul>
-<li><em>EDESTADDRREQ</em> or <em>EISDIR</em>: The address argument is a null pointer.<br /></li>
-<li><em>EIO</em>: An I/O error occurred.<br /></li>
-<li><em>ELOOP</em>: A loop exists in symbolic links encountered during resolution of the pathname in address.<br /></li>
-<li><em>ENAMETOOLONG</em>: A component of a pathname exceeded NAME_MAX characters, or an entire pathname exceeded PATH_MAX characters.<br /></li>
-<li><em>ENOENT</em>: A component of the pathname does not name an existing file or the pathname is an empty string.<br /></li>
-<li><em>ENOTDIR</em>: A component of the path prefix of the pathname in address is not a directory.<br /></li>
-<li><em>EROFS</em>: The name would reside on a read-only file system.<br /></li>
-<li><em>EADDRINUSE</em>: The specified address is already in use.<br /></li>
-<li><em>EMFILE</em>: No more file descriptors are available for this process.<br /></li>
-<li><em>ENFILE</em>: No more file descriptors are available for the system.<br /></li>
-<li><em>EACCES</em>: The process does not have appropriate privileges.<br /></li>
-<li><em>ENOBUFS</em>: Insufficient resources were available in the system to perform the operation.<br /></li>
-<li><em>ENOMEM</em>: Insufficient memory was available to fulfill the request.</li>
+<li><code>EDESTADDRREQ</code> or <code>EISDIR</code>: The address argument is a null pointer.<br /></li>
+<li><code>EIO</code>: An I/O error occurred.<br /></li>
+<li><code>ELOOP</code>: A loop exists in symbolic links encountered during resolution of the pathname in address.<br /></li>
+<li><code>ENAMETOOLONG</code>: A component of a pathname exceeded NAME_MAX characters, or an entire pathname exceeded PATH_MAX characters.<br /></li>
+<li><code>ENOENT</code>: A component of the pathname does not name an existing file or the pathname is an empty string.<br /></li>
+<li><code>ENOTDIR</code>: A component of the path prefix of the pathname in address is not a directory.<br /></li>
+<li><code>EROFS</code>: The name would reside on a read-only file system.<br /></li>
+<li><code>EADDRINUSE</code>: The specified address is already in use.<br /></li>
+<li><code>EMFILE</code>: No more file descriptors are available for this process.<br /></li>
+<li><code>ENFILE</code>: No more file descriptors are available for the system.<br /></li>
+<li><code>EACCES</code>: The process does not have appropriate privileges.<br /></li>
+<li><code>ENOBUFS</code>: Insufficient resources were available in the system to perform the operation.<br /></li>
+<li><code>ENOMEM</code>: Insufficient memory was available to fulfill the request.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
 <pre><code>int s = unixlisten(&quot;/tmp/unix.test&quot;, 10);</code></pre>

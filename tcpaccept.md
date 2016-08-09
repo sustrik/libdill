@@ -21,13 +21,15 @@ Returns handle of the accepted connection. In case of error -1 is returned and `
 
 ## ERRORS
 
-* *ECONNABORTED*: A connection has been aborted.
-* *EINTR*: The function was interrupted by a signal.
-* *EMFILE*: The maximum number of file descriptors in the process are already open.
-* *ENFILE*: The maximum number of file descriptors in the system are already open.
-* *ENOBUFS*: No buffer space is available.
-* *ENOMEM*: There was insufficient memory available to complete the operation.
-* *ETIMEDOUT*: Deadline was reached.
+* `EBADF`: Invalid handle.
+* `ECONNABORTED`: A connection has been aborted.
+* `EINTR`: The function was interrupted by a signal.
+* `EMFILE`: The maximum number of file descriptors in the process are already open.
+* `ENFILE`: The maximum number of file descriptors in the system are already open.
+* `ENOBUFS`: No buffer space is available.
+* `ENOMEM`: There was insufficient memory available to complete the operation.
+* `ENOTSUP`: Handle is not a TCP listening socket.
+* `ETIMEDOUT`: Deadline was reached.
 
 ## EXAMPLE
 
