@@ -23,6 +23,9 @@ Number of bytes sent. In case of error -1 is returned and `errno` is set to one 
 
 TODO
 
+* `EDADF`: Invalid handle.
+* `ENOTSUP`: Handle is not a UDP socket.
+
 ## EXAMPLE
 
 ```

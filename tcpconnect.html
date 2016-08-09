@@ -25,7 +25,20 @@ int tcpconnect(const ipaddr *addr, int64_t deadline);</code></pre>
 <h2 id="return-value">RETURN VALUE</h2>
 <p>Handle of the created socket. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
-<p>TODO</p>
+<ul>
+<li><em>ECONNREFUSED</em>: The target address was not listening for connections or refused the connection request.<br /></li>
+<li><em>ECONNRESET</em>: Remote host reset the connection request.<br /></li>
+<li><em>EHOSTUNREACH</em>: The destination host cannot be reached.<br /></li>
+<li><em>ENETDOWN</em>: The local network interface used to reach the destination is down.<br /></li>
+<li><em>ENETUNREACH</em>: No route to the network is present.<br /></li>
+<li><em>EINTR</em>: The function was interrupted by a signal.<br /></li>
+<li><em>EMFILE</em>: The maximum number of file descriptors in the process are already open.<br /></li>
+<li><em>ENFILE:</em> The maximum number of file descriptors in the system are already open.<br /></li>
+<li><em>EACCES</em>: The process does not have appropriate privileges.<br /></li>
+<li><em>ENOBUFS</em>: No buffer space is available.<br /></li>
+<li><em>ENOMEM</em>: There was insufficient memory available to complete the operation.<br /></li>
+<li><em>ETIMEDOUT</em>: Deadline was reached.</li>
+</ul>
 <h2 id="example">EXAMPLE</h2>
 <pre><code>ipaddr addr;
 int rc = ipremote(&amp;addr, &quot;192.168.0.1&quot;, 5555, 0, -1);

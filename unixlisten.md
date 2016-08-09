@@ -21,7 +21,19 @@ Handle of the created socket. In case of error -1 is returned and `errno` is set
 
 ## ERRORS
 
-TODO
+* *EDESTADDRREQ* or *EISDIR*: The address argument is a null pointer.
+* *EIO*: An I/O error occurred.
+* *ELOOP*: A loop exists in symbolic links encountered during resolution of the pathname in address.
+* *ENAMETOOLONG*: A component of a pathname exceeded NAME_MAX characters, or an entire pathname exceeded PATH_MAX characters.
+* *ENOENT*: A component of the pathname does not name an existing file or the pathname is an empty string.
+* *ENOTDIR*: A component of the path prefix of the pathname in address is not a directory.
+* *EROFS*: The name would reside on a read-only file system.
+* *EADDRINUSE*: The specified address is already in use.
+* *EMFILE*: No more file descriptors are available for this process.
+* *ENFILE*: No more file descriptors are available for the system.
+* *EACCES*: The process does not have appropriate privileges.
+* *ENOBUFS*: Insufficient resources were available in the system to perform the operation.
+* *ENOMEM*: Insufficient memory was available to fulfill the request.
 
 ## EXAMPLE
 

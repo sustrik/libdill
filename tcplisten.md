@@ -21,7 +21,13 @@ Handle of the created socket. In case of error -1 is returned and `errno` is set
 
 ## ERRORS
 
-TODO
+* *EADDRINUSE*: The specified address is already in use.
+* *EADDRNOTAVAIL*: The specified address is not available from the local machine.
+* *EMFILE*: No more file descriptors are available for this process.
+* *ENFILE*: No more file descriptors are available for the system.
+* *EACCES*: The process does not have appropriate privileges.
+* *ENOBUFS*: Insufficient resources were available in the system to perform the operation.
+* *ENOMEM*: Insufficient memory was available to fulfill the request.
 
 ## EXAMPLE
 
