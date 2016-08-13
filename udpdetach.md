@@ -24,7 +24,7 @@ Underlying file descriptor. In case of error -1 is returned and `errno` is set t
 ## ERRORS
 
 * `EBADF`: Invalid handle.
-* `ENOTSUP`: Handle is not a UNIX domain socket.
+* `ENOTSUP`: Handle is not a UDP socket.
 
 ## EXAMPLE
 
