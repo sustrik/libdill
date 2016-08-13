@@ -8,28 +8,34 @@ unixrecv - read data from a UNIX domain connection
 
 ```
 #include <dsock.h>
-ssize_t unixrecv(int s, void *buf, size_t len, int64_t deadline);
+int unixrecv(int s, void *buf, size_t *len, int64_t deadline);
 ```
 
 ## DESCRIPTION
 
-Reads data from a UNIX domain socket.
+Reads `len` bytes from the socket to buffer `buf`. When calling the function `len` must be set to the number of bytes requested. When the function returns it sets `len` to number of bytes actually received.
+
+The function succeeds only if it reads all the requested bytes. If it fails it may still have read some bytes. In both cases the number of bytes read is available via `len` argument.
 
 ## RETURN VALUE
 
-Number of bytes read. In case of error -1 is returned and `errno` is set to one of the error codes below.
+Zero in case of success. In case of error -1 is returned and `errno` is set to one of the error codes below.
 
 ## ERRORS
 
 TODO
 
 * `EBADF`: Invalid handle.
-* `ENOTSUP`: Handle is not a UNIX domain socket.
+* `ECANCELED`: Current coroutine is being shut down.
+* `ECONNRESET`: The connection is broken.
+* `ENOTSUP`: Handle is not a UNIX socket.
+* `ETIMEDOUT`: Deadline expired.
 
 ## EXAMPLE
 
 ```
-char buf[256];
-ssize_t sz = unixrecv(s, buf, sizeof(buf), -1);
+char buf[16];
+size_t sz = sizeof(buf);
+int rc = unixrecv(s, buf, &sz, -1);
 ```
 

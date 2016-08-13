@@ -19,18 +19,23 @@
 <p>tcprecv - read data from a TCP connection</p>
 <h2 id="synopsis">SYNOPSIS</h2>
 <pre><code>#include &lt;dsock.h&gt;
-ssize_t tcprecv(int s, void *buf, size_t len, int64_t deadline);</code></pre>
+int tcprecv(int s, void *buf, size_t *len, int64_t deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>Reads data from a TCP socket.</p>
+<p>Reads <code>len</code> bytes from the socket to buffer <code>buf</code>. When calling the function <code>len</code> must be set to the number of bytes requested. When the function returns it sets <code>len</code> to number of bytes actually received.</p>
+<p>The function succeeds only if it reads all the requested bytes. If it fails it may still have read some bytes. In both cases the number of bytes read is available via <code>len</code> argument.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>Number of bytes read. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
+<p>Zero in case of success. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <p>TODO</p>
 <ul>
 <li><code>EBADF</code>: Invalid handle.<br /></li>
-<li><code>ENOTSUP</code>: Handle is not a TCP socket.</li>
+<li><code>ECANCELED</code>: Current coroutine is being shut down.<br /></li>
+<li><code>ECONNRESET</code>: The connection is broken.<br /></li>
+<li><code>ENOTSUP</code>: Handle is not a TCP socket.<br /></li>
+<li><code>ETIMEDOUT</code>: Deadline expired.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>char buf[256];
-ssize_t sz = tcprecv(s, buf, sizeof(buf), -1);</code></pre>
+<pre><code>char buf[16];
+size_t sz = sizeof(buf);
+int rc = tcprecv(s, buf, &amp;sz, -1);</code></pre>
 </body>

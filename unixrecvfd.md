@@ -24,7 +24,11 @@ File descriptor read from the connection. In case of error -1 is returned and `e
 TODO
 
 * `EBADF`: Invalid handle.
-* `ENOTSUP`: Handle is not a UNIX domain socket.
+* `ECANCELED`: Current coroutine is being shut down.
+* `ECONNRESET`: The connection is broken.
+* `ENOMSG`: There was no file descriptor attached to the byte.
+* `ENOTSUP`: Handle is not a UNIX socket.
+* `ETIMEDOUT`: Deadline expired.
 
 ## EXAMPLE
 

@@ -8,23 +8,28 @@ brecv - read data from a bytestream socket
 
 ```
 #include <dsock.h>
-ssize_t brecv(int s, void *buf, size_t len, int64_t deadline);
+int brecv(int s, void *buf, size_t *len, int64_t deadline);
 ```
 
 ## DESCRIPTION
 
-Reads data from a bytestream socket, such as TCP or UNIX domain socket.
+Reads `len` bytes from the socket to buffer `buf`. When calling the function `len` must be set to the number of bytes requested. When the function returns it sets `len` to number of bytes actually received.
+
+The function succeeds only if it reads all the requested bytes. If it fails it may still have read some bytes. In both cases the number of bytes read is available via `len` argument.
 
 ## RETURN VALUE
 
-Number of bytes read. In case of error -1 is returned and `errno` is set to one of the error codes below.
+Zero in case of success. In case of error -1 is returned and `errno` is set to one of the error codes below.
 
 ## ERRORS
 
 TODO
 
-* `EDADF`: Invalid handle.
+* `EBADF`: Invalid handle.
+* `ECANCELED`: Current coroutine is being shut down.
+* `ECONNRESET`: The connection is broken.
 * `ENOTSUP`: Handle is not a bytestream socket.
+* `ETIMEDOUT`: Deadline expired.
 
 ## EXAMPLE
 
