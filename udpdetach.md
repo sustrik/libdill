@@ -27,11 +27,3 @@ TODO
 
 TODO
 
-## SEE ALSO
-
-TODO
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

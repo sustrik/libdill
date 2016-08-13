@@ -33,17 +33,3 @@ ipaddrstr(&addr, buf);
 printf("address=%s\n", buf);
 ```
 
-## SEE ALSO
-
-* [ipfamily(3)](ipfamily.html)
-* [iplen(3)](iplen.html)
-* [iplocal(3)](iplocal.html)
-* [ipport(3)](ipport.html)
-* [ipremote(3)](ipremote.html)
-* [ipsetport(3)](ipsetport.html)
-* [ipsockaddr(3)](ipsockaddr.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

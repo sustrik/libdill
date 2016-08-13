@@ -41,15 +41,3 @@ Handle of the created socket. In case of error -1 is returned and `errno` is set
 int s = unixlisten("/tmp/unix.test", 10);
 ```
 
-## SEE ALSO
-
-* [unixaccept(3)](unixaccept.html)
-* [unixconnect(3)](unixconnect.html)
-* [unixpair(3)](unixpair.html)
-* [unixrecv(3)](unixrecv.html)
-* [unixsend(3)](unixsend.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

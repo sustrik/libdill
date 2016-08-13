@@ -39,13 +39,3 @@ int val = 42;
 chsend(ch, &val, sizeof(val), now() + 1000);
 ```
 
-## SEE ALSO
-
-[channel(3)](channel.html)
-[chdone(3)](chdone.html)
-[chrecv(3)](chrecv.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

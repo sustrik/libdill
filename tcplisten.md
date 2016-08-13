@@ -37,15 +37,3 @@ int rc = iplocal(&addr, NULL, 5555, 0);
 int s = tcplisten(&addr, 10);
 ```
 
-## SEE ALSO
-
-* [iplocal(3)](iplocal.html)
-* [tcpaccept(3)](tcpaccept.html)
-* [tcpconnect(3)](tcpconnect.html)
-* [tcprecv(3)](tcprecv.html)
-* [tcpsend(3)](tcpsend.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

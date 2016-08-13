@@ -34,15 +34,3 @@ char buf[2000];
 ssize_t sz = udprecv(s, &src, buf, sizeof(buf), -1);
 ```
 
-## SEE ALSO
-
-```
-* [mrecv(3)](mrecv.html)
-* [udpsend(3)](udpsend.html)
-* [udpsocket(3)](udpsocket.html)
-```
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

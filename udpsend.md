@@ -32,15 +32,3 @@ TODO
 ssize_t sz = udpsend(s, NULL, "ABC", 3, -1);
 ```
 
-## SEE ALSO
-
-```
-* [msend(3)](msend.html)
-* [udprecv(3)](udprecv.html)
-* [udpsocket(3)](udpsocket.html)
-```
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

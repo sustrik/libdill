@@ -36,9 +36,3 @@ None.
 chrecv(ch, &val, sizeof(val), now() + 1000);
 ```
 
-## SEE ALSO
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

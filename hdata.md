@@ -32,13 +32,3 @@ The data pointer in case of success. In case of failure, `NULL` is returned and 
 struct foo_data *data = hdata(h, foo_type);
 ```
 
-## SEE ALSO
-
-[handle(3)](handle.html)
-[hclose(3)](hclose.html)
-[hdup(3)](hdup.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

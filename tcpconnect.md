@@ -42,15 +42,3 @@ int rc = ipremote(&addr, "192.168.0.1", 5555, 0, -1);
 int s = tcpconnect(&addr, -1);
 ```
 
-## SEE ALSO
-
-* [ipremote(3)](ipremote.html)
-* [tcpaccept(3)](tcpaccept.html)
-* [tcplisten(3)](tcplisten.html)
-* [tcprecv(3)](tcprecv.html)
-* [tcpsend(3)](tcpsend.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

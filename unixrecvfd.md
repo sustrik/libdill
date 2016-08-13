@@ -32,11 +32,3 @@ TODO
 int fd = unixrecvfd(s, -1);
 ```
 
-## SEE ALSO
-
-TODO
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

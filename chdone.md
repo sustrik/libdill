@@ -31,9 +31,7 @@ The function returns 0 in case of success. In case of failure it returns -1 and 
 
 ## EXAMPLE
 
-## SEE ALSO
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
+```
+int rc = chdone(ch);
+```
 

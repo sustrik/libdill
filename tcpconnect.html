@@ -43,19 +43,4 @@ int tcpconnect(const ipaddr *addr, int64_t deadline);</code></pre>
 <pre><code>ipaddr addr;
 int rc = ipremote(&amp;addr, &quot;192.168.0.1&quot;, 5555, 0, -1);
 int s = tcpconnect(&amp;addr, -1);</code></pre>
-<h2 id="see-also">SEE ALSO</h2>
-<ul>
-<li><a href="ipremote.html">ipremote(3)</a><br /></li>
-<li><a href="tcpaccept.html">tcpaccept(3)</a><br /></li>
-<li><a href="tcplisten.html">tcplisten(3)</a><br /></li>
-<li><a href="tcprecv.html">tcprecv(3)</a><br /></li>
-<li><a href="tcpsend.html">tcpsend(3)</a></li>
-</ul>
-<h2 id="authors">AUTHORS</h2>
-<p>Martin Sustrik <script type="text/javascript">
-<!--
-h='&#50;&#x35;&#48;&#98;&#112;&#x6d;&#46;&#x63;&#x6f;&#x6d;';a='&#64;';n='&#x73;&#x75;&#x73;&#116;&#114;&#x69;&#x6b;';e=n+a+h;
-document.write('<a h'+'ref'+'="ma'+'ilto'+':'+e+'">'+e+'<\/'+'a'+'>');
-// -->
-</script><noscript>&#x73;&#x75;&#x73;&#116;&#114;&#x69;&#x6b;&#32;&#x61;&#116;&#32;&#50;&#x35;&#48;&#98;&#112;&#x6d;&#32;&#100;&#x6f;&#116;&#32;&#x63;&#x6f;&#x6d;</noscript></p>
 </body>

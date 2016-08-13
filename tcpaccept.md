@@ -40,14 +40,3 @@ int listener = tcplisten(&addr, 10);
 int connection = tcpaccept(listener, NULL, -1);
 ```
 
-## SEE ALSO
-
-* [tcpconnect(3)](tcpconnect.html)
-* [tcplisten(3)](tcplisten.html)
-* [tcprecv(3)](tcprecv.html)
-* [tcpsend(3)](tcpsend.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

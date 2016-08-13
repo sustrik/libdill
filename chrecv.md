@@ -39,13 +39,3 @@ int val;
 chrecv(ch, &val, sizeof(val), now() + 1000);
 ```
 
-## SEE ALSO
-
-[channel(3)](channel.html)
-[chdone(3)](chdone.html)
-[chsend(3)](chsend.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

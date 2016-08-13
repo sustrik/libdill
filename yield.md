@@ -31,11 +31,3 @@ The function returns 0 in case of success or -1 in case of error. In the latter 
 yield();
 ```
 
-## SEE ALSO
-
-[go(3)](go.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

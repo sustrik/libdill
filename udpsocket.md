@@ -31,14 +31,3 @@ int rc = iplocal(&addr, NULL, 5555, 0);
 int s = udpsocket(&addr, NULL);
 ```
 
-## SEE ALSO
-
-* [mrecv(3)](mrecv.html)
-* [msend(3)](msend.html)
-* [udprecv(3)](udprecv.html)
-* [udpsend(3)](udpsend.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

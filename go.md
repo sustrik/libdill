@@ -44,12 +44,3 @@ coroutine void add(int a, int b) {
 int h = go(add(1, 2));
 ```
 
-## SEE ALSO
-
-* [hclose(3)](hclose.html)
-* [proc(3)](proc.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

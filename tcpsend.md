@@ -32,15 +32,3 @@ TODO
 ssize_t sz = bsend(s, "ABC", 3, -1);
 ```
 
-## SEE ALSO
-
-* [bsend(3)](bsend.html)
-* [tcpaccept(3)](tcpaccept.html)
-* [tcpconnect(3)](tcpconnect.html)
-* [tcplisten(3)](tcplisten.html)
-* [tcprecv(3)](tcprecv.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

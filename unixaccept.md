@@ -38,15 +38,3 @@ int listener = unixlisten("/tmp/unix.test", 10);
 int connection = unixaccept(listener, -1);
 ```
 
-## SEE ALSO
-
-* [unixconnect(3)](unixconnect.html)
-* [unixlisten(3)](unixlisten.html)
-* [unixpair(3)](unixpair.html)
-* [unixrecv(3)](unixrecv.html)
-* [unixsend(3)](unixsend.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

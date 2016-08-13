@@ -34,12 +34,3 @@ The function returns 0 in case of success or -1 in case of error. In the latter 
 fdin(fd);
 ```
 
-## SEE ALSO
-
-[fdclean(3)](fdclean.html)
-[fdout(3)](fdout.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

@@ -32,11 +32,3 @@ TODO
 ssize_t sz = msend(s, "ABC", 3, -1);
 ```
 
-## SEE ALSO
-
-* [mrecv(3)](mrecv.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

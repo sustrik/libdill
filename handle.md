@@ -63,13 +63,3 @@ static void foo_close(int h) {
 }
 ```
 
-## SEE ALSO
-
-[hclose(3)](hclose.html)
-[hdata(3)](hdata.html)
-[hdup(3)](hdup.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

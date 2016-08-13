@@ -30,14 +30,3 @@ Returns a channel handle. In the case of error it returns -1 and sets `errno` to
 int ch = channel(sizeof(int), 100);
 ```
 
-## SEE ALSO
-
-* [chdone(3)](chdone.html)
-* [chrecv(3)](chrecv.html)
-* [chsend(3)](chsend.html)
-* [hclose(3)](hclose.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

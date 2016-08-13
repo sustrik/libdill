@@ -33,11 +33,3 @@ char buf[256];
 ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
 ```
 
-## SEE ALSO
-
-* [msend(3)](msend.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

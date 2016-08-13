@@ -33,14 +33,3 @@ Returns 0 in case of success. In case of failure it returns -1 and sets `errno` 
 hclose(h);
 ```
 
-## SEE ALSO
-
-[handle(3)](handle.html)
-[hdata(3)](hdata.html)
-[hdup(3)](hdup.html)
-[hfinish(3)](hfinish.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

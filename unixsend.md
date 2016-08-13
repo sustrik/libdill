@@ -32,16 +32,3 @@ TODO
 ssize_t sz = unixsend(s, "ABC", 3, -1);
 ```
 
-## SEE ALSO
-
-* [bsend(3)](bsend.html)
-* [unixaccept(3)](unixaccept.html)
-* [unixconnect(3)](unixconnect.html)
-* [unixlisten(3)](unixlisten.html)
-* [unixpair(3)](unixpair.html)
-* [unixrecv(3)](unixrecv.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

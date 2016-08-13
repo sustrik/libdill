@@ -32,11 +32,3 @@ TODO
 ssize_t sz = bsend(s, "ABC", 3, -1);
 ```
 
-## SEE ALSO
-
-* [brecv(3)](brecv.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

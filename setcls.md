@@ -31,12 +31,3 @@ setcls(str);
 printf("%s\n", (char*)cls());
 ```
 
-## SEE ALSO
-
-[cls(3)](cls.html)
-[go(3)](go.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

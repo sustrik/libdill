@@ -33,15 +33,3 @@ char buf[256];
 ssize_t sz = tcprecv(s, buf, sizeof(buf), -1);
 ```
 
-## SEE ALSO
-
-* [brecv(3)](brecv.html)
-* [tcpaccept(3)](tcpaccept.html)
-* [tcpconnect(3)](tcpconnect.html)
-* [tcplisten(3)](tcplisten.html)
-* [tcpsend(3)](tcpsend.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

@@ -31,15 +31,3 @@ int s[2];
 int rc = unixpair(s);
 ```
 
-## SEE ALSO
-
-* [unixaccept(3)](unixaccept.html)
-* [unixconnect(3)](unixconnect.html)
-* [unixlisten(3)](unixlisten.html)
-* [unixrecv(3)](unixrecv.html)
-* [unixsend(3)](unixsend.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

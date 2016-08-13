@@ -31,12 +31,3 @@ None.
 fdclean(fd);
 ```
 
-## SEE ALSO
-
-[fdin(3)](fdin.html)
-[fdout(3)](fdout.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

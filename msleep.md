@@ -29,11 +29,3 @@ Returns 0 in case of success, -1 in case of error. In the latter case it sets `e
 msleep(now() + 1000);
 ```
 
-## SEE ALSO
-
-[now(3)](now.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-

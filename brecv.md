@@ -33,11 +33,3 @@ char buf[256];
 ssize_t sz = brecv(s, buf, sizeof(buf), -1);
 ```
 
-## SEE ALSO
-
-* [bsend(3)](bsend.html)
-
-## AUTHORS
-
-Martin Sustrik <sustrik@250bpm.com>
-
