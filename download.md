@@ -20,12 +20,13 @@ May 15, 2016: <http://libdill.org/libdill-0.3-beta.tar.gz>
 
 ```
 $ wget http://libdill.org/dsock-0.1-alpha.tar.gz
-$ tar -xzf dsock-0.1-alpha.tar.gz 
-$ cd dsock-0.1-alpha
+$ tar -xzf dsock-0.2-alpha.tar.gz 
+$ cd dsock-0.2-alpha
 $ ./configure
 $ make
 $ sudo make install
 ```
 
-**Aug 07, 2016: <http://libdill.org/dsock-0.1-alpha.tar.gz>**
+**Aug 13, 2016: <http://libdill.org/dsock-0.2-alpha.tar.gz>**
+Aug 07, 2016: <http://libdill.org/dsock-0.1-alpha.tar.gz>
 
