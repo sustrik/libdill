@@ -22,6 +22,7 @@
 ssize_t unixsendfd(int s, int fd, int64_t deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Sends one byte (0) to the UNIX domain connection and attaches file descriptor <code>fd</code> to it.</p>
+<p>The file descriptor is duplicated during the transport. The caller is still responsible for closing it after this call.</p>
 <h2 id="return-value">RETURN VALUE</h2>
 <p>Zero in case of success. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
