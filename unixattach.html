@@ -21,11 +21,15 @@
 <pre><code>#include &lt;dsock.h&gt;
 int unixattach(int fd);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Encapsulates raw file descriptor <code>fd</code> in dsock UNIX domain socket object. The descriptor is not duplicated, i.e. the caller should not attempt to use it or close it after this call.</p>
 <h2 id="return-value">RETURN VALUE</h2>
 <p>Handle of the created socket. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
-<p>TODO</p>
+<ul>
+<li><code>ECANCELED</code>: Current coroutine is being shut down.<br /></li>
+<li><code>EINVAL</code>: Invalid argument.<br /></li>
+<li><code>ENOMEM</code>: Not enough free memory to create the handle.</li>
+</ul>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>int s = unixattach(fd);</code></pre>
 </body>

@@ -21,11 +21,15 @@
 <pre><code>#include &lt;dsock.h&gt;
 int unixdetach(int s);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Closes dsock object without closing the underlying file descriptor. The descriptor is returned to the user.</p>
+<p>Note that the returned file descriptor is set to non-blocking mode.</p>
 <h2 id="return-value">RETURN VALUE</h2>
 <p>Underlying file descriptor. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
-<p>TODO</p>
+<ul>
+<li><code>EBADF</code>: Invalid handle.<br /></li>
+<li><code>ENOTSUP</code>: Handle is not a UNIX domain socket.</li>
+</ul>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<pre><code>int fd = unixdetach(s);</code></pre>
 </body>

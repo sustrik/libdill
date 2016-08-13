@@ -13,7 +13,7 @@ int tcpattach(int fd);
 
 ## DESCRIPTION
 
-TODO
+Encapsulates raw file descriptor `fd` in dsock TCP socket object. The descriptor is not duplicated, i.e. the caller should not attempt to use it or close it after this call.
 
 ## RETURN VALUE
 
@@ -21,9 +21,13 @@ Handle of the created socket. In case of error -1 is returned and `errno` is set
 
 ## ERRORS
 
-TODO
+* `ECANCELED`: Current coroutine is being shut down.
+* `EINVAL`: Invalid argument.
+* `ENOMEM`: Not enough free memory to create the handle.
 
 ## EXAMPLE
 
-TODO
+```
+int s = tcpattach(fd);
+```
 
