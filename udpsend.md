@@ -8,27 +8,32 @@ udpsend - send a message to UDP socket
 
 ```
 #include <dsock.h>
-ssize_t udpsend(int s, const ipaddr *addr, const void *buf, size_t len);
+int udpsend(int s, const ipaddr *addr, const void *buf, size_t *len);
 ```
 
 ## DESCRIPTION
 
 Send a UDP packet. If `addr` is not `NULL` the packet will be sent to that address. If it is `NULL` remote address specified in the call to `udpsocket` will be used instead. If even remote address wasn't specified the function will fail with `EINVAL` error.
 
+The operation is atomic. Either it succeeds to send entire packet or fails and sends nothing.
+
 ## RETURN VALUE
 
-Number of bytes sent. In case of error -1 is returned and `errno` is set to one of the error codes below.
+Zero in case of success. In case of error -1 is returned and `errno` is set to one of the error codes below.
 
 ## ERRORS
 
 TODO
 
 * `EDADF`: Invalid handle.
+* `ECANCELED`: Current coroutine is being shut down.
 * `ENOTSUP`: Handle is not a UDP socket.
+* `ETIMEDOUT`: Deadline expired.
 
 ## EXAMPLE
 
 ```
-ssize_t sz = udpsend(s, NULL, "ABC", 3, -1);
+size_t sz = 3;
+int rc = udpsend(s, NULL, "ABC", &sz, -1);
 ```
 

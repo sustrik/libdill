@@ -19,17 +19,21 @@
 <p>udpsend - send a message to UDP socket</p>
 <h2 id="synopsis">SYNOPSIS</h2>
 <pre><code>#include &lt;dsock.h&gt;
-ssize_t udpsend(int s, const ipaddr *addr, const void *buf, size_t len);</code></pre>
+int udpsend(int s, const ipaddr *addr, const void *buf, size_t *len);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Send a UDP packet. If <code>addr</code> is not <code>NULL</code> the packet will be sent to that address. If it is <code>NULL</code> remote address specified in the call to <code>udpsocket</code> will be used instead. If even remote address wasn't specified the function will fail with <code>EINVAL</code> error.</p>
+<p>The operation is atomic. Either it succeeds to send entire packet or fails and sends nothing.</p>
 <h2 id="return-value">RETURN VALUE</h2>
-<p>Number of bytes sent. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
+<p>Zero in case of success. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <p>TODO</p>
 <ul>
 <li><code>EDADF</code>: Invalid handle.<br /></li>
-<li><code>ENOTSUP</code>: Handle is not a UDP socket.</li>
+<li><code>ECANCELED</code>: Current coroutine is being shut down.<br /></li>
+<li><code>ENOTSUP</code>: Handle is not a UDP socket.<br /></li>
+<li><code>ETIMEDOUT</code>: Deadline expired.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>ssize_t sz = udpsend(s, NULL, &quot;ABC&quot;, 3, -1);</code></pre>
+<pre><code>size_t sz = 3;
+int rc = udpsend(s, NULL, &quot;ABC&quot;, &amp;sz, -1);</code></pre>
 </body>
