@@ -41,17 +41,25 @@ all: \
     mrecv.html \
     msend.html \
     tcpaccept.html \
+    tcpattach.html \
     tcpconnect.html \
+    tcpdetach.html \
     tcplisten.html \
     tcprecv.html \
     tcpsend.html \
+    udpattach.html \
+    udpdetach.html \
     udprecv.html \
     udpsend.html \
     udpsocket.html \
     unixaccept.html \
+    unixattach.html \
     unixconnect.html \
+    unixdetach.html \
     unixlisten.html \
     unixpair.html \
     unixrecv.html \
-    unixsend.html
+    unixrecvfd.html \
+    unixsend.html \
+    unixsendfd.html
 

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+</ul>
+<h1 id="unixrecvfd3-manual-page">unixrecvfd(3) manual page</h1>
+<h2 id="name">NAME</h2>
+<p>unixrecvfd - read a file descriptor from a UNIX domain connection</p>
+<h2 id="synopsis">SYNOPSIS</h2>
+<pre><code>#include &lt;dsock.h&gt;
+int unixrecvfd(int s, int64_t deadline);</code></pre>
+<h2 id="description">DESCRIPTION</h2>
+<p>Reads one byte from UNIX domain connection and discards it. Returns file descriptor attached to that byte.</p>
+<h2 id="return-value">RETURN VALUE</h2>
+<p>File descriptor read from the connection. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
+<h2 id="errors">ERRORS</h2>
+<p>TODO</p>
+<ul>
+<li><code>EBADF</code>: Invalid handle.<br /></li>
+<li><code>ENOTSUP</code>: Handle is not a UNIX domain socket.</li>
+</ul>
+<h2 id="example">EXAMPLE</h2>
+<pre><code>int fd = unixrecvfd(s, -1);</code></pre>
+<h2 id="see-also">SEE ALSO</h2>
+<p>TODO</p>
+<h2 id="authors">AUTHORS</h2>
+<p>Martin Sustrik <script type="text/javascript">
+<!--
+h='&#50;&#x35;&#48;&#98;&#112;&#x6d;&#46;&#x63;&#x6f;&#x6d;';a='&#64;';n='&#x73;&#x75;&#x73;&#116;&#114;&#x69;&#x6b;';e=n+a+h;
+document.write('<a h'+'ref'+'="ma'+'ilto'+':'+e+'">'+e+'<\/'+'a'+'>');
+// -->
+</script><noscript>&#x73;&#x75;&#x73;&#116;&#114;&#x69;&#x6b;&#32;&#x61;&#116;&#32;&#50;&#x35;&#48;&#98;&#112;&#x6d;&#32;&#100;&#x6f;&#116;&#32;&#x63;&#x6f;&#x6d;</noscript></p>
+</body>
