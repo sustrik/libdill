@@ -23,6 +23,9 @@ Handle of the created socket. In case of error -1 is returned and `errno` is set
 
 TODO
 
+* `EMFILE`: No more file descriptors are available for this process.
+* `ENFILE`: No more file descriptors are available for the system.
+
 ## EXAMPLE
 
 ```

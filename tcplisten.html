@@ -26,11 +26,11 @@ int tcplisten(ipaddr *addr, int backlog);</code></pre>
 <p>Handle of the created socket. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <ul>
+<li><code>EACCES</code>: The process does not have appropriate privileges.<br /></li>
 <li><code>EADDRINUSE</code>: The specified address is already in use.<br /></li>
 <li><code>EADDRNOTAVAIL</code>: The specified address is not available from the local machine.<br /></li>
 <li><code>EMFILE</code>: No more file descriptors are available for this process.<br /></li>
 <li><code>ENFILE</code>: No more file descriptors are available for the system.<br /></li>
-<li><code>EACCES</code>: The process does not have appropriate privileges.<br /></li>
 <li><code>ENOBUFS</code>: Insufficient resources were available in the system to perform the operation.<br /></li>
 <li><code>ENOMEM</code>: Insufficient memory was available to fulfill the request.</li>
 </ul>

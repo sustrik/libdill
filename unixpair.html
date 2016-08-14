@@ -27,6 +27,10 @@ int s[2]);</code></pre>
 <p>Zero in case of success. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <p>TODO</p>
+<ul>
+<li><code>EMFILE</code>: No more file descriptors are available for this process.<br /></li>
+<li><code>ENFILE</code>: No more file descriptors are available for the system.</li>
+</ul>
 <h2 id="example">EXAMPLE</h2>
 <pre><code>int s[2];
 int rc = unixpair(s);</code></pre>

@@ -21,6 +21,7 @@ Handle of the created socket. In case of error -1 is returned and `errno` is set
 
 ## ERRORS
 
+* `EACCES`: The process does not have appropriate privileges.
 * `EDESTADDRREQ` or `EISDIR`: The address argument is a null pointer.
 * `EIO`: An I/O error occurred.
 * `ELOOP`: A loop exists in symbolic links encountered during resolution of the pathname in address.
@@ -31,7 +32,6 @@ Handle of the created socket. In case of error -1 is returned and `errno` is set
 * `EADDRINUSE`: The specified address is already in use.
 * `EMFILE`: No more file descriptors are available for this process.
 * `ENFILE`: No more file descriptors are available for the system.
-* `EACCES`: The process does not have appropriate privileges.
 * `ENOBUFS`: Insufficient resources were available in the system to perform the operation.
 * `ENOMEM`: Insufficient memory was available to fulfill the request.
 

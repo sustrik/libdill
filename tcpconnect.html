@@ -26,6 +26,7 @@ int tcpconnect(const ipaddr *addr, int64_t deadline);</code></pre>
 <p>Handle of the created socket. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
 <ul>
+<li><code>EACCES</code>: The process does not have appropriate privileges.<br /></li>
 <li><code>ECONNREFUSED</code>: The target address was not listening for connections or refused the connection request.<br /></li>
 <li><code>ECONNRESET</code>: Remote host reset the connection request.<br /></li>
 <li><code>EHOSTUNREACH</code>: The destination host cannot be reached.<br /></li>
@@ -34,7 +35,6 @@ int tcpconnect(const ipaddr *addr, int64_t deadline);</code></pre>
 <li><code>EINTR</code>: The function was interrupted by a signal.<br /></li>
 <li><code>EMFILE</code>: The maximum number of file descriptors in the process are already open.<br /></li>
 <li><code>ENFILE</code>: The maximum number of file descriptors in the system are already open.<br /></li>
-<li><code>EACCES</code>: The process does not have appropriate privileges.<br /></li>
 <li><code>ENOBUFS</code>: No buffer space is available.<br /></li>
 <li><code>ENOMEM</code>: There was insufficient memory available to complete the operation.<br /></li>
 <li><code>ETIMEDOUT</code>: Deadline was reached.</li>

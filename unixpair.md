@@ -24,6 +24,9 @@ Zero in case of success. In case of error -1 is returned and `errno` is set to o
 
 TODO
 
+* `EMFILE`: No more file descriptors are available for this process.
+* `ENFILE`: No more file descriptors are available for the system.
+
 ## EXAMPLE
 
 ```
