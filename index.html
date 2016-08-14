@@ -20,12 +20,11 @@
 <span class="ot">#include &lt;stdio.h&gt;</span>
 <span class="ot">#include &lt;stdlib.h&gt;</span>
 
-coroutine <span class="dt">int</span> worker(<span class="dt">const</span> <span class="dt">char</span> *text) {
+coroutine <span class="dt">void</span> worker(<span class="dt">const</span> <span class="dt">char</span> *text) {
     <span class="kw">while</span>(<span class="dv">1</span>) {
         printf(<span class="st">&quot;%s</span><span class="ch">\n</span><span class="st">&quot;</span>, text);
         msleep(now() + random() % <span class="dv">500</span>);
     }
-    <span class="kw">return</span> <span class="dv">0</span>;
 }
 
 <span class="dt">int</span> main() {

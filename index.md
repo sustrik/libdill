@@ -8,12 +8,11 @@ The following example launches two concurrent worker functions that print "Hello
 #include <stdio.h>
 #include <stdlib.h>
 
-coroutine int worker(const char *text) {
+coroutine void worker(const char *text) {
     while(1) {
         printf("%s\n", text);
         msleep(now() + random() % 500);
     }
-    return 0;
 }
 
 int main() {
