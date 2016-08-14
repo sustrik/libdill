@@ -34,7 +34,8 @@ TODO
 ## EXAMPLE
 
 ```
-char buf[256];
-ssize_t sz = brecv(s, buf, sizeof(buf), -1);
+char buf[16];
+size_t sz = sizeof(buf);
+int rc = brecv(s, buf, &sz, -1);
 ```
 
