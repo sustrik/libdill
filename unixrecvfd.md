@@ -21,11 +21,10 @@ File descriptor read from the connection. In case of error -1 is returned and `e
 
 ## ERRORS
 
-TODO
-
 * `EBADF`: Invalid handle.
 * `ECANCELED`: Current coroutine is being shut down.
 * `ECONNRESET`: The connection is broken.
+* `EINTR`: The function was interruped by a singal.
 * `ENOMSG`: There was no file descriptor attached to the byte.
 * `ENOTSUP`: Handle is not a UNIX socket.
 * `ETIMEDOUT`: Deadline expired.

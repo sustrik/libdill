@@ -21,11 +21,10 @@ Zero in case of success. In case of error -1 is returned and `errno` is set to o
 
 ## ERRORS
 
-TODO
-
 * `EDADF`: Invalid handle.
 * `ECANCELED`: Current coroutine is being shut down.
 * `ECONNRESET`: The connection is broken.
+* `EINTR`: The function was interruped by a singal.
 * `ENOTSUP`: Handle is not a bytestream socket.
 * `ETIMEDOUT`: Deadline expired.
 
@@ -33,6 +32,6 @@ TODO
 
 ```
 size_t sz = 3;
-int rc = bsend(s, "ABC", 3, -1);
+int rc = bsend(s, "ABC", &sz, -1);
 ```
 

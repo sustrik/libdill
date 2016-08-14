@@ -21,11 +21,10 @@ Zero in case of success. In case of error -1 is returned and `errno` is set to o
 
 ## ERRORS
 
-TODO
-
 * `EBADF`: Invalid handle.
 * `ECANCELED`: Current coroutine is being shut down.
 * `ECONNRESET`: The connection is broken.
+* `EINTR`: The function was interruped by a singal.
 * `ENOTSUP`: Handle is not a TCP socket.
 * `ETIMEDOUT`: Deadline expired.
 
