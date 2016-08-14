@@ -1,5 +1,5 @@
 
-## Reference
+# Documentation
 
 ##### libdill
 

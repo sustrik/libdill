@@ -1,5 +1,5 @@
 
-## Installation
+# Download
 
 ##### libdill
 
@@ -19,7 +19,7 @@ May 15, 2016: <http://libdill.org/libdill-0.3-beta.tar.gz>
 ##### dsock
 
 ```
-$ wget http://libdill.org/dsock-0.1-alpha.tar.gz
+$ wget http://libdill.org/dsock-0.2-alpha.tar.gz
 $ tar -xzf dsock-0.2-alpha.tar.gz 
 $ cd dsock-0.2-alpha
 $ ./configure
