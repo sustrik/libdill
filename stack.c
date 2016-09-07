@@ -111,7 +111,7 @@ void dill_freestack(void *stack) {
     /* If there are free slots in the cache put the stack to the cache. */
     if(dill_num_cached_stacks < dill_max_cached_stacks) {
         dill_slist_item_init(item);
-        dill_slist_push_back(&dill_cached_stacks, item);
+        dill_slist_push(&dill_cached_stacks, item);
         ++dill_num_cached_stacks;
         return;
     }
