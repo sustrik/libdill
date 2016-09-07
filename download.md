@@ -4,9 +4,9 @@
 ##### libdill
 
 ```
-$ wget http://libdill.org/libdill-0.5-beta.tar.gz
-$ tar -xzf libdill-0.5-beta.tar.gz 
-$ cd libdill-0.5-beta
+$ wget http://libdill.org/libdill-0.6-beta.tar.gz
+$ tar -xzf libdill-0.6-beta.tar.gz 
+$ cd libdill-0.6-beta
 $ ./configure
 $ make
 $ sudo make install
