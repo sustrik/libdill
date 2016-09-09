@@ -15,7 +15,7 @@ const char *ipaddrstr(const ipaddr *addr, char *ipstr);
 
 Formats ipaddr as a human-readable string.
 
-First argument is the IP address to format, second is the buffer to store the result it. The buffer must be at least `IPADDR_MAXSTRLEN` bytes long.
+First argument is the IP address to format, second is the buffer to store the result. The buffer must be at least `IPADDR_MAXSTRLEN` bytes long.
 
 ## RETURN VALUE
 
