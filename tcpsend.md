@@ -32,6 +32,6 @@ Zero in case of success. In case of error -1 is returned and `errno` is set to o
 
 ```
 size_t sz = 3;
-int rc = bsend(s, "ABC", &sz, -1);
+int rc = tcpsend(s, "ABC", &sz, -1);
 ```
 
