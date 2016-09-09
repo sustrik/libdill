@@ -78,7 +78,7 @@ Check this short introductory [article](structured-concurrency.html) about struc
 
 Technically, there are following differences:
 
-1. It's C-idiomatic. Whereas libmill takes Go's concurrency API a implements them in almost identical manner in C, libdill tries to provide the same functionality via more C-like and POSIX-y API. For example, `choose` is a function rather than a language construct, Go-style panic is replaced by returning an error code and so on.
+1. It's C-idiomatic. Whereas libmill takes Go's concurrency API and implements them in almost identical manner in C, libdill tries to provide the same functionality via more C-like and POSIX-y API. For example, `choose` is a function rather than a language construct, Go-style panic is replaced by returning an error code and so on.
 2. Coroutines and processes can be canceled. This creates a foundation for "structured concurrency".
 3. `chdone` causes blocked `recv` on the channel to return `EPIPE` error rather than a value.
 4. `chdone` will signal senders to the channel as well as receivers. This allows for scenarios like multiple senders and single receiver communicating via single channel. The receiver can let the senders know that it's terminating via `chdone`.
@@ -120,7 +120,7 @@ Travis: <https://travis-ci.org/sustrik/libdill>
 
 ## FAQ: How can I contribute?
 
-To contribute to libdill create a GitHub pull request. You have to state that your patch is submitted under MIT/X11 license, so that it can be incorporated into the mainline codebase without licesing issues.
+To contribute to libdill create a GitHub pull request. You have to state that your patch is submitted under MIT/X11 license, so that it can be incorporated into the mainline codebase without licensing issues.
 
 If you make a substantial contribution to a file, add your copyright to the file header. Irrespective of whether you do so, your name will be added to the AUTHORS file to indicate you own copyright to a part of the codebase.
 
