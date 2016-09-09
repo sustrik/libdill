@@ -21,7 +21,7 @@
 <pre><code>#include &lt;dsock.h&gt;
 int tcpsend(int s, const void *buf, size_t *len, int64_t deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>Attempts to write <code>len</code> bytes from buffer <code>buf</code> to the socket. Function succeeds only if all the bytes are written. If it fails though it may still have written some bytes to the socket. In either case the value of <code>len</code> is updated to indicate the number of bytes acutally written.</p>
+<p>Attempts to write <code>len</code> bytes from buffer <code>buf</code> to the socket. Function succeeds only if all the bytes are written. If it fails though it may still have written some bytes to the socket. In either case the value of <code>len</code> is updated to indicate the number of bytes actually written.</p>
 <h2 id="return-value">RETURN VALUE</h2>
 <p>Zero in case of success. In case of error -1 is returned and <code>errno</code> is set to one of the error codes below.</p>
 <h2 id="errors">ERRORS</h2>
@@ -29,7 +29,7 @@ int tcpsend(int s, const void *buf, size_t *len, int64_t deadline);</code></pre>
 <li><code>EBADF</code>: Invalid handle.<br /></li>
 <li><code>ECANCELED</code>: Current coroutine is being shut down.<br /></li>
 <li><code>ECONNRESET</code>: The connection is broken.<br /></li>
-<li><code>EINTR</code>: The function was interruped by a singal.<br /></li>
+<li><code>EINTR</code>: The function was interrupted by a signal.<br /></li>
 <li><code>ENOTSUP</code>: Handle is not a TCP socket.<br /></li>
 <li><code>ETIMEDOUT</code>: Deadline expired.</li>
 </ul>
