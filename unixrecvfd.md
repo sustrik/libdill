@@ -13,7 +13,7 @@ int unixrecvfd(int s, int64_t deadline);
 
 ## DESCRIPTION
 
-Reads one byte from UNIX domain connection and discards it. Returns file descriptor attached to that byte. 
+Reads one byte from UNIX domain connection and discards it. Returns file descriptor attached to that byte.
 
 ## RETURN VALUE
 
@@ -24,7 +24,7 @@ File descriptor read from the connection. In case of error -1 is returned and `e
 * `EBADF`: Invalid handle.
 * `ECANCELED`: Current coroutine is being shut down.
 * `ECONNRESET`: The connection is broken.
-* `EINTR`: The function was interruped by a singal.
+* `EINTR`: The function was interrupted by a signal.
 * `ENOMSG`: There was no file descriptor attached to the byte.
 * `ENOTSUP`: Handle is not a UNIX socket.
 * `ETIMEDOUT`: Deadline expired.
