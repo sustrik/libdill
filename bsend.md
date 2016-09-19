@@ -13,7 +13,7 @@ int bsend(int s, const void *buf, size_t *len, int64_t deadline);
 
 ## DESCRIPTION
 
-Writes data to a bytestream socket, such as TCP or UNIX domain socket. Function succeeds only if all the bytes are written. If it fails though it may still have written some bytes to the socket. In either case the value of `len` is updated to indicate the number of bytes acutally written.
+Writes data to a bytestream socket, such as TCP or UNIX domain socket. Function succeeds only if all the bytes are written. If it fails though it may still have written some bytes to the socket. In either case the value of `len` is updated to indicate the number of bytes actually written.
 
 ## RETURN VALUE
 
@@ -24,7 +24,7 @@ Zero in case of success. In case of error -1 is returned and `errno` is set to o
 * `EDADF`: Invalid handle.
 * `ECANCELED`: Current coroutine is being shut down.
 * `ECONNRESET`: The connection is broken.
-* `EINTR`: The function was interruped by a singal.
+* `EINTR`: The function was interrupted by a signal.
 * `ENOTSUP`: Handle is not a bytestream socket.
 * `ETIMEDOUT`: Deadline expired.
 

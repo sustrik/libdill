@@ -26,7 +26,7 @@ Zero in case of success. In case of error -1 is returned and `errno` is set to o
 * `EBADF`: Invalid handle.
 * `ECANCELED`: Current coroutine is being shut down.
 * `ECONNRESET`: The connection is broken.
-* `EINTR`: The function was interruped by a singal.
+* `EINTR`: The function was interrupted by a signal.
 * `ENOTSUP`: Handle is not a UNIX domain socket.
 * `ETIMEDOUT`: Deadline expired.
 

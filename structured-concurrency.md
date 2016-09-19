@@ -31,7 +31,7 @@ Following table explains the trade-offs between the two mechanisms:
 | **scheduling**          | cooperative            | preemptive             |
 | **failure isolation**   | no                     | yes                    |
 
-Launching a concurrent function -- a `coroutine` in libdill terminology -- using `go` construct is extremely fast, if requires only few machine instructions. In other words, coroutines can be used as flow control mechanism, similar to `if` or `while`. The performance is comparable. `proc`, on the other hand, launches a separate OS process with its own address space and so on. It is much slower.
+Launching a concurrent function -- a `coroutine` in libdill terminology -- using `go` construct is extremely fast, it requires only few machine instructions. In other words, coroutines can be used as flow control mechanism, similar to `if` or `while`. The performance is comparable. `proc`, on the other hand, launches a separate OS process with its own address space and so on. It is much slower.
 
 Same applies to switching between different coroutines. While switching from one coroutine to other inside a single process is super fast, switching between processes is slow. OS scheduler gets involved, TLBs are switched and so on. Context switch between processes is a system hiccup and it often takes many thousands cycles to get back up to speed.
 
@@ -115,7 +115,7 @@ In other words, you want a guarantee that once the object is deallocated there a
 
 ![](index4.jpeg)
 
-And there's no trick there. Just do it in the most straightforward way. Launch the coroutines in function that opens the object and close them in the function the closes the object. Once main function closes the connection object, both sender and receiver corotuines will be automatically stopped.
+And there's no trick there. Just do it in the most straightforward way. Launch the coroutines in function that opens the object and close them in the function the closes the object. Once main function closes the connection object, both sender and receiver coroutines will be automatically stopped.
 
 ```c
 struct tcp_connection {

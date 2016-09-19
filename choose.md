@@ -30,7 +30,7 @@ Accepts a list of channel operations. Performs one that can be done first. If mu
 
 If deadline expires before any operation can be performed, the function fails with `ETIMEDOUT` error.
 
-NOTE: `choose` is using reseved fields in `chclause` structure to store its internal information. Therefore, same `chclause` instance cannot be used by two overlapping invocations of `choose`.
+NOTE: `choose` is using reserved fields in `chclause` structure to store its internal information. Therefore, same `chclause` instance cannot be used by two overlapping invocations of `choose`.
 
 ## RETURN VALUE
 
