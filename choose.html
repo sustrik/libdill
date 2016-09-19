@@ -35,7 +35,7 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline);</code></pr
 <p>Accepts a list of channel operations. Performs one that can be done first. If multiple operations can be done immediately, one to perform is chosen at random.</p>
 <p><code>op</code> is operation code, either <code>CHSEND</code> or <code>CHRECV</code>. <code>ch</code> is a channel handle. <code>val</code> is a pointer to buffer to send from or receive to. <code>len</code> is size of the buffer, in bytes.</p>
 <p>If deadline expires before any operation can be performed, the function fails with <code>ETIMEDOUT</code> error.</p>
-<p>NOTE: <code>choose</code> is using reseved fields in <code>chclause</code> structure to store its internal information. Therefore, same <code>chclause</code> instance cannot be used by two overlapping invocations of <code>choose</code>.</p>
+<p>NOTE: <code>choose</code> is using reserved fields in <code>chclause</code> structure to store its internal information. Therefore, same <code>chclause</code> instance cannot be used by two overlapping invocations of <code>choose</code>.</p>
 <h2 id="return-value">RETURN VALUE</h2>
 <p>Returns -1 if an error occured. Index of the clause that caused the function to exit otherwise. Even in the latter case <code>errno</code> may be set to indicate a failure.</p>
 <h2 id="errors">ERRORS</h2>
