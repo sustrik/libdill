@@ -21,14 +21,14 @@
 <pre><code>#include &lt;libdill.h&gt;
 void *hdata(int h, const void *type);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>Returns opaque data pointer passed to <code>handle</code> funcion when the handle was created.</p>
+<p>Returns opaque data pointer passed to <code>handle</code> function when the handle was created.</p>
 <p>Second argument is the expected type of the handle. If the type of the supplied handle doesn't match the expected type the function fails.</p>
 <h2 id="return-value">RETURN VALUE</h2>
 <p>The data pointer in case of success. In case of failure, <code>NULL</code> is returned and <code>errno</code> is set to one of the following values.</p>
 <h2 id="errors">ERRORS</h2>
 <ul>
 <li><code>EDADF</code>: Invalid handle.<br /></li>
-<li><code>ENOTSUP</code>: Provided type parameter doesn't match the typo of the handle.</li>
+<li><code>ENOTSUP</code>: Provided type parameter doesn't match the type of the handle.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
 <pre><code>struct foo_data *data = hdata(h, foo_type);</code></pre>

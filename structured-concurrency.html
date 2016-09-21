@@ -55,7 +55,7 @@
 </tr>
 </tbody>
 </table>
-<p>Launching a concurrent function -- a <code>coroutine</code> in libdill terminology -- using <code>go</code> construct is extremely fast, if requires only few machine instructions. In other words, coroutines can be used as flow control mechanism, similar to <code>if</code> or <code>while</code>. The performance is comparable. <code>proc</code>, on the other hand, launches a separate OS process with its own address space and so on. It is much slower.</p>
+<p>Launching a concurrent function -- a <code>coroutine</code> in libdill terminology -- using <code>go</code> construct is extremely fast, it requires only few machine instructions. In other words, coroutines can be used as flow control mechanism, similar to <code>if</code> or <code>while</code>. The performance is comparable. <code>proc</code>, on the other hand, launches a separate OS process with its own address space and so on. It is much slower.</p>
 <p>Same applies to switching between different coroutines. While switching from one coroutine to other inside a single process is super fast, switching between processes is slow. OS scheduler gets involved, TLBs are switched and so on. Context switch between processes is a system hiccup and it often takes many thousands cycles to get back up to speed.</p>
 <p>However, there's one huge advantage of using separate processes. They may run in parallel, meaning that they can utilise multiple CPU cores. Launching the coroutine inside of the process, on the other hand, means that it shares CPU with the parent coroutine. If you are using <code>go</code> exclusively your program will use only a single CPU core even on a 32-core machine.</p>
 <p>From the performance point of view, the best strategy is to have as many processes as there are CPU cores and deal with any remaining concurrency needs inside the process via <code>go</code> mechanism.</p>
@@ -100,7 +100,7 @@ hclose(h);</code></pre>
 <p>Still, it would be nice if the object was a node in the calltree, just like a coroutine is.</p>
 <p>In other words, you want a guarantee that once the object is deallocated there are no leftover coroutines running:</p>
 <p><img src="index4.jpeg" /></p>
-<p>And there's no trick there. Just do it in the most straightforward way. Launch the coroutines in function that opens the object and close them in the function the closes the object. Once main function closes the connection object, both sender and receiver corotuines will be automatically stopped.</p>
+<p>And there's no trick there. Just do it in the most straightforward way. Launch the coroutines in function that opens the object and close them in the function the closes the object. Once main function closes the connection object, both sender and receiver coroutines will be automatically stopped.</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> tcp_connection {
     <span class="dt">int</span> sender;
     <span class="dt">int</span> receiver;
