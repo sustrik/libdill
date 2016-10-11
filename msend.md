@@ -2,7 +2,7 @@
 
 ## NAME
 
-msend - read a message to a socket
+msend - send a message to a socket
 
 ## SYNOPSIS
 
