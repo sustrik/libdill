@@ -151,8 +151,8 @@ DILL_EXPORT void dill_proc_epilogue(void);
         : : "a" (ctx) : "rdx" \
     )
 #else
-#define dill_setjmp(ctx) sigsetjmp(*ctx, 0)
-#define dill_longjmp(ctx) siglongjmp(*ctx, 1)
+#define dill_setjmp(ctx) sigsetjmp(ctx, 0)
+#define dill_longjmp(ctx) siglongjmp(ctx, 1)
 #endif
 
 /* Statement expressions are a gcc-ism but they are also supported by clang.
