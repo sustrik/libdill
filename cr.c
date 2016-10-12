@@ -48,8 +48,6 @@ struct dill_cr {
        from dill_wait() once the coroutine is resumed. Additionally, errno
        will be set to value of 'err'. */
     struct dill_slist_item ready;
-    /* Virtual function table. */
-    struct hvfs vfs;
     int id;
     int err;
     /* When coroutine is suspended 'ctx' holds the context
@@ -231,8 +229,8 @@ static void dill_poller_wait(int block) {
 
 static const int dill_cr_type_placeholder = 0;
 static const void *dill_cr_type = &dill_cr_type_placeholder;
-static void *dill_cr_query(struct hvfs *vfs, const void *type);
-static void dill_cr_close(struct hvfs *vfs);
+static void dill_cr_close(int h);
+static const struct hvfptrs dill_cr_vfptrs = {dill_cr_close};
 
 /******************************************************************************/
 /*  Creation and termination of coroutines.                                   */
@@ -250,9 +248,7 @@ int dill_prologue(sigjmp_buf **ctx) {
     struct dill_cr *cr = (struct dill_cr*)dill_allocstack(&stacksz);
     if(dill_slow(!cr)) return -1;
     --cr;
-    cr->vfs.query = dill_cr_query;
-    cr->vfs.close = dill_cr_close;
-    int hndl = hcreate(&cr->vfs);
+    int hndl = handle(dill_cr_type, cr, &dill_cr_vfptrs);
     if(dill_slow(hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return -1;}
     dill_slist_item_init(&cr->ready);
     dill_slist_init(&cr->clauses);
@@ -287,15 +283,9 @@ void dill_epilogue(void) {
     dill_wait();
 }
 
-static void *dill_cr_query(struct hvfs *vfs, const void *type) {
-    if(dill_fast(!type || type == dill_cr_type)) return vfs;
-    errno = ENOTSUP;
-    return NULL;
-}
-
 /* Gets called when coroutine handle is closed. */
-static void dill_cr_close(struct hvfs *vfs) {
-    struct dill_cr *cr = dill_cont(vfs, struct dill_cr, vfs);
+static void dill_cr_close(int h) {
+    struct dill_cr *cr = (struct dill_cr*)hdata(h, dill_cr_type);
     /* If the coroutine have already finished, we are done. */
     if(!cr->done) {
         /* No blocking calls from this point on. */

@@ -33,10 +33,14 @@
 #include "utils.h"
 
 struct dill_handle {
-    /* Table of virtual functions. */
-    struct hvfs *vfs;
-    /* Number of references to this handle. */
+    /* Implemetor-specified type of the handle. */
+    const void *type;
+    /* Opaque implemetor-specified pointer. */
+    void *data;
+    /* Number of duplicates of this handle. */
     int refcount;
+    /* Table of virtual functions. */
+    struct hvfptrs vfptrs;
     /* Index of the next handle in the linked list of unused handles. -1 means
        'end of the list'. -2 means 'active handle'. */
     int next;
@@ -57,12 +61,13 @@ static void dill_handle_atexit(void) {
         free(dill_handles);
 }
 
-int hcreate(struct hvfs *vfs) {
-    if(dill_slow(!vfs || !vfs->query || !vfs->close)) {
-        errno = EINVAL; return -1;}
+int handle(const void *type, void *data, const struct hvfptrs *vfptrs) {
+    if(dill_slow(!type || !data || !vfptrs)) {errno = EINVAL; return -1;}
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
+    /* Check mandatory virtual functions. */
+    if(dill_slow(!vfptrs->close)) {errno = EINVAL; return -1;}
     /* If there's no space for the new handle expand the array. */
     if(dill_slow(dill_unused == -1)) {
         /* Start with 256 handles, double the size when needed. */
@@ -89,8 +94,10 @@ int hcreate(struct hvfs *vfs) {
     /* Return first handle from the list of unused hadles. */
     int h = dill_unused;
     dill_unused = dill_handles[h].next;
-    dill_handles[h].vfs = vfs;
+    dill_handles[h].type = type;
+    dill_handles[h].data = data;
     dill_handles[h].refcount = 1;
+    dill_handles[h].vfptrs = *vfptrs;
     dill_handles[h].next = -2;
     return h;
 }
@@ -101,9 +108,10 @@ int hdup(int h) {
     return h;
 }
 
-void *hquery(int h, const void *type) {
+void *hdata(int h, const void *type) {
     CHECKHANDLE(h, NULL);
-    return hndl->vfs->query(hndl->vfs, type);
+    if(dill_slow(type && hndl->type != type)) {errno = ENOTSUP; return NULL;}
+    return hndl->data;
 }
 
 int hclose(int h) {
@@ -118,7 +126,10 @@ int hclose(int h) {
        inside the context of the close. */
     int old = dill_no_blocking2(1);
     /* Send stop signal to the handle. */
-    hndl->vfs->close(hndl->vfs);
+    dill_assert(hndl->vfptrs.close);
+    hndl->vfptrs.close(h);
+    /* Better be paraniod and delete the function pointer once it was used. */
+    hndl->vfptrs.close = NULL;
     /* Restore the previous state. */
     dill_no_blocking2(old);
     /* Return the handle to the shared pool. */

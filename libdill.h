@@ -79,14 +79,14 @@ DILL_EXPORT int64_t now(void);
 /*  Handles                                                                   */
 /******************************************************************************/
 
-struct hvfs {
-    void *(*query)(struct hvfs *vfs, const void *type);
-    void (*close)(struct hvfs *vfs);
+struct hvfptrs {
+    void (*close)(int h);
 };
 
-DILL_EXPORT int hcreate(struct hvfs *vfs);
-DILL_EXPORT void *hquery(int h, const void *type);
+DILL_EXPORT int handle(const void *type, void *data,
+    const struct hvfptrs *vfptrs);
 DILL_EXPORT int hdup(int h);
+DILL_EXPORT void *hdata(int h, const void *type);
 DILL_EXPORT int hclose(int h);
 
 /******************************************************************************/
@@ -166,7 +166,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
             if(!dill_setjmp(*ctx)) {\
                 int dill_anchor[dill_unoptimisable1];\
                 dill_unoptimisable2 = &dill_anchor;\
-                char dill_filler[(char*)&dill_anchor - (char*)hquery(h, NULL)];\
+                char dill_filler[(char*)&dill_anchor - (char*)hdata(h, NULL)];\
                 dill_unoptimisable2 = &dill_filler;\
                 fn;\
                 dill_epilogue();\
