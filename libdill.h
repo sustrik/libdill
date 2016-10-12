@@ -44,7 +44,7 @@
 #define DILL_VERSION_CURRENT 5
 
 /*  The latest revision of the current interface. */
-#define DILL_VERSION_REVISION 0
+#define DILL_VERSION_REVISION 1
 
 /*  How many past interface versions are still supported. */
 #define DILL_VERSION_AGE 0
