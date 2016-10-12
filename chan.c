@@ -38,6 +38,8 @@
    +-----------+-------+--------+---------------------------------+--------+
 */
 struct dill_chan {
+    /* Table of virtual functions. */
+    struct hvfs vfs;
     /* The size of one element stored in the channel, in bytes. */
     size_t sz;
     /* List of clauses wanting to receive from the channel. */
@@ -72,8 +74,8 @@ DILL_CT_ASSERT(sizeof(struct dill_chcl) <= 64);
 
 static const int dill_chan_type_placeholder = 0;
 static const void *dill_chan_type = &dill_chan_type_placeholder;
-static void dill_chan_close(int h);
-static const struct hvfptrs dill_chan_vfptrs = {dill_chan_close};
+static void *dill_chan_query(struct hvfs *vfs, const void *type);
+static void dill_chan_close(struct hvfs *vfs);
 
 /******************************************************************************/
 /*  Channel creation and deallocation.                                        */
@@ -87,6 +89,8 @@ int channel(size_t itemsz, size_t bufsz) {
     struct dill_chan *ch = (struct dill_chan*)
         malloc(sizeof(struct dill_chan) + (itemsz * bufsz));
     if(!ch) {errno = ENOMEM; return -1;}
+    ch->vfs.query = dill_chan_query;
+    ch->vfs.close = dill_chan_close;
     ch->sz = itemsz;
     dill_list_init(&ch->in);
     dill_list_init(&ch->out);
@@ -95,7 +99,7 @@ int channel(size_t itemsz, size_t bufsz) {
     ch->first = 0;
     ch->done = 0;
     /* Allocate a handle to point to the channel. */
-    int h = handle(dill_chan_type, ch, &dill_chan_vfptrs);
+    int h = hcreate(&ch->vfs);
     if(dill_slow(h < 0)) {
         int err = errno;
         free(ch);
@@ -105,8 +109,14 @@ int channel(size_t itemsz, size_t bufsz) {
     return h;
 }
 
-static void dill_chan_close(int h) {
-    struct dill_chan *ch = hdata(h, dill_chan_type);
+static void *dill_chan_query(struct hvfs *vfs, const void *type) {
+    if(dill_fast(type == dill_chan_type)) return vfs;
+    errno = ENOTSUP;
+    return NULL;
+}
+
+static void dill_chan_close(struct hvfs *vfs) {
+    struct dill_chan *ch = (struct dill_chan*)vfs;
     dill_assert(ch);
     /* Resume any remaining senders and receivers on the channel
        with EPIPE error. */
@@ -142,7 +152,7 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
 }
 
 int chdone(int h) {
-    struct dill_chan *ch = hdata(h, dill_chan_type);
+    struct dill_chan *ch = hquery(h, dill_chan_type);
     if(dill_slow(!ch)) return -1;
     if(ch->done) {errno = EPIPE; return -1;}
     ch->done = 1;
@@ -170,7 +180,7 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
     int available = 0;
     int i;
     for(i = 0; i != nclauses; ++i) {
-        struct dill_chan *ch = hdata(clauses[i].ch, dill_chan_type);
+        struct dill_chan *ch = hquery(clauses[i].ch, dill_chan_type);
         if(dill_slow(!ch)) return i;
         if(dill_slow(clauses[i].len != ch->sz ||
               (clauses[i].len > 0 && !clauses[i].val))) {
@@ -198,7 +208,7 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
     if(available) {
         int chosen = *(int*)&clauses[random() % available].reserved;
         struct chclause *cl = &clauses[chosen];
-        struct dill_chan *ch = hdata(cl->ch, dill_chan_type);
+        struct dill_chan *ch = hquery(cl->ch, dill_chan_type);
         dill_assert(ch);
         switch(cl->op) {
         case CHSEND:
@@ -255,7 +265,8 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
     for(i = 0; i != nclauses; ++i) {
-        struct dill_chan *ch = hdata(clauses[i].ch, dill_chan_type);
+        struct dill_chan *ch = hquery(clauses[i].ch, dill_chan_type);
+        dill_assert(ch);
         struct dill_chcl *chcl = (struct dill_chcl*)&clauses[i].reserved;
         chcl->val = clauses[i].val;
         dill_waitfor(&chcl->cl, i,

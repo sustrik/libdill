@@ -33,6 +33,9 @@
 #include "utils.h"
 
 struct dill_proc {
+    /* Table of virtual functions. */
+    struct hvfs vfs;
+    /* Process ID of the child process. */
     pid_t pid;
     /* File descriptor to signal when we want the child process to exit.
        In case of parent failure it's signaled with ERR automatically when
@@ -46,8 +49,8 @@ struct dill_proc {
 
 static const int dill_proc_type_placeholder = 0;
 static const void *dill_proc_type = &dill_proc_type_placeholder;
-static void dill_proc_close(int h);
-static const struct hvfptrs dill_proc_vfptrs = {dill_proc_close};
+static void *dill_proc_query(struct hvfs *vfs, const void *type);
+static void dill_proc_close(struct hvfs *vfs);
 
 /******************************************************************************/
 /*  Creating and terminating processes.                                       */
@@ -60,12 +63,14 @@ int dill_proc_prologue(int *hndl) {
     if(dill_slow(rc < 0)) {err = ECANCELED; goto error1;}
     struct dill_proc *proc = malloc(sizeof(struct dill_proc));
     if(dill_slow(!proc)) {err = ENOMEM; goto error1;}
+    proc->vfs.query = dill_proc_query;
+    proc->vfs.close = dill_proc_close;
     proc->pid = -1;
     int closepipe[2];
     rc = pipe(closepipe);
     if(dill_slow(rc < 0)) {err = ENOMEM; goto error2;}
     proc->closepipe = closepipe[1];
-    int h = handle(dill_proc_type, proc, &dill_proc_vfptrs);
+    int h = hcreate(&proc->vfs);
     if(dill_slow(h < 0)) {err = errno; goto error3;}
     pid_t pid = fork();
     if(dill_slow(pid < 0)) {err = ENOMEM; goto error4;}
@@ -101,8 +106,14 @@ void dill_proc_epilogue(void) {
     exit(0);
 }
 
-static void dill_proc_close(int h) {
-    struct dill_proc *proc = hdata(h, dill_proc_type);
+static void *dill_proc_query(struct hvfs *vfs, const void *type) {
+    if(dill_fast(type == dill_proc_type)) return vfs;
+    errno = ENOTSUP;
+    return NULL;
+}
+
+static void dill_proc_close(struct hvfs *vfs) {
+    struct dill_proc *proc = (struct dill_proc*)vfs;
     dill_assert(proc);
     /* This may happen if forking failed. */
     if(dill_slow(proc->pid < 0)) {free(proc); return;}
