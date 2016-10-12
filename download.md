@@ -4,15 +4,16 @@
 ##### libdill
 
 ```
-$ wget http://libdill.org/libdill-0.6-beta.tar.gz
-$ tar -xzf libdill-0.6-beta.tar.gz 
-$ cd libdill-0.6-beta
+$ wget http://libdill.org/libdill-0.7-beta.tar.gz
+$ tar -xzf libdill-0.7-beta.tar.gz 
+$ cd libdill-0.7-beta
 $ ./configure
 $ make
 $ sudo make install
 ```
 
-**Sep 07, 2016: <http://libdill.org/libdill-0.6-beta.tar.gz>**
+**Oct 13, 2016 <http://libdill.org/libdill-0.7-beta.tar.gz>**
+Sep 07, 2016: <http://libdill.org/libdill-0.6-beta.tar.gz>
 Jun 03, 2016: <http://libdill.org/libdill-0.5-beta.tar.gz>
 May 22, 2016: <http://libdill.org/libdill-0.4-beta.tar.gz>
 May 15, 2016: <http://libdill.org/libdill-0.3-beta.tar.gz>
