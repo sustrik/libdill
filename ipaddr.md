@@ -6,7 +6,7 @@ ipaddr - IP address resolution
 
 ## SYNOPSIS
 
-```
+```c
 #include <dsock.h>
 typedef ipaddr;
 int ipaddr_local(ipaddr *addr, const char *name, int port, int mode);

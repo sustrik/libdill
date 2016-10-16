@@ -18,11 +18,11 @@
 <h2 id="name">NAME</h2>
 <p>bthrottler - bytestream throttler</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;dsock.h&gt;
-int bthrottler_start(int s,
-    uint64_t send_throughput, int64_t send_interval,
-    uint64_t recv_throughput, int64_t recv_interval);
-int bthrottler_stop(int s);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;dsock.h&gt;</span>
+<span class="dt">int</span> bthrottler_start(<span class="dt">int</span> s,
+    <span class="dt">uint64_t</span> send_throughput, <span class="dt">int64_t</span> send_interval,
+    <span class="dt">uint64_t</span> recv_throughput, <span class="dt">int64_t</span> recv_interval);
+<span class="dt">int</span> bthrottler_stop(<span class="dt">int</span> s);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>TODO</p>
 <h2 id="example">EXAMPLE</h2>

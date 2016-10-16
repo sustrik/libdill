@@ -6,7 +6,7 @@ msleep - waits until deadline
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 int msleep(int64_t deadline);
 ```
@@ -25,7 +25,7 @@ Returns 0 in case of success, -1 in case of error. In the latter case it sets `e
 
 ## EXAMPLE
 
-```
+```c
 msleep(now() + 1000);
 ```
 

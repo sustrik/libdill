@@ -6,7 +6,7 @@ hclose - hard-cancels a handle
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 int hclose(int h);
 ```
@@ -29,7 +29,7 @@ Returns 0 in case of success. In case of failure it returns -1 and sets `errno` 
 
 ## EXAMPLE
 
-```
+```c
 hclose(h);
 ```
 

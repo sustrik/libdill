@@ -6,7 +6,7 @@ handle - creates a handle
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 
 struct hvfptrs {
@@ -40,7 +40,7 @@ In case of success the function returns a newly allocated handle. In case of fai
 
 ## EXAMPLE
 
-```
+```c
 static const int foo_type_placeholder = 0;
 static const void *foo_type = &foo_type_placeholder;
 static void foo_close(int h);

@@ -6,7 +6,7 @@ unix - UNIX domain protocol
 
 ## SYNOPSIS
 
-```
+```c
 #include <dsock.h>
 int unix_listen(const char *addr, int backlog);
 int unix_accept(int s, int64_t deadline);

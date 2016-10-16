@@ -6,7 +6,7 @@ fdclean - erases cached info about a file descriptor
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 void fdclean(int fd);
 ```
@@ -27,7 +27,7 @@ None.
 
 ## EXAMPLE
 
-```
+```c
 fdclean(fd);
 ```
 

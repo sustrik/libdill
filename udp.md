@@ -6,7 +6,7 @@ udp - UDP protocol
 
 ## SYNOPSIS
 
-```
+```c
 #include <dsock.h>
 int udp_socket(ipaddr *local, const ipaddr *remote);
 int udp_send(int s, const ipaddr *addr, const void *buf, size_t len);

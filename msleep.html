@@ -18,8 +18,8 @@
 <h2 id="name">NAME</h2>
 <p>msleep - waits until deadline</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
-int msleep(int64_t deadline);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> msleep(<span class="dt">int64_t</span> deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Waits until the deadline expires.</p>
 <h2 id="return-value">RETURN VALUE</h2>
@@ -29,5 +29,5 @@ int msleep(int64_t deadline);</code></pre>
 <li><code>ECANCELED</code>: Current coroutine is being shut down.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>msleep(now() + 1000);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c">msleep(now() + <span class="dv">1000</span>);</code></pre>
 </body>

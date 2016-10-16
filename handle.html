@@ -18,13 +18,13 @@
 <h2 id="name">NAME</h2>
 <p>handle - creates a handle</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
 
-struct hvfptrs {
-    void (*close)(int h);
+<span class="kw">struct</span> hvfptrs {
+    <span class="dt">void</span> (*close)(<span class="dt">int</span> h);
 };
 
-int handle(const void *type, void *data, const struct hvfptrs *vfptrs);</code></pre>
+<span class="dt">int</span> handle(<span class="dt">const</span> <span class="dt">void</span> *type, <span class="dt">void</span> *data, <span class="dt">const</span> <span class="kw">struct</span> hvfptrs *vfptrs);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Handle is a user-space equivalent of a file descriptor. Coroutines, processes and channels are represented by handles.</p>
 <p>Unlike with file descriptors though, you can create your own handle type. To do so use <code>handle</code> function.</p>
@@ -40,23 +40,23 @@ int handle(const void *type, void *data, const struct hvfptrs *vfptrs);</code></
 <li><code>ENOMEM</code>: Not enough free memory to create the handle.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>static const int foo_type_placeholder = 0;
-static const void *foo_type = &amp;foo_type_placeholder;
-static void foo_close(int h);
-static const struct hvfptrs foo_vfptrs = {foo_close};
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">const</span> <span class="dt">int</span> foo_type_placeholder = <span class="dv">0</span>;
+<span class="dt">static</span> <span class="dt">const</span> <span class="dt">void</span> *foo_type = &amp;foo_type_placeholder;
+<span class="dt">static</span> <span class="dt">void</span> foo_close(<span class="dt">int</span> h);
+<span class="dt">static</span> <span class="dt">const</span> <span class="kw">struct</span> hvfptrs foo_vfptrs = {foo_close};
 
-struct foo_data {
+<span class="kw">struct</span> foo_data {
     ...
 };
 
-int foo_create() {
-    struct foo_data *data = malloc(sizeof(struct foo_data));
+<span class="dt">int</span> foo_create() {
+    <span class="kw">struct</span> foo_data *data = malloc(<span class="kw">sizeof</span>(<span class="kw">struct</span> foo_data));
     ...
-    return handle(foo_type, foodata, &amp;foo_vfptrs);
+    <span class="kw">return</span> handle(foo_type, foodata, &amp;foo_vfptrs);
 }
 
-static void foo_close(int h) {
-    struct foo_data *data = hdata(h, foo_type);
+<span class="dt">static</span> <span class="dt">void</span> foo_close(<span class="dt">int</span> h) {
+    <span class="kw">struct</span> foo_data *data = hdata(h, foo_type);
     ...
     free(data);
 }</code></pre>

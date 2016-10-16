@@ -6,7 +6,7 @@ setcls - set coroutine-local storage
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 void setcls(void *val);
 ```
@@ -25,7 +25,7 @@ None.
 
 ## EXAMPLE
 
-```
+```c
 char *str = "Hello, world!";
 setcls(str);
 printf("%s\n", (char*)cls());

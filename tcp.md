@@ -6,7 +6,7 @@ tcp - TCP protocol
 
 ## SYNOPSIS
 
-```
+```c
 #include <dsock.h>
 int tcp_listen(ipaddr *addr, int backlog);
 int tcp_accept(int s, ipaddr *addr, int64_t deadline);

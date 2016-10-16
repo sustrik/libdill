@@ -6,7 +6,7 @@ channel - create a channel
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 int channel(size_t itemsz, size_t bufsz);
 ```
@@ -26,7 +26,7 @@ Returns a channel handle. In the case of error it returns -1 and sets `errno` to
 
 ## EXAMPLE
 
-```
+```c
 int ch = channel(sizeof(int), 100);
 ```
 

@@ -18,11 +18,11 @@
 <h2 id="name">NAME</h2>
 <p>unix - UNIX domain protocol</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;dsock.h&gt;
-int unix_listen(const char *addr, int backlog);
-int unix_accept(int s, int64_t deadline);
-int unix_connect(const char *addr, int64_t deadline);
-int unix_pair(int s[2]);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;dsock.h&gt;</span>
+<span class="dt">int</span> unix_listen(<span class="dt">const</span> <span class="dt">char</span> *addr, <span class="dt">int</span> backlog);
+<span class="dt">int</span> unix_accept(<span class="dt">int</span> s, <span class="dt">int64_t</span> deadline);
+<span class="dt">int</span> unix_connect(<span class="dt">const</span> <span class="dt">char</span> *addr, <span class="dt">int64_t</span> deadline);
+<span class="dt">int</span> unix_pair(<span class="dt">int</span> s[<span class="dv">2</span>]);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>TODO</p>
 <h2 id="example">EXAMPLE</h2>

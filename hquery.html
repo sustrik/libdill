@@ -18,30 +18,30 @@
 <h2 id="name">NAME</h2>
 <p>hquery - gets an opaque pointer associated with a handle and a type</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
-void *hquery(int h, const void *type);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">void</span> *hquery(<span class="dt">int</span> h, <span class="dt">const</span> <span class="dt">void</span> *type);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Returns opaque pointer associated with the handle and the type. This function is a fundamental construct for building APIs on top of handles.</p>
 <p>Argument <code>type</code> is not interpreted in any way. It is used only as a unique ID. An unique ID can be created, for example, like this:</p>
-<pre><code>int foobar_placeholder = 0;
-const void *foobar_type = &amp;foobar_placeholder;</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> foobar_placeholder = <span class="dv">0</span>;
+<span class="dt">const</span> <span class="dt">void</span> *foobar_type = &amp;foobar_placeholder;</code></pre>
 <p>The return value has no specified semantics, it's an opaque pointer. Typical use case is to return pointer to a table of virtual functions. These virtual functions can be the used to access handle's functionality:</p>
-<pre><code>struct foobar_vfs {
-    int (*foo)(struct foobar_vfs *vfs, int a, int b);
-    void (*bar)(struct foobar_vfs *vfs, char *c);
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> foobar_vfs {
+    <span class="dt">int</span> (*foo)(<span class="kw">struct</span> foobar_vfs *vfs, <span class="dt">int</span> a, <span class="dt">int</span> b);
+    <span class="dt">void</span> (*bar)(<span class="kw">struct</span> foobar_vfs *vfs, <span class="dt">char</span> *c);
 };
 
-int foo(int h, int a, int b) {
-    struct foobar_vfs *vfs = hquery(h, foobar_type);
-    if(!vfs) return -1;
-    return vfs-&gt;foo(vfs, a, b);
+<span class="dt">int</span> foo(<span class="dt">int</span> h, <span class="dt">int</span> a, <span class="dt">int</span> b) {
+    <span class="kw">struct</span> foobar_vfs *vfs = hquery(h, foobar_type);
+    <span class="kw">if</span>(!vfs) <span class="kw">return</span> -<span class="dv">1</span>;
+    <span class="kw">return</span> vfs-&gt;foo(vfs, a, b);
 }
 
-int foo(int h, char *c) {
-    struct foobar_vfs *vfs = hquery(h, foobar_type);
-    if(!vfs) return -1;
+<span class="dt">int</span> foo(<span class="dt">int</span> h, <span class="dt">char</span> *c) {
+    <span class="kw">struct</span> foobar_vfs *vfs = hquery(h, foobar_type);
+    <span class="kw">if</span>(!vfs) <span class="kw">return</span> -<span class="dv">1</span>;
     vfs-&gt;bar(vfs, c);
-    return 0;
+    <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
 <h2 id="return-value">RETURN VALUE</h2>
 <p>An opaque pointer in case of success. In case of failure, <code>NULL</code> is returned and <code>errno</code> is set to one of the following values.</p>
@@ -51,5 +51,5 @@ int foo(int h, char *c) {
 <li><code>ENOTSUP</code>: Provided type parameter doesn't match any of the types supported by the handle.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>struct foobar_vfs *vfs = hquery(h, foobar_type);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> foobar_vfs *vfs = hquery(h, foobar_type);</code></pre>
 </body>

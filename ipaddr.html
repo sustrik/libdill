@@ -18,17 +18,17 @@
 <h2 id="name">NAME</h2>
 <p>ipaddr - IP address resolution</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;dsock.h&gt;
-typedef ipaddr;
-int ipaddr_local(ipaddr *addr, const char *name, int port, int mode);
-int ipaddr_remote(ipaddr *addr, const char *name, int port, int mode,
-    int64_t deadline);
-const char *ipaddr_str(const ipaddr *addr, char *ipstr);
-int ipaddr_family(const ipaddr *addr);
-const struct sockaddr *ipaddr_sockaddr(const ipaddr *addr);
-int ipaddr_len(const ipaddr *addr);
-int ipaddr_port(const ipaddr *addr);
-void ipaddr_setport(ipaddr *addr, int port);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;dsock.h&gt;</span>
+<span class="kw">typedef</span> ipaddr;
+<span class="dt">int</span> ipaddr_local(ipaddr *addr, <span class="dt">const</span> <span class="dt">char</span> *name, <span class="dt">int</span> port, <span class="dt">int</span> mode);
+<span class="dt">int</span> ipaddr_remote(ipaddr *addr, <span class="dt">const</span> <span class="dt">char</span> *name, <span class="dt">int</span> port, <span class="dt">int</span> mode,
+    <span class="dt">int64_t</span> deadline);
+<span class="dt">const</span> <span class="dt">char</span> *ipaddr_str(<span class="dt">const</span> ipaddr *addr, <span class="dt">char</span> *ipstr);
+<span class="dt">int</span> ipaddr_family(<span class="dt">const</span> ipaddr *addr);
+<span class="dt">const</span> <span class="kw">struct</span> sockaddr *ipaddr_sockaddr(<span class="dt">const</span> ipaddr *addr);
+<span class="dt">int</span> ipaddr_len(<span class="dt">const</span> ipaddr *addr);
+<span class="dt">int</span> ipaddr_port(<span class="dt">const</span> ipaddr *addr);
+<span class="dt">void</span> ipaddr_setport(ipaddr *addr, <span class="dt">int</span> port);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>TODO</p>
 <h2 id="example">EXAMPLE</h2>

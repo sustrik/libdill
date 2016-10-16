@@ -6,7 +6,7 @@ chsend - send a message to a channel
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 int chsend(int ch, const void *val, size_t len, int64_t deadline);
 ```
@@ -34,7 +34,7 @@ The function returns 0 in case of success or -1 in case of error. In the latter 
 
 ## EXAMPLE
 
-```
+```c
 int val = 42;
 chsend(ch, &val, sizeof(val), now() + 1000);
 ```

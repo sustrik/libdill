@@ -6,7 +6,7 @@ now - get current time
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 int64_t now(void);
 ```
@@ -32,7 +32,7 @@ None.
 
 ## EXAMPLE
 
-```
+```c
 chrecv(ch, &val, sizeof(val), now() + 1000);
 ```
 

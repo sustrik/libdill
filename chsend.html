@@ -18,8 +18,8 @@
 <h2 id="name">NAME</h2>
 <p>chsend - send a message to a channel</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
-int chsend(int ch, const void *val, size_t len, int64_t deadline);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> chsend(<span class="dt">int</span> ch, <span class="dt">const</span> <span class="dt">void</span> *val, size_t len, <span class="dt">int64_t</span> deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Send a message to the channel. First parameter is the channel handle. Second points to the buffer that contains the message to send. Third is the size of the buffer.</p>
 <p>The size of the buffer must match the size of elements stored in the channel, as supplied to <code>channel</code> function.</p>
@@ -36,6 +36,6 @@ int chsend(int ch, const void *val, size_t len, int64_t deadline);</code></pre>
 <li><code>ETIMEDOUT</code>: The deadline was reached while waiting for a message.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>int val = 42;
-chsend(ch, &amp;val, sizeof(val), now() + 1000);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> val = <span class="dv">42</span>;
+chsend(ch, &amp;val, <span class="kw">sizeof</span>(val), now() + <span class="dv">1000</span>);</code></pre>
 </body>

@@ -6,7 +6,7 @@ bthrottler - bytestream throttler
 
 ## SYNOPSIS
 
-```
+```c
 #include <dsock.h>
 int bthrottler_start(int s,
     uint64_t send_throughput, int64_t send_interval,

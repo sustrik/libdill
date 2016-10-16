@@ -6,7 +6,7 @@ mthrottler - messages throttler
 
 ## SYNOPSIS
 
-```
+```c
 #include <dsock.h>
 int mthrottler_start(int s,
     uint64_t send_throughput, int64_t send_interval,

@@ -18,19 +18,19 @@
 <h2 id="name">NAME</h2>
 <p>choose - perform one of multiple channel operations</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
 
-#define CHSEND 1
-#define CHRECV 2
+<span class="ot">#define CHSEND 1</span>
+<span class="ot">#define CHRECV 2</span>
 
-struct chclause {
-    int op;
-    int ch;
-    void *val;
+<span class="kw">struct</span> chclause {
+    <span class="dt">int</span> op;
+    <span class="dt">int</span> ch;
+    <span class="dt">void</span> *val;
     size_t len;
 };
 
-int choose(struct chclause *clauses, int nclauses, int64_t deadline);</code></pre>
+<span class="dt">int</span> choose(<span class="kw">struct</span> chclause *clauses, <span class="dt">int</span> nclauses, <span class="dt">int64_t</span> deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Accepts a list of channel operations. Performs one that can be done first. If multiple operations can be done immediately, one to perform is chosen at random.</p>
 <p><code>op</code> is operation code, either <code>CHSEND</code> or <code>CHRECV</code>. <code>ch</code> is a channel handle. <code>val</code> is a pointer to buffer to send from or receive to. <code>len</code> is size of the buffer, in bytes.</p>
@@ -53,11 +53,11 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline);</code></pr
 <li><code>EPIPE</code>: The channel was closed using <code>chdone</code> function.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>int val1 = 0;
-int val2;
-struct chclause clauses[] = {
-    {CHSEND, ch, &amp;val1, sizeof(val1)},
-    {CHRECV, ch, &amp;val2, sizeof(val2)}
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> val1 = <span class="dv">0</span>;
+<span class="dt">int</span> val2;
+<span class="kw">struct</span> chclause clauses[] = {
+    {CHSEND, ch, &amp;val1, <span class="kw">sizeof</span>(val1)},
+    {CHRECV, ch, &amp;val2, <span class="kw">sizeof</span>(val2)}
 };
-int result = choose(clauses, 2, now() + 1000);</code></pre>
+<span class="dt">int</span> result = choose(clauses, <span class="dv">2</span>, now() + <span class="dv">1000</span>);</code></pre>
 </body>

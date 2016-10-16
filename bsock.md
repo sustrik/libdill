@@ -6,7 +6,7 @@ bsock - bytestream socket
 
 ## SYNOPSIS
 
-```
+```c
 #include <dsock.h>
 int bsend(int s, const void *buf, size_t len, int64_t deadline);
 int brecv(int s, void *buf, size_t len, int64_t deadline);

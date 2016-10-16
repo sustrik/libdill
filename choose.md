@@ -6,7 +6,7 @@ choose - perform one of multiple channel operations
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 
 #define CHSEND 1
@@ -53,7 +53,7 @@ If function returns index of operation it sets `errno` to one of the following v
 
 ## EXAMPLE
 
-```
+```c
 int val1 = 0;
 int val2;
 struct chclause clauses[] = {

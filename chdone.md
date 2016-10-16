@@ -6,7 +6,7 @@ chdone - mark the channel as closed for sending
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 int chdone(int ch);
 ```
@@ -31,7 +31,7 @@ The function returns 0 in case of success. In case of failure it returns -1 and 
 
 ## EXAMPLE
 
-```
+```c
 int rc = chdone(ch);
 ```
 

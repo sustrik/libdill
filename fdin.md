@@ -6,7 +6,7 @@ fdin - waits until file descriptor becomes readable
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 int fdin(int fd, int64_t deadline);
 ```
@@ -30,7 +30,7 @@ The function returns 0 in case of success or -1 in case of error. In the latter 
 
 ## EXAMPLE
 
-```
+```c
 fdin(fd);
 ```
 

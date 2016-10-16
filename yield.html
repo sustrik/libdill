@@ -18,8 +18,8 @@
 <h2 id="name">NAME</h2>
 <p>yield - yields CPU to other coroutines</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
-int yield(void);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> yield(<span class="dt">void</span>);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>By calling this function you give other coroutines a chance to run.</p>
 <p>You should consider using yield() when doing lengthy computations which don't involve natural coroutine switching points such as <code>chsend</code>, <code>chrecv</code>, <code>fdin</code>, <code>fdout</code> or <code>msleep</code>.</p>
@@ -30,5 +30,5 @@ int yield(void);</code></pre>
 <li><code>ECANCELED</code>: Current coroutine is being shut down.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>yield();</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c">yield();</code></pre>
 </body>

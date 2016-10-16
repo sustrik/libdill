@@ -18,8 +18,8 @@
 <h2 id="name">NAME</h2>
 <p>hdup - duplicates a handle</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
-int hdup(int h);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> hdup(<span class="dt">int</span> h);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Duplicates a handle. Both handles will refer to the same underlying object.</p>
 <p>Each duplicate of the handle requires it's own call to <code>hclose</code>. The underlying object is deallocated once all the handles pointing to it are closed.</p>
@@ -30,5 +30,5 @@ int hdup(int h);</code></pre>
 <li><code>EBADF</code>: Invalid handle.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>int h2 = hdup(h1);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> h2 = hdup(h1);</code></pre>
 </body>

@@ -18,8 +18,8 @@
 <h2 id="name">NAME</h2>
 <p>go - start a coroutine</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
-int go(expression);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> go(expression);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Launches a coroutine that executes the function invocation passed as the argument.</p>
 <p>Coroutine is executed in concurrent manner and its lifetime may exceed the lifetime of the caller.</p>
@@ -34,11 +34,11 @@ int go(expression);</code></pre>
 <li><code>ENOMEM</code>: Not enough memory to allocate the coroutine stack.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>coroutine void add(int a, int b) {
-    printf(&quot;%d+%d=%d\n&quot;, a, b, a + b);
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> add(<span class="dt">int</span> a, <span class="dt">int</span> b) {
+    printf(<span class="st">&quot;%d+%d=%d</span><span class="ch">\n</span><span class="st">&quot;</span>, a, b, a + b);
 }
 
 ...
 
-int h = go(add(1, 2));</code></pre>
+<span class="dt">int</span> h = go(add(<span class="dv">1</span>, <span class="dv">2</span>));</code></pre>
 </body>

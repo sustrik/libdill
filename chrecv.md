@@ -6,7 +6,7 @@ chrecv - receive a message from a channel
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 int chrecv(int ch, void *val, size_t len, int64_t deadline);
 ```
@@ -34,7 +34,7 @@ The function returns 0 in case of success or -1 in case of error. In the latter 
 
 ## EXAMPLE
 
-```
+```c
 int val;
 chrecv(ch, &val, sizeof(val), now() + 1000);
 ```

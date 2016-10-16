@@ -18,8 +18,8 @@
 <h2 id="name">NAME</h2>
 <p>proc - start a process</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
-int proc(expression);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> proc(expression);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Launches a process that executes the function invocation passed as the argument.</p>
 <p>The return value of the invoked function, if any, is discarded and cannot be retrieved by the caller.</p>
@@ -39,11 +39,11 @@ int proc(expression);</code></pre>
 <li><code>ECANCELED</code>: Current coroutine is in the process of shutting down.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>coroutine void add(int a, int b) {
-    printf(&quot;%d+%d=%d\n&quot;, a, b, a + b);
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> add(<span class="dt">int</span> a, <span class="dt">int</span> b) {
+    printf(<span class="st">&quot;%d+%d=%d</span><span class="ch">\n</span><span class="st">&quot;</span>, a, b, a + b);
 }
 
 ...
 
-int h = proc(add(1, 2));</code></pre>
+<span class="dt">int</span> h = proc(add(<span class="dv">1</span>, <span class="dv">2</span>));</code></pre>
 </body>

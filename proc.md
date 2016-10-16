@@ -6,7 +6,7 @@ proc - start a process
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 int proc(expression);
 ```
@@ -33,7 +33,7 @@ Returns a process handle. In the case of error it returns -1 and sets `errno` to
 
 ## EXAMPLE
 
-```
+```c
 coroutine void add(int a, int b) {
     printf("%d+%d=%d\n", a, b, a + b);
 }

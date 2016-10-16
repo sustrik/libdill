@@ -18,8 +18,8 @@
 <h2 id="name">NAME</h2>
 <p>hclose - hard-cancels a handle</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
-int hclose(int h);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> hclose(<span class="dt">int</span> h);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Closes a handle.</p>
 <p>Once all handles pointing to the same underlying object are closed the object is deallocated immediately.</p>
@@ -31,5 +31,5 @@ int hclose(int h);</code></pre>
 <li><code>EBADF</code>: Invalid handle.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>hclose(h);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c">hclose(h);</code></pre>
 </body>

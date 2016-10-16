@@ -6,7 +6,7 @@ go - start a coroutine
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 int go(expression);
 ```
@@ -34,7 +34,7 @@ Returns a coroutine handle. In the case of error it returns -1 and sets `errno` 
 
 ## EXAMPLE
 
-```
+```c
 coroutine void add(int a, int b) {
     printf("%d+%d=%d\n", a, b, a + b);
 }

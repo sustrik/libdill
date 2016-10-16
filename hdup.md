@@ -6,7 +6,7 @@ hdup - duplicates a handle
 
 ## SYNOPSIS
 
-```
+```c
 #include <libdill.h>
 int hdup(int h);
 ```
@@ -27,7 +27,7 @@ The duplicated handle in case of success or -1 in case of failure. In the latter
 
 ## EXAMPLE
 
-```
+```c
 int h2 = hdup(h1);
 ```
 

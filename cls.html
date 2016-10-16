@@ -18,8 +18,8 @@
 <h2 id="name">NAME</h2>
 <p>cls - get coroutine-local storage</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
-void *cls(void);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">void</span> *cls(<span class="dt">void</span>);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Returns coroutine-local storage, a single pointer that is accessible from anywhere within the same coroutine.</p>
 <p>You can set the coroutine-local storage using <code>setcls</code> function. If it was not previously set, <code>cls</code> will return <code>NULL</code>.</p>
@@ -28,7 +28,7 @@ void *cls(void);</code></pre>
 <h2 id="errors">ERRORS</h2>
 <p>None.</p>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>char *str = &quot;Hello, world!&quot;;
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> *str = <span class="st">&quot;Hello, world!&quot;</span>;
 setcls(str);
-printf(&quot;%s\n&quot;, (char*)cls());</code></pre>
+printf(<span class="st">&quot;%s</span><span class="ch">\n</span><span class="st">&quot;</span>, (<span class="dt">char</span>*)cls());</code></pre>
 </body>

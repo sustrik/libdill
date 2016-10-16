@@ -18,8 +18,8 @@
 <h2 id="name">NAME</h2>
 <p>fdin - waits until file descriptor becomes readable</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
-int fdin(int fd, int64_t deadline);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> fdin(<span class="dt">int</span> fd, <span class="dt">int64_t</span> deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Waits until file descriptor becomes readable or until it gets into an error state. Both options cause successful return from the function. To distinguish between them you have to do subsequent read operation on the file descriptor.</p>
 <p>The function also exits if deadline expires.</p>
@@ -33,5 +33,5 @@ int fdin(int fd, int64_t deadline);</code></pre>
 <li><code>ETIMEDOUT</code>: Deadline expired while waiting for the file descriptor.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>fdin(fd);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c">fdin(fd);</code></pre>
 </body>

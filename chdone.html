@@ -18,8 +18,8 @@
 <h2 id="name">NAME</h2>
 <p>chdone - mark the channel as closed for sending</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
-int chdone(int ch);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> chdone(<span class="dt">int</span> ch);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>This function is used to let all the users of the channel, that there will be no new messages on the channel, ever.</p>
 <p>After <code>chdone</code> is called, all attempts to <code>chsend</code> to the channel will fail with <code>EPIPE</code> error.</p>
@@ -33,5 +33,5 @@ int chdone(int ch);</code></pre>
 <li><code>EPIPE</code>: <code>chdone</code> was already called for this channel.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>int rc = chdone(ch);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> rc = chdone(ch);</code></pre>
 </body>

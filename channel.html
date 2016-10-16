@@ -18,8 +18,8 @@
 <h2 id="name">NAME</h2>
 <p>channel - create a channel</p>
 <h2 id="synopsis">SYNOPSIS</h2>
-<pre><code>#include &lt;libdill.h&gt;
-int channel(size_t itemsz, size_t bufsz);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> channel(size_t itemsz, size_t bufsz);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
 <p>Creates a channel. First parameter is the size of the items to be sent through the channel, in bytes. Second parameter is number of items that will fit into the channel. Setting this argument to zero creates an unbuffered channel.</p>
 <h2 id="return-value">RETURN VALUE</h2>
@@ -30,5 +30,5 @@ int channel(size_t itemsz, size_t bufsz);</code></pre>
 <li><code>ENOMEM</code>: Not enough memory to allocate the channel.</li>
 </ul>
 <h2 id="example">EXAMPLE</h2>
-<pre><code>int ch = channel(sizeof(int), 100);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> ch = channel(<span class="kw">sizeof</span>(<span class="dt">int</span>), <span class="dv">100</span>);</code></pre>
 </body>
