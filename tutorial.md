@@ -202,7 +202,8 @@ int main(int argc, char *argv[]) {
         assert(s >= 0);
         s = crlf_start(s);
         assert(s >= 0);
-        go(dialogue(s));
+        int cr = go(dialogue(s));
+        assert(cr >= 0);
     }
 }
 ```
@@ -270,7 +271,8 @@ int main(int argc, char *argv[]) {
         assert(s >= 0);
         s = crlf_start(s);
         assert(s >= 0);
-        go(dialogue(s, ch));
+        int cr = go(dialogue(s, ch));
+        assert(cr >= 0);
     }
 }
 ```
@@ -313,7 +315,8 @@ int main(int argc, char *argv[]) {
 
     int ch = channel(sizeof(int), 0);
     assert(ch >= 0);
-    go(statistics(ch));
+    int cr = go(statistics(ch));
+    assert(cr >= 0);
 
     ...
 

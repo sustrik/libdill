@@ -136,7 +136,8 @@ cleanup:
         assert(s &gt;= <span class="dv">0</span>);
         s = crlf_start(s);
         assert(s &gt;= <span class="dv">0</span>);
-        go(dialogue(s));
+        <span class="dt">int</span> cr = go(dialogue(s));
+        assert(cr &gt;= <span class="dv">0</span>);
     }
 }</code></pre>
 <p>Let's compile it and try the initial experiment once again. As can be seen, one client now cannot block another one. Great. Let's move on.</p>
@@ -176,7 +177,8 @@ cleanup:
         assert(s &gt;= <span class="dv">0</span>);
         s = crlf_start(s);
         assert(s &gt;= <span class="dv">0</span>);
-        go(dialogue(s, ch));
+        <span class="dt">int</span> cr = go(dialogue(s, ch));
+        assert(cr &gt;= <span class="dv">0</span>);
     }
 }</code></pre>
 <p>The first argument to <code>channel()</code> is the type of the values that will be passed through the channel. In our case, they are simple integers.</p>
@@ -212,7 +214,8 @@ cleanup:
 
     <span class="dt">int</span> ch = channel(<span class="kw">sizeof</span>(<span class="dt">int</span>), <span class="dv">0</span>);
     assert(ch &gt;= <span class="dv">0</span>);
-    go(statistics(ch));
+    <span class="dt">int</span> cr = go(statistics(ch));
+    assert(cr &gt;= <span class="dv">0</span>);
 
     ...
 
