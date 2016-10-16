@@ -147,7 +147,7 @@ To handle possible errors from `msend()` (such as when the client closes the con
 
 ```c
 char inbuf[256];
-size_t sz = mrecv(s, inbuf, sizeof(inbuf), -1);
+ssize_t sz = mrecv(s, inbuf, sizeof(inbuf), -1);
 if(sz < 0) goto cleanup;
 ```
 

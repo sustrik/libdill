@@ -95,7 +95,7 @@ assert(s &gt;= <span class="dv">0</span>);</code></pre>
 <p>Note that <code>msend()</code> works with messages, not bytes (the name stands for &quot;message send&quot;). Therefore, the data acts as a single unit: either all of it is received or none of it. Also, we don't have to care about delimitation of messages. That's done for us by the CRLF protocol.</p>
 <p>To handle possible errors from <code>msend()</code> (such as when the client closes the connection) add <code>cleanup</code> label before the <code>hclose</code> line and jump to it whenever you want to close the connection and proceed without crashing the server.</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> inbuf[<span class="dv">256</span>];
-size_t sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), -<span class="dv">1</span>);
+ssize_t sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), -<span class="dv">1</span>);
 <span class="kw">if</span>(sz &lt; <span class="dv">0</span>) <span class="kw">goto</span> cleanup;</code></pre>
 <p>This piece of code simply reads the reply from the client. Reply is a single message which in case of CRLF protocol translates to a single line of text. The function returns number of bytes in the message.</p>
 <p>Having received the reply from the client, we can now construct the greeting and send it to the client. The analysis of this code is left as an exercise to the reader:</p>
