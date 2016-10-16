@@ -31,6 +31,6 @@ The function returns 0 in case of success or -1 in case of error. In the latter 
 ## EXAMPLE
 
 ```c
-fdin(fd);
+fdin(fd, -1);
 ```
 
