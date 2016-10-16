@@ -4,14 +4,18 @@
 	rm $@.tmp
 
 all: \
+    documentation.html \
+    download.html \
+    index.html \
+    structured-concurrency.html \
+    tutorial.html \
+    \
     channel.html \
     chdone.html \
     choose.html \
     chrecv.html \
     chsend.html \
     cls.html \
-    documentation.html \
-    download.html \
     fdclean.html \
     fdin.html \
     fdout.html \
@@ -20,12 +24,10 @@ all: \
     hclose.html \
     hdup.html \
     hquery.html \
-    index.html \
     msleep.html \
     now.html \
     proc.html \
     setcls.html \
-    structured-concurrency.html \
     yield.html \
     \
     blog.html \
