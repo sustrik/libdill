@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+</ul>
+<h1 id="ipaddr3-manual-page">ipaddr(3) manual page</h1>
+<h2 id="name">NAME</h2>
+<p>ipaddr - IP address resolution</p>
+<h2 id="synopsis">SYNOPSIS</h2>
+<pre><code>#include &lt;dsock.h&gt;
+typedef ipaddr;
+int ipaddr_local(ipaddr *addr, const char *name, int port, int mode);
+int ipaddr_remote(ipaddr *addr, const char *name, int port, int mode,
+    int64_t deadline);
+const char *ipaddr_str(const ipaddr *addr, char *ipstr);
+int ipaddr_family(const ipaddr *addr);
+const struct sockaddr *ipaddr_sockaddr(const ipaddr *addr);
+int ipaddr_len(const ipaddr *addr);
+int ipaddr_port(const ipaddr *addr);
+void ipaddr_setport(ipaddr *addr, int port);</code></pre>
+<h2 id="description">DESCRIPTION</h2>
+<p>TODO</p>
+<h2 id="example">EXAMPLE</h2>
+<p>TODO</p>
+</body>

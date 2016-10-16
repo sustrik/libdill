@@ -28,38 +28,20 @@ all: \
     structured-concurrency.html \
     yield.html \
     \
-    brecv.html \
-    bsend.html \
-    ipaddrstr.html \
-    ipfamily.html \
-    iplen.html \
-    iplocal.html \
-    ipport.html \
-    ipremote.html \
-    ipsetport.html \
-    ipsockaddr.html \
-    mrecv.html \
-    msend.html \
-    tcpaccept.html \
-    tcpattach.html \
-    tcpconnect.html \
-    tcpdetach.html \
-    tcplisten.html \
-    tcprecv.html \
-    tcpsend.html \
-    udpattach.html \
-    udpdetach.html \
-    udprecv.html \
-    udpsend.html \
-    udpsocket.html \
-    unixaccept.html \
-    unixattach.html \
-    unixconnect.html \
-    unixdetach.html \
-    unixlisten.html \
-    unixpair.html \
-    unixrecv.html \
-    unixrecvfd.html \
-    unixsend.html \
-    unixsendfd.html
+    blog.html \
+    bsock.html \
+    bthrottler.html \
+    crlf.html \
+    ipaddr.html \
+    keepalive.html \
+    lz4.html \
+    mlog.html \
+    msock.html \
+    mthrottler.html \
+    nacl.html \
+    nagle.html \
+    pfx.html \
+    tcp.html \
+    udp.html \
+    unix.html 
 
