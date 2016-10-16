@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+</ul>
+<h1 id="hquery3-manual-page">hquery(3) manual page</h1>
+<h2 id="name">NAME</h2>
+<p>hquery - gets an opaque pointer associated with a handle and a type</p>
+<h2 id="synopsis">SYNOPSIS</h2>
+<pre><code>#include &lt;libdill.h&gt;
+void *hquery(int h, const void *type);</code></pre>
+<h2 id="description">DESCRIPTION</h2>
+<p>Returns opaque pointer associated with the handle and the type. This function is a fundamental construct for building APIs on top of handles.</p>
+<p>Argument <code>type</code> is not interpreted in any way. It is used only as a unique ID. An unique ID can be created, for example, like this:</p>
+<pre><code>int foobar_placeholder = 0;
+const void *foobar_type = &amp;foobar_placeholder;</code></pre>
+<p>The return value has no specified semantics, it's an opaque pointer. Typical use case is to return pointer to a table of virtual functions. These virtual functions can be the used to access handle's functionality:</p>
+<pre><code>struct foobar_vfs {
+    int (*foo)(struct foobar_vfs *vfs, int a, int b);
+    void (*bar)(struct foobar_vfs *vfs, char *c);
+};
+
+int foo(int h, int a, int b) {
+    struct foobar_vfs *vfs = hquery(h, foobar_type);
+    if(!vfs) return -1;
+    return vfs-&gt;foo(vfs, a, b);
+}
+
+int foo(int h, char *c) {
+    struct foobar_vfs *vfs = hquery(h, foobar_type);
+    if(!vfs) return -1;
+    vfs-&gt;bar(vfs, c);
+    return 0;
+}</code></pre>
+<h2 id="return-value">RETURN VALUE</h2>
+<p>An opaque pointer in case of success. In case of failure, <code>NULL</code> is returned and <code>errno</code> is set to one of the following values.</p>
+<h2 id="errors">ERRORS</h2>
+<ul>
+<li><code>EDADF</code>: Invalid handle.<br /></li>
+<li><code>ENOTSUP</code>: Provided type parameter doesn't match any of the types supported by the handle.</li>
+</ul>
+<h2 id="example">EXAMPLE</h2>
+<pre><code>struct foobar_vfs *vfs = hquery(h, foobar_type);</code></pre>
+</body>

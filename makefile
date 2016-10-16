@@ -18,8 +18,8 @@ all: \
     go.html \
     handle.html \
     hclose.html \
-    hdata.html \
     hdup.html \
+    hquery.html \
     index.html \
     msleep.html \
     now.html \
