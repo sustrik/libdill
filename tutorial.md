@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 
 Now we can start doing the actual interesting stuff.
 
-Libdill's `tcp_listen()` function can be used to create listening TCP socket. The socket will be used to accept new TCP connections from the clients:
+`tcp_listen()` function can be used to create listening TCP socket. The socket will be used to accept new TCP connections from the clients:
 
 ```c
 ipaddr addr;
@@ -70,7 +70,7 @@ As for errors that are not likely, we'll just use asserts to catch them, so that
 
 If you run the program at this stage you'll find out that it finishes immediately rather than pausing and waiting for a connection from the client to arrive. That is what `tcp_accept()` function is for:
 
-```
+```c
 int s = tcp_accept(ls, NULL, -1);
 assert(s >= 0);
 ```

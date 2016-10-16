@@ -45,7 +45,7 @@ Connection closed by foreign host.</code></pre>
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
 <p>Now we can start doing the actual interesting stuff.</p>
-<p>Libdill's <code>tcp_listen()</code> function can be used to create listening TCP socket. The socket will be used to accept new TCP connections from the clients:</p>
+<p><code>tcp_listen()</code> function can be used to create listening TCP socket. The socket will be used to accept new TCP connections from the clients:</p>
 <pre class="sourceCode c"><code class="sourceCode c">ipaddr addr;
 <span class="dt">int</span> rc = ipaddr_local(&amp;addr, NULL, port, <span class="dv">0</span>);
 assert(rc == <span class="dv">0</span>);
@@ -59,8 +59,8 @@ assert(rc == <span class="dv">0</span>);
 <p>If <code>tcp_listen()</code> fails it returns -1 and sets <code>errno</code> to appropriate error code. Libdill/dscok API is in this respect very similar to standard POSIX APIs. What it means is that we can use standard POSIX mechanims -- <code>perror()</code> in this case -- to deal with errors.</p>
 <p>As for errors that are not likely, we'll just use asserts to catch them, so that the tutorial code is kept succint and readable.</p>
 <p>If you run the program at this stage you'll find out that it finishes immediately rather than pausing and waiting for a connection from the client to arrive. That is what <code>tcp_accept()</code> function is for:</p>
-<pre><code>int s = tcp_accept(ls, NULL, -1);
-assert(s &gt;= 0);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = tcp_accept(ls, NULL, -<span class="dv">1</span>);
+assert(s &gt;= <span class="dv">0</span>);</code></pre>
 <p>The function returns the newly established connection.</p>
 <p>The third argument of the function is a deadline. We'll cover the deadlines later on in this tutorial. For now, remember that constant -1 can be used to mean 'no deadline' -- if there is no incoming connection the call will block forever.</p>
 <p>Finally, we want to handle many connections from the clients rather than a single one so we put the <code>tcp_accept()</code> call into an infinite loop.</p>
