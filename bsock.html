@@ -25,7 +25,30 @@
 <span class="dt">int</span> bsendv(<span class="dt">int</span> s, <span class="dt">const</span> <span class="kw">struct</span> iovec *iov, size_t iovlen, <span class="dt">int64_t</span> deadline);
 <span class="dt">int</span> brecvv(<span class="dt">int</span> s, <span class="dt">const</span> <span class="kw">struct</span> iovec *iov, size_t iovlen, <span class="dt">int64_t</span> deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Bytestream sockets (for example TCP socket or UNIX domain socket) transport a continuous stream of bytes. There are no message boundaries.</p>
+<p>Bytestream protocols are ordered (bytes can't arrive at the destination out of order) and reliable (there are no holes in the data).</p>
+<p>Bytestram sockets can be written to using <code>bsend</code> function. The function either writes all <code>len</code> bytes to the socket and returns 0 or fails and returns -1. In the latter case if sets <code>errno</code> to the appropriate error code. <code>bsendv</code> behaves in the same way as <code>bsend</code> except that the data is passed in a scatter array rather than in a single continuous buffer.</p>
+<p>To read from bytestream socket use <code>brecv</code> function. The function either reads <code>len</code> bytes from the socket and returns 0 or fails and returns -1. In the latter case if sets <code>errno</code> to the appropriate error code. <code>brecvv</code> behaves in the same way as <code>brecv</code> except that the data is written to a gather array rather than into a single continuous buffer.</p>
+<p>Bytestream send/recv functions can return following errors:</p>
+<ul>
+<li><code>EBADF</code>: Bad file descriptor (handle).<br /></li>
+<li><code>ECONNRESET</code>: Connection to the peer broken.<br /></li>
+<li><code>EINVAL</code>: Invalid argument.<br /></li>
+<li><code>ENOTSUP</code>: Not a bytestream socket.<br /></li>
+<li><code>EPIPE</code>: Connection orderly terminated by the peer.<br /></li>
+<li><code>ETIMEDOUT</code>: Deadline expired.</li>
+</ul>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<p>Send data to a bytestream socket:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> iovec iov[<span class="dv">2</span>];
+iov[<span class="dv">0</span>].iov_base = (<span class="dt">void</span>*)<span class="st">&quot;Hello, &quot;</span>;
+iov[<span class="dv">0</span>].iov_len = <span class="dv">7</span>;
+iov[<span class="dv">1</span>].iov_base = (<span class="dt">void</span>*)<span class="st">&quot;world!&quot;</span>;
+iov[<span class="dv">1</span>].iov_len = <span class="dv">6</span>;
+<span class="dt">int</span> rc = bsendv(s, iov, <span class="dv">2</span>, -<span class="dv">1</span>);
+assert(rc == <span class="dv">0</span>);</code></pre>
+<p>Receive data from a bytestream socket:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> buf[<span class="dv">16</span>];
+<span class="dt">int</span> rc = brecv(s, buf, <span class="kw">sizeof</span>(buf), now() + <span class="dv">1000</span>);
+assert(rc == <span class="dv">0</span>);</code></pre>
 </body>
