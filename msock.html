@@ -25,7 +25,26 @@ ssize_t mrecv(<span class="dt">int</span> s, <span class="dt">void</span> *buf, 
 <span class="dt">int</span> msendv(<span class="dt">int</span> s, <span class="dt">const</span> <span class="kw">struct</span> iovec *iov, size_t iovlen, <span class="dt">int64_t</span> deadline);
 ssize_t mrecvv(<span class="dt">int</span> s, <span class="dt">const</span> <span class="kw">struct</span> iovec *iov, size_t iovlen, <span class="dt">int64_t</span> deadline);</code></pre>
 <h2 id="description">DESCRIPTION</h2>
-<p>TODO</p>
+<p>Message sockets (for example UDP socket or CRLF socket) transport discrete messages rather than stream of bytes. Messages are atomic. Either entire message is trasnferred or none of it. A message can be empty, i.e. zero bytes long.</p>
+<p>Message protocols are not necessarily ordered or reliable. Messages may arrive out of order or be lost. That being said, particular message protocols may be ordered and reliable, for example, CRLF protocol layered on top of TCP protocol guarantees both reliable and ordered delivery.</p>
+<p>Message can be sent to socket using <code>msend</code> function. The function either sends whole message and returns 0 or fails and returns -1. In the latter case if sets <code>errno</code> to the appropriate error code. <code>msendv</code> behaves in the same way as <code>msend</code> except that the data is passed in a scatter array rather than in a single continuous buffer.</p>
+<p>To read a message from socket use <code>mrecv</code> function. If successfull, the function reads message to the supplied buffer and returns size of the message. Otherwise it returns -1 and sets <code>errno</code> to the appropriate error code. <code>mrecvv</code> behaves in the same way as <code>mrecv</code> except that the message is written to a gather array rather than into a single continuous buffer.</p>
+<p>Message send/recv functions can return following errors:</p>
+<ul>
+<li><code>EBADF</code>: Bad file descriptor (handle).<br /></li>
+<li><code>ECONNRESET</code>: Connection to the peer broken.<br /></li>
+<li><code>EINVAL</code>: Invalid argument.<br /></li>
+<li><code>EMSGSIZE</code>: Message larger than the protocol can transport (<code>msend</code>) or larger than the supplied buffer (<code>mrecv</code>).<br /></li>
+<li><code>ENOTSUP</code>: Not a message socket.<br /></li>
+<li><code>EPIPE</code>: Connection orderly terminated by the peer.<br /></li>
+<li><code>ETIMEDOUT</code>: Deadline expired.</li>
+</ul>
 <h2 id="example">EXAMPLE</h2>
-<p>TODO</p>
+<p>Send a message to socket:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> rc = msend(s, <span class="st">&quot;Boo!&quot;</span>, <span class="dv">4</span>, -<span class="dv">1</span>);
+assert(rc == <span class="dv">0</span>);</code></pre>
+<p>Receive a message from socket:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> buf[<span class="dv">256</span>];
+ssize_t msgsz = brecv(s, buf, <span class="kw">sizeof</span>(buf), -<span class="dv">1</span>);
+assert(msgsz &gt;= <span class="dv">0</span>);</code></pre>
 </body>
