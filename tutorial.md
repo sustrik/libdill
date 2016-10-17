@@ -27,6 +27,7 @@ First, include libdill and dsock header files. Later on we'll need some function
 ```c
 #include <libdill.h>
 #include <dsock.h>
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
