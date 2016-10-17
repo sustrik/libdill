@@ -73,7 +73,7 @@ Resolve and print out IP address of a remote host:
 
 ```
 ipaddr addr;
-int rc = ipaddr_remote(&addr, "www.example.org", 80, 0);
+int rc = ipaddr_remote(&addr, "www.example.org", 80, 0, now() + 1000);
 assert(rc == 0);
 char buf[IPADDR_MAXSTRLEN];
 printf("IP address of www.example.org is %s.\n", ipaddr_str(&addr, buf));

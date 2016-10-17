@@ -61,7 +61,7 @@ char buf[IPADDR_MAXSTRLEN];
 printf(&quot;IP address of interface eth0 is %s.\n&quot;, ipaddr_str(&amp;addr, buf));</code></pre>
 <p>Resolve and print out IP address of a remote host:</p>
 <pre><code>ipaddr addr;
-int rc = ipaddr_remote(&amp;addr, &quot;www.example.org&quot;, 80, 0);
+int rc = ipaddr_remote(&amp;addr, &quot;www.example.org&quot;, 80, 0, now() + 1000);
 assert(rc == 0);
 char buf[IPADDR_MAXSTRLEN];
 printf(&quot;IP address of www.example.org is %s.\n&quot;, ipaddr_str(&amp;addr, buf));</code></pre>
