@@ -187,8 +187,8 @@ cleanup:
 <p>This kind of behaviour could, in theory, become a bottleneck, however, in our case we assume that <code>statistics()</code> coroutine will be extremely fast and not likely to turn into a performance bottleneck.</p>
 <p>At this point we can implement the <code>statistics()</code> coroutine that will run forever in a busy loop and collect the statistics from all the <code>dialogue()</code> coroutines. Each time the statistics change, it will print them to <code>stdout</code>:</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> statistics(<span class="dt">int</span> ch) {
-    <span class="dt">int</span> connections = <span class="dv">0</span>;
     <span class="dt">int</span> active = <span class="dv">0</span>;
+    <span class="dt">int</span> succeeded = <span class="dv">0</span>;
     <span class="dt">int</span> failed = <span class="dv">0</span>;
     
     <span class="kw">while</span>(<span class="dv">1</span>) {
@@ -196,16 +196,22 @@ cleanup:
         <span class="dt">int</span> rc = chrecv(ch, &amp;op, <span class="kw">sizeof</span>(op), -<span class="dv">1</span>);
         assert(rc == <span class="dv">0</span>);
 
-        <span class="kw">if</span>(op == CONN_ESTABLISHED)
-            ++connections, ++active;
-        <span class="kw">else</span>
+        <span class="kw">switch</span>(op) {
+        <span class="kw">case</span> CONN_ESTABLISHED:
+            ++active;
+            <span class="kw">break</span>;
+        <span class="kw">case</span> CONN_SUCCEEDED:
             --active;
-        <span class="kw">if</span>(op == CONN_FAILED)
+            ++succeeded;
+            <span class="kw">break</span>;
+        <span class="kw">case</span> CONN_FAILED:
+            --active;
             ++failed;
+            <span class="kw">break</span>;
+        }
 
-        printf(<span class="st">&quot;Total number of connections: %d</span><span class="ch">\n</span><span class="st">&quot;</span>, connections);
-        printf(<span class="st">&quot;Active connections: %d</span><span class="ch">\n</span><span class="st">&quot;</span>, active);
-        printf(<span class="st">&quot;Failed connections: %d</span><span class="ch">\n\n</span><span class="st">&quot;</span>, failed);
+        printf(<span class="st">&quot;active: %-5d  succeeded: %-5d  failed: %-5d</span><span class="ch">\n</span><span class="st">&quot;</span>,
+            active, succeeded, failed);
     }
 }
 
@@ -239,16 +245,11 @@ cleanup:
 }</code></pre>
 <p>Now compile the server and run it. Create a telnet session and let it timeout. The output on the server side will look like this:</p>
 <pre><code>$ ./greetserver
-Total number of connections: 1
-Active connections: 1
-Failed connections: 0
-
-Total number of connections: 1
-Active connections: 0
-Failed connections: 1</code></pre>
-<p>The first block of text is displayed when the connection is established: There have been 1 connection ever and 1 is active at the moment.</p>
-<p>Second block shows up when the connection times out: There have been 1 connection overall, there are no active connection any longer and one connection have failed in the past.</p>
-<p>Now try just pressing enter when asked for the name. The connection is terminated by server immediately, without sending the greeting and the server log reports one failed connection. What's going on here?</p>
+active: 1      succeeded: 0      failed: 0
+active: 0      succeeded: 0      failed: 1</code></pre>
+<p>The first line is displayed when the connection is established: There is one active connection and no connection have succeeded or failed yet.</p>
+<p>Second line shows up when the connection times out: There are no active connection any longer and one connection have failed in the past.</p>
+<p>Now try pressing enter in telnet when asked for the name. The connection is terminated by server immediately, without sending the greeting and the server log reports one failed connection. What's going on here?</p>
 <p>The reason for the bahavior is that CRLF protocol treats an empty line as a connection termination request. Thus, when you press enter in telnet, you send an empty line whicha causes <code>mrecv()</code> on the server side to return <code>EPIPE</code> error which stands for &quot;connection terminated by the peer&quot;. Server thus jumps directly to the cleanup code.</p>
 <h2 id="step-6-multi-process-server">Step 6: Multi-process server</h2>
 <p>Our new server does what it is supposed to do. With no context switching it has performance that can never be matched by a multithreaded server. But it has one major drawback. It runs only on one CPU core. Even if the machine has 64 cores it runs on one of them and leaves 63 cores unutilised.</p>
@@ -260,10 +261,8 @@ Failed connections: 1</code></pre>
 
     ...
 
-    printf(<span class="st">&quot;Process ID: %d</span><span class="ch">\n</span><span class="st">&quot;</span>, (<span class="dt">int</span>)getpid());
-    printf(<span class="st">&quot;Total number of connections: %d</span><span class="ch">\n</span><span class="st">&quot;</span>, connections);
-    printf(<span class="st">&quot;Active connections: %d</span><span class="ch">\n</span><span class="st">&quot;</span>, active);
-    printf(<span class="st">&quot;Failed connections: %d</span><span class="ch">\n\n</span><span class="st">&quot;</span>, failed);
+    printf(<span class="st">&quot;pid: %-5d  active: %-5d  succeeded: %-5d  failed: %-5d</span><span class="ch">\n</span><span class="st">&quot;</span>,
+        (<span class="dt">int</span>)getpid(), active, succeeded, failed);
 
     ...
 
@@ -313,15 +312,11 @@ Failed connections: 1</code></pre>
 16422 pts/14   00:00:00 greetserver
 16424 pts/7    00:00:00 ps</code></pre>
 <p>Telnet to the server twice to see whether the connections are dispatched to different instances:</p>
-<pre><code>Process ID: 16420
-Total number of connections: 1
-Active connections: 1
-Failed connections: 0
-
-Process ID: 16422
-Total number of connections: 1
-Active connections: 1
-Failed connections: 0</code></pre>
+<pre><code>$ ./greetserver
+pid: 16406  active: 1      succeeded: 0      failed: 0
+pid: 16420  active: 1      succeeded: 0      failed: 0
+pid: 16406  active: 0      succeeded: 0      failed: 1
+pid: 16420  active: 0      succeeded: 0      failed: 1</code></pre>
 <p>Yay! Everything works as expected.</p>
 <p>We are done with the tutorial now. Enjoy your time with the library!</p>
 </body>

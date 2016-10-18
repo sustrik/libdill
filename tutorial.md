@@ -288,8 +288,8 @@ At this point we can implement the `statistics()` coroutine that will run foreve
 
 ```c
 coroutine void statistics(int ch) {
-    int connections = 0;
     int active = 0;
+    int succeeded = 0;
     int failed = 0;
     
     while(1) {
@@ -297,16 +297,22 @@ coroutine void statistics(int ch) {
         int rc = chrecv(ch, &op, sizeof(op), -1);
         assert(rc == 0);
 
-        if(op == CONN_ESTABLISHED)
-            ++connections, ++active;
-        else
+        switch(op) {
+        case CONN_ESTABLISHED:
+            ++active;
+            break;
+        case CONN_SUCCEEDED:
             --active;
-        if(op == CONN_FAILED)
+            ++succeeded;
+            break;
+        case CONN_FAILED:
+            --active;
             ++failed;
+            break;
+        }
 
-        printf("Total number of connections: %d\n", connections);
-        printf("Active connections: %d\n", active);
-        printf("Failed connections: %d\n\n", failed);
+        printf("active: %-5d  succeeded: %-5d  failed: %-5d\n",
+            active, succeeded, failed);
     }
 }
 
@@ -349,20 +355,15 @@ Now compile the server and run it. Create a telnet session and let it timeout. T
 
 ```
 $ ./greetserver
-Total number of connections: 1
-Active connections: 1
-Failed connections: 0
-
-Total number of connections: 1
-Active connections: 0
-Failed connections: 1
+active: 1      succeeded: 0      failed: 0
+active: 0      succeeded: 0      failed: 1
 ```
 
-The first block of text is displayed when the connection is established: There have been 1 connection ever and 1 is active at the moment.
+The first line is displayed when the connection is established: There is one active connection and no connection have succeeded or failed yet.
 
-Second block shows up when the connection times out: There have been 1 connection overall, there are no active connection any longer and one connection have failed in the past.
+Second line shows up when the connection times out: There are no active connection any longer and one connection have failed in the past.
 
-Now try just pressing enter when asked for the name. The connection is terminated by server immediately, without sending the greeting and the server log reports one failed connection. What's going on here?
+Now try pressing enter in telnet when asked for the name. The connection is terminated by server immediately, without sending the greeting and the server log reports one failed connection. What's going on here?
 
 The reason for the bahavior is that CRLF protocol treats an empty line as a connection termination request. Thus, when you press enter in telnet, you send an empty line whicha causes `mrecv()` on the server side to return `EPIPE` error which stands for "connection terminated by the peer". Server thus jumps directly to the cleanup code.
 
@@ -384,10 +385,8 @@ coroutine void statistics(int ch) {
 
     ...
 
-    printf("Process ID: %d\n", (int)getpid());
-    printf("Total number of connections: %d\n", connections);
-    printf("Active connections: %d\n", active);
-    printf("Failed connections: %d\n\n", failed);
+    printf("pid: %-5d  active: %-5d  succeeded: %-5d  failed: %-5d\n",
+        (int)getpid(), active, succeeded, failed);
 
     ...
 
@@ -462,15 +461,11 @@ $ ps -a
 Telnet to the server twice to see whether the connections are dispatched to different instances:
 
 ```
-Process ID: 16420
-Total number of connections: 1
-Active connections: 1
-Failed connections: 0
-
-Process ID: 16422
-Total number of connections: 1
-Active connections: 1
-Failed connections: 0
+$ ./greetserver
+pid: 16406  active: 1      succeeded: 0      failed: 0
+pid: 16420  active: 1      succeeded: 0      failed: 0
+pid: 16406  active: 0      succeeded: 0      failed: 1
+pid: 16420  active: 0      succeeded: 0      failed: 1
 ```
 
 Yay! Everything works as expected.
