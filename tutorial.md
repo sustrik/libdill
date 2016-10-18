@@ -410,7 +410,11 @@ int main(int argc, char *argv[]) {
 Third, let's move the connection accepting loop to a separate coroutine:
 
 ```c
-coroutine void accepter(int ls, int ch) {
+coroutine void accepter(int ls) {
+    int ch = channel(sizeof(int), 0);
+    assert(ch >= 0);
+    int cr = go(statistics(ch));
+    assert(cr >= 0);
     while(1) {
         int s = tcp_accept(ls, NULL, -1);
         assert(s >= 0);
@@ -431,10 +435,10 @@ int main(int argc, char *argv[]) {
 
     int i;
     for (i = 0; i < nproc - 1; ++i) {
-        cr = proc(accepter(ls, ch));
+        int cr = proc(accepter(ls));
         assert(cr >= 0);
     }
-    accepter(ls, ch);
+    accepter(ls);
 }
 ```
 

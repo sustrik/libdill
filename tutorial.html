@@ -278,7 +278,11 @@ active: 0      succeeded: 0      failed: 1</code></pre>
     ...
 }</code></pre>
 <p>Third, let's move the connection accepting loop to a separate coroutine:</p>
-<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> accepter(<span class="dt">int</span> ls, <span class="dt">int</span> ch) {
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> accepter(<span class="dt">int</span> ls) {
+    <span class="dt">int</span> ch = channel(<span class="kw">sizeof</span>(<span class="dt">int</span>), <span class="dv">0</span>);
+    assert(ch &gt;= <span class="dv">0</span>);
+    <span class="dt">int</span> cr = go(statistics(ch));
+    assert(cr &gt;= <span class="dv">0</span>);
     <span class="kw">while</span>(<span class="dv">1</span>) {
         <span class="dt">int</span> s = tcp_accept(ls, NULL, -<span class="dv">1</span>);
         assert(s &gt;= <span class="dv">0</span>);
@@ -295,10 +299,10 @@ active: 0      succeeded: 0      failed: 1</code></pre>
 
     <span class="dt">int</span> i;
     <span class="kw">for</span> (i = <span class="dv">0</span>; i &lt; nproc - <span class="dv">1</span>; ++i) {
-        cr = proc(accepter(ls, ch));
+        <span class="dt">int</span> cr = proc(accepter(ls));
         assert(cr &gt;= <span class="dv">0</span>);
     }
-    accepter(ls, ch);
+    accepter(ls);
 }</code></pre>
 <p>An interesting thing to notice in the code above is that coroutines are perfectly normal C functions. While they can be invoked using <code>go()</code> and <code>proc()</code> constructs they can also be called in standard C way.</p>
 <p>Now we can check it in practice. Let's run it on 4 CPU cores:</p>
