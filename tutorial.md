@@ -366,3 +366,114 @@ Now try just pressing enter when asked for the name. The connection is terminate
 
 The reason for the bahavior is that CRLF protocol treats an empty line as a connection termination request. Thus, when you press enter in telnet, you send an empty line whicha causes `mrecv()` on the server side to return `EPIPE` error which stands for "connection terminated by the peer". Server thus jumps directly to the cleanup code.
 
+
+## Step 6: Multi-process server
+
+Our new server does what it is supposed to do. With no context switching it has performance that can never be matched by a multithreaded server. But it has one major drawback. It runs only on one CPU core. Even if the machine has 64 cores it runs on one of them and leaves 63 cores unutilised.
+
+If the server is IO-bound, as it happens to be in this tutorial, it doesn't really matter. However, if it was CPU-bound we would face a serious problem.
+
+What we are going to do in this step is to create one server process per CPU core and distribute the incoming connections among the processes. That way, each process can run on one CPU core, fully utilising resources of the machine.
+
+It is important to note that spawning more processes than there are CPU cores is not desirable. It results in unnecessary context switching among processes located on a single core and ultimately to the performance degradation.
+
+First, let's do some preparatory work. We want statistics to print out the process ID so that we can distinguish between outputs from different instances of the server. (And yes, it would be better to aggregate the statistics from all instances, but that's out of scope of this tutorial and left as an exercise to the reader.)
+
+```c
+coroutine void statistics(int ch) {
+
+    ...
+
+    printf("Process ID: %d\n", (int)getpid());
+    printf("Total number of connections: %d\n", connections);
+    printf("Active connections: %d\n", active);
+    printf("Failed connections: %d\n\n", failed);
+
+    ...
+
+}
+```
+
+Second, we won't try to estimate the number of CPU cores on the machine and rather let the user specify it:
+
+```c
+int main(int argc, char *argv[]) {
+    int port = 5555;
+    int nproc = 1;
+    if(argc > 1)
+        port = atoi(argv[1]);
+    if(argc > 2)
+        nproc = atoi(argv[2]);
+    ...
+}
+```
+
+Third, let's move the connection accepting loop to a separate coroutine:
+
+```c
+coroutine void accepter(int ls, int ch) {
+    while(1) {
+        int s = tcp_accept(ls, NULL, -1);
+        assert(s >= 0);
+        s = crlf_start(s);
+        assert(s >= 0);
+        int cr = go(dialogue(s, ch));
+        assert(cr >= 0);
+    }
+}
+```
+
+Now we can do the actual magic. The idea is to open the listening socket in the first process, then to fork all the remaining processes, each inheriting the socket. Each process can then `tcp_accept()` connections from the listening socket making OS work as a simple load balancer, dispatching connections evenly among processes. Actually, we will fork number of processes requested by the user short by one. The reason is that the parent process itself is going to act as one instance of the server after if finishes the fork loop.
+
+```c
+int main(int argc, char *argv[]) {
+
+    ...
+
+    int i;
+    for (i = 0; i < nproc - 1; ++i) {
+        cr = proc(accepter(ls, ch));
+        assert(cr >= 0);
+    }
+    accepter(ls, ch);
+}
+```
+
+An interesting thing to notice in the code above is that coroutines are perfectly normal C functions. While they can be invoked using `go()` and `proc()` constructs they can also be called in standard C way.
+
+Now we can check it in practice. Let's run it on 4 CPU cores:
+
+```
+./greetserver 5555 4
+```
+
+Check the processes from a different terminal using `ps`:
+
+```
+$ ps -a
+  PID TTY          TIME CMD
+16406 pts/14   00:00:00 greetserver
+16420 pts/14   00:00:00 greetserver
+16421 pts/14   00:00:00 greetserver
+16422 pts/14   00:00:00 greetserver
+16424 pts/7    00:00:00 ps
+```
+
+Telnet to the server twice to see whether the connections are dispatched to different instances:
+
+```
+Process ID: 16420
+Total number of connections: 1
+Active connections: 1
+Failed connections: 0
+
+Process ID: 16422
+Total number of connections: 1
+Active connections: 1
+Failed connections: 0
+```
+
+Yay! Everything works as expected.
+
+We are done with the tutorial now. Enjoy your time with the library!
+
