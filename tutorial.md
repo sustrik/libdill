@@ -442,7 +442,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-An interesting thing to notice in the code above is that coroutines are perfectly normal C functions. While they can be invoked using `go()` and `proc()` constructs they can also be called in standard C way.
+An interesting thing to note in the code above is that coroutines are perfectly normal C functions. While they can be invoked using `go()` and `proc()` constructs they can also be called in standard C way.
 
 Now we can check it in practice. Let's run it on 4 CPU cores:
 

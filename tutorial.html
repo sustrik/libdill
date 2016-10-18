@@ -304,7 +304,7 @@ active: 0      succeeded: 0      failed: 1</code></pre>
     }
     accepter(ls);
 }</code></pre>
-<p>An interesting thing to notice in the code above is that coroutines are perfectly normal C functions. While they can be invoked using <code>go()</code> and <code>proc()</code> constructs they can also be called in standard C way.</p>
+<p>An interesting thing to note in the code above is that coroutines are perfectly normal C functions. While they can be invoked using <code>go()</code> and <code>proc()</code> constructs they can also be called in standard C way.</p>
 <p>Now we can check it in practice. Let's run it on 4 CPU cores:</p>
 <pre><code>./greetserver 5555 4</code></pre>
 <p>Check the processes from a different terminal using <code>ps</code>:</p>
