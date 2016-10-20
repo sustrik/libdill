@@ -178,7 +178,8 @@ DILL_EXPORT void dill_proc_epilogue(void);
         "jmp    *%%edx\n\t"\
         : : "a" (ctx) : "edx" \
     )
-#define dill_setsp(x) asm volatile("leal -4(%%eax), %%esp"::"eax"(x));
+/* TODO: investigate why clang fails without -16 */
+#define dill_setsp(x) asm volatile("leal -16(%%eax), %%esp"::"eax"(x));
 #else
 #define dill_setjmp(ctx) sigsetjmp(ctx, 0)
 #define dill_longjmp(ctx) siglongjmp(ctx, 1)
