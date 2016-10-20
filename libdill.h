@@ -94,7 +94,6 @@ DILL_EXPORT int hclose(int h);
 /******************************************************************************/
 
 #define coroutine __attribute__((noinline))
-#define dill_naked __attribute__((optimize("omit-frame-pointer",3)))
 
 DILL_EXPORT extern volatile int dill_unoptimisable1;
 DILL_EXPORT extern volatile void *dill_unoptimisable2;
