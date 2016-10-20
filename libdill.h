@@ -94,6 +94,7 @@ DILL_EXPORT int hclose(int h);
 /******************************************************************************/
 
 #define coroutine __attribute__((noinline))
+#define dill_naked __attribute__((optimize("omit-frame-pointer",3)))
 
 DILL_EXPORT extern volatile int dill_unoptimisable1;
 DILL_EXPORT extern volatile void *dill_unoptimisable2;
@@ -137,27 +138,64 @@ DILL_EXPORT void dill_proc_epilogue(void);
 })
 #define dill_longjmp(ctx) \
     asm("movq   (%%rax), %%rbx\n\t"\
-	    "movq   8(%%rax), %%rbp\n\t"\
-	    "movq   16(%%rax), %%r12\n\t"\
-	    "movq   24(%%rax), %%rdx\n\t"\
-	    "movq   32(%%rax), %%r13\n\t"\
-	    "movq   40(%%rax), %%r14\n\t"\
-	    "mov    %%rdx, %%rsp\n\t"\
-	    "movq   48(%%rax), %%r15\n\t"\
-	    "movq   56(%%rax), %%rdx\n\t"\
-	    "movq   64(%%rax), %%rdi\n\t"\
-	    "movq   72(%%rax), %%rsi\n\t"\
-	    "jmp    *%%rdx\n\t"\
+        "movq   8(%%rax), %%rbp\n\t"\
+        "movq   16(%%rax), %%r12\n\t"\
+        "movq   24(%%rax), %%rdx\n\t"\
+        "movq   32(%%rax), %%r13\n\t"\
+        "movq   40(%%rax), %%r14\n\t"\
+        "mov    %%rdx, %%rsp\n\t"\
+        "movq   48(%%rax), %%r15\n\t"\
+        "movq   56(%%rax), %%rdx\n\t"\
+        "movq   64(%%rax), %%rdi\n\t"\
+        "movq   72(%%rax), %%rsi\n\t"\
+        "jmp    *%%rdx\n\t"\
         : : "a" (ctx) : "rdx" \
     )
+#define dill_setsp(x) asm volatile("leaq -8(%%rax), %%rsp"::"rax"(x));
+#elif defined(__i386__)
+#define dill_setjmp(ctx) ({\
+    int ret;\
+    asm("movl   $LJMPRET%=, %%eax\n\t"\
+        "movl   %%eax, (%%edx)\n\t"\
+        "movl   %%ebx, 4(%%edx)\n\t"\
+        "movl   %%esi, 8(%%edx)\n\t"\
+        "movl   %%edi, 12(%%edx)\n\t"\
+        "movl   %%ebp, 16(%%edx)\n\t"\
+        "movl   %%esp, 20(%%edx)\n\t"\
+        "xorl   %%eax, %%eax\n\t"\
+        "LJMPRET%=:\n\t"\
+        : "=a" (ret) : "d" (ctx) : "memory", "ecx",\
+        "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7");\
+    ret;\
+})
+#define dill_longjmp(ctx) \
+    asm("movl   (%%eax), %%edx\n\t"\
+        "movl   4(%%eax), %%ebx\n\t"\
+        "movl   8(%%eax), %%esi\n\t"\
+        "movl   12(%%eax), %%edi\n\t"\
+        "movl   16(%%eax), %%ebp\n\t"\
+        "movl   20(%%eax), %%esp\n\t"\
+        "jmp    *%%edx\n\t"\
+        : : "a" (ctx) : "edx" \
+    )
+#define dill_setsp(x) asm volatile("leal -4(%%eax), %%esp"::"eax"(x));
 #else
 #define dill_setjmp(ctx) sigsetjmp(ctx, 0)
 #define dill_longjmp(ctx) siglongjmp(ctx, 1)
+#define DILL_NOASMSETSP
 #endif
 
 /* Statement expressions are a gcc-ism but they are also supported by clang.
    Given that there's no other way to do this, screw other compilers for now.
    See https://gcc.gnu.org/onlinedocs/gcc-3.2/gcc/Statement-Exprs.html */
+
+/* Here be dragons: the VLAs are necessary to coerce the compiler to always
+   generate a stack frame (they are unimplementable without a stack frame). 
+   The stack frame lets fn reference the local variables, which store the
+   function arguments needed, even when the stack pointer is changed. */
+
+#ifdef DILL_NOASMSETSP
+/* In newer GCCs, -fstack-protector breaks on this; use -fno-stack-protector */
 #define go(fn) \
     ({\
         sigjmp_buf *ctx;\
@@ -174,6 +212,25 @@ DILL_EXPORT void dill_proc_epilogue(void);
         }\
         h;\
     })
+#else
+/* This works with newer GCCs and is a bit more optimised.
+   However, dill_setsp needs to be implemented per architecture. */
+#define go(fn) \
+    ({\
+        sigjmp_buf *ctx;\
+        int h = dill_prologue(&ctx);\
+        if(h >= 0) {\
+            if(!dill_setjmp(*ctx)) {\
+                int dill_anchor[dill_unoptimisable1];\
+                dill_unoptimisable2 = &dill_anchor;\
+                dill_setsp(hquery(h, NULL));\
+                fn;\
+                dill_epilogue();\
+            }\
+        }\
+        h;\
+    })
+#endif
 
 #define proc(fn) \
     ({\
