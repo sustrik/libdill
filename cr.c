@@ -76,7 +76,7 @@ struct dill_cr {
        than nothing. */
     int sid;
 #endif
-};
+} __attribute__((aligned(16),packed));
 
 /* Storage for constants used by go() macro. */
 volatile int dill_unoptimisable1 = 1;
