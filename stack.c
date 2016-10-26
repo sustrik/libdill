@@ -64,6 +64,8 @@ static size_t dill_page_size(void) {
 }
 
 void *dill_allocstack(size_t *stack_size) {
+    if(stack_size)
+        *stack_size = dill_stack_size;
     /* If there's a cached stack, use it. */
     if(!dill_slist_empty(&dill_cached_stacks)) {
         --dill_num_cached_stacks;
@@ -101,8 +103,6 @@ void *dill_allocstack(size_t *stack_size) {
     }
     top = ptr + dill_stack_size;
 #endif
-    if(stack_size)
-        *stack_size = dill_stack_size;
     return top;
 }
 

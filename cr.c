@@ -253,7 +253,7 @@ int dill_prologue(sigjmp_buf **ctx) {
     cr->vfs.query = dill_cr_query;
     cr->vfs.close = dill_cr_close;
     int hndl = hcreate(&cr->vfs);
-    if(dill_slow(hndl < 0)) {dill_freestack(cr); errno = ENOMEM; return -1;}
+    if(dill_slow(hndl < 0)) {dill_freestack(cr + 1); errno = ENOMEM; return -1;}
     dill_slist_item_init(&cr->ready);
     dill_slist_init(&cr->clauses);
     cr->closer = NULL;
