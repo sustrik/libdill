@@ -313,6 +313,9 @@ static void dill_cr_close(struct hvfs *vfs) {
         dill_assert(rc == -1 && errno == 0);
     }
     /* Now that the coroutine is finished deallocate it. */
+#if defined DILL_VALGRIND
+    VALGRIND_STACK_DEREGISTER(cr->sid);
+#endif
     dill_freestack(cr + 1);
 }
 
