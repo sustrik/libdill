@@ -103,6 +103,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 DILL_EXPORT int dill_proc_prologue(int *hndl);
 DILL_EXPORT void dill_proc_epilogue(void);
 
+/* Stack-switching on X86-64. */
 #if defined(__x86_64__)
 #define dill_setjmp(ctx) ({\
     int ret;\
@@ -140,6 +141,8 @@ DILL_EXPORT void dill_proc_epilogue(void);
         : : "a" (ctx) : "rdx" \
     )
 #define dill_setsp(x) asm volatile("leaq -8(%%rax), %%rsp"::"rax"(x));
+
+/* Stack switching on X86. */
 #elif defined(__i386__)
 #define dill_setjmp(ctx) ({\
     int ret;\
@@ -166,6 +169,8 @@ DILL_EXPORT void dill_proc_epilogue(void);
         : : "a" (ctx) : "edx" \
     )
 #define dill_setsp(x) asm volatile("leal -4(%%eax), %%esp"::"eax"(x));
+
+/* Stack-switching on other microarchiterctures. */
 #else
 #define dill_setjmp(ctx) sigsetjmp(ctx, 0)
 #define dill_longjmp(ctx) siglongjmp(ctx, 1)
