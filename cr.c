@@ -288,9 +288,9 @@ void dill_epilogue(void) {
 }
 
 static void *dill_cr_query(struct hvfs *vfs, const void *type) {
-    if(dill_fast(!type || type == dill_cr_type)) return vfs;
-    errno = ENOTSUP;
-    return NULL;
+    if(dill_slow(type && type != dill_cr_type)) {errno = ENOTSUP; return NULL;}
+    struct dill_cr *cr = dill_cont(vfs, struct dill_cr, vfs);
+    return cr;
 }
 
 /* Gets called when coroutine handle is closed. */

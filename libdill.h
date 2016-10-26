@@ -140,7 +140,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
         "jmp    *%%rdx\n\t"\
         : : "a" (ctx) : "rdx" \
     )
-#define dill_setsp(x) asm volatile("leaq -8(%%rax), %%rsp"::"rax"(x));
+#define dill_setsp(x) asm volatile("leaq (%%rax), %%rsp"::"rax"(x));
 
 /* Stack switching on X86. */
 #elif defined(__i386__)
@@ -168,7 +168,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
         "jmp    *%%edx\n\t"\
         : : "a" (ctx) : "edx" \
     )
-#define dill_setsp(x) asm volatile("leal -4(%%eax), %%esp"::"eax"(x));
+#define dill_setsp(x) asm volatile("leal (%%eax), %%esp"::"eax"(x));
 
 /* Stack-switching on other microarchiterctures. */
 #else
