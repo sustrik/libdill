@@ -10,17 +10,11 @@ compiler:
   - gcc
   - clang
 
-before_install:
-  - sudo apt-get update
-  - sudo apt-get install valgrind
-
 env:
   matrix:
    - CONF="shared"
    - CONF="static"
    - CONF="shared-poll"
-   include:
-   - CONF="valgrind"
 
 addons:
   apt:
@@ -38,7 +32,6 @@ install:
   - if [[ $CONF == "shared" ]]; then ./autogen.sh && ./configure && make; fi
   - if [[ $CONF == "static" ]]; then ./autogen.sh && ./configure --disable-shared && make; fi
   - if [[ $CONF == "shared-poll" ]]; then ./autogen.sh && ./configure CFLAGS=-DDILL_POLL && make; fi
-  - if [[ $CONF == "valgrind" ]]; then ./autogen.sh && ./configure --enable-valgrind && make; fi
 
 script:
   - make check
