@@ -77,9 +77,11 @@ int hcreate(struct hvfs *vfs) {
 #if defined DILL_VALGRIND
         /* Clean-up function to delete the array at exit. It is not strictly
            necessary but valgrind will be happy about it. */
-        if(dill_slow(!dill_handles)) {
+        static int initialized = 0;
+        if(dill_slow(!initialized)) {
             int rc = atexit(dill_handle_atexit);
             dill_assert(rc == 0);
+            initialized = 1;
         }
 #endif
         /* Add newly allocated handles to the list of unused handles. */
