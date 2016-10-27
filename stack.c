@@ -63,7 +63,37 @@ static size_t dill_page_size(void) {
     return (size_t)pgsz;
 }
 
+#if defined DILL_VALGRIND
+
+static void dill_stack_atexit(void) {
+    struct dill_slist_item *it;
+    while(it = dill_slist_pop(&dill_cached_stacks)) {
+      /* If the stack cache is full deallocate the stack. */
+#if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD
+      void *ptr = ((uint8_t*)(it + 1)) - dill_stack_size - dill_page_size();
+      int rc = mprotect(ptr, dill_page_size(), PROT_READ|PROT_WRITE);
+      dill_assert(rc == 0);
+      free(ptr);
+#else
+      void *ptr = ((uint8_t*)(it + 1)) - dill_stack_size;
+      free(ptr);
+#endif
+    }
+}
+
+#endif
+
 void *dill_allocstack(size_t *stack_size) {
+#if defined DILL_VALGRIND
+    /* When using valgrind we want to deallocate cached stacks when
+       the process is terminated so that they don't show up in the output. */
+    static int initialized = 0;
+    if(dill_slow(!initialized)) {
+        int rc = atexit(dill_stack_atexit);
+        dill_assert(rc == 0);
+        initialized = 1;
+    }
+#endif
     if(stack_size)
         *stack_size = dill_stack_size;
     /* If there's a cached stack, use it. */
