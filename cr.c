@@ -286,7 +286,10 @@ int dill_prologue(sigjmp_buf **ctx, const char *file, int line) {
     if(dill_slow(!cr)) return -1;
 #if defined DILL_CENSUS
     /* Mark the bytes in stack as unused. */
-    memset(((char*)cr) - stacksz, 0xaa, stacksz);
+    uint8_t *bottom = ((char*)cr) - stacksz;
+    int i;
+    for(i = 0; i != stacksz; ++i)
+        bottom[i] = 0xa0 + (i % 13);
 #endif
     --cr;
     cr->vfs.query = dill_cr_query;
@@ -385,7 +388,7 @@ static void dill_cr_close(struct hvfs *vfs) {
     uint8_t *bottom = ((uint8_t*)cr) - cr->stacksz;
     int i;
     for(i = 0; i != cr->stacksz; ++i) {
-        if(bottom[i] != 0xaa) {
+        if(bottom[i] != 0xa0 + (i % 13)) {
             if(cr->stacksz - i > cr->census->max_stack)
                 cr->census->max_stack = cr->stacksz - i;
             break;
