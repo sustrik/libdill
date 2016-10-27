@@ -52,10 +52,14 @@ static struct dill_handle *dill_handles = NULL;
 static int dill_nhandles = 0;
 static int dill_unused = -1;
 
+#if defined DILL_VALGRIND
+
 static void dill_handle_atexit(void) {
     if(dill_handles)
         free(dill_handles);
 }
+
+#endif
 
 int hcreate(struct hvfs *vfs) {
     if(dill_slow(!vfs || !vfs->query || !vfs->close)) {
@@ -70,12 +74,14 @@ int hcreate(struct hvfs *vfs) {
         struct dill_handle *hndls =
             realloc(dill_handles, sz * sizeof(struct dill_handle));
         if(dill_slow(!hndls)) {errno = ENOMEM; return -1;}
+#if defined DILL_VALGRIND
         /* Clean-up function to delete the array at exit. It is not strictly
            necessary but valgrind will be happy about it. */
         if(dill_slow(!dill_handles)) {
             int rc = atexit(dill_handle_atexit);
             dill_assert(rc == 0);
         }
+#endif
         /* Add newly allocated handles to the list of unused handles. */
         int i;
         for(i = dill_nhandles; i != sz - 1; ++i)
