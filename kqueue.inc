@@ -62,11 +62,28 @@ static struct dill_fdinfo *dill_fdinfos = NULL;
 static uint32_t dill_changelist = DILL_ENDLIST;
 static struct dill_fdinfo *dill_parentinfo = NULL;
 
+#if defined DILL_VALGRIND
+
+static void dill_pollset_atexit(void) {
+    if(dill_fdinfos)
+        free(dill_fdinfos);
+}
+
+#endif
+
 int dill_pollset_init(int parent) {
     int err;
     dill_fdinfos = (struct dill_fdinfo*)
         calloc(dill_maxfds(), sizeof(struct dill_fdinfo));
     if(dill_slow(!dill_fdinfos)) {err = ENOMEM; goto error1;}
+#if defined DILL_VALGRIND
+    static int initialized = 0;
+    if(dill_slow(!initialized)) {
+        int rc = atexit(dill_pollset_atexit);
+        dill_assert(rc == 0);
+        initialized = 1;
+    }
+#endif
     dill_kfd = kqueue();
     if(dill_slow(dill_kfd < 0)) {err = errno; goto error2;}
     dill_changelist = DILL_ENDLIST;
