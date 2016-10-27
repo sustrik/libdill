@@ -77,6 +77,17 @@ struct dill_fdinfo {
    File descriptors are used as indices in this array. */
 static struct dill_fdinfo *dill_fdinfos = NULL;
 
+#if defined DILL_VALGRIND
+
+static void dill_pollset_atexit(void) {
+    if(dill_pollset)
+        free(dill_pollset);
+    if(dill_fdinfos)
+        free(dill_fdinfos);
+}
+
+#endif
+
 int dill_pollset_init(int parent) {
     int err;
     /* Allocate largest possible pollset. */
@@ -85,6 +96,14 @@ int dill_pollset_init(int parent) {
     if(dill_slow(!dill_pollset)) {err = ENOMEM; goto error1;}
     dill_fdinfos = malloc(sizeof(struct dill_fdinfo) * dill_maxfds());
     if(dill_slow(!dill_fdinfos)) {err = ENOMEM; goto error2;}
+#if defined DILL_VALGRIND
+    static int initialized = 0;
+    if(dill_slow(!initialized)) {
+        int rc = atexit(dill_pollset_atexit);
+        dill_assert(rc == 0);
+        initialized = 1;
+    }
+#endif
     /* Intialise fd infos. There's no fd in the pollset,
        so set all indices to -1. */
     int i;
