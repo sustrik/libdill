@@ -22,6 +22,8 @@
 
 #include <errno.h>
 #include <setjmp.h>
+#include <stdio.h>
+#include <string.h>
 
 #if defined DILL_VALGRIND
 #include <valgrind/valgrind.h>
@@ -33,6 +35,21 @@
 #include "pollset.h"
 #include "stack.h"
 #include "utils.h"
+
+#if defined DILL_CENSUS
+
+/* When doing stack size census we will keep maximum stack size in a list
+   indexed by go() call, i.e. by file name and line number. */
+struct dill_census_item {
+    struct dill_slist_item crs;
+    const char *file;
+    int line;
+    size_t max_stack;
+};
+
+struct dill_slist dill_census = {0};
+
+#endif
 
 /* The coroutine. The memory layout looks like this:
    +-------------------------------------------------------------+---------+
@@ -76,6 +93,11 @@ struct dill_cr {
        than nothing. */
     int sid;
 #endif
+#if defined DILL_CENSUS
+    /* Census record corresponding to this coroutine. */
+    struct dill_census_item *census;
+    size_t stacksz;
+#endif
 } __attribute__((aligned(16),packed));
 
 /* Storage for constants used by go() macro. */
@@ -102,6 +124,19 @@ static struct dill_list dill_timers;
 /******************************************************************************/
 /*  Helpers.                                                                  */
 /******************************************************************************/
+
+#if defined DILL_CENSUS
+/* Print out the results of the stack size census. */
+static void dill_census_atexit(void) {
+    struct dill_slist_item *it;
+    for(it = dill_slist_begin(&dill_census); it; it = dill_slist_next(it)) {
+        struct dill_census_item *ci =
+            dill_cont(it, struct dill_census_item, crs);
+        fprintf(stderr, "%s:%d - maximum stack size %zu B\n",
+            ci->file, ci->line, ci->max_stack);
+    }
+}
+#endif
 
 static void dill_resume(struct dill_cr *cr, int id, int err) {
     cr->id = id;
@@ -241,7 +276,7 @@ static void dill_cr_close(struct hvfs *vfs);
 static void dill_cancel(struct dill_cr *cr, int err);
 
 /* The intial part of go(). Allocates a new stack and handle. */
-int dill_prologue(sigjmp_buf **ctx) {
+int dill_prologue(sigjmp_buf **ctx, const char *file, int line) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) {errno = ECANCELED; return -1;}
@@ -249,6 +284,10 @@ int dill_prologue(sigjmp_buf **ctx) {
     size_t stacksz;
     struct dill_cr *cr = (struct dill_cr*)dill_allocstack(&stacksz);
     if(dill_slow(!cr)) return -1;
+#if defined DILL_CENSUS
+    /* Mark the bytes in stack as unused. */
+    memset(((char*)cr) - stacksz, 0xaa, stacksz);
+#endif
     --cr;
     cr->vfs.query = dill_cr_query;
     cr->vfs.close = dill_cr_close;
@@ -263,6 +302,34 @@ int dill_prologue(sigjmp_buf **ctx) {
     cr->done = 0;
 #if defined DILL_VALGRIND
     cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stacksz, cr);
+#endif
+#if defined DILL_CENSUS
+    /* Initialize census. */
+    static int census_initialized = 0;
+    if(dill_slow(!census_initialized)) {
+        rc = atexit(dill_census_atexit);
+        dill_assert(rc == 0);
+        census_initialized = 1;
+    }
+    /* Find the appropriate census item if it exists. It's O(n) but meh. */
+    struct dill_slist_item *it;
+    cr->census = NULL;
+    for(it = dill_slist_begin(&dill_census); it; it = dill_slist_next(it)) {
+        cr->census = dill_cont(it, struct dill_census_item, crs);
+        if(cr->census->line == line && strcmp(cr->census->file, file) == 0)
+            break;
+    }
+    /* Allocate it if it does not exist. */
+    if(!it) {
+        cr->census = malloc(sizeof(struct dill_census_item));
+        dill_assert(cr->census);
+        dill_slist_item_init(&cr->census->crs);
+        dill_slist_push(&dill_census, &cr->census->crs);
+        cr->census->file = file;
+        cr->census->line = line;
+        cr->census->max_stack = 0;
+    }
+    cr->stacksz = stacksz - sizeof(struct dill_cr);
 #endif
     /* Return the context of the parent coroutine to the caller so that it can
        store its current state. It can't be done here becuse we are at the
@@ -312,10 +379,23 @@ static void dill_cr_close(struct hvfs *vfs) {
         int rc = dill_wait();
         dill_assert(rc == -1 && errno == 0);
     }
-    /* Now that the coroutine is finished deallocate it. */
+#if defined DILL_CENSUS
+    /* Find first overwritten byte on the stack.
+       Determine stack usage based on that. */
+    uint8_t *bottom = ((uint8_t*)cr) - cr->stacksz;
+    int i;
+    for(i = 0; i != cr->stacksz; ++i) {
+        if(bottom[i] != 0xaa) {
+            if(cr->stacksz - i > cr->census->max_stack)
+                cr->census->max_stack = cr->stacksz - i;
+            break;
+        }
+    }
+#endif
 #if defined DILL_VALGRIND
     VALGRIND_STACK_DEREGISTER(cr->sid);
 #endif
+    /* Now that the coroutine is finished deallocate it. */
     dill_freestack(cr + 1);
 }
 

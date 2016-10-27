@@ -83,6 +83,17 @@ if test "x$enable_valgrind" = "xyes"; then
 fi
 
 ################################################################################
+#  --enable-census                                                             #
+################################################################################
+
+AC_ARG_ENABLE([census], [AS_HELP_STRING([--enable-census],
+    [Print out information about space used on coroutine stacks [default=no]])])
+
+if test "x$enable_census" = "xyes"; then
+    AC_DEFINE(DILL_CENSUS)
+fi
+
+################################################################################
 #  Feature checks.                                                             #
 ################################################################################
 
