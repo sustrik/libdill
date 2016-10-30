@@ -73,6 +73,16 @@ matrix:
           - ubuntu-toolchain-r-test
         packages:
           - gcc-4.9
+  - os: linux
+    compiler: gcc
+    env: VALGRIND=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-4.9
+          - valgrind
 
 branches:
   only:
