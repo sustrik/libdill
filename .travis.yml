@@ -6,7 +6,7 @@ matrix:
   include:
   - os: linux
     compiler: gcc
-    env: O3=1
+    env: 
     addons:
       apt:
         sources:
@@ -15,7 +15,7 @@ matrix:
           - gcc-4.9
   - os: linux
     compiler: clang
-    env: O3=1
+    env: 
     addons:
       apt:
         sources:
@@ -24,7 +24,7 @@ matrix:
           - clang
   - os: linux
     compiler: gcc
-    env: O3=1 STATIC=1
+    env: STATIC=1
     addons:
       apt:
         sources:
@@ -33,7 +33,7 @@ matrix:
           - gcc-4.9
   - os: linux
     compiler: clang
-    env: O3=1 STATIC=1
+    env: STATIC=1
     addons:
       apt:
         sources:
@@ -42,16 +42,16 @@ matrix:
           - clang
   - os: osx
     compiler: gcc
-    env: O3=1
+    env: 
   - os: osx
     compiler: clang
-    env: O3=1
+    env: 
   - os: osx
     compiler: gcc
-    env: O3=1 STATIC=1
+    env: STATIC=1
   - os: osx
     compiler: clang
-    env: O3=1 STATIC=1
+    env: STATIC=1
 
 branches:
   only:
@@ -59,7 +59,7 @@ branches:
 
 install:
   - ./autogen.sh
-  - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census}
+  - CFLAGS=-O3 ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census}
   - make V=1
 
 script:
