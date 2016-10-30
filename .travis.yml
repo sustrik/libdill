@@ -2,36 +2,65 @@ language: c
 
 sudo: false
 
-os:
-  - osx
-  - linux
-
-compiler:
-  - gcc
-  - clang
-
-env:
-  matrix:
-   - CONF="shared"
-   - CONF="static"
-   - CONF="shared-poll"
-
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-4.9
-      - clang
+matrix:
+  include:
+  - os: linux
+    compiler: gcc
+    env: O3=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-4.9
+  - os: linux
+    compiler: clang
+    env: O3=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - clang
+  - os: linux
+    compiler: gcc
+    env: O3=1 STATIC=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-4.9
+  - os: linux
+    compiler: clang
+    env: O3=1 STATIC=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - clang
+  - os: osx
+    compiler: gcc
+    env: O3=1
+  - os: osx
+    compiler: clang
+    env: O3=1
+  - os: osx
+    compiler: gcc
+    env: O3=1 STATIC=1
+  - os: osx
+    compiler: clang
+    env: O3=1 STATIC=1
 
 branches:
   only:
     - master
 
 install:
-  - if [[ $CONF == "shared" ]]; then ./autogen.sh && ./configure && make; fi
-  - if [[ $CONF == "static" ]]; then ./autogen.sh && ./configure --disable-shared && make; fi
-  - if [[ $CONF == "shared-poll" ]]; then ./autogen.sh && ./configure CFLAGS=-DDILL_POLL && make; fi
+  - ./autogen.sh
+  - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census}
+  - make V=1
 
 script:
   - make check
