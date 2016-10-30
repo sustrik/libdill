@@ -23,13 +23,13 @@ Any function to be invoked using go() must be declared with `coroutine` specifie
 
 *WARNING*: Coroutine will most likely work even without `coroutine` specifier. However, it may fail in random non-deterministic fashion, depending on a particular combination of compiler, optimisation level and code in question. Also, all arguments to a coroutine must not be function calls. If they are the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine do the computation first, then pass the result as an argument. Instead of:
 
-```
+```c
 go(bar(foo(a)));
 ```
 
 Do this:
 
-```
+```c
 int a = foo();
 go(bar(a));
 ```
