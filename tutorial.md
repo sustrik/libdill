@@ -242,7 +242,7 @@ With libdill, however, we are aiming at "concurrency by message passing" and thu
 
 We will create a new coroutine that will keep track of the statistics and a channel that will be used by `dialogue()` coroutines to communicate with it:
 
-<img src="tutorial1.jpeg"/>
+<img src="tutorial1.png"/>
 
 First, we define values that will be passed through the channel:
 

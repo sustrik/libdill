@@ -156,7 +156,7 @@ cleanup:
 <p>In a classic thread-based application we would keep the statistics in global variables and synchronise access to them using mutexes.</p>
 <p>With libdill, however, we are aiming at &quot;concurrency by message passing&quot; and thus we are going to implement the feature in a different way.</p>
 <p>We will create a new coroutine that will keep track of the statistics and a channel that will be used by <code>dialogue()</code> coroutines to communicate with it:</p>
-<p><img src="tutorial1.jpeg"/></p>
+<p><img src="tutorial1.png"/></p>
 <p>First, we define values that will be passed through the channel:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#define CONN_ESTABLISHED 1</span>
 <span class="ot">#define CONN_SUCCEEDED 2</span>
