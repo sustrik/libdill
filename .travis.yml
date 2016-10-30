@@ -52,6 +52,27 @@ matrix:
   - os: osx
     compiler: clang
     env: STATIC=1
+  - os: linux
+    compiler: gcc
+    env: POLL=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-4.9
+  - os: osx
+    compiler: gcc
+    env: POLL=1
+  - os: linux
+    compiler: gcc
+    env: CENSUS=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-4.9
 
 branches:
   only:
@@ -59,7 +80,7 @@ branches:
 
 install:
   - ./autogen.sh
-  - CFLAGS=-O3 ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census}
+  - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census} CFLAGS="-O3 ${POLL+-DDILL_POLL}"
   - make V=1
 
 script:
