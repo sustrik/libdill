@@ -22,11 +22,11 @@
 
 */
 
-#include <assert.h>
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
 
+#include "assert.h"
 #include "../libdill.h"
 
 #define SIGNAL SIGUSR1
@@ -44,14 +44,14 @@ void signal_intr(int signo) {
 coroutine void sender(int ch) {
     char signo;
     int rc = chrecv(ch, &signo, sizeof(signo), -1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     rc = kill(getpid(), signo);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 }
 
 coroutine void receiver(int ch) {
     int events = fdin(signal_pipe[0], -1);
-    assert(events == 0);
+    errno_assert(events == 0);
 
     char signo;
     ssize_t sz = read(signal_pipe[0], &signo, 1);
@@ -59,42 +59,44 @@ coroutine void receiver(int ch) {
     assert(signo == SIGNAL);
 
     int rc = chsend(ch, &signo, sizeof(signo), -1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 }
 
 int main() {
     int err = pipe(signal_pipe);
-    assert(err == 0);
+    errno_assert(err == 0);
 
     signal(SIGNAL, signal_intr);
 
     int sendch = channel(sizeof(char), 0);
-    assert(sendch >= 0);
+    errno_assert(sendch >= 0);
     int recvch = channel(sizeof(char), 0);
-    assert(recvch >= 0);
+    errno_assert(recvch >= 0);
 
     int i;
     for(i = 0; i < COUNT; ++i) {
         int hndls[2];
         hndls[0] = go(sender(sendch));
-        assert(hndls[0] >= 0);
+        errno_assert(hndls[0] >= 0);
         hndls[1] = go(receiver(recvch));
-        assert(hndls[1] >= 0);
+        errno_assert(hndls[1] >= 0);
         char c = SIGNAL;
         int rc = chsend(sendch, &c, sizeof(c), -1);
-        assert(rc == 0);
+        errno_assert(rc == 0);
         char signo;
         rc = chrecv(recvch, &signo, sizeof(signo), -1);
-        assert(rc == 0);
+        errno_assert(rc == 0);
         assert(signo == SIGNAL);
         rc = hclose(hndls[0]);
-        assert(rc == 0);
+        errno_assert(rc == 0);
         rc = hclose(hndls[1]);
-        assert(rc == 0);
+        errno_assert(rc == 0);
     }
 
-    hclose(sendch);
-    hclose(recvch);
+    int rc = hclose(sendch);
+    errno_assert(rc == 0);
+    rc = hclose(recvch);
+    errno_assert(rc == 0);
 
     return 0;
 }

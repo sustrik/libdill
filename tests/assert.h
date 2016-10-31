@@ -22,47 +22,17 @@
 
 */
 
-#include <stddef.h>
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "assert.h"
-#include "../libdill.h"
-
-static int dummy1 = 0;
-static int dummy2 = 0;
-
-coroutine void worker(void) {
-    /* Test whether newly created coroutine has CLS set to NULL. */
-    assert(cls() == NULL);
-
-    /* Check whether CLS remains unchanged after yielding control
-       to the main coroutine. */
-    setcls(&dummy2);
-    assert(cls() == &dummy2);
-    int rc = yield();
-    errno_assert(rc == 0);
-    assert(cls() == &dummy2);
-}
-
-int main() {
-    /* Test whether CLS of the main coroutine is NULL on program startup. */
-    assert(cls() == NULL);
-
-    /* Basic functionality. */
-    setcls(&dummy1);
-    assert(cls() == &dummy1);
-
-    /* Check whether CLS is not messed up by launching a new coroutine. */
-    int hndl = go(worker());
-    errno_assert(hndl >= 0);
-    assert(cls() == &dummy1);
-    int rc = msleep(now() + 50);
-    errno_assert(rc == 0);
-    rc = hclose(hndl);
-    errno_assert(rc == 0);
-
-    /* Check whether CLS is not messed up when coroutine terminates. */
-    assert(cls() == &dummy1);
-
-    return 0;
-}
-
+#define errno_assert(x) \
+    do {\
+        if(!(x)) {\
+            fprintf(stderr, "%s [%d] (%s:%d)\n", strerror(errno),\
+                (int)errno, __FILE__, __LINE__);\
+            fflush(stderr);\
+            abort();\
+        }\
+    } while (0)

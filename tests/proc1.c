@@ -23,11 +23,11 @@
 */
 
 #include <errno.h>
-#include <assert.h>
 #include <stdio.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "assert.h"
 #include "../libdill.h"
 
 int forked = 0;
@@ -46,8 +46,10 @@ coroutine void child(int fd) {
     /* Make sure that there's only one coroutine running. */
     forked = 1; 
     int i;
-    for(i = 0; i != 20; ++i)
-        yield();
+    for(i = 0; i != 20; ++i) {
+        int rc = yield();
+        errno_assert(rc == 0);
+    }
     assert(!worker_running);
     ssize_t sz = write(fd, "A", 1);
     assert(sz == 1);
@@ -58,17 +60,17 @@ int main() {
     /* Pipe to check whether child have failed. */
     int fds[2];
     int rc = pipe(fds);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     /* Start second coroutine before forking. */
     int h = go(worker());
-    assert(h >= 0);
+    errno_assert(h >= 0);
     /* Fork. */
     h = proc(child(fds[1]));
-    assert(h >= 0);
+    errno_assert(h >= 0);
     close(fds[1]);
     /* Parent waits for the child. */
     rc = fdin(fds[0], -1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 
     return 0;
 }

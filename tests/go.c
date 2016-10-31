@@ -22,15 +22,15 @@
 
 */
 
-#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 
+#include "assert.h"
 #include "../libdill.h"
 
 coroutine void dummy(void) {
     int rc = msleep(now() + 50);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 }
 
 int sum = 0;
@@ -40,7 +40,7 @@ coroutine void worker(int count, int n) {
     for(i = 0; i != count; ++i) {
         sum += n;
         int rc = yield();
-        assert(rc == 0);
+        errno_assert(rc == 0);
     }
 }
 
@@ -63,19 +63,19 @@ coroutine void worker6(void) {
 int main() {
     /* Basic test. Run some coroutines. */
     int cr1 = go(worker(3, 7));
-    assert(cr1 >= 0);
+    errno_assert(cr1 >= 0);
     int cr2 = go(worker(1, 11));
-    assert(cr2 >= 0);
+    errno_assert(cr2 >= 0);
     int cr3 = go(worker(2, 5));
-    assert(cr3 >= 0);
+    errno_assert(cr3 >= 0);
     int rc = msleep(now() + 100);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     rc = hclose(cr1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     rc = hclose(cr2);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     rc = hclose(cr3);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     assert(sum == 42);
 
     /* Test whether stack deallocation works. */
@@ -83,33 +83,36 @@ int main() {
     int hndls2[20];
     for(i = 0; i != 20; ++i) {
         hndls2[i] = go(dummy());
-        assert(hndls2[i] >= 0);
+        errno_assert(hndls2[i] >= 0);
     }
     rc = msleep(now() + 100);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     for(i = 0; i != 20; ++i) {
         rc = hclose(hndls2[i]);
-        assert(rc == 0);
+        errno_assert(rc == 0);
     }
 
     /* Test whether immediate cancelation works. */
     cr1 = go(worker2());
-    assert(cr1 >= 0);
+    errno_assert(cr1 >= 0);
     cr2 = go(worker2());
-    assert(cr2 >= 0);
+    errno_assert(cr2 >= 0);
     cr3 = go(worker2());
-    assert(cr3 >= 0);
+    errno_assert(cr3 >= 0);
     rc = msleep(now() + 30);
-    assert(rc == 0);
-    hclose(cr1);
-    hclose(cr2);
-    hclose(cr3);
+    errno_assert(rc == 0);
+    rc = hclose(cr1);
+    errno_assert(rc == 0);
+    rc = hclose(cr2);
+    errno_assert(rc == 0);
+    rc = hclose(cr3);
+    errno_assert(rc == 0);
     assert(worker2_done == 3);
 
     /* Let the test running for a while to detect possible errors if there
        was a bug that left any corotines running. */
     rc = msleep(now() + 100);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 
     return 0;
 }

@@ -22,7 +22,6 @@
 
 */
 
-#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -30,6 +29,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include "assert.h"
 #include "../libdill.h"
 
 coroutine void cancel(int fd) {
@@ -41,38 +41,38 @@ coroutine void cancel(int fd) {
 
 coroutine void trigger(int fd, int64_t deadline) {
     int rc = msleep(deadline);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     ssize_t sz = send(fd, "A", 1, 0);
-    assert(sz == 1);
+    errno_assert(sz == 1);
 }
 
 int main() {
     int rc;
 
     /* Check invalid fd. */
-    //rc = fdin(33, -1);
-    //assert(rc == -1 && errno == EBADF);
-    //rc = fdout(33, -1);
-    //assert(rc == -1 && errno == EBADF);
+    rc = fdin(33, -1);
+    assert(rc == -1 && errno == EBADF);
+    rc = fdout(33, -1);
+    assert(rc == -1 && errno == EBADF);
 
     /* Create a pair of file deshndliptors for testing. */
     int fds[2];
     rc = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 
     /* Check for in & out. */
     rc = fdout(fds[0], 0);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     rc = fdin(fds[0], 0);
     assert(rc == -1 && errno == ETIMEDOUT);
 
     /* Check with infinite timeout. */
     rc = fdout(fds[0], -1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 
     /* Check with the timeout that doesn't expire. */
     rc = fdout(fds[0], now() + 100);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 
     /* Check with the timeout that does expire. */
     int64_t deadline = now() + 100;
@@ -83,52 +83,52 @@ int main() {
 
     /* Check cancelation. */
     int hndl1 = go(cancel(fds[0]));
-    assert(hndl1 >= 0);
+    errno_assert(hndl1 >= 0);
     rc = hclose(hndl1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 
     /* Check for in. */
     ssize_t sz = send(fds[1], "A", 1, 0);
-    assert(sz == 1);
+    errno_assert(sz == 1);
     rc = fdin(fds[0], -1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     char c;
     sz = recv(fds[0], &c, 1, 0);
-    assert(sz == 1);
+    errno_assert(sz == 1);
 
     /* Two interleaved deadlines. */
     int64_t start = now();
     int hndl2 = go(trigger(fds[0], start + 50));
-    assert(hndl2 >= 0);
+    errno_assert(hndl2 >= 0);
     rc = fdin(fds[1], start + 90);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     diff = now() - start;
     assert(diff > 30 && diff < 70);
     rc = hclose(hndl2);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 
     /* Check whether closing the connection is reported. */
     ssize_t nbytes = send(fds[1], "ABC", 3, 0);
-    assert(nbytes == 3);
+    errno_assert(nbytes == 3);
     fdclean(fds[1]);
     rc = close(fds[1]);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     rc = msleep(now() + 50);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     rc = fdin(fds[0], -1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     rc = fdout(fds[0], -1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     char buf[10];
     nbytes = recv(fds[0], buf, sizeof(buf), 0);
     assert(nbytes == 3);
     rc = fdin(fds[0], -1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     nbytes = recv(fds[0], buf, sizeof(buf), 0);
     assert(nbytes == 0 || (nbytes == -1 && errno == ECONNRESET));
     fdclean(fds[0]);
     rc = close(fds[0]);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 
     return 0;
 }

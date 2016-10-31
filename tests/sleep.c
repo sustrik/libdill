@@ -22,58 +22,63 @@
 
 */
 
-#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/time.h>
 
+#include "assert.h"
 #include "../libdill.h"
 
 coroutine static void delay(int n, int ch) {
     int rc = msleep(now() + n);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     rc = chsend(ch, &n, sizeof(n), -1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 }
 
 int main() {
     /* Test 'msleep'. */
     int64_t deadline = now() + 100;
     int rc = msleep(deadline);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     int64_t diff = now () - deadline;
     assert(diff > -20 && diff < 20);
 
     /* msleep-sort */
     int ch = channel(sizeof(int), 0);
-    assert(ch >= 0);
+    errno_assert(ch >= 0);
     int hndls[4];
     hndls[0] = go(delay(30, ch));
-    assert(hndls[0] >= 0);
+    errno_assert(hndls[0] >= 0);
     hndls[1] = go(delay(40, ch));
-    assert(hndls[1] >= 0);
+    errno_assert(hndls[1] >= 0);
     hndls[2] = go(delay(10, ch));
-    assert(hndls[2] >= 0);
+    errno_assert(hndls[2] >= 0);
     hndls[3] = go(delay(20, ch));
-    assert(hndls[3] >= 0);
+    errno_assert(hndls[3] >= 0);
     int val;
     rc = chrecv(ch, &val, sizeof(val), -1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     assert(val == 10);
     rc = chrecv(ch, &val, sizeof(val), -1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     assert(val == 20);
     rc = chrecv(ch, &val, sizeof(val), -1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     assert(val == 30);
     rc = chrecv(ch, &val, sizeof(val), -1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     assert(val == 40);
-    hclose(hndls[0]);
-    hclose(hndls[1]);
-    hclose(hndls[2]);
-    hclose(hndls[3]);
-    hclose(ch);
+    rc = hclose(hndls[0]);
+    errno_assert(rc == 0);
+    rc = hclose(hndls[1]);
+    errno_assert(rc == 0);
+    rc = hclose(hndls[2]);
+    errno_assert(rc == 0);
+    rc = hclose(hndls[3]);
+    errno_assert(rc == 0);
+    rc = hclose(ch);
+    errno_assert(rc == 0);
 
     return 0;
 }

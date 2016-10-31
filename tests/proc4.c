@@ -22,9 +22,9 @@
 
 */
 
-#include <assert.h>
 #include <unistd.h>
 
+#include "assert.h"
 #include "../libdill.h"
 
 coroutine void child(int fd) {
@@ -32,7 +32,7 @@ coroutine void child(int fd) {
         int rc = yield();
         if(rc < 0 && errno == ECANCELED)
             break;
-        assert(rc == 0);
+        errno_assert(rc == 0);
     }
     char c = 55;
     ssize_t sz = write(fd, &c, 1);
@@ -44,10 +44,10 @@ int main() {
     /* Pipe to check whether child have finished. */
     int fds[2];
     int rc = pipe(fds);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     /* Fork. */
     int h = proc(child(fds[1]));
-    assert(h >= 0);
+    errno_assert(h >= 0);
     /* Send close signal to the child and wait till it finishes. */
     hclose(h);
     /* Check whether child finished decently. */

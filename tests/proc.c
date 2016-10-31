@@ -22,8 +22,7 @@
 
 */
 
-#include <assert.h>
-
+#include "assert.h"
 #include "../libdill.h"
 
 coroutine void foo(int a, int b) {
@@ -33,7 +32,7 @@ coroutine void foo(int a, int b) {
 
 coroutine void bar(void) {
     int rc = msleep(now() + 100000);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 }
 
 int main(void) {
@@ -42,16 +41,16 @@ int main(void) {
     /* Launch the coroutine locally. */
     h = go(foo(3, 4));
     rc = msleep(now() + 50);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     rc = hclose(h);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 
     /* Launch the coroutine in a separate process. */
     h = proc(foo(3, 4));
     rc = msleep(now() + 100);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     rc = hclose(h);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 
     return 0;
 }
