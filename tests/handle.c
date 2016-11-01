@@ -25,7 +25,32 @@
 #include "assert.h"
 #include "../libdill.h"
 
+static int status = 0;
+
+struct test {
+    struct hvfs vfs;
+};
+
+static void *test_query(struct hvfs *vfs, const void *type) {
+    status = 1;
+    return &status;
+}
+
+static void test_close(struct hvfs *vfs) {
+    status = 2;
+}
+
 int main(void) {
+    struct test t;
+    t.vfs.query = test_query;
+    t.vfs.close = test_close;
+    int h = hcreate(&t.vfs);
+    errno_assert(h >= 0);
+    void *p = hquery(h, NULL);
+    errno_assert(p);
+    assert(p == &status);
+    int rc = hclose(h);
+    errno_assert(rc == 0);
     return 0;
 }
 
