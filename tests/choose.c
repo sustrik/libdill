@@ -65,7 +65,7 @@ coroutine void receiver2(int ch, int expected) {
 coroutine void choosesender(int ch, int val) {
     struct chclause cl = {CHSEND, ch, &val, sizeof(val)};
     int rc = choose(&cl, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
 }
 
 coroutine void feeder(int ch, int val) {
@@ -93,11 +93,11 @@ int main() {
     val = 555;
     struct chclause cls01[] = {{CHSEND, ch0, &val, sizeof(val)}};
     rc = choose(cls01, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     val = 0;
     struct chclause cls02[] = {{CHRECV, ch0, &val, sizeof(val)}};
     rc = choose(cls02, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     assert(val == 555);    
 
     /* Non-blocking receiver case. */
@@ -107,7 +107,7 @@ int main() {
     errno_assert(hndl1 >= 0);
     struct chclause cls1[] = {{CHRECV, ch1, &val, sizeof(val)}};
     rc = choose(cls1, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     assert(val == 555);
     hclose(ch1);
     rc = hclose(hndl1);
@@ -120,7 +120,7 @@ int main() {
     errno_assert(hndl2 >= 0);
     struct chclause cls2[] = {{CHRECV, ch2, &val, sizeof(val)}};
     rc = choose(cls2, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     assert(val == 666);
     hclose(ch2);
     rc = hclose(hndl2);
@@ -134,7 +134,7 @@ int main() {
     val = 777;
     struct chclause cls3[] = {{CHSEND, ch3, &val, sizeof(val)}};
     rc = choose(cls3, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     hclose(ch3);
     rc = hclose(hndl3);
     errno_assert(rc == 0);
@@ -147,7 +147,7 @@ int main() {
     val = 888;
     struct chclause cls4[] = {{CHSEND, ch4, &val, sizeof(val)}};
     rc = choose(cls4, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     hclose(ch4);
     rc = hclose(hndl4);
     errno_assert(rc == 0);
@@ -165,12 +165,12 @@ int main() {
         {CHRECV, ch6, &val, sizeof(val)}
     };
     rc = choose(cls5, 2, -1);
-    errno_assert(rc == 1);
+    choose_assert(1, 0);
     assert(val == 555);
     hndl5[1] = go(sender2(ch5, 666));
     errno_assert(hndl5 >= 0);
     rc = choose(cls5, 2, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     assert(val == 666);
     hclose(ch5);
     hclose(ch6);
@@ -222,10 +222,10 @@ int main() {
     errno_assert(ch9 >= 0);
     struct chclause cls7[] = {{CHRECV, ch9, &val, sizeof(val)}};
     rc = choose(cls7, 1, 0);
-    assert(rc == -1 && errno == ETIMEDOUT);
+    choose_assert(-1, ETIMEDOUT);
     hclose(ch9);
     rc = choose(NULL, 0, 0);
-    assert(rc == -1 && errno == ETIMEDOUT);
+    choose_assert(-1, ETIMEDOUT);
 
     /* Test two simultaneous senders vs. choose statement. */
     int ch10 = channel(sizeof(int), 0);
@@ -238,11 +238,11 @@ int main() {
     val = 0;
     struct chclause cls8[] = {{CHRECV, ch10, &val, sizeof(val)}};
     rc = choose(cls8, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     assert(val == 888);
     val = 0;
     rc = choose(cls8, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     assert(val == 999);
     hclose(ch10);
     rc = hclose(hndl7[0]);
@@ -261,10 +261,10 @@ int main() {
     val = 333;
     struct chclause cls9[] = {{CHSEND, ch11, &val, sizeof(val)}};
     rc = choose(cls9, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     val = 444;
     rc = choose(cls9, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     hclose(ch11);
     rc = hclose(hndl8[0]);
     errno_assert(rc == 0);
@@ -278,7 +278,7 @@ int main() {
     errno_assert(hndl9 >= 0);
     struct chclause cls10[] = {{CHRECV, ch12, &val, sizeof(val)}};
     rc = choose(cls10, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     assert(val == 111);
     hclose(ch12);
     rc = hclose(hndl9);
@@ -293,7 +293,7 @@ int main() {
     errno_assert(rc == 0);
     struct chclause cls12[] = {{CHRECV, ch13, &val, sizeof(val)}};
     rc = choose(cls12, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     assert(val == 999);
     hclose(ch13);
 
@@ -310,7 +310,7 @@ int main() {
         {CHRECV, ch15, &lrg, sizeof(lrg)}
     };
     rc = choose(cls13, 2, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     assert(val == 1111);
     hclose(ch16);
     hclose(ch15);
@@ -325,7 +325,7 @@ int main() {
     errno_assert(rc == 0);
     struct chclause cls14[] = {{CHRECV, ch17, &lrg, sizeof(lrg)}};
     rc = choose(cls14, 1, -1);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     hclose(ch17);
 
     /* Test that 'in' on done-with channel fires. */
@@ -335,7 +335,7 @@ int main() {
     errno_assert(rc == 0);
     struct chclause cls15[] = {{CHRECV, ch18, &val, sizeof(val)}};
     rc = choose(cls15, 1, -1);
-    errno_assert(rc == 0 && errno == EPIPE);
+    choose_assert(0, EPIPE);
     hclose(ch18);
 
     /* Test expiration of 'deadline' clause. */
@@ -344,7 +344,7 @@ int main() {
     int64_t start = now();
     struct chclause cls17[] = {{CHRECV, ch21, &val, sizeof(val)}};
     rc = choose(cls17, 1, start + 50);
-    assert(rc == -1 && errno == ETIMEDOUT);
+    choose_assert(-1, ETIMEDOUT);
     int64_t diff = now() - start;
     assert(diff > 30 && diff < 70);
     hclose(ch21);
@@ -357,7 +357,7 @@ int main() {
     errno_assert(hndl11 >= 0);
     struct chclause cls18[] = {{CHRECV, ch22, &val, sizeof(val)}};
     rc = choose(cls17, 1, start + 1000);
-    errno_assert(rc == 0);
+    choose_assert(0, 0);
     assert(val == 4444);
     diff = now() - start;
     assert(diff > 30 && diff < 70);

@@ -36,3 +36,14 @@
             abort();\
         }\
     } while (0)
+
+#define choose_assert(x, err) \
+    do {\
+        if(rc != (x) || errno != (err)) {\
+            fprintf(stderr, "rc=%d; %s [%d] (%s:%d)\n", (int)rc, \
+                strerror(errno), (int)errno, __FILE__, __LINE__);\
+            fflush(stderr);\
+            abort();\
+        }\
+    } while (0)
+
