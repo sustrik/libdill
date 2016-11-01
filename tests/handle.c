@@ -49,8 +49,10 @@ int main(void) {
     void *p = hquery(h, NULL);
     errno_assert(p);
     assert(p == &status);
+    assert(status == 1);
     int rc = hclose(h);
     errno_assert(rc == 0);
+    assert(status == 2);
     return 0;
 }
 
