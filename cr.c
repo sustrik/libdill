@@ -22,6 +22,7 @@
 
 #include <errno.h>
 #include <setjmp.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -83,6 +84,8 @@ struct dill_cr {
     unsigned int no_blocking2 : 1;
     /* Set once coroutine has finished its execution. */
     unsigned int done : 1;
+    /* If true, the coroutine was launched via go_stack. */
+    unsigned int go_stack : 1;
     /* When coroutine handle is being closed, this is the pointer to the
        coroutine that is doing the hclose() call. */
     struct dill_cr *closer;
@@ -276,14 +279,29 @@ static void dill_cr_close(struct hvfs *vfs);
 static void dill_cancel(struct dill_cr *cr, int err);
 
 /* The intial part of go(). Allocates a new stack and handle. */
-int dill_prologue(sigjmp_buf **ctx, const char *file, int line) {
+int dill_prologue(sigjmp_buf **ctx, void *ptr, size_t len,
+      const char *file, int line) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) {errno = ECANCELED; return -1;}
-    /* Allocate and initialise new stack. */
+    struct dill_cr *cr;
     size_t stacksz;
-    struct dill_cr *cr = (struct dill_cr*)dill_allocstack(&stacksz);
-    if(dill_slow(!cr)) return -1;
+    if(!ptr) {
+        /* Allocate new stack. */
+        cr = (struct dill_cr*)dill_allocstack(&stacksz);
+        if(dill_slow(!cr)) return -1;
+    }
+    else {
+        /* Stack is supplied by the user.
+           Align top of the stack to 8-byte boundary. */
+        uintptr_t top = (uintptr_t)ptr;
+        top += len;
+        top &= ~(uintptr_t)7;
+        stacksz = top - (uintptr_t)ptr;
+        cr = (struct dill_cr*)top;
+        if(dill_slow(stacksz < sizeof(struct dill_cr))) {
+            errno = ENOMEM; return -1;}
+    }
 #if defined DILL_CENSUS
     /* Mark the bytes in stack as unused. */
     uint8_t *bottom = ((char*)cr) - stacksz;
@@ -304,6 +322,7 @@ int dill_prologue(sigjmp_buf **ctx, const char *file, int line) {
     cr->no_blocking1 = 0;
     cr->no_blocking2 = 0;
     cr->done = 0;
+    cr->go_stack = ptr ? 1 : 0;
 #if defined DILL_VALGRIND
     cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stacksz, cr);
 #endif
@@ -400,7 +419,7 @@ static void dill_cr_close(struct hvfs *vfs) {
     VALGRIND_STACK_DEREGISTER(cr->sid);
 #endif
     /* Now that the coroutine is finished deallocate it. */
-    dill_freestack(cr + 1);
+    if(!cr->go_stack) dill_freestack(cr + 1);
 }
 
 void dill_shutdown(void) {
