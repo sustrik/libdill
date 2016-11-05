@@ -293,10 +293,10 @@ int dill_prologue(sigjmp_buf **ctx, void *ptr, size_t len,
     }
     else {
         /* Stack is supplied by the user.
-           Align top of the stack to 8-byte boundary. */
+           Align top of the stack to 16-byte boundary. */
         uintptr_t top = (uintptr_t)ptr;
         top += len;
-        top &= ~(uintptr_t)7;
+        top &= ~(uintptr_t)15;
         stacksz = top - (uintptr_t)ptr;
         cr = (struct dill_cr*)top;
         if(dill_slow(stacksz < sizeof(struct dill_cr))) {
@@ -411,8 +411,8 @@ static void dill_cr_close(struct hvfs *vfs) {
         if(bottom[i] != 0xa0 + (i % 13)) {
             /* dill_cr is located on stack so we have take that to account.
                Also, it may be necessary to align the top of the stack to
-               8-byte boundary, so add 8 bytes to account for that. */
-            size_t used = cr->stacksz - i - sizeof(struct dill_cr) + 8;
+               16-byte boundary, so add 16 bytes to account for that. */
+            size_t used = cr->stacksz - i - sizeof(struct dill_cr) + 16;
             if(used > cr->census->max_stack)
                 cr->census->max_stack = used;
             break;
