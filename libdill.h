@@ -105,7 +105,7 @@ DILL_EXPORT int dill_proc_prologue(int *hndl);
 DILL_EXPORT void dill_proc_epilogue(void);
 
 /* Stack-switching on X86-64. */
-#if defined(__x86_64__)
+#if defined(__x86_64__) && !defined DILL_ARCH_FALLBACK
 #define dill_setjmp(ctx) ({\
     int ret;\
     asm("lea     LJMPRET%=(%%rip), %%rcx\n\t"\
@@ -145,7 +145,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
     asm volatile("leaq (%%rax), %%rsp"::"rax"(x));
 
 /* Stack switching on X86. */
-#elif defined(__i386__)
+#elif defined(__i386__) && !defined DILL_ARCH_FALLBACK
 #define dill_setjmp(ctx) ({\
     int ret;\
     asm("movl   $LJMPRET%=, %%eax\n\t"\
