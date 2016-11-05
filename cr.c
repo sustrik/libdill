@@ -409,8 +409,12 @@ static void dill_cr_close(struct hvfs *vfs) {
     int i;
     for(i = 0; i != cr->stacksz; ++i) {
         if(bottom[i] != 0xa0 + (i % 13)) {
-            if(cr->stacksz - i > cr->census->max_stack)
-                cr->census->max_stack = cr->stacksz - i;
+            /* dill_cr is located on stack so we have take that to account.
+               Also, it may be necessary to align the top of the stack to
+               8-byte boundary, so add 8 bytes to account for that. */
+            size_t used = cr->stacksz - i - sizeof(struct dill_cr) + 8;
+            if(used > cr->census->max_stack)
+                cr->census->max_stack = used;
             break;
         }
     }
