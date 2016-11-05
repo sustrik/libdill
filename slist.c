@@ -25,51 +25,6 @@
 #include <stddef.h>
 
 #include "slist.h"
-#include "utils.h"
 
 /* After removing item from a list, next points here. */
 struct dill_slist_item dill_slist_item_none = {NULL};
-
-void dill_slist_item_init(struct dill_slist_item *self) {
-    self->next = &dill_slist_item_none;
-}
-
-int dill_slist_item_inlist(struct dill_slist_item *self) {
-    return self->next == &dill_slist_item_none ? 0 : 1;
-}
-
-void dill_slist_init(struct dill_slist *self) {
-    self->first = NULL;
-    self->last = NULL;
-}
-
-void dill_slist_push(struct dill_slist *self, struct dill_slist_item *item) {
-    dill_assert(!dill_slist_item_inlist(item));
-    item->next = self->first;
-    self->first = item;
-    if(!self->last)
-        self->last = item;
-}
-
-void dill_slist_push_back(struct dill_slist *self,
-      struct dill_slist_item *item) {
-    dill_assert(!dill_slist_item_inlist(item));
-    item->next = NULL;
-    if(!self->last)
-        self->first = item;
-    else
-        self->last->next = item;
-    self->last = item;
-}
-
-struct dill_slist_item *dill_slist_pop(struct dill_slist *self) {
-    if(!self->first)
-        return NULL;
-    struct dill_slist_item *it = self->first;
-    self->first = self->first->next;
-    if(!self->first)
-        self->last = NULL;
-    it->next = &dill_slist_item_none;
-    return it;
-}
-

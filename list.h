@@ -25,6 +25,9 @@
 #ifndef DILL_LIST_INCLUDED
 #define DILL_LIST_INCLUDED
 
+#include <stddef.h>
+#include "utils.h"
+
 /* Doubly-linked list. */
 
 struct dill_list_item {
@@ -37,14 +40,25 @@ struct dill_list {
     struct dill_list_item *last;
 };
 
+/* After removing item from a list, prev & next point here. */
+extern struct dill_list_item dill_list_item_none;
+
 /* Initialise a list item. */
-void dill_list_item_init(struct dill_list_item *self);
+static inline void dill_list_item_init(struct dill_list_item *self) {
+    self->prev = &dill_list_item_none;
+    self->next = &dill_list_item_none;
+}
 
 /* Returns 1 if the item is part of a list. 0 otherwise. */
-int dill_list_item_inlist(struct dill_list_item *self);
+static inline int dill_list_item_inlist(struct dill_list_item *self) {
+    return self->prev == &dill_list_item_none ? 0 : 1;
+}
 
 /* Initialise the list. To statically initialise the list use = {0}. */
-void dill_list_init(struct dill_list *self);
+static inline void dill_list_init(struct dill_list *self) {
+    self->first = NULL;
+    self->last = NULL;
+}
 
 /* True is the list has no items. */
 #define dill_list_empty(self) (!((self)->first))
@@ -58,13 +72,37 @@ void dill_list_init(struct dill_list *self);
 
 /* Adds the item to the list before the item pointed to by 'it'.
    If 'it' is NULL the item is inserted to the end of the list. */
-void dill_list_insert(struct dill_list *self, struct dill_list_item *item,
-    struct dill_list_item *it);
+static inline void dill_list_insert(struct dill_list *self, struct dill_list_item *item,
+    struct dill_list_item *it) {
+    item->prev = it ? it->prev : self->last;
+    item->next = it;
+    if(item->prev)
+        item->prev->next = item;
+    if(item->next)
+        item->next->prev = item;
+    if(!self->first || self->first == it)
+        self->first = item;
+    if(!it)
+        self->last = item;
+}
 
 /* Removes the item from the list and returns pointer to the next item in the
    list. Item must be part of the list. */
-struct dill_list_item *dill_list_erase(struct dill_list *self,
-    struct dill_list_item *item);
+static inline struct dill_list_item *dill_list_erase(struct dill_list *self,
+    struct dill_list_item *item) {
+    if(item->prev)
+        item->prev->next = item->next;
+    else
+        self->first = item->next;
+    if(item->next)
+        item->next->prev = item->prev;
+    else
+        self->last = item->prev;
+    struct dill_list_item *next = item->next;
+    item->prev = &dill_list_item_none;
+    item->next = &dill_list_item_none;
+    return next;
+}
 
 #endif
 
