@@ -141,7 +141,8 @@ DILL_EXPORT void dill_proc_epilogue(void);
         "jmp    *%%rdx\n\t"\
         : : "a" (ctx) : "rdx" \
     )
-#define dill_setsp(x) asm volatile("leaq (%%rax), %%rsp"::"rax"(x));
+#define DILL_SETSP(x) \
+    asm volatile("leaq (%%rax), %%rsp"::"rax"(x));
 
 /* Stack switching on X86. */
 #elif defined(__i386__)
@@ -169,13 +170,18 @@ DILL_EXPORT void dill_proc_epilogue(void);
         "jmp    *%%edx\n\t"\
         : : "a" (ctx) : "edx" \
     )
-#define dill_setsp(x) asm volatile("leal (%%eax), %%esp"::"eax"(x));
+#define DILL_SETSP(x) \
+    asm volatile("leal (%%eax), %%esp"::"eax"(x));
 
 /* Stack-switching on other microarchiterctures. */
 #else
 #define dill_setjmp(ctx) sigsetjmp(ctx, 0)
 #define dill_longjmp(ctx) siglongjmp(ctx, 1)
-#define DILL_NOASMSETSP
+/* For newer GCCs, -fstack-protector breaks on this; use -fno-stack-protector.
+   Alternatively, implement custom DILL_SETSP for your microarchitecture. */
+#define DILL_SETSP(x) \
+    char dill_filler[(char*)&dill_anchor - (char*)(x)];\
+    dill_unoptimisable2 = &dill_filler;
 #endif
 
 /* Statement expressions are a gcc-ism but they are also supported by clang.
@@ -187,8 +193,6 @@ DILL_EXPORT void dill_proc_epilogue(void);
    The stack frame lets fn reference the local variables, which store the
    function arguments needed, even when the stack pointer is changed. */
 
-#ifdef DILL_NOASMSETSP
-/* In newer GCCs, -fstack-protector breaks on this; use -fno-stack-protector */
 #define go(fn) \
     ({\
         sigjmp_buf *ctx;\
@@ -197,33 +201,13 @@ DILL_EXPORT void dill_proc_epilogue(void);
             if(!dill_setjmp(*ctx)) {\
                 int dill_anchor[dill_unoptimisable1];\
                 dill_unoptimisable2 = &dill_anchor;\
-                char dill_filler[(char*)&dill_anchor - (char*)hquery(h, NULL)];\
-                dill_unoptimisable2 = &dill_filler;\
+                DILL_SETSP(hquery(h, NULL));\
                 fn;\
                 dill_epilogue();\
             }\
         }\
         h;\
     })
-#else
-/* This works with newer GCCs and is a bit more optimised.
-   However, dill_setsp needs to be implemented per architecture. */
-#define go(fn) \
-    ({\
-        sigjmp_buf *ctx;\
-        int h = dill_prologue(&ctx, __FILE__, __LINE__);\
-        if(h >= 0) {\
-            if(!dill_setjmp(*ctx)) {\
-                int dill_anchor[dill_unoptimisable1];\
-                dill_unoptimisable2 = &dill_anchor;\
-                dill_setsp(hquery(h, NULL));\
-                fn;\
-                dill_epilogue();\
-            }\
-        }\
-        h;\
-    })
-#endif
 
 #define proc(fn) \
     ({\
