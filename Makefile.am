@@ -33,9 +33,8 @@ lib_LTLIBRARIES = libdill.la
 
 libdill_la_SOURCES = \
     aalloc.c \
+    abasic.c \
     acache.c \
-    amalloc.c \
-    apage.c \
     apool.c \
     chan.c \
     cr.h \
@@ -48,8 +47,8 @@ libdill_la_SOURCES = \
     libdill.c \
     list.h \
     list.c \
-    page.h \
-    page.c \
+    osalloc.h \
+    osalloc.c \
     poll.inc \
     pollset.h \
     pollset.c \

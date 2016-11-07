@@ -33,6 +33,7 @@
 
 #include "utils.h"
 #include "libdill.h"
+#include "osalloc.h"
 
 /* This allocator tracks:
 
@@ -62,8 +63,8 @@
 
 static inline void *apool_hquery(struct hvfs *hvfs, const void *type);
 static void apool_hclose(struct hvfs *hvfs);
-static void *apool_alloc(struct alloc_vfs *avfs, size_t *sz);
-static int apool_free(struct alloc_vfs *avfs, void *p);
+static void *apool_alloc(struct alloc_vfs *avfs);
+static int apool_free(struct alloc_vfs *avfs, void *stack);
 static ssize_t apool_size(struct alloc_vfs *avfs);
 static int apool_caps(struct alloc_vfs *avfs);
 
@@ -73,13 +74,15 @@ struct apool_alloc {
     struct hvfs hvfs;
     struct alloc_vfs avfs;
     struct alloc_vfs *iavfs;
+    size_t pgsz;
     size_t blockcount, blocktotal;
     size_t elsize, elcount, total, allocated;
     void *freelist, **blocklist;
     void **nextblock;
     int flags;
-    int needzero;
 };
+
+static void *apool_alloc_block(struct apool_alloc *obj);
 
 static inline void *apool_hquery(struct hvfs *hvfs, const void *type) {
     struct apool_alloc *obj = (struct apool_alloc *)hvfs;
@@ -89,23 +92,15 @@ static inline void *apool_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int apool(int a, int flags, size_t sz, size_t count)
+int apool(int flags, size_t sz, size_t count)
 {
+#if !HAVE_MPROTECT
+    if(flags & DILL_ALLOC_FLAGS_GUARD) {errno = ENOTSUP; return -1;}
+#endif
+    flags |= DILL_ALLOC_FLAGS_ALIGN;
     /* Mempool allocator only works with sizes bigger than pointer size */
     if(dill_slow(sz < sizeof(void *))) sz = APOOL_DEFAULT_SIZE;
     if(dill_slow(count == 0)) count = APOOL_DEFAULT_COUNT;
-    if(flags & DILL_ALLOC_FLAGS_GUARD) {errno = ENOTSUP; return -1;}
-    if(flags & DILL_ALLOC_FLAGS_HUGE) {errno = ENOTSUP; return -1;}
-    /* Get underlying allocator type */
-    struct alloc_vfs *iavfs = hquery(a, alloc_type);
-    /* Check whether underlying type is an allocator */
-    if(dill_slow(!iavfs)) return -1;
-    /* Check that the size underlying allocator can fit a pool block */
-    if(dill_slow(!(iavfs->caps(iavfs) & DILL_ALLOC_CAPS_RESIZE)))
-        if(sz * count > iavfs->size(iavfs)) {errno = ENOTSUP; return -1;}
-    /* The guard page will interfere with the pool */
-    if(dill_slow(iavfs->caps(iavfs) & DILL_ALLOC_CAPS_GUARD))
-        {errno = ENOTSUP; return -1;}
     struct apool_alloc *obj = malloc(sizeof(struct apool_alloc));
     if(dill_slow(!obj)) {errno = ENOMEM; return -1;}
     obj->hvfs.query = apool_hquery;
@@ -114,26 +109,28 @@ int apool(int a, int flags, size_t sz, size_t count)
     obj->avfs.free = apool_free;
     obj->avfs.size = apool_size;
     obj->avfs.caps = apool_caps;
-    obj->iavfs = iavfs;
+    obj->pgsz = dill_page_size();
     /* Create the block */
-    size_t blocksize = sz * count;
     obj->elsize = sz;
+    /* Pick element sizes that fit the minimum requirement of flags */
+    if(flags & DILL_ALLOC_FLAGS_ALIGN)
+        obj->elsize = dill_align(obj->elsize, obj->pgsz);
+    /* As pools are fixed-size, allocate an extra page for guards early */
+    if(flags & DILL_ALLOC_FLAGS_GUARD)
+        obj->elsize = dill_page_larger(obj->elsize, obj->pgsz);
     obj->elcount = count;
     obj->allocated = 0;
     obj->total = count;
-    void *p = iavfs->alloc(iavfs, &blocksize);
-    if(!p) {return -1;}
+    obj->flags = flags;
+    void *p = apool_alloc_block(obj);
+    if(!p) return -1;
     obj->freelist = p;
     /* Create the list of blocks with single item */
-    obj->blocklist = iavfs->alloc(iavfs, &blocksize);
+    size_t blocksize = obj->elsize * obj->elcount;
+    obj->blocklist = dill_alloc(memalign, 1, obj->pgsz, blocksize);
     obj->nextblock = obj->blocklist + 1;
-    obj->blocktotal = (sz * count) / sizeof(void *) - 1;
+    obj->blocktotal = blocksize / sizeof(void *) - 1;
     dill_assert(obj->blocktotal > 0);
-    obj->needzero = !!(iavfs->caps(iavfs) & DILL_ALLOC_CAPS_ZERO);
-    if(obj->needzero) {
-        memset(p, 0, blocksize);
-        memset(obj->blocklist, 0, blocksize);
-    }
 #ifdef DILL_VALGRIND
     debug("memblock => %lp\n", obj->nextblock);
     VALGRIND_CREATE_MEMPOOL(obj->nextblock, 0,
@@ -170,19 +167,33 @@ static void *apool_findblock(struct apool_alloc *obj, void *entry) {
 }
 #endif
 
-static int apool_extend(struct apool_alloc *obj) {
+static void *apool_alloc_block(struct apool_alloc *obj) {
     size_t blocksize = obj->elsize * obj->elcount;
+    void *p = dill_alloc(memalign, 1, obj->pgsz, blocksize);
+    if(p && (obj->flags & DILL_ALLOC_FLAGS_GUARD)) {
+        int i = 0;
+        void *stack = p;
+        while(i < obj->elcount) {
+            int rc = dill_guard(stack, obj->pgsz);
+            dill_assert(rc == 0);
+            stack += obj->elsize;
+            i++;
+        }
+    }
+    return p;
+}
+
+static int apool_extend(struct apool_alloc *obj) {
     /* Allocate the pool block */
-    void *p = obj->iavfs->alloc(obj->iavfs, &blocksize);
+    void *p = apool_alloc_block(obj); 
     if(!p) return -1;
-    if(obj->needzero) memset(p, 0, blocksize);
     debug("memory extension at %p\n", p);
     /* Need to allocate to the block header list too */
     if(obj->blockcount + 1 >= obj->blocktotal) {
         /* Allocate new block header extension list */
-        void *b = obj->iavfs->alloc(obj->iavfs, &blocksize);
+        size_t blocksize = obj->elsize * obj->elcount;
+        void *b = dill_alloc(memalign, 1, obj->pgsz, blocksize);
         if(!b) return -1;
-        if(obj->needzero) memset(b, 0, blocksize);
         /* Update linked list of block header extension list */
         *(void **)b = *obj->blocklist;
         *obj->blocklist = b;
@@ -202,12 +213,9 @@ static int apool_extend(struct apool_alloc *obj) {
     return 0;
 }
 
-static void *apool_alloc(struct alloc_vfs *avfs, size_t *sz) {
+static void *apool_alloc(struct alloc_vfs *avfs) {
     struct apool_alloc *obj =
         dill_cont(avfs, struct apool_alloc, avfs);
-    /* Always use the size given in the pool */
-    if(*sz > obj->elsize) {errno = ENOTSUP; return NULL;}
-    *sz = obj->elsize;
     debug("start => allocated = %lu, total = %lu\n", obj->allocated, obj->total);
     /* Add an extension to the memory pool */
     if(dill_slow(obj->allocated >= obj->total) && apool_extend(obj) == -1)
@@ -230,12 +238,14 @@ static void *apool_alloc(struct alloc_vfs *avfs, size_t *sz) {
     if(obj->flags & DILL_ALLOC_FLAGS_ZERO) memset(entry, 0, obj->elsize);
     debug("end => allocated = %lu, total = %lu, address = %p\n",
             obj->allocated, obj->total, entry);
-    return entry;
+    return entry + obj->elsize;
 }
 
-static int apool_free(struct alloc_vfs *avfs, void *p) {
+static int apool_free(struct alloc_vfs *avfs, void *stack) {
     struct apool_alloc *obj =
         dill_cont(avfs, struct apool_alloc, avfs);
+    /* Get the start of the stack memory */
+    void *p = stack - obj->elsize;
     /* Store at the location of the freed memory, the pointer to the
        next element in the free list */
     *(void **)p = obj->freelist;
@@ -262,8 +272,10 @@ static ssize_t apool_size(struct alloc_vfs *avfs) {
 static int apool_caps(struct alloc_vfs *avfs) {
     struct apool_alloc *obj =
         dill_cont(avfs, struct apool_alloc, avfs);
-    int caps = 0; 
+    int caps = DILL_ALLOC_CAPS_BOOKKEEP; 
     if(obj->flags & (DILL_ALLOC_FLAGS_ZERO)) caps |= DILL_ALLOC_CAPS_ZERO;
+    if(obj->flags & (DILL_ALLOC_FLAGS_ALIGN)) caps |= DILL_ALLOC_CAPS_ALIGN;
+    if(obj->flags & (DILL_ALLOC_FLAGS_GUARD)) caps |= DILL_ALLOC_CAPS_GUARD;
     return caps;
 }
 
@@ -278,13 +290,22 @@ static void apool_hclose(struct hvfs *hvfs) {
     do {
         for(b = p + 1, count = 0; count < blockents; b++, count++)
             if(*b) {
+                if(obj->flags & DILL_ALLOC_FLAGS_GUARD) {
+                    int i = 0;
+                    void *stack = *b;
+                    while(i < obj->elcount) {
+                        dill_unguard(stack, obj->pgsz);
+                        stack += obj->elsize;
+                        i++;
+                    }
+                }
 #ifdef DILL_VALGRIND
                 VALGRIND_DESTROY_MEMPOOL(b);
 #endif
-                obj->iavfs->free(obj->iavfs, *b);
+                free(*b);
             } else break;
         np = *p;
-        obj->iavfs->free(obj->iavfs, p);
+        free(p);
     } while(p = np);
     free(obj);
 }

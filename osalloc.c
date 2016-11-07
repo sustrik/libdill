@@ -22,8 +22,7 @@
 
 */
 
-#include "page.h"
-#include "utils.h"
+#include "osalloc.h"
 
 /* Get memory page size. The query is done once only. The value is cached. */
 size_t dill_page_size(void) {

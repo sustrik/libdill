@@ -239,14 +239,13 @@ void *alloca (size_t);
 #endif
 
 #define DILL_ALLOC_CAPS_ZERO     0x0002
-#define DILL_ALLOC_CAPS_ALIGNED  0x0004
-#define DILL_ALLOC_CAPS_RESIZE   0x0008
-#define DILL_ALLOC_CAPS_BOOKKEEP 0x0010
-#define DILL_ALLOC_CAPS_GUARD    0x0020
+#define DILL_ALLOC_CAPS_BOOKKEEP 0x0004
+#define DILL_ALLOC_CAPS_ALIGN    0x0020
+#define DILL_ALLOC_CAPS_GUARD    0x0040
 
 extern const void *alloc_type;
 struct alloc_vfs {
-    void *(*alloc)(struct alloc_vfs *, size_t *);
+    void *(*alloc)(struct alloc_vfs *);
     int (*free)(struct alloc_vfs *, void *);
     ssize_t (*size)(struct alloc_vfs *);
     int (*caps)(struct alloc_vfs *);
@@ -259,25 +258,22 @@ struct alloc_vfs {
      error with -1 and errno=ENOTSUP */
 #define DILL_ALLOC_FLAGS_DEFAULT  0x0000
 #define DILL_ALLOC_FLAGS_ZERO     0x0002
-#define DILL_ALLOC_FLAGS_GUARD    0x0020
-#define DILL_ALLOC_FLAGS_HUGE     0x0040
+#define DILL_ALLOC_FLAGS_ALIGN    0x0020
+#define DILL_ALLOC_FLAGS_GUARD    0x0040
+#define DILL_ALLOC_FLAGS_HUGEPAGE 0x0080
 
-/* Return a standard libdill memory allocator (returns a handle) */
-extern const void *amalloc_type;
-DILL_EXPORT int amalloc(int flags, size_t sz);
+/* Standard libdill memory allocators (returns a handle) */
+extern const void *abasic_type;
+DILL_EXPORT int abasic(int flags, size_t sz);
 
-extern const void *apage_type;
-DILL_EXPORT int apage(int flags, size_t sz);
-
-/* The behaviour of these two are subject to change in later versions */
 extern const void *apool_type;
-DILL_EXPORT int apool(int a, int flags, size_t sz, size_t count);
+DILL_EXPORT int apool(int flags, size_t sz, size_t poolsz);
 
 extern const void *acache_type;
-DILL_EXPORT int acache(int a, int flags, size_t sz, size_t cachesz);
+DILL_EXPORT int acache(int flags, size_t sz, size_t cachesz);
 
-DILL_EXPORT void *aalloc(int h, size_t *sz);
-DILL_EXPORT int afree(int h, void *m);
+DILL_EXPORT void *aalloc(int h);
+DILL_EXPORT int afree(int h, void *ptr);
 DILL_EXPORT ssize_t asize(int h);
 DILL_EXPORT int acaps(int h);
 

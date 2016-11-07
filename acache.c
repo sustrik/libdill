@@ -29,15 +29,15 @@
 
 #include "libdill.h"
 #include "utils.h"
+#include "osalloc.h"
 
 dill_unique_id(acache_type);
 
 struct acache_alloc {
     struct hvfs hvfs;
     struct alloc_vfs avfs;
-    struct alloc_vfs *iavfs;
     int flags;
-    size_t sz;
+    size_t sz, pgsz;
     void **cache;
     int cachesz, cachehead, cachetail, cachecnt;
 };
@@ -47,8 +47,11 @@ struct acache_alloc {
 
 static void *acache_hquery(struct hvfs *hvfs, const void *type);
 static void acache_hclose(struct hvfs *hvfs);
-static void *acache_alloc(struct alloc_vfs *avfs, size_t *sz);
-static int acache_free(struct alloc_vfs *avfs, void *p);
+static void *acache_guard(struct alloc_vfs *avfs);
+static void *acache_memalign(struct alloc_vfs *avfs);
+static void *acache_malloc(struct alloc_vfs *avfs);
+static void *acache_calloc(struct alloc_vfs *avfs);
+static int acache_free(struct alloc_vfs *avfs, void *stack);
 static ssize_t acache_size(struct alloc_vfs *avfs);
 static int acache_caps(struct alloc_vfs *avfs);
 
@@ -60,29 +63,35 @@ static void *acache_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int acache(int a, int flags, size_t sz, size_t cachesz) {
-    if(flags & (DILL_ALLOC_FLAGS_GUARD | DILL_ALLOC_FLAGS_HUGE)) {
-        errno = ENOTSUP; return -1;
-    }
-    /* Get underlying allocator type */
-    struct alloc_vfs *iavfs = hquery(a, alloc_type);
-    /* Check whether underlying type is an allocator */
-    if(dill_slow(!iavfs)) return -1;
+int acache(int flags, size_t sz, size_t cachesz) {
+#if !HAVE_MPROTECT
+    if(flags & DILL_ALLOC_FLAGS_GUARD) {errno = ENOTSUP; return -1;}
+#endif
+    if(flags & DILL_ALLOC_FLAGS_GUARD) flags |= DILL_ALLOC_FLAGS_ALIGN;
     /* Check that the size underlying allocator can fit a pool block */
     if(dill_slow(!sz)) sz = DEFAULT_SIZE;
-    if(dill_slow(!(iavfs->caps(iavfs) & DILL_ALLOC_CAPS_RESIZE)))
-        if(sz > iavfs->size(iavfs)) {errno = ENOTSUP; return -1;}
     struct acache_alloc *obj = malloc(sizeof(struct acache_alloc));
     if(dill_slow(!obj)) {errno = ENOMEM; return -1;}
     obj->hvfs.query = acache_hquery;
     obj->hvfs.close = acache_hclose;
-    obj->avfs.alloc = acache_alloc;
+    if(flags & DILL_ALLOC_FLAGS_ALIGN)
+        obj->avfs.alloc = acache_memalign;
+    else if(flags & DILL_ALLOC_FLAGS_ZERO)
+        obj->avfs.alloc = acache_calloc;
+    else
+        obj->avfs.alloc = acache_malloc;
     obj->avfs.free = acache_free;
     obj->avfs.size = acache_size;
     obj->avfs.caps = acache_caps;
-    obj->iavfs = iavfs;
     obj->flags = flags;
     obj->sz = sz ? sz : DEFAULT_SIZE;
+    obj->pgsz = dill_page_size();
+    /* Pick element sizes that fit the minimum requirement of flags */
+    if(flags & DILL_ALLOC_FLAGS_ALIGN)
+        obj->sz = dill_align(obj->sz, obj->pgsz);
+    /* As caches are fixed-size, allocate an extra page for guards early */
+    if(flags & DILL_ALLOC_FLAGS_GUARD)
+        obj->sz = dill_page_larger(obj->sz, obj->pgsz);
     obj->cachesz = cachesz ? cachesz : DEFAULT_CACHESZ;
     obj->cache = malloc(obj->cachesz * sizeof(void *));
     obj->cachehead = obj->cachetail = obj->cachecnt = 0;
@@ -97,32 +106,68 @@ int acache(int a, int flags, size_t sz, size_t cachesz) {
     return h;
 }
 
-static void *acache_alloc(struct alloc_vfs *avfs, size_t *sz) {
-    struct acache_alloc *obj =
-        dill_cont(avfs, struct acache_alloc, avfs);
-    void *m;
-    /* Always use the size given in the cache */
-    if(*sz > obj->sz) {errno = ENOTSUP; return NULL;}
-    /* Try use *sz first (if valid), if not use default & return through *sz */
-    size_t size = sz ? (*sz ? *sz : (*sz = obj->sz)) : obj->sz;
-    if(obj->cachecnt) {
-        m = obj->cache[obj->cachehead];
-        obj->cachehead = (obj->cachehead + 1) % obj->cachesz;
-        obj->cachecnt--;
-    } else m = obj->iavfs->alloc(obj->iavfs, &size);
-    if(m && (obj->flags & DILL_ALLOC_FLAGS_ZERO))
-        memset(m, 0, size);
-    return m;
+static inline void *acache_pop(struct acache_alloc *obj) {
+    if(!obj->cachecnt) return NULL;
+    void *ptr = obj->cache[obj->cachehead];
+    obj->cachehead = (obj->cachehead + 1) % obj->cachesz;
+    obj->cachecnt--;
+    if(obj->flags & DILL_ALLOC_FLAGS_ZERO) {
+        int guard = (obj->flags & DILL_ALLOC_FLAGS_GUARD);
+        memset(guard ? ptr + obj->pgsz : ptr, 0,
+            guard ? obj->sz - obj->pgsz : obj->sz);
+    }
+    return ptr;
 }
 
-static int acache_free(struct alloc_vfs *avfs, void *p) {
-    struct acache_alloc *obj =
-        dill_cont(avfs, struct acache_alloc, avfs);
+static inline int acache_push(struct acache_alloc *obj, void *p) {
     if(obj->cachecnt != obj->cachesz) {
         obj->cache[obj->cachetail] = p;
         obj->cachetail = (obj->cachetail + 1) % obj->cachesz;
         obj->cachecnt++;
-    } else free(p);
+        return 0;
+    }
+    return -1;
+}
+
+#define acache_a(method, avfs) ({\
+    struct acache_alloc *obj =\
+        dill_cont(avfs, struct acache_alloc, avfs);\
+    void *stack = acache_pop(obj);\
+    if(!stack) {\
+        stack = dill_alloc(method, obj->flags & DILL_ALLOC_FLAGS_ZERO,\
+            obj->pgsz, obj->sz);\
+        if(dill_slow(!stack)) return NULL;\
+        if(obj->flags & DILL_ALLOC_FLAGS_GUARD) {\
+            if(dill_guard(stack, obj->pgsz) == -1) {\
+                free(stack); return NULL;}\
+        }\
+    }\
+    stack + obj->sz;\
+})
+
+static void *acache_memalign(struct alloc_vfs *avfs) {
+    return acache_a(memalign, avfs);
+}
+
+static void *acache_malloc(struct alloc_vfs *avfs) {
+    return acache_a(malloc, avfs);
+}
+
+static void *acache_calloc(struct alloc_vfs *avfs) {
+    return acache_a(calloc, avfs);
+}
+
+static int acache_free(struct alloc_vfs *avfs, void *stack) {
+    struct acache_alloc *obj =
+        dill_cont(avfs, struct acache_alloc, avfs);
+    void *ptr = stack - obj->sz;
+    if(acache_push(obj, ptr) == -1) {
+        if(obj->flags & DILL_ALLOC_FLAGS_GUARD) {
+            int rc = dill_unguard(ptr, obj->pgsz);
+            if(rc) {errno = rc; return -1;}
+        }
+        free(ptr);
+    }
     return 0;
 }
 
@@ -137,6 +182,8 @@ static int acache_caps(struct alloc_vfs *avfs) {
         dill_cont(avfs, struct acache_alloc, avfs);
     int caps = 0;
     if(obj->flags & (DILL_ALLOC_FLAGS_ZERO)) caps |= DILL_ALLOC_CAPS_ZERO;
+    if(obj->flags & (DILL_ALLOC_FLAGS_ALIGN)) caps |= DILL_ALLOC_CAPS_ALIGN;
+    if(obj->flags & (DILL_ALLOC_FLAGS_GUARD)) caps |= DILL_ALLOC_CAPS_GUARD;
     return caps;
 }
 

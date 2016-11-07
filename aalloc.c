@@ -27,16 +27,16 @@
 
 dill_unique_id(alloc_type);
 
-void *aalloc(int h, size_t *sz) {
+void *aalloc(int h) {
     struct alloc_vfs *a = hquery(h, alloc_type);
     if(dill_slow(!a)) return NULL;
-    return a->alloc(a, sz);
+    return a->alloc(a);
 }
 
-int afree(int h, void *m) {
+int afree(int h, void *ptr) {
     struct alloc_vfs *a = hquery(h, alloc_type);
     if(dill_slow(!a)) return -1;
-    return a->free(a, m);
+    return a->free(a, ptr);
 }
 
 ssize_t asize(int h) {
