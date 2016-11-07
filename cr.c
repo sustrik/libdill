@@ -72,7 +72,7 @@ struct dill_cr {
     int err;
     /* When coroutine is suspended 'ctx' holds the context
        (registers and such). */
-    sigjmp_buf ctx;
+    char ctx[dill_sizeof_jmpbuf];
     /* If coroutine is blocked, here's the list of clauses it waits for. */
     struct dill_slist clauses;
     /* Coroutine-local storage. */
@@ -279,14 +279,15 @@ static void dill_cr_close(struct hvfs *vfs);
 static void dill_cancel(struct dill_cr *cr, int err);
 
 /* The intial part of go(). Allocates a new stack and handle. */
-int dill_prologue(sigjmp_buf **ctx, void *ptr, size_t len,
+DILL_NOINLINE int dill_prologue(void **ctx, void **ptr, size_t len,
       const char *file, int line) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) {errno = ECANCELED; return -1;}
     struct dill_cr *cr;
-    size_t stacksz;
-    if(!ptr) {
+    size_t stacksz = len;
+    void *m = NULL;
+    if(!*ptr) {
         /* Allocate new stack. */
         cr = (struct dill_cr*)dill_allocstack(&stacksz);
         if(dill_slow(!cr)) return -1;
@@ -313,7 +314,7 @@ int dill_prologue(sigjmp_buf **ctx, void *ptr, size_t len,
     cr->vfs.query = dill_cr_query;
     cr->vfs.close = dill_cr_close;
     int hndl = hcreate(&cr->vfs);
-    if(dill_slow(hndl < 0)) {
+    if(dill_slow(hndl < 0 && !*ptr)) {
         int err = errno; dill_freestack(cr + 1); errno = err; return -1;}
     dill_slist_item_init(&cr->ready);
     dill_slist_init(&cr->clauses);
@@ -322,7 +323,7 @@ int dill_prologue(sigjmp_buf **ctx, void *ptr, size_t len,
     cr->no_blocking1 = 0;
     cr->no_blocking2 = 0;
     cr->done = 0;
-    cr->go_stack = ptr ? 1 : 0;
+    cr->go_stack = *ptr ? 1 : 0;
 #if defined DILL_VALGRIND
     cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stacksz, cr);
 #endif
@@ -361,12 +362,12 @@ int dill_prologue(sigjmp_buf **ctx, void *ptr, size_t len,
     /* Add parent coroutine to the list of coroutines ready for execution. */
     dill_resume(dill_r, 0, 0);
     /* Mark the new coroutine as running. */
-    dill_r = cr;
+    *ptr = dill_r = cr;
     return hndl;
 }
 
 /* The final part of go(). Gets called one the coroutine is finished. */
-void dill_epilogue(void) {
+DILL_NOINLINE void dill_epilogue(void) {
     /* Mark the coroutine as finished. */
     dill_r->done = 1;
     /* If there's a coroutine waiting till we finish, unblock it now. */

@@ -22,14 +22,31 @@
 
 */
 
-#ifndef DILL_STACK_INCLUDED
-#define DILL_STACK_INCLUDED
-
-#include <stddef.h>
-
 #include "libdill.h"
+#include "utils.h"
 
-void *dill_allocstack(size_t *stack_size);
-void dill_freestack(void *stack);
+dill_unique_id(alloc_type);
 
-#endif
+void *aalloc(int h, size_t *sz) {
+    struct alloc_vfs *a = hquery(h, alloc_type);
+    if(dill_slow(!a)) return NULL;
+    return a->alloc(a, sz);
+}
+
+int afree(int h, void *m) {
+    struct alloc_vfs *a = hquery(h, alloc_type);
+    if(dill_slow(!a)) return -1;
+    return a->free(a, m);
+}
+
+ssize_t asize(int h) {
+    struct alloc_vfs *a = hquery(h, alloc_type);
+    if(dill_slow(!a)) return -1;
+    return a->size(a);
+}
+
+int acaps(int h) {
+    struct alloc_vfs *a = hquery(h, alloc_type);
+    if(dill_slow(!a)) return -1;
+    return a->caps(a);
+}

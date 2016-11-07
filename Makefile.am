@@ -32,6 +32,11 @@ dillinclude_HEADERS = libdill.h
 lib_LTLIBRARIES = libdill.la
 
 libdill_la_SOURCES = \
+    aalloc.c \
+    acache.c \
+    amalloc.c \
+    apage.c \
+    apool.c \
     chan.c \
     cr.h \
     cr.c \
@@ -43,6 +48,8 @@ libdill_la_SOURCES = \
     libdill.c \
     list.h \
     list.c \
+    page.h \
+    page.c \
     poll.inc \
     pollset.h \
     pollset.c \
@@ -63,13 +70,15 @@ libdill_la_LDFLAGS = -no-undefined -version-info @DILL_LIBTOOL_VERSION@
 libdill_la_CFLAGS = \
     -fvisibility=hidden\
     -DDILL_EXPORTS \
-    -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0
+    -D_POSIX_C_SOURCE=200112L\
+    -D_XOPEN_SOURCE=500
 
 ################################################################################
 #  automated tests                                                             #
 ################################################################################
 
 check_PROGRAMS = \
+    tests/aalloc \
     tests/example \
     tests/go \
     tests/fd \
