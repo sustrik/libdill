@@ -29,6 +29,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "utils.h"
+
 /* Returns smallest value greater than val that is a multiple of unit. */
 #define dill_align(val, unit) ((val) % (unit) ?\
     (val) + (unit) - (val) % (unit) : (val))

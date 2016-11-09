@@ -27,6 +27,7 @@
 
 #include "stack.h"
 #include "utils.h"
+#include "page.h"
 
 struct alloc_vfs *dill_avfs = NULL;
 int dill_ah = -1;
@@ -48,6 +49,11 @@ void dill_stack_atexit(void) {
 /* Allocates new stack. Returns pointer to the *top* of the stack.
    For now we assume that the stack grows downwards. */
 void *dill_allocstack(size_t *stack_size) {
+#if !defined DILL_NOGUARD
+    static size_t page_size = 0;
+    if(dill_slow(!page_size))
+        page_size = dill_page_size();
+#endif
 #if defined DILL_VALGRIND
     /* When using valgrind we want to deallocate cached stacks when
        the process is terminated so that they don't show up in the output. */
@@ -71,7 +77,11 @@ void *dill_allocstack(size_t *stack_size) {
     /* Allocate and initialise new stack. */
     void *ptr = dill_avfs->alloc(dill_avfs, stack_size);
     if(dill_slow(!ptr)) return NULL;
-    return ptr + *stack_size;
+    ptr += *stack_size;
+#if !defined DILL_NOGUARD
+    *stack_size -= page_size;
+#endif
+    return ptr;
 }
 
 /* Deallocates a stack. The argument is pointer to the top of the stack. */
