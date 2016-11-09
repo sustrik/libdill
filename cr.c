@@ -295,10 +295,10 @@ DILL_NOINLINE int dill_prologue(void **ctx, void **ptr, size_t len,
     else {
         /* Stack is supplied by the user.
            Align top of the stack to 16-byte boundary. */
-        uintptr_t top = (uintptr_t)ptr;
+        uintptr_t top = (uintptr_t)*ptr;
         top += len;
         top &= ~(uintptr_t)15;
-        stacksz = top - (uintptr_t)ptr;
+        stacksz = top - (uintptr_t)*ptr;
         cr = (struct dill_cr*)top;
         if(dill_slow(stacksz < sizeof(struct dill_cr))) {
             errno = ENOMEM; return -1;}
