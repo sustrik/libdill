@@ -285,6 +285,6 @@ static void apool_hclose(struct hvfs *hvfs) {
             } else break;
         np = *p;
         obj->iavfs->free(obj->iavfs, p);
-    } while(p = np);
+    } while((p = np));
     free(obj);
 }
