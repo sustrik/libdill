@@ -201,6 +201,7 @@ static int apool_extend(struct apool_alloc *obj) {
         obj->nextblock = (void **)b + 1;
     }
 #ifdef DILL_VALGRIND
+    size_t blocksize = obj->elsize * obj->elcount;
     VALGRIND_CREATE_MEMPOOL(obj->nextblock, 0,
         !!(obj->flags & DILL_ALLOC_FLAGS_ZERO));
     VALGRIND_MAKE_MEM_NOACCESS(p, blocksize);

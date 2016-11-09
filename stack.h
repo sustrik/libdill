@@ -40,6 +40,8 @@ extern int dill_ah;
 /* Maximum number of unused cached stacks. */
 #define DILL_MAX_CACHED_STACKS 64
 
+void dill_stack_atexit(void);
+
 /* Allocates new stack. Returns pointer to the *top* of the stack.
    For now we assume that the stack grows downwards. */
 static inline void *dill_allocstack(size_t *stack_size) {
@@ -55,9 +57,9 @@ static inline void *dill_allocstack(size_t *stack_size) {
 #endif
     if(dill_slow(!dill_avfs)) {
 #if defined DILL_NOGUARD
-        dill_ah = amalloc(DILL_ALLOC_FLAGS_DEFAULT, DILL_STACK_SIZE);
+        dill_ah = abasic(DILL_ALLOC_FLAGS_DEFAULT, DILL_STACK_SIZE);
 #else
-        dill_ah = apool(DILL_ALLOC_FLAGS_DEFAULT, DILL_STACK_SIZE,
+        dill_ah = acache(DILL_ALLOC_FLAGS_DEFAULT, DILL_STACK_SIZE,
             DILL_MAX_CACHED_STACKS);
 #endif
         dill_avfs = hquery(dill_ah, alloc_type);
