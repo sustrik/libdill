@@ -41,7 +41,7 @@ int main() {
 
     am = abasic(DILL_ALLOC_FLAGS_DEFAULT, 512);
     assert(am != -1);
-    assert(asize(am) == 512);
+    assert(asize(am) >= 512);
     assert(!(acaps(am) & DILL_ALLOC_CAPS_ZERO));
     assert(!(acaps(am) & DILL_ALLOC_CAPS_ALIGN));
     assert(!(acaps(am) & DILL_ALLOC_CAPS_BOOKKEEP));
@@ -50,7 +50,7 @@ int main() {
 
     ap = abasic(DILL_ALLOC_FLAGS_ALIGN, 1);
     assert(ap != -1);
-    assert(asize(ap) == pgsz);
+    assert(asize(ap) >= pgsz);
     assert(!(acaps(ap) & DILL_ALLOC_CAPS_ZERO));
     assert(acaps(ap) & DILL_ALLOC_CAPS_ALIGN);
     assert(!(acaps(ap) & DILL_ALLOC_CAPS_BOOKKEEP));
@@ -68,7 +68,7 @@ int main() {
 
     am = abasic(DILL_ALLOC_FLAGS_ZERO, 4096);
     assert(am != -1);
-    assert(asize(am) == 4096);
+    assert(asize(am) >= 4096);
     assert(acaps(am) & DILL_ALLOC_CAPS_ZERO);
     assert(!(acaps(am) & DILL_ALLOC_CAPS_ALIGN));
     assert(!(acaps(am) & DILL_ALLOC_CAPS_BOOKKEEP));
@@ -79,9 +79,9 @@ int main() {
     hclose(am);
     ao = apool(DILL_ALLOC_FLAGS_DEFAULT, 8, 2);
     assert(ao != -1);
-    assert(asize(ao) == 8);
+    assert(asize(ao) >= 8);
     assert(!(acaps(ao) & DILL_ALLOC_CAPS_ZERO));
-    assert(!(acaps(ao) & DILL_ALLOC_CAPS_ALIGN));
+    assert(acaps(ao) & DILL_ALLOC_CAPS_ALIGN);
     assert(acaps(ao) & DILL_ALLOC_CAPS_BOOKKEEP);
     p = aalloc(ao);
     assert(p != NULL);
