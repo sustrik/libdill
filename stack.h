@@ -59,7 +59,7 @@ static inline void *dill_allocstack(size_t *stack_size) {
 #if defined DILL_NOGUARD
         dill_ah = abasic(DILL_ALLOC_FLAGS_DEFAULT, DILL_STACK_SIZE);
 #else
-        dill_ah = acache(DILL_ALLOC_FLAGS_DEFAULT, DILL_STACK_SIZE,
+        dill_ah = acache(DILL_ALLOC_FLAGS_GUARD, DILL_STACK_SIZE,
             DILL_MAX_CACHED_STACKS);
 #endif
         dill_avfs = hquery(dill_ah, alloc_type);

@@ -69,7 +69,7 @@ static inline void *dill_memalign(size_t pgsz, size_t s) {
 #endif
 
 #define dill_malloc(p,s) malloc(s);
-#define dill_calloc(p,s) calloc(1,s);
+#define dill_calloc(p,s) calloc(s, 1);
 
 #define dill_alloc(method, zero, pgsz, sz) ({\
     void *stack = dill_ ## method(pgsz, sz);\

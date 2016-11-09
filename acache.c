@@ -74,7 +74,9 @@ int acache(int flags, size_t sz, size_t cachesz) {
     if(dill_slow(!obj)) {errno = ENOMEM; return -1;}
     obj->hvfs.query = acache_hquery;
     obj->hvfs.close = acache_hclose;
-    if(flags & DILL_ALLOC_FLAGS_ALIGN)
+    if(flags & DILL_ALLOC_FLAGS_GUARD)
+        obj->avfs.alloc = acache_guard;
+    else if(flags & DILL_ALLOC_FLAGS_ALIGN)
         obj->avfs.alloc = acache_memalign;
     else if(flags & DILL_ALLOC_FLAGS_ZERO)
         obj->avfs.alloc = acache_calloc;
@@ -137,13 +139,23 @@ static inline int acache_push(struct acache_alloc *obj, void *p) {
         stack = dill_alloc(method, obj->flags & DILL_ALLOC_FLAGS_ZERO,\
             obj->pgsz, obj->sz);\
         if(dill_slow(!stack)) return NULL;\
-        if(obj->flags & DILL_ALLOC_FLAGS_GUARD) {\
-            if(dill_guard(stack, obj->pgsz) == -1) {\
-                free(stack); return NULL;}\
-        }\
     }\
     stack + obj->sz;\
 })
+
+static void *acache_guard(struct alloc_vfs *avfs) {
+    struct acache_alloc *obj =
+        dill_cont(avfs, struct acache_alloc, avfs);
+    void *stack = acache_pop(obj);
+    if(!stack) {
+        stack = dill_alloc(memalign, obj->flags & DILL_ALLOC_FLAGS_ZERO,
+            obj->pgsz, obj->sz);
+        if(dill_slow(!stack)) return NULL;
+        if(dill_guard(stack, obj->pgsz) == -1) {
+            free(stack); return NULL;}
+    }
+    return stack + obj->sz;
+}
 
 static void *acache_memalign(struct alloc_vfs *avfs) {
     return acache_a(memalign, avfs);
