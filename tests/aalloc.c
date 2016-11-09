@@ -72,10 +72,11 @@ int main() {
     assert(acaps(am) & DILL_ALLOC_CAPS_ZERO);
     assert(!(acaps(am) & DILL_ALLOC_CAPS_ALIGN));
     assert(!(acaps(am) & DILL_ALLOC_CAPS_BOOKKEEP));
-    p = aalloc(am);
+    p = aalloc(am) - asize(am);
+    sz = asize(am);
     while(sz)
-        assert(((char *)p)[sz--] == 0);
-    afree(am, p);
+        assert(((char *)p)[--sz] == 0);
+    afree(am, p + asize(am));
     hclose(am);
     ao = apool(DILL_ALLOC_FLAGS_DEFAULT, 8, 2);
     assert(ao != -1);
