@@ -25,6 +25,10 @@
 #include <sys/param.h>
 #include <sys/resource.h>
 
+#if defined BSD
+#include <unistd.h>
+#endif
+
 #include "fd.h"
 #include "utils.h"
 
@@ -38,10 +42,10 @@ int dill_maxfds(void) {
     dill_assert(rc == 0);
     maxfds = rlim.rlim_max;
 #if defined BSD
-    /* The above behaves weirdly on newer versions of OSX, ruturning limit
-       of -1. Fix it by using OPEN_MAX instead. */
+    /* The above behaves weirdly on newer versions of OSX, returning limit
+       of -1. Fix it by using sysconf(_SC_OPEN_MAX) instead. */
     if(maxfds < 0)
-        maxfds = OPEN_MAX;
+        maxfds = sysconf(_SC_OPEN_MAX);
 #endif
     return maxfds;
 }
