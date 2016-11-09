@@ -77,7 +77,7 @@ static inline void *dill_memalign(size_t pgsz, size_t s) {
     stack;\
 })
 
-static inline size_t dill_guard(void *ptr, size_t pgsz) {
+static inline int dill_guard(void *ptr, size_t pgsz) {
 #if HAVE_MPROTECT
     /* The bottom page is used as a stack guard. This way stack overflow will
        cause segfault rather than randomly overwrite the heap. */
