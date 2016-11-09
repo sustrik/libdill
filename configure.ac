@@ -97,6 +97,7 @@ fi
 #  Feature checks.                                                             #
 ################################################################################
 
+AC_CHECK_FUNC([aligned_alloc], [AC_DEFINE([HAVE_ALIGNED_ALLOC])])
 AC_CHECK_FUNC([posix_memalign], [AC_DEFINE([HAVE_POSIX_MEMALIGN])])
 AC_CHECK_FUNC([mprotect], [AC_DEFINE([HAVE_MPROTECT])])
 AC_CHECK_LIB([rt], [clock_gettime])

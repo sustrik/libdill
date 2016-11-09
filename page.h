@@ -35,10 +35,10 @@
 #define dill_align(val, unit) ((val) % (unit) ?\
     (val) + (unit) - (val) % (unit) : (val))
 
-#if __STDC_VERSION__ >= 201112L
+#if __STDC_VERSION__ >= 201112L && defined HAVE_ALIGNED_ALLOC
 #define dill_memalign(pgsz,s) aligned_alloc(pgsz, s)
-#elif _POSIX_VERSION >= 200112L
-static inline void *dill_memalign_(size_t pgsz, size_t s) {
+#elif _POSIX_VERSION >= 200112L && defined HAVE_POSIX_MEMALIGN
+static inline void *dill_memalign(size_t pgsz, size_t s) {
     void *m = NULL;
     int rc = posix_memalign(&m, pgsz, s);
     if(dill_slow(rc != 0)) {
