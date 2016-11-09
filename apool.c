@@ -74,7 +74,7 @@ struct apool_alloc {
     struct hvfs hvfs;
     struct alloc_vfs avfs;
     struct alloc_vfs *iavfs;
-    size_t pgsz;
+    size_t pgsz, offset;
     size_t blockcount, blocktotal;
     size_t elsize, elcount, total, allocated;
     void *freelist, **blocklist;
@@ -110,6 +110,7 @@ int apool(int flags, size_t sz, size_t count)
     obj->avfs.size = apool_size;
     obj->avfs.caps = apool_caps;
     obj->pgsz = dill_page_size();
+    obj->offset = flags & DILL_ALLOC_FLAGS_GUARD ? obj->pgsz : 0;
     /* Create the block */
     obj->elsize = sz;
     /* Pick element sizes that fit the minimum requirement of flags */
@@ -170,6 +171,7 @@ static void *apool_findblock(struct apool_alloc *obj, void *entry) {
 static void *apool_alloc_block(struct apool_alloc *obj) {
     size_t blocksize = obj->elsize * obj->elcount;
     void *p = dill_alloc(memalign, 1, obj->pgsz, blocksize);
+    /* Iterate through all pool elements and add a page guard */
     if(p && (obj->flags & DILL_ALLOC_FLAGS_GUARD)) {
         int i = 0;
         void *stack = p;
@@ -233,7 +235,7 @@ static void *apool_alloc(struct alloc_vfs *avfs) {
 #endif
     void *entry = obj->freelist;
     if(dill_slow(!entry)) return NULL;
-    void *nextentry = *(void **)entry;
+    void *nextentry = *(void **)(entry + obj->offset);
     obj->freelist = nextentry ? nextentry : (char *)entry + obj->elsize;
     obj->allocated++;
     if(obj->flags & DILL_ALLOC_FLAGS_ZERO) memset(entry, 0, obj->elsize);
@@ -249,7 +251,7 @@ static int apool_free(struct alloc_vfs *avfs, void *stack) {
     void *p = stack - obj->elsize;
     /* Store at the location of the freed memory, the pointer to the
        next element in the free list */
-    *(void **)p = obj->freelist;
+    *(void **)(p + obj->offset) = obj->freelist;
     /* Point the free list to p */
     obj->freelist = p;
     obj->allocated--;

@@ -78,6 +78,7 @@ int main() {
         assert(((char *)p)[--sz] == 0);
     afree(am, p + asize(am));
     hclose(am);
+
     ao = apool(DILL_ALLOC_FLAGS_DEFAULT, 8, 2);
     assert(ao != -1);
     assert(asize(ao) >= 8);
@@ -101,6 +102,31 @@ int main() {
     rc = afree(ao, p);
     assert(rc == 0);
     hclose(ao);
+
+    ao = apool(DILL_ALLOC_FLAGS_GUARD, 8, 2);
+    assert(ao != -1);
+    assert(asize(ao) >= 8);
+    assert(!(acaps(ao) & DILL_ALLOC_CAPS_ZERO));
+    assert(acaps(ao) & DILL_ALLOC_CAPS_ALIGN);
+    assert(acaps(ao) & DILL_ALLOC_CAPS_BOOKKEEP);
+    p = aalloc(ao);
+    assert(p != NULL);
+    rc = afree(ao, p);
+    assert(rc == 0);
+    p = aalloc(ao);
+    assert(p != NULL);
+    rc = afree(ao, p);
+    assert(rc == 0);
+    p = aalloc(ao);
+    assert(p != NULL);
+    rc = afree(ao, p);
+    assert(rc == 0);
+    p = aalloc(ao);
+    assert(p != NULL);
+    rc = afree(ao, p);
+    assert(rc == 0);
+    hclose(ao);
+
     return 0;
 }
 
