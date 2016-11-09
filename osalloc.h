@@ -40,9 +40,9 @@
 /* Returns a size that is one page larger */
 #define dill_page_larger(s,pgsz) dill_align(s + pgsz, pgsz)
 
-#if __STDC_VERSION__ >= 201112L
+#if __STDC_VERSION__ >= 201112L && defined HAVE_ALIGNED_ALLOC
 #define dill_memalign(pgsz,s) aligned_alloc(pgsz, s)
-#elif _POSIX_VERSION >= 200112L
+#elif _POSIX_VERSION >= 200112L && defined HAVE_POSIX_MEMALIGN
 static inline void *dill_memalign(size_t pgsz, size_t s) {
     void *m = NULL;
     int rc = posix_memalign(&m, pgsz, s);
