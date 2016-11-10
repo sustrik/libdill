@@ -22,31 +22,49 @@
 
 */
 
-#include <sys/param.h>
-#include <sys/resource.h>
+#ifndef DILL_PAGE_H_INCLUDED
+#define DILL_PAGE_H_INCLUDED
 
-#if defined BSD
+#include <errno.h>
+#include <stdlib.h>
 #include <unistd.h>
-#endif
 
-#include "fd.h"
 #include "utils.h"
 
-int dill_maxfds(void) {
-    /* Return cached value if possible. */
-    static int maxfds = -1;
-    if(dill_fast(maxfds >= 0)) return maxfds;
-    /* Get the max number of file descriptors. */
-    struct rlimit rlim;
-    int rc = getrlimit(RLIMIT_NOFILE, &rlim);
-    dill_assert(rc == 0);
-    maxfds = rlim.rlim_max;
-#if defined BSD
-    /* The above behaves weirdly on newer versions of OSX, returning limit
-       of -1. Fix it by using sysconf(_SC_OPEN_MAX) instead. */
-    if(maxfds < 0)
-        maxfds = sysconf(_SC_OPEN_MAX);
-#endif
-    return maxfds;
+/* Returns smallest value greater than val that is a multiple of unit. */
+#define dill_align(val, unit) ((val) % (unit) ?\
+    (val) + (unit) - (val) % (unit) : (val))
+
+#if __STDC_VERSION__ >= 201112L && defined HAVE_ALIGNED_ALLOC
+#define dill_memalign(pgsz,s) aligned_alloc(pgsz, s)
+#elif _POSIX_VERSION >= 200112L && defined HAVE_POSIX_MEMALIGN
+static inline void *dill_memalign_(size_t pgsz, size_t s) {
+    void *m = NULL;
+    int rc = posix_memalign(&m, pgsz, s);
+    if(dill_slow(rc != 0)) {
+        errno = rc;
+        m = NULL;
+    }
+    return m;
 }
+#define dill_memalign(pgsz,s) dill_memalign_(pgsz, s)
+#elif defined HAVE_MALLOC_H
+#include <malloc.h>
+#if defined HAVE_VALLOC
+#define dill_memalign(pgsz,s) valloc(pgsz, s)
+#elif HAVE_MEMALIGN
+#define dill_memalign(pgsz,s) memalign(pgsz, s)
+#elif defined HAVE_PVALLOC
+#define dill_memalign(pgsz,s) pvalloc(pgsz, s)
+#else
+#endif
+#endif
+
+#ifndef dill_memalign
+#error "Target system does not have posix_memalign compatible function!"
+#endif
+
+size_t dill_page_size(void);
+
+#endif
 

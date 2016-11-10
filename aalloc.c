@@ -22,31 +22,31 @@
 
 */
 
-#include <sys/param.h>
-#include <sys/resource.h>
-
-#if defined BSD
-#include <unistd.h>
-#endif
-
-#include "fd.h"
+#include "libdill.h"
 #include "utils.h"
 
-int dill_maxfds(void) {
-    /* Return cached value if possible. */
-    static int maxfds = -1;
-    if(dill_fast(maxfds >= 0)) return maxfds;
-    /* Get the max number of file descriptors. */
-    struct rlimit rlim;
-    int rc = getrlimit(RLIMIT_NOFILE, &rlim);
-    dill_assert(rc == 0);
-    maxfds = rlim.rlim_max;
-#if defined BSD
-    /* The above behaves weirdly on newer versions of OSX, returning limit
-       of -1. Fix it by using sysconf(_SC_OPEN_MAX) instead. */
-    if(maxfds < 0)
-        maxfds = sysconf(_SC_OPEN_MAX);
-#endif
-    return maxfds;
+dill_unique_id(alloc_type);
+
+void *aalloc(int h, size_t *sz) {
+    struct alloc_vfs *a = hquery(h, alloc_type);
+    if(dill_slow(!a)) return NULL;
+    return a->alloc(a, sz);
 }
 
+int afree(int h, void *m) {
+    struct alloc_vfs *a = hquery(h, alloc_type);
+    if(dill_slow(!a)) return -1;
+    return a->free(a, m);
+}
+
+ssize_t asize(int h) {
+    struct alloc_vfs *a = hquery(h, alloc_type);
+    if(dill_slow(!a)) return -1;
+    return a->size(a);
+}
+
+int acaps(int h) {
+    struct alloc_vfs *a = hquery(h, alloc_type);
+    if(dill_slow(!a)) return -1;
+    return a->caps(a);
+}
