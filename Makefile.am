@@ -68,9 +68,13 @@ libdill_la_LDFLAGS = -no-undefined -version-info @DILL_LIBTOOL_VERSION@
 # because of the stack pointer black magic in 'go' macro.
 libdill_la_CFLAGS = \
     -fvisibility=hidden\
-    -DDILL_EXPORTS \
+    -DDILL_EXPORTS\
     -D_POSIX_C_SOURCE=200112L\
-    -D_XOPEN_SOURCE=500
+    -D_XOPEN_SOURCE=500\
+    -fno-stack-protector\
+    -U_FORTIFY_SOURCE\
+    -D_FORTIFY_SOURCE=0
+
 
 ################################################################################
 #  automated tests                                                             #
