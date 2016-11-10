@@ -32,6 +32,10 @@ dillinclude_HEADERS = libdill.h
 lib_LTLIBRARIES = libdill.la
 
 libdill_la_SOURCES = \
+    aalloc.c \
+    abasic.c \
+    acache.c \
+    apool.c \
     chan.c \
     cr.h \
     cr.c \
@@ -43,6 +47,8 @@ libdill_la_SOURCES = \
     libdill.c \
     list.h \
     list.c \
+    osalloc.h \
+    osalloc.c \
     poll.inc \
     pollset.h \
     pollset.c \
@@ -62,14 +68,20 @@ libdill_la_LDFLAGS = -no-undefined -version-info @DILL_LIBTOOL_VERSION@
 # because of the stack pointer black magic in 'go' macro.
 libdill_la_CFLAGS = \
     -fvisibility=hidden\
-    -DDILL_EXPORTS \
-    -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0
+    -DDILL_EXPORTS\
+    -D_POSIX_C_SOURCE=200112L\
+    -D_XOPEN_SOURCE=500\
+    -fno-stack-protector\
+    -U_FORTIFY_SOURCE\
+    -D_FORTIFY_SOURCE=0
+
 
 ################################################################################
 #  automated tests                                                             #
 ################################################################################
 
 check_PROGRAMS = \
+    tests/aalloc \
     tests/example \
     tests/go \
     tests/fd \

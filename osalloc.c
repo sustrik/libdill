@@ -22,31 +22,14 @@
 
 */
 
-#include <sys/param.h>
-#include <sys/resource.h>
+#include "osalloc.h"
 
-#if defined BSD
-#include <unistd.h>
-#endif
-
-#include "fd.h"
-#include "utils.h"
-
-int dill_maxfds(void) {
-    /* Return cached value if possible. */
-    static int maxfds = -1;
-    if(dill_fast(maxfds >= 0)) return maxfds;
-    /* Get the max number of file descriptors. */
-    struct rlimit rlim;
-    int rc = getrlimit(RLIMIT_NOFILE, &rlim);
-    dill_assert(rc == 0);
-    maxfds = rlim.rlim_max;
-#if defined BSD
-    /* The above behaves weirdly on newer versions of OSX, returning limit
-       of -1. Fix it by using sysconf(_SC_OPEN_MAX) instead. */
-    if(maxfds < 0)
-        maxfds = sysconf(_SC_OPEN_MAX);
-#endif
-    return maxfds;
+/* Get memory page size. The query is done once only. The value is cached. */
+size_t dill_page_size(void) {
+    static long dill_pgsz = 0;
+    if(dill_fast(dill_pgsz))
+        return (size_t)dill_pgsz;
+    dill_pgsz = sysconf(_SC_PAGE_SIZE);
+    dill_assert(dill_pgsz > 0);
+    return (size_t)dill_pgsz;
 }
-
