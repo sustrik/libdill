@@ -35,19 +35,49 @@
 #include "libdill.h"
 #include "osalloc.h"
 
-/* This allocator tracks:
+/* This allocator has a hierarchy of three different entities:
 
-   - pool items allocated
-   - list of pool blocks (which contain the pool items)
-   - list of block header extensions (which contain block list metadata)
+   - pool elements (aalloc returns a pointer to this)
+   - pool blocks (which contain a number pool elements)
+   - block list header (which contain references to pool blocks)
+
+   And a final list of freed items which are stored in unallocated portions
+   of the pool blocks
+
+   - freed elements (linked list through unallocated pool elements)
 
    The reason for the separation is to map neatly to an underlying allocator
    which has fixed size allocation without significantly wasting space per
-   allocation.  Thus, the metadata is stored separately to the pool blocks which
-   then can be completely filled.
+   allocation.
 
-   TODO: As the underlying allocation mechanism may over-allocate memory, one could
-   fit more memory blocks in.  However, this has not been implemented yet.
+   ASCII art:
+
+   Block list header
+   +---------------+-----------+-------------------+-----------+-----------+
+   |next header ptr|block 1 ptr|block 2 ptr| ..... |block N ptr|unallocated|
+   +---------------+-----------+-------------------+-----------+-----------+
+
+   Block 1
+        A         B           C             D           E            F
+   +---------+---------+-------------+-------------+----------+------------+
+   |element 1|element 2|freed ptr D  |freed ptr F  | element 3| unallocated|
+   +---------+---------+-------------+-------------+----------+------------+
+
+   Freelist: ptr to C
+
+   Basic operation (without considering extensions of blocks.
+
+   Allocation of next element would occur like this:
+
+   - Check freelist.  If it is null; return next unallocated element.
+   - If not null. Use C as next alloc.
+   - Update freelist using freed ptr at that location (i.e. D in this case)
+   - Freelist now has D.  Returned allocation item is C.
+
+   Freeing an element (B) would occur like this:
+   - Get pointer to element to be freed.
+   - Write the pointer that freelist points to into B.
+   - Update freelist to point to B.
 */
 
 //#define DILL_APOOL_DEBUG
