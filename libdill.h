@@ -110,6 +110,8 @@ DILL_EXPORT int dill_proc_prologue(int *hndl);
 DILL_EXPORT void dill_proc_epilogue(void);
 
 #include <signal.h>
+
+#ifndef DILL_ARCH_FALLBACK
 #if defined(__x86_64__)
 #define dill_setjmp(ctx) ({\
     int ret;\
@@ -178,10 +180,11 @@ DILL_EXPORT void dill_proc_epilogue(void);
 #define dill_getsp() ({uintptr_t x;asm volatile("":"=esp"(x));x;})
 #define dill_dummyuse(a) asm(""::"r"(a))
 #else
-#define DILL_NOASMSETSP
+#define DILL_ARCH_FALLBACK
+#endif
 #endif
 
-#if !defined dill_setjmp && !defined dill_longjmp && !dill_sizeof_jmpbuf
+#ifdef DILL_ARCH_FALLBACK
 #include <setjmp.h>
 #define dill_setjmp(ctx) sigsetjmp(*(sigjmp_buf *)ctx, 0)
 #define dill_longjmp(ctx) siglongjmp(*(sigjmp_buf *)ctx, 1)
@@ -202,7 +205,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
    wrapped in itself.  These macros should only be used internally. */
 
 /* In newer GCCs, -fstack-protector* breaks on VLAs and alloca, use -fno-stack-protector */
-#ifdef DILL_NOASMSETSP
+#ifdef DILL_ARCH_FALLBACK
 #if __STDC_VERSION__ == 199901L || (__STDC_VERSION__ == 201112L && !defined(__STDC_NO_VLA))
 /* Implement dill_gosp using VLAs: this macro is FRAGILE */
 #define dill_gosp(stk) \
