@@ -103,9 +103,8 @@ struct dill_cr {
 #endif
 } __attribute__((aligned(16),packed));
 
-/* Storage for constants used by go() macro. */
-volatile int dill_unoptimisable1 = 1;
-volatile void *dill_unoptimisable2 = NULL;
+/* Storage for constant used by go() macro. */
+volatile void *dill_unoptimisable = NULL;
 
 /* Main coroutine. */
 struct dill_cr dill_main_data = {DILL_SLIST_ITEM_INITIALISER};

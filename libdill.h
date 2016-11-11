@@ -96,8 +96,7 @@ DILL_EXPORT int hclose(int h);
 
 #define coroutine __attribute__((noinline))
 
-DILL_EXPORT extern volatile int dill_unoptimisable1;
-DILL_EXPORT extern volatile void *dill_unoptimisable2;
+DILL_EXPORT extern volatile void *dill_unoptimisable;
 
 DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
     void **ptr, size_t len, const char *file, int line);
@@ -183,20 +182,12 @@ DILL_EXPORT void dill_proc_epilogue(void);
 /* For newer GCCs, -fstack-protector breaks on this; use -fno-stack-protector.
    Alternatively, implement custom DILL_SETSP for your microarchitecture. */
 #define DILL_SETSP(x) \
-    int dill_anchor[dill_unoptimisable1];\
-    dill_unoptimisable2 = &dill_anchor;\
-    char dill_filler[(char*)&dill_anchor - (char*)(x)];\
-    dill_unoptimisable2 = &dill_filler;
+    dill_unoptimisable = alloca((char *)alloca(sizeof(size_t)) - (char *)(x));
 #endif
 
 /* Statement expressions are a gcc-ism but they are also supported by clang.
    Given that there's no other way to do this, screw other compilers for now.
    See https://gcc.gnu.org/onlinedocs/gcc-3.2/gcc/Statement-Exprs.html */
-
-/* Here be dragons: the VLAs are necessary to coerce the compiler to always
-   generate a stack frame (they are unimplementable without a stack frame). 
-   The stack frame lets fn reference the local variables, which store the
-   function arguments needed, even when the stack pointer is changed. */
 
 #define go_stack(fn, ptr, len) \
     ({\
