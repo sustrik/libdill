@@ -25,6 +25,7 @@
 #ifndef LIBDILL_H_INCLUDED
 #define LIBDILL_H_INCLUDED
 
+#include <alloca.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <stddef.h>
@@ -142,6 +143,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
         : : "a" (ctx) : "rdx" \
     )
 #define DILL_SETSP(x) \
+    asm(""::"r"(alloca(sizeof(size_t))));\
     asm volatile("leaq (%%rax), %%rsp"::"rax"(x));
 
 /* Stack switching on X86. */
@@ -171,6 +173,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
         : : "a" (ctx) : "edx" \
     )
 #define DILL_SETSP(x) \
+    asm(""::"r"(alloca(sizeof(size_t))));\
     asm volatile("leal (%%eax), %%esp"::"eax"(x));
 
 /* Stack-switching on other microarchiterctures. */
@@ -180,6 +183,8 @@ DILL_EXPORT void dill_proc_epilogue(void);
 /* For newer GCCs, -fstack-protector breaks on this; use -fno-stack-protector.
    Alternatively, implement custom DILL_SETSP for your microarchitecture. */
 #define DILL_SETSP(x) \
+    int dill_anchor[dill_unoptimisable1];\
+    dill_unoptimisable2 = &dill_anchor;\
     char dill_filler[(char*)&dill_anchor - (char*)(x)];\
     dill_unoptimisable2 = &dill_filler;
 #endif
@@ -200,8 +205,6 @@ DILL_EXPORT void dill_proc_epilogue(void);
         int h = dill_prologue(&ctx, &stk, (len), __FILE__, __LINE__);\
         if(h >= 0) {\
             if(!dill_setjmp(*ctx)) {\
-                int dill_anchor[dill_unoptimisable1];\
-                dill_unoptimisable2 = &dill_anchor;\
                 DILL_SETSP(stk);\
                 fn;\
                 dill_epilogue();\
