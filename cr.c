@@ -279,14 +279,14 @@ static void dill_cr_close(struct hvfs *vfs);
 static void dill_cancel(struct dill_cr *cr, int err);
 
 /* The intial part of go(). Allocates a new stack and handle. */
-int dill_prologue(sigjmp_buf **ctx, void *ptr, size_t len,
+int dill_prologue(sigjmp_buf **ctx, void **ptr, size_t len,
       const char *file, int line) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) {errno = ECANCELED; return -1;}
     struct dill_cr *cr;
     size_t stacksz;
-    if(!ptr) {
+    if(!*ptr) {
         /* Allocate new stack. */
         cr = (struct dill_cr*)dill_allocstack(&stacksz);
         if(dill_slow(!cr)) return -1;
@@ -294,10 +294,10 @@ int dill_prologue(sigjmp_buf **ctx, void *ptr, size_t len,
     else {
         /* Stack is supplied by the user.
            Align top of the stack to 16-byte boundary. */
-        uintptr_t top = (uintptr_t)ptr;
+        uintptr_t top = (uintptr_t)*ptr;
         top += len;
         top &= ~(uintptr_t)15;
-        stacksz = top - (uintptr_t)ptr;
+        stacksz = top - (uintptr_t)*ptr;
         cr = (struct dill_cr*)top;
         if(dill_slow(stacksz < sizeof(struct dill_cr))) {
             errno = ENOMEM; return -1;}
@@ -322,7 +322,7 @@ int dill_prologue(sigjmp_buf **ctx, void *ptr, size_t len,
     cr->no_blocking1 = 0;
     cr->no_blocking2 = 0;
     cr->done = 0;
-    cr->go_stack = ptr ? 1 : 0;
+    cr->go_stack = *ptr ? 1 : 0;
 #if defined DILL_VALGRIND
     cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stacksz, cr);
 #endif
@@ -361,7 +361,7 @@ int dill_prologue(sigjmp_buf **ctx, void *ptr, size_t len,
     /* Add parent coroutine to the list of coroutines ready for execution. */
     dill_resume(dill_r, 0, 0);
     /* Mark the new coroutine as running. */
-    dill_r = cr;
+    *ptr = dill_r = cr;
     return hndl;
 }
 
@@ -378,7 +378,7 @@ void dill_epilogue(void) {
 }
 
 static void *dill_cr_query(struct hvfs *vfs, const void *type) {
-    if(dill_slow(type && type != dill_cr_type)) {errno = ENOTSUP; return NULL;}
+    if(dill_slow(type != dill_cr_type)) {errno = ENOTSUP; return NULL;}
     struct dill_cr *cr = dill_cont(vfs, struct dill_cr, vfs);
     return cr;
 }

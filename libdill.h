@@ -99,7 +99,7 @@ DILL_EXPORT extern volatile int dill_unoptimisable1;
 DILL_EXPORT extern volatile void *dill_unoptimisable2;
 
 DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
-    void *ptr, size_t len, const char *file, int line);
+    void **ptr, size_t len, const char *file, int line);
 DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 DILL_EXPORT int dill_proc_prologue(int *hndl);
 DILL_EXPORT void dill_proc_epilogue(void);
@@ -196,12 +196,13 @@ DILL_EXPORT void dill_proc_epilogue(void);
 #define go_stack(fn, ptr, len) \
     ({\
         sigjmp_buf *ctx;\
-        int h = dill_prologue(&ctx, (ptr), (len), __FILE__, __LINE__);\
+        void *stk = (ptr);\
+        int h = dill_prologue(&ctx, &stk, (len), __FILE__, __LINE__);\
         if(h >= 0) {\
             if(!dill_setjmp(*ctx)) {\
                 int dill_anchor[dill_unoptimisable1];\
                 dill_unoptimisable2 = &dill_anchor;\
-                DILL_SETSP(hquery(h, NULL));\
+                DILL_SETSP(stk);\
                 fn;\
                 dill_epilogue();\
             }\
