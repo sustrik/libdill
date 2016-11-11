@@ -104,6 +104,9 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 DILL_EXPORT int dill_proc_prologue(int *hndl);
 DILL_EXPORT void dill_proc_epilogue(void);
 
+/* In the following macros alloca(sizeof(size_t)) is used because clang
+   doesn't support alloca with size zero. */
+
 /* Stack-switching on X86-64. */
 #if defined(__x86_64__) && !defined DILL_ARCH_FALLBACK
 #define dill_setjmp(ctx) ({\
@@ -182,7 +185,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
 /* For newer GCCs, -fstack-protector breaks on this; use -fno-stack-protector.
    Alternatively, implement custom DILL_SETSP for your microarchitecture. */
 #define DILL_SETSP(x) \
-    dill_unoptimisable = alloca((char *)alloca(sizeof(size_t)) - (char *)(x));
+    dill_unoptimisable = alloca((char*)alloca(sizeof(size_t)) - (char*)(x));
 #endif
 
 /* Statement expressions are a gcc-ism but they are also supported by clang.
