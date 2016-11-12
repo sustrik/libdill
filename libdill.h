@@ -148,7 +148,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
         ".cfi_offset %%r14, 32 \n\t"\
         ".cfi_offset %%r15, 40 \n\t"\
         ".cfi_offset %%rsp, 48 \n\t"\
-        ".cfi_offset %%rcx, 56 \n\t"\
+        ".cfi_offset %%rip, 56 \n\t"\
         "jmp    *%%rcx\n\t"\
         : : "d" (ctx), "a" (1))
 #define DILL_SETSP(x) \
@@ -182,7 +182,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
         ".cfi_offset %%esi, 4 \n\t"\
         ".cfi_offset %%edi, 8 \n\t"\
         ".cfi_offset %%ebp, 12 \n\t"\
-        ".cfi_offset %%edx, 16 \n\t"\
+        ".cfi_offset %%eip, 16 \n\t"\
         ".cfi_offset %%esp, 20 \n\t"\
         "jmp    *%%ecx\n\t"\
         : : "d" (ctx), "a" (1))
