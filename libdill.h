@@ -98,7 +98,7 @@ DILL_EXPORT int hclose(int h);
 
 DILL_EXPORT extern volatile void *dill_unoptimisable;
 
-DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
+DILL_EXPORT __attribute__((noinline)) int dill_prologue(jmp_buf **ctx,
     void **ptr, size_t len, const char *file, int line);
 DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 DILL_EXPORT int dill_proc_prologue(int *hndl);
@@ -107,8 +107,27 @@ DILL_EXPORT void dill_proc_epilogue(void);
 /* In the following macros alloca(sizeof(size_t)) is used because clang
    doesn't support alloca with size zero. */
 
+/* This assembly setjmp/longjmp mechanism is in the same order as glibc and
+   musl but glibc implements pointer mangling, which is hard to support.
+   This should be binary-compatible with musl though. */
+
 /* Stack-switching on X86-64. */
 #if defined(__x86_64__) && !defined DILL_ARCH_FALLBACK
+#ifdef __CYGWIN__
+#define DILL_CYGWIN_SETJMP\
+        "mov     %%rsi, 64(%%rdx)\n\t"\
+        "mov     %%rdi, 72(%%rdx)\n\t"\
+        "movups  %%xmm6, 80(%%rdx)\n\t"\
+        "movups  %%xmm7, 88(%%rdx)\n\t"
+#define DILL_CYGWIN_LONGJMP\
+        "movups  88(%%rdx), %%xmm7\n\t"\
+        "movups  80(%%rdx), %%xmm6\n\t"\
+        "movq    72(%%rdx), %%rsi\n\t"\
+        "movq    64(%%rdx), %%rdi\n\t"
+#else
+#define DILL_CYGWIN_SETJMP
+#define DILL_CYGWIN_LONGJMP
+#endif
 #define dill_setjmp(ctx) ({\
     int ret;\
     asm("lea     LJMPRET%=(%%rip), %%rcx\n\t"\
@@ -116,34 +135,39 @@ DILL_EXPORT void dill_proc_epilogue(void);
         "mov     %%rbx, (%%rdx)\n\t"\
         "mov     %%rbp, 8(%%rdx)\n\t"\
         "mov     %%r12, 16(%%rdx)\n\t"\
-        "mov     %%rsp, 24(%%rdx)\n\t"\
-        "mov     %%r13, 32(%%rdx)\n\t"\
-        "mov     %%r14, 40(%%rdx)\n\t"\
-        "mov     %%r15, 48(%%rdx)\n\t"\
+        "mov     %%r13, 24(%%rdx)\n\t"\
+        "mov     %%r14, 32(%%rdx)\n\t"\
+        "mov     %%r15, 40(%%rdx)\n\t"\
+        "mov     %%rsp, 48(%%rdx)\n\t"\
         "mov     %%rcx, 56(%%rdx)\n\t"\
-        "mov     %%rdi, 64(%%rdx)\n\t"\
-        "mov     %%rsi, 72(%%rdx)\n\t"\
+        DILL_CYGWIN_SETJMP\
         "LJMPRET%=:\n\t"\
         : "=a" (ret)\
         : "d" (ctx)\
-        : "memory", "rcx", "r8", "r9", "r10", "r11");\
+        : "memory", "rcx", "rsi", "rdi", "r8", "r9", "r10", "r11", "cc");\
     ret;\
 })
 #define dill_longjmp(ctx) \
-    asm("movq   (%%rax), %%rbx\n\t"\
-        "movq   8(%%rax), %%rbp\n\t"\
-        "movq   16(%%rax), %%r12\n\t"\
-        "movq   24(%%rax), %%rdx\n\t"\
-        "movq   32(%%rax), %%r13\n\t"\
-        "movq   40(%%rax), %%r14\n\t"\
-        "mov    %%rdx, %%rsp\n\t"\
-        "movq   48(%%rax), %%r15\n\t"\
-        "movq   56(%%rax), %%rdx\n\t"\
-        "movq   64(%%rax), %%rdi\n\t"\
-        "movq   72(%%rax), %%rsi\n\t"\
-        "jmp    *%%rdx\n\t"\
-        : : "a" (ctx) : "rdx" \
-    )
+    asm(DILL_CYGWIN_LONGJMP\
+        "movq   56(%%rdx), %%rcx\n\t"\
+        "movq   48(%%rdx), %%rsp\n\t"\
+        "movq   40(%%rdx), %%r15\n\t"\
+        "movq   32(%%rdx), %%r14\n\t"\
+        "movq   24(%%rdx), %%r13\n\t"\
+        "movq   16(%%rdx), %%r12\n\t"\
+        "movq   8(%%rdx), %%rbp\n\t"\
+        "movq   (%%rdx), %%rbx\n\t"\
+        ".cfi_def_cfa %%rdx, 0 \n\t"\
+        ".cfi_offset %%rbx, 0 \n\t"\
+        ".cfi_offset %%rbp, 8 \n\t"\
+        ".cfi_offset %%r12, 16 \n\t"\
+        ".cfi_offset %%r13, 24 \n\t"\
+        ".cfi_offset %%r14, 32 \n\t"\
+        ".cfi_offset %%r15, 40 \n\t"\
+        ".cfi_offset %%rsp, 48 \n\t"\
+        ".cfi_offset %%rip, 56 \n\t"\
+        "jmp    *%%rcx\n\t"\
+        : : "d" (ctx), "a" (1))
 #define DILL_SETSP(x) \
     asm(""::"r"(alloca(sizeof(size_t))));\
     asm volatile("leaq (%%rax), %%rsp"::"rax"(x));
@@ -151,37 +175,47 @@ DILL_EXPORT void dill_proc_epilogue(void);
 /* Stack switching on X86. */
 #elif defined(__i386__) && !defined DILL_ARCH_FALLBACK
 #define dill_setjmp(ctx) ({\
-    int ret;\
-    asm("movl   $LJMPRET%=, %%eax\n\t"\
-        "movl   %%eax, (%%edx)\n\t"\
-        "movl   %%ebx, 4(%%edx)\n\t"\
-        "movl   %%esi, 8(%%edx)\n\t"\
-        "movl   %%edi, 12(%%edx)\n\t"\
-        "movl   %%ebp, 16(%%edx)\n\t"\
-        "movl   %%esp, 20(%%edx)\n\t"\
+    int ret;
+    asm("movl   $LJMPRET%=, %%ecx\n\t"\
+        "movl   %%ebx, (%%edx)\n\t"\
+        "movl   %%esi, 4(%%edx)\n\t"\
+        "movl   %%edi, 8(%%edx)\n\t"\
+        "movl   %%ebp, 12(%%edx)\n\t"\
+        "movl   %%esp, 16(%%edx)\n\t"\
+        "movl   %%ecx, 20(%%edx)\n\t"\
         "xorl   %%eax, %%eax\n\t"\
         "LJMPRET%=:\n\t"\
         : "=a" (ret) : "d" (ctx) : "memory");\
     ret;\
 })
 #define dill_longjmp(ctx) \
-    asm("movl   (%%eax), %%edx\n\t"\
-        "movl   4(%%eax), %%ebx\n\t"\
-        "movl   8(%%eax), %%esi\n\t"\
-        "movl   12(%%eax), %%edi\n\t"\
-        "movl   16(%%eax), %%ebp\n\t"\
-        "movl   20(%%eax), %%esp\n\t"\
-        "jmp    *%%edx\n\t"\
-        : : "a" (ctx) : "edx" \
-    )
+    asm("movl   (%%edx), %%ebx\n\t"\
+        "movl   4(%%edx), %%esi\n\t"\
+        "movl   8(%%edx), %%edi\n\t"\
+        "movl   12(%%edx), %%ebp\n\t"\
+        "movl   16(%%edx), %%esp\n\t"\
+        "movl   20(%%edx), %%ecx\n\t"\
+        ".cfi_def_cfa %%edx, 0 \n\t"\
+        ".cfi_offset %%ebx, 0 \n\t"\
+        ".cfi_offset %%esi, 4 \n\t"\
+        ".cfi_offset %%edi, 8 \n\t"\
+        ".cfi_offset %%ebp, 12 \n\t"\
+        ".cfi_offset %%esp, 16 \n\t"\
+        ".cfi_offset %%eip, 20 \n\t"\
+        "jmp    *%%ecx\n\t"\
+        : : "d" (ctx), "a" (1))
 #define DILL_SETSP(x) \
     asm(""::"r"(alloca(sizeof(size_t))));\
     asm volatile("leal (%%eax), %%esp"::"eax"(x));
 
 /* Stack-switching on other microarchiterctures. */
 #else
-#define dill_setjmp(ctx) sigsetjmp(ctx, 0)
-#define dill_longjmp(ctx) siglongjmp(ctx, 1)
+#ifdef __CYGWIN__
+#error "Cygwin setjmp/longjmp is broken."
+#else
+#define dill_setjmp(ctx) setjmp(ctx)
+#define dill_longjmp(ctx) longjmp(ctx, 1)
+#endif
 /* For newer GCCs, -fstack-protector breaks on this; use -fno-stack-protector.
    Alternatively, implement custom DILL_SETSP for your microarchitecture. */
 #define DILL_SETSP(x) \
@@ -194,7 +228,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
 
 #define go_stack(fn, ptr, len) \
     ({\
-        sigjmp_buf *ctx;\
+        jmp_buf *ctx;\
         void *stk = (ptr);\
         int h = dill_prologue(&ctx, &stk, (len), __FILE__, __LINE__);\
         if(h >= 0) {\
