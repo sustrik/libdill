@@ -107,6 +107,10 @@ DILL_EXPORT void dill_proc_epilogue(void);
 /* In the following macros alloca(sizeof(size_t)) is used because clang
    doesn't support alloca with size zero. */
 
+/* This assembly setjmp/longjmp mechanism is in the same order as glibc and
+   musl but glibc implements pointer mangling, which is hard to support.
+   This should be binary-compatible with musl though. */
+
 /* Stack-switching on X86-64. */
 #if defined(__x86_64__) && !defined DILL_ARCH_FALLBACK
 #define dill_setjmp(ctx) ({\
