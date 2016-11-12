@@ -158,13 +158,13 @@ DILL_EXPORT void dill_proc_epilogue(void);
 /* Stack switching on X86. */
 #elif defined(__i386__) && !defined DILL_ARCH_FALLBACK
 #define dill_setjmp(ctx) ({\
-    asm("movl   $LJMPRET%=, %%eax\n\t"\
+    asm("movl   $LJMPRET%=, %%ecx\n\t"\
         "movl   %%ebx, (%%edx)\n\t"\
         "movl   %%esi, 4(%%edx)\n\t"\
         "movl   %%edi, 8(%%edx)\n\t"\
         "movl   %%ebp, 12(%%edx)\n\t"\
-        "movl   %%eax, 16(%%edx)\n\t"\
-        "movl   %%esp, 20(%%edx)\n\t"\
+        "movl   %%esp, 16(%%edx)\n\t"\
+        "movl   %%ecx, 20(%%edx)\n\t"\
         "xorl   %%eax, %%eax\n\t"\
         "LJMPRET%=:\n\t"\
         : "=a" (ret) : "d" (ctx) : "memory");\
@@ -182,8 +182,8 @@ DILL_EXPORT void dill_proc_epilogue(void);
         ".cfi_offset %%esi, 4 \n\t"\
         ".cfi_offset %%edi, 8 \n\t"\
         ".cfi_offset %%ebp, 12 \n\t"\
-        ".cfi_offset %%eip, 16 \n\t"\
-        ".cfi_offset %%esp, 20 \n\t"\
+        ".cfi_offset %%esp, 16 \n\t"\
+        ".cfi_offset %%eip, 20 \n\t"\
         "jmp    *%%ecx\n\t"\
         : : "d" (ctx), "a" (1))
 #define DILL_SETSP(x) \
