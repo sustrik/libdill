@@ -72,7 +72,7 @@ struct dill_cr {
     int err;
     /* When coroutine is suspended 'ctx' holds the context
        (registers and such). */
-    sigjmp_buf ctx;
+    jmp_buf ctx;
     /* If coroutine is blocked, here's the list of clauses it waits for. */
     struct dill_slist clauses;
     /* Coroutine-local storage. */
@@ -278,7 +278,7 @@ static void dill_cr_close(struct hvfs *vfs);
 static void dill_cancel(struct dill_cr *cr, int err);
 
 /* The intial part of go(). Allocates a new stack and handle. */
-int dill_prologue(sigjmp_buf **ctx, void **ptr, size_t len,
+int dill_prologue(jmp_buf **ctx, void **ptr, size_t len,
       const char *file, int line) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();

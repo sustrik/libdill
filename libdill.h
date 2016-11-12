@@ -98,7 +98,7 @@ DILL_EXPORT int hclose(int h);
 
 DILL_EXPORT extern volatile void *dill_unoptimisable;
 
-DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
+DILL_EXPORT __attribute__((noinline)) int dill_prologue(jmp_buf **ctx,
     void **ptr, size_t len, const char *file, int line);
 DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 DILL_EXPORT int dill_proc_prologue(int *hndl);
@@ -121,8 +121,6 @@ DILL_EXPORT void dill_proc_epilogue(void);
         "mov     %%r14, 40(%%rdx)\n\t"\
         "mov     %%r15, 48(%%rdx)\n\t"\
         "mov     %%rcx, 56(%%rdx)\n\t"\
-        "mov     %%rdi, 64(%%rdx)\n\t"\
-        "mov     %%rsi, 72(%%rdx)\n\t"\
         "LJMPRET%=:\n\t"\
         : "=a" (ret)\
         : "d" (ctx)\
@@ -139,8 +137,6 @@ DILL_EXPORT void dill_proc_epilogue(void);
         "mov    %%rdx, %%rsp\n\t"\
         "movq   48(%%rax), %%r15\n\t"\
         "movq   56(%%rax), %%rdx\n\t"\
-        "movq   64(%%rax), %%rdi\n\t"\
-        "movq   72(%%rax), %%rsi\n\t"\
         "jmp    *%%rdx\n\t"\
         : : "a" (ctx) : "rdx" \
     )
@@ -180,8 +176,8 @@ DILL_EXPORT void dill_proc_epilogue(void);
 
 /* Stack-switching on other microarchiterctures. */
 #else
-#define dill_setjmp(ctx) sigsetjmp(ctx, 0)
-#define dill_longjmp(ctx) siglongjmp(ctx, 1)
+#define dill_setjmp(ctx) setjmp(ctx)
+#define dill_longjmp(ctx) longjmp(ctx, 1)
 /* For newer GCCs, -fstack-protector breaks on this; use -fno-stack-protector.
    Alternatively, implement custom DILL_SETSP for your microarchitecture. */
 #define DILL_SETSP(x) \
@@ -194,7 +190,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
 
 #define go_stack(fn, ptr, len) \
     ({\
-        sigjmp_buf *ctx;\
+        jmp_buf *ctx;\
         void *stk = (ptr);\
         int h = dill_prologue(&ctx, &stk, (len), __FILE__, __LINE__);\
         if(h >= 0) {\
