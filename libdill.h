@@ -128,19 +128,19 @@ DILL_EXPORT void dill_proc_epilogue(void);
         "LJMPRET%=:\n\t"\
         : "=a" (ret)\
         : "d" (ctx)\
-        : "memory", "rcx", "r8", "r9", "r10", "r11", "cc");\
+        : "memory", "rcx", "rsi", "rdi", "r8", "r9", "r10", "r11", "cc");\
     ret;\
 })
 #define dill_longjmp(ctx) \
-    asm("movq   56(%%rax), %%rdx\n\t"\
-        "movq   48(%%rax), %%rsp\n\t"\
-        "movq   40(%%rax), %%r15\n\t"\
-        "movq   32(%%rax), %%r14\n\t"\
-        "movq   24(%%rax), %%r13\n\t"\
-        "movq   16(%%rax), %%r12\n\t"\
-        "movq   8(%%rax), %%rbp\n\t"\
-        "movq   (%%rax), %%rbx\n\t"\
-        ".cfi_def_cfa %%rax, 0 \n\t"\
+    asm("movq   56(%%rdx), %%rcx\n\t"\
+        "movq   48(%%rdx), %%rsp\n\t"\
+        "movq   40(%%rdx), %%r15\n\t"\
+        "movq   32(%%rdx), %%r14\n\t"\
+        "movq   24(%%rdx), %%r13\n\t"\
+        "movq   16(%%rdx), %%r12\n\t"\
+        "movq   8(%%rdx), %%rbp\n\t"\
+        "movq   (%%rdx), %%rbx\n\t"\
+        ".cfi_def_cfa %%rdx, 0 \n\t"\
         ".cfi_offset %%rbx, 0 \n\t"\
         ".cfi_offset %%rbp, 8 \n\t"\
         ".cfi_offset %%r12, 16 \n\t"\
@@ -149,8 +149,8 @@ DILL_EXPORT void dill_proc_epilogue(void);
         ".cfi_offset %%r15, 40 \n\t"\
         ".cfi_offset %%rsp, 48 \n\t"\
         ".cfi_offset %%rcx, 56 \n\t"\
-        "jmp    *%%rdx\n\t"\
-        : : "a" (ctx))
+        "jmp    *%%rcx\n\t"\
+        : : "d" (ctx), "a" (1))
 #define DILL_SETSP(x) \
     asm(""::"r"(alloca(sizeof(size_t))));\
     asm volatile("leaq (%%rax), %%rsp"::"rax"(x));
@@ -171,21 +171,21 @@ DILL_EXPORT void dill_proc_epilogue(void);
     ret;\
 })
 #define dill_longjmp(ctx) \
-    asm("movl   (%%eax), %%ebx\n\t"\
-        "movl   4(%%eax), %%esi\n\t"\
-        "movl   8(%%eax), %%edi\n\t"\
-        "movl   12(%%eax), %%ebp\n\t"\
-        "movl   16(%%eax), %%edx\n\t"\
-        "movl   20(%%eax), %%esp\n\t"\
-        ".cfi_def_cfa %%eax, 0 \n\t"\
+    asm("movl   (%%edx), %%ebx\n\t"\
+        "movl   4(%%edx), %%esi\n\t"\
+        "movl   8(%%edx), %%edi\n\t"\
+        "movl   12(%%edx), %%ebp\n\t"\
+        "movl   16(%%edx), %%ecx\n\t"\
+        "movl   20(%%edx), %%esp\n\t"\
+        ".cfi_def_cfa %%edx, 0 \n\t"\
         ".cfi_offset %%ebx, 0 \n\t"\
         ".cfi_offset %%esi, 4 \n\t"\
         ".cfi_offset %%edi, 8 \n\t"\
         ".cfi_offset %%ebp, 12 \n\t"\
         ".cfi_offset %%edx, 16 \n\t"\
         ".cfi_offset %%esp, 20 \n\t"\
-        "jmp    *%%edx\n\t"\
-        : : "a" (ctx))
+        "jmp    *%%ecx\n\t"\
+        : : "d" (ctx), "a" (1))
 #define DILL_SETSP(x) \
     asm(""::"r"(alloca(sizeof(size_t))));\
     asm volatile("leal (%%eax), %%esp"::"eax"(x));
