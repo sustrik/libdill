@@ -116,34 +116,39 @@ DILL_EXPORT void dill_proc_epilogue(void);
         "mov     %%rbx, (%%rdx)\n\t"\
         "mov     %%rbp, 8(%%rdx)\n\t"\
         "mov     %%r12, 16(%%rdx)\n\t"\
-        "mov     %%rsp, 24(%%rdx)\n\t"\
-        "mov     %%r13, 32(%%rdx)\n\t"\
-        "mov     %%r14, 40(%%rdx)\n\t"\
-        "mov     %%r15, 48(%%rdx)\n\t"\
+        "mov     %%r13, 24(%%rdx)\n\t"\
+        "mov     %%r14, 32(%%rdx)\n\t"\
+        "mov     %%r15, 40(%%rdx)\n\t"\
+        "mov     %%rsp, 48(%%rdx)\n\t"\
         "mov     %%rcx, 56(%%rdx)\n\t"\
         "mov     %%rdi, 64(%%rdx)\n\t"\
         "mov     %%rsi, 72(%%rdx)\n\t"\
         "LJMPRET%=:\n\t"\
         : "=a" (ret)\
         : "d" (ctx)\
-        : "memory", "rcx", "r8", "r9", "r10", "r11");\
+        : "memory", "rcx", "r8", "r9", "r10", "r11", "cc");\
     ret;\
 })
 #define dill_longjmp(ctx) \
-    asm("movq   (%%rax), %%rbx\n\t"\
-        "movq   8(%%rax), %%rbp\n\t"\
+    asm("movq   56(%%rax), %%rdx\n\t"\
+        "movq   48(%%rax), %%rsp\n\t"\
+        "movq   40(%%rax), %%r15\n\t"\
+        "movq   32(%%rax), %%r14\n\t"\
+        "movq   24(%%rax), %%r13\n\t"\
         "movq   16(%%rax), %%r12\n\t"\
-        "movq   24(%%rax), %%rdx\n\t"\
-        "movq   32(%%rax), %%r13\n\t"\
-        "movq   40(%%rax), %%r14\n\t"\
-        "mov    %%rdx, %%rsp\n\t"\
-        "movq   48(%%rax), %%r15\n\t"\
-        "movq   56(%%rax), %%rdx\n\t"\
-        "movq   64(%%rax), %%rdi\n\t"\
-        "movq   72(%%rax), %%rsi\n\t"\
+        "movq   8(%%rax), %%rbp\n\t"\
+        "movq   (%%rax), %%rbx\n\t"\
+        ".cfi_def_cfa %%rax, 0 \n\t"\
+        ".cfi_offset %%rbx, 0 \n\t"\
+        ".cfi_offset %%rbp, 8 \n\t"\
+        ".cfi_offset %%r12, 16 \n\t"\
+        ".cfi_offset %%r13, 24 \n\t"\
+        ".cfi_offset %%r14, 32 \n\t"\
+        ".cfi_offset %%r15, 40 \n\t"\
+        ".cfi_offset %%rsp, 48 \n\t"\
+        ".cfi_offset %%rcx, 56 \n\t"\
         "jmp    *%%rdx\n\t"\
-        : : "a" (ctx) : "rdx" \
-    )
+        : : "a" (ctx))
 #define DILL_SETSP(x) \
     asm(""::"r"(alloca(sizeof(size_t))));\
     asm volatile("leaq (%%rax), %%rsp"::"rax"(x));
@@ -151,13 +156,12 @@ DILL_EXPORT void dill_proc_epilogue(void);
 /* Stack switching on X86. */
 #elif defined(__i386__) && !defined DILL_ARCH_FALLBACK
 #define dill_setjmp(ctx) ({\
-    int ret;\
     asm("movl   $LJMPRET%=, %%eax\n\t"\
-        "movl   %%eax, (%%edx)\n\t"\
-        "movl   %%ebx, 4(%%edx)\n\t"\
-        "movl   %%esi, 8(%%edx)\n\t"\
-        "movl   %%edi, 12(%%edx)\n\t"\
-        "movl   %%ebp, 16(%%edx)\n\t"\
+        "movl   %%ebx, (%%edx)\n\t"\
+        "movl   %%esi, 4(%%edx)\n\t"\
+        "movl   %%edi, 8(%%edx)\n\t"\
+        "movl   %%ebp, 12(%%edx)\n\t"\
+        "movl   %%eax, 16(%%edx)\n\t"\
         "movl   %%esp, 20(%%edx)\n\t"\
         "xorl   %%eax, %%eax\n\t"\
         "LJMPRET%=:\n\t"\
@@ -165,15 +169,21 @@ DILL_EXPORT void dill_proc_epilogue(void);
     ret;\
 })
 #define dill_longjmp(ctx) \
-    asm("movl   (%%eax), %%edx\n\t"\
-        "movl   4(%%eax), %%ebx\n\t"\
-        "movl   8(%%eax), %%esi\n\t"\
-        "movl   12(%%eax), %%edi\n\t"\
-        "movl   16(%%eax), %%ebp\n\t"\
+    asm("movl   (%%eax), %%ebx\n\t"\
+        "movl   4(%%eax), %%esi\n\t"\
+        "movl   8(%%eax), %%edi\n\t"\
+        "movl   12(%%eax), %%ebp\n\t"\
+        "movl   16(%%eax), %%edx\n\t"\
         "movl   20(%%eax), %%esp\n\t"\
+        ".cfi_def_cfa %%eax, 0 \n\t"\
+        ".cfi_offset %%ebx, 0 \n\t"\
+        ".cfi_offset %%esi, 4 \n\t"\
+        ".cfi_offset %%edi, 8 \n\t"\
+        ".cfi_offset %%ebp, 12 \n\t"\
+        ".cfi_offset %%edx, 16 \n\t"\
+        ".cfi_offset %%esp, 20 \n\t"\
         "jmp    *%%edx\n\t"\
-        : : "a" (ctx) : "edx" \
-    )
+        : : "a" (ctx))
 #define DILL_SETSP(x) \
     asm(""::"r"(alloca(sizeof(size_t))));\
     asm volatile("leal (%%eax), %%esp"::"eax"(x));
