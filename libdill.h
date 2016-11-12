@@ -158,6 +158,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
 /* Stack switching on X86. */
 #elif defined(__i386__) && !defined DILL_ARCH_FALLBACK
 #define dill_setjmp(ctx) ({\
+    int ret;
     asm("movl   $LJMPRET%=, %%ecx\n\t"\
         "movl   %%ebx, (%%edx)\n\t"\
         "movl   %%esi, 4(%%edx)\n\t"\
@@ -175,8 +176,8 @@ DILL_EXPORT void dill_proc_epilogue(void);
         "movl   4(%%edx), %%esi\n\t"\
         "movl   8(%%edx), %%edi\n\t"\
         "movl   12(%%edx), %%ebp\n\t"\
-        "movl   16(%%edx), %%ecx\n\t"\
-        "movl   20(%%edx), %%esp\n\t"\
+        "movl   16(%%edx), %%esp\n\t"\
+        "movl   20(%%edx), %%ecx\n\t"\
         ".cfi_def_cfa %%edx, 0 \n\t"\
         ".cfi_offset %%ebx, 0 \n\t"\
         ".cfi_offset %%esi, 4 \n\t"\
