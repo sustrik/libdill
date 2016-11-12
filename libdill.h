@@ -113,6 +113,21 @@ DILL_EXPORT void dill_proc_epilogue(void);
 
 /* Stack-switching on X86-64. */
 #if defined(__x86_64__) && !defined DILL_ARCH_FALLBACK
+#ifdef __CYGWIN__
+#define DILL_CYGWIN_SETJMP\
+        "mov     %%rsi, 64(%%rdx)\n\t"\
+        "mov     %%rdi, 72(%%rdx)\n\t"\
+        "movups  %%xmm6, 80(%%rdx)\n\t"\
+        "movups  %%xmm7, 88(%%rdx)\n\t"
+#define DILL_CYGWIN_LONGJMP\
+        "movups  88(%%rdx), %%xmm7\n\t"\
+        "movups  80(%%rdx), %%xmm6\n\t"\
+        "movq    72(%%rdx), %%rsi\n\t"\
+        "movq    64(%%rdx), %%rdi\n\t"
+#else
+#define DILL_CYGWIN_SETJMP
+#define DILL_CYGWIN_LONGJMP
+#endif
 #define dill_setjmp(ctx) ({\
     int ret;\
     asm("lea     LJMPRET%=(%%rip), %%rcx\n\t"\
@@ -125,6 +140,7 @@ DILL_EXPORT void dill_proc_epilogue(void);
         "mov     %%r15, 40(%%rdx)\n\t"\
         "mov     %%rsp, 48(%%rdx)\n\t"\
         "mov     %%rcx, 56(%%rdx)\n\t"\
+        DILL_CYGWIN_SETJMP\
         "LJMPRET%=:\n\t"\
         : "=a" (ret)\
         : "d" (ctx)\
@@ -132,7 +148,8 @@ DILL_EXPORT void dill_proc_epilogue(void);
     ret;\
 })
 #define dill_longjmp(ctx) \
-    asm("movq   56(%%rdx), %%rcx\n\t"\
+    asm(DILL_CYGWIN_LONGJMP\
+        "movq   56(%%rdx), %%rcx\n\t"\
         "movq   48(%%rdx), %%rsp\n\t"\
         "movq   40(%%rdx), %%r15\n\t"\
         "movq   32(%%rdx), %%r14\n\t"\
@@ -193,8 +210,12 @@ DILL_EXPORT void dill_proc_epilogue(void);
 
 /* Stack-switching on other microarchiterctures. */
 #else
+#ifdef __CYGWIN__
+#error "Cygwin setjmp/longjmp is broken."
+#else
 #define dill_setjmp(ctx) setjmp(ctx)
 #define dill_longjmp(ctx) longjmp(ctx, 1)
+#endif
 /* For newer GCCs, -fstack-protector breaks on this; use -fno-stack-protector.
    Alternatively, implement custom DILL_SETSP for your microarchitecture. */
 #define DILL_SETSP(x) \

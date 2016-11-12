@@ -49,6 +49,11 @@ coroutine void trigger(int fd, int64_t deadline) {
 int main() {
     int rc;
 
+    /* Cygwin does not support AF_UNIX properly */
+#ifdef __CYGWIN__
+    return -1;
+#endif
+
     /* Check invalid fd. */
     rc = fdin(33, -1);
     assert(rc == -1 && errno == EBADF);

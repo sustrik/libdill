@@ -361,6 +361,12 @@ int dill_prologue(jmp_buf **ctx, void **ptr, size_t len,
     dill_resume(dill_r, 0, 0);
     /* Mark the new coroutine as running. */
     *ptr = dill_r = cr;
+#if defined __CYGWIN__
+    /* TODO: On cygwin, the compiler assumes there's some writeable stack below
+       the stack pointer.  This line implements a red zone.
+       I'm not entirely sure this is correct, but it appears to work. */
+    *ptr -= 128;
+#endif
     return hndl;
 }
 
