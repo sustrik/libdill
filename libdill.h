@@ -125,8 +125,6 @@ DILL_EXPORT void dill_proc_epilogue(void);
         "mov     %%r15, 40(%%rdx)\n\t"\
         "mov     %%rsp, 48(%%rdx)\n\t"\
         "mov     %%rcx, 56(%%rdx)\n\t"\
-        "mov     %%rdi, 64(%%rdx)\n\t"\
-        "mov     %%rsi, 72(%%rdx)\n\t"\
         "LJMPRET%=:\n\t"\
         : "=a" (ret)\
         : "d" (ctx)\
