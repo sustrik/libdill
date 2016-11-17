@@ -137,18 +137,8 @@ static void dill_chan_close(struct hvfs *vfs) {
 /*  Sending and receiving.                                                    */
 /******************************************************************************/
 
-#define CLAUSE_INIT(cl, o, h, v, l)\
-    do {\
-        cl.op = (o);\
-        cl.ch = (h);\
-        cl.val = (void*)(v);\
-        cl.len = (l);\
-    } while(0)
-
 int chsend(int h, const void *val, size_t len, int64_t deadline) {
     /* Initialise the single clause. */
-    struct chclause cl;
-    CLAUSE_INIT(cl, CHSEND, h, (void*)val, len);
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Get the channel interface. */
@@ -163,14 +153,14 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
             /* Copy the message directly to the waiting receiver. */
             struct dill_chcl *chcl = dill_cont(dill_list_begin(&ch->in),
                 struct dill_chcl, cl.epitem);
-            memcpy(chcl->val, cl.val, len);
+            memcpy(chcl->val, val, len);
             dill_trigger(&chcl->cl, 0);
             return 0;
         }
         dill_assert(ch->items < ch->bufsz);
         /* Write the item to the buffer. */
         size_t pos = (ch->first + ch->items) % ch->bufsz;
-        memcpy(((char*)(ch + 1)) + (pos * len), cl.val, len);
+        memcpy(((char*)(ch + 1)) + (pos * len), val, len);
         ++ch->items;
         return 0;
 
@@ -178,9 +168,9 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
     /* The clause is not available immediately. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
-    struct dill_chcl *chcl = (struct dill_chcl*)&cl.reserved;
-    chcl->val = cl.val;
-    dill_waitfor(&chcl->cl, 0, &ch->out, NULL);
+    struct dill_chcl chcl;
+    chcl.val = (void*)val;
+    dill_waitfor(&chcl.cl, 0, &ch->out, NULL);
     struct dill_tmcl tmcl;
     dill_timer(&tmcl, 1, deadline);
     int id = dill_wait();
@@ -192,8 +182,6 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
 
 int chrecv(int h, void *val, size_t len, int64_t deadline) {
     /* Initialise the single clause. */
-    struct chclause cl;
-    CLAUSE_INIT(cl, CHRECV, h, (void*)val, len);
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Get the channel interface. */
@@ -209,12 +197,12 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
                Copy the message directly from a waiting sender. */
             struct dill_chcl *chcl = dill_cont(dill_list_begin(&ch->out),
                 struct dill_chcl, cl.epitem);
-            memcpy(cl.val, chcl->val, len);
+            memcpy(val, chcl->val, len);
             dill_trigger(&chcl->cl, 0);
             return 0;
         }
         /* Read an item from the buffer. */
-        memcpy(cl.val, ((char*)(ch + 1)) + (ch->first * len), len);
+        memcpy(val, ((char*)(ch + 1)) + (ch->first * len), len);
         ch->first = (ch->first + 1) % ch->bufsz;
         --ch->items;
         /* If there was a waiting sender, unblock it. */
@@ -231,9 +219,9 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     /* The clause is not available immediately. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
-    struct dill_chcl *chcl = (struct dill_chcl*)&cl.reserved;
-    chcl->val = cl.val;
-    dill_waitfor(&chcl->cl, 0, &ch->in, NULL);
+    struct dill_chcl chcl;
+    chcl.val = val;
+    dill_waitfor(&chcl.cl, 0, &ch->in, NULL);
     struct dill_tmcl tmcl;
     dill_timer(&tmcl, 1, deadline);
     int id = dill_wait();
