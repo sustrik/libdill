@@ -151,10 +151,12 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
     CLAUSE_INIT(cl, CHSEND, h, (void*)val, len);
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
-    /* First pass through the clauses. Find out which are immediately ready. */
+    /* Get the channel interface. */
     struct dill_chan *ch = hquery(h, dill_chan_type);
     if(dill_slow(!ch)) return -1;
+    /* Check that the length provided matches the channel length */
     if(dill_slow(len != ch->sz)) return -1;
+    /* Check if the channel is ready. */
     if(ch->items < ch->bufsz || !dill_list_empty(&ch->in) || ch->done) {
         if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
         if(!dill_list_empty(&ch->in)) {
@@ -173,7 +175,7 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
         return 0;
 
     }
-    /* There are no clauses available immediately. */
+    /* The clause is not available immediately. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
     struct dill_chcl *chcl = (struct dill_chcl*)&cl.reserved;
@@ -194,10 +196,12 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     CLAUSE_INIT(cl, CHRECV, h, (void*)val, len);
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
-    /* First pass through the clauses. Find out which are immediately ready. */
+    /* Get the channel interface. */
     struct dill_chan *ch = hquery(h, dill_chan_type);
     if(dill_slow(!ch)) return -1;
+    /* Check that the length provided matches the channel length */
     if(dill_slow(len != ch->sz)) return -1;
+    /* Check if the channel is ready. */
     if(ch->items || !dill_list_empty(&ch->out) || ch->done) {
         if(dill_slow(ch->done && !ch->items)) {errno = EPIPE; return -1;}
         if(!ch->items) {
@@ -224,7 +228,7 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
         }
         return 0;
     }
-    /* There are no clauses available immediately. */
+    /* The clause is not available immediately. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
     struct dill_chcl *chcl = (struct dill_chcl*)&cl.reserved;

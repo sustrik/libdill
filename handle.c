@@ -122,7 +122,7 @@ void *hquery(int h, const void *type) {
     else {
         void *ptr = hndl->vfs->query(hndl->vfs, type);
         if(dill_slow(!ptr)) return NULL;
-        /* Update cache */
+        /* Update cache. */
         hndl->type = type;
         hndl->ptr = ptr;
         return ptr;
