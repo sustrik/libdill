@@ -40,6 +40,9 @@ struct dill_handle {
     /* Index of the next handle in the linked list of unused handles. -1 means
        'end of the list'. -2 means 'active handle'. */
     int next;
+    /* Cache hquery's last call. */
+    const void *type;
+    void *ptr;
 };
 
 #define CHECKHANDLE(h, err) \
@@ -100,6 +103,8 @@ int hcreate(struct hvfs *vfs) {
     dill_handles[h].vfs = vfs;
     dill_handles[h].refcount = 1;
     dill_handles[h].next = -2;
+    dill_handles[h].type = NULL;
+    dill_handles[h].ptr = NULL;
     return h;
 }
 
@@ -111,7 +116,17 @@ int hdup(int h) {
 
 void *hquery(int h, const void *type) {
     CHECKHANDLE(h, NULL);
-    return hndl->vfs->query(hndl->vfs, type);
+    /* Try and use cached pointer first, otherwise do expensive virtual call.*/
+    if(dill_fast(hndl->ptr != NULL && hndl->type == type))
+        return hndl->ptr;
+    else {
+        void *ptr = hndl->vfs->query(hndl->vfs, type);
+        if(dill_slow(!ptr)) return NULL;
+        /* Update cache */
+        hndl->type = type;
+        hndl->ptr = ptr;
+        return ptr;
+    }
 }
 
 int hclose(int h) {
@@ -129,6 +144,8 @@ int hclose(int h) {
     hndl->vfs->close(hndl->vfs);
     /* Restore the previous state. */
     dill_no_blocking2(old);
+    /* Mark the cache as invalid. */
+    hndl->ptr = NULL;
     /* Return the handle to the shared pool. */
     hndl->next = dill_unused;
     dill_unused = h;
