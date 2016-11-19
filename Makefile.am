@@ -87,6 +87,9 @@ check_PROGRAMS = \
     tests/proc4 \
     tests/proc5
 
+check_HEADERS = \
+    tests/assert.h
+
 LDADD = libdill.la
 
 TESTS = $(check_PROGRAMS)
