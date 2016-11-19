@@ -13,6 +13,7 @@
 * [fdin](fdin.html)
 * [fdout](fdout.html)
 * [go](go.html)
+* [go_stack](go_stack.html)
 * [handle](handle.html)
 * [hclose](hclose.html)
 * [hdup](hdup.html)

@@ -20,6 +20,7 @@ all: \
     fdin.html \
     fdout.html \
     go.html \
+    go_stack.html \
     handle.html \
     hclose.html \
     hdup.html \
