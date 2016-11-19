@@ -17,13 +17,20 @@
 </ul>
 <h1 id="download">Download</h1>
 <h5 id="libdill">libdill</h5>
-<pre><code>$ wget http://libdill.org/libdill-0.8-beta.tar.gz
-$ tar -xzf libdill-0.8-beta.tar.gz 
-$ cd libdill-0.8-beta
+<pre><code>$ wget http://libdill.org/libdill-0.9-beta.tar.gz
+$ tar -xzf libdill-0.9-beta.tar.gz 
+$ cd libdill-0.9-beta
 $ ./configure
 $ make
 $ sudo make install</code></pre>
-<p><strong>Oct 16, 2016 <a href="http://libdill.org/libdill-0.8-beta.tar.gz">http://libdill.org/libdill-0.8-beta.tar.gz</a></strong><br />Oct 13, 2016 <a href="http://libdill.org/libdill-0.7-beta.tar.gz">http://libdill.org/libdill-0.7-beta.tar.gz</a><br />Sep 07, 2016: <a href="http://libdill.org/libdill-0.6-beta.tar.gz">http://libdill.org/libdill-0.6-beta.tar.gz</a><br />Jun 03, 2016: <a href="http://libdill.org/libdill-0.5-beta.tar.gz">http://libdill.org/libdill-0.5-beta.tar.gz</a><br />May 22, 2016: <a href="http://libdill.org/libdill-0.4-beta.tar.gz">http://libdill.org/libdill-0.4-beta.tar.gz</a><br />May 15, 2016: <a href="http://libdill.org/libdill-0.3-beta.tar.gz">http://libdill.org/libdill-0.3-beta.tar.gz</a></p>
+<p><strong>Nov 19, 2016 <a href="http://libdill.org/libdill-0.9-beta.tar.gz">http://libdill.org/libdill-0.9-beta.tar.gz</a></strong></p>
+<ul>
+<li>A lot of optimizations. Context switch have been seen to execute in 6ns, coroutine creation in 26ns. Passing a message via a channel in 40ns.<br /></li>
+<li>New <code>go_stack()</code> construct allows to run coroutine on a user-allocated stack.<br /></li>
+<li>New <code>--enable-census</code> option monitors coroutines' stack usage and prints thr statistics on process shutdown.<br /></li>
+<li>Mutliple bug fixes.</li>
+</ul>
+<p>Oct 16, 2016 <a href="http://libdill.org/libdill-0.8-beta.tar.gz">http://libdill.org/libdill-0.8-beta.tar.gz</a><br />Oct 13, 2016 <a href="http://libdill.org/libdill-0.7-beta.tar.gz">http://libdill.org/libdill-0.7-beta.tar.gz</a><br />Sep 07, 2016: <a href="http://libdill.org/libdill-0.6-beta.tar.gz">http://libdill.org/libdill-0.6-beta.tar.gz</a><br />Jun 03, 2016: <a href="http://libdill.org/libdill-0.5-beta.tar.gz">http://libdill.org/libdill-0.5-beta.tar.gz</a><br />May 22, 2016: <a href="http://libdill.org/libdill-0.4-beta.tar.gz">http://libdill.org/libdill-0.4-beta.tar.gz</a><br />May 15, 2016: <a href="http://libdill.org/libdill-0.3-beta.tar.gz">http://libdill.org/libdill-0.3-beta.tar.gz</a></p>
 <h5 id="dsock">dsock</h5>
 <pre><code>$ wget http://libdill.org/dsock-0.3-alpha.tar.gz
 $ tar -xzf dsock-0.3-alpha.tar.gz 
