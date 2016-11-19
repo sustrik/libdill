@@ -25,26 +25,28 @@ all: \
     hclose.html \
     hdup.html \
     hquery.html \
+    libdill_build_options.html \
     msleep.html \
     now.html \
     proc.html \
     setcls.html \
     yield.html \
     \
-    blog.html \
     bsock.html \
     bthrottler.html \
+    btrace.html \
     crlf.html \
+    http.html \
     ipaddr.html \
     keepalive.html \
     lz4.html \
-    mlog.html \
     msock.html \
     mthrottler.html \
+    mtrace.html \
     nacl.html \
     nagle.html \
     pfx.html \
     tcp.html \
     udp.html \
-    unix.html 
+    unix.html
 

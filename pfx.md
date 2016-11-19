@@ -9,6 +9,7 @@ pfx - messages prefixed by size
 ```c
 #include <dsock.h>
 int pfx_start(int s);
+int pfx_done(int s, int64_t deadline);
 int pfx_stop(int s, int64_t deadline);
 ```
 

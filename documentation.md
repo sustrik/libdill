@@ -3,6 +3,8 @@
 
 ##### libdill
 
+[Build options](libdill_build_options.html)
+
 * [channel](channel.html)
 * [chdone](chdone.html)
 * [choose](choose.html)
@@ -26,16 +28,17 @@
 
 ##### dsock
 
-* [blog](blog.html)
 * [bsock](bsock.html)
 * [bthrottler](bthrottler.html)
+* [btrace](btrace.html)
 * [crlf](crlf.html)
+* [http](http.html)
 * [ipaddr](ipaddr.html)
 * [keepalive](keepalive.html)
 * [lz4](lz4.html)
-* [mlog](mlog.html)
 * [msock](msock.html)
 * [mthrottler](mthrottler.html)
+* [mtrace](mtrace.html)
 * [nacl](nacl.html)
 * [nagle](nagle.html)
 * [pfx](pfx.html)
