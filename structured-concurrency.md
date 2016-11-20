@@ -1,6 +1,6 @@
 ## What is concurrency?
 
-Concurrency means that multiple functions can run independently of each another. It can mean that they are running in parallel on multiple CPU cores. It can also mean that they are running on a single CPU core and the system is transparently switching between them.
+Concurrency means that multiple functions can run independently of each another.
 
 ## How is concurrency implemented in libdill?
 
@@ -10,41 +10,18 @@ Functions that are meant to run concurrently must be annotated by `coroutine` mo
 coroutine void foo(int arg1, const char *arg2);
 ```
 
-To launch the function in the same process as the caller use `go` keyword:
+To launch the coroutine use `go` keyword:
 
 ```c
 go(foo(34, "ABC"));
 ```
 
-To launch it in a separate process use `proc` keyword:
+Launching a concurrent function -- a `coroutine` in libdill terminology -- using `go` construct  as well as switching between multiple running coroutines is extremely fast, it requires only few machine instructions. In other words, coroutines can be used as flow control mechanism, similar to `if` or `while`. The performance is comparable.
 
-```c
-proc(foo(34, "ABC"));
-```
+However, there's one huge limitation: All the coroutines run on a single CPU core. If you want to take advantage of multiple cores you have to launch multiple processes, presumably as many of them as there are CPU cores on your machine.
 
-Following table explains the trade-offs between the two mechanisms:
-
-|                         | go()                   | proc()                 |
-| ----------------------- | ---------------------- | ---------------------- |
-| **lightweight**         | yes                    | no                     |
-| **parallel**            | no                     | yes                    |
-| **scheduling**          | cooperative            | preemptive             |
-| **failure isolation**   | no                     | yes                    |
-
-Launching a concurrent function -- a `coroutine` in libdill terminology -- using `go` construct is extremely fast, it requires only few machine instructions. In other words, coroutines can be used as flow control mechanism, similar to `if` or `while`. The performance is comparable. `proc`, on the other hand, launches a separate OS process with its own address space and so on. It is much slower.
-
-Same applies to switching between different coroutines. While switching from one coroutine to other inside a single process is super fast, switching between processes is slow. OS scheduler gets involved, TLBs are switched and so on. Context switch between processes is a system hiccup and it often takes many thousands cycles to get back up to speed.
-
-However, there's one huge advantage of using separate processes. They may run in parallel, meaning that they can utilise multiple CPU cores. Launching the coroutine inside of the process, on the other hand, means that it shares CPU with the parent coroutine. If you are using `go` exclusively your program will use only a single CPU core even on a 32-core machine.
-
-From the performance point of view, the best strategy is to have as many processes as there are CPU cores and deal with any remaining concurrency needs inside the process via `go` mechanism.
-
-It's also worth noting that scheduling between different processes is preemptive, in other words that switch from one process to another can happen at any point of time.
-
-Coroutines within a single process are scheduled cooperatively. What that means is that one coroutine has to explicitly yield control of the CPU to allow a different coroutine to run. In the typical case this is done transparently to the user: When coroutine invokes a function that would block (like `msleep` or`chrecv`) the CPU is automatically yielded. However, if a coroutine does
+Coroutines are scheduled cooperatively. What that means is that one coroutine has to explicitly yield control of the CPU to allow a different coroutine to run. In the typical case this is done transparently to the user: When coroutine invokes a function that would block (like `msleep` or`chrecv`) the CPU is automatically yielded. However, if a coroutine does
 work without calling any blocking functions it may hold the CPU forever. For these cases there's a `yield` function to yield the CPU to other coroutines manually.
-
-Finally, there's a difference in how failures are handled. If a corutine crashes it takes down entire process along with all the other coroutines running inside it. However, if two coroutines are running in two different processes the fact that one of them crashes has no effect on the other one.
 
 ## What is structured concurrency?
 
@@ -64,17 +41,13 @@ What you end up with is a tree of coroutines rooted in the main function and spr
 
 ![](index3.jpeg)
 
-It should be noted that the call tree, via `proc` mechanism, can span multiple processes:
-
-![](index5.jpeg)
-
 ## How is structured concurrency implemented in libdill?
 
 As with everything that's idiomatic C you have to do it by hand.
 
 The good news is that it's easy to do.
 
-Both `go` and `proc` return a handle. The handle can be closed thus killing the concurrent function.
+`go` construct returns a handle. The handle can be closed thus killing the concurrent function.
 
 ```c
 int h = go(foo());
@@ -99,15 +72,9 @@ coroutine void foo(void) {
 }
 ```
 
-Processes launched by `proc` behave similarly. When `hclose` is called they are not killed immediately. Rather, blocking calls in the main coroutine start failing with `ECANCELED` error.
-
-If one of the processes in the process tree crashes or if it is killed, all its child processes behave as if they were closed using `hclose`, i.e. blocking calls in the main coroutine start failing with `ECANCELED` error:
-
-![](index6.jpeg)
-
 ## What about asynchronous objects?
 
-Sometimes you don't want to launch a coroutine but rather to create an object that runs coroutines in the background. For example, an object called "tcp_connection" may run two coroutines, one for asynchronously reading data from the network, one for sending data to the network.
+Sometimes you don't want to launch a coroutine but rather to create an object that runs coroutines in the background. For example, an object called `tcp_connection` may run two coroutines, one for asynchronously reading data from the network, one for sending data to the network.
 
 Still, it would be nice if the object was a node in the calltree, just like a coroutine is.
 
