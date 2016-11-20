@@ -54,8 +54,6 @@
 
 */
 
-static int dill_parent = -1;
-
 /* Pollset, as used by poll(2). */
 static int dill_pollset_size = 0;
 static struct pollfd *dill_pollset = NULL;
@@ -88,7 +86,7 @@ static void dill_pollset_atexit(void) {
 
 #endif
 
-int dill_pollset_init(int parent) {
+int dill_pollset_init(void) {
     int err;
     /* Allocate largest possible pollset. */
     dill_pollset_size = 0;
@@ -113,13 +111,6 @@ int dill_pollset_init(int parent) {
         dill_list_init(&dill_fdinfos[i].out);
         dill_fdinfos[i].cached = 0;
     }
-    /* Start waiting for a signal from the parent process. */
-    if(parent >= 0) {
-        dill_parent = parent;
-        dill_pollset[0].fd = parent;
-        dill_pollset[0].events = POLLIN;
-        dill_pollset_size = 1;
-    }
     return 0;
 error2:
     free(dill_pollset);
@@ -127,13 +118,6 @@ error2:
 error1:
     errno = err;
     return -1;
-}
-
-void dill_pollset_term(void) {
-    free(dill_pollset);
-    dill_pollset = NULL;
-    free(dill_fdinfos);
-    dill_fdinfos = NULL;
 }
 
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
@@ -197,12 +181,6 @@ int dill_pollset_poll(int timeout) {
     for(i = 0; i != dill_pollset_size && numevs; ++i) {
         struct pollfd *pfd = &dill_pollset[i];
         struct dill_fdinfo *fdi = &dill_fdinfos[pfd->fd];
-        /* Signal from parent process. */
-        if(dill_slow(pfd->fd == dill_parent)) {
-            dill_parent = -1;
-            dill_shutdown();
-            continue;
-        }
         /* Resume the blocked coroutines. */
         if(!dill_list_empty(&fdi->in) &&
               pfd->revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {

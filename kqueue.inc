@@ -60,7 +60,6 @@ struct dill_fdinfo {
 
 static struct dill_fdinfo *dill_fdinfos = NULL;
 static uint32_t dill_changelist = DILL_ENDLIST;
-static struct dill_fdinfo *dill_parentinfo = NULL;
 
 #if defined DILL_VALGRIND
 
@@ -71,7 +70,7 @@ static void dill_pollset_atexit(void) {
 
 #endif
 
-int dill_pollset_init(int parent) {
+int dill_pollset_init(void) {
     int err;
     dill_fdinfos = (struct dill_fdinfo*)
         calloc(dill_maxfds(), sizeof(struct dill_fdinfo));
@@ -87,12 +86,6 @@ int dill_pollset_init(int parent) {
     dill_kfd = kqueue();
     if(dill_slow(dill_kfd < 0)) {err = errno; goto error2;}
     dill_changelist = DILL_ENDLIST;
-    /* Start polling for signals from the parent. */
-    if(parent >= 0) {
-        dill_parentinfo = &dill_fdinfos[parent];
-        dill_parentinfo->next = dill_changelist;
-        dill_changelist = parent + 1;
-    }
     return 0;
 error2:
     free(dill_fdinfos);
@@ -100,19 +93,6 @@ error2:
 error1:
     errno = err;
     return -1;
-}
-
-void dill_pollset_term(void) {
-    free(dill_fdinfos);
-    dill_fdinfos = NULL;
-    if(dill_kfd != -1) {
-        /* TODO: kqueue documentation says that a kqueue descriptor won't
-           survive a fork. However, implementations seem to diverge.
-           On FreeBSD the following function succeeds. On OSX it returns
-           EACCESS. Therefore we ignore the return value. */
-        close(dill_kfd);
-    }
-    dill_kfd = -1;
 }
 
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
@@ -217,7 +197,7 @@ int dill_pollset_poll(int timeout) {
         }
         int fd = dill_changelist - 1;
         struct dill_fdinfo *fdi = &dill_fdinfos[fd];
-        if(!dill_list_empty(&fdi->in) || fdi == dill_parentinfo) {
+        if(!dill_list_empty(&fdi->in)) {
             if(!(fdi->currevs & FDW_IN)) {
                 EV_SET(&chngs[nchngs], fd, EVFILT_READ, EV_ADD, 0, 0, 0);
                 fdi->currevs |= FDW_IN;
@@ -292,22 +272,15 @@ int dill_pollset_poll(int timeout) {
     while(chl != DILL_ENDLIST) {
         int fd = chl - 1;
         struct dill_fdinfo *fdi = &dill_fdinfos[fd];
-        /* Signal from parent. */
-        if(dill_slow(fdi == dill_parentinfo)) {
-            dill_parentinfo = NULL;
-            dill_shutdown();
+        if(!dill_list_empty(&fdi->in) && (fdi->firing & FDW_IN)) {
+            struct dill_clause *cl = dill_cont(dill_list_begin(&fdi->in),
+                struct dill_clause, epitem);
+            dill_trigger(cl, 0);
         }
-        else {            
-            if(!dill_list_empty(&fdi->in) && (fdi->firing & FDW_IN)) {
-                struct dill_clause *cl = dill_cont(dill_list_begin(&fdi->in),
-                    struct dill_clause, epitem);
-                dill_trigger(cl, 0);
-            }
-            if(!dill_list_empty(&fdi->out) && (fdi->firing & FDW_OUT)) {
-                struct dill_clause *cl = dill_cont(dill_list_begin(&fdi->out),
-                    struct dill_clause, epitem);
-                dill_trigger(cl, 0);
-            }
+        if(!dill_list_empty(&fdi->out) && (fdi->firing & FDW_OUT)) {
+            struct dill_clause *cl = dill_cont(dill_list_begin(&fdi->out),
+                struct dill_clause, epitem);
+            dill_trigger(cl, 0);
         }
         fdi->firing = 0;
         chl = fdi->next;

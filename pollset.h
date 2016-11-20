@@ -25,14 +25,8 @@
 #ifndef DILL_POLLSET_INCLUDED
 #define DILL_POLLSET_INCLUDED
 
-/* Initialises the pollset. This function isn't called second time unless
-   dill_pollset_term() was called in the meantime. 'parent' is a file
-   descriptor that becomes readable when parent process dies or asks this
-   process to shut down. */
-int dill_pollset_init(int parent);
-
-/* Deallocates the pollset. */
-void dill_pollset_term(void);
+/* Initialises the pollset. This function is called once only. */
+int dill_pollset_init(void);
 
 /* Add waiting for in event on the fd to the list of current clauses. */
 int dill_pollset_in(struct dill_clause *cl, int id, int fd);

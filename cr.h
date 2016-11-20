@@ -82,9 +82,6 @@ int dill_in(struct dill_clause *cl, int id, int fd);
 /* Wait for out event on a file descriptor. */
 int dill_out(struct dill_clause *cl, int id, int fd);
 
-/* Starts canceling the main coroutine. */
-void dill_shutdown(void);
-
 /* Returns 0 if blocking functions are allowed.
    Returns -1 and sets errno to ECANCELED otherwise. */
 int dill_canblock(void);
@@ -94,11 +91,6 @@ int dill_no_blocking2(int val);
 
 /* Cleans cached info about the fd. */
 void dill_clean(int fd);
-
-/* Makes the current coroutine the main coroutine of the child process.
-   'parent' is a file descriptor that will signal in and/or err if the process
-   is supposed to shut down. */
-void dill_postfork(int parent);
 
 #endif
 

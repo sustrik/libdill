@@ -101,8 +101,6 @@ DILL_EXPORT extern volatile void *dill_unoptimisable;
 DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
     void **ptr, size_t len, const char *file, int line);
 DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
-DILL_EXPORT int dill_proc_prologue(int *hndl);
-DILL_EXPORT void dill_proc_epilogue(void);
 
 /* In the following macros alloca(sizeof(size_t)) is used because clang
    doesn't support alloca with size zero. */
@@ -221,16 +219,6 @@ DILL_EXPORT void dill_proc_epilogue(void);
     })
 
 #define go(fn) go_stack(fn, NULL, 0)
-
-#define proc(fn) \
-    ({\
-        int h;\
-        if(dill_proc_prologue(&h)) {\
-            fn;\
-            dill_proc_epilogue();\
-        }\
-        h;\
-    })
 
 DILL_EXPORT int yield(void);
 DILL_EXPORT int msleep(int64_t deadline);

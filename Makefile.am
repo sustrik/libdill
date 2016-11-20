@@ -46,7 +46,6 @@ libdill_la_SOURCES = \
     poll.inc \
     pollset.h \
     pollset.c \
-    proc.c \
     slist.h \
     slist.c \
     stack.h \
@@ -79,13 +78,7 @@ check_PROGRAMS = \
     tests/choose \
     tests/sleep \
     tests/signals \
-    tests/overload \
-    tests/proc \
-    tests/proc1 \
-    tests/proc2 \
-    tests/proc3 \
-    tests/proc4 \
-    tests/proc5
+    tests/overload
 
 check_HEADERS = \
     tests/assert.h

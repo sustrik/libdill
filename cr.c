@@ -164,28 +164,20 @@ int dill_no_blocking2(int val) {
 /*  Poller.                                                                   */
 /******************************************************************************/
 
-static void dill_poller_init(int parent) {
+static void dill_poller_init(void) {
     /* If intialisation was already done, do nothing. */
     if(dill_fast(dill_poller_initialised)) return;
     dill_poller_initialised = 1;
     /* Timers. */
     dill_list_init(&dill_timers);
     /* Polling-mechanism-specific intitialisation. */
-    int rc = dill_pollset_init(parent);
+    int rc = dill_pollset_init();
     dill_assert(rc == 0);
-}
-
-static void dill_poller_term(void) {
-    dill_poller_initialised = 0;
-    /* Polling-mechanism-specific termination. */
-    dill_pollset_term();
-    /* Get rid of all the timers inherited from the parent. */
-    dill_list_init(&dill_timers);
 }
 
 /* Adds a timer clause to the list of waited for clauses. */
 void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
-    dill_poller_init(-1);
+    dill_poller_init();
     /* If the deadline is infinite there's nothing to wait for. */
     if(deadline < 0) return;
     /* Finite deadline. */
@@ -205,19 +197,19 @@ void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
 }
 
 int dill_in(struct dill_clause *cl, int id, int fd) {
-    dill_poller_init(-1);
+    dill_poller_init();
     if(dill_slow(fd < 0 || fd >= dill_maxfds())) {errno = EBADF; return -1;}
     return dill_pollset_in(cl, id, fd);
 }
 
 int dill_out(struct dill_clause *cl, int id, int fd) {
-    dill_poller_init(-1);
+    dill_poller_init();
     if(dill_slow(fd < 0 || fd >= dill_maxfds())) {errno = EBADF; return -1;}
     return dill_pollset_out(cl, id, fd);
 }
 
 void dill_clean(int fd) {
-    dill_poller_init(-1);
+    dill_poller_init();
     dill_pollset_clean(fd);
 }
 
@@ -225,7 +217,7 @@ void dill_clean(int fd) {
    to 0 the function will poll for events and return immediately. If it is set
    to 1 it will block until there's at least one event to process. */
 static void dill_poller_wait(int block) {
-    dill_poller_init(-1);
+    dill_poller_init();
     while(1) {
         /* Compute timeout for the subsequent poll. */
         int timeout = 0;
@@ -423,23 +415,6 @@ static void dill_cr_close(struct hvfs *vfs) {
 #endif
     /* Now that the coroutine is finished deallocate it. */
     if(!cr->go_stack) dill_freestack(cr + 1);
-}
-
-void dill_shutdown(void) {
-    dill_main->no_blocking1 = 1;
-    if(!dill_slist_item_inlist(&dill_main->ready))
-        dill_cancel(dill_main, ECANCELED);
-}
-
-void dill_postfork(int parent) {
-    /* Currently running coroutine will become the new main. */
-    dill_main = dill_r;
-    /* Ignore all the scheduled coroutines. */
-    dill_slist_init(&dill_ready);
-    /* Re-create the polling infrastructure. */
-    dill_poller_term();
-    dill_poller_init(parent);
-    /* TODO: Re-create the stack cache. */
 }
 
 /******************************************************************************/

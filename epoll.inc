@@ -57,7 +57,6 @@ struct dill_fdinfo {
 
 static struct dill_fdinfo *dill_fdinfos = NULL;
 static uint32_t dill_changelist = DILL_ENDLIST;
-static struct dill_fdinfo *dill_parentinfo = NULL;
 
 #if defined DILL_VALGRIND
 
@@ -68,7 +67,7 @@ static void dill_pollset_atexit(void) {
 
 #endif
 
-int dill_pollset_init(int parent) {
+int dill_pollset_init(void) {
     int err;
     /* Allocate one info per fd. */
     dill_fdinfos = (struct dill_fdinfo*)
@@ -87,12 +86,6 @@ int dill_pollset_init(int parent) {
     /* Create kernel-side pollset. */
     dill_efd = epoll_create(1);
     if(dill_slow(dill_efd < 0)) {err = errno; goto error2;}
-    /* Start polling for signals from the parent. */
-    if(parent >= 0) {
-        dill_parentinfo = &dill_fdinfos[parent];
-        dill_parentinfo->next = dill_changelist;
-        dill_changelist = parent + 1;
-    }
     return 0;
 error2:
     free(dill_fdinfos);
@@ -100,18 +93,6 @@ error2:
 error1:
     errno = err;
     return -1;
-}
-
-void dill_pollset_term(void) {
-    if(dill_efd >= 0) {
-        int rc = close(dill_efd);
-        dill_assert(rc == 0);
-        dill_efd = -1;
-    }
-    free(dill_fdinfos);
-    dill_fdinfos = NULL;
-    dill_changelist = DILL_ENDLIST;
-    dill_parentinfo = NULL;
 }
 
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
@@ -206,7 +187,7 @@ int dill_pollset_poll(int timeout) {
         struct epoll_event ev;
         ev.data.fd = fd;
         ev.events = 0;
-        if(!dill_list_empty(&fdi->in) || fdi == dill_parentinfo)
+        if(!dill_list_empty(&fdi->in))
             ev.events |= EPOLLIN;
         if(!dill_list_empty(&fdi->out))
             ev.events |= EPOLLOUT;
@@ -241,12 +222,6 @@ int dill_pollset_poll(int timeout) {
     for(i = 0; i != numevs; ++i) {
         int fd = evs[i].data.fd;
         struct dill_fdinfo *fdi = &dill_fdinfos[fd];
-        /* Signal from parent process. */
-        if(dill_slow(fdi == dill_parentinfo)) {
-            dill_parentinfo = NULL;
-            dill_shutdown();
-            continue;
-        }
         /* Resume the blocked coroutines. */
         if(!dill_list_empty(&fdi->in) &&
               (evs[i].events & (EPOLLIN | EPOLLERR | EPOLLHUP))) {
