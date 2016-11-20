@@ -22,7 +22,6 @@
 * [hquery](hquery.html)
 * [msleep](msleep.html)
 * [now](now.html)
-* [proc](proc.html)
 * [setcls](setcls.html)
 * [yield](yield.html)
 

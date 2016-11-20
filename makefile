@@ -28,7 +28,6 @@ all: \
     libdill_build_options.html \
     msleep.html \
     now.html \
-    proc.html \
     setcls.html \
     yield.html \
     \
