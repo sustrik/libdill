@@ -85,7 +85,7 @@ struct hvfs {
     void (*close)(struct hvfs *vfs);
 };
 
-DILL_EXPORT int hcreate(struct hvfs *vfs);
+DILL_EXPORT int hmake(struct hvfs *vfs);
 DILL_EXPORT void *hquery(int h, const void *type);
 DILL_EXPORT int hdup(int h);
 DILL_EXPORT int hclose(int h);

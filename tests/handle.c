@@ -44,7 +44,7 @@ int main(void) {
     struct test t;
     t.vfs.query = test_query;
     t.vfs.close = test_close;
-    int h = hcreate(&t.vfs);
+    int h = hmake(&t.vfs);
     errno_assert(h >= 0);
     void *p = hquery(h, NULL);
     errno_assert(p);

@@ -98,7 +98,7 @@ int channel(size_t itemsz, size_t bufsz) {
     ch->first = 0;
     ch->done = 0;
     /* Allocate a handle to point to the channel. */
-    int h = hcreate(&ch->vfs);
+    int h = hmake(&ch->vfs);
     if(dill_slow(h < 0)) {
         int err = errno;
         free(ch);

@@ -303,7 +303,7 @@ int dill_prologue(sigjmp_buf **ctx, void **ptr, size_t len,
     --cr;
     cr->vfs.query = dill_cr_query;
     cr->vfs.close = dill_cr_close;
-    int hndl = hcreate(&cr->vfs);
+    int hndl = hmake(&cr->vfs);
     if(dill_slow(hndl < 0)) {
         int err = errno; dill_freestack(cr + 1); errno = err; return -1;}
     dill_slist_item_init(&cr->ready);

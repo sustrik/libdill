@@ -64,7 +64,7 @@ static void dill_handle_atexit(void) {
 
 #endif
 
-int hcreate(struct hvfs *vfs) {
+int hmake(struct hvfs *vfs) {
     if(dill_slow(!vfs || !vfs->query || !vfs->close)) {
         errno = EINVAL; return -1;}
     /* Return ECANCELED if shutting down. */
