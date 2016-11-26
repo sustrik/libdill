@@ -18,7 +18,7 @@ int handle(const void *type, void *data, const struct hvfptrs *vfptrs);
 
 ## DESCRIPTION
 
-Handle is a user-space equivalent of a file descriptor. Coroutines, processes and channels are represented by handles.
+Handle is a user-space equivalent of a file descriptor. Coroutines and channels are represented by handles.
 
 Unlike with file descriptors though, you can create your own handle type. To do so use `handle` function.
 
