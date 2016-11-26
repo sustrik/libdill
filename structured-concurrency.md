@@ -20,8 +20,7 @@ Launching a concurrent function -- a `coroutine` in libdill terminology -- using
 
 However, there's one huge limitation: All the coroutines run on a single CPU core. If you want to take advantage of multiple cores you have to launch multiple processes, presumably as many of them as there are CPU cores on your machine.
 
-Coroutines are scheduled cooperatively. What that means is that one coroutine has to explicitly yield control of the CPU to allow a different coroutine to run. In the typical case this is done transparently to the user: When coroutine invokes a function that would block (like `msleep` or`chrecv`) the CPU is automatically yielded. However, if a coroutine does
-work without calling any blocking functions it may hold the CPU forever. For these cases there's a `yield` function to yield the CPU to other coroutines manually.
+Coroutines are scheduled cooperatively. What that means is that one coroutine has to explicitly yield control of the CPU to allow a different coroutine to run. In the typical case this is done transparently to the user: When coroutine invokes a function that would block (like `msleep` or`chrecv`) the CPU is automatically yielded. However, if a coroutine does work without calling any blocking functions it may hold the CPU forever. For these cases there's a `yield` function to yield the CPU to other coroutines manually.
 
 ## What is structured concurrency?
 
