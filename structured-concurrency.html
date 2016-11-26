@@ -75,9 +75,9 @@ hclose(h);</code></pre>
 }</code></pre>
 <h2 id="stack-on-stack">Stack-on-stack</h2>
 <p>Given that with structured concurrency child coroutine always finishes before the parent coroutine it is possible to keep child's stack as a local variable on parent's stack. Doing it is dangerous (stack overflow in child can corrupt parent's stack) and not recommended unless there are heavy constraints on memory usage. Still, the technique is worth of mention:</p>
-<pre class="sourceCode c"><code class="sourceCode c">coroutine parent(<span class="dt">void</span>) {
+<pre class="sourceCode c"><code class="sourceCode c">coroutine foo(<span class="dt">void</span>) {
     <span class="dt">char</span> stk[<span class="dv">1024</span>];
-    <span class="dt">int</span> h = go_stack(child(), stk, <span class="kw">sizeof</span>(stk));
+    <span class="dt">int</span> h = go_stack(bar(), stk, <span class="kw">sizeof</span>(stk));
     ...
     hclose(h);
 }</code></pre>
