@@ -83,6 +83,8 @@ DILL_EXPORT int64_t now(void);
 struct hvfs {
     void *(*query)(struct hvfs *vfs, const void *type);
     void (*close)(struct hvfs *vfs);
+    /* Reserved. Do not use directly! */
+    unsigned int refcount;
 };
 
 DILL_EXPORT int hmake(struct hvfs *vfs);

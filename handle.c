@@ -35,10 +35,8 @@
 struct dill_handle {
     /* Table of virtual functions. */
     struct hvfs *vfs;
-    /* Number of references to this handle. */
-    int refcount;
     /* Index of the next handle in the linked list of unused handles. -1 means
-       'end of the list'. -2 means 'active handle'. */
+       'end of the list'. -2 means 'handle is in use'. */
     int next;
     /* Cache hquery's last call. */
     const void *type;
@@ -100,8 +98,8 @@ int hmake(struct hvfs *vfs) {
     /* Return first handle from the list of unused hadles. */
     int h = dill_unused;
     dill_unused = dill_handles[h].next;
+    vfs->refcount = 1;
     dill_handles[h].vfs = vfs;
-    dill_handles[h].refcount = 1;
     dill_handles[h].next = -2;
     dill_handles[h].type = NULL;
     dill_handles[h].ptr = NULL;
@@ -110,8 +108,11 @@ int hmake(struct hvfs *vfs) {
 
 int hdup(int h) {
     CHECKHANDLE(h, -1);
-    ++hndl->refcount;
-    return h;
+    int refcount = hndl->vfs->refcount;
+    int res = hmake(hndl->vfs);
+    if(dill_slow(res < 0)) return -1;
+    hndl->vfs->refcount = refcount + 1;
+    return res;
 }
 
 void *hquery(int h, const void *type) {
@@ -133,8 +134,8 @@ int hclose(int h) {
     CHECKHANDLE(h, -1);
     /* If there are multiple duplicates of this handle just remove one
        reference. */
-    if(hndl->refcount > 1) {
-        --hndl->refcount;
+    if(hndl->vfs->refcount > 1) {
+        --hndl->vfs->refcount;
         return 0;
     }
     /* This will guarantee that blocking functions cannot be called anywhere
