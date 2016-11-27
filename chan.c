@@ -40,8 +40,6 @@
 struct dill_chan {
     /* Table of virtual functions. */
     struct hvfs vfs;
-    /* Reference count increases every time hdup() is called. */
-    unsigned int refcount;
     /* The size of one element stored in the channel, in bytes. */
     size_t sz;
     /* List of clauses wanting to receive from the channel. */
@@ -76,7 +74,6 @@ DILL_CT_ASSERT(sizeof(struct dill_chcl) <= 64);
 static const int dill_chan_type_placeholder = 0;
 static const void *dill_chan_type = &dill_chan_type_placeholder;
 static void *dill_chan_query(struct hvfs *vfs, const void *type);
-static int dill_chan_dup(struct hvfs *vfs);
 static void dill_chan_close(struct hvfs *vfs);
 
 /******************************************************************************/
@@ -92,9 +89,7 @@ int channel(size_t itemsz, size_t bufsz) {
         malloc(sizeof(struct dill_chan) + (itemsz * bufsz));
     if(!ch) {errno = ENOMEM; return -1;}
     ch->vfs.query = dill_chan_query;
-    ch->vfs.dup = dill_chan_dup;
     ch->vfs.close = dill_chan_close;
-    ch->refcount = 1;
     ch->sz = itemsz;
     dill_list_init(&ch->in);
     dill_list_init(&ch->out);
@@ -119,17 +114,9 @@ static void *dill_chan_query(struct hvfs *vfs, const void *type) {
     return NULL;
 }
 
-static int dill_chan_dup(struct hvfs *vfs) {
-    struct dill_chan *ch = (struct dill_chan*)vfs;
-    ++ch->refcount;
-}
-
 static void dill_chan_close(struct hvfs *vfs) {
     struct dill_chan *ch = (struct dill_chan*)vfs;
-    if(ch->refcount > 1) {
-        --ch->refcount;
-        return;
-    }
+    dill_assert(ch);
     /* Resume any remaining senders and receivers on the channel
        with EPIPE error. */
     while(!dill_list_empty(&ch->in)) {

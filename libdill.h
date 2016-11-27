@@ -82,7 +82,6 @@ DILL_EXPORT int64_t now(void);
 
 struct hvfs {
     void *(*query)(struct hvfs *vfs, const void *type);
-    int (*dup)(struct hvfs *vfs);
     void (*close)(struct hvfs *vfs);
 };
 
