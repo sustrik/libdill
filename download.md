@@ -4,15 +4,19 @@
 ##### libdill
 
 ```
-$ wget http://libdill.org/libdill-0.9-beta.tar.gz
-$ tar -xzf libdill-0.9-beta.tar.gz 
-$ cd libdill-0.9-beta
+$ wget http://libdill.org/libdill-0.10-beta.tar.gz
+$ tar -xzf libdill-0.10-beta.tar.gz 
+$ cd libdill-0.10-beta
 $ ./configure
 $ make
 $ sudo make install
 ```
 
-**Nov 19, 2016 <http://libdill.org/libdill-0.9-beta.tar.gz>**
+**Nov 27, 2016 <http://libdill.org/libdill-0.10-beta.tar.gz>**
+
+* Rename hcreate() to hmake(). hcreate() clashes with POSIX function of the same name.
+
+Nov 19, 2016 <http://libdill.org/libdill-0.9-beta.tar.gz>
 
 * A lot of optimizations. Context switch have been seen to execute in 6ns, coroutine creation in 26ns. Passing a message via a channel in 40ns.
 * New `go_stack()` construct allows to run coroutine on a user-allocated stack. 
