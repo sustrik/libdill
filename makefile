@@ -21,9 +21,9 @@ all: \
     fdout.html \
     go.html \
     go_stack.html \
-    handle.html \
     hclose.html \
     hdup.html \
+    hmake.html \
     hquery.html \
     libdill_build_options.html \
     msleep.html \
