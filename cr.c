@@ -75,6 +75,8 @@ struct dill_cr {
     sigjmp_buf ctx;
     /* If coroutine is blocked, here's the list of clauses it waits for. */
     struct dill_slist clauses;
+    /* Reference count. It get increased every time hdup() is called. */
+    unsigned int refcount;
     /* Coroutine-local storage. */
     void *cls;
     /* There are two possible reasons to disable blocking calls.
@@ -261,6 +263,7 @@ static void dill_poller_wait(int block) {
 static const int dill_cr_type_placeholder = 0;
 static const void *dill_cr_type = &dill_cr_type_placeholder;
 static void *dill_cr_query(struct hvfs *vfs, const void *type);
+static int dill_cr_dup(struct hvfs *vfs);
 static void dill_cr_close(struct hvfs *vfs);
 
 /******************************************************************************/
@@ -302,6 +305,7 @@ int dill_prologue(sigjmp_buf **ctx, void **ptr, size_t len,
 #endif
     --cr;
     cr->vfs.query = dill_cr_query;
+    cr->vfs.dup = dill_cr_dup;
     cr->vfs.close = dill_cr_close;
     int hndl = hmake(&cr->vfs);
     if(dill_slow(hndl < 0)) {
@@ -309,6 +313,7 @@ int dill_prologue(sigjmp_buf **ctx, void **ptr, size_t len,
     dill_slist_item_init(&cr->ready);
     dill_slist_init(&cr->clauses);
     cr->closer = NULL;
+    cr->refcount = 1;
     cr->cls = NULL;
     cr->no_blocking1 = 0;
     cr->no_blocking2 = 0;
@@ -374,9 +379,18 @@ static void *dill_cr_query(struct hvfs *vfs, const void *type) {
     return cr;
 }
 
+static int dill_cr_dup(struct hvfs *vfs) {
+    struct dill_cr *cr = dill_cont(vfs, struct dill_cr, vfs);
+    ++cr->refcount;
+}
+
 /* Gets called when coroutine handle is closed. */
 static void dill_cr_close(struct hvfs *vfs) {
     struct dill_cr *cr = dill_cont(vfs, struct dill_cr, vfs);
+    if(cr->refcount > 1) {
+        --cr->refcount;
+        return;
+    }
     /* If the coroutine have already finished, we are done. */
     if(!cr->done) {
         /* No blocking calls from this point on. */
