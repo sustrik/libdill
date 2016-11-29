@@ -23,7 +23,24 @@
 #ifndef DILL_CONTEXT_INCLUDED
 #define DILL_CONTEXT_INCLUDED
 
+#if defined DILL_THREADS
+
 #include <limits.h>
+
+/* Thread local storage support */
+#if (__STDC_VERSION__ >= 201112L) && (__STDC_NO_THREADS__ != 1)
+#define DILL_THREAD_LOCAL _Thread_local
+#elif defined __GNUC__
+#define DILL_THREAD_LOCAL __thread
+#else
+#error "No TLS support"
+#endif
+
+#else
+
+#define DILL_THREAD_LOCAL
+
+#endif
 
 struct dill_ctx_cr;
 struct dill_ctx_handle;
@@ -37,6 +54,7 @@ struct dill_ctx {
     struct dill_ctx_pollset *pollset;
 };
 
-extern struct dill_ctx dill_context;
+extern DILL_THREAD_LOCAL struct dill_ctx dill_context;
 
 #endif
+

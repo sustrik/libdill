@@ -30,4 +30,10 @@
 struct dill_ctx_handle;
 extern struct dill_ctx_handle dill_ctx_handle_main_data;
 
+/* Initialises internal structures. */
+int dill_inithandle(void);
+
+/* Release internal structures. */
+void dill_termhandle(void);
+
 #endif

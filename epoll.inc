@@ -61,34 +61,28 @@ struct dill_ctx_pollset {
 };
 
 struct dill_ctx_pollset dill_ctx_pollset_defaults = {-1, NULL, DILL_ENDLIST};
-struct dill_ctx_pollset dill_ctx_pollset_main_data = {-1, NULL, DILL_ENDLIST};
 
-#if defined DILL_VALGRIND
-
-static void dill_pollset_atexit(void) {
+/* Termination function for the pollset context. */
+void dill_pollset_term(void) {
     struct dill_ctx_pollset *ctx = dill_context.pollset;
-    if(!ctx) return;
+    if(dill_slow(!ctx)) return;
     if(ctx->fdinfos)
         free(ctx->fdinfos);
+    free(ctx);
+    dill_context.pollset = NULL;
 }
 
-#endif
-
 int dill_pollset_init(void) {
-    struct dill_ctx_pollset *ctx = dill_context.pollset;
     int err;
+    /* Always allocate a pollset because this function is always called from cr.c */
+    struct dill_ctx_pollset *ctx = malloc(sizeof(struct dill_ctx_pollset));
+    if(dill_slow(!ctx)) {err = ENOMEM; goto error1;}
+    memcpy(ctx, &dill_ctx_pollset_defaults, sizeof(struct dill_ctx_pollset));
+    dill_context.pollset = ctx;
     /* Allocate one info per fd. */
     ctx->fdinfos = (struct dill_fdinfo*)
         calloc(dill_maxfds(), sizeof(struct dill_fdinfo));
     if(dill_slow(!ctx->fdinfos)) {err = ENOMEM; goto error1;}
-#if defined DILL_VALGRIND
-    static int initialized = 0;
-    if(dill_slow(!initialized)) {
-        int rc = atexit(dill_pollset_atexit);
-        dill_assert(rc == 0);
-        initialized = 1;
-    }
-#endif
     /* Changelist is empty. */
     ctx->changelist = DILL_ENDLIST;
     /* Create kernel-side pollset. */

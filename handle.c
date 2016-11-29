@@ -63,12 +63,31 @@ struct dill_ctx_handle {
 struct dill_ctx_handle dill_ctx_handle_defaults = {NULL, 0, -1};
 struct dill_ctx_handle dill_ctx_handle_main_data = {NULL, 0, -1};
 
+/* Initialisation function for the handle context. */
+int dill_inithandle(void) {
+    struct dill_ctx_handle *ctx = malloc(sizeof(struct dill_ctx_handle));
+    if(dill_slow(!ctx)) return -1;
+    memcpy(ctx, &dill_ctx_handle_defaults, sizeof(struct dill_ctx_handle));
+    dill_context.handle = ctx;
+    return 0;
+}
+
+/* Termination function for the handle context. */
+void dill_termhandle(void) {
+    struct dill_ctx_handle *ctx = dill_context.handle;
+    if(dill_slow(!ctx)) return;
+    if(ctx->handles)
+        free(ctx->handles);
+    /* Ensure that we are not in the main thread. */
+    if(ctx == &dill_ctx_handle_main_data) return;
+    free(ctx);
+    dill_context.handle = NULL;
+}
+
 #if defined DILL_VALGRIND
 
 static void dill_handle_atexit(void) {
-    struct dill_ctx_handle *ctx = dill_context.handle;
-    if(ctx->handles)
-        free(ctx->handles);
+    dill_termhandle();
 }
 
 #endif
@@ -91,8 +110,10 @@ int hmake(struct hvfs *vfs) {
         /* Clean-up function to delete the array at exit. It is not strictly
            necessary but valgrind will be happy about it. */
         if(dill_slow(!ctx->initialized)) {
-            int rc = atexit(dill_handle_atexit);
-            dill_assert(rc == 0);
+            if(ctx == &dill_ctx_handle_main_data) {
+                int rc = atexit(dill_handle_atexit);
+                dill_assert(rc == 0);
+            }
             ctx->initialized = 1;
         }
 #endif

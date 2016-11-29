@@ -28,8 +28,11 @@
 struct dill_ctx_pollset;
 extern struct dill_ctx_pollset dill_ctx_pollset_main_data;
 
-/* Initialises the pollset. This function is called once only. */
+/* Initialises the pollset. This function is called once per thread. */
 int dill_pollset_init(void);
+
+/* Frees the pollset. This function called once per thread. */
+void dill_pollset_term(void);
 
 /* Add waiting for in event on the fd to the list of current clauses. */
 int dill_pollset_in(struct dill_clause *cl, int id, int fd);

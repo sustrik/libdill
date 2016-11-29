@@ -75,11 +75,20 @@ static size_t dill_page_size(void) {
     return (size_t)pgsz;
 }
 
-#if defined DILL_VALGRIND
+/* Intialisation function for stack context */
+int dill_initstack(void) {
+    struct dill_ctx_stack *ctx = malloc(sizeof(struct dill_ctx_stack));
+    if(dill_slow(!ctx)) return -1;
+    memcpy(ctx, &dill_ctx_stack_defaults, sizeof(struct dill_ctx_stack));
+    dill_context.stack = ctx;
+    return 0;
+}
 
-static void dill_stack_atexit(void) {
+/* Termination function for stack context */
+void dill_termstack(void) {
     struct dill_ctx_stack *ctx = dill_context.stack;
     if(!ctx) return;
+#if defined DILL_VALGRIND
     struct dill_slist_item *it;
     while(it = dill_slist_pop(&ctx->cache)) {
       /* If the stack cache is full deallocate the stack. */
@@ -93,6 +102,17 @@ static void dill_stack_atexit(void) {
       free(ptr);
 #endif
     }
+#endif
+    /* Ensure that we are not in the main thread. */
+    if(ctx == &dill_ctx_stack_main_data) return;
+    free(dill_context.stack);
+    dill_context.stack = NULL;
+}
+
+#if defined DILL_VALGRIND
+
+static void dill_stack_atexit(void) {
+    dill_termstack();
 }
 
 #endif
@@ -103,8 +123,10 @@ void *dill_allocstack(size_t *stack_size) {
     /* When using valgrind we want to deallocate cached stacks when
        the process is terminated so that they don't show up in the output. */
     if(dill_slow(!ctx->initialized)) {
-        int rc = atexit(dill_stack_atexit);
-        dill_assert(rc == 0);
+        if(ctx == &dill_ctx_stack_main_data) {
+            int rc = atexit(dill_stack_atexit);
+            dill_assert(rc == 0);
+        }
         ctx->initialized = 1;
     }
 #endif

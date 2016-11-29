@@ -20,16 +20,31 @@
 
 */
 
+#include "libdill.h"
 #include "context.h"
 #include "cr.h"
 #include "handle.h"
 #include "stack.h"
-#include "pollset.h"
 
-struct dill_ctx dill_context = {
+DILL_THREAD_LOCAL struct dill_ctx dill_context = {
     .cr = &dill_ctx_cr_main_data,
     .handle = &dill_ctx_handle_main_data,
     .stack = &dill_ctx_stack_main_data,
-    .pollset = &dill_ctx_pollset_main_data,
+    /* Pollset is managed by cr.c even in main thread. */
+    .pollset = NULL,
 };
 
+int ctxinit(void) {
+    int rc = dill_inithandle();
+    if(dill_slow(rc != 0)) return rc;
+    rc = dill_initstack();
+    if(dill_slow(rc != 0)) return rc;
+    rc = dill_initcr();
+    return rc;
+}
+
+void ctxterm(void) {
+    dill_termcr();
+    dill_termstack();
+    dill_termhandle();
+}

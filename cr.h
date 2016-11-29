@@ -54,6 +54,12 @@ struct dill_tmcl {
     int64_t deadline;
 };
 
+/* Intialisation function for coroutine context */
+int dill_initcr(void);
+
+/* Termination function for coroutine context */
+void dill_termcr(void);
+
 /* When dill_wait() is called next time, the coroutine will wait
    (among other clauses) for this clause. 'id' must not be negative.
    'eplist' is the list to add the clause to (can be NULL). 'epitem' is the

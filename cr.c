@@ -109,6 +109,7 @@ struct dill_cr {
 volatile void *dill_unoptimisable = NULL;
 
 /* Main coroutine. */
+struct dill_cr dill_main_defaults = {DILL_SLIST_ITEM_INITIALISER};
 struct dill_cr dill_main_data = {DILL_SLIST_ITEM_INITIALISER};
 
 /* Current coroutine context */
@@ -134,12 +135,25 @@ const struct dill_ctx_cr dill_ctx_cr_defaults = {0};
 struct dill_ctx_cr dill_ctx_cr_main_data = {&dill_main_data, &dill_main_data};
 
 /******************************************************************************/
-/*  Helpers.                                                                  */
+/*  Context.                                                                  */
 /******************************************************************************/
 
+/* Intialisation function for coroutine context. */
+int dill_initcr(void) {
+    struct dill_ctx_cr *ctx = malloc(sizeof(struct dill_ctx_cr));
+    if(dill_slow(!ctx)) return -1;
+    memcpy(ctx, &dill_ctx_cr_defaults, sizeof(struct dill_ctx_cr));
+    ctx->main = ctx->r = malloc(sizeof(struct dill_cr));
+    memcpy(ctx->main, &dill_main_defaults, sizeof(struct dill_cr));
+    dill_context.cr = ctx;
+    return 0;
+}
+
+/* Termination function for coroutine context. */
+void dill_termcr(void) {
+    struct dill_ctx_cr *ctx = dill_context.cr;
+    if(!ctx) return;
 #if defined DILL_CENSUS
-/* Print out the results of the stack size census. */
-static void dill_census_atexit(void) {
     struct dill_slist_item *it;
     for(it = dill_slist_begin(&ctx->census); it; it = dill_slist_next(it)) {
         struct dill_census_item *ci =
@@ -147,6 +161,30 @@ static void dill_census_atexit(void) {
         fprintf(stderr, "%s:%d - maximum stack size %zu B\n",
             ci->file, ci->line, ci->max_stack);
     }
+#endif
+    /* Ensure that we are not in the main thread. */
+    if(ctx == &dill_ctx_cr_main_data) return;
+    free(dill_context.cr->main);
+    free(dill_context.cr);
+    dill_context.cr = NULL;
+}
+
+/******************************************************************************/
+/*  Helpers.                                                                  */
+/******************************************************************************/
+
+#if defined DILL_CENSUS
+/* Print out the results of the stack size census. */
+static void dill_census_atexit(void) {
+    dill_termcr();
+}
+#endif
+
+#if defined DILL_VALGRIND
+static void dill_pollset_atexit(void) {
+    struct dill_ctx_cr *ctx = dill_context.cr;
+    if(dill_slow(!ctx)) return;
+    if(dill_fast(ctx->poller_init)) dill_pollset_term();
 }
 #endif
 
@@ -337,8 +375,10 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
 #if defined DILL_CENSUS
     /* Initialize census. */
     if(dill_slow(!ctx->census_init)) {
-        rc = atexit(dill_census_atexit);
-        dill_assert(rc == 0);
+        if(ctx == &dill_ctx_cr_main_data) {
+            rc = atexit(dill_census_atexit);
+            dill_assert(rc == 0);
+        }
         ctx->census_init = 1;
     }
     /* Find the appropriate census item if it exists. It's O(n) but meh. */
@@ -360,6 +400,12 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
         cr->census->max_stack = 0;
     }
     cr->stacksz = stacksz - sizeof(struct dill_cr);
+#endif
+#if defined DILL_VALGRIND
+    if(ctx == &dill_ctx_cr_main_data) {
+        rc = atexit(dill_pollset_atexit);
+        dill_assert(rc == 0);
+    }
 #endif
     /* Return the context of the parent coroutine to the caller so that it can
        store its current state. It can't be done here becuse we are at the

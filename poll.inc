@@ -27,6 +27,7 @@
 #include <poll.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "cr.h"
 #include "fd.h"
@@ -79,38 +80,32 @@ struct dill_ctx_pollset {
 };
 
 struct dill_ctx_pollset dill_ctx_pollset_defaults = {0};
-struct dill_ctx_pollset dill_ctx_pollset_main_data = {0};
 
-#if defined DILL_VALGRIND
-
-static void dill_pollset_atexit(void) {
+/* Termination function for the pollset context. */
+void dill_pollset_term(void) {
     struct dill_ctx_pollset *ctx = dill_context.pollset;
-    if(!ctx) return;
+    if(dill_slow(!ctx)) return;
     if(ctx->pollset)
         free(ctx->pollset);
     if(ctx->fdinfos)
         free(ctx->fdinfos);
+    free(ctx);
+    dill_context.pollset = NULL;
 }
 
-#endif
-
 int dill_pollset_init(void) {
-    struct dill_ctx_pollset *ctx = dill_context.pollset;
     int err;
+    /* Always allocate a pollset because this function is always called from cr.c */
+    struct dill_ctx_pollset *ctx = malloc(sizeof(struct dill_ctx_pollset));
+    if(dill_slow(!ctx)) {err = ENOMEM; goto error1;}
+    memcpy(ctx, &dill_ctx_pollset_defaults, sizeof(struct dill_ctx_pollset));
+    dill_context.pollset = ctx;
     /* Allocate largest possible pollset. */
     ctx->pollset_size = 0;
     ctx->pollset = malloc(sizeof(struct pollfd) * dill_maxfds());
     if(dill_slow(!ctx->pollset)) {err = ENOMEM; goto error1;}
     ctx->fdinfos = malloc(sizeof(struct dill_fdinfo) * dill_maxfds());
     if(dill_slow(!ctx->fdinfos)) {err = ENOMEM; goto error2;}
-#if defined DILL_VALGRIND
-    static int initialized = 0;
-    if(dill_slow(!initialized)) {
-        int rc = atexit(dill_pollset_atexit);
-        dill_assert(rc == 0);
-        initialized = 1;
-    }
-#endif
     /* Intialise fd infos. There's no fd in the pollset,
        so set all indices to -1. */
     int i;
