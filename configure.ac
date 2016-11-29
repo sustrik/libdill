@@ -116,9 +116,12 @@ if test "x$enable_threads" = "xyes" || test "x$enable_threads" = "xpthread"; the
         PTHREAD_CFLAGS="-pthread"
         AC_DEFINE(DILL_THREADS)
         AC_DEFINE(DILL_PTHREAD)
+        AM_CONDITIONAL([DILL_THREADS], true)
     fi
     AC_SUBST(PTHREAD_LIBS)
     AC_SUBST(PTHREAD_CFLAGS)
+else
+    AM_CONDITIONAL([DILL_THREADS], false)
 fi
 
 ################################################################################

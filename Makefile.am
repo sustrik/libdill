@@ -84,6 +84,10 @@ check_PROGRAMS = \
     tests/signals \
     tests/overload
 
+if DILL_THREADS
+check_PROGRAMS += tests/threads
+endif
+
 check_HEADERS = \
     tests/assert.h
 
