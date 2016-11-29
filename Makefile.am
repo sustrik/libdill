@@ -38,6 +38,7 @@ libdill_la_SOURCES = \
     epoll.inc \
     fd.h \
     fd.c \
+    handle.h \
     handle.c \
     kqueue.inc \
     libdill.c \
@@ -50,6 +51,8 @@ libdill_la_SOURCES = \
     slist.c \
     stack.h \
     stack.c \
+    context.h \
+    context.c \
     utils.h
 
 pkgconfigdir = $(libdir)/pkgconfig

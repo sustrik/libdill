@@ -25,6 +25,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -32,6 +33,7 @@
 #include "slist.h"
 #include "stack.h"
 #include "utils.h"
+#include "context.h"
 
 /* The stacks are cached. The advantage is twofold. First, caching is
    faster than malloc(). Second, it results in smaller number of calls to
@@ -41,12 +43,22 @@
 static size_t dill_stack_size = 256 * 1024;
 /* Maximum number of unused cached stacks. */
 static int dill_max_cached_stacks = 64;
+
 /* A stack of unused coroutine stacks. This allows for extra-fast allocation
    of a new stack. The LIFO nature of this structure minimises cache misses.
    When the stack is cached its dill_slist_item is placed on its top rather
    then on the bottom. That way we minimise page misses. */
-static int dill_num_cached_stacks = 0;
-static struct dill_slist dill_cached_stacks = {0};
+struct dill_ctx_stack {
+    int count;
+    struct dill_slist cache;
+#if defined DILL_VALGRIND
+/* Flag to indicate that atexit is registered. */
+    int initialized;
+#endif
+};
+
+struct dill_ctx_stack dill_ctx_stack_defaults = {0};
+struct dill_ctx_stack dill_ctx_stack_main_data = {0};
 
 /* Returns smallest value greater than val that is a multiply of unit. */
 static size_t dill_align(size_t val, size_t unit) {
@@ -66,8 +78,10 @@ static size_t dill_page_size(void) {
 #if defined DILL_VALGRIND
 
 static void dill_stack_atexit(void) {
+    struct dill_ctx_stack *ctx = dill_context.stack;
+    if(!ctx) return;
     struct dill_slist_item *it;
-    while(it = dill_slist_pop(&dill_cached_stacks)) {
+    while(it = dill_slist_pop(&ctx->cache)) {
       /* If the stack cache is full deallocate the stack. */
 #if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD
       void *ptr = ((uint8_t*)(it + 1)) - dill_stack_size - dill_page_size();
@@ -84,22 +98,22 @@ static void dill_stack_atexit(void) {
 #endif
 
 void *dill_allocstack(size_t *stack_size) {
+    struct dill_ctx_stack *ctx = dill_context.stack;
 #if defined DILL_VALGRIND
     /* When using valgrind we want to deallocate cached stacks when
        the process is terminated so that they don't show up in the output. */
-    static int initialized = 0;
-    if(dill_slow(!initialized)) {
+    if(dill_slow(!ctx->initialized)) {
         int rc = atexit(dill_stack_atexit);
         dill_assert(rc == 0);
-        initialized = 1;
+        ctx->initialized = 1;
     }
 #endif
     if(stack_size)
         *stack_size = dill_stack_size;
     /* If there's a cached stack, use it. */
-    if(!dill_slist_empty(&dill_cached_stacks)) {
-        --dill_num_cached_stacks;
-        return (void*)(dill_slist_pop(&dill_cached_stacks) + 1);
+    if(!dill_slist_empty(&ctx->cache)) {
+        --ctx->count;
+        return (void*)(dill_slist_pop(&ctx->cache) + 1);
     }
     /* Allocate a new stack. */
     uint8_t *top;
@@ -137,12 +151,13 @@ void *dill_allocstack(size_t *stack_size) {
 }
 
 void dill_freestack(void *stack) {
+    struct dill_ctx_stack *ctx = dill_context.stack;
     struct dill_slist_item *item = ((struct dill_slist_item*)stack) - 1;
     /* If there are free slots in the cache put the stack to the cache. */
-    if(dill_num_cached_stacks < dill_max_cached_stacks) {
+    if(ctx->count < dill_max_cached_stacks) {
         dill_slist_item_init(item);
-        dill_slist_push(&dill_cached_stacks, item);
-        ++dill_num_cached_stacks;
+        dill_slist_push(&ctx->cache, item);
+        ++ctx->count;
         return;
     }
     /* If the stack cache is full deallocate the stack. */

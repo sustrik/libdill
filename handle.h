@@ -22,26 +22,12 @@
 
 */
 
-#ifndef DILL_POLLSET_INCLUDED
-#define DILL_POLLSET_INCLUDED
+#ifndef DILL_HANDLE_INCLUDED
+#define DILL_HANDLE_INCLUDED
 
-struct dill_ctx_pollset;
-extern struct dill_ctx_pollset dill_ctx_pollset_main_data;
+#include <stddef.h>
 
-/* Initialises the pollset. This function is called once only. */
-int dill_pollset_init(void);
-
-/* Add waiting for in event on the fd to the list of current clauses. */
-int dill_pollset_in(struct dill_clause *cl, int id, int fd);
-
-/* Add waiting for out event on the fd to the list of current clauses. */
-int dill_pollset_out(struct dill_clause *cl, int id, int fd);
-
-/* Drops any cached info about the file descriptor. */
-void dill_pollset_clean(int fd);
-
-/* Wait for events. 'timeout' is in milliseconds. Returns 0 if timeout was
-   exceeded. 1 if at least one clause was triggered. */
-int dill_pollset_poll(int timeout);
+struct dill_ctx_handle;
+extern struct dill_ctx_handle dill_ctx_handle_main_data;
 
 #endif

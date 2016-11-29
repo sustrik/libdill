@@ -27,10 +27,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "cr.h"
 #include "libdill.h"
 #include "utils.h"
+#include "context.h"
 
 struct dill_handle {
     /* Table of virtual functions. */
@@ -44,69 +46,79 @@ struct dill_handle {
 };
 
 #define CHECKHANDLE(h, err) \
-    if(dill_slow((h) < 0 || (h) >= dill_nhandles ||\
-          dill_handles[(h)].next != -2)) {\
+    if(dill_slow((h) < 0 || (h) >= ctx->nhandles ||\
+          ctx->handles[(h)].next != -2)) {\
         errno = EBADF; return (err);}\
-    struct dill_handle *hndl = &dill_handles[(h)];
+    struct dill_handle *hndl = &ctx->handles[(h)];
 
-static struct dill_handle *dill_handles = NULL;
-static int dill_nhandles = 0;
-static int dill_unused = -1;
+struct dill_ctx_handle {
+    struct dill_handle *handles;
+    int nhandles;
+    int unused;
+#if defined DILL_VALGRIND
+    int initialized;
+#endif
+};
+
+struct dill_ctx_handle dill_ctx_handle_defaults = {NULL, 0, -1};
+struct dill_ctx_handle dill_ctx_handle_main_data = {NULL, 0, -1};
 
 #if defined DILL_VALGRIND
 
 static void dill_handle_atexit(void) {
-    if(dill_handles)
-        free(dill_handles);
+    struct dill_ctx_handle *ctx = dill_context.handle;
+    if(ctx->handles)
+        free(ctx->handles);
 }
 
 #endif
 
 int hmake(struct hvfs *vfs) {
+    struct dill_ctx_handle *ctx = dill_context.handle;
     if(dill_slow(!vfs || !vfs->query || !vfs->close)) {
         errno = EINVAL; return -1;}
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* If there's no space for the new handle expand the array. */
-    if(dill_slow(dill_unused == -1)) {
+    if(dill_slow(ctx->unused == -1)) {
         /* Start with 256 handles, double the size when needed. */
-        int sz = dill_nhandles ? dill_nhandles * 2 : 256;
+        int sz = ctx->nhandles ? ctx->nhandles * 2 : 256;
         struct dill_handle *hndls =
-            realloc(dill_handles, sz * sizeof(struct dill_handle));
+            realloc(ctx->handles, sz * sizeof(struct dill_handle));
         if(dill_slow(!hndls)) {errno = ENOMEM; return -1;}
 #if defined DILL_VALGRIND
         /* Clean-up function to delete the array at exit. It is not strictly
            necessary but valgrind will be happy about it. */
-        static int initialized = 0;
-        if(dill_slow(!initialized)) {
+        if(dill_slow(!ctx->initialized)) {
             int rc = atexit(dill_handle_atexit);
             dill_assert(rc == 0);
-            initialized = 1;
+            ctx->initialized = 1;
         }
 #endif
         /* Add newly allocated handles to the list of unused handles. */
         int i;
-        for(i = dill_nhandles; i != sz - 1; ++i)
+        for(i = ctx->nhandles; i != sz - 1; ++i)
             hndls[i].next = i + 1;
         hndls[sz - 1].next = -1;
-        dill_unused = dill_nhandles;
+        ctx->unused = ctx->nhandles;
         /* Adjust the array. */
-        dill_handles = hndls;
-        dill_nhandles = sz;
+        ctx->handles = hndls;
+        ctx->nhandles = sz;
     }
     /* Return first handle from the list of unused hadles. */
-    int h = dill_unused;
-    dill_unused = dill_handles[h].next;
+    int h = ctx->unused;
+    ctx->unused = ctx->handles[h].next;
     vfs->refcount = 1;
-    dill_handles[h].vfs = vfs;
-    dill_handles[h].next = -2;
-    dill_handles[h].type = NULL;
-    dill_handles[h].ptr = NULL;
+    ctx->handles[h].vfs = vfs;
+    ctx->handles[h].next = -2;
+    ctx->handles[h].type = NULL;
+    ctx->handles[h].ptr = NULL;
     return h;
 }
 
 int hdup(int h) {
+    struct dill_ctx_handle *ctx = dill_context.handle;
     CHECKHANDLE(h, -1);
     int refcount = hndl->vfs->refcount;
     int res = hmake(hndl->vfs);
@@ -116,6 +128,7 @@ int hdup(int h) {
 }
 
 void *hquery(int h, const void *type) {
+    struct dill_ctx_handle *ctx = dill_context.handle;
     CHECKHANDLE(h, NULL);
     /* Try and use cached pointer first, otherwise do expensive virtual call.*/
     if(dill_fast(hndl->ptr != NULL && hndl->type == type))
@@ -131,6 +144,7 @@ void *hquery(int h, const void *type) {
 }
 
 int hclose(int h) {
+    struct dill_ctx_handle *ctx = dill_context.handle;
     CHECKHANDLE(h, -1);
     /* If there are multiple duplicates of this handle just remove one
        reference. */
@@ -148,8 +162,8 @@ int hclose(int h) {
     /* Mark the cache as invalid. */
     hndl->ptr = NULL;
     /* Return the handle to the shared pool. */
-    hndl->next = dill_unused;
-    dill_unused = h;
+    hndl->next = ctx->unused;
+    ctx->unused = h;
     return 0;
 }
 

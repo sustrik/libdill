@@ -8,10 +8,8 @@
   the rights to use, copy, modify, merge, publish, distribute, sublicense,
   and/or sell copies of the Software, and to permit persons to whom
   the Software is furnished to do so, subject to the following conditions:
-
   The above copyright notice and this permission notice shall be included
   in all copies or substantial portions of the Software.
-
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -22,26 +20,23 @@
 
 */
 
-#ifndef DILL_POLLSET_INCLUDED
-#define DILL_POLLSET_INCLUDED
+#ifndef DILL_CONTEXT_INCLUDED
+#define DILL_CONTEXT_INCLUDED
 
+#include <limits.h>
+
+struct dill_ctx_cr;
+struct dill_ctx_handle;
+struct dill_ctx_stack;
 struct dill_ctx_pollset;
-extern struct dill_ctx_pollset dill_ctx_pollset_main_data;
 
-/* Initialises the pollset. This function is called once only. */
-int dill_pollset_init(void);
+struct dill_ctx {
+    struct dill_ctx_cr *cr;
+    struct dill_ctx_handle *handle;
+    struct dill_ctx_stack *stack;
+    struct dill_ctx_pollset *pollset;
+};
 
-/* Add waiting for in event on the fd to the list of current clauses. */
-int dill_pollset_in(struct dill_clause *cl, int id, int fd);
-
-/* Add waiting for out event on the fd to the list of current clauses. */
-int dill_pollset_out(struct dill_clause *cl, int id, int fd);
-
-/* Drops any cached info about the file descriptor. */
-void dill_pollset_clean(int fd);
-
-/* Wait for events. 'timeout' is in milliseconds. Returns 0 if timeout was
-   exceeded. 1 if at least one clause was triggered. */
-int dill_pollset_poll(int timeout);
+extern struct dill_ctx dill_context;
 
 #endif
