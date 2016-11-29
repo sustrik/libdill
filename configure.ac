@@ -94,6 +94,34 @@ if test "x$enable_census" = "xyes"; then
 fi
 
 ################################################################################
+#  --enable-threads                                                            #
+################################################################################
+
+AC_ARG_ENABLE([threads], [AS_HELP_STRING([--enable-threads],
+    [Enable threading support [default=no]])])
+
+if test "x$enable_threads" = "xyes" || test "x$enable_threads" = "xpthread"; then
+    PTHREAD_LIBS=error
+    PTHREAD_CFLAGS=""
+    AC_CHECK_LIB([pthread], [pthread_attr_init], PTHREAD_LIBS="-lpthread")
+    if test "x$PTHREAD_LIBS" = "xerror"; then
+            AC_CHECK_LIB([c_r], [pthread_attr_init], PTHREAD_LIBS="-lc_r")
+    fi
+    if test "x$PTHREAD_LIBS" = "xerror"; then
+            AC_CHECK_FUNC([pthread_attr_init], PTHREAD_LIBS="")
+    fi
+    if test "x$PTHREAD_LIBS" = "xerror"; then
+        AC_MSG_ERROR([no thread implementation available])
+    else
+        PTHREAD_CFLAGS="-pthread"
+        AC_DEFINE(DILL_THREADS)
+        AC_DEFINE(DILL_PTHREAD)
+    fi
+    AC_SUBST(PTHREAD_LIBS)
+    AC_SUBST(PTHREAD_CFLAGS)
+fi
+
+################################################################################
 #  Feature checks.                                                             #
 ################################################################################
 
