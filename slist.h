@@ -28,9 +28,6 @@
 #include <stddef.h>
 #include "utils.h"
 
-/* After removing item from a list, next points here. */
-extern struct dill_slist_item dill_slist_item_none;
-
 /* Singly-linked list. Having both push and push_back functions means that
    it can be used both as a queue and as a stack. */
 
@@ -43,6 +40,7 @@ struct dill_slist {
     struct dill_slist_item *last;
 };
 
+/* After removing item from a list, next points here. */
 extern struct dill_slist_item dill_slist_item_none;
 
 #define DILL_SLIST_ITEM_INITIALISER {&dill_slist_item_none}
