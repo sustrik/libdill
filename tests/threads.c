@@ -48,7 +48,7 @@ void *threadmain(void *arg)
     errno_assert(cr2 >= 0);
     int cr3 = go(worker(3, "c"));
     errno_assert(cr3 >= 0);
-    rc = msleep(now() + 100);
+    rc = msleep(now() + 200);
     errno_assert(rc == 0);
     rc = hclose(cr1);
     errno_assert(rc == 0);
@@ -69,7 +69,7 @@ int main() {
     errno_assert(cr2 >= 0);
     int cr3 = go(worker(3, "c"));
     errno_assert(cr3 >= 0);
-    rc = msleep(now() + 100);
+    rc = msleep(now() + 200);
     errno_assert(rc == 0);
     rc = hclose(cr1);
     errno_assert(rc == 0);
