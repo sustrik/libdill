@@ -101,7 +101,7 @@ struct dill_cr {
     struct dill_census_item *census;
     size_t stacksz;
 #endif
-} __attribute__((aligned(16),packed));
+};
 
 /* Storage for constant used by go() macro. */
 volatile void *dill_unoptimisable = NULL;
