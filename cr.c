@@ -101,7 +101,10 @@ struct dill_cr {
     struct dill_census_item *census;
     size_t stacksz;
 #endif
-};
+/* Clang assumes that the client stack is aligned to 16-bytes on x86-64
+   architectures; to achieve this we align this structure (with the added
+   benefit of a minor optimisation). */
+} __attribute__((aligned(16)));
 
 /* Storage for constant used by go() macro. */
 volatile void *dill_unoptimisable = NULL;
