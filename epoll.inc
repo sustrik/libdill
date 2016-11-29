@@ -66,6 +66,10 @@ struct dill_ctx_pollset dill_ctx_pollset_defaults = {-1, NULL, DILL_ENDLIST};
 void dill_pollset_term(void) {
     struct dill_ctx_pollset *ctx = dill_context.pollset;
     if(dill_slow(!ctx)) return;
+    if(ctx->efd >= 0) {
+        int rc = close(ctx->efd);
+        dill_assert(rc == 0);
+    }
     if(ctx->fdinfos)
         free(ctx->fdinfos);
     free(ctx);

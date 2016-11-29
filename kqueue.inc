@@ -70,6 +70,13 @@ struct dill_ctx_pollset dill_ctx_pollset_defaults = {-1, NULL, DILL_ENDLIST};
 void dill_pollset_term(void) {
     struct dill_ctx_pollset *ctx = dill_context.pollset;
     if(dill_slow(!ctx)) return;
+    if(ctx->kfd != -1) {
+        /* TODO: kqueue documentation says that a kqueue descriptor won't
+           survive a fork. However, implementations seem to diverge.
+           On FreeBSD the following function succeeds. On OSX it returns
+           EACCESS. Therefore we ignore the return value. */
+        close(ctx->kfd);
+    }
     if(ctx->fdinfos)
         free(ctx->fdinfos);
     free(ctx);
