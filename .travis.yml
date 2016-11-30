@@ -101,6 +101,7 @@ matrix:
           - ubuntu-toolchain-r-test
         packages:
           - gcc-4.9
+          - valgrind
   - os: linux
     compiler: gcc
     env: POLL=1 THREADS=1
