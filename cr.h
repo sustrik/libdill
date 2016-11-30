@@ -30,6 +30,9 @@
 
 struct dill_cr;
 
+struct dill_ctx_cr;
+extern struct dill_ctx_cr dill_ctx_cr_main_data;
+
 struct dill_clause {
     /* The coroutine that owns this clause. */
     struct dill_cr *cr;
@@ -50,6 +53,12 @@ struct dill_tmcl {
     struct dill_clause cl;
     int64_t deadline;
 };
+
+/* Intialisation function for coroutine context */
+int dill_initcr(void);
+
+/* Termination function for coroutine context */
+void dill_termcr(void);
 
 /* When dill_wait() is called next time, the coroutine will wait
    (among other clauses) for this clause. 'id' must not be negative.

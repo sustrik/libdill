@@ -27,17 +27,19 @@
 #include <poll.h>
 #include <stddef.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "cr.h"
 #include "fd.h"
 #include "list.h"
 #include "utils.h"
+#include "context.h"
 
 /*
 
-                                dill_pollset_size
+                                ctx->pollset_size
                                         |
-  dill_pollset                          V
+  ctx->pollset                          V
   +-------+-------+-------+-----+-------+--------------------------------+
   | pfd 0 | pfd 1 | pfd 2 | ... | pfd N |             empty              |
   +-------+-------+-------+-----+-------+--------------------------------+
@@ -48,15 +50,11 @@
   +------+------+------+----------------------------------------+--------+
   | fd=0 | fd=1 | fd=2 |                   ...                  | fd=max |
   +------+------+------+----------------------------------------+--------+
-  dill_fdinfos                                                           ^
+  ctx->fdinfos                                                           ^
                                                                          |
                                                                   dill_maxfds
 
 */
-
-/* Pollset, as used by poll(2). */
-static int dill_pollset_size = 0;
-static struct pollfd *dill_pollset = NULL;
 
 /* Additional info about file descriptor. */
 struct dill_fdinfo {
@@ -71,57 +69,64 @@ struct dill_fdinfo {
     unsigned int cached : 1;
 };
 
-/* Info about all file descriptors.
-   File descriptors are used as indices in this array. */
-static struct dill_fdinfo *dill_fdinfos = NULL;
+/* Implementation-specific pollset context. */
+struct dill_ctx_pollset {
+    /* Pollset, as used by poll(2). */
+    int pollset_size;
+    struct pollfd *pollset;
+    /* Info about all file descriptors.
+       File descriptors are used as indices in this array. */
+    struct dill_fdinfo *fdinfos;
+};
 
-#if defined DILL_VALGRIND
+struct dill_ctx_pollset dill_ctx_pollset_defaults = {0};
 
-static void dill_pollset_atexit(void) {
-    if(dill_pollset)
-        free(dill_pollset);
-    if(dill_fdinfos)
-        free(dill_fdinfos);
+/* Termination function for the pollset context. */
+void dill_pollset_term(void) {
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    if(dill_slow(!ctx)) return;
+    if(ctx->pollset)
+        free(ctx->pollset);
+    if(ctx->fdinfos)
+        free(ctx->fdinfos);
+    free(ctx);
+    dill_context.pollset = NULL;
 }
-
-#endif
 
 int dill_pollset_init(void) {
     int err;
+    /* Always allocate a pollset because this function is always called from cr.c */
+    struct dill_ctx_pollset *ctx = malloc(sizeof(struct dill_ctx_pollset));
+    if(dill_slow(!ctx)) {err = ENOMEM; goto error1;}
+    memcpy(ctx, &dill_ctx_pollset_defaults, sizeof(struct dill_ctx_pollset));
+    dill_context.pollset = ctx;
     /* Allocate largest possible pollset. */
-    dill_pollset_size = 0;
-    dill_pollset = malloc(sizeof(struct pollfd) * dill_maxfds());
-    if(dill_slow(!dill_pollset)) {err = ENOMEM; goto error1;}
-    dill_fdinfos = malloc(sizeof(struct dill_fdinfo) * dill_maxfds());
-    if(dill_slow(!dill_fdinfos)) {err = ENOMEM; goto error2;}
-#if defined DILL_VALGRIND
-    static int initialized = 0;
-    if(dill_slow(!initialized)) {
-        int rc = atexit(dill_pollset_atexit);
-        dill_assert(rc == 0);
-        initialized = 1;
-    }
-#endif
+    ctx->pollset_size = 0;
+    ctx->pollset = malloc(sizeof(struct pollfd) * dill_maxfds());
+    if(dill_slow(!ctx->pollset)) {err = ENOMEM; goto error1;}
+    ctx->fdinfos = malloc(sizeof(struct dill_fdinfo) * dill_maxfds());
+    if(dill_slow(!ctx->fdinfos)) {err = ENOMEM; goto error2;}
     /* Intialise fd infos. There's no fd in the pollset,
        so set all indices to -1. */
     int i;
     for(i = 0; i != dill_maxfds(); ++i) {
-        dill_fdinfos[i].idx = -1;
-        dill_list_init(&dill_fdinfos[i].in);
-        dill_list_init(&dill_fdinfos[i].out);
-        dill_fdinfos[i].cached = 0;
+        ctx->fdinfos[i].idx = -1;
+        dill_list_init(&ctx->fdinfos[i].in);
+        dill_list_init(&ctx->fdinfos[i].out);
+        ctx->fdinfos[i].cached = 0;
     }
     return 0;
 error2:
-    free(dill_pollset);
-    dill_pollset = NULL;
+    free(ctx->pollset);
+    ctx->pollset = NULL;
 error1:
     errno = err;
     return -1;
 }
 
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
-    struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(dill_slow(!fdi->cached)) {
         int flags = fcntl(fd, F_GETFD);
         if(flags < 0 && errno == EBADF) return -1;
@@ -129,19 +134,20 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
         fdi->cached = 1;
     }
     if(fdi->idx < 0) {
-        dill_assert(dill_pollset_size < dill_maxfds());
-        fdi->idx = dill_pollset_size;
-        ++dill_pollset_size;
-        dill_pollset[fdi->idx].fd = fd;
+        dill_assert(ctx->pollset_size < dill_maxfds());
+        fdi->idx = ctx->pollset_size;
+        ++ctx->pollset_size;
+        ctx->pollset[fdi->idx].fd = fd;
     }
     if(dill_slow(!dill_list_empty(&fdi->in))) {errno = EEXIST; return -1;}
-    dill_pollset[fdi->idx].events |= POLLIN;
+    ctx->pollset[fdi->idx].events |= POLLIN;
     dill_waitfor(cl, id, &fdi->in, NULL);
     return 0;
 }
 
 int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
-    struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(dill_slow(!fdi->cached)) {
         int flags = fcntl(fd, F_GETFD);
         if(flags < 0 && errno == EBADF) return -1;
@@ -149,27 +155,29 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
         fdi->cached = 1;
     }
     if(fdi->idx < 0) {
-        dill_assert(dill_pollset_size < dill_maxfds());
-        fdi->idx = dill_pollset_size;
-        ++dill_pollset_size;
-        dill_pollset[fdi->idx].fd = fd;
+        dill_assert(ctx->pollset_size < dill_maxfds());
+        fdi->idx = ctx->pollset_size;
+        ++ctx->pollset_size;
+        ctx->pollset[fdi->idx].fd = fd;
     }
     if(dill_slow(!dill_list_empty(&fdi->out))) {errno = EEXIST; return -1;}
-    dill_pollset[fdi->idx].events |= POLLOUT;
+    ctx->pollset[fdi->idx].events |= POLLOUT;
     dill_waitfor(cl, id, &fdi->out, NULL);
     return 0;
 }
 
 void dill_pollset_clean(int fd) {
-    struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     fdi->cached = 0;
 }
 
 int dill_pollset_poll(int timeout) {
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
     /* Wait for events. */
     int numevs;
     while(1) {
-        numevs = poll(dill_pollset, dill_pollset_size, timeout);
+        numevs = poll(ctx->pollset, ctx->pollset_size, timeout);
         if(numevs < 0 && errno == EINTR)
             continue;
         dill_assert(numevs >= 0);
@@ -178,9 +186,9 @@ int dill_pollset_poll(int timeout) {
     int result = numevs > 0 ? 1 : 0;
     /* Fire file descriptor events as needed. */
     int i;
-    for(i = 0; i != dill_pollset_size && numevs; ++i) {
-        struct pollfd *pfd = &dill_pollset[i];
-        struct dill_fdinfo *fdi = &dill_fdinfos[pfd->fd];
+    for(i = 0; i != ctx->pollset_size && numevs; ++i) {
+        struct pollfd *pfd = &ctx->pollset[i];
+        struct dill_fdinfo *fdi = &ctx->fdinfos[pfd->fd];
         /* Resume the blocked coroutines. */
         if(!dill_list_empty(&fdi->in) &&
               pfd->revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
@@ -201,14 +209,14 @@ int dill_pollset_poll(int timeout) {
             fdi->idx = -1;
             dill_assert(dill_list_empty(&fdi->in) &&
                 dill_list_empty(&fdi->out));
-            --dill_pollset_size;
+            --ctx->pollset_size;
             /* Pollset has to be compact. Thus, unless we are removing the
                last item from the pollset we want to move the last item
                to the vacant slot left by the removed fd. */
-            if(i != dill_pollset_size) {
-                struct pollfd *lastpfd = &dill_pollset[dill_pollset_size];
+            if(i != ctx->pollset_size) {
+                struct pollfd *lastpfd = &ctx->pollset[ctx->pollset_size];
                 *pfd = *lastpfd;
-                dill_fdinfos[pfd->fd].idx = i;
+                ctx->fdinfos[pfd->fd].idx = i;
             }
             --i;
             --numevs;

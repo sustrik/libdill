@@ -32,13 +32,11 @@
 #include "fd.h"
 #include "list.h"
 #include "utils.h"
+#include "context.h"
 
 #define DILL_ENDLIST 0xffffffff
 
 #define DILL_EPOLLSETSIZE 128
-
-/* Global pollset. */
-static int dill_efd = -1;
 
 /* One of these is associated with each file descriptor. */
 struct dill_fdinfo {
@@ -55,55 +53,64 @@ struct dill_fdinfo {
     unsigned int cached : 1;
 };
 
-static struct dill_fdinfo *dill_fdinfos = NULL;
-static uint32_t dill_changelist = DILL_ENDLIST;
+/* Implementation-specific pollset context. */
+struct dill_ctx_pollset {
+    int efd;
+    struct dill_fdinfo *fdinfos;
+    uint32_t changelist;
+};
 
-#if defined DILL_VALGRIND
+struct dill_ctx_pollset dill_ctx_pollset_defaults = {-1, NULL, DILL_ENDLIST};
 
-static void dill_pollset_atexit(void) {
-    if(dill_fdinfos)
-        free(dill_fdinfos);
+/* Termination function for the pollset context. */
+void dill_pollset_term(void) {
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    if(dill_slow(!ctx)) return;
+    if(ctx->efd >= 0) {
+        int rc = close(ctx->efd);
+        dill_assert(rc == 0);
+    }
+    if(ctx->fdinfos)
+        free(ctx->fdinfos);
+    free(ctx);
+    dill_context.pollset = NULL;
 }
-
-#endif
 
 int dill_pollset_init(void) {
     int err;
+    /* Always allocate a pollset because this function is always called from cr.c */
+    struct dill_ctx_pollset *ctx = malloc(sizeof(struct dill_ctx_pollset));
+    if(dill_slow(!ctx)) {err = ENOMEM; goto error1;}
+    memcpy(ctx, &dill_ctx_pollset_defaults, sizeof(struct dill_ctx_pollset));
+    dill_context.pollset = ctx;
     /* Allocate one info per fd. */
-    dill_fdinfos = (struct dill_fdinfo*)
+    ctx->fdinfos = (struct dill_fdinfo*)
         calloc(dill_maxfds(), sizeof(struct dill_fdinfo));
-    if(dill_slow(!dill_fdinfos)) {err = ENOMEM; goto error1;}
-#if defined DILL_VALGRIND
-    static int initialized = 0;
-    if(dill_slow(!initialized)) {
-        int rc = atexit(dill_pollset_atexit);
-        dill_assert(rc == 0);
-        initialized = 1;
-    }
-#endif
+    if(dill_slow(!ctx->fdinfos)) {err = ENOMEM; goto error1;}
     /* Changelist is empty. */
-    dill_changelist = DILL_ENDLIST;
+    ctx->changelist = DILL_ENDLIST;
     /* Create kernel-side pollset. */
-    dill_efd = epoll_create(1);
-    if(dill_slow(dill_efd < 0)) {err = errno; goto error2;}
+    ctx->efd = epoll_create(1);
+    if(dill_slow(ctx->efd < 0)) {err = errno; goto error2;}
     return 0;
 error2:
-    free(dill_fdinfos);
-    dill_fdinfos = NULL;
+    free(ctx->fdinfos);
+    ctx->fdinfos = NULL;
 error1:
     errno = err;
     return -1;
 }
 
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
-    struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
     /* If not yet cached check whether fd exists and if so add it to pollset. */    
     if(dill_slow(!fdi->cached)) {
         struct epoll_event ev;
         ev.data.fd = fd;
         ev.events = EPOLLIN;
-        int rc = epoll_ctl(dill_efd, EPOLL_CTL_ADD, fd, &ev);
+        int rc = epoll_ctl(ctx->efd, EPOLL_CTL_ADD, fd, &ev);
         if(dill_slow(rc < 0)) {
             if(errno == ELOOP || errno == EPERM) {errno = ENOTSUP; return -1;}
             return -1;
@@ -114,8 +121,8 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     }
     /* If fd is not yet in the pollset add it there. */
     else if(!fdi->next) {
-        fdi->next = dill_changelist;
-        dill_changelist = fd + 1;
+        fdi->next = ctx->changelist;
+        ctx->changelist = fd + 1;
     }
     /* Add the clause to the list of waited for clauses. */
     dill_waitfor(cl, id, &fdi->in, NULL);
@@ -123,14 +130,15 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
 }
 
 int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
-    struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
     /* If not yet cached check whether fd exists and if so add it to pollset. */    
     if(dill_slow(!fdi->cached)) {
         struct epoll_event ev;
         ev.data.fd = fd;
         ev.events = EPOLLOUT;
-        int rc = epoll_ctl(dill_efd, EPOLL_CTL_ADD, fd, &ev);
+        int rc = epoll_ctl(ctx->efd, EPOLL_CTL_ADD, fd, &ev);
         if(dill_slow(rc < 0)) {
             if(errno == ELOOP || errno == EPERM) {errno = ENOTSUP; return -1;}
             return -1;
@@ -141,8 +149,8 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     }
     /* If fd is not yet in the pollset add it there. */
     else if(!fdi->next) {
-        fdi->next = dill_changelist;
-        dill_changelist = fd + 1;
+        fdi->next = ctx->changelist;
+        ctx->changelist = fd + 1;
     }
     /* Add the clause to the list of waited for clauses. */
     dill_waitfor(cl, id, &fdi->out, NULL);
@@ -150,7 +158,8 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
 }
 
 void dill_pollset_clean(int fd) {
-    struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     /* We cannot clean an fd that someone is waiting for. */
     dill_assert(dill_list_empty(&fdi->in));
     dill_assert(dill_list_empty(&fdi->out));
@@ -159,17 +168,17 @@ void dill_pollset_clean(int fd) {
         struct epoll_event ev;
         ev.data.fd = fd;
         ev.events = 0;
-        int rc = epoll_ctl(dill_efd, EPOLL_CTL_DEL, fd, &ev);
+        int rc = epoll_ctl(ctx->efd, EPOLL_CTL_DEL, fd, &ev);
         dill_assert(rc == 0 || errno == ENOENT);
         fdi->currevs = 0;
     }
     /* If needed, remove the fd from the changelist. */
     if(fdi->next) {
-        uint32_t *pidx = &dill_changelist;
+        uint32_t *pidx = &ctx->changelist;
         while(1) {
             dill_assert(*pidx != 0 && *pidx != DILL_ENDLIST);
             if(*pidx - 1 == fd) break;
-            pidx = &dill_fdinfos[*pidx - 1].next;
+            pidx = &ctx->fdinfos[*pidx - 1].next;
         }
         *pidx = fdi->next;
         fdi->next = 0;
@@ -179,11 +188,12 @@ void dill_pollset_clean(int fd) {
 }
 
 int dill_pollset_poll(int timeout) {
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
     /* Apply any changes to the pollset.
        TODO: Use epoll_ctl_batch once available. */
-    while(dill_changelist != DILL_ENDLIST) {
-        int fd = dill_changelist - 1;
-        struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    while(ctx->changelist != DILL_ENDLIST) {
+        int fd = ctx->changelist - 1;
+        struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
         struct epoll_event ev;
         ev.data.fd = fd;
         ev.events = 0;
@@ -200,17 +210,17 @@ int dill_pollset_poll(int timeout) {
             else
                  op = EPOLL_CTL_MOD;
             fdi->currevs = ev.events;
-            int rc = epoll_ctl(dill_efd, op, fd, &ev);
+            int rc = epoll_ctl(ctx->efd, op, fd, &ev);
             dill_assert(rc == 0);
         }
-        dill_changelist = fdi->next;
+        ctx->changelist = fdi->next;
         fdi->next = 0;
     }
     /* Wait for events. */
     struct epoll_event evs[DILL_EPOLLSETSIZE];
     int numevs;
     while(1) {
-        numevs = epoll_wait(dill_efd, evs, DILL_EPOLLSETSIZE, timeout);
+        numevs = epoll_wait(ctx->efd, evs, DILL_EPOLLSETSIZE, timeout);
         if(numevs < 0 && errno == EINTR)
             continue;
         dill_assert(numevs >= 0);
@@ -221,7 +231,7 @@ int dill_pollset_poll(int timeout) {
     int i;
     for(i = 0; i != numevs; ++i) {
         int fd = evs[i].data.fd;
-        struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+        struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
         /* Resume the blocked coroutines. */
         if(!dill_list_empty(&fdi->in) &&
               (evs[i].events & (EPOLLIN | EPOLLERR | EPOLLHUP))) {
@@ -230,8 +240,8 @@ int dill_pollset_poll(int timeout) {
             dill_trigger(cl, 0);
             /* Remove the fd from the pollset, if needed. */
             if(dill_list_empty(&fdi->in) && !fdi->next) {
-                fdi->next = dill_changelist;
-                dill_changelist = fd + 1;
+                fdi->next = ctx->changelist;
+                ctx->changelist = fd + 1;
             }
         }
         if(!dill_list_empty(&fdi->out) &&
@@ -241,8 +251,8 @@ int dill_pollset_poll(int timeout) {
             dill_trigger(cl, 0);
             /* Remove the fd from the pollset, if needed. */
             if(dill_list_empty(&fdi->out) && !fdi->next) {
-                fdi->next = dill_changelist;
-                dill_changelist = fd + 1;
+                fdi->next = ctx->changelist;
+                ctx->changelist = fd + 1;
             }
         }
     }

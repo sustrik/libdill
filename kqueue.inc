@@ -35,6 +35,7 @@
 #include "fd.h"
 #include "list.h"
 #include "utils.h"
+#include "context.h"
 
 #define DILL_ENDLIST 0xffffffff
 
@@ -43,8 +44,6 @@
 
 #define FDW_IN 1
 #define FDW_OUT 2
-
-static int dill_kfd = -1;
 
 struct dill_fdinfo {
     struct dill_list in;
@@ -58,23 +57,42 @@ struct dill_fdinfo {
     unsigned int cached : 1;
 };
 
-static struct dill_fdinfo *dill_fdinfos = NULL;
-static uint32_t dill_changelist = DILL_ENDLIST;
+/* Implementation-specific pollset context. */
+struct dill_ctx_pollset {
+    int kfd;
+    struct dill_fdinfo *fdinfos;
+    uint32_t changelist;
+};
 
-#if defined DILL_VALGRIND
+struct dill_ctx_pollset dill_ctx_pollset_defaults = {-1, NULL, DILL_ENDLIST};
 
-static void dill_pollset_atexit(void) {
-    if(dill_fdinfos)
-        free(dill_fdinfos);
+/* Termination function for the pollset context. */
+void dill_pollset_term(void) {
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    if(dill_slow(!ctx)) return;
+    if(ctx->kfd != -1) {
+        /* TODO: kqueue documentation says that a kqueue descriptor won't
+           survive a fork. However, implementations seem to diverge.
+           On FreeBSD the following function succeeds. On OSX it returns
+           EACCESS. Therefore we ignore the return value. */
+        close(ctx->kfd);
+    }
+    if(ctx->fdinfos)
+        free(ctx->fdinfos);
+    free(ctx);
+    dill_context.pollset = NULL;
 }
-
-#endif
 
 int dill_pollset_init(void) {
     int err;
-    dill_fdinfos = (struct dill_fdinfo*)
+    /* Always allocate a pollset because this function is always called from cr.c */
+    struct dill_ctx_pollset *ctx = malloc(sizeof(struct dill_ctx_pollset));
+    if(dill_slow(!ctx)) {err = ENOMEM; goto error1;}
+    memcpy(ctx, &dill_ctx_pollset_defaults, sizeof(struct dill_ctx_pollset));
+    dill_context.pollset = ctx;
+    ctx->fdinfos = (struct dill_fdinfo*)
         calloc(dill_maxfds(), sizeof(struct dill_fdinfo));
-    if(dill_slow(!dill_fdinfos)) {err = ENOMEM; goto error1;}
+    if(dill_slow(!ctx->fdinfos)) {err = ENOMEM; goto error1;}
 #if defined DILL_VALGRIND
     static int initialized = 0;
     if(dill_slow(!initialized)) {
@@ -83,26 +101,27 @@ int dill_pollset_init(void) {
         initialized = 1;
     }
 #endif
-    dill_kfd = kqueue();
-    if(dill_slow(dill_kfd < 0)) {err = errno; goto error2;}
-    dill_changelist = DILL_ENDLIST;
+    ctx->kfd = kqueue();
+    if(dill_slow(ctx->kfd < 0)) {err = errno; goto error2;}
+    ctx->changelist = DILL_ENDLIST;
     return 0;
 error2:
-    free(dill_fdinfos);
-    dill_fdinfos = NULL;
+    free(ctx->fdinfos);
+    ctx->fdinfos = NULL;
 error1:
     errno = err;
     return -1;
 }
 
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
-    struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
     /* If not yet cached check whether fd exists and if so add it to pollset. */
     if(dill_slow(!fdi->cached)) {
         struct kevent ev;
         EV_SET(&ev, fd, EVFILT_READ, EV_ADD, 0, 0, 0);
-        int rc = kevent(dill_kfd, &ev, 1, NULL, 0, NULL);
+        int rc = kevent(ctx->kfd, &ev, 1, NULL, 0, NULL);
         if(dill_slow(rc < 0 && errno == EBADF)) return -1;
         dill_assert(rc >= 0);
         fdi->currevs = FDW_IN;
@@ -112,8 +131,8 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     }
     /* If fd is not yet in the pollset add it there. */
     else if(!fdi->next) {
-        fdi->next = dill_changelist;
-        dill_changelist = fd + 1;
+        fdi->next = ctx->changelist;
+        ctx->changelist = fd + 1;
     }
     /* Add the clause to the list of waited for clauses. */
     dill_waitfor(cl, id, &fdi->in, NULL);
@@ -121,13 +140,14 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
 }
 
 int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
-    struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
     /* If not yet cached check whether fd exists and if so add it to pollset. */    
     if(dill_slow(!fdi->cached)) {
         struct kevent ev;
         EV_SET(&ev, fd, EVFILT_WRITE, EV_ADD, 0, 0, 0);
-        int rc = kevent(dill_kfd, &ev, 1, NULL, 0, NULL);
+        int rc = kevent(ctx->kfd, &ev, 1, NULL, 0, NULL);
         if(dill_slow(rc < 0 && errno == EBADF)) return -1;
         dill_assert(rc >= 0);
         fdi->currevs = FDW_OUT;
@@ -137,8 +157,8 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     }
     /* If fd is not yet in the pollset add it there. */
     else if(!fdi->next) {
-        fdi->next = dill_changelist;
-        dill_changelist = fd + 1;
+        fdi->next = ctx->changelist;
+        ctx->changelist = fd + 1;
     }
     /* Add the clause to the list of waited for clauses. */
     dill_waitfor(cl, id, &fdi->out, NULL);
@@ -146,7 +166,8 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
 }
 
 void dill_pollset_clean(int fd) {
-    struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     /* We cannot clean an fd that someone is waiting for. */
     dill_assert(dill_list_empty(&fdi->in));
     dill_assert(dill_list_empty(&fdi->out));
@@ -162,17 +183,17 @@ void dill_pollset_clean(int fd) {
         ++nevs;
     }
     if(nevs) {
-        int rc = kevent(dill_kfd, evs, nevs, NULL, 0, NULL);
+        int rc = kevent(ctx->kfd, evs, nevs, NULL, 0, NULL);
         dill_assert(rc != -1);
     }
     fdi->currevs = 0;
     /* If needed, remove the fd from the changelist. */
     if(fdi->next) {
-        uint32_t *pidx = &dill_changelist;
+        uint32_t *pidx = &ctx->changelist;
         while(1) {
             dill_assert(*pidx != 0 && *pidx != DILL_ENDLIST);
             if(*pidx - 1 == fd) break;
-            pidx = &dill_fdinfos[*pidx - 1].next;
+            pidx = &ctx->fdinfos[*pidx - 1].next;
         }
         *pidx = fdi->next;
         fdi->next = 0;
@@ -182,21 +203,22 @@ void dill_pollset_clean(int fd) {
 }
 
 int dill_pollset_poll(int timeout) {
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
     /* Apply any changes to the pollset. */
     struct kevent chngs[DILL_CHNGSSIZE];
     int nchngs = 0;
-    while(dill_changelist != DILL_ENDLIST) {
+    while(ctx->changelist != DILL_ENDLIST) {
         /* Flush the changes to the pollset even if there is one emtpy entry
            left in the changeset. That way we make sure that both in & out
            associated with the next file descriptor can be filled in if we
            choose not to flush the changes yet. */
         if(nchngs >= DILL_CHNGSSIZE - 1) {
-            int rc = kevent(dill_kfd, chngs, nchngs, NULL, 0, NULL);
+            int rc = kevent(ctx->kfd, chngs, nchngs, NULL, 0, NULL);
             dill_assert(rc != -1);
             nchngs = 0;
         }
-        int fd = dill_changelist - 1;
-        struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+        int fd = ctx->changelist - 1;
+        struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
         if(!dill_list_empty(&fdi->in)) {
             if(!(fdi->currevs & FDW_IN)) {
                 EV_SET(&chngs[nchngs], fd, EVFILT_READ, EV_ADD, 0, 0, 0);
@@ -226,7 +248,7 @@ int dill_pollset_poll(int timeout) {
             }
         }
         fdi->firing = 0;
-        dill_changelist = fdi->next;
+        ctx->changelist = fdi->next;
         fdi->next = 0;
     }
     /* Wait for events. */
@@ -238,7 +260,7 @@ int dill_pollset_poll(int timeout) {
             ts.tv_sec = timeout / 1000;
             ts.tv_nsec = (((long)timeout) % 1000) * 1000000;
         }
-        nevs = kevent(dill_kfd, chngs, nchngs, evs, DILL_EVSSIZE,
+        nevs = kevent(ctx->kfd, chngs, nchngs, evs, DILL_EVSSIZE,
             timeout < 0 ? NULL : &ts);
         if(nevs < 0 && errno == EINTR)
             continue;
@@ -252,7 +274,7 @@ int dill_pollset_poll(int timeout) {
     for(i = 0; i != nevs; ++i) {
         dill_assert(evs[i].flags != EV_ERROR);
         int fd = (int)evs[i].ident;
-        struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+        struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
         /* Add firing event to the result list. */
         if(evs[i].flags == EV_EOF)
             fdi->firing |= (FDW_IN | FDW_OUT);
@@ -263,15 +285,15 @@ int dill_pollset_poll(int timeout) {
                 fdi->firing |= FDW_OUT;
         }
         if(!fdi->next) {
-            fdi->next = dill_changelist;
-            dill_changelist = fd + 1;
+            fdi->next = ctx->changelist;
+            ctx->changelist = fd + 1;
         }
     }
     /* Resume the blocked coroutines. */
-    uint32_t chl = dill_changelist;
+    uint32_t chl = ctx->changelist;
     while(chl != DILL_ENDLIST) {
         int fd = chl - 1;
-        struct dill_fdinfo *fdi = &dill_fdinfos[fd];
+        struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
         if(!dill_list_empty(&fdi->in) && (fdi->firing & FDW_IN)) {
             struct dill_clause *cl = dill_cont(dill_list_begin(&fdi->in),
                 struct dill_clause, epitem);

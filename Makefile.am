@@ -38,6 +38,7 @@ libdill_la_SOURCES = \
     epoll.inc \
     fd.h \
     fd.c \
+    handle.h \
     handle.c \
     kqueue.inc \
     libdill.c \
@@ -50,16 +51,19 @@ libdill_la_SOURCES = \
     slist.c \
     stack.h \
     stack.c \
+    context.h \
+    context.c \
     utils.h
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libdill.pc
 
-libdill_la_LDFLAGS = -no-undefined -version-info @DILL_LIBTOOL_VERSION@
+libdill_la_LDFLAGS = -no-undefined -version-info @DILL_LIBTOOL_VERSION@ @PTHREAD_LIBS@
 
 # Turn the source fortification in glibc off - otherwise it would panic
 # because of the stack pointer black magic in 'go' macro.
 libdill_la_CFLAGS = \
+    @PTHREAD_CFLAGS@ \
     -fvisibility=hidden\
     -DDILL_EXPORTS \
     -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0
@@ -79,6 +83,10 @@ check_PROGRAMS = \
     tests/sleep \
     tests/signals \
     tests/overload
+
+if DILL_THREADS
+check_PROGRAMS += tests/threads
+endif
 
 check_HEADERS = \
     tests/assert.h
