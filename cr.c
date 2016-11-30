@@ -224,6 +224,13 @@ static void dill_poller_init(void) {
     dill_list_init(&ctx->timers);
     /* Polling-mechanism-specific intitialisation. */
     int rc = dill_pollset_init();
+    /* Register cleanup function once for main thread. */
+#if defined DILL_VALGRIND
+    if(ctx == &dill_ctx_cr_main_data) {
+        rc = atexit(dill_pollset_atexit);
+        dill_assert(rc == 0);
+    }
+#endif
     dill_assert(rc == 0);
 }
 
@@ -400,12 +407,6 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
         cr->census->max_stack = 0;
     }
     cr->stacksz = stacksz - sizeof(struct dill_cr);
-#endif
-#if defined DILL_VALGRIND
-    if(ctx == &dill_ctx_cr_main_data) {
-        rc = atexit(dill_pollset_atexit);
-        dill_assert(rc == 0);
-    }
 #endif
     /* Return the context of the parent coroutine to the caller so that it can
        store its current state. It can't be done here becuse we are at the
