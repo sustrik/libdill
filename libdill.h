@@ -252,13 +252,5 @@ DILL_EXPORT int chdone(int ch);
 DILL_EXPORT int choose(struct chclause *clauses, int nclauses,
     int64_t deadline);
 
-
-/******************************************************************************/
-/*  Thread safety                                                             */
-/******************************************************************************/
-
-DILL_EXPORT int ctxinit(void);
-DILL_EXPORT void ctxterm(void);
-
 #endif
 

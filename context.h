@@ -28,9 +28,7 @@
 #include <limits.h>
 
 /* Thread local storage support */
-#if (__STDC_VERSION__ >= 201112L) && (__STDC_NO_THREADS__ != 1)
-#define DILL_THREAD_LOCAL _Thread_local
-#elif defined __GNUC__
+#if defined __GNUC__
 #define DILL_THREAD_LOCAL __thread
 #else
 #error "No TLS support"
@@ -42,19 +40,9 @@
 
 #endif
 
-struct dill_ctx_cr;
-struct dill_ctx_handle;
-struct dill_ctx_stack;
-struct dill_ctx_pollset;
+typedef void (*dill_atexit_fn)(void);
 
-struct dill_ctx {
-    struct dill_ctx_cr *cr;
-    struct dill_ctx_handle *handle;
-    struct dill_ctx_stack *stack;
-    struct dill_ctx_pollset *pollset;
-};
-
-extern DILL_THREAD_LOCAL struct dill_ctx dill_context;
+int dill_atexit(dill_atexit_fn f);
 
 #endif
 

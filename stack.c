@@ -51,14 +51,13 @@ static int dill_max_cached_stacks = 64;
 struct dill_ctx_stack {
     int count;
     struct dill_slist cache;
-#if defined DILL_VALGRIND
+#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
 /* Flag to indicate that atexit is registered. */
     int initialized;
 #endif
 };
 
-struct dill_ctx_stack dill_ctx_stack_defaults = {0};
-struct dill_ctx_stack dill_ctx_stack_main_data = {0};
+static DILL_THREAD_LOCAL struct dill_ctx_stack dill_ctx_stack_data = {0};
 
 /* Returns smallest value greater than val that is a multiply of unit. */
 static size_t dill_align(size_t val, size_t unit) {
@@ -75,58 +74,35 @@ static size_t dill_page_size(void) {
     return (size_t)pgsz;
 }
 
-/* Intialisation function for stack context */
-int dill_initstack(void) {
-    struct dill_ctx_stack *ctx = malloc(sizeof(struct dill_ctx_stack));
-    if(dill_slow(!ctx)) return -1;
-    memcpy(ctx, &dill_ctx_stack_defaults, sizeof(struct dill_ctx_stack));
-    dill_context.stack = ctx;
-    return 0;
-}
-
-/* Termination function for stack context */
-void dill_termstack(void) {
-    struct dill_ctx_stack *ctx = dill_context.stack;
-    if(!ctx) return;
-#if defined DILL_VALGRIND
-    struct dill_slist_item *it;
-    while(it = dill_slist_pop(&ctx->cache)) {
-      /* If the stack cache is full deallocate the stack. */
-#if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD
-      void *ptr = ((uint8_t*)(it + 1)) - dill_stack_size - dill_page_size();
-      int rc = mprotect(ptr, dill_page_size(), PROT_READ|PROT_WRITE);
-      dill_assert(rc == 0);
-      free(ptr);
-#else
-      void *ptr = ((uint8_t*)(it + 1)) - dill_stack_size;
-      free(ptr);
-#endif
-    }
-#endif
-    /* Ensure that we are not in the main thread. */
-    if(ctx == &dill_ctx_stack_main_data) return;
-    free(dill_context.stack);
-    dill_context.stack = NULL;
-}
-
-#if defined DILL_VALGRIND
+#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
 
 static void dill_stack_atexit(void) {
-    dill_termstack();
+    struct dill_ctx_stack *ctx = &dill_ctx_stack_data;
+    struct dill_slist_item *it;
+    while((it = dill_slist_pop(&ctx->cache))) {
+      /* If the stack cache is full deallocate the stack. */
+#if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD
+        void *ptr = ((uint8_t*)(it + 1)) - dill_stack_size - dill_page_size();
+        int rc = mprotect(ptr, dill_page_size(), PROT_READ|PROT_WRITE);
+        dill_assert(rc == 0);
+        free(ptr);
+#else
+        void *ptr = ((uint8_t*)(it + 1)) - dill_stack_size;
+        free(ptr);
+#endif
+    }
 }
 
 #endif
 
 void *dill_allocstack(size_t *stack_size) {
-    struct dill_ctx_stack *ctx = dill_context.stack;
-#if defined DILL_VALGRIND
+    struct dill_ctx_stack *ctx = &dill_ctx_stack_data;
+#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
     /* When using valgrind we want to deallocate cached stacks when
        the process is terminated so that they don't show up in the output. */
     if(dill_slow(!ctx->initialized)) {
-        if(ctx == &dill_ctx_stack_main_data) {
-            int rc = atexit(dill_stack_atexit);
-            dill_assert(rc == 0);
-        }
+        int rc = dill_atexit(dill_stack_atexit);
+        dill_assert(rc == 0);
         ctx->initialized = 1;
     }
 #endif
@@ -173,7 +149,7 @@ void *dill_allocstack(size_t *stack_size) {
 }
 
 void dill_freestack(void *stack) {
-    struct dill_ctx_stack *ctx = dill_context.stack;
+    struct dill_ctx_stack *ctx = &dill_ctx_stack_data;
     struct dill_slist_item *item = ((struct dill_slist_item*)stack) - 1;
     /* If there are free slots in the cache put the stack to the cache. */
     if(ctx->count < dill_max_cached_stacks) {
