@@ -52,7 +52,25 @@ struct dill_ctx {
     struct dill_ctx_pollset *pollset;
 };
 
+/* The context is statically allocated in single-threaded builds and
+   dynamically allocated in multi-threaded builds.
+   This enables the compiler to remove the extra level of indirection in the
+   case of the single-threaded build. */
+#if defined DILL_THREADS
 extern DILL_THREAD_LOCAL struct dill_ctx dill_context;
+#else
+/* Statically declared in cr.c, handle.c, stack.c, and pollset.c */
+extern struct dill_ctx_cr dill_ctx_cr_data;
+extern struct dill_ctx_handle dill_ctx_handle_data;
+extern struct dill_ctx_stack dill_ctx_stack_data;
+extern struct dill_ctx_pollset dill_ctx_pollset_data;
+static const struct dill_ctx dill_context = {
+    .cr = &dill_ctx_cr_data,
+    .handle = &dill_ctx_handle_data,
+    .stack = &dill_ctx_stack_data,
+    .pollset = &dill_ctx_pollset_data,
+};
+#endif
 
 typedef void (*dill_atexit_fn)(void);
 

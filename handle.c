@@ -55,34 +55,40 @@ struct dill_ctx_handle {
     struct dill_handle *handles;
     int nhandles;
     int unused;
+#if defined DILL_VALGRIND
+    int initialized;
+#endif
 };
 
-static DILL_THREAD_LOCAL struct dill_ctx_handle dill_ctx_handle_data =
-    {NULL, 0, -1};
+/* Static declaration referenced in context.h */
+#if !defined DILL_THREADS
+struct dill_ctx_handle dill_ctx_handle_data = {NULL, 0, -1};
+#endif
 
 #if defined(DILL_VALGRIND) || defined(DILL_THREADS)
 
 static void dill_handle_atexit(void) {
     struct dill_ctx_handle *ctx = dill_context.handle;
     if(ctx->handles) free(ctx->handles);
+#if defined DILL_THREADS
+    free(ctx);
+#endif
 }
 
 #endif
 
-static struct dill_ctx_handle *dill_handle_init(void) {
-    if(dill_slow(!dill_context.handle)) {
-        struct dill_ctx_handle *ctx = malloc(sizeof(struct dill_ctx_handle));
+static inline struct dill_ctx_handle *dill_handle_init(void) {
+    struct dill_ctx_handle *ctx = dill_context.handle;
+#if defined DILL_THREADS
+    if(dill_slow(!ctx)) {
+        ctx = dill_context.handle = malloc(sizeof(struct dill_ctx_handle));
         ctx->handles = NULL;
         ctx->nhandles = 0;
         ctx->unused = -1;
-#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
-        /* Clean-up function to delete the array at exit. It is not strictly
-           necessary but valgrind will be happy about it. */
         int rc = dill_atexit(dill_handle_atexit);
         dill_assert(rc == 0);
-#endif
-        dill_context.handle = ctx;
     }
+#endif
     return dill_context.handle;
 }
 
@@ -100,6 +106,15 @@ int hmake(struct hvfs *vfs) {
         struct dill_handle *hndls =
             realloc(ctx->handles, sz * sizeof(struct dill_handle));
         if(dill_slow(!hndls)) {errno = ENOMEM; return -1;}
+#if defined DILL_VALGRIND
+        /* Clean-up function to delete the array at exit. It is not strictly
+           necessary but valgrind will be happy about it. */
+        if(dill_slow(!ctx->initialized)) {
+            int rc = dill_atexit(dill_handle_atexit);
+            dill_assert(rc == 0);
+            ctx->initialized = 1;
+        }
+#endif
         /* Add newly allocated handles to the list of unused handles. */
         int i;
         for(i = ctx->nhandles; i != sz - 1; ++i)

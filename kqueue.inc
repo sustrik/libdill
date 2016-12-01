@@ -64,6 +64,11 @@ struct dill_ctx_pollset {
     uint32_t changelist;
 };
 
+/* Static declaration referenced in context.h */
+#if !defined DILL_THREADS
+struct dill_ctx_pollset dill_ctx_pollset_data = {-1, NULL, DILL_ENDLIST};
+#endif
+
 /* Termination function for the pollset context. */
 void dill_pollset_term(void) {
     struct dill_ctx_pollset *ctx = dill_context.pollset;
@@ -76,13 +81,19 @@ void dill_pollset_term(void) {
     }
     if(ctx->fdinfos)
         free(ctx->fdinfos);
+#if defined DILL_THREADS
     free(ctx);
+#endif
 }
 
 int dill_pollset_init(void) {
-    struct dill_ctx_pollset *ctx;
     int err;
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+#if defined DILL_THREADS
+    /* dill_pollset_init is used internally and should only be called once. */
+    dill_assert(ctx == NULL);
     ctx = dill_context.pollset = malloc(sizeof(struct dill_ctx_pollset));
+#endif
     /* Allocate one info per fd. */
     ctx->fdinfos =
         calloc(dill_maxfds(), sizeof(struct dill_fdinfo));

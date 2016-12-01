@@ -57,9 +57,16 @@ struct dill_ctx_stack {
 #endif
 };
 
-static struct dill_ctx_stack *dill_stack_init(void) {
+/* Static declaration referenced in context.h */
+#if !defined DILL_THREADS
+struct dill_ctx_stack dill_ctx_stack_data = {0};
+#endif
+
+static inline struct dill_ctx_stack *dill_stack_init(void) {
+#if defined DILL_THREADS
     if(dill_slow(!dill_context.stack))
         dill_context.stack = calloc(sizeof(struct dill_ctx_stack), 1);
+#endif
     return dill_context.stack;
 }
 
@@ -95,7 +102,9 @@ static void dill_stack_atexit(void) {
         free(ptr);
 #endif
     }
+#if defined DILL_THREADS
     free(ctx);
+#endif
 }
 
 #endif

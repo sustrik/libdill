@@ -79,7 +79,10 @@ struct dill_ctx_pollset {
     struct dill_fdinfo *fdinfos;
 };
 
-static DILL_THREAD_LOCAL struct dill_ctx_pollset dill_ctx_pollset_data = {0};
+/* Static declaration referenced in context.h */
+#if !defined DILL_THREADS
+struct dill_ctx_pollset dill_ctx_pollset_data = {0};
+#endif
 
 /* Termination function for the pollset context. */
 void dill_pollset_term(void) {
@@ -88,13 +91,19 @@ void dill_pollset_term(void) {
         free(ctx->pollset);
     if(ctx->fdinfos)
         free(ctx->fdinfos);
+#if defined DILL_THREADS
     free(ctx);
+#endif
 }
 
 int dill_pollset_init(void) {
-    struct dill_ctx_pollset *ctx;
     int err;
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
+#if defined DILL_THREADS
+    /* dill_pollset_init is used internally and should only be called once. */
+    dill_assert(ctx == NULL);
     ctx = dill_context.pollset = malloc(sizeof(struct dill_ctx_pollset));
+#endif
     /* Allocate largest possible pollset. */
     ctx->pollset_size = 0;
     ctx->pollset = malloc(sizeof(struct pollfd) * dill_maxfds());

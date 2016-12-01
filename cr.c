@@ -108,12 +108,10 @@ struct dill_cr {
 /* Storage for constant used by go() macro. */
 volatile void *dill_unoptimisable = NULL;
 
-/* Main coroutine. */
-static DILL_THREAD_LOCAL struct dill_cr dill_main_data =
-    {DILL_SLIST_ITEM_INITIALISER};
-
 /* Current coroutine context */
 struct dill_ctx_cr {
+    /* Main coroutine */
+    struct dill_cr *main;
     /* Currently running coroutine. */
     struct dill_cr *r;
     /* List of coroutines ready for execution. */
@@ -133,21 +131,34 @@ struct dill_ctx_cr {
 #endif
 };
 
+/* Static declaration referenced in context.h */
+#if !defined DILL_THREADS
+struct dill_cr dill_cr_main_data = {DILL_SLIST_ITEM_INITIALISER};
+struct dill_ctx_cr dill_ctx_cr_data = {&dill_cr_main_data, &dill_cr_main_data};
+#endif
+
 /******************************************************************************/
 /*  Helpers.                                                                  */
 /******************************************************************************/
 
-static struct dill_ctx_cr *dill_cr_init(void) {
-    if(dill_slow(!dill_context.cr)) {
-        dill_context.cr = calloc(sizeof(struct dill_ctx_cr), 1);
-        dill_context.cr->r = &dill_main_data;
+static inline struct dill_ctx_cr *dill_cr_init(void) {
+    struct dill_ctx_cr *ctx = dill_context.cr;
+#if defined DILL_THREADS
+    if(dill_slow(!ctx)) {
+        ctx = dill_context.cr = calloc(sizeof(struct dill_ctx_cr), 1);
+        ctx->main = calloc(sizeof(struct dill_cr), 1);
+        dill_slist_item_init(&ctx->main->ready);
+        ctx->r = ctx->main;
     }
-    return dill_context.cr;
+#endif
+    return ctx;
 }
 
 #if defined DILL_THREADS
 static void dill_cr_atexit(void) {
     struct dill_ctx_cr *ctx = dill_cr_init();
+    if(ctx->main)
+        free(ctx->main);
     free(ctx);
 }
 #endif

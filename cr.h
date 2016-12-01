@@ -28,9 +28,6 @@
 #include "list.h"
 #include "slist.h"
 
-struct dill_ctx_cr;
-extern struct dill_ctx_cr dill_ctx_cr_main_data;
-
 struct dill_cr;
 
 struct dill_clause {
