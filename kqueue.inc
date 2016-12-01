@@ -79,8 +79,6 @@ void dill_pollset_term(void) {
     }
     if(ctx->fdinfos)
         free(ctx->fdinfos);
-    free(ctx);
-    &dill_ctx_pollset_data = NULL;
 }
 
 int dill_pollset_init(void) {
