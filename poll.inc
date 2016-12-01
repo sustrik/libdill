@@ -83,16 +83,18 @@ static DILL_THREAD_LOCAL struct dill_ctx_pollset dill_ctx_pollset_data = {0};
 
 /* Termination function for the pollset context. */
 void dill_pollset_term(void) {
-    struct dill_ctx_pollset *ctx = &dill_ctx_pollset_data;
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
     if(ctx->pollset)
         free(ctx->pollset);
     if(ctx->fdinfos)
         free(ctx->fdinfos);
+    free(ctx);
 }
 
 int dill_pollset_init(void) {
-    struct dill_ctx_pollset *ctx = &dill_ctx_pollset_data;
+    struct dill_ctx_pollset *ctx;
     int err;
+    ctx = dill_context.pollset = malloc(sizeof(struct dill_ctx_pollset));
     /* Allocate largest possible pollset. */
     ctx->pollset_size = 0;
     ctx->pollset = malloc(sizeof(struct pollfd) * dill_maxfds());
@@ -118,7 +120,7 @@ error1:
 }
 
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
-    struct dill_ctx_pollset *ctx = &dill_ctx_pollset_data;
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(dill_slow(!fdi->cached)) {
         int flags = fcntl(fd, F_GETFD);
@@ -139,7 +141,7 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
 }
 
 int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
-    struct dill_ctx_pollset *ctx = &dill_ctx_pollset_data;
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(dill_slow(!fdi->cached)) {
         int flags = fcntl(fd, F_GETFD);
@@ -160,13 +162,13 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
 }
 
 void dill_pollset_clean(int fd) {
-    struct dill_ctx_pollset *ctx = &dill_ctx_pollset_data;
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     fdi->cached = 0;
 }
 
 int dill_pollset_poll(int timeout) {
-    struct dill_ctx_pollset *ctx = &dill_ctx_pollset_data;
+    struct dill_ctx_pollset *ctx = dill_context.pollset;
     /* Wait for events. */
     int numevs;
     while(1) {

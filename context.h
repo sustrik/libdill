@@ -40,6 +40,20 @@
 
 #endif
 
+struct dill_ctx_cr;
+struct dill_ctx_handle;
+struct dill_ctx_stack;
+struct dill_ctx_pollset;
+
+struct dill_ctx {
+    struct dill_ctx_cr *cr;
+    struct dill_ctx_handle *handle;
+    struct dill_ctx_stack *stack;
+    struct dill_ctx_pollset *pollset;
+};
+
+extern DILL_THREAD_LOCAL struct dill_ctx dill_context;
+
 typedef void (*dill_atexit_fn)(void);
 
 int dill_atexit(dill_atexit_fn f);

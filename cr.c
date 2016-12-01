@@ -128,20 +128,29 @@ struct dill_ctx_cr {
     int census_init;
     struct dill_slist census;
 #endif
+#if defined DILL_THREADS
+    int initialized;
+#endif
 };
-
-static DILL_THREAD_LOCAL struct dill_ctx_cr dill_ctx_cr_data = {0};
 
 /******************************************************************************/
 /*  Helpers.                                                                  */
 /******************************************************************************/
 
-static inline struct dill_ctx_cr *dill_cr_init(void) {
-    struct dill_ctx_cr *ctx = &dill_ctx_cr_data;
-    if(dill_fast(ctx->r)) return ctx;
-    ctx->r = &dill_main_data;
-    return ctx;
+static struct dill_ctx_cr *dill_cr_init(void) {
+    if(dill_slow(!dill_context.cr)) {
+        dill_context.cr = calloc(sizeof(struct dill_ctx_cr), 1);
+        dill_context.cr->r = &dill_main_data;
+    }
+    return dill_context.cr;
 }
+
+#if defined DILL_THREADS
+static void dill_cr_atexit(void) {
+    struct dill_ctx_cr *ctx = dill_cr_init();
+    free(ctx);
+}
+#endif
 
 #if defined DILL_CENSUS
 /* Print out the results of the stack size census. */
@@ -352,6 +361,13 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     cr->go_stack = *ptr ? 1 : 0;
 #if defined DILL_VALGRIND
     cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stacksz, cr);
+#endif
+#if defined DILL_THREADS
+    if(dill_slow(!ctx->initialized)) {
+        rc = dill_atexit(dill_cr_atexit);
+        dill_assert(rc == 0);
+        ctx->initialized = 1;
+    }
 #endif
 #if defined DILL_CENSUS
     /* Initialize census. */

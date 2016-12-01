@@ -55,9 +55,6 @@ struct dill_ctx_handle {
     struct dill_handle *handles;
     int nhandles;
     int unused;
-#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
-    int initialized;
-#endif
 };
 
 static DILL_THREAD_LOCAL struct dill_ctx_handle dill_ctx_handle_data =
@@ -66,14 +63,31 @@ static DILL_THREAD_LOCAL struct dill_ctx_handle dill_ctx_handle_data =
 #if defined(DILL_VALGRIND) || defined(DILL_THREADS)
 
 static void dill_handle_atexit(void) {
-    struct dill_ctx_handle *ctx = &dill_ctx_handle_data;
+    struct dill_ctx_handle *ctx = dill_context.handle;
     if(ctx->handles) free(ctx->handles);
 }
 
 #endif
 
+static struct dill_ctx_handle *dill_handle_init(void) {
+    if(dill_slow(!dill_context.handle)) {
+        struct dill_ctx_handle *ctx = malloc(sizeof(struct dill_ctx_handle));
+        ctx->handles = NULL;
+        ctx->nhandles = 0;
+        ctx->unused = -1;
+#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
+        /* Clean-up function to delete the array at exit. It is not strictly
+           necessary but valgrind will be happy about it. */
+        int rc = dill_atexit(dill_handle_atexit);
+        dill_assert(rc == 0);
+#endif
+        dill_context.handle = ctx;
+    }
+    return dill_context.handle;
+}
+
 int hmake(struct hvfs *vfs) {
-    struct dill_ctx_handle *ctx = &dill_ctx_handle_data;
+    struct dill_ctx_handle *ctx = dill_handle_init();
     if(dill_slow(!vfs || !vfs->query || !vfs->close)) {
         errno = EINVAL; return -1;}
     /* Return ECANCELED if shutting down. */
@@ -86,15 +100,6 @@ int hmake(struct hvfs *vfs) {
         struct dill_handle *hndls =
             realloc(ctx->handles, sz * sizeof(struct dill_handle));
         if(dill_slow(!hndls)) {errno = ENOMEM; return -1;}
-#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
-        /* Clean-up function to delete the array at exit. It is not strictly
-           necessary but valgrind will be happy about it. */
-        if(dill_slow(!ctx->initialized)) {
-            int rc = dill_atexit(dill_handle_atexit);
-            dill_assert(rc == 0);
-            ctx->initialized = 1;
-        }
-#endif
         /* Add newly allocated handles to the list of unused handles. */
         int i;
         for(i = ctx->nhandles; i != sz - 1; ++i)
@@ -117,7 +122,7 @@ int hmake(struct hvfs *vfs) {
 }
 
 int hdup(int h) {
-    struct dill_ctx_handle *ctx = &dill_ctx_handle_data;
+    struct dill_ctx_handle *ctx = dill_handle_init();
     CHECKHANDLE(h, -1);
     int refcount = hndl->vfs->refcount;
     int res = hmake(hndl->vfs);
@@ -127,7 +132,7 @@ int hdup(int h) {
 }
 
 void *hquery(int h, const void *type) {
-    struct dill_ctx_handle *ctx = &dill_ctx_handle_data;
+    struct dill_ctx_handle *ctx = dill_handle_init();
     CHECKHANDLE(h, NULL);
     /* Try and use cached pointer first, otherwise do expensive virtual call.*/
     if(dill_fast(hndl->ptr != NULL && hndl->type == type))
@@ -143,7 +148,7 @@ void *hquery(int h, const void *type) {
 }
 
 int hclose(int h) {
-    struct dill_ctx_handle *ctx = &dill_ctx_handle_data;
+    struct dill_ctx_handle *ctx = dill_handle_init();
     CHECKHANDLE(h, -1);
     /* If there are multiple duplicates of this handle just remove one
        reference. */

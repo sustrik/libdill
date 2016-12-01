@@ -25,6 +25,8 @@
 
 #include "context.h"
 
+DILL_THREAD_LOCAL struct dill_ctx dill_context = {0};
+
 #if defined DILL_THREADS
 
 #include "libdill.h"

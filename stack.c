@@ -57,7 +57,11 @@ struct dill_ctx_stack {
 #endif
 };
 
-static DILL_THREAD_LOCAL struct dill_ctx_stack dill_ctx_stack_data = {0};
+static struct dill_ctx_stack *dill_stack_init(void) {
+    if(dill_slow(!dill_context.stack))
+        dill_context.stack = calloc(sizeof(struct dill_ctx_stack), 1);
+    return dill_context.stack;
+}
 
 /* Returns smallest value greater than val that is a multiply of unit. */
 static size_t dill_align(size_t val, size_t unit) {
@@ -77,7 +81,7 @@ static size_t dill_page_size(void) {
 #if defined(DILL_VALGRIND) || defined(DILL_THREADS)
 
 static void dill_stack_atexit(void) {
-    struct dill_ctx_stack *ctx = &dill_ctx_stack_data;
+    struct dill_ctx_stack *ctx = dill_stack_init();
     struct dill_slist_item *it;
     while((it = dill_slist_pop(&ctx->cache))) {
       /* If the stack cache is full deallocate the stack. */
@@ -91,12 +95,13 @@ static void dill_stack_atexit(void) {
         free(ptr);
 #endif
     }
+    free(ctx);
 }
 
 #endif
 
 void *dill_allocstack(size_t *stack_size) {
-    struct dill_ctx_stack *ctx = &dill_ctx_stack_data;
+    struct dill_ctx_stack *ctx = dill_stack_init();
 #if defined(DILL_VALGRIND) || defined(DILL_THREADS)
     /* When using valgrind we want to deallocate cached stacks when
        the process is terminated so that they don't show up in the output. */
@@ -149,7 +154,7 @@ void *dill_allocstack(size_t *stack_size) {
 }
 
 void dill_freestack(void *stack) {
-    struct dill_ctx_stack *ctx = &dill_ctx_stack_data;
+    struct dill_ctx_stack *ctx = dill_stack_init();
     struct dill_slist_item *item = ((struct dill_slist_item*)stack) - 1;
     /* If there are free slots in the cache put the stack to the cache. */
     if(ctx->count < dill_max_cached_stacks) {
