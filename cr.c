@@ -126,9 +126,6 @@ struct dill_ctx_cr {
     int census_init;
     struct dill_slist census;
 #endif
-#if defined DILL_THREADS
-    int initialized;
-#endif
 };
 
 /* Static declaration referenced in context.h */
@@ -141,6 +138,15 @@ struct dill_ctx_cr dill_ctx_cr_data = {&dill_cr_main_data, &dill_cr_main_data};
 /*  Helpers.                                                                  */
 /******************************************************************************/
 
+#if defined DILL_THREADS
+static void dill_cr_atexit(void) {
+    struct dill_ctx_cr *ctx = dill_context.cr;
+    if(ctx->main)
+        free(ctx->main);
+    free(ctx);
+}
+#endif
+
 static inline struct dill_ctx_cr *dill_cr_init(void) {
     struct dill_ctx_cr *ctx = dill_context.cr;
 #if defined DILL_THREADS
@@ -149,19 +155,13 @@ static inline struct dill_ctx_cr *dill_cr_init(void) {
         ctx->main = calloc(sizeof(struct dill_cr), 1);
         dill_slist_item_init(&ctx->main->ready);
         ctx->r = ctx->main;
+        /* Register destructor. */
+        int rc = dill_atexit(dill_cr_atexit);
+        dill_assert(rc == 0);
     }
 #endif
     return ctx;
 }
-
-#if defined DILL_THREADS
-static void dill_cr_atexit(void) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
-    if(ctx->main)
-        free(ctx->main);
-    free(ctx);
-}
-#endif
 
 #if defined DILL_CENSUS
 /* Print out the results of the stack size census. */
@@ -372,13 +372,6 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     cr->go_stack = *ptr ? 1 : 0;
 #if defined DILL_VALGRIND
     cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stacksz, cr);
-#endif
-#if defined DILL_THREADS
-    if(dill_slow(!ctx->initialized)) {
-        rc = dill_atexit(dill_cr_atexit);
-        dill_assert(rc == 0);
-        ctx->initialized = 1;
-    }
 #endif
 #if defined DILL_CENSUS
     /* Initialize census. */
