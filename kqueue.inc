@@ -86,7 +86,6 @@ void dill_pollset_term(void) {
 int dill_pollset_init(void) {
     struct dill_ctx_pollset *ctx = &dill_ctx_pollset_data;
     int err;
-    /* Always allocate a pollset because this function is always called from cr.c */
     ctx->fdinfos = (struct dill_fdinfo*)
         calloc(dill_maxfds(), sizeof(struct dill_fdinfo));
     if(dill_slow(!ctx->fdinfos)) {err = ENOMEM; goto error1;}
