@@ -55,7 +55,7 @@ struct dill_ctx_handle {
     struct dill_handle *handles;
     int nhandles;
     int unused;
-#if defined DILL_VALGRIND
+#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
     int initialized;
 #endif
 };
@@ -85,8 +85,6 @@ static inline struct dill_ctx_handle *dill_handle_init(void) {
         ctx->handles = NULL;
         ctx->nhandles = 0;
         ctx->unused = -1;
-        int rc = dill_atexit(dill_handle_atexit);
-        dill_assert(rc == 0);
     }
 #endif
     return dill_context.handle;
@@ -106,7 +104,7 @@ int hmake(struct hvfs *vfs) {
         struct dill_handle *hndls =
             realloc(ctx->handles, sz * sizeof(struct dill_handle));
         if(dill_slow(!hndls)) {errno = ENOMEM; return -1;}
-#if defined DILL_VALGRIND
+#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
         /* Clean-up function to delete the array at exit. It is not strictly
            necessary but valgrind will be happy about it. */
         if(dill_slow(!ctx->initialized)) {
