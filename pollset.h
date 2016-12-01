@@ -25,9 +25,6 @@
 #ifndef DILL_POLLSET_INCLUDED
 #define DILL_POLLSET_INCLUDED
 
-struct dill_ctx_pollset;
-extern struct dill_ctx_pollset dill_ctx_pollset_main_data;
-
 /* Initialises the pollset. This function is called once per thread. */
 int dill_pollset_init(void);
 

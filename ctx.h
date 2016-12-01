@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2016 Martin Sustrik
+  Copyright (c) 2016 Tai Chi Minh Ralph Eastwood
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -28,9 +28,7 @@
 #include <limits.h>
 
 /* Thread local storage support */
-#if (__STDC_VERSION__ >= 201112L) && (__STDC_NO_THREADS__ != 1)
-#define DILL_THREAD_LOCAL _Thread_local
-#elif defined __GNUC__
+#if defined __GNUC__
 #define DILL_THREAD_LOCAL __thread
 #else
 #error "No TLS support"
@@ -42,6 +40,20 @@
 
 #endif
 
+/* The context is statically allocated in single-threaded builds, dynamically
+   allocated in multi-threaded shared builds using malloc, and allocated using
+   multiple thread locals in multi-threaded static builds.
+
+   - Single-threaded: Making global variables enables the compiler to remove
+     the extra level of indirection in the case of the single-threaded build.
+   - Multi-threaded(shared): Having a single thread local enables the compiler
+     to group TLS accesses (reduces __tls_get_addr calls.)
+   - Multi-threaded(static): Having context split into multiple thread locals
+     enables the compiler to optimise TLS accesses into the least number of
+     instructions (negligible difference in performance from single-threaded
+     build). */
+
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
 struct dill_ctx_cr;
 struct dill_ctx_handle;
 struct dill_ctx_stack;
@@ -54,7 +66,13 @@ struct dill_ctx {
     struct dill_ctx_pollset *pollset;
 };
 
+/* This is necessary to group TLS accesses in multi-threaded shared builds. */
 extern DILL_THREAD_LOCAL struct dill_ctx dill_context;
+#endif
+
+typedef void (*dill_atexit_fn)(void);
+
+int dill_atexit(dill_atexit_fn f);
 
 #endif
 

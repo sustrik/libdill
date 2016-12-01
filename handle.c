@@ -32,7 +32,7 @@
 #include "cr.h"
 #include "libdill.h"
 #include "utils.h"
-#include "context.h"
+#include "ctx.h"
 
 struct dill_handle {
     /* Table of virtual functions. */
@@ -55,45 +55,51 @@ struct dill_ctx_handle {
     struct dill_handle *handles;
     int nhandles;
     int unused;
-#if defined DILL_VALGRIND
+#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
     int initialized;
 #endif
 };
 
-struct dill_ctx_handle dill_ctx_handle_defaults = {NULL, 0, -1};
-struct dill_ctx_handle dill_ctx_handle_main_data = {NULL, 0, -1};
+#if !(defined(DILL_THREADS) && defined(DILL_SHARED))
+/* Non-shared build */
+static DILL_THREAD_LOCAL struct dill_ctx_handle dill_ctx_handle_data =
+    {NULL, 0, -1};
+#endif
 
-/* Initialisation function for the handle context. */
-int dill_inithandle(void) {
-    struct dill_ctx_handle *ctx = malloc(sizeof(struct dill_ctx_handle));
-    if(dill_slow(!ctx)) return -1;
-    memcpy(ctx, &dill_ctx_handle_defaults, sizeof(struct dill_ctx_handle));
-    dill_context.handle = ctx;
-    return 0;
-}
-
-/* Termination function for the handle context. */
-void dill_termhandle(void) {
+/* Returns the pointer to the stack context. */
+static inline struct dill_ctx_handle *dill_ctx(void) {
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
     struct dill_ctx_handle *ctx = dill_context.handle;
-    if(dill_slow(!ctx)) return;
-    if(ctx->handles)
-        free(ctx->handles);
-    /* Ensure that we are not in the main thread. */
-    if(ctx == &dill_ctx_handle_main_data) return;
-    free(ctx);
-    dill_context.handle = NULL;
+    /* Allocate memory for shared multithreaded-build contexts. */
+    if(dill_slow(!ctx)) {
+        ctx = dill_context.handle = malloc(sizeof(struct dill_ctx_handle));
+        ctx->handles = NULL;
+        ctx->nhandles = 0;
+        ctx->unused = -1;
+#if defined(DILL_VALGRIND)
+        ctx->initialized = 0;
+#endif
+    }
+    return ctx;
+#else
+    return &dill_ctx_handle_data;
+#endif
 }
 
-#if defined DILL_VALGRIND
+#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
 
 static void dill_handle_atexit(void) {
-    dill_termhandle();
+    struct dill_ctx_handle *ctx = dill_ctx();
+    if(ctx->handles) free(ctx->handles);
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+    free(ctx);
+#endif
 }
 
 #endif
 
 int hmake(struct hvfs *vfs) {
-    struct dill_ctx_handle *ctx = dill_context.handle;
+    struct dill_ctx_handle *ctx = dill_ctx();
     if(dill_slow(!vfs || !vfs->query || !vfs->close)) {
         errno = EINVAL; return -1;}
     /* Return ECANCELED if shutting down. */
@@ -106,14 +112,12 @@ int hmake(struct hvfs *vfs) {
         struct dill_handle *hndls =
             realloc(ctx->handles, sz * sizeof(struct dill_handle));
         if(dill_slow(!hndls)) {errno = ENOMEM; return -1;}
-#if defined DILL_VALGRIND
+#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
         /* Clean-up function to delete the array at exit. It is not strictly
            necessary but valgrind will be happy about it. */
         if(dill_slow(!ctx->initialized)) {
-            if(ctx == &dill_ctx_handle_main_data) {
-                int rc = atexit(dill_handle_atexit);
-                dill_assert(rc == 0);
-            }
+            int rc = dill_atexit(dill_handle_atexit);
+            dill_assert(rc == 0);
             ctx->initialized = 1;
         }
 #endif
@@ -139,7 +143,7 @@ int hmake(struct hvfs *vfs) {
 }
 
 int hdup(int h) {
-    struct dill_ctx_handle *ctx = dill_context.handle;
+    struct dill_ctx_handle *ctx = dill_ctx();
     CHECKHANDLE(h, -1);
     int refcount = hndl->vfs->refcount;
     int res = hmake(hndl->vfs);
@@ -149,7 +153,7 @@ int hdup(int h) {
 }
 
 void *hquery(int h, const void *type) {
-    struct dill_ctx_handle *ctx = dill_context.handle;
+    struct dill_ctx_handle *ctx = dill_ctx();
     CHECKHANDLE(h, NULL);
     /* Try and use cached pointer first, otherwise do expensive virtual call.*/
     if(dill_fast(hndl->ptr != NULL && hndl->type == type))
@@ -165,7 +169,7 @@ void *hquery(int h, const void *type) {
 }
 
 int hclose(int h) {
-    struct dill_ctx_handle *ctx = dill_context.handle;
+    struct dill_ctx_handle *ctx = dill_ctx();
     CHECKHANDLE(h, -1);
     /* If there are multiple duplicates of this handle just remove one
        reference. */
