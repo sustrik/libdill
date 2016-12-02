@@ -95,7 +95,7 @@ static void dill_stack_atexit(void) {
     struct dill_ctx_stack *ctx = dill_ctx();
     struct dill_slist_item *it;
     while((it = dill_slist_pop(&ctx->cache))) {
-      /* If the stack cache is full deallocate the stack. */
+        /* If the stack cache is full deallocate the stack. */
 #if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD
         void *ptr = ((uint8_t*)(it + 1)) - dill_stack_size - dill_page_size();
         int rc = mprotect(ptr, dill_page_size(), PROT_READ|PROT_WRITE);
