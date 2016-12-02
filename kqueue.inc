@@ -64,7 +64,6 @@ struct dill_ctx_pollset {
     uint32_t changelist;
 };
 
-/* Static declaration referenced in context.h */
 #if !(defined(DILL_THREADS) && defined(DILL_SHARED))
 static DILL_THREAD_LOCAL struct dill_ctx_pollset dill_ctx_pollset_data =
     {-1, NULL, DILL_ENDLIST};

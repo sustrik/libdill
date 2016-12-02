@@ -52,16 +52,19 @@ struct dill_ctx {
     struct dill_ctx_pollset *pollset;
 };
 
-/* The context is statically allocated in single-threaded builds,
-   dynamically allocated in multi-threaded shared builds using malloc,
-   and allocated using thread locals in multi-threaded static builds
-   - Single-threaded: This enables the compiler to remove the extra level
-     of indirection in the case of the single-threaded build.
-   - Multi-threaded(shared): This enables the compiler to group
-     TLS accesses (reduces __tls_get_addr calls.
-   - Multi-threaded(static): This enables the compiler to optimise TLS
-     accesses into the least number of instructions (negligible performance
-     difference from single-threaded build. */
+/* The context is statically allocated in single-threaded builds, dynamically
+   allocated in multi-threaded shared builds using malloc, and allocated using
+   multiple thread locals in multi-threaded static builds.
+
+   - Single-threaded: Making global variables enables the compiler to remove
+     the extra level of indirection in the case of the single-threaded build.
+   - Multi-threaded(shared): Having a single thread local enables the compiler
+     to group TLS accesses (reduces __tls_get_addr calls.)
+   - Multi-threaded(static): Having context split into multiple thread locals
+     enables the compiler to optimise TLS accesses into the least number of
+     instructions (negligible difference in performance from single-threaded
+     build). */
+
 #if defined(DILL_THREADS) && defined(DILL_SHARED)
 /* This is necessary to group TLS accesses in multi-threaded shared builds. */
 extern DILL_THREAD_LOCAL struct dill_ctx dill_context;
