@@ -25,7 +25,7 @@
 
 #include "context.h"
 
-#if defined DILL_THREADS
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
 DILL_THREAD_LOCAL struct dill_ctx dill_context = {0};
 #endif
 
