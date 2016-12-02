@@ -60,38 +60,43 @@ struct dill_ctx_handle {
 #endif
 };
 
-/* Static declaration referenced in context.h */
-#if !defined DILL_THREADS
-struct dill_ctx_handle dill_ctx_handle_data = {NULL, 0, -1};
+#if !(defined(DILL_THREADS) && defined(DILL_SHARED))
+/* Non-shared build */
+static DILL_THREAD_LOCAL struct dill_ctx_handle dill_ctx_handle_data =
+    {NULL, 0, -1};
 #endif
 
-#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
-
-static void dill_handle_atexit(void) {
+/* Returns the pointer to the stack context. */
+static inline struct dill_ctx_handle *dill_ctx(void) {
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
     struct dill_ctx_handle *ctx = dill_context.handle;
-    if(ctx->handles) free(ctx->handles);
-#if defined DILL_THREADS
-    free(ctx);
-#endif
-}
-
-#endif
-
-static inline struct dill_ctx_handle *dill_handle_init(void) {
-    struct dill_ctx_handle *ctx = dill_context.handle;
-#if defined DILL_THREADS
+    /* Allocate memory for shared multithreaded-build contexts. */
     if(dill_slow(!ctx)) {
         ctx = dill_context.handle = malloc(sizeof(struct dill_ctx_handle));
         ctx->handles = NULL;
         ctx->nhandles = 0;
         ctx->unused = -1;
     }
+    return ctx;
+#else
+    return &dill_ctx_handle_data;
 #endif
-    return dill_context.handle;
 }
 
+#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
+
+static void dill_handle_atexit(void) {
+    struct dill_ctx_handle *ctx = dill_ctx();
+    if(ctx->handles) free(ctx->handles);
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+    free(ctx);
+#endif
+}
+
+#endif
+
 int hmake(struct hvfs *vfs) {
-    struct dill_ctx_handle *ctx = dill_handle_init();
+    struct dill_ctx_handle *ctx = dill_ctx();
     if(dill_slow(!vfs || !vfs->query || !vfs->close)) {
         errno = EINVAL; return -1;}
     /* Return ECANCELED if shutting down. */
@@ -135,7 +140,7 @@ int hmake(struct hvfs *vfs) {
 }
 
 int hdup(int h) {
-    struct dill_ctx_handle *ctx = dill_handle_init();
+    struct dill_ctx_handle *ctx = dill_ctx();
     CHECKHANDLE(h, -1);
     int refcount = hndl->vfs->refcount;
     int res = hmake(hndl->vfs);
@@ -145,7 +150,7 @@ int hdup(int h) {
 }
 
 void *hquery(int h, const void *type) {
-    struct dill_ctx_handle *ctx = dill_handle_init();
+    struct dill_ctx_handle *ctx = dill_ctx();
     CHECKHANDLE(h, NULL);
     /* Try and use cached pointer first, otherwise do expensive virtual call.*/
     if(dill_fast(hndl->ptr != NULL && hndl->type == type))
@@ -161,7 +166,7 @@ void *hquery(int h, const void *type) {
 }
 
 int hclose(int h) {
-    struct dill_ctx_handle *ctx = dill_handle_init();
+    struct dill_ctx_handle *ctx = dill_ctx();
     CHECKHANDLE(h, -1);
     /* If there are multiple duplicates of this handle just remove one
        reference. */

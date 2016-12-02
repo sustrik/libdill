@@ -128,17 +128,25 @@ struct dill_ctx_cr {
 #endif
 };
 
-/* Static declaration referenced in context.h */
-#if !defined DILL_THREADS
-struct dill_cr dill_cr_main_data = {DILL_SLIST_ITEM_INITIALISER};
-struct dill_ctx_cr dill_ctx_cr_data = {&dill_cr_main_data, &dill_cr_main_data};
+#if defined DILL_THREADS
+#if !defined DILL_SHARED
+/* Multi-threaded static build */
+static DILL_THREAD_LOCAL struct dill_cr dill_cr_main_data =
+    {DILL_SLIST_ITEM_INITIALISER};
+static DILL_THREAD_LOCAL struct dill_ctx_cr dill_ctx_cr_data = {0};
+#endif
+#else
+/* Single-threaded build */
+static struct dill_cr dill_cr_main_data = {DILL_SLIST_ITEM_INITIALISER};
+static struct dill_ctx_cr dill_ctx_cr_data =
+    {&dill_cr_main_data, &dill_cr_main_data};
 #endif
 
 /******************************************************************************/
 /*  Helpers.                                                                  */
 /******************************************************************************/
 
-#if defined DILL_THREADS
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
 static void dill_cr_atexit(void) {
     struct dill_ctx_cr *ctx = dill_context.cr;
     if(ctx->main)
@@ -147,10 +155,14 @@ static void dill_cr_atexit(void) {
 }
 #endif
 
-static inline struct dill_ctx_cr *dill_cr_init(void) {
-    struct dill_ctx_cr *ctx = dill_context.cr;
-#if defined DILL_THREADS
+/* Returns the pointer to the coroutine context. */
+static inline struct dill_ctx_cr *dill_ctx(void) {
+    struct dill_ctx_cr *ctx;
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+    /* Allocate memory for shared multithreaded-build contexts. */
+    ctx = dill_context.cr;
     if(dill_slow(!ctx)) {
+        /* Multi-threaded shared build */
         ctx = dill_context.cr = calloc(sizeof(struct dill_ctx_cr), 1);
         ctx->main = calloc(sizeof(struct dill_cr), 1);
         dill_slist_item_init(&ctx->main->ready);
@@ -159,6 +171,15 @@ static inline struct dill_ctx_cr *dill_cr_init(void) {
         int rc = dill_atexit(dill_cr_atexit);
         dill_assert(rc == 0);
     }
+#else
+    /* Multi-threaded static build */
+    ctx = &dill_ctx_cr_data;
+    /* Link the pointer to the main coroutine
+       (cannot be assigned statically because it is a TLS variable. */
+#if defined(DILL_THREADS)
+    if(dill_slow(!ctx->r))
+        ctx->r = ctx->main = &dill_cr_main_data;
+#endif
 #endif
     return ctx;
 }
@@ -166,7 +187,7 @@ static inline struct dill_ctx_cr *dill_cr_init(void) {
 #if defined DILL_CENSUS
 /* Print out the results of the stack size census. */
 static void dill_census_atexit(void) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     struct dill_slist_item *it;
     for(it = dill_slist_begin(&ctx->census); it; it = dill_slist_next(it)) {
         struct dill_census_item *ci =
@@ -179,20 +200,20 @@ static void dill_census_atexit(void) {
 
 #if defined(DILL_VALGRIND) || defined(DILL_THREADS)
 static void dill_pollset_atexit(void) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     if(dill_fast(ctx->poller_init)) dill_pollset_term();
 }
 #endif
 
 static void dill_resume(struct dill_cr *cr, int id, int err) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     cr->id = id;
     cr->err = err;
     dill_slist_push_back(&ctx->ready, &cr->ready);
 }
 
 int dill_canblock(void) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     if(ctx->r->no_blocking1 || ctx->r->no_blocking2) {
         errno = ECANCELED;
         return -1;
@@ -201,7 +222,7 @@ int dill_canblock(void) {
 }
 
 int dill_no_blocking2(int val) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     int old = ctx->r->no_blocking2;
     ctx->r->no_blocking2 = val;
     return old;
@@ -212,7 +233,7 @@ int dill_no_blocking2(int val) {
 /******************************************************************************/
 
 static void dill_poller_init(void) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     /* If intialisation was already done, do nothing. */
     if(dill_fast(ctx->poller_init)) return;
     ctx->poller_init = 1;
@@ -230,7 +251,7 @@ static void dill_poller_init(void) {
 
 /* Adds a timer clause to the list of waited for clauses. */
 void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     dill_poller_init();
     /* If the deadline is infinite there's nothing to wait for. */
     if(deadline < 0) return;
@@ -271,7 +292,7 @@ void dill_clean(int fd) {
    to 0 the function will poll for events and return immediately. If it is set
    to 1 it will block until there's at least one event to process. */
 static void dill_poller_wait(int block) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     dill_poller_init();
     while(1) {
         /* Compute timeout for the subsequent poll. */
@@ -327,7 +348,7 @@ static void dill_cancel(struct dill_cr *cr, int err);
 /* The intial part of go(). Allocates a new stack and handle. */
 int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
       const char *file, int line) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) {errno = ECANCELED; return -1;}
@@ -413,7 +434,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
 
 /* The final part of go(). Gets called one the coroutine is finished. */
 void dill_epilogue(void) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     /* Mark the coroutine as finished. */
     ctx->r->done = 1;
     /* If there's a coroutine waiting till we finish, unblock it now. */
@@ -432,7 +453,7 @@ static void *dill_cr_query(struct hvfs *vfs, const void *type) {
 
 /* Gets called when coroutine handle is closed. */
 static void dill_cr_close(struct hvfs *vfs) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     struct dill_cr *cr = dill_cont(vfs, struct dill_cr, vfs);
     /* If the coroutine have already finished, we are done. */
     if(!cr->done) {
@@ -480,7 +501,7 @@ static void dill_cr_close(struct hvfs *vfs) {
 
 void dill_waitfor(struct dill_clause *cl, int id,
       struct dill_list *eplist, struct dill_list_item *before) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     /* Add the clause to the endpoint's list of waiting clauses. */
     dill_list_item_init(&cl->epitem);
     dill_list_insert(eplist, &cl->epitem, before);
@@ -496,7 +517,7 @@ int dill_wait(void)  {
 /* Even if process never gets idle, we have to process external events
    once in a while. The external signal may very well be a deadline or
    a user-issued command that cancels the CPU intensive operation. */
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     /* 103 is a prime. That way it's less likely to coincide with some kind
        of cycle in the user's code. */
     if(ctx->wait_counter >= 103) {
@@ -553,7 +574,7 @@ static void dill_cancel(struct dill_cr *cr, int err) {
 }
 
 int yield(void) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Put the current coroutine into the ready queue. */
@@ -567,12 +588,12 @@ int yield(void) {
 /******************************************************************************/
 
 void *cls(void) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     return ctx->r->cls;
 }
 
 void setcls(void *val) {
-    struct dill_ctx_cr *ctx = dill_cr_init();
+    struct dill_ctx_cr *ctx = dill_ctx();
     ctx->r->cls = val;
 }
 
