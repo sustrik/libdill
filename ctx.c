@@ -118,6 +118,8 @@ static void dill_makekey(void) {
 int dill_atexit(dill_atexit_fn fn) {
     int rc = dill_ismain();
     if(rc == 1) {
+        /* FIXME: right now we assume that if context pointers are not NULL
+           then it is either Linux or the main function (on all platforms). */
         return atexit((void (*)(void))fn);
     } else if (rc == 0) {
 #if defined DILL_PTHREAD

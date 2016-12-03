@@ -53,6 +53,10 @@
      instructions (negligible difference in performance from single-threaded
      build). */
 
+/* FIXME: On OS X, builtin thread local storage through __thread does not seem
+   to map to the same memory location as the TLS it is destroying.
+   Thus we need to pass the context pointer through the destructors into the
+   individual atexit functions. */
 #if defined(DILL_THREADS) && defined(DILL_SHARED)
 struct dill_ctx;
 #define DILL_CONTEXT_PARAM struct dill_ctx *context
