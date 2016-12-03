@@ -40,18 +40,6 @@
 
 #endif
 
-struct dill_ctx_cr;
-struct dill_ctx_handle;
-struct dill_ctx_stack;
-struct dill_ctx_pollset;
-
-struct dill_ctx {
-    struct dill_ctx_cr *cr;
-    struct dill_ctx_handle *handle;
-    struct dill_ctx_stack *stack;
-    struct dill_ctx_pollset *pollset;
-};
-
 /* The context is statically allocated in single-threaded builds, dynamically
    allocated in multi-threaded shared builds using malloc, and allocated using
    multiple thread locals in multi-threaded static builds.
@@ -66,6 +54,18 @@ struct dill_ctx {
      build). */
 
 #if defined(DILL_THREADS) && defined(DILL_SHARED)
+struct dill_ctx_cr;
+struct dill_ctx_handle;
+struct dill_ctx_stack;
+struct dill_ctx_pollset;
+
+struct dill_ctx {
+    struct dill_ctx_cr *cr;
+    struct dill_ctx_handle *handle;
+    struct dill_ctx_stack *stack;
+    struct dill_ctx_pollset *pollset;
+};
+
 /* This is necessary to group TLS accesses in multi-threaded shared builds. */
 extern DILL_THREAD_LOCAL struct dill_ctx dill_context;
 #endif
