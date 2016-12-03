@@ -200,8 +200,7 @@ static void dill_census_atexit(void) {
 
 #if defined(DILL_VALGRIND) || defined(DILL_THREADS)
 static void dill_pollset_atexit(void) {
-    struct dill_ctx_cr *ctx = dill_ctx();
-    if(dill_fast(ctx->poller_init)) dill_pollset_term();
+    dill_pollset_term();
 }
 #endif
 

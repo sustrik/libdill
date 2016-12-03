@@ -77,6 +77,7 @@ static inline struct dill_ctx_pollset *dill_ctx(void) {
 /* Termination function for the pollset context. */
 void dill_pollset_term(void) {
     struct dill_ctx_pollset *ctx = dill_ctx();
+    if(ctx == NULL) return;
     if(ctx->efd >= 0) {
         int rc = close(ctx->efd);
         dill_assert(rc == 0);

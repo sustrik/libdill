@@ -81,6 +81,7 @@ static inline struct dill_ctx_pollset *dill_ctx(void) {
 /* Termination function for the pollset context. */
 void dill_pollset_term(void) {
     struct dill_ctx_pollset *ctx = dill_ctx();
+    if(ctx == NULL) return;
     if(ctx->kfd != -1) {
         /* TODO: kqueue documentation says that a kqueue descriptor won't
            survive a fork. However, implementations seem to diverge.
