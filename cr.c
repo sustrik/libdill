@@ -146,7 +146,7 @@ static struct dill_ctx_cr dill_ctx_cr_data =
 /*  Helpers.                                                                  */
 /******************************************************************************/
 
-static void dill_cr_atexit(DILL_CONTEXT_PARAM);
+static void dill_cr_atexit(void *ptr);
 
 /* Returns the pointer to the coroutine context. */
 static inline struct dill_ctx_cr *dill_ctx(void) {
@@ -161,7 +161,7 @@ static inline struct dill_ctx_cr *dill_ctx(void) {
         dill_slist_item_init(&ctx->main->ready);
         ctx->r = ctx->main;
         /* Register destructor. */
-        int rc = dill_atexit(dill_cr_atexit);
+        int rc = dill_atexit(dill_cr_atexit, ctx);
         dill_assert(rc == 0);
     }
 #else
@@ -178,11 +178,8 @@ static inline struct dill_ctx_cr *dill_ctx(void) {
 }
 
 #if defined(DILL_THREADS) && defined(DILL_SHARED)
-static void dill_cr_atexit(DILL_CONTEXT_PARAM) {
-    struct dill_ctx_cr *ctx = dill_ctx();
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
-    if(dill_slow(!ctx)) ctx = context->cr;
-#endif
+static void dill_cr_atexit(void *ptr) {
+    struct dill_ctx_cr *ctx = ptr;
     dill_assert(ctx != NULL);
     if(ctx->main)
         free(ctx->main);
@@ -192,11 +189,8 @@ static void dill_cr_atexit(DILL_CONTEXT_PARAM) {
 
 #if defined DILL_CENSUS
 /* Print out the results of the stack size census. */
-static void dill_census_atexit(DILL_CONTEXT_PARAM) {
-    struct dill_ctx_cr *ctx = dill_ctx();
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
-    if(dill_slow(!ctx)) ctx = context->cr;
-#endif
+static void dill_census_atexit(void *ptr) {
+    struct dill_ctx_cr *ctx = ptr;
     dill_assert(ctx != NULL);
     struct dill_slist_item *it;
     for(it = dill_slist_begin(&ctx->census); it; it = dill_slist_next(it)) {
@@ -205,16 +199,6 @@ static void dill_census_atexit(DILL_CONTEXT_PARAM) {
         fprintf(stderr, "%s:%d - maximum stack size %zu B\n",
             ci->file, ci->line, ci->max_stack);
     }
-}
-#endif
-
-#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
-static void dill_pollset_atexit(DILL_CONTEXT_PARAM) {
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
-    dill_pollset_term(context);
-#else
-    dill_pollset_term();
-#endif
 }
 #endif
 
@@ -255,11 +239,6 @@ static void dill_poller_init(void) {
     /* Polling-mechanism-specific intitialisation. */
     int rc = dill_pollset_init();
     dill_assert(rc == 0);
-    /* Register cleanup function once for main thread. */
-#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
-    rc = dill_atexit(dill_pollset_atexit);
-    dill_assert(rc == 0);
-#endif
 }
 
 /* Adds a timer clause to the list of waited for clauses. */
@@ -410,7 +389,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
 #if defined DILL_CENSUS
     /* Initialize census. */
     if(dill_slow(!ctx->census_init)) {
-        rc = dill_atexit(dill_census_atexit);
+        rc = dill_atexit(dill_census_atexit, ctx);
         dill_assert(rc == 0);
         ctx->census_init = 1;
     }

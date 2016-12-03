@@ -91,11 +91,8 @@ static size_t dill_page_size(void) {
 
 #if defined(DILL_VALGRIND) || defined(DILL_THREADS)
 
-static void dill_stack_atexit(DILL_CONTEXT_PARAM) {
-    struct dill_ctx_stack *ctx = dill_ctx();
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
-    if(dill_slow(!ctx)) ctx = context->stack;
-#endif
+static void dill_stack_atexit(void *ptr) {
+    struct dill_ctx_stack *ctx = ptr;
     dill_assert(ctx != NULL);
     struct dill_slist_item *it;
     while((it = dill_slist_pop(&ctx->cache))) {
@@ -123,7 +120,7 @@ void *dill_allocstack(size_t *stack_size) {
     /* When using valgrind we want to deallocate cached stacks when
        the process is terminated so that they don't show up in the output. */
     if(dill_slow(!ctx->initialized)) {
-        int rc = dill_atexit(dill_stack_atexit);
+        int rc = dill_atexit(dill_stack_atexit, ctx);
         dill_assert(rc == 0);
         ctx->initialized = 1;
     }

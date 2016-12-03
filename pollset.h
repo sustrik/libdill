@@ -25,13 +25,8 @@
 #ifndef DILL_POLLSET_INCLUDED
 #define DILL_POLLSET_INCLUDED
 
-#include "ctx.h"
-
 /* Initialises the pollset. This function is called once per thread. */
 int dill_pollset_init(void);
-
-/* Frees the pollset. This function called once per thread. */
-void dill_pollset_term(DILL_CONTEXT_PARAM);
 
 /* Add waiting for in event on the fd to the list of current clauses. */
 int dill_pollset_in(struct dill_clause *cl, int id, int fd);

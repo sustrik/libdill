@@ -88,11 +88,8 @@ static inline struct dill_ctx_handle *dill_ctx(void) {
 
 #if defined(DILL_VALGRIND) || defined(DILL_THREADS)
 
-static void dill_handle_atexit(DILL_CONTEXT_PARAM) {
-    struct dill_ctx_handle *ctx = dill_ctx();
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
-    if(dill_slow(!ctx)) ctx = context->handle;
-#endif
+static void dill_handle_atexit(void *ptr) {
+    struct dill_ctx_handle *ctx = ptr;
     dill_assert(ctx != NULL);
     if(ctx->handles) free(ctx->handles);
 #if defined(DILL_THREADS) && defined(DILL_SHARED)
@@ -120,7 +117,7 @@ int hmake(struct hvfs *vfs) {
         /* Clean-up function to delete the array at exit. It is not strictly
            necessary but valgrind will be happy about it. */
         if(dill_slow(!ctx->initialized)) {
-            int rc = dill_atexit(dill_handle_atexit);
+            int rc = dill_atexit(dill_handle_atexit, ctx);
             dill_assert(rc == 0);
             ctx->initialized = 1;
         }

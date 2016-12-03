@@ -79,12 +79,9 @@ static inline struct dill_ctx_pollset *dill_ctx(void) {
 }
 
 /* Termination function for the pollset context. */
-void dill_pollset_term(DILL_CONTEXT_PARAM) {
-    struct dill_ctx_pollset *ctx = dill_ctx();
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
-    if(dill_slow(!ctx)) ctx = context->pollset;
-#endif
-    if(ctx == NULL) return;
+static void dill_pollset_atexit(void *ptr) {
+    struct dill_ctx_pollset *ctx = ptr;
+    dill_assert(ctx != NULL);
     if(ctx->kfd != -1) {
         /* TODO: kqueue documentation says that a kqueue descriptor won't
            survive a fork. However, implementations seem to diverge.
@@ -107,6 +104,7 @@ int dill_pollset_init(void) {
     dill_assert(ctx == NULL);
     ctx = dill_context.pollset = malloc(sizeof(struct dill_ctx_pollset));
 #endif
+    dill_atexit(dill_pollset_atexit, ctx);
     /* Allocate one info per fd. */
     ctx->fdinfos =
         calloc(dill_maxfds(), sizeof(struct dill_fdinfo));

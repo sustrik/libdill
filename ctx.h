@@ -53,28 +53,24 @@
      instructions (negligible difference in performance from single-threaded
      build). */
 
-/* FIXME: On OS X, builtin thread local storage through __thread does not seem
+/* On OS X, builtin thread local storage through __thread does not seem
    to map to the same memory location as the TLS it is destroying.
    Thus we need to pass the context pointer through the destructors into the
-   individual atexit functions. */
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
-struct dill_ctx;
-#define DILL_CONTEXT_PARAM struct dill_ctx *context
-#else
-#define DILL_CONTEXT_PARAM void
-#endif
+   individual atexit functions.  This has been made a generalised function
+   that can be utilised in both multi-threaded and single-threaded code. */
+typedef void (*dill_atexit_fn)(void *ptr);
 
-typedef void (*dill_atexit_fn)(DILL_CONTEXT_PARAM);
+int dill_atexit(dill_atexit_fn f, void *ptr);
 
-int dill_atexit(dill_atexit_fn f);
-
-#if defined(DILL_THREADS)
 #define DILL_ATEXIT_MAX 16
+struct dill_atexit_pair {
+    dill_atexit_fn fn;
+    void *ptr;
+};
 struct dill_atexit_fn_list {
     int count;
-    dill_atexit_fn fn[DILL_ATEXIT_MAX];
+    struct dill_atexit_pair pair[DILL_ATEXIT_MAX];
 };
-#endif
 
 #if defined(DILL_THREADS) && defined(DILL_SHARED)
 struct dill_ctx_cr;
