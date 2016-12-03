@@ -41,14 +41,8 @@ matrix:
         packages:
           - clang
   - os: osx
-    compiler: gcc
-    env: 
-  - os: osx
     compiler: clang
     env: 
-  - os: osx
-    compiler: gcc
-    env: STATIC=1
   - os: osx
     compiler: clang
     env: STATIC=1
@@ -61,9 +55,6 @@ matrix:
           - ubuntu-toolchain-r-test
         packages:
           - gcc-4.9
-  - os: osx
-    compiler: gcc
-    env: POLL=1
   - os: linux
     compiler: gcc
     env: NOTHREADS=1
