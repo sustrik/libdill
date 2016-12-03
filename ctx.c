@@ -23,7 +23,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "context.h"
+#include "ctx.h"
 
 #if defined(DILL_THREADS) && defined(DILL_SHARED)
 DILL_THREAD_LOCAL struct dill_ctx dill_context = {0};

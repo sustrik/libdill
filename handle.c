@@ -32,7 +32,7 @@
 #include "cr.h"
 #include "libdill.h"
 #include "utils.h"
-#include "context.h"
+#include "ctx.h"
 
 struct dill_handle {
     /* Table of virtual functions. */

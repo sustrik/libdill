@@ -33,7 +33,7 @@
 #include "slist.h"
 #include "stack.h"
 #include "utils.h"
-#include "context.h"
+#include "ctx.h"
 
 /* The stacks are cached. The advantage is twofold. First, caching is
    faster than malloc(). Second, it results in smaller number of calls to
