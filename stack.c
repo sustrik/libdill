@@ -91,8 +91,12 @@ static size_t dill_page_size(void) {
 
 #if defined(DILL_VALGRIND) || defined(DILL_THREADS)
 
-static void dill_stack_atexit(void) {
+static void dill_stack_atexit(DILL_CONTEXT_PARAM) {
     struct dill_ctx_stack *ctx = dill_ctx();
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+    if(dill_slow(!ctx)) ctx = context->stack;
+#endif
+    dill_assert(ctx != NULL);
     struct dill_slist_item *it;
     while((it = dill_slist_pop(&ctx->cache))) {
         /* If the stack cache is full deallocate the stack. */

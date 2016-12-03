@@ -54,6 +54,25 @@
      build). */
 
 #if defined(DILL_THREADS) && defined(DILL_SHARED)
+struct dill_ctx;
+#define DILL_CONTEXT_PARAM struct dill_ctx *context
+#else
+#define DILL_CONTEXT_PARAM void
+#endif
+
+typedef void (*dill_atexit_fn)(DILL_CONTEXT_PARAM);
+
+int dill_atexit(dill_atexit_fn f);
+
+#if defined(DILL_THREADS)
+#define DILL_ATEXIT_MAX 16
+struct dill_atexit_fn_list {
+    int count;
+    dill_atexit_fn fn[DILL_ATEXIT_MAX];
+};
+#endif
+
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
 struct dill_ctx_cr;
 struct dill_ctx_handle;
 struct dill_ctx_stack;
@@ -64,15 +83,11 @@ struct dill_ctx {
     struct dill_ctx_handle *handle;
     struct dill_ctx_stack *stack;
     struct dill_ctx_pollset *pollset;
+    struct dill_atexit_fn_list fn_list;
 };
 
 /* This is necessary to group TLS accesses in multi-threaded shared builds. */
 extern DILL_THREAD_LOCAL struct dill_ctx dill_context;
 #endif
-
-typedef void (*dill_atexit_fn)(void);
-
-int dill_atexit(dill_atexit_fn f);
-
 #endif
 

@@ -146,14 +146,7 @@ static struct dill_ctx_cr dill_ctx_cr_data =
 /*  Helpers.                                                                  */
 /******************************************************************************/
 
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
-static void dill_cr_atexit(void) {
-    struct dill_ctx_cr *ctx = dill_context.cr;
-    if(ctx->main)
-        free(ctx->main);
-    free(ctx);
-}
-#endif
+static void dill_cr_atexit(DILL_CONTEXT_PARAM);
 
 /* Returns the pointer to the coroutine context. */
 static inline struct dill_ctx_cr *dill_ctx(void) {
@@ -184,10 +177,27 @@ static inline struct dill_ctx_cr *dill_ctx(void) {
     return ctx;
 }
 
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+static void dill_cr_atexit(DILL_CONTEXT_PARAM) {
+    struct dill_ctx_cr *ctx = dill_ctx();
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+    if(dill_slow(!ctx)) ctx = context->cr;
+#endif
+    dill_assert(ctx != NULL);
+    if(ctx->main)
+        free(ctx->main);
+    free(ctx);
+}
+#endif
+
 #if defined DILL_CENSUS
 /* Print out the results of the stack size census. */
-static void dill_census_atexit(void) {
+static void dill_census_atexit(DILL_CONTEXT_PARAM) {
     struct dill_ctx_cr *ctx = dill_ctx();
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+    if(dill_slow(!ctx)) ctx = context->cr;
+#endif
+    dill_assert(ctx != NULL);
     struct dill_slist_item *it;
     for(it = dill_slist_begin(&ctx->census); it; it = dill_slist_next(it)) {
         struct dill_census_item *ci =
@@ -199,8 +209,12 @@ static void dill_census_atexit(void) {
 #endif
 
 #if defined(DILL_VALGRIND) || defined(DILL_THREADS)
-static void dill_pollset_atexit(void) {
+static void dill_pollset_atexit(DILL_CONTEXT_PARAM) {
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+    dill_pollset_term(context);
+#else
     dill_pollset_term();
+#endif
 }
 #endif
 

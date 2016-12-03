@@ -67,29 +67,38 @@ static int dill_ismain() {
 #endif
 }
 
-#define DILL_ATEXIT_MAX 16
-
-struct dill_atexit_fn_list {
-    int count;
-    dill_atexit_fn fn[DILL_ATEXIT_MAX];
-};
-
+#if !(defined(DILL_THREADS) && defined(DILL_SHARED))
 static DILL_THREAD_LOCAL struct dill_atexit_fn_list dill_fn_list = {0};
+#endif
 
 /* Run registered destructor functions on thread exit. */
 static void dill_destructor(void *ptr) {
-    struct dill_atexit_fn_list *list = ptr;
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+    dill_assert(ptr != NULL);
+    struct dill_atexit_fn_list *list = &((struct dill_ctx *)ptr)->fn_list;
+#else
+    struct dill_atexit_fn_list *list = &dill_fn_list;
+#endif
     int i = list->count - 1;
     for(; i >= 0; --i) {
         dill_assert(list->fn[i] != NULL);
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+        list->fn[i](ptr);
+#else
         list->fn[i]();
+#endif
     }
 }
 
 /* Register a destructor function. */
 static int dill_register(void *f) {
-    if(dill_fn_list.count >= DILL_ATEXIT_MAX) {errno = ENOMEM; return -1;}
-    dill_fn_list.fn[dill_fn_list.count++] = f;
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+    struct dill_atexit_fn_list *list = &dill_context.fn_list;
+#else
+    struct dill_atexit_fn_list *list = &dill_fn_list;
+#endif
+    if(list->count >= DILL_ATEXIT_MAX) {errno = ENOMEM; return -1;}
+    list->fn[list->count++] = f;
     return 0;
 }
 
@@ -109,12 +118,16 @@ static void dill_makekey(void) {
 int dill_atexit(dill_atexit_fn fn) {
     int rc = dill_ismain();
     if(rc == 1) {
-        return atexit(fn);
+        return atexit((void (*)(void))fn);
     } else if (rc == 0) {
 #if defined DILL_PTHREAD
         rc = pthread_once(&dill_keyonce, dill_makekey);
         if(rc) {errno = rc; return -1;}
+#if defined(DILL_PTHREAD) && defined(DILL_SHARED)
+        rc = pthread_setspecific(dill_key, &dill_context);
+#else
         rc = pthread_setspecific(dill_key, &dill_fn_list);
+#endif
         if(rc) {errno = rc; return -1;}
         return dill_register(fn);
 #else

@@ -75,8 +75,11 @@ static inline struct dill_ctx_pollset *dill_ctx(void) {
 }
 
 /* Termination function for the pollset context. */
-void dill_pollset_term(void) {
+void dill_pollset_term(DILL_CONTEXT_PARAM) {
     struct dill_ctx_pollset *ctx = dill_ctx();
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+    if(dill_slow(!ctx)) ctx = context->pollset;
+#endif
     if(ctx == NULL) return;
     if(ctx->efd >= 0) {
         int rc = close(ctx->efd);
