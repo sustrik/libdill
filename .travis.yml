@@ -66,7 +66,7 @@ matrix:
     env: POLL=1
   - os: linux
     compiler: gcc
-    env: THREADS=1
+    env: NOTHREADS=1
     addons:
       apt:
         sources:
@@ -94,7 +94,7 @@ matrix:
           - valgrind
   - os: linux
     compiler: gcc
-    env: VALGRIND=1 THREADS=1
+    env: STATIC=1 VALGRIND=1
     addons:
       apt:
         sources:
@@ -104,7 +104,26 @@ matrix:
           - valgrind
   - os: linux
     compiler: gcc
-    env: POLL=1 THREADS=1
+    env: VALGRIND=1 NOTHREADS=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-4.9
+          - valgrind
+  - os: linux
+    compiler: gcc
+    env: POLL=1 NOTHREADS=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-4.9
+  - os: linux
+    compiler: gcc
+    env: STATIC=1 NOTHREADS=1
     addons:
       apt:
         sources:
@@ -136,7 +155,7 @@ branches:
 
 install:
   - ./autogen.sh
-  - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census} ${THREADS+--enable-threads} CFLAGS="-O3 ${POLL+-DDILL_POLL} ${ARCH_FALLBACK+-DDILL_ARCH_FALLBACK}"
+  - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census} ${NOTHREADS+--disable-threads} CFLAGS="-O3 ${POLL+-DDILL_POLL} ${ARCH_FALLBACK+-DDILL_ARCH_FALLBACK}"
   - make V=1
 
 script:

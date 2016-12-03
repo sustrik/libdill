@@ -94,13 +94,15 @@ if test "x$enable_census" = "xyes"; then
 fi
 
 ################################################################################
-#  --enable-threads                                                            #
+#  --disable-threads                                                           #
 ################################################################################
 
-AC_ARG_ENABLE([threads], [AS_HELP_STRING([--enable-threads],
-    [Enable threading support [default=no]])])
+AC_ARG_ENABLE([threads], [AS_HELP_STRING([--disable-threads],
+    [Disable threading support [default=no]])])
 
-if test "x$enable_threads" = "xyes" || test "x$enable_threads" = "xpthread"; then
+if test "x$enable_threads" = "xno"; then
+    AM_CONDITIONAL([DILL_THREADS], false)
+else
     PTHREAD_LIBS=error
     PTHREAD_CFLAGS=""
     AC_CHECK_LIB([pthread], [pthread_attr_init], PTHREAD_LIBS="-lpthread")
@@ -120,8 +122,6 @@ if test "x$enable_threads" = "xyes" || test "x$enable_threads" = "xpthread"; the
     fi
     AC_SUBST(PTHREAD_LIBS)
     AC_SUBST(PTHREAD_CFLAGS)
-else
-    AM_CONDITIONAL([DILL_THREADS], false)
 fi
 
 ################################################################################
@@ -141,6 +141,14 @@ AC_CHECK_FUNCS([kqueue], [] ,[AC_DEFINE([DILL_NO_KQUEUE])])
 ################################################################################
 
 LT_INIT
+
+################################################################################
+#  --enable-shared                                                             #
+################################################################################
+
+if test "x$enable_shared" = "xyes"; then
+    AC_DEFINE(DILL_SHARED)
+fi
 
 ################################################################################
 #  Finish the configuration phase.                                             #

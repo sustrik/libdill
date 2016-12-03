@@ -27,15 +27,6 @@
 
 #include <stddef.h>
 
-struct dill_ctx_stack;
-extern struct dill_ctx_stack dill_ctx_stack_main_data;
-
-/* Initialises internal structures. */
-int dill_initstack(void);
-
-/* Release internal structures. */
-void dill_termstack(void);
-
 /* Allocates new stack. Returns pointer to the *top* of the stack.
    For now we assume that the stack grows downwards. */
 void *dill_allocstack(size_t *stack_size);

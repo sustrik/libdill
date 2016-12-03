@@ -40,15 +40,13 @@ coroutine void worker(int count, const char *text) {
 /* This function is run by thread t1. */
 void *threadmain(void *arg)
 {
-    int rc = ctxinit();
-    errno_assert(rc == 0);
     int cr1 = go(worker(4, "a "));
     errno_assert(cr1 >= 0);
     int cr2 = go(worker(2, "b"));
     errno_assert(cr2 >= 0);
     int cr3 = go(worker(3, "c"));
     errno_assert(cr3 >= 0);
-    rc = msleep(now() + 200);
+    int rc = msleep(now() + 200);
     errno_assert(rc == 0);
     rc = hclose(cr1);
     errno_assert(rc == 0);
@@ -56,7 +54,7 @@ void *threadmain(void *arg)
     errno_assert(rc == 0);
     rc = hclose(cr3);
     errno_assert(rc == 0);
-    ctxterm();
+    return NULL;
 }
 
 int main() {
