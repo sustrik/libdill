@@ -39,12 +39,7 @@ tests/sleep
 tests/overload
 tests/signals
 tests/handle
-tests/proc
-tests/proc1
-tests/proc2
-tests/proc3
-tests/proc4
-tests/proc5
+tests/threads
 perf/.dirstamp
 perf/chan
 perf/chrecv
