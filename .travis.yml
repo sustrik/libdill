@@ -156,9 +156,8 @@ matrix:
           - clang
 
 branches:
-  only:
-    - master
-    - single-context
+  except:
+    - gh-pages
 
 install:
   - ./autogen.sh
