@@ -158,6 +158,7 @@ matrix:
 branches:
   only:
     - master
+    - single-context
 
 install:
   - ./autogen.sh
