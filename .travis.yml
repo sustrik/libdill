@@ -163,6 +163,10 @@ matrix:
           - ubuntu-toolchain-r-test
         packages:
           - gcc-4.9
+  - os: osx
+    compiler: clang
+    env: THREAD_FALLBACK=1
+
 
 branches:
   except:
