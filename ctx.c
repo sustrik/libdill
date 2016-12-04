@@ -50,7 +50,29 @@ struct dill_ctx *dill_ctx_init(void) {
 
 #elif defined __GNUC__
 
-#error "TODO: Use __thread"
+__thread struct dill_ctx dill_ctx_ = {0};
+
+static void dill_ctx_atexit(void) {
+    dill_ctx_pollset_term(&dill_ctx_.pollset);
+    dill_ctx_stack_term(&dill_ctx_.stack);
+    dill_ctx_handle_term(&dill_ctx_.handle);
+    dill_ctx_cr_term(&dill_ctx_.cr);
+}
+
+struct dill_ctx *dill_ctx_init(void) {
+    int rc = dill_ctx_cr_init(&dill_ctx_.cr);
+    dill_assert(rc == 0);
+    rc = dill_ctx_handle_init(&dill_ctx_.handle);
+    dill_assert(rc == 0);
+    rc = dill_ctx_stack_init(&dill_ctx_.stack);
+    dill_assert(rc == 0);
+    rc = dill_ctx_pollset_init(&dill_ctx_.pollset);
+    dill_assert(rc == 0);
+    rc = atexit(dill_ctx_atexit);
+    dill_assert(rc == 0);
+    dill_ctx_.initialized = 1;
+    return &dill_ctx_;
+}
 
 #else
 

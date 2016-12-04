@@ -47,7 +47,10 @@ extern struct dill_ctx dill_ctx_;
 
 #elif defined __GNUC__
 
-#error "TODO: Use __thread"
+extern __thread struct dill_ctx dill_ctx_;
+
+#define dill_getctx \
+    (dill_fast(dill_ctx_.initialized) ? &dill_ctx_ : dill_ctx_init())
 
 #else
 
