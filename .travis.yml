@@ -154,6 +154,15 @@ matrix:
           - ubuntu-toolchain-r-test
         packages:
           - clang
+  - os: linux
+    compiler: gcc
+    env: THREAD_FALLBACK=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-4.9
 
 branches:
   except:
@@ -161,7 +170,7 @@ branches:
 
 install:
   - ./autogen.sh
-  - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census} ${NOTHREADS+--disable-threads} CFLAGS="-O3 ${POLL+-DDILL_POLL} ${ARCH_FALLBACK+-DDILL_ARCH_FALLBACK}"
+  - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census} ${NOTHREADS+--disable-threads} CFLAGS="-O3 ${POLL+-DDILL_POLL} ${ARCH_FALLBACK+-DDILL_ARCH_FALLBACK} ${THREAD_FALLBACK+-DDILL_THREAD_FALLBACK}"
   - make V=1
 
 script:

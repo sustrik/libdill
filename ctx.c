@@ -48,7 +48,7 @@ struct dill_ctx *dill_ctx_init(void) {
     return &dill_ctx_;
 }
 
-#elif defined __GNUC__
+#elif defined __GNUC__ && !defined DILL_THREAD_FALLBACK
 
 #include <pthread.h>
 
@@ -90,7 +90,43 @@ struct dill_ctx *dill_ctx_init(void) {
 
 #else
 
-#error "TODO: Fallback to pthread_getspecific()"
+#include <pthread.h>
+
+static pthread_key_t dill_key;
+static pthread_once_t dill_keyonce = PTHREAD_ONCE_INIT;
+
+static void dill_ctx_term(void *ptr) {
+    struct dill_ctx *ctx = ptr;
+    dill_ctx_pollset_term(&ctx->pollset);
+    dill_ctx_stack_term(&ctx->stack);
+    dill_ctx_handle_term(&ctx->handle);
+    dill_ctx_cr_term(&ctx->cr);
+}
+
+static void dill_makekey(void) {
+    int rc = pthread_key_create(&dill_key, dill_ctx_term);
+    dill_assert(!rc);
+}
+
+struct dill_ctx *dill_getctx_(void) {
+    int rc = pthread_once(&dill_keyonce, dill_makekey);
+    dill_assert(rc == 0);
+    struct dill_ctx *ctx = pthread_getspecific(dill_key);
+    if(dill_fast(ctx)) return ctx;
+    ctx = malloc(sizeof(struct dill_ctx));
+    dill_assert(ctx);
+    rc = dill_ctx_cr_init(&ctx->cr);
+    dill_assert(rc == 0);
+    rc = dill_ctx_handle_init(&ctx->handle);
+    dill_assert(rc == 0);
+    rc = dill_ctx_stack_init(&ctx->stack);
+    dill_assert(rc == 0);
+    rc = dill_ctx_pollset_init(&ctx->pollset);
+    dill_assert(rc == 0);
+    rc = pthread_setspecific(dill_key, ctx);
+    dill_assert(rc == 0);
+    return ctx;
+}
 
 #endif
 
