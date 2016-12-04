@@ -26,16 +26,16 @@
 
 /* User overloads. */
 #if defined DILL_EPOLL
-#include "epoll.inc"
+#include "epoll.c.inc"
 #elif defined DILL_KQUEUE
-#include "kqueue.inc"
+#include "kqueue.c.inc"
 #elif defined DILL_POLL
-#include "poll.inc"
+#include "poll.c.inc"
 /* Defaults. */
 #elif defined __linux__ && !defined DILL_NO_EPOLL
-#include "epoll.inc"
+#include "epoll.c.inc"
 #elif (defined BSD || defined __APPLE__) && !defined DILL_NO_KQUEUE
-#include "kqueue.inc"
+#include "kqueue.c.inc"
 #else
-#include "poll.inc"
+#include "poll.c.inc"
 #endif

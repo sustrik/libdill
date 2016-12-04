@@ -108,26 +108,6 @@ struct dill_cr {
 /* Storage for constant used by go() macro. */
 volatile void *dill_unoptimisable = NULL;
 
-/* Current coroutine context */
-struct dill_ctx_cr {
-    /* Main coroutine */
-    struct dill_cr *main;
-    /* Currently running coroutine. */
-    struct dill_cr *r;
-    /* List of coroutines ready for execution. */
-    struct dill_slist ready;
-    /* 1 if dill_poller_init() was already run. */
-    int poller_init;
-    /* Global linked list of all timers. The list is ordered.
-       First timer to be resumed comes first and so on. */
-    struct dill_list timers;
-    int wait_counter;
-#if defined DILL_CENSUS
-    int census_init;
-    struct dill_slist census;
-#endif
-};
-
 #if defined DILL_THREADS
 #if !defined DILL_SHARED
 /* Multi-threaded static build */

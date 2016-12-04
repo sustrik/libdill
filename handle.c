@@ -30,6 +30,7 @@
 #include <string.h>
 
 #include "cr.h"
+#include "handle.h"
 #include "libdill.h"
 #include "utils.h"
 #include "ctx.h"
@@ -50,15 +51,6 @@ struct dill_handle {
           ctx->handles[(h)].next != -2)) {\
         errno = EBADF; return (err);}\
     struct dill_handle *hndl = &ctx->handles[(h)];
-
-struct dill_ctx_handle {
-    struct dill_handle *handles;
-    int nhandles;
-    int unused;
-#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
-    int initialized;
-#endif
-};
 
 #if !(defined(DILL_THREADS) && defined(DILL_SHARED))
 /* Non-shared build */

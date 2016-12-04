@@ -35,16 +35,19 @@ libdill_la_SOURCES = \
     chan.c \
     cr.h \
     cr.c \
-    epoll.inc \
+    epoll.h.inc \
+    epoll.c.inc \
     fd.h \
     fd.c \
     handle.h \
     handle.c \
-    kqueue.inc \
+    kqueue.h.inc \
+    kqueue.c.inc \
     libdill.c \
     list.h \
     list.c \
-    poll.inc \
+    poll.h.inc \
+    poll.c.inc \
     pollset.h \
     pollset.c \
     slist.h \

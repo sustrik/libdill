@@ -27,6 +27,21 @@
 
 #include <stddef.h>
 
+#include "slist.h"
+
+/* A stack of unused coroutine stacks. This allows for extra-fast allocation
+   of a new stack. The LIFO nature of this structure minimises cache misses.
+   When the stack is cached its dill_slist_item is placed on its top rather
+   then on the bottom. That way we minimise page misses. */
+struct dill_ctx_stack {
+    int count;
+    struct dill_slist cache;
+#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
+/* Flag to indicate that atexit is registered. */
+    int initialized;
+#endif
+};
+
 /* Allocates new stack. Returns pointer to the *top* of the stack.
    For now we assume that the stack grows downwards. */
 void *dill_allocstack(size_t *stack_size);

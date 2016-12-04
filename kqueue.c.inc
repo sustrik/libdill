@@ -34,6 +34,7 @@
 #include "cr.h"
 #include "fd.h"
 #include "list.h"
+#include "pollset.h"
 #include "utils.h"
 #include "ctx.h"
 
@@ -55,13 +56,6 @@ struct dill_fdinfo {
     uint32_t next;
     /* 1 if the file descriptor is cached. 0 otherwise. */
     unsigned int cached : 1;
-};
-
-/* Implementation-specific pollset context. */
-struct dill_ctx_pollset {
-    int kfd;
-    struct dill_fdinfo *fdinfos;
-    uint32_t changelist;
 };
 
 #if !(defined(DILL_THREADS) && defined(DILL_SHARED))

@@ -44,19 +44,6 @@ static size_t dill_stack_size = 256 * 1024;
 /* Maximum number of unused cached stacks. */
 static int dill_max_cached_stacks = 64;
 
-/* A stack of unused coroutine stacks. This allows for extra-fast allocation
-   of a new stack. The LIFO nature of this structure minimises cache misses.
-   When the stack is cached its dill_slist_item is placed on its top rather
-   then on the bottom. That way we minimise page misses. */
-struct dill_ctx_stack {
-    int count;
-    struct dill_slist cache;
-#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
-/* Flag to indicate that atexit is registered. */
-    int initialized;
-#endif
-};
-
 #if !(defined(DILL_THREADS) && defined(DILL_SHARED))
 /* Non-shared build */
 static DILL_THREAD_LOCAL struct dill_ctx_stack dill_ctx_stack_data = {0};

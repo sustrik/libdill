@@ -24,7 +24,6 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <poll.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +31,7 @@
 #include "cr.h"
 #include "fd.h"
 #include "list.h"
+#include "pollset.h"
 #include "utils.h"
 #include "ctx.h"
 
@@ -67,16 +67,6 @@ struct dill_fdinfo {
     struct dill_list out;
     /* 1 is the file descriptor was used before, 0 otherwise. */
     unsigned int cached : 1;
-};
-
-/* Implementation-specific pollset context. */
-struct dill_ctx_pollset {
-    /* Pollset, as used by poll(2). */
-    int pollset_size;
-    struct pollfd *pollset;
-    /* Info about all file descriptors.
-       File descriptors are used as indices in this array. */
-    struct dill_fdinfo *fdinfos;
 };
 
 #if !(defined(DILL_THREADS) && defined(DILL_SHARED))
