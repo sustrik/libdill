@@ -87,7 +87,7 @@ void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
 }
 
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
-    struct dill_ctx_pollset *ctx = &dill_ctx->pollset;
+    struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
     /* If not yet cached check whether fd exists and if so add it to pollset. */
@@ -113,7 +113,7 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
 }
 
 int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
-    struct dill_ctx_pollset *ctx = &dill_ctx->pollset;
+    struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
     /* If not yet cached check whether fd exists and if so add it to pollset. */    
@@ -139,7 +139,7 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
 }
 
 void dill_pollset_clean(int fd) {
-    struct dill_ctx_pollset *ctx = &dill_ctx->pollset;
+    struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     /* We cannot clean an fd that someone is waiting for. */
     dill_assert(dill_list_empty(&fdi->in));
@@ -176,7 +176,7 @@ void dill_pollset_clean(int fd) {
 }
 
 int dill_pollset_poll(int timeout) {
-    struct dill_ctx_pollset *ctx = &dill_ctx->pollset;
+    struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     /* Apply any changes to the pollset. */
     struct kevent chngs[DILL_CHNGSSIZE];
     int nchngs = 0;
