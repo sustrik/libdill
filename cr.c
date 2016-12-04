@@ -257,12 +257,6 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stacksz, cr);
 #endif
 #if defined DILL_CENSUS
-    /* Initialize census. */
-    if(dill_slow(!ctx->census_init)) {
-        rc = dill_atexit(dill_census_atexit, ctx);
-        dill_assert(rc == 0);
-        ctx->census_init = 1;
-    }
     /* Find the appropriate census item if it exists. It's O(n) but meh. */
     struct dill_slist_item *it;
     cr->census = NULL;
