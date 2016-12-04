@@ -20,74 +20,40 @@
 
 */
 
-#ifndef DILL_CONTEXT_INCLUDED
-#define DILL_CONTEXT_INCLUDED
-
-#if defined DILL_THREADS
-
-#include <limits.h>
+#ifndef DILL_CTX_INCLUDED
+#define DILL_CTX_INCLUDED
 
 #include "cr.h"
 #include "handle.h"
 #include "pollset.h"
 #include "stack.h"
 
-/* Thread local storage support */
-#if defined __GNUC__
-#define DILL_THREAD_LOCAL __thread
-#else
-#error "No TLS support"
-#endif
-
-#else
-
-#define DILL_THREAD_LOCAL
-
-#endif
-
-/* The context is statically allocated in single-threaded builds, dynamically
-   allocated in multi-threaded shared builds using malloc, and allocated using
-   multiple thread locals in multi-threaded static builds.
-
-   - Single-threaded: Making global variables enables the compiler to remove
-     the extra level of indirection in the case of the single-threaded build.
-   - Multi-threaded(shared): Having a single thread local enables the compiler
-     to group TLS accesses (reduces __tls_get_addr calls.)
-   - Multi-threaded(static): Having context split into multiple thread locals
-     enables the compiler to optimise TLS accesses into the least number of
-     instructions (negligible difference in performance from single-threaded
-     build). */
-
-/* On OS X, builtin thread local storage through __thread does not seem
-   to map to the same memory location as the TLS it is destroying.
-   Thus we need to pass the context pointer through the destructors into the
-   individual atexit functions.  This has been made a generalised function
-   that can be utilised in both multi-threaded and single-threaded code. */
-typedef void (*dill_atexit_fn)(void *ptr);
-
-int dill_atexit(dill_atexit_fn f, void *ptr);
-
-#define DILL_ATEXIT_MAX 16
-struct dill_atexit_pair {
-    dill_atexit_fn fn;
-    void *ptr;
-};
-struct dill_atexit_fn_list {
-    int count;
-    struct dill_atexit_pair pair[DILL_ATEXIT_MAX];
-};
-
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
 struct dill_ctx {
-    struct dill_ctx_cr *cr;
-    struct dill_ctx_handle *handle;
-    struct dill_ctx_stack *stack;
-    struct dill_ctx_pollset *pollset;
-    struct dill_atexit_fn_list fn_list;
+    int initialized;
+    struct dill_ctx_cr cr;
+    struct dill_ctx_handle handle;
+    struct dill_ctx_stack stack;
+    struct dill_ctx_pollset pollset;
 };
 
-/* This is necessary to group TLS accesses in multi-threaded shared builds. */
-extern DILL_THREAD_LOCAL struct dill_ctx dill_context;
+struct dill_ctx *dill_ctx_init(void);
+
+#if !defined DILL_THREADS
+
+extern struct dill_ctx dill_ctx_;
+
+#define dill_getctx \
+    (dill_fast(dill_ctx_.initialized) ? &dill_ctx_ : dill_ctx_init())
+
+#elif defined __GNUC__
+
+#error "TODO: Use __thread"
+
+#else
+
+#error "TODO: Fallback to pthread_getspecific()"
+
 #endif
+
 #endif
 

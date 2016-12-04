@@ -20,141 +20,41 @@
 
 */
 
-#include <stdlib.h>
-#include <unistd.h>
-
-#include "libdill.h"
 #include "ctx.h"
-#include "utils.h"
 
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
-DILL_THREAD_LOCAL struct dill_ctx dill_context = {0};
-#endif
+#if !defined DILL_THREADS
 
-#if defined DILL_THREADS
-/* Needed to determine if current thread is the main thread on Linux. */
-#if defined __linux__
-#define _GNU_SOURCE
-#include <unistd.h>
-#include <sys/syscall.h>
-#endif
+struct dill_ctx dill_ctx_ = {0};
 
-/* Needed to determine if current thread is the main thread on NetBSD. */
-#if defined __NetBSD__
-#include <sys/lwp.h>
-#endif
+static void dill_ctx_atexit(void) {
+    dill_ctx_pollset_term(&dill_ctx_.pollset);
+    dill_ctx_stack_term(&dill_ctx_.stack);
+    dill_ctx_handle_term(&dill_ctx_.handle);
+    dill_ctx_cr_term(&dill_ctx_.cr);
+}
 
-/* Needed to determine if current thread is the main thread on other Unix. */
-#if defined(__OpenBSD__) || defined(__FreeBSD__) ||\
-    defined(__APPLE__) || defined(__DragonFly__) || defined(__sun)
-#include <pthread.h>
-#endif
+struct dill_ctx *dill_ctx_init(void) {
+    int rc = dill_ctx_cr_init(&dill_ctx_.cr);
+    dill_assert(rc == 0);
+    rc = dill_ctx_handle_init(&dill_ctx_.handle);
+    dill_assert(rc == 0);
+    rc = dill_ctx_stack_init(&dill_ctx_.stack);
+    dill_assert(rc == 0);
+    rc = dill_ctx_pollset_init(&dill_ctx_.pollset);
+    dill_assert(rc == 0);
+    rc = atexit(dill_ctx_atexit);
+    dill_assert(rc == 0);
+    dill_ctx_.initialized = 1;
+    return &dill_ctx_;
+}
 
-/* Returns 1 if in main thread, otherwise 0 for spawned threads. */
-static int dill_ismain() {
-#if defined __linux__
-    return syscall(SYS_gettid) == getpid();
-#elif defined(__OpenBSD__) || defined(__FreeBSD__) ||\
-    defined(__APPLE__) || defined(__DragonFly__)
-    return pthread_main_np();
-#elif defined __NetBSD__
-    return _lwp_self() == 1;
-#elif defined __sun
-    return pthread_self() == 1;
+#elif defined __GNUC__
+
+#error "TODO: Use __thread"
+
 #else
-    return -1;
-#endif
-}
-#else
-/* Single-threaded case always returns 1. */
-static int dill_ismain() {return 1;}
-#endif
 
-#if !(defined(DILL_THREADS) && defined(DILL_SHARED))
-static DILL_THREAD_LOCAL struct dill_atexit_fn_list dill_fn_list = {0};
+#error "TODO: Fallback to pthread_getspecific()"
+
 #endif
-
-/* Flag to indicate whether the atexit has been registered. */
-static int dill_main_atexit_initialized = 0;
-
-/* Run registered destructor functions on thread exit. */
-static void dill_destructor(void *ptr) {
-    struct dill_atexit_fn_list *list = ptr;
-    dill_assert(list != NULL);
-    int i = list->count - 1;
-    for(; i >= 0; --i) {
-        dill_assert(list->pair[i].fn != NULL);
-        dill_assert(list->pair[i].ptr != NULL);
-        list->pair[i].fn(list->pair[i].ptr);
-    }
-}
-
-/* Register a destructor function. */
-static int dill_atexit_register(struct dill_atexit_fn_list *list,
-        void *fn, void *ptr) {
-    if(list->count >= DILL_ATEXIT_MAX) {errno = ENOMEM; return -1;}
-    if(fn == NULL || ptr == NULL) {errno = EINVAL; return -1;}
-    list->pair[list->count].fn = fn;
-    list->pair[list->count].ptr = ptr;
-    list->count++;
-    return 0;
-}
-
-/* Get the list context */
-static inline struct dill_atexit_fn_list *dill_atexit_list(void) {
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
-    return &dill_context.fn_list;
-#else
-    return &dill_fn_list;
-#endif
-}
-
-/* Atexit handler for main function. */
-static void dill_atexit_handler(void) {
-    dill_destructor(dill_atexit_list());
-}
-
-#if defined(DILL_THREADS)
-#if defined(DILL_PTHREAD)
-#include <pthread.h>
-static pthread_key_t dill_key;
-static pthread_once_t dill_keyonce = PTHREAD_ONCE_INIT;
-static void dill_makekey(void) {
-    int rc = pthread_key_create(&dill_key, dill_destructor);
-    dill_assert(!rc);
-}
-#else
-#error "No thread destructor support"
-#endif
-#endif
-
-/* Runs atexit on main thread of simulates atexit on spawned threads. */
-int dill_atexit(dill_atexit_fn fn, void *ptr) {
-    struct dill_atexit_fn_list *list = dill_atexit_list();
-    int rc = dill_ismain();
-    if(rc == 1) {
-        if(dill_slow(!dill_main_atexit_initialized)) {
-            rc = atexit(dill_atexit_handler);
-            if(rc != 0) return -1;
-            dill_main_atexit_initialized = 1;
-        }
-    }
-#if defined DILL_THREADS
-#if defined DILL_PTHREAD
-    /* Create pthread key destructor. */
-    if (rc == 0) {
-        rc = pthread_once(&dill_keyonce, dill_makekey);
-        if(rc != 0) {errno = rc; return -1;}
-        void *ptr = pthread_getspecific(dill_key);
-        if(dill_slow(!ptr)) {
-            rc = pthread_setspecific(dill_key, list);
-            if(rc != 0) {errno = rc; return -1;}
-        }
-    }
-#else
-#error "No thread destructor support"
-#endif
-#endif
-    return dill_atexit_register(list, fn, ptr);
-}
 

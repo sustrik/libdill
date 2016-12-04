@@ -58,50 +58,10 @@ struct dill_fdinfo {
     unsigned int cached : 1;
 };
 
-#if !(defined(DILL_THREADS) && defined(DILL_SHARED))
-static DILL_THREAD_LOCAL struct dill_ctx_pollset dill_ctx_pollset_data =
-    {-1, NULL, DILL_ENDLIST};
-#endif
-
-/* Returns the pointer to the poll context. */
-static inline struct dill_ctx_pollset *dill_ctx(void) {
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
-    return dill_context.pollset;
-#else
-    return &dill_ctx_pollset_data;
-#endif
-}
-
-/* Termination function for the pollset context. */
-static void dill_pollset_atexit(void *ptr) {
-    struct dill_ctx_pollset *ctx = ptr;
-    dill_assert(ctx != NULL);
-    if(ctx->kfd != -1) {
-        /* TODO: kqueue documentation says that a kqueue descriptor won't
-           survive a fork. However, implementations seem to diverge.
-           On FreeBSD the following function succeeds. On OSX it returns
-           EACCESS. Therefore we ignore the return value. */
-        close(ctx->kfd);
-    }
-    if(ctx->fdinfos)
-        free(ctx->fdinfos);
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
-    free(ctx);
-#endif
-}
-
-int dill_pollset_init(void) {
+int dill_ctx_pollset_init(struct dill_ctx_pollset *ctx) {
     int err;
-    struct dill_ctx_pollset *ctx = dill_ctx();
-#if defined(DILL_THREADS) && defined(DILL_SHARED)
-    /* dill_pollset_init is used internally and should only be called once. */
-    dill_assert(ctx == NULL);
-    ctx = dill_context.pollset = malloc(sizeof(struct dill_ctx_pollset));
-#endif
-    dill_atexit(dill_pollset_atexit, ctx);
     /* Allocate one info per fd. */
-    ctx->fdinfos =
-        calloc(dill_maxfds(), sizeof(struct dill_fdinfo));
+    ctx->fdinfos = calloc(dill_maxfds(), sizeof(struct dill_fdinfo));
     if(dill_slow(!ctx->fdinfos)) {err = ENOMEM; goto error1;}
     /* Changelist is empty. */
     ctx->changelist = DILL_ENDLIST;
@@ -115,6 +75,15 @@ error2:
 error1:
     errno = err;
     return -1;
+}
+
+void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
+    /* TODO: kqueue documentation says that a kqueue descriptor won't
+       survive a fork. However, implementations seem to disagree.
+       On FreeBSD the following function succeeds. On OSX it returns
+       EACCESS. Therefore we ignore the return value. */
+    close(ctx->kfd);
+    free(ctx->fdinfos);
 }
 
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {

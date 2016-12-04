@@ -25,26 +25,77 @@
 
 #include <stdint.h>
 
+#include "libdill.h"
 #include "list.h"
 #include "slist.h"
 
-struct dill_cr;
+/* The coroutine. The memory layout looks like this:
+   +-------------------------------------------------------------+---------+
+   |                                                      stack  | dill_cr |
+   +-------------------------------------------------------------+---------+
+   - dill_cr contains generic book-keeping info about the coroutine
+   - stack is a standard C stack; it grows downwards (at the moment libdill
+     doesn't support microarchitectures where stack grows upwards)
+*/
+struct dill_cr {
+    /* When coroutine is ready for execution but not running yet,
+       it lives in this list (dill_ready). 'id' is a result value to return
+       from dill_wait() once the coroutine is resumed. Additionally, errno
+       will be set to value of 'err'. */
+    struct dill_slist_item ready;
+    /* Virtual function table. */
+    struct hvfs vfs;
+    int id;
+    int err;
+    /* When coroutine is suspended 'ctx' holds the context
+       (registers and such). */
+    sigjmp_buf ctx;
+    /* If coroutine is blocked, here's the list of clauses it waits for. */
+    struct dill_slist clauses;
+    /* Coroutine-local storage. */
+    void *cls;
+    /* There are two possible reasons to disable blocking calls.
+       1. The coroutine is being closed by its owner.
+       2. The execution is happening within a context of hclose() function. */
+    unsigned int no_blocking1 : 1;
+    unsigned int no_blocking2 : 1;
+    /* Set once coroutine has finished its execution. */
+    unsigned int done : 1;
+    /* If true, the coroutine was launched via go_stack. */
+    unsigned int go_stack : 1;
+    /* When coroutine handle is being closed, this is the pointer to the
+       coroutine that is doing the hclose() call. */
+    struct dill_cr *closer;
+#if defined DILL_VALGRIND
+    /* Valgrind stack identifier. This way valgrind knows which areas of
+       memory are used as a stacks and doesn't produce spurious warnings.
+       Well, sort of. The mechanism is not perfect, but it's still better
+       than nothing. */
+    int sid;
+#endif
+#if defined DILL_CENSUS
+    /* Census record corresponding to this coroutine. */
+    struct dill_census_item *census;
+    size_t stacksz;
+#endif
+/* Clang assumes that the client stack is aligned to 16-bytes on x86-64
+   architectures; to achieve this we align this structure (with the added
+   benefit of a minor optimisation). */
+} __attribute__((aligned(16)));
 
 struct dill_ctx_cr {
-    /* Main coroutine */
-    struct dill_cr *main;
     /* Currently running coroutine. */
     struct dill_cr *r;
     /* List of coroutines ready for execution. */
     struct dill_slist ready;
-    /* 1 if dill_poller_init() was already run. */
-    int poller_init;
     /* Global linked list of all timers. The list is ordered.
        First timer to be resumed comes first and so on. */
     struct dill_list timers;
     int wait_counter;
+    /* Main coroutine. We don't control creation of main coroutine's stack
+       so we have to store this info here instead on the top of the stack. */
+    struct dill_cr main;
 #if defined DILL_CENSUS
-    int census_init;
     struct dill_slist census;
 #endif
 };
@@ -69,6 +120,9 @@ struct dill_tmcl {
     struct dill_clause cl;
     int64_t deadline;
 };
+
+int dill_ctx_cr_init(struct dill_ctx_cr *ctx);
+void dill_ctx_cr_term(struct dill_ctx_cr *ctx);
 
 /* When dill_wait() is called next time, the coroutine will wait
    (among other clauses) for this clause. 'id' must not be negative.
@@ -112,4 +166,5 @@ int dill_no_blocking2(int val);
 void dill_clean(int fd);
 
 #endif
+
 

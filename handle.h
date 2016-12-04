@@ -26,12 +26,15 @@
 struct dill_handle;
 
 struct dill_ctx_handle {
+    /* Array of handles. Size of the array is stored in 'nhandles'. */
     struct dill_handle *handles;
     int nhandles;
+    /* Points to first item in the list of unused handles. */
     int unused;
-#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
-    int initialized;
-#endif
 };
 
+int dill_ctx_handle_init(struct dill_ctx_handle *ctx);
+void dill_ctx_handle_term(struct dill_ctx_handle *ctx);
+
 #endif
+

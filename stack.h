@@ -36,11 +36,10 @@
 struct dill_ctx_stack {
     int count;
     struct dill_slist cache;
-#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
-/* Flag to indicate that atexit is registered. */
-    int initialized;
-#endif
 };
+
+int dill_ctx_stack_init(struct dill_ctx_stack *ctx);
+void dill_ctx_stack_term(struct dill_ctx_stack *ctx);
 
 /* Allocates new stack. Returns pointer to the *top* of the stack.
    For now we assume that the stack grows downwards. */

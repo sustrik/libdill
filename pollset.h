@@ -41,8 +41,8 @@
 #include "poll.h.inc"
 #endif
 
-/* Initialises the pollset. This function is called once per thread. */
-int dill_pollset_init(void);
+int dill_ctx_pollset_init(struct dill_ctx_pollset *ctx);
+void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx);
 
 /* Add waiting for in event on the fd to the list of current clauses. */
 int dill_pollset_in(struct dill_clause *cl, int id, int fd);
