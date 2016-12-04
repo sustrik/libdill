@@ -35,7 +35,7 @@
 #include "fd.h"
 #include "list.h"
 #include "utils.h"
-#include "context.h"
+#include "ctx.h"
 
 #define DILL_ENDLIST 0xffffffff
 
@@ -64,12 +64,24 @@ struct dill_ctx_pollset {
     uint32_t changelist;
 };
 
-struct dill_ctx_pollset dill_ctx_pollset_defaults = {-1, NULL, DILL_ENDLIST};
+#if !(defined(DILL_THREADS) && defined(DILL_SHARED))
+static DILL_THREAD_LOCAL struct dill_ctx_pollset dill_ctx_pollset_data =
+    {-1, NULL, DILL_ENDLIST};
+#endif
+
+/* Returns the pointer to the poll context. */
+static inline struct dill_ctx_pollset *dill_ctx(void) {
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+    return dill_context.pollset;
+#else
+    return &dill_ctx_pollset_data;
+#endif
+}
 
 /* Termination function for the pollset context. */
-void dill_pollset_term(void) {
-    struct dill_ctx_pollset *ctx = dill_context.pollset;
-    if(dill_slow(!ctx)) return;
+static void dill_pollset_atexit(void *ptr) {
+    struct dill_ctx_pollset *ctx = ptr;
+    dill_assert(ctx != NULL);
     if(ctx->kfd != -1) {
         /* TODO: kqueue documentation says that a kqueue descriptor won't
            survive a fork. However, implementations seem to diverge.
@@ -79,31 +91,29 @@ void dill_pollset_term(void) {
     }
     if(ctx->fdinfos)
         free(ctx->fdinfos);
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
     free(ctx);
-    dill_context.pollset = NULL;
+#endif
 }
 
 int dill_pollset_init(void) {
     int err;
-    /* Always allocate a pollset because this function is always called from cr.c */
-    struct dill_ctx_pollset *ctx = malloc(sizeof(struct dill_ctx_pollset));
-    if(dill_slow(!ctx)) {err = ENOMEM; goto error1;}
-    memcpy(ctx, &dill_ctx_pollset_defaults, sizeof(struct dill_ctx_pollset));
-    dill_context.pollset = ctx;
-    ctx->fdinfos = (struct dill_fdinfo*)
+    struct dill_ctx_pollset *ctx = dill_ctx();
+#if defined(DILL_THREADS) && defined(DILL_SHARED)
+    /* dill_pollset_init is used internally and should only be called once. */
+    dill_assert(ctx == NULL);
+    ctx = dill_context.pollset = malloc(sizeof(struct dill_ctx_pollset));
+#endif
+    dill_atexit(dill_pollset_atexit, ctx);
+    /* Allocate one info per fd. */
+    ctx->fdinfos =
         calloc(dill_maxfds(), sizeof(struct dill_fdinfo));
     if(dill_slow(!ctx->fdinfos)) {err = ENOMEM; goto error1;}
-#if defined DILL_VALGRIND
-    static int initialized = 0;
-    if(dill_slow(!initialized)) {
-        int rc = atexit(dill_pollset_atexit);
-        dill_assert(rc == 0);
-        initialized = 1;
-    }
-#endif
+    /* Changelist is empty. */
+    ctx->changelist = DILL_ENDLIST;
+    /* Create kernel-side pollset. */
     ctx->kfd = kqueue();
     if(dill_slow(ctx->kfd < 0)) {err = errno; goto error2;}
-    ctx->changelist = DILL_ENDLIST;
     return 0;
 error2:
     free(ctx->fdinfos);
@@ -114,7 +124,7 @@ error1:
 }
 
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
-    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    struct dill_ctx_pollset *ctx = dill_ctx();
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
     /* If not yet cached check whether fd exists and if so add it to pollset. */
@@ -140,7 +150,7 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
 }
 
 int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
-    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    struct dill_ctx_pollset *ctx = dill_ctx();
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
     /* If not yet cached check whether fd exists and if so add it to pollset. */    
@@ -166,7 +176,7 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
 }
 
 void dill_pollset_clean(int fd) {
-    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    struct dill_ctx_pollset *ctx = dill_ctx();
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     /* We cannot clean an fd that someone is waiting for. */
     dill_assert(dill_list_empty(&fdi->in));
@@ -203,7 +213,7 @@ void dill_pollset_clean(int fd) {
 }
 
 int dill_pollset_poll(int timeout) {
-    struct dill_ctx_pollset *ctx = dill_context.pollset;
+    struct dill_ctx_pollset *ctx = dill_ctx();
     /* Apply any changes to the pollset. */
     struct kevent chngs[DILL_CHNGSSIZE];
     int nchngs = 0;
