@@ -83,15 +83,6 @@ void dill_ctx_stack_term(struct dill_ctx_stack *ctx) {
 
 void *dill_allocstack(size_t *stack_size) {
     struct dill_ctx_stack *ctx = &dill_getctx->stack;
-#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
-    /* When using valgrind we want to deallocate cached stacks when
-       the process is terminated so that they don't show up in the output. */
-    if(dill_slow(!ctx->initialized)) {
-        int rc = dill_atexit(dill_stack_atexit, ctx);
-        dill_assert(rc == 0);
-        ctx->initialized = 1;
-    }
-#endif
     if(stack_size)
         *stack_size = dill_stack_size;
     /* If there's a cached stack, use it. */

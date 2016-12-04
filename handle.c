@@ -77,15 +77,6 @@ int hmake(struct hvfs *vfs) {
         struct dill_handle *hndls =
             realloc(ctx->handles, sz * sizeof(struct dill_handle));
         if(dill_slow(!hndls)) {errno = ENOMEM; return -1;}
-#if defined(DILL_VALGRIND) || defined(DILL_THREADS)
-        /* Clean-up function to delete the array at exit. It is not strictly
-           necessary but valgrind will be happy about it. */
-        if(dill_slow(!ctx->initialized)) {
-            int rc = dill_atexit(dill_handle_atexit, ctx);
-            dill_assert(rc == 0);
-            ctx->initialized = 1;
-        }
-#endif
         /* Add newly allocated handles to the list of unused handles. */
         int i;
         for(i = ctx->nhandles; i != sz - 1; ++i)
