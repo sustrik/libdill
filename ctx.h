@@ -27,6 +27,11 @@
 
 #include <limits.h>
 
+#include "cr.h"
+#include "handle.h"
+#include "pollset.h"
+#include "stack.h"
+
 /* Thread local storage support */
 #if defined __GNUC__
 #define DILL_THREAD_LOCAL __thread
@@ -73,11 +78,6 @@ struct dill_atexit_fn_list {
 };
 
 #if defined(DILL_THREADS) && defined(DILL_SHARED)
-struct dill_ctx_cr;
-struct dill_ctx_handle;
-struct dill_ctx_stack;
-struct dill_ctx_pollset;
-
 struct dill_ctx {
     struct dill_ctx_cr *cr;
     struct dill_ctx_handle *handle;
