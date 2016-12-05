@@ -25,7 +25,11 @@
 #ifndef LIBDILL_H_INCLUDED
 #define LIBDILL_H_INCLUDED
 
+#if !(defined __OpenBSD__ || defined __FreeBSD__ || \
+    defined __NetBSD__ || defined __DragonFly__)
 #include <alloca.h>
+#endif
+#include <stdlib.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <stddef.h>
