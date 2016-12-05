@@ -62,6 +62,7 @@ static int dill_ismain() {
 }
 #elif defined(__OpenBSD__) || defined(__FreeBSD__) ||\
     defined(__APPLE__) || defined(__DragonFly__)
+#include <pthread_np.h>
 static int dill_ismain() {
     return pthread_main_np();
 }
