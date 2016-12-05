@@ -60,9 +60,11 @@ struct dill_ctx *dill_ctx_init(void) {
 static int dill_ismain() {
     return syscall(SYS_gettid) == getpid();
 }
-#elif defined(__OpenBSD__) || defined(__FreeBSD__) ||\
-    defined(__APPLE__) || defined(__DragonFly__)
+#elif defined __OpenBSD__ || defined __FreeBSD__ || \
+    defined __APPLE__ || defined __DragonFly__
+#if defined __FreeBSD__
 #include <pthread_np.h>
+#endif
 static int dill_ismain() {
     return pthread_main_np();
 }
