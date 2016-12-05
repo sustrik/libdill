@@ -88,7 +88,9 @@ check_PROGRAMS = \
     tests/overload
 
 if DILL_THREADS
-check_PROGRAMS += tests/threads
+check_PROGRAMS += \
+    tests/threads \
+    tests/threads2
 endif
 
 check_HEADERS = \

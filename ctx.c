@@ -92,10 +92,11 @@ static void dill_ctx_term(void *ptr) {
     dill_ctx_stack_term(&ctx->stack);
     dill_ctx_handle_term(&ctx->handle);
     dill_ctx_cr_term(&ctx->cr);
+    if(dill_ismain()) dill_main = NULL;
 }
 
 static void dill_ctx_atexit(void) {
-    dill_ctx_term(dill_main);
+    if(dill_main) dill_ctx_term(dill_main);
 }
 
 static void dill_makekey(void) {
@@ -138,10 +139,11 @@ static void dill_ctx_term(void *ptr) {
     dill_ctx_handle_term(&ctx->handle);
     dill_ctx_cr_term(&ctx->cr);
     free(ctx);
+    if(dill_ismain()) dill_main = NULL;
 }
 
 static void dill_ctx_atexit(void) {
-    dill_ctx_term(dill_main);
+    if(dill_main) dill_ctx_term(dill_main);
 }
 
 static void dill_makekey(void) {
