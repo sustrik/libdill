@@ -137,6 +137,7 @@ static void dill_ctx_term(void *ptr) {
     dill_ctx_stack_term(&ctx->stack);
     dill_ctx_handle_term(&ctx->handle);
     dill_ctx_cr_term(&ctx->cr);
+    free(ctx);
 }
 
 static void dill_ctx_atexit(void) {
