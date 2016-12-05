@@ -98,7 +98,8 @@ int main() {
     struct chclause cls02[] = {{CHRECV, ch0, &val, sizeof(val)}};
     rc = choose(cls02, 1, -1);
     choose_assert(0, 0);
-    assert(val == 555);    
+    assert(val == 555);
+    hclose(ch0);
 
     /* Non-blocking receiver case. */
     int ch1 = channel(sizeof(int), 0);
