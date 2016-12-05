@@ -48,15 +48,43 @@ struct dill_ctx *dill_ctx_init(void) {
     return &dill_ctx_;
 }
 
-#elif defined __GNUC__ && !defined DILL_THREAD_FALLBACK
+#else
 
 #include <pthread.h>
 
-__thread struct dill_ctx dill_ctx_ = {0};
+/* Determine whether current thread is the main thread. */
+#if defined __linux__
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <sys/syscall.h>
+static int dill_ismain() {
+    return syscall(SYS_gettid) == getpid();
+}
+#elif defined(__OpenBSD__) || defined(__FreeBSD__) ||\
+    defined(__APPLE__) || defined(__DragonFly__)
+static int dill_ismain() {
+    return pthread_main_np();
+}
+#elif defined __NetBSD__
+#include <sys/lwp.h>
+static int dill_ismain() {
+    return _lwp_self() == 1;
+}
+#elif defined __sun
+static int dill_ismain() {
+    return pthread_self() == 1;
+}
+#else
+#error "Cannot determine which thread is main."
+#endif
 
+#if defined __GNUC__ && !defined DILL_THREAD_FALLBACK
+
+__thread struct dill_ctx dill_ctx_ = {0};
 
 static pthread_key_t dill_key;
 static pthread_once_t dill_keyonce = PTHREAD_ONCE_INIT;
+static void *dill_main = NULL;
 
 static void dill_ctx_term(void *ptr) {
     struct dill_ctx *ctx = ptr;
@@ -64,6 +92,10 @@ static void dill_ctx_term(void *ptr) {
     dill_ctx_stack_term(&ctx->stack);
     dill_ctx_handle_term(&ctx->handle);
     dill_ctx_cr_term(&ctx->cr);
+}
+
+static void dill_ctx_atexit(void) {
+    dill_ctx_term(dill_main);
 }
 
 static void dill_makekey(void) {
@@ -82,6 +114,11 @@ struct dill_ctx *dill_ctx_init(void) {
     dill_assert(rc == 0);
     rc = pthread_once(&dill_keyonce, dill_makekey);
     dill_assert(rc == 0);
+    if(dill_ismain()) {
+        dill_main = &dill_ctx_;
+        rc = atexit(dill_ctx_atexit);
+        dill_assert(rc == 0);
+    }
     rc = pthread_setspecific(dill_key, &dill_ctx_);
     dill_assert(rc == 0);
     dill_ctx_.initialized = 1;
@@ -90,10 +127,9 @@ struct dill_ctx *dill_ctx_init(void) {
 
 #else
 
-#include <pthread.h>
-
 static pthread_key_t dill_key;
 static pthread_once_t dill_keyonce = PTHREAD_ONCE_INIT;
+static void *dill_main = NULL;
 
 static void dill_ctx_term(void *ptr) {
     struct dill_ctx *ctx = ptr;
@@ -101,6 +137,10 @@ static void dill_ctx_term(void *ptr) {
     dill_ctx_stack_term(&ctx->stack);
     dill_ctx_handle_term(&ctx->handle);
     dill_ctx_cr_term(&ctx->cr);
+}
+
+static void dill_ctx_atexit(void) {
+    dill_ctx_term(dill_main);
 }
 
 static void dill_makekey(void) {
@@ -123,10 +163,17 @@ struct dill_ctx *dill_getctx_(void) {
     dill_assert(rc == 0);
     rc = dill_ctx_pollset_init(&ctx->pollset);
     dill_assert(rc == 0);
+    if(dill_ismain()) {
+        dill_main = ctx;
+        rc = atexit(dill_ctx_atexit);
+        dill_assert(rc == 0);
+    }
     rc = pthread_setspecific(dill_key, ctx);
     dill_assert(rc == 0);
     return ctx;
 }
+
+#endif
 
 #endif
 
