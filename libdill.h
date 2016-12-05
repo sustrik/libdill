@@ -25,12 +25,16 @@
 #ifndef LIBDILL_H_INCLUDED
 #define LIBDILL_H_INCLUDED
 
-#include <alloca.h>
 #include <errno.h>
 #include <setjmp.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <unistd.h>
+
+#if defined __linux__
+#include <alloca.h>
+#endif
 
 /******************************************************************************/
 /*  ABI versioning support                                                    */
