@@ -231,8 +231,6 @@ DILL_EXPORT int msleep(int64_t deadline);
 DILL_EXPORT void fdclean(int fd);
 DILL_EXPORT int fdin(int fd, int64_t deadline);
 DILL_EXPORT int fdout(int fd, int64_t deadline);
-DILL_EXPORT void *cls(void);
-DILL_EXPORT void setcls(void *val);
 
 /******************************************************************************/
 /*  Channels                                                                  */

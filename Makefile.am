@@ -79,7 +79,6 @@ check_PROGRAMS = \
     tests/example \
     tests/go \
     tests/fd \
-    tests/cls \
     tests/handle \
     tests/chan \
     tests/choose \

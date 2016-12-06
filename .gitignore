@@ -31,7 +31,6 @@ tests/*.o
 test-suite.log
 tests/chan
 tests/choose
-tests/cls
 tests/example
 tests/fd
 tests/go

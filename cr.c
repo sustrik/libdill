@@ -248,7 +248,6 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     dill_slist_item_init(&cr->ready);
     dill_slist_init(&cr->clauses);
     cr->closer = NULL;
-    cr->cls = NULL;
     cr->no_blocking1 = 0;
     cr->no_blocking2 = 0;
     cr->done = 0;
@@ -437,19 +436,5 @@ int yield(void) {
     dill_resume(ctx->r, 0, 0);
     /* Suspend. */
     return dill_wait();
-}
-
-/******************************************************************************/
-/*  Coroutine-local storage.                                                  */
-/******************************************************************************/
-
-void *cls(void) {
-    struct dill_ctx_cr *ctx = &dill_getctx->cr;
-    return ctx->r->cls;
-}
-
-void setcls(void *val) {
-    struct dill_ctx_cr *ctx = &dill_getctx->cr;
-    ctx->r->cls = val;
 }
 

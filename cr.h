@@ -52,8 +52,6 @@ struct dill_cr {
     sigjmp_buf ctx;
     /* If coroutine is blocked, here's the list of clauses it waits for. */
     struct dill_slist clauses;
-    /* Coroutine-local storage. */
-    void *cls;
     /* There are two possible reasons to disable blocking calls.
        1. The coroutine is being closed by its owner.
        2. The execution is happening within a context of hclose() function. */
