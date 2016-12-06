@@ -15,7 +15,7 @@ $ sudo make install
 
 **Dec 6th, 2016 <http://libdill.org/libdill-0.11-beta.tar.gz>**
 
-* Make the library thread-friendly.
+* Make the library [thread-friendly](threads.html).
 
 Nov 27, 2016 <http://libdill.org/libdill-0.10-beta.tar.gz>
 
