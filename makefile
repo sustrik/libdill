@@ -15,7 +15,6 @@ all: \
     choose.html \
     chrecv.html \
     chsend.html \
-    cls.html \
     fdclean.html \
     fdin.html \
     fdout.html \
@@ -28,7 +27,6 @@ all: \
     libdill_build_options.html \
     msleep.html \
     now.html \
-    setcls.html \
     yield.html \
     \
     bsock.html \

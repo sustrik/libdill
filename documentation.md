@@ -10,7 +10,6 @@
 * [choose](choose.html)
 * [chrecv](chrecv.html)
 * [chsend](chsend.html)
-* [cls](cls.html)
 * [fdclean](fdclean.html)
 * [fdin](fdin.html)
 * [fdout](fdout.html)
@@ -22,7 +21,6 @@
 * [hquery](hquery.html)
 * [msleep](msleep.html)
 * [now](now.html)
-* [setcls](setcls.html)
 * [yield](yield.html)
 
 ##### dsock
