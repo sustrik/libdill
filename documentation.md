@@ -3,7 +3,8 @@
 
 ##### libdill
 
-[Build options](libdill_build_options.html)
+[Build options](build_options.html)
+[Threads](threads.html)
 
 * [channel](channel.html)
 * [chdone](chdone.html)

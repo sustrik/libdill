@@ -10,6 +10,9 @@ all: \
     structured-concurrency.html \
     tutorial.html \
     \
+    build_options.html \
+    threads.html \
+    \
     channel.html \
     chdone.html \
     choose.html \
@@ -24,7 +27,6 @@ all: \
     hdup.html \
     hmake.html \
     hquery.html \
-    libdill_build_options.html \
     msleep.html \
     now.html \
     yield.html \
