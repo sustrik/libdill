@@ -244,7 +244,6 @@ struct chclause {
     int ch;
     void *val;
     size_t len;
-    char reserved[64];
 };
 
 DILL_EXPORT int channel(size_t itemsz, size_t bufsz);

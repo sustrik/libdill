@@ -320,12 +320,12 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
     /* There are no clauses available immediately. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
+    struct dill_chcl chcls[nclauses];
     for(i = 0; i != nclauses; ++i) {
         struct dill_chan *ch = hquery(clauses[i].ch, dill_chan_type);
         dill_assert(ch);
-        struct dill_chcl *chcl = (struct dill_chcl*)&clauses[i].reserved;
-        chcl->val = clauses[i].val;
-        dill_waitfor(&chcl->cl, i,
+        chcls[i].val = clauses[i].val;
+        dill_waitfor(&chcls[i].cl, i,
             clauses[i].op == CHRECV ? &ch->in : &ch->out, NULL);
     }
     struct dill_tmcl tmcl;
