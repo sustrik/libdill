@@ -109,6 +109,9 @@ noinst_PROGRAMS = \
     perf/chan\
     perf/chsend\
     perf/chrecv\
+    perf/choose\
+    perf/choosesend\
+    perf/chooserecv\
     perf/whispers
 
 ################################################################################
