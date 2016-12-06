@@ -7,7 +7,7 @@ Currently only modern POSIX systems are supported; it has been tested mainly on 
 
 It is likely to work with DragonFlyBSD. NetBSD and OpenBSD probably need `DILL_THREAD_FALLBACK` to work as Thread Local Storage is unsupported. If you are using libdill on these platforms, please let us know.
 
-Cygwin is very broken, it does not support AF_UNIX properly so no development will progress further with this platform. Work will be done porting libdill to use Mingw and Windows IOCP instead, help is welcome.
+There is currently no support for Windows. Cygwin is very broken, it does not support AF_UNIX properly so no development will progress further with this platform. Work will be done porting libdill to use Mingw and Windows IOCP instead, help is welcome.
 
 ### Compiler
 

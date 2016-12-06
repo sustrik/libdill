@@ -19,7 +19,7 @@
 <h3 id="operating-systems">Operating Systems</h3>
 <p>Currently only modern POSIX systems are supported; it has been tested mainly on Linux, FreeBSD and OSX.</p>
 <p>It is likely to work with DragonFlyBSD. NetBSD and OpenBSD probably need <code>DILL_THREAD_FALLBACK</code> to work as Thread Local Storage is unsupported. If you are using libdill on these platforms, please let us know.</p>
-<p>Cygwin is very broken, it does not support AF_UNIX properly so no development will progress further with this platform. Work will be done porting libdill to use Mingw and Windows IOCP instead, help is welcome.</p>
+<p>There is currently no support for Windows. Cygwin is very broken, it does not support AF_UNIX properly so no development will progress further with this platform. Work will be done porting libdill to use Mingw and Windows IOCP instead, help is welcome.</p>
 <h3 id="compiler">Compiler</h3>
 <p>libdill requires either GCC and Clang. Your mileage may vary with other compilers:</p>
 <ul>
