@@ -4,6 +4,7 @@
 ##### libdill
 
 [Build options](build_options.html)
+[Compatibility](compatibility.html)
 [Threads](threads.html)
 
 * [channel](channel.html)

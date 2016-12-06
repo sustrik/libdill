@@ -11,6 +11,7 @@ all: \
     tutorial.html \
     \
     build_options.html \
+    compatibility.html \
     threads.html \
     \
     channel.html \
