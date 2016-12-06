@@ -18,7 +18,7 @@ libdill requires either GCC and Clang. Your mileage may vary with other compiler
 
 The non-standard language features that are required by libdill are as follows:
 
-- The GCC-extension [statement expressions(https://gcc.gnu.org/onlinedocs/gcc-3.2/gcc/Statement-Exprs.html) is used in the `go` macro.
+- The GCC-extension [statement expressions](https://gcc.gnu.org/onlinedocs/gcc-3.2/gcc/Statement-Exprs.html) is used in the `go` macro.
 - GCC-style inline assembly.
 
 Compiler features and incompatibilities:
