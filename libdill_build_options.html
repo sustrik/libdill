@@ -19,6 +19,7 @@
 <p>You can pass the following options to <code>./configure</code>:</p>
 <ul>
 <li><code>--disable-shared</code>: Generate only static library. This option causes tests to be statically linked with libdill thus making debugging easier.<br /></li>
+<li><code>--disable-threads</code>: Can be used with single-threaded programs. It will make libdill a little bit faster and make it not depend on pthread library.<br /></li>
 <li><code>--enable-census</code>: When this option is set the library keeps track of space on stack was used by individual coroutines. It prints the statistics when the process exits.<br /></li>
 <li><code>--enable-debug</code>: Add debug info to the library.<br /></li>
 <li><code>--enable-valgrind</code>: Valgrind gets confused by libdill's coroutines. Setting this option helps valgrind make sense of what's going on. It's not 100% waterproof but it helps to eliminate many false positives.</li>
