@@ -4,15 +4,20 @@
 ##### libdill
 
 ```
-$ wget http://libdill.org/libdill-0.10-beta.tar.gz
-$ tar -xzf libdill-0.10-beta.tar.gz 
-$ cd libdill-0.10-beta
+$ wget http://libdill.org/libdill-0.11-beta.tar.gz
+$ tar -xzf libdill-0.11-beta.tar.gz 
+$ cd libdill-0.11
+-beta
 $ ./configure
 $ make
 $ sudo make install
 ```
 
-**Nov 27, 2016 <http://libdill.org/libdill-0.10-beta.tar.gz>**
+**Dec 6th, 2016 <http://libdill.org/libdill-0.11-beta.tar.gz>**
+
+* Make the library thread-friendly.
+
+Nov 27, 2016 <http://libdill.org/libdill-0.10-beta.tar.gz>
 
 * Rename hcreate() to hmake(). hcreate() clashes with POSIX function of the same name.
 
