@@ -63,10 +63,6 @@ struct dill_chcl {
     void *val;
 };
 
-/* Make sure that the channel clause will fit into the opaque data space
-   int chclause strcuture. */
-DILL_CT_ASSERT(sizeof(struct dill_chcl) <= 64);
-
 /******************************************************************************/
 /*  Handle implementation.                                                    */
 /******************************************************************************/
