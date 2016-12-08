@@ -34,7 +34,7 @@
 
 /* Returns t2 - t1; assumes that t2 > t1. */
 static inline int64_t nowdiff(uint64_t t2, uint64_t t1) {
-	return t2 < t1 ? t1 - t2 : t2 - t1;
+	return t2 < t1 ? (UINT64_MAX - t1) + t2 + 1 : t2 - t1;
 }
 
 int64_t now(void) {
