@@ -33,9 +33,9 @@
 #include "utils.h"
 
 /* The channel. Memory layout of a channel looks like this:
-   +-----------+-------+--------+---------------------------------+--------+
-   | dill_chan | item1 | item 2 |             ...                 | item N |
-   +-----------+-------+--------+---------------------------------+--------+
+   +-----------+-------+
+   | dill_chan | item  |
+   +-----------+-------+
 */
 struct dill_chan {
     /* Table of virtual functions. */
@@ -46,13 +46,6 @@ struct dill_chan {
     struct dill_list in;
     /* List of clauses wanting to send to the channel. */
     struct dill_list out;
-    /* The message buffer directly follows the chan structure. 'bufsz' specifies
-       the maximum capacity of the buffer. 'items' is the number of messages
-       currently in the buffer. 'first' is the index of the next message to
-       be received from the buffer. */
-    size_t bufsz;
-    size_t items;
-    size_t first;
     /* 1 is chdone() was already called. 0 otherwise. */
     unsigned int done : 1;
 };
@@ -76,22 +69,19 @@ static void dill_chan_close(struct hvfs *vfs);
 /*  Channel creation and deallocation.                                        */
 /******************************************************************************/
 
-int channel(size_t itemsz, size_t bufsz) {
+int channel(size_t itemsz) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Allocate the channel structure followed by the item buffer. */
     struct dill_chan *ch = (struct dill_chan*)
-        malloc(sizeof(struct dill_chan) + (itemsz * bufsz));
+        malloc(sizeof(struct dill_chan) + itemsz);
     if(!ch) {errno = ENOMEM; return -1;}
     ch->vfs.query = dill_chan_query;
     ch->vfs.close = dill_chan_close;
     ch->sz = itemsz;
     dill_list_init(&ch->in);
     dill_list_init(&ch->out);
-    ch->bufsz = bufsz;
-    ch->items = 0;
-    ch->first = 0;
     ch->done = 0;
     /* Allocate a handle to point to the channel. */
     int h = hmake(&ch->vfs);
@@ -150,13 +140,6 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
         dill_trigger(&chcl->cl, 0);
         return 0;
     }
-    if(ch->items < ch->bufsz) {
-        /* Write the item to the buffer. */
-        size_t pos = (ch->first + ch->items) % ch->bufsz;
-        memcpy(((char*)(ch + 1)) + (pos * len), val, len);
-        ++ch->items;
-        return 0;
-    }
     /* The clause is not available immediately. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
@@ -180,23 +163,6 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     if(dill_slow(!ch)) return -1;
     /* Check that the length provided matches the channel length */
     if(dill_slow(len != ch->sz)) return -1;
-    /* If there's an item in the buffer return it. */
-    if(ch->items) {
-        /* Read an item from the buffer. */
-        memcpy(val, ((char*)(ch + 1)) + (ch->first * len), len);
-        ch->first = (ch->first + 1) % ch->bufsz;
-        --ch->items;
-        /* If there was a waiting sender, unblock it. */
-        if(!dill_list_empty(&ch->out)) {
-            struct dill_chcl *chcl = dill_cont(dill_list_begin(&ch->out),
-                struct dill_chcl, cl.epitem);
-            size_t pos = (ch->first + ch->items) % ch->bufsz;
-            memcpy(((char*)(ch + 1)) + (pos * len) , chcl->val, len);
-            ++ch->items;
-            dill_trigger(&chcl->cl, 0);
-        }
-        return 0;
-    }
     /* If there's a sender waiting copy the message directly from the sender. */
     if(!dill_list_empty(&ch->out)) {
         struct dill_chcl *chcl = dill_cont(dill_list_begin(&ch->out),
@@ -206,7 +172,7 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
         return 0;
     }
     /* Check whether channel is done. */
-    if(dill_slow(ch->done && !ch->items)) {errno = EPIPE; return -1;}
+    if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
     /* The clause is not available immediately. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
@@ -256,54 +222,26 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
             errno = EINVAL; return i;}
         switch(cl->op) {
         case CHSEND:
-            if(ch->items < ch->bufsz || !dill_list_empty(&ch->in) || ch->done) {
-                if(dill_slow(ch->done)) {errno = EPIPE; return i;}
-                if(!dill_list_empty(&ch->in)) {
-                    /* Copy the message directly to the waiting receiver. */
-                    struct dill_chcl *chcl = dill_cont(dill_list_begin(&ch->in),
-                        struct dill_chcl, cl.epitem);
-                    memcpy(chcl->val, cl->val, cl->len);
-                    dill_trigger(&chcl->cl, 0);
-                    errno = 0;
-                    return i;
-                }
-                dill_assert(ch->items < ch->bufsz);
-                /* Write the item to the buffer. */
-                size_t pos = (ch->first + ch->items) % ch->bufsz;
-                memcpy(((char*)(ch + 1)) + (pos * ch->sz) , cl->val, cl->len);
-                ++ch->items;
+            if(dill_slow(ch->done)) {errno = EPIPE; return i;}
+            if(!dill_list_empty(&ch->in)) {
+                /* Copy the message directly to the waiting receiver. */
+                struct dill_chcl *chcl = dill_cont(dill_list_begin(&ch->in),
+                    struct dill_chcl, cl.epitem);
+                memcpy(chcl->val, cl->val, cl->len);
+                dill_trigger(&chcl->cl, 0);
                 errno = 0;
                 return i;
             }
             break;
         case CHRECV:
-            if(ch->items || !dill_list_empty(&ch->out) || ch->done) {
-                if(dill_slow(ch->done && !ch->items)) {errno = EPIPE; return i;}
-                if(!ch->items) {
-                    /* Unbuffered channel. But there's a sender waiting to send.
-                       Copy the message directly from a waiting sender. */
-                    struct dill_chcl *chcl = dill_cont(
-                        dill_list_begin(&ch->out), struct dill_chcl, cl.epitem);
-                    memcpy(cl->val, chcl->val, ch->sz);
-                    dill_trigger(&chcl->cl, 0);
-                    errno = 0;
-                    return i;
-                }
-                /* Read an item from the buffer. */
-                memcpy(cl->val, ((char*)(ch + 1)) + (ch->first * ch->sz),
-                    ch->sz);
-                ch->first = (ch->first + 1) % ch->bufsz;
-                --ch->items;
-                /* If there was a waiting sender, unblock it. */
-                if(!dill_list_empty(&ch->out)) {
-                    struct dill_chcl *chcl = dill_cont(
-                        dill_list_begin(&ch->out), struct dill_chcl, cl.epitem);
-                    size_t pos = (ch->first + ch->items) % ch->bufsz;
-                    memcpy(((char*)(ch + 1)) + (pos * ch->sz) , chcl->val,
-                        ch->sz);
-                    ++ch->items;
-                    dill_trigger(&chcl->cl, 0);
-                }
+            if(dill_slow(ch->done)) {errno = EPIPE; return i;}
+            if(!dill_list_empty(&ch->out)) {
+                /* A sender waiting to send.
+                   Copy the message directly from a waiting sender. */
+                struct dill_chcl *chcl = dill_cont(
+                    dill_list_begin(&ch->out), struct dill_chcl, cl.epitem);
+                memcpy(cl->val, chcl->val, ch->sz);
+                dill_trigger(&chcl->cl, 0);
                 errno = 0;
                 return i;
             }

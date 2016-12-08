@@ -83,26 +83,18 @@ struct large {
     char buf[1024];
 };
 
+coroutine void sender4(int ch) {
+    struct large large = {{0}};
+    int rc = chsend(ch, &large, sizeof(large), -1);
+    errno_assert(rc == 0);
+}
+
 int main() {
     int rc;
     int val;
 
-    /* Trivial case. */
-    int ch0 = channel(sizeof(int), 1);
-    errno_assert(ch0 >= 0);
-    val = 555;
-    struct chclause cls01[] = {{CHSEND, ch0, &val, sizeof(val)}};
-    rc = choose(cls01, 1, -1);
-    choose_assert(0, 0);
-    val = 0;
-    struct chclause cls02[] = {{CHRECV, ch0, &val, sizeof(val)}};
-    rc = choose(cls02, 1, -1);
-    choose_assert(0, 0);
-    assert(val == 555);
-    hclose(ch0);
-
     /* Non-blocking receiver case. */
-    int ch1 = channel(sizeof(int), 0);
+    int ch1 = channel(sizeof(int));
     errno_assert(ch1 >= 0);
     int hndl1 = go(sender1(ch1, 555));
     errno_assert(hndl1 >= 0);
@@ -115,7 +107,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Blocking receiver case. */
-    int ch2 = channel(sizeof(int), 0);
+    int ch2 = channel(sizeof(int));
     errno_assert(ch2 >= 0);
     int hndl2 = go(sender2(ch2, 666));
     errno_assert(hndl2 >= 0);
@@ -128,7 +120,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Non-blocking sender case. */
-    int ch3 = channel(sizeof(int), 0);
+    int ch3 = channel(sizeof(int));
     errno_assert(ch3 >= 0);
     int hndl3 = go(receiver1(ch3, 777));
     errno_assert(hndl3 >= 0);
@@ -141,7 +133,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Blocking sender case. */
-    int ch4 = channel(sizeof(int), 0);
+    int ch4 = channel(sizeof(int));
     errno_assert(ch4 >= 0);
     int hndl4 = go(receiver2(ch4, 888));
     errno_assert(hndl4 >= 0);
@@ -155,9 +147,9 @@ int main() {
 
     /* Check with two channels. */
     int hndl5[2];
-    int ch5 = channel(sizeof(int), 0);
+    int ch5 = channel(sizeof(int));
     errno_assert(ch5 >= 0);
-    int ch6 = channel(sizeof(int), 0);
+    int ch6 = channel(sizeof(int));
     errno_assert(ch6 >= 0);
     hndl5[0] = go(sender1(ch6, 555));
     errno_assert(hndl5 >= 0);
@@ -181,9 +173,9 @@ int main() {
     errno_assert(rc == 0);
 
     /* Test whether selection of in channels is random. */
-    int ch7 = channel(sizeof(int), 0);
+    int ch7 = channel(sizeof(int));
     errno_assert(ch7 >= 0);
-    int ch8 = channel(sizeof(int), 0);
+    int ch8 = channel(sizeof(int));
     errno_assert(ch8 >= 0);
     int hndl6[2];
     hndl6[0] = go(feeder(ch7, 111));
@@ -219,7 +211,7 @@ int main() {
     hclose(ch8);
 
     /* Test 'otherwise' clause. */
-    int ch9 = channel(sizeof(int), 0);
+    int ch9 = channel(sizeof(int));
     errno_assert(ch9 >= 0);
     struct chclause cls7[] = {{CHRECV, ch9, &val, sizeof(val)}};
     rc = choose(cls7, 1, 0);
@@ -229,7 +221,7 @@ int main() {
     choose_assert(-1, ETIMEDOUT);
 
     /* Test two simultaneous senders vs. choose statement. */
-    int ch10 = channel(sizeof(int), 0);
+    int ch10 = channel(sizeof(int));
     errno_assert(ch10 >= 0);
     int hndl7[2];
     hndl7[0] = go(sender1(ch10, 888));
@@ -252,7 +244,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Test two simultaneous receivers vs. choose statement. */
-    int ch11 = channel(sizeof(int), 0);
+    int ch11 = channel(sizeof(int));
     errno_assert(ch11 >= 0);
     int hndl8[2];
     hndl8[0] = go(receiver1(ch11, 333));
@@ -273,7 +265,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Choose vs. choose. */
-    int ch12 = channel(sizeof(int), 0);
+    int ch12 = channel(sizeof(int));
     errno_assert(ch12 >= 0);
     int hndl9 = go(choosesender(ch12, 111));
     errno_assert(hndl9 >= 0);
@@ -285,52 +277,19 @@ int main() {
     rc = hclose(hndl9);
     errno_assert(rc == 0);
 
-    /* Choose vs. buffered channels. */
-    int ch13 = channel(sizeof(int), 2);
-    errno_assert(ch13 >= 0);
-    val = 999;
-    struct chclause cls11[] = {{CHSEND, ch13, &val, sizeof(val)}};
-    rc = choose(cls11, 1, -1);
-    errno_assert(rc == 0);
-    struct chclause cls12[] = {{CHRECV, ch13, &val, sizeof(val)}};
-    rc = choose(cls12, 1, -1);
-    choose_assert(0, 0);
-    assert(val == 999);
-    hclose(ch13);
-
-    /* Test whether allocating larger in buffer breaks previous in clause. */
-    int ch15 = channel(sizeof(struct large), 1);
-    errno_assert(ch15 >= 0);
-    int ch16 = channel(sizeof(int), 1);
-    errno_assert(ch16 >= 0);
-    int hndl10 = go(sender2(ch16, 1111));
-    errno_assert(hndl10 >= 0);
-    struct large lrg;
-    struct chclause cls13[] = {
-        {CHRECV, ch16, &val, sizeof(val)},
-        {CHRECV, ch15, &lrg, sizeof(lrg)}
-    };
-    rc = choose(cls13, 2, -1);
-    choose_assert(0, 0);
-    assert(val == 1111);
-    hclose(ch16);
-    hclose(ch15);
-    rc = hclose(hndl10);
-    errno_assert(rc == 0);
-
     /* Test transferring a large object. */
-    int ch17 = channel(sizeof(struct large), 1);
+    int ch17 = channel(sizeof(struct large));
     errno_assert(ch17 >= 0);
-    struct large large = {{0}};
-    rc = chsend(ch17, &large, sizeof(large), -1);
-    errno_assert(rc == 0);
+    int hndl10 = go(sender4(ch17));
+    errno_assert(hndl9 >= 0);
+    struct large lrg;
     struct chclause cls14[] = {{CHRECV, ch17, &lrg, sizeof(lrg)}};
     rc = choose(cls14, 1, -1);
     choose_assert(0, 0);
     hclose(ch17);
 
     /* Test that 'in' on done-with channel fires. */
-    int ch18 = channel(sizeof(int), 0);
+    int ch18 = channel(sizeof(int));
     errno_assert(ch18 >= 0);
     rc = chdone(ch18);
     errno_assert(rc == 0);
@@ -340,7 +299,7 @@ int main() {
     hclose(ch18);
 
     /* Test expiration of 'deadline' clause. */
-    int ch21 = channel(sizeof(int), 0);
+    int ch21 = channel(sizeof(int));
     errno_assert(ch21 >= 0);
     int64_t start = now();
     struct chclause cls17[] = {{CHRECV, ch21, &val, sizeof(val)}};
@@ -351,7 +310,7 @@ int main() {
     hclose(ch21);
 
     /* Test unexpired 'deadline' clause. */
-    int ch22 = channel(sizeof(int), 0);
+    int ch22 = channel(sizeof(int));
     errno_assert(ch22 >= 0);
     start = now();
     int hndl11 = go(sender3(ch22, 4444, start + 50));

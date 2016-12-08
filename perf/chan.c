@@ -45,8 +45,8 @@ int main(int argc, char *argv[]) {
     }
     long count = atol(argv[1]) * 1000000;
 
-    int out = channel(sizeof(int), 0);
-    int in = channel(sizeof(int), 0);
+    int out = channel(sizeof(int));
+    int in = channel(sizeof(int));
 
     int64_t start = now();
     go(worker(out, in));
