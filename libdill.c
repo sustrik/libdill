@@ -32,6 +32,11 @@
 #include "libdill.h"
 #include "utils.h"
 
+/* Returns t2 - t1; assumes that t2 > t1. */
+static inline int64_t nowdiff(uint64_t t2, uint64_t t1) {
+	return t2 < t1 ? t1 - t2 : t2 - t1;
+}
+
 int64_t now(void) {
 #if defined __APPLE__
     static mach_timebase_info_data_t dill_mtid = {0};
@@ -40,10 +45,17 @@ int64_t now(void) {
     uint64_t ticks = mach_absolute_time();
     return (int64_t)(ticks * dill_mtid.numer / dill_mtid.denom / 1000000);
 #elif defined CLOCK_MONOTONIC
+    static uint64_t initialized = 0;
+    static uint64_t start = 0;
     struct timespec ts;
     int rc = clock_gettime(CLOCK_MONOTONIC, &ts);
-    dill_assert (rc == 0);
-    return ((int64_t)ts.tv_sec) * 1000 + (((int64_t)ts.tv_nsec) / 1000000);
+    dill_assert(rc == 0);
+    uint64_t t = ((uint64_t)ts.tv_sec) * 1000 + (((uint64_t)ts.tv_nsec) / 1000000);
+    if(dill_slow(!initialized)) {
+        start = t;
+        initialized = 1;
+    }
+    return nowdiff(t, start);
 #else
     /* This is slow and error-prone (time can jump backwards!) but it's just
        a last resort option. */
