@@ -54,6 +54,13 @@ matrix:
     env: STATIC=1 NOTHREADS=1
   - os: linux
     compiler: gcc
+    env: DIST=1
+    addons:
+      apt:
+        packages:
+          - pandoc
+  - os: linux
+    compiler: gcc
     env: POLL=1
     addons:
       apt:
@@ -175,7 +182,7 @@ branches:
 install:
   - ./autogen.sh
   - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census} ${NOTHREADS+--disable-threads} CFLAGS="-O3 ${POLL+-DDILL_POLL} ${ARCH_FALLBACK+-DDILL_ARCH_FALLBACK} ${THREAD_FALLBACK+-DDILL_THREAD_FALLBACK}"
-  - make V=1
+  - make V=1 ${DIST+dist}
 
 script:
   - make check
