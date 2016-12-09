@@ -55,6 +55,8 @@ matrix:
   - os: linux
     compiler: gcc
     env: DIST=1
+    dist: trusty
+    sudo: false
     addons:
       apt:
         packages:
