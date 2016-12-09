@@ -32,11 +32,6 @@
 #include "list.h"
 #include "utils.h"
 
-/* The channel. Memory layout of a channel looks like this:
-   +-----------+-------+
-   | dill_chan | item  |
-   +-----------+-------+
-*/
 struct dill_chan {
     /* Table of virtual functions. */
     struct hvfs vfs;
@@ -73,9 +68,7 @@ int channel(size_t itemsz) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
-    /* Allocate the channel structure followed by the item buffer. */
-    struct dill_chan *ch = (struct dill_chan*)
-        malloc(sizeof(struct dill_chan) + itemsz);
+    struct dill_chan *ch = malloc(sizeof(struct dill_chan));
     if(!ch) {errno = ENOMEM; return -1;}
     ch->vfs.query = dill_chan_query;
     ch->vfs.close = dill_chan_close;
