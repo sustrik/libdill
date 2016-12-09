@@ -11,9 +11,7 @@ int fdout(int fd, int64_t deadline);
 
 # DESCRIPTION
 
-Waits until file descriptor becomes writeable or until it gets into an error state. Both options cause successful return from the function. To distinguish between them you have to do subsequent write operation on the file descriptor.
-
-The function also exits if deadline expires.
+Waits until file descriptor becomes writeable or until it gets into an error state. Both options cause successful return from the function. To distinguish between the two outcomes you have to do subsequent write operation on the file descriptor.
 
 # RETURN VALUE
 

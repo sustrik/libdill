@@ -24,6 +24,11 @@ Returns 0 in case of success, -1 in case of error. In the latter case it sets `e
 # EXAMPLE
 
 ```c
-msleep(now() + 1000);
+int result = msleep(now() + 1000);
+if(result != 0) {
+    perror("Cannot sleep");
+    exit(1);
+}
+printf("Slept succefully for 1 second.\n");
 ```
 

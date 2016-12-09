@@ -26,6 +26,12 @@ None.
 # EXAMPLE
 
 ```c
-fdclean(fd);
+int fds[2];
+pipe(fds);
+use_the_pipe(fds);
+fdclean(fds[0]);
+close(fds[0]);
+fdclean(fds[1]);
+close(fds[1]);
 ```
 

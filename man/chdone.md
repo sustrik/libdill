@@ -28,6 +28,11 @@ The function returns 0 in case of success. In case of failure it returns -1 and 
 # EXAMPLE
 
 ```c
-int rc = chdone(ch);
+int result = chdone(ch);
+if(result != 0) {
+    perror("Channel cannot be terminated");
+    exit(1);
+}
+printf("Channel successfully terminated.\n", val);
 ```
 

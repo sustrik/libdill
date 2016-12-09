@@ -17,8 +17,8 @@ The function is meant to be used for creating deadlines. For example, a point of
 
 Following values have special meaning and cannot be returned by the function:
 
-* *0*: Immediate.
-* *-1*: Infinite.
+* *0*: Immediate deadline.
+* *-1*: Infinite deadline.
 
 # RETURN VALUE
 
@@ -31,6 +31,9 @@ None.
 # EXAMPLE
 
 ```c
-chrecv(ch, &val, sizeof(val), now() + 1000);
+int result = chrecv(ch, &val, sizeof(val), now() + 1000);
+if(result == -1 && errno == ETIMEDOUT) {
+    printf("One second elapsed without receiving a message.\n");
+}
 ```
 

@@ -57,5 +57,15 @@ struct chclause clauses[] = {
     {CHRECV, ch, &val2, sizeof(val2)}
 };
 int result = choose(clauses, 2, now() + 1000);
+if(result == -1) {
+    perror("Choose failed");
+    exit(1);
+}
+if(result == 0) {
+    printf("Value %d sent.\n", val1);
+}
+if(result == 1) {
+    printf("Value %d received.\n", val2);
+}
 ```
 

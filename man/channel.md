@@ -27,6 +27,10 @@ Returns a channel handle. In the case of error it returns -1 and sets `errno` to
 # EXAMPLE
 
 ```c
-int ch = channel(sizeof(int), 100);
+int ch = channel(sizeof(int));
+if(ch == -1) {
+    perror("Cannot create channel");
+    exit(1);
+}
 ```
 

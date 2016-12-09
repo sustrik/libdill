@@ -35,5 +35,10 @@ The function returns 0 in case of success or -1 in case of error. In the latter 
 ```c
 int val = 42;
 chsend(ch, &val, sizeof(val), now() + 1000);
+if(result != 0) {
+    perror("Cannot send message");
+    exit(1);
+}
+printf("Value %d sent successfully.\n", val);
 ```
 

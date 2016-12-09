@@ -34,6 +34,11 @@ The function returns 0 in case of success or -1 in case of error. In the latter 
 
 ```c
 int val;
-chrecv(ch, &val, sizeof(val), now() + 1000);
+int result = chrecv(ch, &val, sizeof(val), now() + 1000);
+if(result != 0) {
+    perror("Cannot receive message");
+    exit(1);
+}
+printf("Value %d received.\n", val);
 ```
 

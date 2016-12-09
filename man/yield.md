@@ -26,6 +26,9 @@ The function returns 0 in case of success or -1 in case of error. In the latter 
 # EXAMPLE
 
 ```c
-yield();
+for(i = 0; i != 1000000; ++i) {
+    expensive_computation();
+    yield(); /* Give other coroutines a chance to run. */
+}
 ```
 
