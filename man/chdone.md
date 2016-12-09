@@ -1,6 +1,6 @@
 # NAME
 
-chdone - mark the channel as closed for sending
+chdone - mark the channel as closed
 
 # SYNOPSIS
 
@@ -13,9 +13,7 @@ int chdone(int ch);
 
 This function is used to let all the users of the channel, that there will be no new messages on the channel, ever.
 
-After `chdone` is called, all attempts to `chsend` to the channel will fail with `EPIPE` error.
-
-After `chdone` is called and all remaining messages are read from the channel all further attempts to `chrecv` from the channel will fail with `EPIPE` error.
+After `chdone` is called, all attempts to `chsend` or `chrecv` on the channel will fail with `EPIPE` error.
 
 # RETURN VALUE
 

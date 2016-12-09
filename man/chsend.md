@@ -15,7 +15,7 @@ Send a message to the channel. First parameter is the channel handle. Second poi
 
 The size of the buffer must match the size of elements stored in the channel, as supplied to `channel` function.
 
-If there's no space in the channel for the message the function waits until it becomes available or until deadline expires.
+If there's no receiver for the message the function waits until one becomes available or until deadline expires.
 
 # RETURN VALUE
 

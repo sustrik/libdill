@@ -15,7 +15,7 @@ Retrieves a message from the channel. First parameter is the channel handle. Sec
 
 The size of the buffer must match the size of elements stored in the channel, as supplied to `channel` function.
 
-If there's no message in the channel the function waits until one becomes available or until deadline expires.
+If there's no sender available the function waits until one arrives or until deadline expires.
 
 # RETURN VALUE
 

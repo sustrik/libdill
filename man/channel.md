@@ -6,12 +6,14 @@ channel - create a channel
 
 ```c
 #include <libdill.h>
-int channel(size_t itemsz, size_t bufsz);
+int channel(size_t itemsz);
 ```
 
 # DESCRIPTION
 
-Creates a channel. First parameter is the size of the items to be sent through the channel, in bytes. Second parameter is number of items that will fit into the channel. Setting this argument to zero creates an unbuffered channel.
+Creates a channel. The parameter is the size of the items to be sent through the channel, in bytes.
+
+The channel is a synchronizationn primitive, not a container. It doesn't store any items.
 
 # RETURN VALUE
 

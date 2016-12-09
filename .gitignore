@@ -42,8 +42,8 @@ tests/threads
 tests/threads2
 perf/.dirstamp
 perf/chan
-perf/chrecv
-perf/chsend
 perf/ctxswitch
 perf/go
 perf/whispers
+perf/chdone
+perf/choose
