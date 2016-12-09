@@ -186,7 +186,7 @@ install:
   - make V=1 ${DIST+dist}
 
 script:
-  - make check
+  - test ${DIST+x} || make check
 
 after_failure:
   - for f in tests/*.log; do echo; echo "${f}:"; cat $f; done;
