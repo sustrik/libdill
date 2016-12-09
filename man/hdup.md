@@ -26,6 +26,9 @@ The duplicated handle in case of success or -1 in case of failure. In the latter
 # EXAMPLE
 
 ```c
-int h2 = hdup(h1);
+int ch1 = channel(sizeof(int));
+int ch2 = hdup(ch1);
+hclose(ch2);
+hclose(ch1);
 ```
 

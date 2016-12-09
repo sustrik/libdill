@@ -13,14 +13,14 @@ void *hquery(int h, const void *type);
 
 Returns opaque pointer associated with the handle and the type. This function is a fundamental construct for building APIs on top of handles.
 
-Argument `type` is not interpreted in any way. It is used only as a unique ID. An unique ID can be created, for example, like this:
+Argument `type` is not interpreted in any way. It is used only as an unique ID. An unique ID can be created, for instance, like this:
 
 ```c
 int foobar_placeholder = 0;
 const void *foobar_type = &foobar_placeholder;
 ```
 
-The return value has no specified semantics, it's an opaque pointer. Typical use case is to return pointer to a table of virtual functions. These virtual functions can be the used to access handle's functionality:
+The return value has no specified semantics, it is an opaque pointer. Typical use case is to return pointer to a table of virtual functions. These virtual functions can be the used to access handle's functionality:
 
 ```c
 struct foobar_vfs {
