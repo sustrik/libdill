@@ -213,32 +213,26 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
         if(dill_slow(!ch)) return i;
         if(dill_slow(cl->len != ch->sz || (cl->len > 0 && !cl->val))) {
             errno = EINVAL; return i;}
+        struct dill_chcl *chcl;
         switch(cl->op) {
         case CHSEND:
             if(dill_slow(ch->done)) {errno = EPIPE; return i;}
-            if(!dill_list_empty(&ch->in)) {
-                /* Copy the message directly to the waiting receiver. */
-                struct dill_chcl *chcl = dill_cont(dill_list_begin(&ch->in),
-                    struct dill_chcl, cl.epitem);
-                memcpy(chcl->val, cl->val, cl->len);
-                dill_trigger(&chcl->cl, 0);
-                errno = 0;
-                return i;
-            }
-            break;
+            if(dill_list_empty(&ch->in)) break;
+            chcl = dill_cont(dill_list_begin(&ch->in),
+                struct dill_chcl, cl.epitem);
+            memcpy(chcl->val, cl->val, cl->len);
+            dill_trigger(&chcl->cl, 0);
+            errno = 0;
+            return i;
         case CHRECV:
             if(dill_slow(ch->done)) {errno = EPIPE; return i;}
-            if(!dill_list_empty(&ch->out)) {
-                /* A sender waiting to send.
-                   Copy the message directly from a waiting sender. */
-                struct dill_chcl *chcl = dill_cont(
-                    dill_list_begin(&ch->out), struct dill_chcl, cl.epitem);
-                memcpy(cl->val, chcl->val, ch->sz);
-                dill_trigger(&chcl->cl, 0);
-                errno = 0;
-                return i;
-            }
-            break;
+            if(dill_list_empty(&ch->out)) break;
+            chcl = dill_cont(dill_list_begin(&ch->out),
+                struct dill_chcl, cl.epitem);
+            memcpy(cl->val, chcl->val, ch->sz);
+            dill_trigger(&chcl->cl, 0);
+            errno = 0;
+            return i;
         default:
             errno = EINVAL;
             return i;
