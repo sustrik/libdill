@@ -56,11 +56,10 @@ matrix:
     compiler: gcc
     env: DIST=1
     dist: trusty
-    sudo: false
-    addons:
-      apt:
-        packages:
-          - pandoc
+    sudo: true
+    before_install:
+      - sudo apt-get -qq update
+      - sudo apt-get install -y pandoc
   - os: linux
     compiler: gcc
     env: POLL=1
