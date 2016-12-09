@@ -45,7 +45,7 @@ int main() {
     assert(diff > -20 && diff < 20);
 
     /* msleep-sort */
-    int ch = channel(sizeof(int), 0);
+    int ch = channel(sizeof(int));
     errno_assert(ch >= 0);
     int hndls[4];
     hndls[0] = go(delay(30, ch));

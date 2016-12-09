@@ -68,9 +68,9 @@ int main() {
 
     signal(SIGNAL, signal_intr);
 
-    int sendch = channel(sizeof(char), 0);
+    int sendch = channel(sizeof(char));
     errno_assert(sendch >= 0);
-    int recvch = channel(sizeof(char), 0);
+    int recvch = channel(sizeof(char));
     errno_assert(recvch >= 0);
 
     int i;
