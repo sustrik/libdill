@@ -54,6 +54,14 @@ matrix:
     env: STATIC=1 NOTHREADS=1
   - os: linux
     compiler: gcc
+    env: DIST=1
+    dist: trusty
+    sudo: true
+    before_install:
+      - sudo apt-get -qq update
+      - sudo apt-get install -y pandoc
+  - os: linux
+    compiler: gcc
     env: POLL=1
     addons:
       apt:
@@ -175,10 +183,10 @@ branches:
 install:
   - ./autogen.sh
   - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census} ${NOTHREADS+--disable-threads} CFLAGS="-O3 ${POLL+-DDILL_POLL} ${ARCH_FALLBACK+-DDILL_ARCH_FALLBACK} ${THREAD_FALLBACK+-DDILL_THREAD_FALLBACK}"
-  - make V=1
+  - make V=1 ${DIST+dist}
 
 script:
-  - make check
+  - test ${DIST+x} || make check
 
 after_failure:
   - for f in tests/*.log; do echo; echo "${f}:"; cat $f; done;
