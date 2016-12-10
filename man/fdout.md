@@ -27,6 +27,17 @@ The function returns 0 in case of success or -1 in case of error. In the latter 
 # EXAMPLE
 
 ```c
-fdout(fd, -1);
+void sendbuf(int fd, const char *buf, size_t len) {
+    int result = fcntl(fd, F_SETFL, O_NONBLOCK);
+    assert(result == 0);
+    while(len) {
+        result = fdout(fd, -1);
+        assert(result == 0);
+        ssize_t sent = send(fd, buf, len, 0);
+        assert(len > 0);
+        buf += sent;
+        len -= sent;
+    }
+}
 ```
 
