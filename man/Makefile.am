@@ -43,11 +43,11 @@ man-local: $(man3_MANS)
 
 # Extract the library function name from filename for the title
 %.txt: %.md
-	echo "$(patsubst %.md,%,$<)(3)" | tr 'a-z' 'A-Z' > $@
+	$(AM_V_GEN) echo "$(patsubst %.md,%,$<)(3)" | tr 'a-z' 'A-Z' > $@
 
 # Compile the man page document
 %.3: %.md %.txt
-	@PANDOC@ -s -t man $< -o $@ \
+	$(AM_V_GEN) @PANDOC@ -s -t man $< -o $@ \
 		-M author="Martin Sustrik" \
 		-M header="libdill Library Functions" \
 		-M footer="libdill" \
@@ -61,3 +61,4 @@ clean-local-check:
 	-rm $(man3_MANS)
 
 EXTRA_DIST = $(man3_MANS)
+

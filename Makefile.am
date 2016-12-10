@@ -61,7 +61,8 @@ libdill_la_SOURCES = \
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libdill.pc
 
-libdill_la_LDFLAGS = -no-undefined -version-info @DILL_LIBTOOL_VERSION@ @PTHREAD_LIBS@
+libdill_la_LDFLAGS = \
+    -no-undefined -version-info @DILL_LIBTOOL_VERSION@ @PTHREAD_LIBS@
 
 # Turn the source fortification in glibc off - otherwise it would panic
 # because of the stack pointer black magic in 'go' macro.
