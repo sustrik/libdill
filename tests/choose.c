@@ -325,6 +325,32 @@ int main() {
     rc = hclose(hndl11);
     errno_assert(rc == 0);
 
+    /* Test that first channel in the array is prioritized. */
+    int ch23 = channel(sizeof(int));
+    errno_assert(ch23 >= 0);
+    int ch24 = channel(sizeof(int));
+    errno_assert(ch24 >= 0);
+    int hndl12 = go(sender1(ch23, 0));
+    errno_assert(hndl12 >= 0);
+    int hndl13 = go(sender1(ch24, 0));
+    errno_assert(hndl13 >= 0);
+    struct chclause cls19[] = {
+        {CHRECV, ch24, &val, sizeof(val)},
+        {CHRECV, ch23, &val, sizeof(val)}
+    };
+    rc = choose(cls19, 2, -1);
+    choose_assert(0, 0);
+    rc = chrecv(ch23, &val, sizeof(val), -1);
+    errno_assert(rc == 0);
+    rc = hclose(hndl13);
+    errno_assert(rc == 0);
+    rc = hclose(hndl12);
+    errno_assert(rc == 0);
+    rc = hclose(ch24);
+    errno_assert(rc == 0);
+    rc = hclose(ch23);
+    errno_assert(rc == 0);
+
     return 0;
 }
 
