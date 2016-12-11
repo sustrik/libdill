@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     int val = 0;
     long i;
     for(i = 0; i != count; ++i) {
-        int ch = channel(sizeof(int));
+        int ch = chmake(sizeof(int));
         int h = go(worker(ch));
         chdone(ch);
         hclose(h);

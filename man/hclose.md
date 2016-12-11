@@ -28,7 +28,7 @@ Returns 0 in case of success. In case of failure it returns -1 and sets `errno` 
 # EXAMPLE
 
 ```c
-int ch = channel(sizeof(int));
+int ch = chmake(sizeof(int));
 hclose(ch);
 ```
 

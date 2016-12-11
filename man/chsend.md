@@ -13,7 +13,7 @@ int chsend(int ch, const void *val, size_t len, int64_t deadline);
 
 Send a message to the channel. First parameter is the channel handle. Second points to the buffer that contains the message to send. Third is the size of the buffer.
 
-The size of the buffer must match the size of elements stored in the channel, as supplied to `channel` function.
+The size of the buffer must match the size of elements stored in the channel, as supplied to `chmake` function.
 
 If there's no receiver for the message the function waits until one becomes available or until deadline expires.
 

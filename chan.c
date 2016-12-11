@@ -64,7 +64,7 @@ static void dill_chan_close(struct hvfs *vfs);
 /*  Channel creation and deallocation.                                        */
 /******************************************************************************/
 
-int channel(size_t itemsz) {
+int chmake(size_t itemsz) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;

@@ -104,7 +104,7 @@ int main() {
     int rc;
 
     /* Receiver waits for sender. */
-    int ch1 = channel(sizeof(int));
+    int ch1 = chmake(sizeof(int));
     errno_assert(ch1 >= 0);
     int hndl1 = go(sender(ch1, 1, 333));
     errno_assert(hndl1 >= 0);
@@ -118,7 +118,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Sender waits for receiver. */
-    int ch2 = channel(sizeof(int));
+    int ch2 = chmake(sizeof(int));
     errno_assert(ch2 >= 0);
     int hndl2 = go(sender(ch2, 0, 444));
     errno_assert(hndl2 >= 0);
@@ -130,7 +130,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Test two simultaneous senders. */
-    int ch3 = channel(sizeof(int));
+    int ch3 = chmake(sizeof(int));
     errno_assert(ch3 >= 0);
     int hndl3[2];
     hndl3[0] = go(sender(ch3, 0, 888));
@@ -152,7 +152,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Test two simultaneous receivers. */
-    int ch4 = channel(sizeof(int));
+    int ch4 = chmake(sizeof(int));
     errno_assert(ch4 >= 0);
     int hndl4[2];
     hndl4[0] = go(receiver(ch4, 333));
@@ -173,7 +173,7 @@ int main() {
 
     /* Test typed channels. */
     int hndl5[2];
-    int ch5 = channel(sizeof(char));
+    int ch5 = chmake(sizeof(char));
     errno_assert(ch5 >= 0);
     hndl5[0] = go(charsender(ch5, 111));
     errno_assert(hndl5[0] >= 0);
@@ -182,7 +182,7 @@ int main() {
     errno_assert(rc == 0);
     assert(charval == 111);
     hclose(ch5);
-    int ch6 = channel(sizeof(struct foo));
+    int ch6 = chmake(sizeof(struct foo));
     errno_assert(ch6 >= 0);
     struct foo foo1 = {555, 222};
     hndl5[1] = go(structsender(ch6, foo1));
@@ -198,7 +198,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Test simple chdone() scenarios. */
-    int ch8 = channel(sizeof(int));
+    int ch8 = chmake(sizeof(int));
     errno_assert(ch8 >= 0);
     rc = chdone(ch8);
     errno_assert(rc == 0);
@@ -211,9 +211,9 @@ int main() {
     hclose(ch8);
 
     /* Test whether chdone() unblocks all receivers. */
-    int ch12 = channel(sizeof(int));
+    int ch12 = chmake(sizeof(int));
     errno_assert(ch12 >= 0);
-    int ch13 = channel(sizeof(int));
+    int ch13 = chmake(sizeof(int));
     errno_assert(ch13 >= 0);
     int hndl6[2];
     hndl6[0] = go(receiver2(ch12, ch13));
@@ -236,7 +236,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Test whether chdone() unblocks blocked senders. */
-    int ch15 = channel(sizeof(int));
+    int ch15 = chmake(sizeof(int));
     errno_assert(ch15 >= 0);
     int hndl8[3];
     hndl8[0] = go(sender2(ch15));
@@ -258,7 +258,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Test whether hclose() unblocks blocked senders and receivers. */
-    int ch16 = channel(sizeof(int));
+    int ch16 = chmake(sizeof(int));
     errno_assert(ch16 >= 0);
     int hndl9[2];
     hndl9[0] = go(receiver3(ch16));
@@ -274,7 +274,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Test cancelation. */
-    int ch17 = channel(sizeof(int));
+    int ch17 = chmake(sizeof(int));
     errno_assert(ch17 >= 0);
     int hndl10 = go(cancel(ch17));
     errno_assert(hndl10 >= 0);
@@ -282,7 +282,7 @@ int main() {
     hclose(ch17);
 
     /* Receiver waits for sender (zero-byte message). */
-    int ch18 = channel(0);
+    int ch18 = chmake(0);
     errno_assert(ch18 >= 0);
     int hndl11 = go(sender3(ch18, 1));
     errno_assert(hndl11 >= 0);
@@ -293,7 +293,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Sender waits for receiver (zero-byte message). */
-    int ch19 = channel(0);
+    int ch19 = chmake(0);
     errno_assert(ch19 >= 0);
     int hndl12 = go(sender3(ch19, 0));
     errno_assert(hndl12 >= 0);

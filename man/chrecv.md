@@ -13,7 +13,7 @@ int chrecv(int ch, void *val, size_t len, int64_t deadline);
 
 Retrieves a message from the channel. First parameter is the channel handle. Second points to the buffer to receive the message. Third is the size of the buffer.
 
-The size of the buffer must match the size of elements stored in the channel, as supplied to `channel` function.
+The size of the buffer must match the size of elements stored in the channel, as supplied to `chmake` function.
 
 If there's no sender available the function waits until one arrives or until deadline expires.
 
