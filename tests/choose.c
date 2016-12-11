@@ -351,6 +351,19 @@ int main() {
     rc = hclose(ch23);
     errno_assert(rc == 0);
 
+    /* Try adding the same channel to choose twice. Doing so is pointless,
+       but it shouldn't crash the application. */
+    int ch25 = channel(sizeof(int));
+    errno_assert(ch25 >= 0);
+    struct chclause cls20[] = {
+        {CHRECV, ch25, &val, sizeof(val)},
+        {CHRECV, ch25, &val, sizeof(val)}
+    };
+    rc = choose(cls20, 2, now() + 50);
+    choose_assert(-1, ETIMEDOUT);
+    rc = hclose(ch25);
+    errno_assert(rc == 0);
+
     return 0;
 }
 
