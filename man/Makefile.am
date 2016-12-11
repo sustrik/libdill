@@ -21,8 +21,8 @@
 # IN THE SOFTWARE.
 
 man3_MANS = \
-    channel.3 \
     chdone.3 \
+    chmake.3 \
     choose.3 \
     chrecv.3 \
     chsend.3 \
