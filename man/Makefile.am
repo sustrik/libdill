@@ -41,17 +41,13 @@ man3_MANS = \
 
 man-local: $(man3_MANS)
 
-# Extract the library function name from filename for the title
-%.txt: %.md
-	$(AM_V_GEN) echo "$(patsubst %.md,%,$<)(3)" | tr 'a-z' 'A-Z' > $@
-
 # Compile the man page document
-%.3: %.md %.txt
+%.3: %.md
 	$(AM_V_GEN) @PANDOC@ -s -t man $< -o $@ \
 		-M author="Martin Sustrik" \
 		-M header="libdill Library Functions" \
 		-M footer="libdill" \
-		-M title="$(shell cat $(patsubst %.3,%.txt,$@))"
+		-M title="`echo "$(patsubst %.md,%,$<)(3)" | tr 'a-z' 'A-Z'`"
 
 clean-local: clean-local-check
 
