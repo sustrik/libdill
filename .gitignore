@@ -47,3 +47,4 @@ perf/go
 perf/whispers
 perf/chdone
 perf/choose
+man/*.3
