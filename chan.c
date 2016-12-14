@@ -43,8 +43,8 @@ struct dill_chan {
     struct dill_list out;
     /* 1 if chdone() was already called. 0 otherwise. */
     unsigned int done : 1;
-    /* 1 if the object was created via chmake_s() function. */
-    unsigned int storage : 1;
+    /* 1 if the object was created via chmake_mem() function. */
+    unsigned int mem : 1;
 };
 
 /* Channel clause. */
@@ -80,7 +80,7 @@ int chmake_mem(size_t itemsz, struct chmem *mem) {
     dill_list_init(&ch->in);
     dill_list_init(&ch->out);
     ch->done = 0;
-    ch->storage = 1;
+    ch->mem = 1;
     /* Allocate a handle to point to the channel. */
     return hmake(&ch->vfs);
 }
@@ -95,7 +95,7 @@ int chmake(size_t itemsz) {
         errno = err;
         return -1;
     }
-    ch->storage = 0;
+    ch->mem = 0;
     return h;
 }
 
@@ -120,7 +120,7 @@ static void dill_chan_close(struct hvfs *vfs) {
             struct dill_clause, epitem);
         dill_trigger(cl, EPIPE);
     }
-    if(!ch->storage) free(ch);
+    if(!ch->mem) free(ch);
 }
 
 /******************************************************************************/
