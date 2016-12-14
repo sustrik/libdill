@@ -59,8 +59,8 @@ struct dill_cr {
     unsigned int no_blocking2 : 1;
     /* Set once coroutine has finished its execution. */
     unsigned int done : 1;
-    /* If true, the coroutine was launched via go_stack. */
-    unsigned int go_stack : 1;
+    /* If true, the coroutine was launched via go_mem. */
+    unsigned int mem : 1;
     /* When coroutine handle is being closed, this is the pointer to the
        coroutine that is doing the hclose() call. */
     struct dill_cr *closer;

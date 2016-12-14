@@ -251,7 +251,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     cr->no_blocking1 = 0;
     cr->no_blocking2 = 0;
     cr->done = 0;
-    cr->go_stack = *ptr ? 1 : 0;
+    cr->mem = *ptr ? 1 : 0;
 #if defined DILL_VALGRIND
     cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stacksz, cr);
 #endif
@@ -347,7 +347,7 @@ static void dill_cr_close(struct hvfs *vfs) {
     VALGRIND_STACK_DEREGISTER(cr->sid);
 #endif
     /* Now that the coroutine is finished deallocate it. */
-    if(!cr->go_stack) dill_freestack(cr + 1);
+    if(!cr->mem) dill_freestack(cr + 1);
 }
 
 /******************************************************************************/
