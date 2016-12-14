@@ -1,12 +1,12 @@
 # NAME
 
-go_stack - start a coroutine on a user-supplied stack
+go_mem - start a coroutine on a user-supplied stack
 
 # SYNOPSIS
 
 ```c
 #include <libdill.h>
-int go_stack(expression, void *stk, size_t stklen);
+int go_mem(expression, void *stk, size_t stklen);
 ```
 
 # DESCRIPTION
@@ -17,7 +17,7 @@ Coroutine is executed in concurrent manner and its lifetime may exceed the lifet
 
 The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.
 
-Any function to be invoked using go_stack() must be declared with `coroutine` specifier.
+Any function to be invoked using go_mem() must be declared with `coroutine` specifier.
 
 *WARNING*: Coroutine will most likely work even without `coroutine` specifier. However, it may fail in random non-deterministic fashion, depending on a particular combination of compiler, optimisation level and code in question. Also, all arguments to a coroutine must not be function calls. If they are the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine do the computation first, then pass the result as an argument. Instead of:
 
@@ -50,6 +50,6 @@ coroutine void add(int a, int b) {
 
 ...
 char stk[16384];
-int h = go_stack(add(1, 2), stk, sizeof(stk));
+int h = go_mem(add(1, 2), stk, sizeof(stk));
 ```
 

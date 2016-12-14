@@ -23,7 +23,7 @@
 man3_MANS = \
     chdone.3 \
     chmake.3 \
-    chmake_s.3 \
+    chmake_mem.3 \
     choose.3 \
     chrecv.3 \
     chsend.3 \
@@ -31,7 +31,7 @@ man3_MANS = \
     fdin.3 \
     fdout.3 \
     go.3 \
-    go_s.3 \
+    go_mem.3 \
     hclose.3 \
     hdup.3 \
     hmake.3 \

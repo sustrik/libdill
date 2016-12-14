@@ -53,7 +53,7 @@ struct dill_chcl {
     void *val;
 };
 
-DILL_CT_ASSERT(sizeof(struct chstorage) >= sizeof(struct dill_chan));
+DILL_CT_ASSERT(sizeof(struct chmem) >= sizeof(struct dill_chan));
 
 /******************************************************************************/
 /*  Handle implementation.                                                    */
@@ -68,12 +68,12 @@ static void dill_chan_close(struct hvfs *vfs);
 /*  Channel creation and deallocation.                                        */
 /******************************************************************************/
 
-int chmake_s(size_t itemsz, struct chstorage *storage) {
-    if(dill_slow(!storage)) {errno = EINVAL; return -1;}
+int chmake_mem(size_t itemsz, struct chmem *mem) {
+    if(dill_slow(!mem)) {errno = EINVAL; return -1;}
     /* Return ECANCELED if the coroutine is shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
-    struct dill_chan *ch = (struct dill_chan*)storage;
+    struct dill_chan *ch = (struct dill_chan*)mem;
     ch->vfs.query = dill_chan_query;
     ch->vfs.close = dill_chan_close;
     ch->sz = itemsz;
@@ -88,7 +88,7 @@ int chmake_s(size_t itemsz, struct chstorage *storage) {
 int chmake(size_t itemsz) {
     struct dill_chan *ch = malloc(sizeof(struct dill_chan));
     if(dill_slow(!ch)) {errno = ENOMEM; return -1;}
-    int h = chmake_s(itemsz, (struct chstorage*)ch);
+    int h = chmake_mem(itemsz, (struct chmem*)ch);
     if(dill_slow(h < 0)) {
         int err = errno;
         free(ch);

@@ -304,8 +304,8 @@ int main() {
     errno_assert(rc == 0);
 
     /* Channel with user-supplied storage. */
-    struct chstorage storage;
-    int ch20 = chmake_s(0, &storage);
+    struct chmem mem;
+    int ch20 = chmake_mem(0, &mem);
     errno_assert(ch20 >= 0);
     rc = chrecv(ch20, NULL, 0, now() + 50);
     errno_assert(rc == -1 && errno == ETIMEDOUT);
