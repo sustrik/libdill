@@ -115,10 +115,10 @@ int main() {
     rc = msleep(now() + 100);
     errno_assert(rc == 0);
 
-    /* Test go_stack. */
+    /* Test go_s. */
     char *stack = malloc(4096);
     assert(stack);
-    cr1 = go_stack(dummy(), stack, 4096);
+    cr1 = go_s(dummy(), stack, 4096);
     errno_assert(cr1 >= 0);
     rc = msleep(now() + 100);
     errno_assert(rc == 0);

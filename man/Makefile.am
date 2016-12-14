@@ -31,7 +31,7 @@ man3_MANS = \
     fdin.3 \
     fdout.3 \
     go.3 \
-    go_stack.3 \
+    go_s.3 \
     hclose.3 \
     hdup.3 \
     hmake.3 \

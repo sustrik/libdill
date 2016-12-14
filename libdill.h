@@ -209,7 +209,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
    Given that there's no other way to do this, screw other compilers for now.
    See https://gcc.gnu.org/onlinedocs/gcc-3.2/gcc/Statement-Exprs.html */
 
-#define go_stack(fn, ptr, len) \
+#define go_s(fn, ptr, len) \
     ({\
         sigjmp_buf *ctx;\
         void *stk = (ptr);\
@@ -224,7 +224,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
         h;\
     })
 
-#define go(fn) go_stack(fn, NULL, 0)
+#define go(fn) go_s(fn, NULL, 0)
 
 DILL_EXPORT int yield(void);
 DILL_EXPORT int msleep(int64_t deadline);
