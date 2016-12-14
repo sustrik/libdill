@@ -17,6 +17,8 @@ The size of the buffer must match the size of elements stored in the channel, as
 
 If there's no receiver for the message the function waits until one becomes available or until deadline expires.
 
+`deadline` is a point in time when the operation should time out. Use `now` function to get current point in time. 0 means immediate timeout, i.e. perform the operation if possible, return without blocking if not. -1 means no deadline, i.e. the call will block forever if the operation cannot be performed.
+
 # RETURN VALUE
 
 The function returns 0 in case of success or -1 in case of error. In the latter case it sets `errno` to one of the values below.

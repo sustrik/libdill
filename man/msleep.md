@@ -1,6 +1,6 @@
 # NAME
 
-msleep - waits until deadline
+msleep - waits until deadline expires
 
 # SYNOPSIS
 
@@ -11,7 +11,7 @@ int msleep(int64_t deadline);
 
 # DESCRIPTION
 
-Waits until the deadline expires.
+`deadline` is a point in time when the operation should finish. Use `now` function to get current point in time. 0 will cause the function to return without blocking. -1 will cause it to block forever.
 
 # RETURN VALUE
 

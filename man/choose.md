@@ -26,6 +26,8 @@ Accepts a list of channel operations. Performs one that can be done first. If mu
 
 `op` is operation code, either `CHSEND` or `CHRECV`. `ch` is a channel handle. `val` is a pointer to buffer to send from or receive to. `len` is size of the buffer, in bytes.
 
+`deadline` is a point in time when the operation should time out. Use `now` function to get current point in time. 0 means immediate timeout, i.e. perform the operation if possible, return without blocking if not. -1 means no deadline, i.e. the call will block forever if the operation cannot be performed.
+
 If deadline expires before any operation can be performed, the function fails with `ETIMEDOUT` error.
 
 # RETURN VALUE
