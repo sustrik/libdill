@@ -41,8 +41,10 @@ struct dill_chan {
     struct dill_list in;
     /* List of clauses wanting to send to the channel. */
     struct dill_list out;
-    /* 1 is chdone() was already called. 0 otherwise. */
+    /* 1 if chdone() was already called. 0 otherwise. */
     unsigned int done : 1;
+    /* 1 if the object was created via chmake_s() function. */
+    unsigned int storage : 1;
 };
 
 /* Channel clause. */
@@ -50,6 +52,8 @@ struct dill_chcl {
     struct dill_clause cl;
     void *val;
 };
+
+DILL_CT_ASSERT(sizeof(struct chstorage) >= sizeof(struct dill_chan));
 
 /******************************************************************************/
 /*  Handle implementation.                                                    */
@@ -64,26 +68,34 @@ static void dill_chan_close(struct hvfs *vfs);
 /*  Channel creation and deallocation.                                        */
 /******************************************************************************/
 
-int chmake(size_t itemsz) {
-    /* Return ECANCELED if shutting down. */
+int chmake_s(size_t itemsz, struct chstorage *storage) {
+    if(dill_slow(!storage)) {errno = EINVAL; return -1;}
+    /* Return ECANCELED if the coroutine is shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
-    struct dill_chan *ch = malloc(sizeof(struct dill_chan));
-    if(!ch) {errno = ENOMEM; return -1;}
+    struct dill_chan *ch = (struct dill_chan*)storage;
     ch->vfs.query = dill_chan_query;
     ch->vfs.close = dill_chan_close;
     ch->sz = itemsz;
     dill_list_init(&ch->in);
     dill_list_init(&ch->out);
     ch->done = 0;
+    ch->storage = 1;
     /* Allocate a handle to point to the channel. */
-    int h = hmake(&ch->vfs);
+    return hmake(&ch->vfs);
+}
+
+int chmake(size_t itemsz) {
+    struct dill_chan *ch = malloc(sizeof(struct dill_chan));
+    if(dill_slow(!ch)) {errno = ENOMEM; return -1;}
+    int h = chmake_s(itemsz, (struct chstorage*)ch);
     if(dill_slow(h < 0)) {
         int err = errno;
         free(ch);
         errno = err;
         return -1;
     }
+    ch->storage = 0;
     return h;
 }
 
@@ -108,7 +120,7 @@ static void dill_chan_close(struct hvfs *vfs) {
             struct dill_clause, epitem);
         dill_trigger(cl, EPIPE);
     }
-    free(ch);
+    if(!ch->storage) free(ch);
 }
 
 /******************************************************************************/

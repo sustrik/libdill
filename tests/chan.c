@@ -302,6 +302,16 @@ int main() {
     hclose(ch19);
     rc = hclose(hndl12);
     errno_assert(rc == 0);
+
+    /* Channel with user-supplied storage. */
+    struct chstorage storage;
+    int ch20 = chmake_s(0, &storage);
+    errno_assert(ch20 >= 0);
+    rc = chrecv(ch20, NULL, 0, now() + 50);
+    errno_assert(rc == -1 && errno == ETIMEDOUT);
+    rc = hclose(ch20);
+    errno_assert(rc == 0);
+
     return 0;
 }
 

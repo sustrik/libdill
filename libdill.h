@@ -246,7 +246,12 @@ struct chclause {
     size_t len;
 };
 
+struct chstorage {
+    char reserved[72];
+};
+
 DILL_EXPORT int chmake(size_t itemsz);
+DILL_EXPORT int chmake_s(size_t itemsz, struct chstorage *storage);
 DILL_EXPORT int chsend(int ch, const void *val, size_t len, int64_t deadline);
 DILL_EXPORT int chrecv(int ch, void *val, size_t len, int64_t deadline);
 DILL_EXPORT int chdone(int ch);
