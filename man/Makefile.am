@@ -23,6 +23,7 @@
 man3_MANS = \
     chdone.3 \
     chmake.3 \
+    chmake_s.3 \
     choose.3 \
     chrecv.3 \
     chsend.3 \
