@@ -33,6 +33,7 @@ cat templates/documentation-header.md manpage-index.md templates/documentation-f
 rm manpage-index.md
 
 # Build other documentation
+git rm *.html
 other="\
     build_options \
     compatibility \
