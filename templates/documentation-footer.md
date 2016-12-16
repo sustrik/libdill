@@ -28,7 +28,7 @@ Context switch have been seen to execute in 6 ns, coroutine creation in 26 ns. P
 
 `libmill` was a project to copy Go's concurrency model to C 1:1 without introducing any innovations or experiments. The project is finished now. It will be maintained but won't change in the future.
 
-`libdill` is a follow-up project that diverges from the Go model and experiments with structured concurrency. It is not stable yet and it may change a bit in the future.
+`libdill` is a follow-up project that diverges from the Go model and experiments with structured concurrency.
 
 Technically, there are following differences:
 
