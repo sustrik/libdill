@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="http://libdill.org/main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="http://libdill.org/index.html">Home</a></li>
+<li><a href="http://libdill.org/download.html">Download</a></li>
+<li><a href="http://libdill.org/documentation.html">Documentation</a></li>
+<li><a href="http://libdill.org/tutorial.html">Tutorial</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>hdup - duplicates a handle</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> hdup(<span class="dt">int</span> h);</code></pre>
+<h1 id="description">DESCRIPTION</h1>
+<p>Duplicates a handle. Both handles will refer to the same underlying object.</p>
+<p>Each duplicate of the handle requires it's own call to <code>hclose</code>. The underlying object is deallocated once all the handles pointing to it are closed.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>The duplicated handle in case of success or -1 in case of failure. In the latter case <code>errno</code> is set to one of the following values.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><code>EBADF</code>: Invalid handle.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> ch1 = chmake(<span class="kw">sizeof</span>(<span class="dt">int</span>));
+<span class="dt">int</span> ch2 = hdup(ch1);
+hclose(ch2);
+hclose(ch1);</code></pre>
+</body>

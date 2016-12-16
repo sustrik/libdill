@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="http://libdill.org/main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="http://libdill.org/index.html">Home</a></li>
+<li><a href="http://libdill.org/download.html">Download</a></li>
+<li><a href="http://libdill.org/documentation.html">Documentation</a></li>
+<li><a href="http://libdill.org/tutorial.html">Tutorial</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>fdclean - erases cached info about a file descriptor</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">void</span> fdclean(<span class="dt">int</span> fd);</code></pre>
+<h1 id="description">DESCRIPTION</h1>
+<p>This function drops any state cached by <code>libdill</code> associated with the file descriptor. It has to be called before the file descriptor is closed. If it is not, undefined behaviour may ensue.</p>
+<p>It should also be used when you are temporarily provided with a file descriptor by a third party library, just before returning the descriptor back to the original owner.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>None.</p>
+<h1 id="errors">ERRORS</h1>
+<p>None.</p>
+<h1 id="example">EXAMPLE</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> fds[<span class="dv">2</span>];
+pipe(fds);
+use_the_pipe(fds);
+fdclean(fds[<span class="dv">0</span>]);
+close(fds[<span class="dv">0</span>]);
+fdclean(fds[<span class="dv">1</span>]);
+close(fds[<span class="dv">1</span>]);</code></pre>
+</body>

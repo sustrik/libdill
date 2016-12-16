@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="http://libdill.org/main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="http://libdill.org/index.html">Home</a></li>
+<li><a href="http://libdill.org/download.html">Download</a></li>
+<li><a href="http://libdill.org/documentation.html">Documentation</a></li>
+<li><a href="http://libdill.org/tutorial.html">Tutorial</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>fdin - waits until file descriptor becomes readable</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> fdin(<span class="dt">int</span> fd, <span class="dt">int64_t</span> deadline);</code></pre>
+<h1 id="description">DESCRIPTION</h1>
+<p>Waits until file descriptor becomes readable or until it gets into an error state. Both options cause successful return from the function. To distinguish between the two outcomes you have to do subsequent read operation on the file descriptor.</p>
+<p><code>deadline</code> is a point in time when the operation should time out. Use <code>now</code> function to get current point in time. 0 means immediate timeout, i.e. return immediately if file descriptor is readable, return without blocking if it is not. -1 means no deadline, i.e. the call will block forever, if needed.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>The function returns 0 in case of success or -1 in case of error. In the latter case is sets <code>errno</code> to one of the following values.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><code>EBADF</code>: Not a file descriptor.<br /></li>
+<li><code>ECANCELED</code>: Current coroutine is being shut down.<br /></li>
+<li><code>EEXIST</code>: Another coroutine is already blocked on <code>fdin</code> with this file descriptor.<br /></li>
+<li><code>ETIMEDOUT</code>: Deadline expired while waiting for the file descriptor.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> result = fcntl(fd, F_SETFL, O_NONBLOCK);
+assert(result == <span class="dv">0</span>);
+<span class="kw">while</span>(<span class="dv">1</span>) {
+    result = fdin(fd, -<span class="dv">1</span>);
+    assert(result == <span class="dv">0</span>);
+    <span class="dt">char</span> buf[<span class="dv">1024</span>];
+    ssize_t len = recv(fd, buf, <span class="kw">sizeof</span>(buf), <span class="dv">0</span>);
+    assert(len &gt; <span class="dv">0</span>);
+    process_input(buf, len);
+}</code></pre>
+</body>

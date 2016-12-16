@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="http://libdill.org/main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="http://libdill.org/index.html">Home</a></li>
+<li><a href="http://libdill.org/download.html">Download</a></li>
+<li><a href="http://libdill.org/documentation.html">Documentation</a></li>
+<li><a href="http://libdill.org/tutorial.html">Tutorial</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>go - start a coroutine</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> go(expression);</code></pre>
+<h1 id="description">DESCRIPTION</h1>
+<p>Launches a coroutine that executes the function invocation passed as the argument.</p>
+<p>Coroutine is executed in concurrent manner and its lifetime may exceed the lifetime of the caller.</p>
+<p>The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.</p>
+<p>Any function to be invoked using go() must be declared with <code>coroutine</code> specifier.</p>
+<p><em>WARNING</em>: Coroutine will most likely work even without <code>coroutine</code> specifier. However, it may fail in random non-deterministic fashion, depending on a particular combination of compiler, optimisation level and code in question. Also, all arguments to a coroutine must not be function calls. If they are the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine do the computation first, then pass the result as an argument. Instead of:</p>
+<pre class="sourceCode c"><code class="sourceCode c">go(bar(foo(a)));</code></pre>
+<p>Do this:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> a = foo();
+go(bar(a));</code></pre>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>Returns a coroutine handle. In the case of error it returns -1 and sets <code>errno</code> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><code>ECANCELED</code>: Current coroutine is in the process of shutting down.<br /></li>
+<li><code>ENOMEM</code>: Not enough memory to allocate the coroutine stack.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> add(<span class="dt">int</span> a, <span class="dt">int</span> b) {
+    printf(<span class="st">&quot;%d+%d=%d</span><span class="ch">\n</span><span class="st">&quot;</span>, a, b, a + b);
+}
+
+...
+
+<span class="dt">int</span> h = go(add(<span class="dv">1</span>, <span class="dv">2</span>));</code></pre>
+</body>

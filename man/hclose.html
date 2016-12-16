@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="http://libdill.org/main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="http://libdill.org/index.html">Home</a></li>
+<li><a href="http://libdill.org/download.html">Download</a></li>
+<li><a href="http://libdill.org/documentation.html">Documentation</a></li>
+<li><a href="http://libdill.org/tutorial.html">Tutorial</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>hclose - hard-cancels a handle</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="dt">int</span> hclose(<span class="dt">int</span> h);</code></pre>
+<h1 id="description">DESCRIPTION</h1>
+<p>Closes a handle.</p>
+<p>Once all handles pointing to the same underlying object are closed the object is deallocated immediately.</p>
+<p>The function guarantees that all resources will be deallocated, however, it does not guarantee that handle's work will be fully finished. E.g. it may not flush data to network or similar.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>Returns 0 in case of success. In case of failure it returns -1 and sets <code>errno</code> to one of the following values.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><code>EBADF</code>: Invalid handle.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> ch = chmake(<span class="kw">sizeof</span>(<span class="dt">int</span>));
+hclose(ch);</code></pre>
+</body>

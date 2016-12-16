@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="http://libdill.org/main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="http://libdill.org/index.html">Home</a></li>
+<li><a href="http://libdill.org/download.html">Download</a></li>
+<li><a href="http://libdill.org/documentation.html">Documentation</a></li>
+<li><a href="http://libdill.org/tutorial.html">Tutorial</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>chmake_mem - create a channel in user-supplied memory</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
+<span class="kw">struct</span> chmem;
+<span class="dt">int</span> chmake_mem(size_t itemsz, <span class="kw">struct</span> chmem *mem);</code></pre>
+<h1 id="description">DESCRIPTION</h1>
+<p>Creates a channel in user-supplied memory.</p>
+<p>First parameter is the size of the items to be sent through the channel, in bytes.</p>
+<p>Second parameter is the memory to store channel data in. The memory cannot be deallocated before all handles referring to the channel are closed using <code>hclose</code> function. Otherwise, undefined behaviour ensues.</p>
+<p>Do not use this function unless you are hyper-otimizing your code and you want to avoid a single memory allocation per channel. Whenever possible, use <code>chmake</code> instead.</p>
+<p>The channel is a synchronizationn primitive, not a container. It doesn't store any items.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>Returns a channel handle. In the case of error it returns -1 and sets <code>errno</code> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><code>ECANCELED</code>: Current coroutine is in the process of shutting down.<br /></li>
+<li><code>EINVAL</code>: Invalid parameter.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> chitem {
+    <span class="dt">int</span> h;
+    <span class="kw">struct</span> chmem mem;
+};
+
+<span class="kw">struct</span> chitem *alloc_channels(size_t n) {
+    <span class="kw">struct</span> chitem *a = malloc(<span class="kw">sizeof</span>(<span class="kw">struct</span> chitem) * n);
+    <span class="dt">int</span> i;
+    <span class="kw">for</span>(i = <span class="dv">0</span>; i != n; ++i)
+        a[i].h = chmake_mem(<span class="dv">0</span>, &amp;a[i].mem);
+    <span class="kw">return</span> a;
+}
+
+<span class="dt">void</span> free_channels(<span class="kw">struct</span> chitem *a, size_t n) {
+    <span class="dt">int</span> i;
+    <span class="kw">for</span>(i = <span class="dv">0</span>; i != n; ++i)
+        hclose(a[i].h);
+    free(a);
+}</code></pre>
+</body>
