@@ -9,6 +9,21 @@ Report a bug here:
 
 Check this short introductory [article](structured-concurrency.html) about structured concurrency.
 
+## FAQ: What's libdill's performance?
+
+The best way to find out is to check for yourself. In `perf` subdirectory you'll find small performance bencharks.
+
+Generally speaking, though, libdill's concurrency primitives only a bit slower than simple C flow control statements.
+
+Context switch have been seen to execute in 6 ns, coroutine creation in 26 ns. Passing a message via a channel in 40 ns.
+
+## FAQ: How does libdill concurrency differ from Go concurrency?
+
+1. No interaction between threads. Each thread is treated as a separate process.
+2. Channels are always unbuffered.
+3. `choose`, unlike `select` is deterministic. If multiple clauses can be executed, a clause closer to the beginning of the pollset wins.
+4. Coroutines can be canceled.
+
 ## FAQ: How does libdill differ from libmill?
 
 `libmill` was a project to copy Go's concurrency model to C 1:1 without introducing any innovations or experiments. The project is finished now. It will be maintained but won't change in the future.
