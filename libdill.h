@@ -247,7 +247,11 @@ struct chclause {
 };
 
 struct chmem {
+#if defined(__i386__)
+    char reserved[36];
+#else
     char reserved[72];
+#endif
 };
 
 DILL_EXPORT int chmake(size_t itemsz);
