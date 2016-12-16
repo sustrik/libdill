@@ -6,7 +6,9 @@
 all: \
     documentation.html \
     download.html \
+    dsock-history.html \
     index.html \
+    libdill-history.html \
     structured-concurrency.html \
     tutorial.html \
     \

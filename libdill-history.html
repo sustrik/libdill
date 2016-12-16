@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorial</a></li>
+</ul>
+<h1 id="past-versions">Past versions</h1>
+<p><strong>Dec 16th, 2016 <a href="http://libdill.org/libdill-1.0.tar.gz">http://libdill.org/libdill-1.0.tar.gz</a></strong></p>
+<ul>
+<li><p>Final API cleanup before the first official release</p>
+<ul>
+<li><code>channel</code> renamed to <code>chmake</code><br /></li>
+<li><code>go_stack</code> renamed to <code>go_mem</code></li>
+</ul></li>
+<li><p>Simplification of channel semantics</p>
+<ul>
+<li>Channels are always unbuffered<br /></li>
+<li><code>choose</code> has deterministic behaviour</li>
+</ul></li>
+<li><p><code>chmake_mem</code> function added</p></li>
+<li><p>Man pages added to the package</p></li>
+<li><p>Some bug fixes</p></li>
+</ul>
+<p><strong>Dec 6th, 2016 <a href="http://libdill.org/libdill-0.11-beta.tar.gz">http://libdill.org/libdill-0.11-beta.tar.gz</a></strong></p>
+<ul>
+<li>Make the library <a href="threads.html">thread-friendly</a>.</li>
+</ul>
+<p><strong>Nov 27, 2016 <a href="http://libdill.org/libdill-0.10-beta.tar.gz">http://libdill.org/libdill-0.10-beta.tar.gz</a></strong></p>
+<ul>
+<li>Rename hcreate() to hmake(). hcreate() clashes with POSIX function of the same name.</li>
+</ul>
+<p><strong>Nov 19, 2016 <a href="http://libdill.org/libdill-0.9-beta.tar.gz">http://libdill.org/libdill-0.9-beta.tar.gz</a></strong></p>
+<ul>
+<li><p>A lot of optimizations. Context switch have been seen to execute in 6ns, coroutine creation in 26ns. Passing a message via a channel in 40ns.</p></li>
+<li><p>New <code>go_stack()</code> construct allows to run coroutine on a user-allocated stack.</p></li>
+<li><p>New <code>--enable-census</code> option monitors coroutines' stack usage and prints thr statistics on process shutdown.</p></li>
+<li><p>Mutliple bug fixes.</p></li>
+</ul>
+<p><strong>Oct 16, 2016 <a href="http://libdill.org/libdill-0.8-beta.tar.gz">http://libdill.org/libdill-0.8-beta.tar.gz</a></strong><br /><strong>Oct 13, 2016 <a href="http://libdill.org/libdill-0.7-beta.tar.gz">http://libdill.org/libdill-0.7-beta.tar.gz</a></strong><br /><strong>Sep 07, 2016 <a href="http://libdill.org/libdill-0.6-beta.tar.gz">http://libdill.org/libdill-0.6-beta.tar.gz</a></strong><br /><strong>Jun 03, 2016 <a href="http://libdill.org/libdill-0.5-beta.tar.gz">http://libdill.org/libdill-0.5-beta.tar.gz</a></strong><br /><strong>May 22, 2016 <a href="http://libdill.org/libdill-0.4-beta.tar.gz">http://libdill.org/libdill-0.4-beta.tar.gz</a></strong><br /><strong>May 15, 2016 <a href="http://libdill.org/libdill-0.3-beta.tar.gz">http://libdill.org/libdill-0.3-beta.tar.gz</a></strong></p>
+</body>
