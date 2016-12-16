@@ -170,7 +170,7 @@ cleanup:
 
     ...
 
-    <span class="dt">int</span> ch = channel(<span class="kw">sizeof</span>(<span class="dt">int</span>), <span class="dv">0</span>);
+    <span class="dt">int</span> ch = chmake(<span class="kw">sizeof</span>(<span class="dt">int</span>));
     assert(ch &gt;= <span class="dv">0</span>);
 
     <span class="kw">while</span>(<span class="dv">1</span>) {
@@ -182,8 +182,8 @@ cleanup:
         assert(cr &gt;= <span class="dv">0</span>);
     }
 }</code></pre>
-<p>The first argument to <code>channel()</code> is the type of the values that will be passed through the channel. In our case, they are simple integers.</p>
-<p>The second argument is the size of channel's buffer. Setting it to zero means that the channel is &quot;unbuffered&quot; or, in other words, that the sending coroutine will block each time until the receiving coroutine can process the message.</p>
+<p>The argument to <code>chmake()</code> is the type of the values that will be passed through the channel. In our case, they are simple integers.</p>
+<p>Libdill channels are &quot;unbuffered&quot;. In other words, the sending coroutine will block each time until the receiving coroutine can process the message.</p>
 <p>This kind of behaviour could, in theory, become a bottleneck, however, in our case we assume that <code>statistics()</code> coroutine will be extremely fast and not likely to turn into a performance bottleneck.</p>
 <p>At this point we can implement the <code>statistics()</code> coroutine that will run forever in a busy loop and collect the statistics from all the <code>dialogue()</code> coroutines. Each time the statistics change, it will print them to <code>stdout</code>:</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> statistics(<span class="dt">int</span> ch) {
@@ -219,7 +219,7 @@ cleanup:
 
     ...
 
-    <span class="dt">int</span> ch = channel(<span class="kw">sizeof</span>(<span class="dt">int</span>), <span class="dv">0</span>);
+    <span class="dt">int</span> ch = chmake(<span class="kw">sizeof</span>(<span class="dt">int</span>));
     assert(ch &gt;= <span class="dv">0</span>);
     <span class="dt">int</span> cr = go(statistics(ch));
     assert(cr &gt;= <span class="dv">0</span>);

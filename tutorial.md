@@ -264,7 +264,7 @@ int main(int argc, char *argv[]) {
 
     ...
 
-    int ch = channel(sizeof(int), 0);
+    int ch = chmake(sizeof(int));
     assert(ch >= 0);
 
     while(1) {
@@ -278,9 +278,9 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-The first argument to `channel()` is the type of the values that will be passed through the channel. In our case, they are simple integers.
+The argument to `chmake()` is the type of the values that will be passed through the channel. In our case, they are simple integers.
 
-The second argument is the size of channel's buffer. Setting it to zero means that the channel is "unbuffered" or, in other words, that the sending coroutine will block each time until the receiving coroutine can process the message.
+Libdill channels are "unbuffered". In other words, the sending coroutine will block each time until the receiving coroutine can process the message.
 
 This kind of behaviour could, in theory, become a bottleneck, however, in our case we assume that `statistics()` coroutine will be extremely fast and not likely to turn into a performance bottleneck.
 
@@ -320,7 +320,7 @@ int main(int argc, char *argv[]) {
 
     ...
 
-    int ch = channel(sizeof(int), 0);
+    int ch = chmake(sizeof(int));
     assert(ch >= 0);
     int cr = go(statistics(ch));
     assert(cr >= 0);
