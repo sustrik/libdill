@@ -4,16 +4,28 @@
 ##### libdill
 
 ```
-$ wget http://libdill.org/libdill-0.11-beta.tar.gz
-$ tar -xzf libdill-0.11-beta.tar.gz 
-$ cd libdill-0.11
+$ wget http://libdill.org/libdill-1.0.tar.gz
+$ tar -xzf libdill-1.0.tar.gz 
+$ cd libdill-1.0
 -beta
 $ ./configure
 $ make
 $ sudo make install
 ```
 
-**Dec 6th, 2016 <http://libdill.org/libdill-0.11-beta.tar.gz>**
+Dec 16th, 2016 <http://libdill.org/libdill-1.0-beta.tar.gz>
+
+* Final API cleanup before the first official release
+  * `channel` renamed to `chmake`
+  * `go_stack` renamed to `go_mem`
+* Simplification of channel semantics
+  * Channels are always unbuffered
+  * `choose` has deterministic behaviour
+* `chmake_mem` function added
+* Man pages added to the package
+* Some bug fixes
+
+Dec 6th, 2016 <http://libdill.org/libdill-0.11-beta.tar.gz>
 
 * Make the library [thread-friendly](threads.html).
 
@@ -46,7 +58,7 @@ $ make
 $ sudo make install
 ```
 
-**Nov 19, 2016  <http://libdill.org/dsock-0.4-alpha.tar.gz>**
+Nov 19, 2016  <http://libdill.org/dsock-0.4-alpha.tar.gz>
 Oct 16, 2016  <http://libdill.org/dsock-0.3-alpha.tar.gz>
 Aug 13, 2016: <http://libdill.org/dsock-0.2-alpha.tar.gz>
 Aug 07, 2016: <http://libdill.org/dsock-0.1-alpha.tar.gz>
