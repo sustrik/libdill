@@ -31,22 +31,4 @@ all: \
     msleep.html \
     now.html \
     yield.html \
-    \
-    bsock.html \
-    bthrottler.html \
-    btrace.html \
-    crlf.html \
-    http.html \
-    ipaddr.html \
-    keepalive.html \
-    lz4.html \
-    msock.html \
-    mthrottler.html \
-    mtrace.html \
-    nacl.html \
-    nagle.html \
-    pfx.html \
-    tcp.html \
-    udp.html \
-    unix.html
 

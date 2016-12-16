@@ -25,26 +25,6 @@
 * [now](now.html)
 * [yield](yield.html)
 
-##### dsock
-
-* [bsock](bsock.html)
-* [bthrottler](bthrottler.html)
-* [btrace](btrace.html)
-* [crlf](crlf.html)
-* [http](http.html)
-* [ipaddr](ipaddr.html)
-* [keepalive](keepalive.html)
-* [lz4](lz4.html)
-* [msock](msock.html)
-* [mthrottler](mthrottler.html)
-* [mtrace](mtrace.html)
-* [nacl](nacl.html)
-* [nagle](nagle.html)
-* [pfx](pfx.html)
-* [tcp](tcp.html)
-* [udp](udp.html)
-* [unix](unix.html)
-
 ## FAQ: How can I report a bug?
 
 Report a bug here:
