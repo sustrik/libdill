@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # Clean up the old man pages
-git rm man/*
+git rm man/*.html
+mkdir man
 
 # Get the man page source files from the libdill repo.
 git clone git@github.com:sustrik/libdill.git libdill-tmp
@@ -20,14 +21,15 @@ do
     name="${name%.*}"
     # Build HTML version of manpage.
     pandoc -f markdown_github $f > $f.tmp
-    cat header.html $f.tmp footer.html > man/$name.html
+    cat templates/header.html $f.tmp templates/footer.html > man/$name.html
     rm $f $f.tmp
+    git add man/$name.html
     # Add manpage to the index.
     echo "* [$name](http://libdill.org/man/$name.html)" >> manpage-index.md
 done
 
 # Build documenentation.md
-cat documentation-header.md manpage-index.md documentation-footer.md > documentation.md
+cat templates/documentation-header.md manpage-index.md templates/documentation-footer.md > documentation.md
 rm manpage-index.md
 
 # Build other documentation
@@ -45,7 +47,10 @@ other="\
 for f in $other
 do
     pandoc -f markdown_github $f.md > $f.tmp
-    cat header.html $f.tmp footer.html > $f.html
+    cat templates/header.html $f.tmp templates/footer.html > $f.html
     rm $f.tmp
+    git add $f.html
 done
+
+rm documentation.md
 
