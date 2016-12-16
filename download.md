@@ -54,17 +54,20 @@ $ sudo make install
 **May 22, 2016 <http://libdill.org/libdill-0.4-beta.tar.gz>**
 **May 15, 2016 <http://libdill.org/libdill-0.3-beta.tar.gz>**
 
-##### dsock 
+##### dsock
+
+Note that dsock library is still in alpha stage and the API may change.
 
 ```
-$ wget http://libdill.org/dsock-0.4-alpha.tar.gz
-$ tar -xzf dsock-0.4-alpha.tar.gz 
-$ cd dsock-0.4-alpha
+$ wget http://libdill.org/dsock-0.5-alpha.tar.gz
+$ tar -xzf dsock-0.5-alpha.tar.gz 
+$ cd dsock-0.5-alpha
 $ ./configure
 $ make
 $ sudo make install
 ```
 
+**Dec 16, 2016 <http://libdill.org/dsock-0.5-alpha.tar.gz>**
 **Nov 19, 2016 <http://libdill.org/dsock-0.4-alpha.tar.gz>**
 **Oct 16, 2016 <http://libdill.org/dsock-0.3-alpha.tar.gz>**
 **Aug 13, 2016 <http://libdill.org/dsock-0.2-alpha.tar.gz>**
