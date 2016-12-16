@@ -171,6 +171,7 @@ static void dill_poller_wait(int block) {
         }
         /* Wait for events. */
         int fired = dill_pollset_poll(timeout);
+        if(dill_slow(fired < 0)) continue;
         /* Fire all expired timers. */
         if(!dill_list_empty(&ctx->timers)) {
             int64_t nw = now();

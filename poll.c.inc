@@ -151,14 +151,9 @@ void dill_pollset_clean(int fd) {
 int dill_pollset_poll(int timeout) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     /* Wait for events. */
-    int numevs;
-    while(1) {
-        numevs = poll(ctx->pollset, ctx->pollset_size, timeout);
-        if(numevs < 0 && errno == EINTR)
-            continue;
-        dill_assert(numevs >= 0);
-        break;  
-    }
+    int numevs = poll(ctx->pollset, ctx->pollset_size, timeout);
+    if(numevs < 0 && errno == EINTR) return -1;
+    dill_assert(numevs >= 0);
     int result = numevs > 0 ? 1 : 0;
     /* Fire file descriptor events as needed. */
     int i;

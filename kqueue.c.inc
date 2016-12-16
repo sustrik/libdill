@@ -226,21 +226,15 @@ int dill_pollset_poll(int timeout) {
     }
     /* Wait for events. */
     struct kevent evs[DILL_EVSSIZE];
-    int nevs;
-    while(1) {
-        struct timespec ts;
-        if(timeout >= 0) {
-            ts.tv_sec = timeout / 1000;
-            ts.tv_nsec = (((long)timeout) % 1000) * 1000000;
-        }
-        nevs = kevent(ctx->kfd, chngs, nchngs, evs, DILL_EVSSIZE,
-            timeout < 0 ? NULL : &ts);
-        if(nevs < 0 && errno == EINTR)
-            continue;
-        dill_assert(nevs >= 0);
-        break;
-        /* TODO: Decrease timeout! */
+    struct timespec ts;
+    if(timeout >= 0) {
+        ts.tv_sec = timeout / 1000;
+        ts.tv_nsec = (((long)timeout) % 1000) * 1000000;
     }
+    int nevs = kevent(ctx->kfd, chngs, nchngs, evs, DILL_EVSSIZE,
+        timeout < 0 ? NULL : &ts);
+    if(nevs < 0 && errno == EINTR) return -1;
+    dill_assert(nevs >= 0);
     /* Join events on file descriptor basis.
        Put all the firing fds into the changelist. */
     int i;

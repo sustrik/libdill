@@ -196,15 +196,9 @@ int dill_pollset_poll(int timeout) {
     }
     /* Wait for events. */
     struct epoll_event evs[DILL_EPOLLSETSIZE];
-    int numevs;
-    while(1) {
-        numevs = epoll_wait(ctx->efd, evs, DILL_EPOLLSETSIZE, timeout);
-        if(numevs < 0 && errno == EINTR)
-            continue;
-        dill_assert(numevs >= 0);
-        break;
-        /* TODO: Decrease timeout! */
-    }
+    int numevs = epoll_wait(ctx->efd, evs, DILL_EPOLLSETSIZE, timeout);
+    if(numevs < 0 && errno == EINTR) return -1;
+    dill_assert(numevs >= 0);
     /* Fire file descriptor events. */
     int i;
     for(i = 0; i != numevs; ++i) {
