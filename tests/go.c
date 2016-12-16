@@ -56,6 +56,9 @@ coroutine void worker2(void) {
     ++worker2_done;
 }
 
+coroutine void worker3(void) {
+}
+
 coroutine void worker6(void) {
     int rc = msleep(now() + 2000);
     assert(rc == -1 && errno == ECANCELED);
@@ -109,6 +112,12 @@ int main() {
     rc = hclose(cr3);
     errno_assert(rc == 0);
     assert(worker2_done == 3);
+
+    /* Test whether finished coroutine can be canceled. */
+    cr1 = go(worker3());
+    errno_assert(cr1 >= 0);
+    rc = hclose(cr1);
+    errno_assert(rc == 0);
 
     /* Let the test running for a while to detect possible errors if there
        was a bug that left any corotines running. */
