@@ -13,16 +13,15 @@ Check this short introductory [article](structured-concurrency.html) about struc
 
 The best way to find out is to check for yourself. In `perf` subdirectory you'll find small performance bencharks.
 
-Generally speaking, though, libdill's concurrency primitives only a bit slower than simple C flow control statements.
-
-Context switch have been seen to execute in 6 ns, coroutine creation in 26 ns. Passing a message via a channel in 40 ns.
+Generally speaking, though, libdill's concurrency primitives only a bit slower than simple C flow control statements. Context switch have been seen to execute in 6 ns, coroutine creation in 26 ns. Passing a message via a channel in 40 ns.
 
 ## FAQ: How does libdill concurrency differ from Go concurrency?
 
 1. No interaction between threads. Each thread is treated as a separate process.
 2. Channels are always unbuffered.
 3. `choose`, unlike `select` is deterministic. If multiple clauses can be executed, a clause closer to the beginning of the pollset wins.
-4. Coroutines can be canceled.
+4. `chdone` signals closing of the channel to both senders and receivers.
+5. Coroutines can be canceled.
 
 ## FAQ: How does libdill differ from libmill?
 
@@ -89,7 +88,8 @@ These instructions are intended for the project maintainers:
 * Clone a clean repo from GitHub.
 * Build the package (`./autogen.sh; ./configure; make distcheck`).
 * Add the package to `gh-pages` branch.
-* Adjust the download.html web page in `gh-pages` branch.
+* Adjust the download.md in `gh-pages` branch.
+* Regenerate the documentaton using `./gendocs.sh`.
 * Commit and push to `gh-pages`.
 * Announce the release on twitter, etc.
 
