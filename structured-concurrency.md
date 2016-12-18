@@ -99,17 +99,3 @@ void tcp_connection_close(struct tcp_connection *self) {
     hclose(self->receiver);
 }
 ```
-
-## Stack-on-stack
-
-Given that with structured concurrency child coroutine always finishes before the parent coroutine it is possible to keep child's stack as a local variable on parent's stack. Doing it is dangerous (stack overflow in child can corrupt parent's stack) and not recommended unless there are heavy constraints on memory usage. Still, the technique is worth of mention:
-
-```c
-coroutine foo(void) {
-    char stk[1024];
-    int h = go_stack(bar(), stk, sizeof(stk));
-    ...
-    hclose(h);
-}
-```
-
