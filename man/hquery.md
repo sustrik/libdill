@@ -42,6 +42,8 @@ int foo(int h, char *c) {
 }
 ```
 
+Pointers returned by hquery are meant to be cacheable. In other words, if you call `hquery` on the same handle with the same type multiple times, the result should be the same.
+
 # RETURN VALUE
 
 An opaque pointer in case of success. In case of failure, `NULL` is returned and `errno` is set to one of the following values.
