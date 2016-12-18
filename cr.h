@@ -107,7 +107,7 @@ struct dill_clause {
        to be used by endpoints. The only thing coroutine does with it is, just
        before dill_wait() exits, it removes 'epitem' from 'eplist' for each
        clause. 'eplist' can be NULL in which case removal doesn't happen. */
-    struct dill_list_item epitem;
+    struct dill_list epitem;
     struct dill_list *eplist;
     /* Number to return from dill_wait() if this clause triggers. */
     int id;
@@ -129,7 +129,7 @@ void dill_ctx_cr_term(struct dill_ctx_cr *ctx);
    at the end of the list. Call to dill_wait() will remove the clause from
    the list. */
 void dill_waitfor(struct dill_clause *cl, int id,
-    struct dill_list *eplist, struct dill_list_item *before);
+    struct dill_list *eplist, struct dill_list *before);
 
 /* Suspend running coroutine. Move to executing different coroutines.
    The coroutine will be resumed once one of the clauses previously added by

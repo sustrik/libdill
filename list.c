@@ -26,5 +26,4 @@
 
 #include "list.h"
 
-/* After removing item from a list, prev & next point here. */
-struct dill_list_item dill_list_item_none = {NULL, NULL};
+struct dill_list dill_list_none = {NULL, NULL};

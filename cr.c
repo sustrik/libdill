@@ -125,7 +125,7 @@ void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
     tmcl->deadline = deadline;
     /* Move the timer into the right place in the ordered list
        of existing timers. TODO: This is an O(n) operation! */
-    struct dill_list_item *it = dill_list_begin(&ctx->timers);
+    struct dill_list *it = dill_list_begin(&ctx->timers);
     while(it) {
         struct dill_tmcl *itcl = dill_cont(it, struct dill_tmcl, cl.epitem);
         /* If multiple timers expire at the same momemt they will be fired
@@ -356,7 +356,7 @@ static void dill_cr_close(struct hvfs *vfs) {
 /******************************************************************************/
 
 void dill_waitfor(struct dill_clause *cl, int id,
-      struct dill_list *eplist, struct dill_list_item *before) {
+      struct dill_list *eplist, struct dill_list *before) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     /* Add the clause to the endpoint's list of waiting clauses. */
     dill_list_insert(eplist, &cl->epitem, before);
