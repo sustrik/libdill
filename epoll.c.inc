@@ -93,6 +93,8 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
             if(errno == ELOOP || errno == EPERM) {errno = ENOTSUP; return -1;}
             return -1;
         }
+        dill_list_init(&fdi->in);
+        dill_list_init(&fdi->out);
         fdi->currevs = EPOLLIN;
         fdi->next = 0;
         fdi->cached = 1;
@@ -121,6 +123,8 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
             if(errno == ELOOP || errno == EPERM) {errno = ENOTSUP; return -1;}
             return -1;
         }
+        dill_list_init(&fdi->in);
+        dill_list_init(&fdi->out);
         fdi->currevs = EPOLLOUT;
         fdi->next = 0;
         fdi->cached = 1;

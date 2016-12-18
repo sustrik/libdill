@@ -97,6 +97,8 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
         int rc = kevent(ctx->kfd, &ev, 1, NULL, 0, NULL);
         if(dill_slow(rc < 0 && errno == EBADF)) return -1;
         dill_assert(rc >= 0);
+        dill_list_init(&fdi->in);
+        dill_list_init(&fdi->out);
         fdi->currevs = FDW_IN;
         fdi->firing = 0;
         fdi->next = 0;
@@ -123,6 +125,8 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
         int rc = kevent(ctx->kfd, &ev, 1, NULL, 0, NULL);
         if(dill_slow(rc < 0 && errno == EBADF)) return -1;
         dill_assert(rc >= 0);
+        dill_list_init(&fdi->in);
+        dill_list_init(&fdi->out);
         fdi->currevs = FDW_OUT;
         fdi->firing = 0;
         fdi->next = 0;
