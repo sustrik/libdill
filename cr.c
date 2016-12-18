@@ -359,7 +359,6 @@ void dill_waitfor(struct dill_clause *cl, int id,
       struct dill_list *eplist, struct dill_list_item *before) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     /* Add the clause to the endpoint's list of waiting clauses. */
-    dill_list_item_init(&cl->epitem);
     dill_list_insert(eplist, &cl->epitem, before);
     cl->eplist = eplist;
     /* Add clause to the coroutine list of active clauses. */

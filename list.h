@@ -43,17 +43,6 @@ struct dill_list {
 /* After removing item from a list, prev & next point here. */
 extern struct dill_list_item dill_list_item_none;
 
-/* Initialise a list item. */
-static inline void dill_list_item_init(struct dill_list_item *self) {
-    self->prev = &dill_list_item_none;
-    self->next = &dill_list_item_none;
-}
-
-/* Returns 1 if the item is part of a list. 0 otherwise. */
-static inline int dill_list_item_inlist(struct dill_list_item *self) {
-    return self->prev == &dill_list_item_none ? 0 : 1;
-}
-
 /* Initialise the list. To statically initialise the list use = {0}. */
 static inline void dill_list_init(struct dill_list *self) {
     self->first = NULL;
