@@ -44,7 +44,7 @@ static inline void dill_list_init(struct dill_list *self) {
 #define dill_list_empty(self) (!((self)->next))
 
 /* Returns iterator to one past the item pointed to by 'it'. */
-#define dill_list_next(it) ((it)->next)
+#define dill_list_next(self, it) ((it)->next)
 
 /* Adds the item to the list before the item pointed to by 'it'.
    If 'it' is NULL the item is inserted to the end of the list. */

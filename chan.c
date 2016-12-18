@@ -111,12 +111,12 @@ static void dill_chan_close(struct hvfs *vfs) {
     /* Resume any remaining senders and receivers on the channel
        with EPIPE error. */
     while(!dill_list_empty(&ch->in)) {
-        struct dill_clause *cl = dill_cont(dill_list_next(&ch->in),
+        struct dill_clause *cl = dill_cont(dill_list_next(&ch->in, &ch->in),
             struct dill_clause, epitem);
         dill_trigger(cl, EPIPE);
     }
     while(!dill_list_empty(&ch->out)) {
-        struct dill_clause *cl = dill_cont(dill_list_next(&ch->out),
+        struct dill_clause *cl = dill_cont(dill_list_next(&ch->out, &ch->out),
             struct dill_clause, epitem);
         dill_trigger(cl, EPIPE);
     }
@@ -139,7 +139,7 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
     if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
     if(!dill_list_empty(&ch->in)) {
         /* Copy the message directly to the waiting receiver. */
-        struct dill_chcl *chcl = dill_cont(dill_list_next(&ch->in),
+        struct dill_chcl *chcl = dill_cont(dill_list_next(&ch->in, &ch->in),
             struct dill_chcl, cl.epitem);
         memcpy(chcl->val, val, len);
         dill_trigger(&chcl->cl, 0);
@@ -170,7 +170,7 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     if(dill_slow(len != ch->sz)) return -1;
     /* If there's a sender waiting copy the message directly from the sender. */
     if(!dill_list_empty(&ch->out)) {
-        struct dill_chcl *chcl = dill_cont(dill_list_next(&ch->out),
+        struct dill_chcl *chcl = dill_cont(dill_list_next(&ch->out, &ch->out),
             struct dill_chcl, cl.epitem);
         memcpy(val, chcl->val, len);
         dill_trigger(&chcl->cl, 0);
@@ -201,12 +201,12 @@ int chdone(int h) {
     /* Resume any remaining senders and receivers on the channel
        with EPIPE error. */
     while(!dill_list_empty(&ch->in)) {
-        struct dill_clause *cl = dill_cont(dill_list_next(&ch->in),
+        struct dill_clause *cl = dill_cont(dill_list_next(&ch->in, &ch->in),
             struct dill_clause, epitem);
         dill_trigger(cl, EPIPE);
     }
     while(!dill_list_empty(&ch->out)) {
-        struct dill_clause *cl = dill_cont(dill_list_next(&ch->out),
+        struct dill_clause *cl = dill_cont(dill_list_next(&ch->out, &ch->out),
             struct dill_clause, epitem);
         dill_trigger(cl, EPIPE);
     }
@@ -230,7 +230,7 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
         case CHSEND:
             if(dill_slow(ch->done)) {errno = EPIPE; return i;}
             if(dill_list_empty(&ch->in)) break;
-            chcl = dill_cont(dill_list_next(&ch->in),
+            chcl = dill_cont(dill_list_next(&ch->in, &ch->in),
                 struct dill_chcl, cl.epitem);
             memcpy(chcl->val, cl->val, cl->len);
             dill_trigger(&chcl->cl, 0);
@@ -239,7 +239,7 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
         case CHRECV:
             if(dill_slow(ch->done)) {errno = EPIPE; return i;}
             if(dill_list_empty(&ch->out)) break;
-            chcl = dill_cont(dill_list_next(&ch->out),
+            chcl = dill_cont(dill_list_next(&ch->out, &ch->out),
                 struct dill_chcl, cl.epitem);
             memcpy(cl->val, chcl->val, ch->sz);
             dill_trigger(&chcl->cl, 0);

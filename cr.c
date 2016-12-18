@@ -125,14 +125,14 @@ void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
     tmcl->deadline = deadline;
     /* Move the timer into the right place in the ordered list
        of existing timers. TODO: This is an O(n) operation! */
-    struct dill_list *it = dill_list_next(&ctx->timers);
+    struct dill_list *it = dill_list_next(&ctx->timers, &ctx->timers);
     while(it) {
         struct dill_tmcl *itcl = dill_cont(it, struct dill_tmcl, cl.epitem);
         /* If multiple timers expire at the same momemt they will be fired
            in the order they were created in (> rather than >=). */
         if(itcl->deadline > tmcl->deadline)
             break;
-        it = dill_list_next(it);
+        it = dill_list_next(&ctx->timers, it);
     }
     dill_waitfor(&tmcl->cl, id, &ctx->timers, it);
 }
@@ -164,7 +164,7 @@ static void dill_poller_wait(int block) {
                 timeout = -1;
             else {
                 int64_t nw = now();
-                int64_t deadline = dill_cont(dill_list_next(&ctx->timers),
+                int64_t deadline = dill_cont(dill_list_next(&ctx->timers, &ctx->timers),
                     struct dill_tmcl, cl.epitem)->deadline;
                 timeout = (int) (nw >= deadline ? 0 : deadline - nw);
             }
@@ -177,10 +177,10 @@ static void dill_poller_wait(int block) {
             int64_t nw = now();
             while(!dill_list_empty(&ctx->timers)) {
                 struct dill_tmcl *tmcl = dill_cont(
-                    dill_list_next(&ctx->timers), struct dill_tmcl, cl.epitem);
+                    dill_list_next(&ctx->timers, &ctx->timers), struct dill_tmcl, cl.epitem);
                 if(tmcl->deadline > nw)
                     break;
-                dill_list_erase(&ctx->timers, dill_list_next(&ctx->timers));
+                dill_list_erase(&ctx->timers, dill_list_next(&ctx->timers, &ctx->timers));
                 dill_trigger(&tmcl->cl, ETIMEDOUT);
                 fired = 1;
             }
@@ -437,4 +437,4 @@ int yield(void) {
     /* Suspend. */
     return dill_wait();
 }
-
+  
