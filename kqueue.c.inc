@@ -89,7 +89,6 @@ void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
 int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
-    if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
     /* If not yet cached check whether fd exists and if so add it to pollset. */
     if(dill_slow(!fdi->cached)) {
         struct kevent ev;
@@ -104,6 +103,7 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
         fdi->next = 0;
         fdi->cached = 1;
     }
+    if(!dill_list_empty(&fdi->in)) {errno = EEXIST; return -1;}
     /* If fd is not yet in the pollset add it there. */
     else if(!fdi->next) {
         fdi->next = ctx->changelist;
@@ -117,7 +117,6 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
 int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
-    if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
     /* If not yet cached check whether fd exists and if so add it to pollset. */    
     if(dill_slow(!fdi->cached)) {
         struct kevent ev;
@@ -132,6 +131,7 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
         fdi->next = 0;
         fdi->cached = 1;
     }
+    if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
     /* If fd is not yet in the pollset add it there. */
     else if(!fdi->next) {
         fdi->next = ctx->changelist;

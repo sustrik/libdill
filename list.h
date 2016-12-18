@@ -36,17 +36,18 @@ struct dill_list {
 
 /* Initialise the list. To statically initialise the list use = {0}. */
 static inline void dill_list_init(struct dill_list *self) {
-    self->next = NULL;
-    self->prev = NULL;
+    self->next = self;
+    self->prev = self;
 }
 
 /* True is the list has no items. */
-#define dill_list_empty(self) (!((self)->next))
+static inline int dill_list_empty(struct dill_list *self) {
+    return self->next == self;
+}
 
 /* Returns iterator to one past the item pointed to by 'item'. */
 static inline struct dill_list *dill_list_next(struct dill_list *self,
       struct dill_list *item) {
-    if(!item->next) return self;
     return item->next;
 }
 
@@ -54,30 +55,16 @@ static inline struct dill_list *dill_list_next(struct dill_list *self,
    If 'it' is the list itself the item is inserted to the end of the list. */
 static inline void dill_list_insert(struct dill_list *self,
       struct dill_list *item, struct dill_list *it) {
-    dill_assert(it);
-    if(it == self) it = NULL;
-    item->prev = it ? it->prev : self->prev;
     item->next = it;
-    if(item->prev)
-        item->prev->next = item;
-    if(item->next)
-        item->next->prev = item;
-    if(!self->next || self->next == it)
-        self->next = item;
-    if(!it)
-        self->prev = item;
+    item->prev = it->prev;
+    it->prev->next = item;
+    it->prev = item;
 }
 
 /* Removes the item from the list. */
 static void dill_list_erase(struct dill_list *self, struct dill_list *item) {
-    if(item->prev)
-        item->prev->next = item->next;
-    else
-        self->next = item->next;
-    if(item->next)
-        item->next->prev = item->prev;
-    else
-        self->prev = item->prev;
+    item->prev->next = item->next;
+    item->next->prev = item->prev;
 }
 
 #endif
