@@ -34,9 +34,6 @@ struct dill_list {
     struct dill_list *prev;
 };
 
-/* After removing item from a list, prev & next point here. */
-extern struct dill_list dill_list_none;
-
 /* Initialise the list. To statically initialise the list use = {0}. */
 static inline void dill_list_init(struct dill_list *self) {
     self->next = NULL;
