@@ -130,13 +130,10 @@ void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
         struct dill_tmcl *itcl = dill_cont(it, struct dill_tmcl, cl.epitem);
         /* If multiple timers expire at the same momemt they will be fired
            in the order they were created in (> rather than >=). */
-        if(itcl->deadline > tmcl->deadline) {
-            dill_waitfor(&tmcl->cl, id, &ctx->timers, it);
-            return;
-        }
+        if(itcl->deadline > tmcl->deadline) break;
         it = dill_list_next(it);
     }
-    dill_waitfor(&tmcl->cl, id, &ctx->timers, &ctx->timers);
+    dill_waitfor(&tmcl->cl, id, &ctx->timers, it);
 }
 
 int dill_in(struct dill_clause *cl, int id, int fd) {
