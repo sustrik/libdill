@@ -34,7 +34,7 @@ struct dill_list {
     struct dill_list *prev;
 };
 
-/* Initialise the list. To statically initialise the list use = {0}. */
+/* Initialise the list. */
 static inline void dill_list_init(struct dill_list *self) {
     self->next = self;
     self->prev = self;
@@ -45,24 +45,25 @@ static inline int dill_list_empty(struct dill_list *self) {
     return self->next == self;
 }
 
-/* Returns iterator to one past the item pointed to by 'item'. */
-static inline struct dill_list *dill_list_next(struct dill_list *self,
-      struct dill_list *item) {
-    return item->next;
+/* Returns iterator to one past the item pointed to by 'it'. If 'it' is the
+   list itself it returns the first item of the list. At the end of
+   the list it returns the list itself. */
+static inline struct dill_list *dill_list_next(struct dill_list *it) {
+    return it->next;
 }
 
-/* Adds the item to the list before the item pointed to by 'it'.
-   If 'it' is the list itself the item is inserted to the end of the list. */
-static inline void dill_list_insert(struct dill_list *self,
-      struct dill_list *item, struct dill_list *it) {
-    item->next = it;
-    item->prev = it->prev;
-    it->prev->next = item;
-    it->prev = item;
+/* Adds the item to the list before the item pointed to by 'before'. If 'before'
+   is the list itself the item is inserted to the end of the list. */
+static inline void dill_list_insert(struct dill_list *item,
+      struct dill_list *before) {
+    item->next = before;
+    item->prev = before->prev;
+    before->prev->next = item;
+    before->prev = item;
 }
 
 /* Removes the item from the list. */
-static void dill_list_erase(struct dill_list *self, struct dill_list *item) {
+static void dill_list_erase(struct dill_list *item) {
     item->prev->next = item->next;
     item->next->prev = item->prev;
 }

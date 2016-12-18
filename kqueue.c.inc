@@ -266,12 +266,12 @@ int dill_pollset_poll(int timeout) {
         int fd = chl - 1;
         struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
         if(!dill_list_empty(&fdi->in) && (fdi->firing & FDW_IN)) {
-            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->in, &fdi->in),
+            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->in),
                 struct dill_clause, epitem);
             dill_trigger(cl, 0);
         }
         if(!dill_list_empty(&fdi->out) && (fdi->firing & FDW_OUT)) {
-            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->out, &fdi->out),
+            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->out),
                 struct dill_clause, epitem);
             dill_trigger(cl, 0);
         }

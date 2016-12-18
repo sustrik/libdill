@@ -211,7 +211,7 @@ int dill_pollset_poll(int timeout) {
         /* Resume the blocked coroutines. */
         if(!dill_list_empty(&fdi->in) &&
               (evs[i].events & (EPOLLIN | EPOLLERR | EPOLLHUP))) {
-            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->in, &fdi->in),
+            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->in),
                 struct dill_clause, epitem);
             dill_trigger(cl, 0);
             /* Remove the fd from the pollset, if needed. */
@@ -222,7 +222,7 @@ int dill_pollset_poll(int timeout) {
         }
         if(!dill_list_empty(&fdi->out) &&
               (evs[i].events & (EPOLLOUT | EPOLLERR | EPOLLHUP))) {
-            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->out, &fdi->out),
+            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->out),
                 struct dill_clause, epitem);
             dill_trigger(cl, 0);
             /* Remove the fd from the pollset, if needed. */
