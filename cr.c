@@ -136,7 +136,7 @@ void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
         }
         it = dill_list_next(&ctx->timers, it);
     }
-    dill_waitfor(&tmcl->cl, id, &ctx->timers, NULL);
+    dill_waitfor(&tmcl->cl, id, &ctx->timers, &ctx->timers);
 }
 
 int dill_in(struct dill_clause *cl, int id, int fd) {

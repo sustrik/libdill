@@ -51,9 +51,11 @@ static inline struct dill_list *dill_list_next(struct dill_list *self,
 }
 
 /* Adds the item to the list before the item pointed to by 'it'.
-   If 'it' is NULL the item is inserted to the end of the list. */
+   If 'it' is the list itself the item is inserted to the end of the list. */
 static inline void dill_list_insert(struct dill_list *self,
-    struct dill_list *item, struct dill_list *it) {
+      struct dill_list *item, struct dill_list *it) {
+    dill_assert(it);
+    if(it == self) it = NULL;
     item->prev = it ? it->prev : self->prev;
     item->next = it;
     if(item->prev)
