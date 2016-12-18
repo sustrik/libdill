@@ -43,10 +43,6 @@ static inline void dill_list_init(struct dill_list *self) {
 /* True is the list has no items. */
 #define dill_list_empty(self) (!((self)->next))
 
-/* Returns iterator to the first item in the list or NULL if
-   the list is empty. */
-#define dill_list_begin(self) ((self)->next)
-
 /* Returns iterator to one past the item pointed to by 'it'. */
 #define dill_list_next(it) ((it)->next)
 

@@ -164,14 +164,14 @@ int dill_pollset_poll(int timeout) {
         if(!dill_list_empty(&fdi->in) &&
               pfd->revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
             pfd->events &= ~POLLIN;
-            struct dill_clause *cl = dill_cont(dill_list_begin(&fdi->in),
+            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->in),
                 struct dill_clause, epitem);
             dill_trigger(cl, 0);
         }
         if(!dill_list_empty(&fdi->out) &&
               pfd->revents & (POLLOUT | POLLERR | POLLHUP | POLLNVAL)) {
             pfd->events &= ~POLLOUT;
-            struct dill_clause *cl = dill_cont(dill_list_begin(&fdi->out),
+            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->out),
                 struct dill_clause, epitem);
             dill_trigger(cl, 0);
         }
