@@ -142,6 +142,7 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
 void dill_pollset_clean(int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
+    if(!fdi->cached) return;
     /* We cannot clean an fd that someone is waiting for. */
     dill_assert(dill_list_empty(&fdi->in));
     dill_assert(dill_list_empty(&fdi->out));
