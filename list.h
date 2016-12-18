@@ -62,10 +62,8 @@ static inline void dill_list_insert(struct dill_list *self,
         self->prev = item;
 }
 
-/* Removes the item from the list and returns pointer to the next item in the
-   list. Item must be part of the list. */
-static inline struct dill_list *dill_list_erase(struct dill_list *self,
-    struct dill_list *item) {
+/* Removes the item from the list. */
+static void dill_list_erase(struct dill_list *self, struct dill_list *item) {
     if(item->prev)
         item->prev->next = item->next;
     else
@@ -74,7 +72,6 @@ static inline struct dill_list *dill_list_erase(struct dill_list *self,
         item->next->prev = item->prev;
     else
         self->prev = item->prev;
-    return item->next;
 }
 
 #endif
