@@ -40,7 +40,7 @@ static inline void dill_list_init(struct dill_list *self) {
     self->prev = self;
 }
 
-/* True is the list has no items. */
+/* True if the list has no items. */
 static inline int dill_list_empty(struct dill_list *self) {
     return self->next == self;
 }
