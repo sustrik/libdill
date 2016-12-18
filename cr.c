@@ -126,15 +126,17 @@ void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
     /* Move the timer into the right place in the ordered list
        of existing timers. TODO: This is an O(n) operation! */
     struct dill_list *it = dill_list_next(&ctx->timers, &ctx->timers);
-    while(it) {
+    while(it != &ctx->timers) {
         struct dill_tmcl *itcl = dill_cont(it, struct dill_tmcl, cl.epitem);
         /* If multiple timers expire at the same momemt they will be fired
            in the order they were created in (> rather than >=). */
-        if(itcl->deadline > tmcl->deadline)
-            break;
+        if(itcl->deadline > tmcl->deadline) {
+            dill_waitfor(&tmcl->cl, id, &ctx->timers, it);
+            return;
+        }
         it = dill_list_next(&ctx->timers, it);
     }
-    dill_waitfor(&tmcl->cl, id, &ctx->timers, it);
+    dill_waitfor(&tmcl->cl, id, &ctx->timers, NULL);
 }
 
 int dill_in(struct dill_clause *cl, int id, int fd) {

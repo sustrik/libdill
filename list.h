@@ -43,9 +43,10 @@ static inline void dill_list_init(struct dill_list *self) {
 /* True is the list has no items. */
 #define dill_list_empty(self) (!((self)->next))
 
-/* Returns iterator to one past the item pointed to by 'it'. */
+/* Returns iterator to one past the item pointed to by 'item'. */
 static inline struct dill_list *dill_list_next(struct dill_list *self,
       struct dill_list *item) {
+    if(!item->next) return self;
     return item->next;
 }
 
