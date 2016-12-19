@@ -27,7 +27,7 @@
 
 #include <stddef.h>
 
-#include "slist.h"
+#include "qlist.h"
 
 /* A stack of unused coroutine stacks. This allows for extra-fast allocation
    of a new stack. The LIFO nature of this structure minimises cache misses.
@@ -35,7 +35,7 @@
    then on the bottom. That way we minimise page misses. */
 struct dill_ctx_stack {
     int count;
-    struct dill_slist cache;
+    struct dill_qlist cache;
 };
 
 int dill_ctx_stack_init(struct dill_ctx_stack *ctx);

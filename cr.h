@@ -27,6 +27,7 @@
 
 #include "libdill.h"
 #include "list.h"
+#include "qlist.h"
 #include "slist.h"
 
 /* The coroutine. The memory layout looks like this:
@@ -51,7 +52,7 @@ struct dill_cr {
        (registers and such). */
     sigjmp_buf ctx;
     /* If coroutine is blocked, here's the list of clauses it waits for. */
-    struct dill_slist clauses;
+    struct dill_qlist clauses;
     /* There are two possible reasons to disable blocking calls.
        1. The coroutine is being closed by its owner.
        2. The execution is happening within a context of hclose() function. */
@@ -94,7 +95,7 @@ struct dill_ctx_cr {
        so we have to store this info here instead on the top of the stack. */
     struct dill_cr main;
 #if defined DILL_CENSUS
-    struct dill_slist census;
+    struct dill_qlist census;
 #endif
 };
 
@@ -102,7 +103,7 @@ struct dill_clause {
     /* The coroutine that owns this clause. */
     struct dill_cr *cr;
     /* List of clauses coroutine is waiting for. See dill_cr::clauses. */
-    struct dill_slist_item item;
+    struct dill_qlist item;
     /* These two fields are completely opaque to the coroutine. They are meant
        to be used by endpoints. The only thing coroutine does with it is, just
        before dill_wait() exits, it removes 'epitem' from 'eplist' for each
