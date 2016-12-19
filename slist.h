@@ -43,8 +43,6 @@ struct dill_slist {
 /* After removing item from a list, next points here. */
 extern struct dill_slist_item dill_slist_item_none;
 
-#define DILL_SLIST_ITEM_INITIALISER {&dill_slist_item_none}
-
 /* Initialise a list item. */
 static inline void dill_slist_item_init(struct dill_slist_item *self) {
     self->next = &dill_slist_item_none;
