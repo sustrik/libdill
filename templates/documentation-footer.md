@@ -32,7 +32,7 @@ Generally speaking, though, libdill's concurrency primitives only a bit slower t
 Technically, there are following differences:
 
 1. It's C-idiomatic. Whereas libmill takes Go's concurrency API and implements them in almost identical manner in C, libdill tries to provide the same functionality via more C-like and POSIX-y API. For example, `choose` is a function rather than a language construct, Go-style panic is replaced by returning an error code and so on.
-2. Coroutines and processes can be canceled. This creates a foundation for "structured concurrency".
+2. Coroutines can be canceled. This creates a foundation for "structured concurrency".
 3. `chdone` causes blocked `recv` on the channel to return `EPIPE` error rather than a value.
 4. `chdone` will signal senders to the channel as well as receivers. This allows for scenarios like multiple senders and single receiver communicating via single channel. The receiver can let the senders know that it's terminating via `chdone`.
 5. libmill's `fdwait` was replaced by `fdin` and `fdout`. The idea is that if we want data to flow via the connection in both directions in parallel we should use two coroutines rather than single one.

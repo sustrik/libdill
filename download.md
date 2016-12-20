@@ -9,7 +9,6 @@
 $ wget http://libdill.org/libdill-1.0.tar.gz
 $ tar -xzf libdill-1.0.tar.gz 
 $ cd libdill-1.0
--beta
 $ ./configure
 $ make
 $ sudo make install
