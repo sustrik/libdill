@@ -22,8 +22,8 @@
 
 */
 
-#ifndef DILL_QLIST_INCLUDED
-#define DILL_QLIST_INCLUDED
+#ifndef DILL_SLIST_INCLUDED
+#define DILL_SLIST_INCLUDED
 
 #include "utils.h"
 

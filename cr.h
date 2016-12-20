@@ -27,8 +27,8 @@
 
 #include "libdill.h"
 #include "list.h"
-#include "slist.h"
 #include "qlist.h"
+#include "slist.h"
 
 /* The coroutine. The memory layout looks like this:
    +-------------------------------------------------------------+---------+
@@ -40,10 +40,10 @@
 */
 struct dill_cr {
     /* When coroutine is ready for execution but not running yet,
-       it lives in this list (dill_ready). 'id' is a result value to return
+       it lives in this list (ctx->ready). 'id' is a result value to return
        from dill_wait() once the coroutine is resumed. Additionally, errno
        will be set to value of 'err'. */
-    struct dill_qlist_item ready;
+    struct dill_slist ready;
     /* Virtual function table. */
     struct hvfs vfs;
     int id;

@@ -22,85 +22,45 @@
 
 */
 
-#ifndef DILL_SLIST_INCLUDED
-#define DILL_SLIST_INCLUDED
+#ifndef DILL_QLIST_INCLUDED
+#define DILL_QLIST_INCLUDED
 
-#include <stddef.h>
+#include "slist.h"
 #include "utils.h"
 
-/* Singly-linked list. Having both push and push_back functions means that
-   it can be used both as a queue and as a stack. */
-
-struct dill_qlist_item {
-    struct dill_qlist_item *next;
-};
+/* Singly-linked list. Works in FIFO manner, so it's actually a queue.
+   To iterate over the items use the underlying slist. */
 
 struct dill_qlist {
-    struct dill_qlist_item *first;
-    struct dill_qlist_item *last;
+    struct dill_slist slist;
+    struct dill_slist *last;
 };
 
-/* After removing item from a list, next points here. */
-extern struct dill_qlist_item dill_qlist_item_none;
-
-/* Initialise a list item. */
-static inline void dill_qlist_item_init(struct dill_qlist_item *self) {
-    self->next = &dill_qlist_item_none;
-}
-
-/* Returns 1 if the item is part of a list. 0 otherwise. */
-static inline int dill_qlist_item_inlist(struct dill_qlist_item *self) {
-    return self->next == &dill_qlist_item_none ? 0 : 1;
-}
-
-/* Initialise the list. To statically initialise the list use = {0}. */
+/* Initialise the list. */
 static inline void dill_qlist_init(struct dill_qlist *self) {
-    self->first = NULL;
-    self->last = NULL;
+    dill_slist_init(&self->slist);
+    self->last = &self->slist;
 }
 
 /* True is the list has no items. */
-#define dill_qlist_empty(self) (!((self)->first))
-
-/* Returns iterator to the first item in the list or NULL if
-   the list is empty. */
-#define dill_qlist_begin(self) ((self)->first)
-
-/* Returns iterator to one past the item pointed to by 'it'.
-   If there are no more items returns NULL. */
-#define dill_qlist_next(it) ((it)->next)
-
-/* Push the item to the beginning of the list. */
-static inline void dill_qlist_push(struct dill_qlist *self, struct dill_qlist_item *item) {
-    dill_assert(!dill_qlist_item_inlist(item));
-    item->next = self->first;
-    self->first = item;
-    if(!self->last)
-        self->last = item;
+static inline int dill_qlist_empty(struct dill_qlist *self) {
+    return self->slist.next == &self->slist;
 }
 
 /* Push the item to the end of the list. */
-static inline void dill_qlist_push_back(struct dill_qlist *self,
-    struct dill_qlist_item *item) {
-    dill_assert(!dill_qlist_item_inlist(item));
-    item->next = NULL;
-    if(!self->last)
-        self->first = item;
-    else
-        self->last->next = item;
+static inline void dill_qlist_push(struct dill_qlist *self,
+      struct dill_slist *item) {
+    item->next = &self->slist;
+    self->last->next = item;
     self->last = item;
 }
 
 /* Pop an item from the beginning of the list. */
-static inline struct dill_qlist_item *dill_qlist_pop(struct dill_qlist *self) {
-    if(!self->first)
-        return NULL;
-    struct dill_qlist_item *it = self->first;
-    self->first = self->first->next;
-    if(!self->first)
-        self->last = NULL;
-    it->next = &dill_qlist_item_none;
-    return it;
+static inline struct dill_slist *dill_qlist_pop(struct dill_qlist *self) {
+    struct dill_slist *item = self->slist.next;
+    self->slist.next = item->next;
+    if(item == self->last) self->last = &self->slist;
+    return item;
 }
 
 #endif

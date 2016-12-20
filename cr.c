@@ -60,7 +60,7 @@ static void dill_resume(struct dill_cr *cr, int id, int err) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     cr->id = id;
     cr->err = err;
-    dill_qlist_push_back(&ctx->ready, &cr->ready);
+    dill_qlist_push(&ctx->ready, &cr->ready);
 }
 
 int dill_canblock(void) {
@@ -93,7 +93,7 @@ int dill_ctx_cr_init(struct dill_ctx_cr *ctx) {
     ctx->wait_counter = 0;
     /* Initialize main coroutine. */
     memset(&ctx->main, 0, sizeof(ctx->main));
-    dill_qlist_item_init(&ctx->main.ready);
+    ctx->main.ready.next = NULL;
     dill_slist_init(&ctx->main.clauses);
 #if defined DILL_CENSUS
     dill_slist_init(&ctx->census);
@@ -247,7 +247,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     int hndl = hmake(&cr->vfs);
     if(dill_slow(hndl < 0)) {
         int err = errno; dill_freestack(cr + 1); errno = err; return -1;}
-    dill_qlist_item_init(&cr->ready);
+    cr->ready.next = NULL;
     dill_slist_init(&cr->clauses);
     cr->closer = NULL;
     cr->no_blocking1 = 0;
@@ -317,7 +317,7 @@ static void dill_cr_close(struct hvfs *vfs) {
         /* No blocking calls from this point on. */
         cr->no_blocking1 = 1;
         /* Resume the coroutine if it was blocked. */
-        if(!dill_qlist_item_inlist(&cr->ready))
+        if(!cr->ready.next)
             dill_cancel(cr, ECANCELED);
         /* Wait till the coroutine finishes execution. With no clauses added
            the only mechanism to resume is dill_cancel(). This is not really
@@ -393,7 +393,8 @@ int dill_wait(void)  {
         /* If there's a coroutine ready to be executed jump to it. */
         if(!dill_qlist_empty(&ctx->ready)) {
             ++ctx->wait_counter;
-            struct dill_qlist_item *it = dill_qlist_pop(&ctx->ready);
+            struct dill_slist *it = dill_qlist_pop(&ctx->ready);
+            it->next = NULL;
             ctx->r = dill_cont(it, struct dill_cr, ready);
             dill_longjmp(ctx->r->ctx);
         }
@@ -409,7 +410,7 @@ int dill_wait(void)  {
 
 static void dill_docancel(struct dill_cr *cr, int id, int err) {
     /* Sanity check: Make sure that the coroutine was really suspended. */
-    dill_assert(!dill_qlist_item_inlist(&cr->ready));
+    dill_assert(!cr->ready.next);
     /* Remove the clauses from endpoints' lists of waiting coroutines. */
     struct dill_slist *it;
     for(it = dill_slist_next(&cr->clauses); it != &cr->clauses;
