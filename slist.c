@@ -24,7 +24,7 @@
 
 #include <stddef.h>
 
-#include "slist.h"
+#include "qlist.h"
 
 /* After removing item from a list, next points here. */
-struct dill_slist_item dill_slist_item_none = {NULL};
+struct dill_qlist_item dill_qlist_item_none = {NULL};

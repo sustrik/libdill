@@ -60,14 +60,14 @@ static size_t dill_page_size(void) {
 
 int dill_ctx_stack_init(struct dill_ctx_stack *ctx) {
     ctx->count = 0;
-    dill_qlist_init(&ctx->cache);
+    dill_slist_init(&ctx->cache);
     return 0;
 }
 
 void dill_ctx_stack_term(struct dill_ctx_stack *ctx) {
     /* Deallocate leftover coroutines. */
-    struct dill_qlist *it;
-    while((it = dill_qlist_pop(&ctx->cache)) != &ctx->cache) {
+    struct dill_slist *it;
+    while((it = dill_slist_pop(&ctx->cache)) != &ctx->cache) {
 #if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD
         void *ptr = ((uint8_t*)(it + 1)) - dill_stack_size - dill_page_size();
         int rc = mprotect(ptr, dill_page_size(), PROT_READ|PROT_WRITE);
@@ -85,9 +85,9 @@ void *dill_allocstack(size_t *stack_size) {
     if(stack_size)
         *stack_size = dill_stack_size;
     /* If there's a cached stack, use it. */
-    if(!dill_qlist_empty(&ctx->cache)) {
+    if(!dill_slist_empty(&ctx->cache)) {
         --ctx->count;
-        return (void*)(dill_qlist_pop(&ctx->cache) + 1);
+        return (void*)(dill_slist_pop(&ctx->cache) + 1);
     }
     /* Allocate a new stack. */
     uint8_t *top;
@@ -126,10 +126,10 @@ void *dill_allocstack(size_t *stack_size) {
 
 void dill_freestack(void *stack) {
     struct dill_ctx_stack *ctx = &dill_getctx->stack;
-    struct dill_qlist *item = ((struct dill_qlist*)stack) - 1;
+    struct dill_slist *item = ((struct dill_slist*)stack) - 1;
     /* If there are free slots in the cache put the stack to the cache. */
     if(ctx->count < dill_max_cached_stacks) {
-        dill_qlist_push(&ctx->cache, item);
+        dill_slist_push(&ctx->cache, item);
         ++ctx->count;
         return;
     }

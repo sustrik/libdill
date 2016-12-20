@@ -27,8 +27,8 @@
 
 #include "libdill.h"
 #include "list.h"
-#include "qlist.h"
 #include "slist.h"
+#include "qlist.h"
 
 /* The coroutine. The memory layout looks like this:
    +-------------------------------------------------------------+---------+
@@ -43,7 +43,7 @@ struct dill_cr {
        it lives in this list (dill_ready). 'id' is a result value to return
        from dill_wait() once the coroutine is resumed. Additionally, errno
        will be set to value of 'err'. */
-    struct dill_slist_item ready;
+    struct dill_qlist_item ready;
     /* Virtual function table. */
     struct hvfs vfs;
     int id;
@@ -52,7 +52,7 @@ struct dill_cr {
        (registers and such). */
     sigjmp_buf ctx;
     /* If coroutine is blocked, here's the list of clauses it waits for. */
-    struct dill_qlist clauses;
+    struct dill_slist clauses;
     /* There are two possible reasons to disable blocking calls.
        1. The coroutine is being closed by its owner.
        2. The execution is happening within a context of hclose() function. */
@@ -86,7 +86,7 @@ struct dill_ctx_cr {
     /* Currently running coroutine. */
     struct dill_cr *r;
     /* List of coroutines ready for execution. */
-    struct dill_slist ready;
+    struct dill_qlist ready;
     /* Global linked list of all timers. The list is ordered.
        First timer to be resumed comes first and so on. */
     struct dill_list timers;
@@ -95,7 +95,7 @@ struct dill_ctx_cr {
        so we have to store this info here instead on the top of the stack. */
     struct dill_cr main;
 #if defined DILL_CENSUS
-    struct dill_qlist census;
+    struct dill_slist census;
 #endif
 };
 
@@ -103,7 +103,7 @@ struct dill_clause {
     /* The coroutine that owns this clause. */
     struct dill_cr *cr;
     /* List of clauses coroutine is waiting for. See dill_cr::clauses. */
-    struct dill_qlist item;
+    struct dill_slist item;
     /* These two fields are completely opaque to the coroutine. They are meant
        to be used by endpoints. The only thing coroutine does with it is, just
        before dill_wait() exits, it removes 'epitem' from 'eplist' for each

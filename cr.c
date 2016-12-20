@@ -41,7 +41,7 @@
 /* When doing stack size census we will keep maximum stack size in a list
    indexed by go() call, i.e. by file name and line number. */
 struct dill_census_item {
-    struct dill_qlist crs;
+    struct dill_slist crs;
     const char *file;
     int line;
     size_t max_stack;
@@ -60,7 +60,7 @@ static void dill_resume(struct dill_cr *cr, int id, int err) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     cr->id = id;
     cr->err = err;
-    dill_slist_push_back(&ctx->ready, &cr->ready);
+    dill_qlist_push_back(&ctx->ready, &cr->ready);
 }
 
 int dill_canblock(void) {
@@ -88,24 +88,24 @@ int dill_ctx_cr_init(struct dill_ctx_cr *ctx) {
        it's called once only and you can't even create a different coroutine
        without calling it. */
     ctx->r = &ctx->main;
-    dill_slist_init(&ctx->ready);
+    dill_qlist_init(&ctx->ready);
     dill_list_init(&ctx->timers);
     ctx->wait_counter = 0;
     /* Initialize main coroutine. */
     memset(&ctx->main, 0, sizeof(ctx->main));
-    dill_slist_item_init(&ctx->main.ready);
-    dill_qlist_init(&ctx->main.clauses);
+    dill_qlist_item_init(&ctx->main.ready);
+    dill_slist_init(&ctx->main.clauses);
 #if defined DILL_CENSUS
-    dill_qlist_init(&ctx->census);
+    dill_slist_init(&ctx->census);
 #endif
     return 0;
 }
 
 void dill_ctx_cr_term(struct dill_ctx_cr *ctx) {
 #if defined DILL_CENSUS
-    struct dill_qlist *it;
-    for(it = dill_qlist_next(&ctx->census); it != &ctx->census;
-          it = dill_qlist_next(it)) {
+    struct dill_slist *it;
+    for(it = dill_slist_next(&ctx->census); it != &ctx->census;
+          it = dill_slist_next(it)) {
         struct dill_census_item *ci =
             dill_cont(it, struct dill_census_item, crs);
         fprintf(stderr, "%s:%d - maximum stack size %zu B\n",
@@ -247,8 +247,8 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     int hndl = hmake(&cr->vfs);
     if(dill_slow(hndl < 0)) {
         int err = errno; dill_freestack(cr + 1); errno = err; return -1;}
-    dill_slist_item_init(&cr->ready);
-    dill_qlist_init(&cr->clauses);
+    dill_qlist_item_init(&cr->ready);
+    dill_slist_init(&cr->clauses);
     cr->closer = NULL;
     cr->no_blocking1 = 0;
     cr->no_blocking2 = 0;
@@ -260,9 +260,9 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
 #if defined DILL_CENSUS
     /* Find the appropriate census item if it exists. It's O(n) but meh. */
     cr->census = NULL;
-    struct dill_qlist *it;
-    for(it = dill_qlist_next(&ctx->census); it != &ctx->census;
-          it = dill_qlist_next(it)) {
+    struct dill_slist *it;
+    for(it = dill_slist_next(&ctx->census); it != &ctx->census;
+          it = dill_slist_next(it)) {
         cr->census = dill_cont(it, struct dill_census_item, crs);
         if(cr->census->line == line && strcmp(cr->census->file, file) == 0)
             break;
@@ -271,7 +271,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     if(it == &ctx->census) {
         cr->census = malloc(sizeof(struct dill_census_item));
         dill_assert(cr->census);
-        dill_qlist_push(&ctx->census, &cr->census->crs);
+        dill_slist_push(&ctx->census, &cr->census->crs);
         cr->census->file = file;
         cr->census->line = line;
         cr->census->max_stack = 0;
@@ -298,7 +298,7 @@ void dill_epilogue(void) {
     if(ctx->r->closer)
         dill_cancel(ctx->r->closer, 0);
     /* With no clauses added, this call will never return. */
-    dill_assert(dill_qlist_empty(&ctx->r->clauses));
+    dill_assert(dill_slist_empty(&ctx->r->clauses));
     dill_wait();
 }
 
@@ -317,7 +317,7 @@ static void dill_cr_close(struct hvfs *vfs) {
         /* No blocking calls from this point on. */
         cr->no_blocking1 = 1;
         /* Resume the coroutine if it was blocked. */
-        if(!dill_slist_item_inlist(&cr->ready))
+        if(!dill_qlist_item_inlist(&cr->ready))
             dill_cancel(cr, ECANCELED);
         /* Wait till the coroutine finishes execution. With no clauses added
            the only mechanism to resume is dill_cancel(). This is not really
@@ -365,7 +365,7 @@ void dill_waitfor(struct dill_clause *cl, int id,
     /* Add clause to the coroutine list of active clauses. */
     cl->cr = ctx->r;
 dill_assert(ctx->r->clauses.next);
-    dill_qlist_push(&ctx->r->clauses, &cl->item);
+    dill_slist_push(&ctx->r->clauses, &cl->item);
     cl->id = id;
 }
 
@@ -384,16 +384,16 @@ int dill_wait(void)  {
     if(ctx->r) {
         if(dill_setjmp(ctx->r->ctx)) {
             /* We get here once the coroutine is resumed. */
-            dill_qlist_init(&ctx->r->clauses);
+            dill_slist_init(&ctx->r->clauses);
             errno = ctx->r->err;
             return ctx->r->id;
         }
     }
     while(1) {
         /* If there's a coroutine ready to be executed jump to it. */
-        if(!dill_slist_empty(&ctx->ready)) {
+        if(!dill_qlist_empty(&ctx->ready)) {
             ++ctx->wait_counter;
-            struct dill_slist_item *it = dill_slist_pop(&ctx->ready);
+            struct dill_qlist_item *it = dill_qlist_pop(&ctx->ready);
             ctx->r = dill_cont(it, struct dill_cr, ready);
             dill_longjmp(ctx->r->ctx);
         }
@@ -402,18 +402,18 @@ int dill_wait(void)  {
         dill_poller_wait(1);
         /* Sanity check: External events must have unblocked at least
            one coroutine. */
-        dill_assert(!dill_slist_empty(&ctx->ready));
+        dill_assert(!dill_qlist_empty(&ctx->ready));
         ctx->wait_counter = 0;
     }
 }
 
 static void dill_docancel(struct dill_cr *cr, int id, int err) {
     /* Sanity check: Make sure that the coroutine was really suspended. */
-    dill_assert(!dill_slist_item_inlist(&cr->ready));
+    dill_assert(!dill_qlist_item_inlist(&cr->ready));
     /* Remove the clauses from endpoints' lists of waiting coroutines. */
-    struct dill_qlist *it;
-    for(it = dill_qlist_next(&cr->clauses); it != &cr->clauses;
-          it = dill_qlist_next(it)) {
+    struct dill_slist *it;
+    for(it = dill_slist_next(&cr->clauses); it != &cr->clauses;
+          it = dill_slist_next(it)) {
         struct dill_clause *cl = dill_cont(it, struct dill_clause, item);
         if(cl->eplist)
             dill_list_erase(&cl->epitem);
