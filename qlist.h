@@ -25,7 +25,6 @@
 #ifndef DILL_QLIST_INCLUDED
 #define DILL_QLIST_INCLUDED
 
-#include <stddef.h>
 #include "utils.h"
 
 /* Singly-linked list. Works in LIFO manner, so it's actually a stack.
@@ -55,15 +54,12 @@ static inline struct dill_qlist *dill_qlist_next(struct dill_qlist *it) {
 /* Push the item to the beginning of the list. */
 static inline void dill_qlist_push(struct dill_qlist *self,
       struct dill_qlist *item) {
-    dill_assert(self);
-    dill_assert(item);
     item->next = self->next;
     self->next = item;
 }
 
 /* Pop an item from the beginning of the list. */
 static inline struct dill_qlist *dill_qlist_pop(struct dill_qlist *self) {
-    dill_assert(self);
     struct dill_qlist *item = self->next;
     self->next = item->next;
     return item;

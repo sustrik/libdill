@@ -25,7 +25,6 @@
 #ifndef DILL_LIST_INCLUDED
 #define DILL_LIST_INCLUDED
 
-#include <stddef.h>
 #include "utils.h"
 
 /* Doubly-linked list. */
