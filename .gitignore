@@ -40,7 +40,6 @@ tests/signals
 tests/handle
 tests/threads
 tests/threads2
-tests/heap
 perf/.dirstamp
 perf/chan
 perf/ctxswitch
