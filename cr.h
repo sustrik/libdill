@@ -126,9 +126,8 @@ void dill_ctx_cr_term(struct dill_ctx_cr *ctx);
 /* When dill_wait() is called next time, the coroutine will wait
    (among other clauses) for this clause. 'id' must not be negative.
    'eplist' is the list to add the clause to (can be NULL). 'epitem' is the
-   item in the list to insert the clause before. If NULL it will be inserted
-   at the end of the list. Call to dill_wait() will remove the clause from
-   the list. */
+   item in the list to insert the clause before. Call to dill_wait() will remove
+   the clause from the list. */
 void dill_waitfor(struct dill_clause *cl, int id,
     struct dill_list *eplist, struct dill_list *before);
 

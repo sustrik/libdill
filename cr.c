@@ -364,7 +364,6 @@ void dill_waitfor(struct dill_clause *cl, int id,
     cl->eplist = eplist;
     /* Add clause to the coroutine list of active clauses. */
     cl->cr = ctx->r;
-dill_assert(ctx->r->clauses.next);
     dill_slist_push(&ctx->r->clauses, &cl->item);
     cl->id = id;
 }
