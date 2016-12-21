@@ -102,7 +102,7 @@ int fdout(int fd, int64_t deadline) {
     return 0;
 }
 
-int fdclean(int fd) {
-    return dill_clean(fd);
+void fdclean(int fd) {
+    dill_clean(fd);
 }
 
