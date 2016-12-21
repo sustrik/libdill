@@ -46,6 +46,11 @@ coroutine void trigger(int fd, int64_t deadline) {
     errno_assert(sz == 1);
 }
 
+coroutine void wait(int fd) {
+   int rc = fdin(fd, -1);
+   errno_assert(rc == -1 && errno == ECANCELED);
+}
+
 int main() {
     int rc;
 
@@ -128,6 +133,21 @@ int main() {
     assert(nbytes == 0 || (nbytes == -1 && errno == ECONNRESET));
     fdclean(fds[0]);
     rc = close(fds[0]);
+    errno_assert(rc == 0);
+
+    int p[2];
+    rc = pipe(p);
+    errno_assert(rc == 0);
+    int cr = go(wait(p[0]));
+    rc = fdclean(p[0]);
+    errno_assert(rc == -1 && errno == EBUSY);
+    rc = hclose(cr);
+    errno_assert(rc == 0);
+    rc = fdclean(p[0]);
+    errno_assert(rc == 0);
+    rc = close(p[0]);
+    errno_assert(rc == 0);
+    rc = close(p[1]);
     errno_assert(rc == 0);
 
     return 0;
