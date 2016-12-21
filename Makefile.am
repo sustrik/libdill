@@ -37,6 +37,8 @@ libdill_la_SOURCES = \
     cr.c \
     epoll.h.inc \
     epoll.c.inc \
+    heap.h \
+    heap.c \
     fd.h \
     fd.c \
     handle.h \
@@ -84,7 +86,8 @@ check_PROGRAMS = \
     tests/choose \
     tests/sleep \
     tests/signals \
-    tests/overload
+    tests/overload \
+    tests/heap
 
 if DILL_THREADS
 check_PROGRAMS += \
