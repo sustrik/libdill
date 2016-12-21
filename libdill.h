@@ -228,7 +228,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 
 DILL_EXPORT int yield(void);
 DILL_EXPORT int msleep(int64_t deadline);
-DILL_EXPORT void fdclean(int fd);
+DILL_EXPORT int fdclean(int fd);
 DILL_EXPORT int fdin(int fd, int64_t deadline);
 DILL_EXPORT int fdout(int fd, int64_t deadline);
 

@@ -142,13 +142,13 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     return 0;
 }
 
-void dill_pollset_clean(int fd) {
+int dill_pollset_clean(int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
-    if(!fdi->cached) return;
+    if(!fdi->cached) return 0;
     /* We cannot clean an fd that someone is waiting for. */
-    dill_assert(dill_list_empty(&fdi->in));
-    dill_assert(dill_list_empty(&fdi->out));
+    if(dill_slow(!dill_list_empty(&fdi->in) || !dill_list_empty(&fdi->out))) {
+        errno = EBUSY; return -1;}
     /* Remove the file descriptor from the pollset, if it is still there. */
     int nevs = 0;
     struct kevent evs[2];
@@ -178,6 +178,7 @@ void dill_pollset_clean(int fd) {
     }
     /* Mark the fd as not used. */
     fdi->cached = 0;
+    return 0;
 }
 
 int dill_pollset_poll(int timeout) {

@@ -6,7 +6,7 @@ fdclean - erases cached info about a file descriptor
 
 ```c
 #include <libdill.h>
-void fdclean(int fd);
+int fdclean(int fd);
 ```
 
 # DESCRIPTION
@@ -17,11 +17,11 @@ It should also be used when you are temporarily provided with a file descriptor 
 
 # RETURN VALUE
 
-None.
+Zero in case of success. In case of error -1 is returned and `errno` is set to appropriate value.
 
 # ERRORS
 
-None.
+* `EBUSY`: The file descriptor is being waited for using `fdin` or `fdout` at the moment.
 
 # EXAMPLE
 
