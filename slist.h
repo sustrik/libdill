@@ -47,9 +47,7 @@ static inline int dill_slist_empty(struct dill_slist *self) {
 /* Returns next item in the list. If 'it' is the list itself, it returns the
    first element in the list. If there are no more elements in the list
    returns pointer to the list itself. */
-static inline struct dill_slist *dill_slist_next(struct dill_slist *it) {
-    return it->next;
-}
+#define dill_slist_next(it) ((it)->next)
 
 /* Push the item to the beginning of the list. */
 static inline void dill_slist_push(struct dill_slist *self,

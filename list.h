@@ -47,9 +47,7 @@ static inline int dill_list_empty(struct dill_list *self) {
 /* Returns iterator to one past the item pointed to by 'it'. If 'it' is the
    list itself it returns the first item of the list. At the end of
    the list it returns the list itself. */
-static inline struct dill_list *dill_list_next(struct dill_list *it) {
-    return it->next;
-}
+#define dill_list_next(it) ((it)->next)
 
 /* Adds the item to the list before the item pointed to by 'before'. If 'before'
    is the list itself the item is inserted to the end of the list. */
