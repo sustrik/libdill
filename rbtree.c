@@ -24,6 +24,9 @@
 
 #include "rbtree.h"
 
+/* Credits: This implementation is heavily influenced by Emin Martinian's
+   red-black tree implementation. */
+
 #define rbtree_isnil(x) ((x) == &rbtree_nil)
 #define rbtree_isroot(x) ((x)->up->up == &rbtree_nil)
 
