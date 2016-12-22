@@ -49,12 +49,14 @@ void rbtree_erase(struct rbtree *item);
    one of them is returned. */
 struct rbtree *rbtree_find(struct rbtree *self, int64_t val);
 
-/* Return item with the lowest value. */
+/* Return item with the lowest value. If there are no items in the tree NULL
+   is returned*/
 struct rbtree *rbtree_first(struct rbtree *self);
 
 /* Iterate throught the tree. Items are returned starting with those with
    the lowest values and ending with those with highest values. Items with
-   equal values are returned in no particular order. */
+   equal values are returned in no particular order. If 'it' points to the
+   las item NULL is returned. */
 struct rbtree *rbtree_next(struct rbtree *it);
 
 #endif
