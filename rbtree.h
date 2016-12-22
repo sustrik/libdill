@@ -26,25 +26,35 @@
 #include <stdint.h>
 
 struct rbtree {
-  int red;
-  struct rbtree *left;
-  struct rbtree *right;
-  struct rbtree *up;
-  int64_t val;
+    int red;
+    struct rbtree *left;
+    struct rbtree *right;
+    struct rbtree *up;
+    int64_t val;
 };
 
+/* Initialize the tree. */
 void rbtree_init(struct rbtree *self);
 
+/* Returns 1 if there are no items in the tree. 0 otherwise. */
 int rbtree_empty(struct rbtree *self);
 
+/* Isert item into the tree. Set its value to 'val'
 void rbtree_insert(struct rbtree *self, int64_t val, struct rbtree *item);
 
+/* Remove an item from a tree. */
 void rbtree_erase(struct rbtree *item);
 
+/* Find item with specified value. If there are multiple such items,
+   one of them is returned. */
 struct rbtree *rbtree_find(struct rbtree *self, int64_t val);
 
+/* Return item with the lowest value. */
 struct rbtree *rbtree_first(struct rbtree *self);
 
+/* Iterate throught the tree. Items are returned starting with those with
+   the lowest values and ending with those with highest values. Items with
+   equal values are returned in no particular order. */
 struct rbtree *rbtree_next(struct rbtree *it);
 
 #endif
