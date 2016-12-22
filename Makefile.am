@@ -50,6 +50,8 @@ libdill_la_SOURCES = \
     pollset.h \
     pollset.c \
     qlist.h \
+    rbtree.h \
+    rbtree.c \
     slist.h \
     stack.h \
     stack.c \
@@ -84,7 +86,8 @@ check_PROGRAMS = \
     tests/choose \
     tests/sleep \
     tests/signals \
-    tests/overload
+    tests/overload \
+    tests/rbtree
 
 if DILL_THREADS
 check_PROGRAMS += \
