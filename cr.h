@@ -111,6 +111,8 @@ struct dill_clause {
     struct dill_list epitem;
     /* Number to return from dill_wait() if this clause triggers. */
     int id;
+    /* Function to call when this clause is canceled. */
+    void (*cancel)(struct dill_clause *cl);
 };
 
 /* Timer clause. */
@@ -126,7 +128,8 @@ void dill_ctx_cr_term(struct dill_ctx_cr *ctx);
    (among other clauses) for this clause. 'id' must not be negative.
    'before' indicates where to insert the clause into the list of waiting
    endpoints. Call to dill_wait() will remove the clause from the list. */
-void dill_waitfor(struct dill_clause *cl, int id, struct dill_list *before);
+void dill_waitfor(struct dill_clause *cl, int id, struct dill_list *before,
+    void (*cancel)(struct dill_clause *cl));
 
 /* Suspend running coroutine. Move to executing different coroutines.
    The coroutine will be resumed once one of the clauses previously added by

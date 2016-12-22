@@ -105,7 +105,7 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
         ctx->changelist = fd + 1;
     }
     /* Add the clause to the list of waited for clauses. */
-    dill_waitfor(cl, id, &fdi->in);
+    dill_waitfor(cl, id, &fdi->in, NULL);
     return 0;
 }
 
@@ -135,7 +135,7 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
         ctx->changelist = fd + 1;
     }
     /* Add the clause to the list of waited for clauses. */
-    dill_waitfor(cl, id, &fdi->out);
+    dill_waitfor(cl, id, &fdi->out, NULL);
     return 0;
 }
 
