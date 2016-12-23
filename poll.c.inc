@@ -100,7 +100,12 @@ void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
     free(ctx->fdinfos);
 }
 
-int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
+static void dill_fdcancel(struct dill_clause *cl) {
+    struct dill_fdcl *fdcl = dill_cont(cl, struct dill_fdcl, cl);
+    dill_list_erase(&fdcl->item);
+}
+
+int dill_pollset_in(struct dill_fdcl *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(dill_slow(!fdi->cached)) {
@@ -117,11 +122,12 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
     }
     if(dill_slow(!dill_list_empty(&fdi->in))) {errno = EEXIST; return -1;}
     ctx->pollset[fdi->idx].events |= POLLIN;
-    dill_waitfor(cl, id, &fdi->in, NULL);
+    dill_list_insert(&fdcl->item, &fdi->in);
+    dill_waitfor(&fdcl->cl, id, NULL, dill_fdcancel);
     return 0;
 }
 
-int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
+int dill_pollset_out(struct dill_fdcl *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(dill_slow(!fdi->cached)) {
@@ -138,7 +144,8 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
     }
     if(dill_slow(!dill_list_empty(&fdi->out))) {errno = EEXIST; return -1;}
     ctx->pollset[fdi->idx].events |= POLLOUT;
-    dill_waitfor(cl, id, &fdi->out, NULL);
+    dill_list_insert(&fdcl->item, &fdi->out);
+    dill_waitfor(&fdcl->cl, id, NULL, dill_fdcancel);
     return 0;
 }
 
@@ -164,16 +171,16 @@ int dill_pollset_poll(int timeout) {
         if(!dill_list_empty(&fdi->in) &&
               pfd->revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
             pfd->events &= ~POLLIN;
-            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->in),
-                struct dill_clause, epitem);
-            dill_trigger(cl, 0);
+            struct dill_fdcl *fdcl = dill_cont(dill_list_next(&fdi->in),
+                struct dill_fdcl, item);
+            dill_trigger(&fdcl->cl, 0);
         }
         if(!dill_list_empty(&fdi->out) &&
               pfd->revents & (POLLOUT | POLLERR | POLLHUP | POLLNVAL)) {
             pfd->events &= ~POLLOUT;
-            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->out),
-                struct dill_clause, epitem);
-            dill_trigger(cl, 0);
+            struct dill_fdcl *fdcl = dill_cont(dill_list_next(&fdi->out),
+                struct dill_fdcl, item);
+            dill_trigger(&fdcl->cl, 0);
         }
         /* If nobody is polling for the fd remove it from the pollset. */
         if(!pfd->events) {

@@ -31,6 +31,7 @@
 
 #include "cr.h"
 #include "fd.h"
+#include "pollset.h"
 #include "stack.h"
 #include "utils.h"
 #include "ctx.h"
