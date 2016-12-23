@@ -31,7 +31,6 @@
 
 #include "cr.h"
 #include "fd.h"
-#include "pollset.h"
 #include "stack.h"
 #include "utils.h"
 #include "ctx.h"
@@ -144,14 +143,14 @@ void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
     dill_waitfor(&tmcl->cl, id, NULL, dill_timer_cancel);
 }
 
-int dill_in(struct dill_clause *cl, int id, int fd) {
+int dill_in(struct dill_fdcl *fdcl, int id, int fd) {
     if(dill_slow(fd < 0 || fd >= dill_maxfds())) {errno = EBADF; return -1;}
-    return dill_pollset_in(cl, id, fd);
+    return dill_pollset_in(fdcl, id, fd);
 }
 
-int dill_out(struct dill_clause *cl, int id, int fd) {
+int dill_out(struct dill_fdcl *fdcl, int id, int fd) {
     if(dill_slow(fd < 0 || fd >= dill_maxfds())) {errno = EBADF; return -1;}
-    return dill_pollset_out(cl, id, fd);
+    return dill_pollset_out(fdcl, id, fd);
 }
 
 void dill_clean(int fd) {

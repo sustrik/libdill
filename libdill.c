@@ -30,6 +30,7 @@
 
 #include "cr.h"
 #include "libdill.h"
+#include "pollset.h"
 #include "utils.h"
 
 int64_t now(void) {
@@ -71,7 +72,7 @@ int fdin(int fd, int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Start waiting for the fd. */
-    struct dill_clause fdcl;
+    struct dill_fdcl fdcl;
     rc = dill_in(&fdcl, 1, fd);
     if(dill_slow(rc < 0)) return -1;
     /* Optionally, start waiting for a timer. */
@@ -89,7 +90,7 @@ int fdout(int fd, int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Start waiting for the fd. */
-    struct dill_clause fdcl;
+    struct dill_fdcl fdcl;
     rc = dill_out(&fdcl, 1, fd);
     if(dill_slow(rc < 0)) return -1;
     /* Optionally, start waiting for a timer. */

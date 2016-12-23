@@ -79,7 +79,12 @@ void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
     free(ctx->fdinfos);
 }
 
-int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
+static void dill_fdcancel(struct dill_clause *cl) {
+    struct dill_fdcl *fdcl = dill_cont(cl, struct dill_fdcl, cl);
+    dill_list_erase(&fdcl->item);
+}
+
+int dill_pollset_in(struct dill_fdcl *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     /* If not yet cached check whether fd exists and if so add it to pollset. */    
@@ -105,11 +110,12 @@ int dill_pollset_in(struct dill_clause *cl, int id, int fd) {
         ctx->changelist = fd + 1;
     }
     /* Add the clause to the list of waited for clauses. */
-    dill_waitfor(cl, id, &fdi->in, NULL);
+    dill_list_insert(&fdcl->item, &fdi->in);
+    dill_waitfor(&fdcl->cl, id, NULL, dill_fdcancel);
     return 0;
 }
 
-int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
+int dill_pollset_out(struct dill_fdcl *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     /* If not yet cached check whether fd exists and if so add it to pollset. */    
@@ -135,7 +141,8 @@ int dill_pollset_out(struct dill_clause *cl, int id, int fd) {
         ctx->changelist = fd + 1;
     }
     /* Add the clause to the list of waited for clauses. */
-    dill_waitfor(cl, id, &fdi->out, NULL);
+    dill_list_insert(&fdcl->item, &fdi->out);
+    dill_waitfor(&fdcl->cl, id, NULL, dill_fdcancel);
     return 0;
 }
 
@@ -212,9 +219,9 @@ int dill_pollset_poll(int timeout) {
         /* Resume the blocked coroutines. */
         if(!dill_list_empty(&fdi->in) &&
               (evs[i].events & (EPOLLIN | EPOLLERR | EPOLLHUP))) {
-            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->in),
-                struct dill_clause, epitem);
-            dill_trigger(cl, 0);
+            struct dill_fdcl *fdcl = dill_cont(dill_list_next(&fdi->in),
+                struct dill_fdcl, item);
+            dill_trigger(&fdcl->cl, 0);
             /* Remove the fd from the pollset, if needed. */
             if(dill_list_empty(&fdi->in) && !fdi->next) {
                 fdi->next = ctx->changelist;
@@ -223,9 +230,9 @@ int dill_pollset_poll(int timeout) {
         }
         if(!dill_list_empty(&fdi->out) &&
               (evs[i].events & (EPOLLOUT | EPOLLERR | EPOLLHUP))) {
-            struct dill_clause *cl = dill_cont(dill_list_next(&fdi->out),
-                struct dill_clause, epitem);
-            dill_trigger(cl, 0);
+            struct dill_fdcl *fdcl = dill_cont(dill_list_next(&fdi->out),
+                struct dill_fdcl, item);
+            dill_trigger(&fdcl->cl, 0);
             /* Remove the fd from the pollset, if needed. */
             if(dill_list_empty(&fdi->out) && !fdi->next) {
                 fdi->next = ctx->changelist;

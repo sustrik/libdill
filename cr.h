@@ -123,6 +123,9 @@ struct dill_tmcl {
     int64_t deadline;
 };
 
+/* File descriptor clause. */
+struct dill_fdcl;
+
 int dill_ctx_cr_init(struct dill_ctx_cr *ctx);
 void dill_ctx_cr_term(struct dill_ctx_cr *ctx);
 
@@ -150,10 +153,10 @@ void dill_trigger(struct dill_clause *cl, int err);
 void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline);
 
 /* Wait for in event on a file descriptor. */
-int dill_in(struct dill_clause *cl, int id, int fd);
+int dill_in(struct dill_fdcl *fdcl, int id, int fd);
 
 /* Wait for out event on a file descriptor. */
-int dill_out(struct dill_clause *cl, int id, int fd);
+int dill_out(struct dill_fdcl *fdcl, int id, int fd);
 
 /* Returns 0 if blocking functions are allowed.
    Returns -1 and sets errno to ECANCELED otherwise. */

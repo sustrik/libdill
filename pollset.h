@@ -45,10 +45,10 @@ int dill_ctx_pollset_init(struct dill_ctx_pollset *ctx);
 void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx);
 
 /* Add waiting for in event on the fd to the list of current clauses. */
-int dill_pollset_in(struct dill_clause *cl, int id, int fd);
+int dill_pollset_in(struct dill_fdcl *fdcl, int id, int fd);
 
 /* Add waiting for out event on the fd to the list of current clauses. */
-int dill_pollset_out(struct dill_clause *cl, int id, int fd);
+int dill_pollset_out(struct dill_fdcl *fdcl, int id, int fd);
 
 /* Drops any cached info about the file descriptor. */
 void dill_pollset_clean(int fd);
