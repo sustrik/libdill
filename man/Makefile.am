@@ -40,10 +40,12 @@ man3_MANS = \
     now.3 \
     yield.3
 
+SUFFIXES = .md .3
+
 man-local: $(man3_MANS)
 
 # Compile the man page document
-%.3: %.md
+.md.3:
 	$(AM_V_GEN) @PANDOC@ -s -t man $< -o $@ \
 		-M author="Martin Sustrik" \
 		-M header="libdill Library Functions" \
