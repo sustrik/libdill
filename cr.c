@@ -141,7 +141,7 @@ void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
         it = dill_list_next(it);
     }
     dill_list_insert(&tmcl->item, it);
-    dill_waitfor(&tmcl->cl, id, NULL, dill_timer_cancel);
+    dill_waitfor(&tmcl->cl, id, dill_timer_cancel);
 }
 
 int dill_in(struct dill_fdcl *fdcl, int id, int fd) {
@@ -362,12 +362,9 @@ static void dill_cr_close(struct hvfs *vfs) {
 /*  Suspend/resume functionality.                                             */
 /******************************************************************************/
 
-void dill_waitfor(struct dill_clause *cl, int id, struct dill_list *before,
+void dill_waitfor(struct dill_clause *cl, int id,
       void (*cancel)(struct dill_clause *cl)) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
-    /* Add the clause to the endpoint's list of waiting clauses. */
-    if(before) dill_list_insert(&cl->epitem, before);
-    else cl->epitem.next = NULL;
     /* Add clause to the coroutine list of active clauses. */
     cl->cr = ctx->r;
     dill_slist_push(&ctx->r->clauses, &cl->item);
@@ -422,7 +419,6 @@ static void dill_docancel(struct dill_cr *cr, int id, int err) {
     for(it = dill_slist_next(&cr->clauses); it != &cr->clauses;
           it = dill_slist_next(it)) {
         struct dill_clause *cl = dill_cont(it, struct dill_clause, item);
-        if(cl->epitem.next) dill_list_erase(&cl->epitem);
         if(cl->cancel) cl->cancel(cl);
     }
     /* Schedule the newly unblocked coroutine for execution. */

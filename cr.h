@@ -104,11 +104,6 @@ struct dill_clause {
     struct dill_cr *cr;
     /* List of clauses coroutine is waiting for. See dill_cr::clauses. */
     struct dill_slist item;
-    /* These two fields are completely opaque to the coroutine. They are meant
-       to be used by endpoints. The only thing coroutine does with it is, just
-       before dill_wait() exits, it removes 'epitem' from 'eplist' for each
-       clause. 'eplist' can be NULL in which case removal doesn't happen. */
-    struct dill_list epitem;
     /* Number to return from dill_wait() if this clause triggers. */
     int id;
     /* Function to call when this clause is canceled. */
@@ -131,9 +126,9 @@ void dill_ctx_cr_term(struct dill_ctx_cr *ctx);
 
 /* When dill_wait() is called next time, the coroutine will wait
    (among other clauses) for this clause. 'id' must not be negative.
-   'before' indicates where to insert the clause into the list of waiting
-   endpoints. Call to dill_wait() will remove the clause from the list. */
-void dill_waitfor(struct dill_clause *cl, int id, struct dill_list *before,
+   'cancel' is a function to be called when the clause is canceled
+   without being triggered. */
+void dill_waitfor(struct dill_clause *cl, int id,
     void (*cancel)(struct dill_clause *cl));
 
 /* Suspend running coroutine. Move to executing different coroutines.

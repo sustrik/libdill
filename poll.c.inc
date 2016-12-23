@@ -123,7 +123,7 @@ int dill_pollset_in(struct dill_fdcl *fdcl, int id, int fd) {
     if(dill_slow(!dill_list_empty(&fdi->in))) {errno = EEXIST; return -1;}
     ctx->pollset[fdi->idx].events |= POLLIN;
     dill_list_insert(&fdcl->item, &fdi->in);
-    dill_waitfor(&fdcl->cl, id, NULL, dill_fdcancel);
+    dill_waitfor(&fdcl->cl, id, dill_fdcancel);
     return 0;
 }
 
@@ -145,7 +145,7 @@ int dill_pollset_out(struct dill_fdcl *fdcl, int id, int fd) {
     if(dill_slow(!dill_list_empty(&fdi->out))) {errno = EEXIST; return -1;}
     ctx->pollset[fdi->idx].events |= POLLOUT;
     dill_list_insert(&fdcl->item, &fdi->out);
-    dill_waitfor(&fdcl->cl, id, NULL, dill_fdcancel);
+    dill_waitfor(&fdcl->cl, id, dill_fdcancel);
     return 0;
 }
 

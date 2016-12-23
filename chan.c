@@ -158,7 +158,7 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
     struct dill_chcl chcl;
     dill_list_insert(&chcl.item, &ch->out);
     chcl.val = (void*)val;
-    dill_waitfor(&chcl.cl, 0, NULL, dill_chcancel);
+    dill_waitfor(&chcl.cl, 0, dill_chcancel);
     struct dill_tmcl tmcl;
     dill_timer(&tmcl, 1, deadline);
     int id = dill_wait();
@@ -192,7 +192,7 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     struct dill_chcl chcl;
     dill_list_insert(&chcl.item, &ch->in);
     chcl.val = val;
-    dill_waitfor(&chcl.cl, 0, NULL, dill_chcancel);
+    dill_waitfor(&chcl.cl, 0, dill_chcancel);
     struct dill_tmcl tmcl;
     dill_timer(&tmcl, 1, deadline);
     int id = dill_wait();
@@ -269,7 +269,7 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
         dill_list_insert(&chcls[i].item,
             clauses[i].op == CHRECV ? &ch->in : &ch->out);
         chcls[i].val = clauses[i].val;
-        dill_waitfor(&chcls[i].cl, i, NULL, dill_chcancel);
+        dill_waitfor(&chcls[i].cl, i, dill_chcancel);
     }
     struct dill_tmcl tmcl;
     dill_timer(&tmcl, nclauses, deadline);

@@ -116,7 +116,7 @@ int dill_pollset_in(struct dill_fdcl *fdcl, int id, int fd) {
     }
     /* Add the clause to the list of waited for clauses. */
     dill_list_insert(&fdcl->item, &fdi->in);
-    dill_waitfor(&fdcl->cl, id, NULL, dill_fdcancel);
+    dill_waitfor(&fdcl->cl, id, dill_fdcancel);
     return 0;
 }
 
@@ -145,7 +145,7 @@ int dill_pollset_out(struct dill_fdcl *fdcl, int id, int fd) {
     }
     /* Add the clause to the list of waited for clauses. */
     dill_list_insert(&fdcl->item, &fdi->out);
-    dill_waitfor(&fdcl->cl, id, NULL, dill_fdcancel);
+    dill_waitfor(&fdcl->cl, id, dill_fdcancel);
     return 0;
 }
 
