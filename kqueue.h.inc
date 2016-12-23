@@ -1,3 +1,4 @@
+/* -*- mode: c; -*- */
 /*
 
   Copyright (c) 2016 Martin Sustrik
