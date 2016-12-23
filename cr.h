@@ -118,6 +118,8 @@ struct dill_clause {
 /* Timer clause. */
 struct dill_tmcl {
     struct dill_clause cl;
+    /* An item in dill_ctx_cr::timers list. */
+    struct dill_list item;
     int64_t deadline;
 };
 

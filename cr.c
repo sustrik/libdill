@@ -118,6 +118,11 @@ void dill_ctx_cr_term(struct dill_ctx_cr *ctx) {
 /*  Poller.                                                                   */
 /******************************************************************************/
 
+static void dill_timer_cancel(struct dill_clause *cl) {
+    struct dill_tmcl *tmcl = dill_cont(cl, struct dill_tmcl, cl);
+    dill_list_erase(&tmcl->item);
+}
+
 /* Adds a timer clause to the list of waited for clauses. */
 void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
@@ -129,13 +134,14 @@ void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline) {
        of existing timers. TODO: This is an O(n) operation! */
     struct dill_list *it = dill_list_next(&ctx->timers);
     while(it != &ctx->timers) {
-        struct dill_tmcl *itcl = dill_cont(it, struct dill_tmcl, cl.epitem);
+        struct dill_tmcl *itcl = dill_cont(it, struct dill_tmcl, item);
         /* If multiple timers expire at the same momemt they will be fired
            in the order they were created in (> rather than >=). */
         if(itcl->deadline > tmcl->deadline) break;
         it = dill_list_next(it);
     }
-    dill_waitfor(&tmcl->cl, id, it, NULL);
+    dill_list_insert(&tmcl->item, it);
+    dill_waitfor(&tmcl->cl, id, NULL, dill_timer_cancel);
 }
 
 int dill_in(struct dill_clause *cl, int id, int fd) {
@@ -166,7 +172,7 @@ static void dill_poller_wait(int block) {
             else {
                 int64_t nw = now();
                 int64_t deadline = dill_cont(dill_list_next(&ctx->timers),
-                    struct dill_tmcl, cl.epitem)->deadline;
+                    struct dill_tmcl, item)->deadline;
                 timeout = (int) (nw >= deadline ? 0 : deadline - nw);
             }
         }
@@ -178,7 +184,7 @@ static void dill_poller_wait(int block) {
             int64_t nw = now();
             while(!dill_list_empty(&ctx->timers)) {
                 struct dill_tmcl *tmcl = dill_cont(
-                    dill_list_next(&ctx->timers), struct dill_tmcl, cl.epitem);
+                    dill_list_next(&ctx->timers), struct dill_tmcl, item);
                 if(tmcl->deadline > nw)
                     break;
                 dill_list_erase(dill_list_next(&ctx->timers));
