@@ -80,11 +80,11 @@ void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
 }
 
 static void dill_fdcancel(struct dill_clause *cl) {
-    struct dill_fdcl *fdcl = dill_cont(cl, struct dill_fdcl, cl);
+    struct dill_fdclause *fdcl = dill_cont(cl, struct dill_fdclause, cl);
     dill_list_erase(&fdcl->item);
 }
 
-int dill_pollset_in(struct dill_fdcl *fdcl, int id, int fd) {
+int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     /* If not yet cached check whether fd exists and if so add it to pollset. */    
@@ -115,7 +115,7 @@ int dill_pollset_in(struct dill_fdcl *fdcl, int id, int fd) {
     return 0;
 }
 
-int dill_pollset_out(struct dill_fdcl *fdcl, int id, int fd) {
+int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     /* If not yet cached check whether fd exists and if so add it to pollset. */    
@@ -219,8 +219,8 @@ int dill_pollset_poll(int timeout) {
         /* Resume the blocked coroutines. */
         if(!dill_list_empty(&fdi->in) &&
               (evs[i].events & (EPOLLIN | EPOLLERR | EPOLLHUP))) {
-            struct dill_fdcl *fdcl = dill_cont(dill_list_next(&fdi->in),
-                struct dill_fdcl, item);
+            struct dill_fdclause *fdcl = dill_cont(dill_list_next(&fdi->in),
+                struct dill_fdclause, item);
             dill_trigger(&fdcl->cl, 0);
             /* Remove the fd from the pollset, if needed. */
             if(dill_list_empty(&fdi->in) && !fdi->next) {
@@ -230,8 +230,8 @@ int dill_pollset_poll(int timeout) {
         }
         if(!dill_list_empty(&fdi->out) &&
               (evs[i].events & (EPOLLOUT | EPOLLERR | EPOLLHUP))) {
-            struct dill_fdcl *fdcl = dill_cont(dill_list_next(&fdi->out),
-                struct dill_fdcl, item);
+            struct dill_fdclause *fdcl = dill_cont(dill_list_next(&fdi->out),
+                struct dill_fdclause, item);
             dill_trigger(&fdcl->cl, 0);
             /* Remove the fd from the pollset, if needed. */
             if(dill_list_empty(&fdi->out) && !fdi->next) {

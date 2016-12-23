@@ -28,7 +28,7 @@
 #include "cr.h"
 #include "list.h"
 
-struct dill_fdcl {
+struct dill_fdclause {
    struct dill_clause cl;
    /* Either an item in dill_fdinfo::in or dill_fdinfo::out list. */
    struct dill_list item;

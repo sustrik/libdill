@@ -60,7 +60,7 @@ int msleep(int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Actual waiting. */
-    struct dill_tmcl tmcl;
+    struct dill_tmclause tmcl;
     dill_timer(&tmcl, 1, deadline);
     int id = dill_wait();
     if(dill_slow(id < 0)) return -1;
@@ -72,11 +72,11 @@ int fdin(int fd, int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Start waiting for the fd. */
-    struct dill_fdcl fdcl;
+    struct dill_fdclause fdcl;
     rc = dill_in(&fdcl, 1, fd);
     if(dill_slow(rc < 0)) return -1;
     /* Optionally, start waiting for a timer. */
-    struct dill_tmcl tmcl;
+    struct dill_tmclause tmcl;
     dill_timer(&tmcl, 2, deadline);
     /* Block. */
     int id = dill_wait();
@@ -90,11 +90,11 @@ int fdout(int fd, int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Start waiting for the fd. */
-    struct dill_fdcl fdcl;
+    struct dill_fdclause fdcl;
     rc = dill_out(&fdcl, 1, fd);
     if(dill_slow(rc < 0)) return -1;
     /* Optionally, start waiting for a timer. */
-    struct dill_tmcl tmcl;
+    struct dill_tmclause tmcl;
     dill_timer(&tmcl, 2, deadline);
     /* Block. */
     int id = dill_wait();

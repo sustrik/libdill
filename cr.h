@@ -111,7 +111,7 @@ struct dill_clause {
 };
 
 /* Timer clause. */
-struct dill_tmcl {
+struct dill_tmclause {
     struct dill_clause cl;
     /* An item in dill_ctx_cr::timers list. */
     struct dill_list item;
@@ -119,7 +119,7 @@ struct dill_tmcl {
 };
 
 /* File descriptor clause. */
-struct dill_fdcl;
+struct dill_fdclause;
 
 int dill_ctx_cr_init(struct dill_ctx_cr *ctx);
 void dill_ctx_cr_term(struct dill_ctx_cr *ctx);
@@ -145,13 +145,13 @@ int dill_wait(void);
 void dill_trigger(struct dill_clause *cl, int err);
 
 /* Add timer to the list of active clauses. */
-void dill_timer(struct dill_tmcl *tmcl, int id, int64_t deadline);
+void dill_timer(struct dill_tmclause *tmcl, int id, int64_t deadline);
 
 /* Wait for in event on a file descriptor. */
-int dill_in(struct dill_fdcl *fdcl, int id, int fd);
+int dill_in(struct dill_fdclause *fdcl, int id, int fd);
 
 /* Wait for out event on a file descriptor. */
-int dill_out(struct dill_fdcl *fdcl, int id, int fd);
+int dill_out(struct dill_fdclause *fdcl, int id, int fd);
 
 /* Returns 0 if blocking functions are allowed.
    Returns -1 and sets errno to ECANCELED otherwise. */
