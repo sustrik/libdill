@@ -26,43 +26,43 @@
 #include "../rbtree.c"
 
 int main(void) {
-    struct rbtree tree;
-    rbtree_init(&tree);
+    struct dill_rbtree tree;
+    dill_rbtree_init(&tree);
 
-    int rc = rbtree_empty(&tree);
+    int rc = dill_rbtree_empty(&tree);
     assert(rc == 1);
 
-    struct rbtree items[10];
+    struct dill_rbtree items[10];
     int i;
     for(i = 0; i != 10; ++i) {
-        rbtree_insert(&tree, i, &items[i]);
+        dill_rbtree_insert(&tree, i, &items[i]);
     }
     for(i = 0; i != 10; ++i) {
-        struct rbtree *it = rbtree_find(&tree, i);
+        struct dill_rbtree *it = dill_rbtree_find(&tree, i);
         assert(it == &items[i]);
     }
 
     i = 0;
-    struct rbtree *it = rbtree_first(&tree);
+    struct dill_rbtree *it = dill_rbtree_first(&tree);
     while(it) {
         assert(it == &items[i]);
-        it = rbtree_next(it);
+        it = dill_rbtree_next(it);
         ++i;
     }
     assert(i == 10);
 
-    rbtree_erase(&items[0]);
-    rbtree_erase(&items[4]);
-    rbtree_erase(&items[5]);
-    rbtree_erase(&items[9]);
+    dill_rbtree_erase(&items[0]);
+    dill_rbtree_erase(&items[4]);
+    dill_rbtree_erase(&items[5]);
+    dill_rbtree_erase(&items[9]);
 
-    rc = rbtree_empty(&tree);
+    rc = dill_rbtree_empty(&tree);
     assert(rc == 0);
 
     i = 0;
-    it = rbtree_first(&tree);
+    it = dill_rbtree_first(&tree);
     while(it) {
-        it = rbtree_next(it);
+        it = dill_rbtree_next(it);
         ++i;
     }
     assert(i == 6);
