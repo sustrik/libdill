@@ -392,23 +392,24 @@ int dill_wait(void)  {
             return ctx->r->id;
         }
     }
-    while(1) {
-        /* If there's a coroutine ready to be executed jump to it. */
-        if(!dill_qlist_empty(&ctx->ready)) {
-            ++ctx->wait_counter;
-            struct dill_slist *it = dill_qlist_pop(&ctx->ready);
-            it->next = NULL;
-            ctx->r = dill_cont(it, struct dill_cr, ready);
-            dill_longjmp(ctx->r->ctx);
-        }
-        /* Otherwise, we are going to wait for sleeping coroutines
-           and for external events. */
+    while(dill_qlist_empty(&ctx->ready)) {
+        /* We are going to wait for sleeping coroutines
+           and for external events if no events are available. */
         dill_poller_wait(1);
         /* Sanity check: External events must have unblocked at least
            one coroutine. */
         dill_assert(!dill_qlist_empty(&ctx->ready));
         ctx->wait_counter = 0;
     }
+    /* There's a coroutine ready to be executed so jump to it. */
+    ++ctx->wait_counter;
+    struct dill_slist *it = dill_qlist_pop(&ctx->ready);
+    it->next = NULL;
+    ctx->r = dill_cont(it, struct dill_cr, ready);
+    /* dill_longjmp has to be at the end of a function body otherwise stack
+       unwinding information will be trimmed if a crash occurs in this
+       function. */
+    dill_longjmp(ctx->r->ctx);
 }
 
 static void dill_docancel(struct dill_cr *cr, int id, int err) {
