@@ -32,9 +32,9 @@
 #elif defined DILL_POLL
 #include "poll.c.inc"
 /* Defaults. */
-#elif defined __linux__ && !defined DILL_NO_EPOLL
+#elif defined HAVE_EPOLL
 #include "epoll.c.inc"
-#elif (defined __FreeBSD__ || defined __APPLE__) && !defined DILL_NO_KQUEUE
+#elif defined HAVE_KQUEUE
 #include "kqueue.c.inc"
 #else
 #include "poll.c.inc"

@@ -139,8 +139,8 @@ AC_CHECK_FUNC([mprotect], [AC_DEFINE([HAVE_MPROTECT])])
 AC_CHECK_LIB([rt], [clock_gettime])
 AC_CHECK_FUNCS([clock_gettime])
 AC_CHECK_LIB([socket], [socket])
-AC_CHECK_FUNCS([epoll_create], [] ,[AC_DEFINE([DILL_NO_EPOLL])])
-AC_CHECK_FUNCS([kqueue], [] ,[AC_DEFINE([DILL_NO_KQUEUE])])
+AC_CHECK_FUNCS([epoll_create], [AC_DEFINE([HAVE_EPOLL])])
+AC_CHECK_FUNCS([kqueue], [AC_DEFINE([HAVE_KQUEUE])])
 
 ################################################################################
 #  Libtool                                                                     #
