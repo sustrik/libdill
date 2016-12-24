@@ -41,6 +41,7 @@ static void test_close(struct hvfs *vfs) {
 }
 
 int main(void) {
+
     struct test t;
     t.vfs.query = test_query;
     t.vfs.close = test_close;
@@ -53,6 +54,22 @@ int main(void) {
     int rc = hclose(h);
     errno_assert(rc == 0);
     assert(status == 2);
+
+    int ch = chmake(sizeof(int));
+    errno_assert(ch >= 0);
+    int i;
+    int hndls[300];
+    for(i = 0; i != 300; ++i) {
+        hndls[i] = hdup(ch);
+        errno_assert(hndls[i] >= 0);
+    }
+    for(i = 0; i != 300; ++i) {
+        rc = hclose(hndls[i]);
+        errno_assert(rc == 0);
+    }
+    rc = hclose(ch);
+    errno_assert(rc == 0);
+
     return 0;
 }
 

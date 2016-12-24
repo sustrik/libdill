@@ -104,7 +104,7 @@ int hdup(int h) {
     int refcount = hndl->vfs->refcount;
     int res = hmake(hndl->vfs);
     if(dill_slow(res < 0)) return -1;
-    hndl->vfs->refcount = refcount + 1;
+    ctx->handles[res].vfs->refcount = refcount + 1;
     return res;
 }
 
