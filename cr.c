@@ -406,6 +406,9 @@ int dill_wait(void)  {
     struct dill_slist *it = dill_qlist_pop(&ctx->ready);
     it->next = NULL;
     ctx->r = dill_cont(it, struct dill_cr, ready);
+    /* dill_longjmp has to be at the end of a function body otherwise stack
+       unwinding information will be trimmed if a crash occurs in this
+       function. */
     dill_longjmp(ctx->r->ctx);
 }
 
