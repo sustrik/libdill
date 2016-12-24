@@ -89,7 +89,7 @@ int dill_ctx_cr_init(struct dill_ctx_cr *ctx) {
        without calling it. */
     ctx->r = &ctx->main;
     dill_qlist_init(&ctx->ready);
-    dill_list_init(&ctx->timers);
+    dill_rbtree_init(&ctx->timers);
     ctx->wait_counter = 0;
     /* Initialize main coroutine. */
     memset(&ctx->main, 0, sizeof(ctx->main));
@@ -120,7 +120,7 @@ void dill_ctx_cr_term(struct dill_ctx_cr *ctx) {
 
 static void dill_timer_cancel(struct dill_clause *cl) {
     struct dill_tmclause *tmcl = dill_cont(cl, struct dill_tmclause, cl);
-    dill_list_erase(&tmcl->item);
+    dill_rbtree_erase(&tmcl->item);
 }
 
 /* Adds a timer clause to the list of waited for clauses. */
@@ -128,19 +128,7 @@ void dill_timer(struct dill_tmclause *tmcl, int id, int64_t deadline) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     /* If the deadline is infinite there's nothing to wait for. */
     if(deadline < 0) return;
-    /* Finite deadline. */
-    tmcl->deadline = deadline;
-    /* Move the timer into the right place in the ordered list
-       of existing timers. TODO: This is an O(n) operation! */
-    struct dill_list *it = dill_list_next(&ctx->timers);
-    while(it != &ctx->timers) {
-        struct dill_tmclause *itcl = dill_cont(it, struct dill_tmclause, item);
-        /* If multiple timers expire at the same momemt they will be fired
-           in the order they were created in (> rather than >=). */
-        if(itcl->deadline > tmcl->deadline) break;
-        it = dill_list_next(it);
-    }
-    dill_list_insert(&tmcl->item, it);
+    dill_rbtree_insert(&ctx->timers, deadline, &tmcl->item);
     dill_waitfor(&tmcl->cl, id, dill_timer_cancel);
 }
 
@@ -167,12 +155,12 @@ static void dill_poller_wait(int block) {
         /* Compute timeout for the subsequent poll. */
         int timeout = 0;
         if(block) {
-            if(dill_list_empty(&ctx->timers))
+            if(dill_rbtree_empty(&ctx->timers))
                 timeout = -1;
             else {
                 int64_t nw = now();
-                int64_t deadline = dill_cont(dill_list_next(&ctx->timers),
-                    struct dill_tmclause, item)->deadline;
+                int64_t deadline = dill_cont(dill_rbtree_first(&ctx->timers),
+                    struct dill_tmclause, item)->item.val;
                 timeout = (int) (nw >= deadline ? 0 : deadline - nw);
             }
         }
@@ -180,14 +168,14 @@ static void dill_poller_wait(int block) {
         int fired = dill_pollset_poll(timeout);
         if(dill_slow(fired < 0)) continue;
         /* Fire all expired timers. */
-        if(!dill_list_empty(&ctx->timers)) {
+        if(!dill_rbtree_empty(&ctx->timers)) {
             int64_t nw = now();
-            while(!dill_list_empty(&ctx->timers)) {
+            while(!dill_rbtree_empty(&ctx->timers)) {
                 struct dill_tmclause *tmcl = dill_cont(
-                    dill_list_next(&ctx->timers), struct dill_tmclause, item);
-                if(tmcl->deadline > nw)
+                    dill_rbtree_first(&ctx->timers),
+                    struct dill_tmclause, item);
+                if(tmcl->item.val > nw)
                     break;
-                dill_list_erase(dill_list_next(&ctx->timers));
                 dill_trigger(&tmcl->cl, ETIMEDOUT);
                 fired = 1;
             }

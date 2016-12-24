@@ -26,8 +26,8 @@
 #include <stdint.h>
 
 #include "libdill.h"
-#include "list.h"
 #include "qlist.h"
+#include "rbtree.h"
 #include "slist.h"
 
 /* The coroutine. The memory layout looks like this:
@@ -87,9 +87,8 @@ struct dill_ctx_cr {
     struct dill_cr *r;
     /* List of coroutines ready for execution. */
     struct dill_qlist ready;
-    /* Global linked list of all timers. The list is ordered.
-       First timer to be resumed comes first and so on. */
-    struct dill_list timers;
+    /* All active timers. */
+    struct dill_rbtree timers;
     int wait_counter;
     /* Main coroutine. We don't control creation of main coroutine's stack
        so we have to store this info here instead on the top of the stack. */
@@ -113,9 +112,8 @@ struct dill_clause {
 /* Timer clause. */
 struct dill_tmclause {
     struct dill_clause cl;
-    /* An item in dill_ctx_cr::timers list. */
-    struct dill_list item;
-    int64_t deadline;
+    /* An item in dill_ctx_cr::timers. */
+    struct dill_rbtree item;
 };
 
 /* File descriptor clause. */
