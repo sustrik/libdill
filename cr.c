@@ -393,15 +393,15 @@ int dill_wait(void)  {
         }
     }
     while(dill_qlist_empty(&ctx->ready)) {
-        /* Otherwise, we are going to wait for sleeping coroutines
-           and for external events. */
+        /* We are going to wait for sleeping coroutines
+           and for external events if no events are available. */
         dill_poller_wait(1);
         /* Sanity check: External events must have unblocked at least
            one coroutine. */
         dill_assert(!dill_qlist_empty(&ctx->ready));
         ctx->wait_counter = 0;
     }
-    /* If there's a coroutine ready to be executed jump to it. */
+    /* There's a coroutine ready to be executed so jump to it. */
     ++ctx->wait_counter;
     struct dill_slist *it = dill_qlist_pop(&ctx->ready);
     it->next = NULL;
