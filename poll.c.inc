@@ -61,10 +61,10 @@ struct dill_fdinfo {
     /* Index of the file descriptor in the pollset.
        -1 means the fd is not in the pollset. */
     int idx;
-    /* Clauses waiting for in. */
-    struct dill_list in;
-    /* Clauses waiting for out. */
-    struct dill_list out;
+    /* Clause waiting for in. NULL if none. */
+    struct dill_fdclause *in;
+    /* Clause waiting for out. NULL if none. */
+    struct dill_fdclause *out;
     /* 1 is the file descriptor was used before, 0 otherwise. */
     unsigned int cached : 1;
 };
@@ -82,8 +82,8 @@ int dill_ctx_pollset_init(struct dill_ctx_pollset *ctx) {
     int i;
     for(i = 0; i != dill_maxfds(); ++i) {
         ctx->fdinfos[i].idx = -1;
-        dill_list_init(&ctx->fdinfos[i].in);
-        dill_list_init(&ctx->fdinfos[i].out);
+        ctx->fdinfos[i].in = NULL;
+        ctx->fdinfos[i].out = NULL;
         ctx->fdinfos[i].cached = 0;
     }
     return 0;
@@ -100,9 +100,14 @@ void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
     free(ctx->fdinfos);
 }
 
-static void dill_fdcancel(struct dill_clause *cl) {
+static void dill_fdcancelin(struct dill_clause *cl) {
     struct dill_fdclause *fdcl = dill_cont(cl, struct dill_fdclause, cl);
-    dill_list_erase(&fdcl->item);
+    fdcl->fdinfo->in = NULL;
+}
+
+static void dill_fdcancelout(struct dill_clause *cl) {
+    struct dill_fdclause *fdcl = dill_cont(cl, struct dill_fdclause, cl);
+    fdcl->fdinfo->out = NULL;
 }
 
 int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
@@ -120,10 +125,11 @@ int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
         ++ctx->pollset_size;
         ctx->pollset[fdi->idx].fd = fd;
     }
-    if(dill_slow(!dill_list_empty(&fdi->in))) {errno = EEXIST; return -1;}
+    if(dill_slow(fdi->in)) {errno = EEXIST; return -1;}
     ctx->pollset[fdi->idx].events |= POLLIN;
-    dill_list_insert(&fdcl->item, &fdi->in);
-    dill_waitfor(&fdcl->cl, id, dill_fdcancel);
+    fdcl->fdinfo = fdi;
+    fdi->in = fdcl;
+    dill_waitfor(&fdcl->cl, id, dill_fdcancelin);
     return 0;
 }
 
@@ -142,10 +148,11 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
         ++ctx->pollset_size;
         ctx->pollset[fdi->idx].fd = fd;
     }
-    if(dill_slow(!dill_list_empty(&fdi->out))) {errno = EEXIST; return -1;}
+    if(dill_slow(fdi->out)) {errno = EEXIST; return -1;}
     ctx->pollset[fdi->idx].events |= POLLOUT;
-    dill_list_insert(&fdcl->item, &fdi->out);
-    dill_waitfor(&fdcl->cl, id, dill_fdcancel);
+    fdcl->fdinfo = fdi;
+    fdi->out = fdcl;
+    dill_waitfor(&fdcl->cl, id, dill_fdcancelout);
     return 0;
 }
 
@@ -168,25 +175,20 @@ int dill_pollset_poll(int timeout) {
         struct pollfd *pfd = &ctx->pollset[i];
         struct dill_fdinfo *fdi = &ctx->fdinfos[pfd->fd];
         /* Resume the blocked coroutines. */
-        if(!dill_list_empty(&fdi->in) &&
+        if(fdi->in &&
               pfd->revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
             pfd->events &= ~POLLIN;
-            struct dill_fdclause *fdcl = dill_cont(dill_list_next(&fdi->in),
-                struct dill_fdclause, item);
-            dill_trigger(&fdcl->cl, 0);
+            dill_trigger(&fdi->in->cl, 0);
         }
-        if(!dill_list_empty(&fdi->out) &&
+        if(fdi->out &&
               pfd->revents & (POLLOUT | POLLERR | POLLHUP | POLLNVAL)) {
             pfd->events &= ~POLLOUT;
-            struct dill_fdclause *fdcl = dill_cont(dill_list_next(&fdi->out),
-                struct dill_fdclause, item);
-            dill_trigger(&fdcl->cl, 0);
+            dill_trigger(&fdi->out->cl, 0);
         }
         /* If nobody is polling for the fd remove it from the pollset. */
         if(!pfd->events) {
             fdi->idx = -1;
-            dill_assert(dill_list_empty(&fdi->in) &&
-                dill_list_empty(&fdi->out));
+            dill_assert(!fdi->in && !fdi->out);
             --ctx->pollset_size;
             /* Pollset has to be compact. Thus, unless we are removing the
                last item from the pollset we want to move the last item
