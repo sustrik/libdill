@@ -133,7 +133,7 @@ int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
         ++ctx->pollset_size;
         ctx->pollset[fdi->idx].fd = fd;
     }
-    if(dill_slow(fdi->in)) {errno = EEXIST; return -1;}
+    if(dill_slow(fdi->in)) {errno = EBUSY; return -1;}
     ctx->pollset[fdi->idx].events |= POLLIN;
     fdcl->fdinfo = fdi;
     fdi->in = fdcl;
@@ -156,7 +156,7 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
         ++ctx->pollset_size;
         ctx->pollset[fdi->idx].fd = fd;
     }
-    if(dill_slow(fdi->out)) {errno = EEXIST; return -1;}
+    if(dill_slow(fdi->out)) {errno = EBUSY; return -1;}
     ctx->pollset[fdi->idx].events |= POLLOUT;
     fdcl->fdinfo = fdi;
     fdi->out = fdcl;
