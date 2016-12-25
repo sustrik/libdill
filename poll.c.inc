@@ -167,6 +167,19 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
 void dill_pollset_clean(int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
+    if(!fdi->cached) return;
+    dill_assert(!fdi->in && !fdi->out);
+    /* If the fd happens to still be in the pollset remove it. */
+    if(fdi->idx >= 0) {
+        --ctx->pollset_size;
+        if(fdi->idx != ctx->pollset_size) {
+            struct pollfd *pfd = &ctx->pollset[fdi->idx];
+            struct pollfd *lastpfd = &ctx->pollset[ctx->pollset_size];
+            *pfd = *lastpfd;
+            ctx->fdinfos[pfd->fd].idx = fdi->idx;
+        }
+        fdi->idx = -1;
+    }
     fdi->cached = 0;
 }
 

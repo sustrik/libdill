@@ -139,7 +139,13 @@ int main() {
     assert(rc == -1 && errno == ETIMEDOUT);
     nbytes = write(pp[1], "ABC", 3);
     assert(nbytes == 3);
+    fdclean(pp[0]);
+    fdclean(pp[1]);
     rc = msleep(now() + 100);
+    assert(rc == 0);
+    rc = close(pp[0]);
+    assert(rc == 0);
+    rc = close(pp[1]);
     assert(rc == 0);
 
     return 0;
