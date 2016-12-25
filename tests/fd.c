@@ -130,6 +130,18 @@ int main() {
     rc = close(fds[0]);
     errno_assert(rc == 0);
 
+    /* Test whether fd is removed from the pollset after fdin/fdout times
+       out. */
+    int pp[2];
+    rc = pipe(pp);
+    assert(rc == 0);
+    rc = fdin(pp[0], now() + 10);
+    assert(rc == -1 && errno == ETIMEDOUT);
+    nbytes = write(pp[1], "ABC", 3);
+    assert(nbytes == 3);
+    rc = msleep(now() + 100);
+    assert(rc == 0);
+
     return 0;
 }
 

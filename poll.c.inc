@@ -101,13 +101,19 @@ void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
 }
 
 static void dill_fdcancelin(struct dill_clause *cl) {
-    struct dill_fdclause *fdcl = dill_cont(cl, struct dill_fdclause, cl);
-    fdcl->fdinfo->in = NULL;
+    struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
+    struct dill_fdinfo *fdi = dill_cont(cl, struct dill_fdclause, cl)->fdinfo;
+    fdi->in = NULL;
+    ctx->pollset[fdi->idx].events &= ~POLLIN;
+    /* TODO: If needed, Remove the fd from the pollset entirely. */
 }
 
 static void dill_fdcancelout(struct dill_clause *cl) {
-    struct dill_fdclause *fdcl = dill_cont(cl, struct dill_fdclause, cl);
-    fdcl->fdinfo->out = NULL;
+    struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
+    struct dill_fdinfo *fdi = dill_cont(cl, struct dill_fdclause, cl)->fdinfo;
+    fdi->out = NULL;
+    ctx->pollset[fdi->idx].events &= ~POLLOUT;
+    /* TODO: If needed, Remove the fd from the pollset entirely. */
 }
 
 int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
