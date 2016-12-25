@@ -93,7 +93,7 @@ static void dill_fdcancelin(struct dill_clause *cl) {
 
 static void dill_fdcancelout(struct dill_clause *cl) {
     struct dill_fdclause *fdcl = dill_cont(cl, struct dill_fdclause, cl);
-    fdcl->fdinfo->in = out;
+    fdcl->fdinfo->out = NULL;
 }
 
 int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
