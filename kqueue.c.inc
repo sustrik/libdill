@@ -87,13 +87,23 @@ void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
 }
 
 static void dill_fdcancelin(struct dill_clause *cl) {
-    struct dill_fdclause *fdcl = dill_cont(cl, struct dill_fdclause, cl);
-    fdcl->fdinfo->in = NULL;
+    struct dill_fdinfo *fdi = dill_cont(cl, struct dill_fdclause, cl)->fdinfo;
+    fdinfo->in = NULL;
+    if(!fdinfo->next) {
+        struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
+        fdinfo->next = ctx->changelist;
+        ctx->changelist = fdinfo - ctx->fdinfos + 1;
+    }
 }
 
 static void dill_fdcancelout(struct dill_clause *cl) {
-    struct dill_fdclause *fdcl = dill_cont(cl, struct dill_fdclause, cl);
-    fdcl->fdinfo->out = NULL;
+    struct dill_fdinfo *fdi = dill_cont(cl, struct dill_fdclause, cl)->fdinfo;
+    fdinfo->out = NULL;
+    if(!fdinfo->next) {
+        struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
+        fdinfo->next = ctx->changelist;
+        ctx->changelist = fdinfo - ctx->fdinfos + 1;
+    }
 }
 
 int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
