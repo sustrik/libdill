@@ -26,13 +26,13 @@
 #include "cr.h"
 #include "list.h"
 
+struct dill_fdinfo;
+
 struct dill_fdclause {
    struct dill_clause cl;
-   /* Either an item in dill_fdinfo::in or dill_fdinfo::out list. */
-   struct dill_list item;
-};
+   struct dill_fdinfo *fdinfo;
 
-struct dill_fdinfo;
+};
 
 struct dill_ctx_pollset {
     int efd;
