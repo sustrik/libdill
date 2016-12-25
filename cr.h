@@ -159,7 +159,7 @@ int dill_canblock(void);
 int dill_no_blocking2(int val);
 
 /* Cleans cached info about the fd. */
-void dill_clean(int fd);
+int dill_clean(int fd);
 
 #endif
 

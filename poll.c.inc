@@ -164,11 +164,11 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
     return 0;
 }
 
-void dill_pollset_clean(int fd) {
+int dill_pollset_clean(int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
-    if(!fdi->cached) return;
-    dill_assert(!fdi->in && !fdi->out);
+    if(!fdi->cached) return 0;
+    if(dill_slow(fdi->in || fdi->out)) {errno = EBUSY; return -1;}
     /* If the fd happens to still be in the pollset remove it. */
     if(fdi->idx >= 0) {
         --ctx->pollset_size;
@@ -181,6 +181,7 @@ void dill_pollset_clean(int fd) {
         fdi->idx = -1;
     }
     fdi->cached = 0;
+    return 0;
 }
 
 int dill_pollset_poll(int timeout) {

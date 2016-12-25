@@ -110,7 +110,8 @@ int main() {
     /* Check whether closing the connection is reported. */
     ssize_t nbytes = send(fds[1], "ABC", 3, 0);
     errno_assert(nbytes == 3);
-    fdclean(fds[1]);
+    rc = fdclean(fds[1]);
+    errno_assert(rc == 0);
     rc = close(fds[1]);
     errno_assert(rc == 0);
     rc = msleep(now() + 50);
@@ -126,7 +127,8 @@ int main() {
     errno_assert(rc == 0);
     nbytes = recv(fds[0], buf, sizeof(buf), 0);
     assert(nbytes == 0 || (nbytes == -1 && errno == ECONNRESET));
-    fdclean(fds[0]);
+    rc = fdclean(fds[0]);
+    errno_assert(rc == 0);
     rc = close(fds[0]);
     errno_assert(rc == 0);
 
@@ -139,10 +141,12 @@ int main() {
     assert(rc == -1 && errno == ETIMEDOUT);
     nbytes = write(pp[1], "ABC", 3);
     assert(nbytes == 3);
-    fdclean(pp[0]);
-    fdclean(pp[1]);
     rc = msleep(now() + 100);
     assert(rc == 0);
+    rc = fdclean(pp[0]);
+    errno_assert(rc == 0);
+    rc = fdclean(pp[1]);
+    errno_assert(rc == 0);
     rc = close(pp[0]);
     assert(rc == 0);
     rc = close(pp[1]);

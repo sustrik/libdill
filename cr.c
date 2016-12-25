@@ -142,8 +142,8 @@ int dill_out(struct dill_fdclause *fdcl, int id, int fd) {
     return dill_pollset_out(fdcl, id, fd);
 }
 
-void dill_clean(int fd) {
-    dill_pollset_clean(fd);
+int dill_clean(int fd) {
+    return dill_pollset_clean(fd);
 }
 
 /* Wait for external events such as timers or file descriptors. If block is set
