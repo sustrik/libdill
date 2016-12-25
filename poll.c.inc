@@ -105,6 +105,8 @@ static void dill_fdcancelin(struct dill_clause *cl) {
     struct dill_fdinfo *fdi = dill_cont(cl, struct dill_fdclause, cl)->fdinfo;
     fdi->in = NULL;
     ctx->pollset[fdi->idx].events &= ~POLLIN;
+    /* fd is left in the pollset. It will be purged once the event loop
+       iterates once more. */
 }
 
 static void dill_fdcancelout(struct dill_clause *cl) {
@@ -112,6 +114,8 @@ static void dill_fdcancelout(struct dill_clause *cl) {
     struct dill_fdinfo *fdi = dill_cont(cl, struct dill_fdclause, cl)->fdinfo;
     fdi->out = NULL;
     ctx->pollset[fdi->idx].events &= ~POLLOUT;
+    /* fd is left in the pollset. It will be purged once the event loop
+       iterates once more. */
 }
 
 int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
@@ -172,10 +176,9 @@ int dill_pollset_poll(int timeout) {
     int numevs = poll(ctx->pollset, ctx->pollset_size, timeout);
     if(numevs < 0 && errno == EINTR) return -1;
     dill_assert(numevs >= 0);
-    int result = numevs > 0 ? 1 : 0;
     /* Fire file descriptor events as needed. */
     int i;
-    for(i = 0; i != ctx->pollset_size && numevs; ++i) {
+    for(i = 0; i != ctx->pollset_size; ++i) {
         struct pollfd *pfd = &ctx->pollset[i];
         struct dill_fdinfo *fdi = &ctx->fdinfos[pfd->fd];
         /* Resume the blocked coroutines. */
@@ -184,7 +187,7 @@ int dill_pollset_poll(int timeout) {
             pfd->events &= ~POLLIN;
             dill_trigger(&fdi->in->cl, 0);
         }
-        if(fdi->out &&
+        if(fdi->out && 
               pfd->revents & (POLLOUT | POLLERR | POLLHUP | POLLNVAL)) {
             pfd->events &= ~POLLOUT;
             dill_trigger(&fdi->out->cl, 0);
@@ -203,9 +206,8 @@ int dill_pollset_poll(int timeout) {
                 ctx->fdinfos[pfd->fd].idx = i;
             }
             --i;
-            --numevs;
         }
     }
-    return result;
+    return numevs > 0;
 }
 
