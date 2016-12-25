@@ -1,4 +1,3 @@
-/* -*- mode: c; -*- */
 /*
 
   Copyright (c) 2016 Martin Sustrik
@@ -48,8 +47,8 @@
 #define FDW_OUT 2
 
 struct dill_fdinfo {
-    struct dill_list in;
-    struct dill_list out;
+    struct dill_fdclause *in;
+    struct dill_fdclause *out;
     uint16_t currevs;
     uint16_t firing;
     /* 1-based index, 0 stands for "not part of the list", DILL_ENDLIST
@@ -87,9 +86,14 @@ void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
     free(ctx->fdinfos);
 }
 
-static void dill_fdcancel(struct dill_clause *cl) {
+static void dill_fdcancelin(struct dill_clause *cl) {
     struct dill_fdclause *fdcl = dill_cont(cl, struct dill_fdclause, cl);
-    dill_list_erase(&fdcl->item);
+    fdcl->fdinfo->in = NULL;
+}
+
+static void dill_fdcancelout(struct dill_clause *cl) {
+    struct dill_fdclause *fdcl = dill_cont(cl, struct dill_fdclause, cl);
+    fdcl->fdinfo->in = out;
 }
 
 int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
@@ -102,8 +106,8 @@ int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
         int rc = kevent(ctx->kfd, &ev, 1, NULL, 0, NULL);
         if(dill_slow(rc < 0 && errno == EBADF)) return -1;
         dill_assert(rc >= 0);
-        dill_list_init(&fdi->in);
-        dill_list_init(&fdi->out);
+        fdi->in = NULL;
+        fdi->out = NULL;
         fdi->currevs = FDW_IN;
         fdi->firing = 0;
         fdi->next = 0;
@@ -115,9 +119,9 @@ int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
         fdi->next = ctx->changelist;
         ctx->changelist = fd + 1;
     }
-    /* Add the clause to the list of waited for clauses. */
-    dill_list_insert(&fdcl->item, &fdi->in);
-    dill_waitfor(&fdcl->cl, id, dill_fdcancel);
+    fdcl->fdinfo = fdi;
+    fdi->in = fdcl;
+    dill_waitfor(&fdcl->cl, id, dill_fdcancelin);
     return 0;
 }
 
@@ -131,22 +135,22 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
         int rc = kevent(ctx->kfd, &ev, 1, NULL, 0, NULL);
         if(dill_slow(rc < 0 && errno == EBADF)) return -1;
         dill_assert(rc >= 0);
-        dill_list_init(&fdi->in);
-        dill_list_init(&fdi->out);
+        fdi->in = NULL;
+        fdi->out = NULL;
         fdi->currevs = FDW_OUT;
         fdi->firing = 0;
         fdi->next = 0;
         fdi->cached = 1;
     }
-    if(!dill_list_empty(&fdi->out)) {errno = EEXIST; return -1;}
+    if(dill_slow(fdi->out)) {errno = EEXIST; return -1;}
     /* If fd is not yet in the pollset add it there. */
     else if(!fdi->next) {
         fdi->next = ctx->changelist;
         ctx->changelist = fd + 1;
     }
-    /* Add the clause to the list of waited for clauses. */
-    dill_list_insert(&fdcl->item, &fdi->out);
-    dill_waitfor(&fdcl->cl, id, dill_fdcancel);
+    fdcl->fdinfo = fdi;
+    fdi->out = fdcl;
+    dill_waitfor(&fdcl->cl, id, dill_fdcancelout);
     return 0;
 }
 
@@ -155,8 +159,8 @@ void dill_pollset_clean(int fd) {
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(!fdi->cached) return;
     /* We cannot clean an fd that someone is waiting for. */
-    dill_assert(dill_list_empty(&fdi->in));
-    dill_assert(dill_list_empty(&fdi->out));
+    dill_assert(!fdi->in);
+    dill_assert(!fdi->out);
     /* Remove the file descriptor from the pollset, if it is still there. */
     int nevs = 0;
     struct kevent evs[2];
@@ -205,7 +209,7 @@ int dill_pollset_poll(int timeout) {
         }
         int fd = ctx->changelist - 1;
         struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
-        if(!dill_list_empty(&fdi->in)) {
+        if(fdi->in) {
             if(!(fdi->currevs & FDW_IN)) {
                 EV_SET(&chngs[nchngs], fd, EVFILT_READ, EV_ADD, 0, 0, 0);
                 fdi->currevs |= FDW_IN;
@@ -219,7 +223,7 @@ int dill_pollset_poll(int timeout) {
                 ++nchngs;
             }
         }
-        if(!dill_list_empty(&fdi->out)) {
+        if(fdi->out) {
             if(!(fdi->currevs & FDW_OUT)) {
                 EV_SET(&chngs[nchngs], fd, EVFILT_WRITE, EV_ADD, 0, 0, 0);
                 fdi->currevs |= FDW_OUT;
@@ -274,16 +278,10 @@ int dill_pollset_poll(int timeout) {
     while(chl != DILL_ENDLIST) {
         int fd = chl - 1;
         struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
-        if(!dill_list_empty(&fdi->in) && (fdi->firing & FDW_IN)) {
-            struct dill_fdclause *fdcl = dill_cont(dill_list_next(&fdi->in),
-                struct dill_fdclause, item);
-            dill_trigger(&fdcl->cl, 0);
-        }
-        if(!dill_list_empty(&fdi->out) && (fdi->firing & FDW_OUT)) {
-            struct dill_fdclause *fdcl = dill_cont(dill_list_next(&fdi->out),
-                struct dill_fdclause, item);
-            dill_trigger(&fdcl->cl, 0);
-        }
+        if(fdi->in && (fdi->firing & FDW_IN))
+            dill_trigger(&fdi->in->cl, 0);
+        if(fdi->out && (fdi->firing & FDW_OUT))
+            dill_trigger(&fdi->out->cl, 0);
         fdi->firing = 0;
         chl = fdi->next;
     }    
