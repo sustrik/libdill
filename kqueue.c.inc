@@ -87,7 +87,8 @@ void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
 }
 
 static void dill_fdcancelin(struct dill_clause *cl) {
-    struct dill_fdinfo *fdi = dill_cont(cl, struct dill_fdclause, cl)->fdinfo;
+    struct dill_fdinfo *fdinfo =
+        dill_cont(cl, struct dill_fdclause, cl)->fdinfo;
     fdinfo->in = NULL;
     if(!fdinfo->next) {
         struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
@@ -97,7 +98,8 @@ static void dill_fdcancelin(struct dill_clause *cl) {
 }
 
 static void dill_fdcancelout(struct dill_clause *cl) {
-    struct dill_fdinfo *fdi = dill_cont(cl, struct dill_fdclause, cl)->fdinfo;
+    struct dill_fdinfo *fdinfo =
+        dill_cont(cl, struct dill_fdclause, cl)->fdinfo;
     fdinfo->out = NULL;
     if(!fdinfo->next) {
         struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
