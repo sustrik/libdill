@@ -372,13 +372,11 @@ int dill_wait(void)  {
         ctx->wait_counter = 0;
     }
     /* Store the context of the current coroutine, if any. */
-    if(ctx->r) {
-        if(dill_setjmp(ctx->r->ctx)) {
-            /* We get here once the coroutine is resumed. */
-            dill_slist_init(&ctx->r->clauses);
-            errno = ctx->r->err;
-            return ctx->r->id;
-        }
+    if(dill_setjmp(ctx->r->ctx)) {
+        /* We get here once the coroutine is resumed. */
+        dill_slist_init(&ctx->r->clauses);
+        errno = ctx->r->err;
+        return ctx->r->id;
     }
     while(dill_qlist_empty(&ctx->ready)) {
         /* We are going to wait for sleeping coroutines
