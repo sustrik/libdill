@@ -153,7 +153,7 @@ int dill_out(struct dill_fdclause *fdcl, int id, int fd);
 
 /* Returns 0 if blocking functions are allowed.
    Returns -1 and sets errno to ECANCELED otherwise. */
-inline int dill_canblock(void);
+int dill_canblock(void);
 
 /* When set to 1, blocking calls return ECANCELED.
    Returns old value of the flag */

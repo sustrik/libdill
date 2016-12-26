@@ -141,7 +141,7 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
     struct dill_chan *ch = hquery(h, dill_chan_type);
     if(dill_slow(!ch)) return -1;
     /* Check that the length provided matches the channel length */
-    if(dill_slow(len != ch->sz)) return -1;
+    if(dill_slow(len != ch->sz)) {errno = EINVAL; return -1;}
     /* Check if the channel is done. */
     if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
     if(!dill_list_empty(&ch->in)) {
@@ -175,7 +175,7 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     struct dill_chan *ch = hquery(h, dill_chan_type);
     if(dill_slow(!ch)) return -1;
     /* Check that the length provided matches the channel length */
-    if(dill_slow(len != ch->sz)) return -1;
+    if(dill_slow(len != ch->sz)) {errno = EINVAL; return -1;}
     /* If there's a sender waiting copy the message directly from the sender. */
     if(!dill_list_empty(&ch->out)) {
         struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->out),
