@@ -78,7 +78,7 @@ error1:
 }
 
 void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
-    /* TODO: kqueue documentation says that a kqueue descriptor won't
+    /* Kqueue documentation says that a kqueue descriptor won't
        survive a fork. However, implementations seem to disagree.
        On FreeBSD the following function succeeds. On OSX it returns
        EACCESS. Therefore we ignore the return value. */
