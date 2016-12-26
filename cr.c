@@ -66,9 +66,7 @@ static void dill_resume(struct dill_cr *cr, int id, int err) {
 int dill_canblock(void) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     if(ctx->r->no_blocking1 || ctx->r->no_blocking2) {
-        errno = ECANCELED;
-        return -1;
-    }
+        errno = ECANCELED; return -1;}
     return 0;
 }
 
