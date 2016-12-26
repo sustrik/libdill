@@ -155,8 +155,9 @@ int dill_out(struct dill_fdclause *fdcl, int id, int fd);
    Returns -1 and sets errno to ECANCELED otherwise. */
 int dill_canblock(void);
 
-/* TODO: Can we get rid of this function? */
-int dill_no_blocking2(int val);
+/* When set to 1, blocking calls return ECANCELED.
+   Returns old value of the flag */
+int dill_no_blocking(int val);
 
 /* Cleans cached info about the fd. */
 int dill_clean(int fd);

@@ -72,7 +72,7 @@ int dill_canblock(void) {
     return 0;
 }
 
-int dill_no_blocking2(int val) {
+int dill_no_blocking(int val) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     int old = ctx->r->no_blocking2;
     ctx->r->no_blocking2 = val;

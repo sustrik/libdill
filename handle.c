@@ -135,11 +135,11 @@ int hclose(int h) {
     }
     /* This will guarantee that blocking functions cannot be called anywhere
        inside the context of the close. */
-    int old = dill_no_blocking2(1);
+    int old = dill_no_blocking(1);
     /* Send stop signal to the handle. */
     hndl->vfs->close(hndl->vfs);
     /* Restore the previous state. */
-    dill_no_blocking2(old);
+    dill_no_blocking(old);
     /* Mark the cache as invalid. */
     hndl->ptr = NULL;
     /* Return the handle to the shared pool. */
