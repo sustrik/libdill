@@ -144,8 +144,8 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
     if(dill_slow(len != ch->sz)) {errno = EINVAL; return -1;}
     /* Check if the channel is done. */
     if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
+        /* Copy the message directly to the waiting receiver, if any. */
     if(!dill_list_empty(&ch->in)) {
-        /* Copy the message directly to the waiting receiver. */
         struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->in),
             struct dill_chclause, item);
         memcpy(chcl->val, val, len);
@@ -176,6 +176,8 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     if(dill_slow(!ch)) return -1;
     /* Check that the length provided matches the channel length */
     if(dill_slow(len != ch->sz)) {errno = EINVAL; return -1;}
+    /* Check whether channel is done. */
+    if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
     /* If there's a sender waiting copy the message directly from the sender. */
     if(!dill_list_empty(&ch->out)) {
         struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->out),
@@ -184,8 +186,6 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
         dill_trigger(&chcl->cl, 0);
         return 0;
     }
-    /* Check whether channel is done. */
-    if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
     /* The clause is not available immediately. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
