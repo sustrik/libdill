@@ -306,7 +306,7 @@ int main() {
     rc = choose(cls17, 1, start + 50);
     choose_assert(-1, ETIMEDOUT);
     int64_t diff = now() - start;
-    assert(diff > 30 && diff < 70);
+    time_assert(diff, 50);
     hclose(ch21);
 
     /* Test unexpired 'deadline' clause. */
@@ -320,7 +320,7 @@ int main() {
     choose_assert(0, 0);
     assert(val == 4444);
     diff = now() - start;
-    assert(diff > 30 && diff < 70);
+    time_assert(diff, 50);
     hclose(ch22);
     rc = hclose(hndl11);
     errno_assert(rc == 0);

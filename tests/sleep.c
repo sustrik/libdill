@@ -42,7 +42,7 @@ int main() {
     int rc = msleep(deadline);
     errno_assert(rc == 0);
     int64_t diff = now () - deadline;
-    assert(diff > -20 && diff < 20);
+    time_assert(diff, 0);
 
     /* msleep-sort */
     int ch = chmake(sizeof(int));

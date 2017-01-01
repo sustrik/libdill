@@ -79,7 +79,7 @@ int main() {
     rc = fdin(fds[0], deadline);
     assert(rc == -1 && errno == ETIMEDOUT);
     int64_t diff = now() - deadline;
-    assert(diff > -20 && diff < 20);
+    time_assert(diff, 0);
 
     /* Check cancelation. */
     int hndl1 = go(cancel(fds[0]));
@@ -103,7 +103,7 @@ int main() {
     rc = fdin(fds[1], start + 90);
     errno_assert(rc == 0);
     diff = now() - start;
-    assert(diff > 30 && diff < 70);
+    time_assert(diff, 50);
     rc = hclose(hndl2);
     errno_assert(rc == 0);
 

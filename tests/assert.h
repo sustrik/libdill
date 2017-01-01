@@ -35,7 +35,7 @@
             fflush(stderr);\
             abort();\
         }\
-    } while (0)
+    } while(0)
 
 #define choose_assert(x, err) \
     do {\
@@ -45,5 +45,15 @@
             fflush(stderr);\
             abort();\
         }\
-    } while (0)
+    } while(0)
+
+#define time_assert(x, expected) \
+    do {\
+        if((x) < ((expected) - 20) || (x) > ((expected) + 20)) {\
+            fprintf(stderr, "Expected duration %d, actual duration %d "\
+                "(%s:%d)\n", (int)(expected), (int)(x), __FILE__, __LINE__);\
+            fflush(stderr);\
+            abort();\
+        }\
+    } while(0) 
 
