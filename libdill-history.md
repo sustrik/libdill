@@ -1,6 +1,12 @@
 
 # Past versions
 
+**Jan 1st, 2016 <http://libdill.org/libdill-1.1.tar.gz>**
+
+* Multiple bugfixes.
+* Multiple performance enhancements.
+* fdclean() returns EBUSY error if file descriptor is being waited for by a different coroutine.
+
 **Dec 16th, 2016 <http://libdill.org/libdill-1.0.tar.gz>**
 
 * Final API cleanup before the first official release

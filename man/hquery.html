@@ -43,6 +43,7 @@
     vfs-&gt;bar(vfs, c);
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
+<p>Pointers returned by hquery are meant to be cacheable. In other words, if you call <code>hquery</code> on the same handle with the same type multiple times, the result should be the same.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>An opaque pointer in case of success. In case of failure, <code>NULL</code> is returned and <code>errno</code> is set to one of the following values.</p>
 <h1 id="errors">ERRORS</h1>

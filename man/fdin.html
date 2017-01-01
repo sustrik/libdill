@@ -28,8 +28,8 @@
 <h1 id="errors">ERRORS</h1>
 <ul>
 <li><code>EBADF</code>: Not a file descriptor.<br /></li>
+<li><code>EBUSY</code>: Another coroutine is already blocked on <code>fdin</code> with this file descriptor.<br /></li>
 <li><code>ECANCELED</code>: Current coroutine is being shut down.<br /></li>
-<li><code>EEXIST</code>: Another coroutine is already blocked on <code>fdin</code> with this file descriptor.<br /></li>
 <li><code>ETIMEDOUT</code>: Deadline expired while waiting for the file descriptor.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>

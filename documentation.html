@@ -76,7 +76,7 @@ $ make check
 $ sudo make install</code></pre>
 <p>For easy debugging use the following configure options:</p>
 <pre><code>$ ./configure --disable-shared --enable-debug --enable-valgrind</code></pre>
-<p>The above will turn the optimisation out, generate debug symbols and link all the tests with the static version of the library. The second option means that the executables in <code>tests</code> subdirectory will be actual debuggable binaries rather that wrapper shell scripts. The last option instructs valgrind about where coroutine stacks are located and thus prevents spurious valgrind warnings.</p>
+<p>The above will turn the optimisation out, generate debug symbols and link all the tests with the static version of the library. The second option means that the executables in <code>tests</code> subdirectory will be actual debuggable binaries rather that wrapper shell scripts. The last option instructs valgrind about where are the coroutine stacks located and thus prevents spurios valgrind warnings.</p>
 <h2 id="faq-is-there-continuous-integration-for-libdill">FAQ: Is there continuous integration for libdill?</h2>
 <iframe width="100%" height="20" frameBorder="0"
 src="https://api.travis-ci.org/sustrik/libdill.svg?branch=master">
