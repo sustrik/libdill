@@ -394,6 +394,7 @@ int dill_wait(void)  {
        unwinding information will be trimmed if a crash occurs in this
        function. */
     dill_longjmp(ctx->r->ctx);
+    return 0;
 }
 
 static void dill_docancel(struct dill_cr *cr, int id, int err) {
