@@ -6,16 +6,17 @@ matrix:
   include:
   - os: linux
     compiler: gcc
-    env: 
+    env:
     addons:
       apt:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - gcc-4.9
   - os: linux
     compiler: clang
-    env: 
+    env:
     addons:
       apt:
         sources:
@@ -30,6 +31,7 @@ matrix:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - gcc-4.9
   - os: linux
     compiler: clang
@@ -42,16 +44,24 @@ matrix:
           - clang
   - os: osx
     compiler: clang
-    env: 
+    env:
+    before_install:
+      - brew install gdb
   - os: osx
     compiler: clang
     env: STATIC=1
+    before_install:
+      - brew install gdb
   - os: osx
     compiler: clang
     env: NOTHREADS=1
+    before_install:
+      - brew install gdb
   - os: osx
     compiler: clang
     env: STATIC=1 NOTHREADS=1
+    before_install:
+      - brew install gdb
   - os: linux
     compiler: gcc
     env: DIST=1
@@ -68,6 +78,7 @@ matrix:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - gcc-4.9
   - os: linux
     compiler: gcc
@@ -77,6 +88,7 @@ matrix:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - gcc-4.9
   - os: linux
     compiler: gcc
@@ -86,6 +98,7 @@ matrix:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - gcc-4.9
   - os: linux
     compiler: gcc
@@ -95,6 +108,7 @@ matrix:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - gcc-4.9
           - valgrind
   - os: linux
@@ -105,6 +119,7 @@ matrix:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - gcc-4.9
           - valgrind
   - os: linux
@@ -115,6 +130,7 @@ matrix:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - gcc-4.9
   - os: linux
     compiler: gcc
@@ -124,6 +140,7 @@ matrix:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - gcc-4.9
           - valgrind
   - os: linux
@@ -134,6 +151,7 @@ matrix:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - gcc-4.9
   - os: linux
     compiler: gcc
@@ -143,6 +161,7 @@ matrix:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - gcc-4.9
   - os: linux
     compiler: gcc
@@ -152,15 +171,17 @@ matrix:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - gcc-4.9
   - os: linux
     compiler: clang
-    env: ARCH_FALLBACK=1 
+    env: ARCH_FALLBACK=1
     addons:
       apt:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - clang
   - os: linux
     compiler: gcc
@@ -170,10 +191,13 @@ matrix:
         sources:
           - ubuntu-toolchain-r-test
         packages:
+          - gdb
           - gcc-4.9
   - os: osx
     compiler: clang
     env: THREAD_FALLBACK=1
+    before_install:
+      - brew install gdb
 
 
 branches:
