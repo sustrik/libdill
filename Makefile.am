@@ -32,6 +32,10 @@ dillinclude_HEADERS = libdill.h
 lib_LTLIBRARIES = libdill.la
 
 libdill_la_SOURCES = \
+    apoll.h \
+    apoll.c \
+    apoll-epoll.h.inc \
+    apoll-epoll.c.inc \
     chan.c \
     cr.h \
     cr.c \
@@ -47,6 +51,8 @@ libdill_la_SOURCES = \
     list.h \
     poll.h.inc \
     poll.c.inc \
+    poller.h \
+    poller.c \
     pollset.h \
     pollset.c \
     qlist.h \
