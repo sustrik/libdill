@@ -2,7 +2,7 @@
 
 # Clean up the old man pages
 git rm man/*.html
-mkdir man
+mkdir -p man
 
 # Get the man page source files from the libdill repo.
 git clone git@github.com:sustrik/libdill.git libdill-tmp

@@ -223,11 +223,14 @@ One thing to note is that libdill uses deadlines rather than more conventional t
 int64_t deadline = now() + 10000;
 ```
 
-Further, you have to modify all the potentially blocking function calls in the program to take the deadline parameter. For example:
+Further, you have to modify all the potentially blocking function calls in the program to take the deadline parameter. In our case:
 
 ```c
 int rc = msend(s, "What's your name?", 17, deadline);
 if(rc != 0) goto cleanup;
+char inbuf[256];
+ssize_t sz = mrecv(s, inbuf, sizeof(inbuf), deadline);
+if(sz < 0) goto cleanup;
 ```
 
 Note that `errno` is set to `ETIMEDOUT` in case the deadline is reached. However, we treat all the errors in the same way (by closing the connection) and thus we don't have to do any specific provisions for the deadline case.

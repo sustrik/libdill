@@ -147,9 +147,12 @@ cleanup:
 <p>To deal with the problem we are going to timeout the whole client/server dialogue. If it takes more than 10 seconds, server will kill the connection straight away.</p>
 <p>One thing to note is that libdill uses deadlines rather than more conventional timeouts. In other words, you specify the time instant when you want the operation to finish rather than maximum time it should take to run. To construct deadlines easily, libdill provides <code>now()</code> function. The deadline is expressed in milliseconds so you can create a deadline 10 seconds in the future like this:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int64_t</span> deadline = now() + <span class="dv">10000</span>;</code></pre>
-<p>Further, you have to modify all the potentially blocking function calls in the program to take the deadline parameter. For example:</p>
+<p>Further, you have to modify all the potentially blocking function calls in the program to take the deadline parameter. In our case:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> rc = msend(s, <span class="st">&quot;What&#39;s your name?&quot;</span>, <span class="dv">17</span>, deadline);
-<span class="kw">if</span>(rc != <span class="dv">0</span>) <span class="kw">goto</span> cleanup;</code></pre>
+<span class="kw">if</span>(rc != <span class="dv">0</span>) <span class="kw">goto</span> cleanup;
+<span class="dt">char</span> inbuf[<span class="dv">256</span>];
+ssize_t sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), deadline);
+<span class="kw">if</span>(sz &lt; <span class="dv">0</span>) <span class="kw">goto</span> cleanup;</code></pre>
 <p>Note that <code>errno</code> is set to <code>ETIMEDOUT</code> in case the deadline is reached. However, we treat all the errors in the same way (by closing the connection) and thus we don't have to do any specific provisions for the deadline case.</p>
 <h2 id="step-5-communicating-among-coroutines">Step 5: Communicating among coroutines</h2>
 <p>Imagine we want to keep statistics in the greetserver: Number of overall connections, number of those that are active at the moment and number of those that have failed.</p>
