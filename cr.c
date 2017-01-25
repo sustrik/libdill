@@ -144,11 +144,17 @@ int dill_clean(int fd) {
     return dill_pollset_clean(fd);
 }
 
-/* Wait for external events such as timers or file descriptors. If block is set
-   to 0 the function will poll for events and return immediately. If it is set
-   to 1 it will block until there's at least one event to process. */
-static void dill_poller_wait(int block) {
+/* Wait for external events such as timers or file descriptors.  */
+static inline void dill_poller_wait(void) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
+    int64_t nw = now();
+    /* If there are ready coroutines no need to poll for external events every
+       time. Still, we'll do it at least once a second. The external signal may
+       very well be a deadline or a user-issued command that cancels the CPU
+       intensive operation. */
+    if(!dill_qlist_empty(&ctx->ready) && nw < ctx->last_poll + 1000)
+        return;
+    int block = dill_qlist_empty(&ctx->ready);
     while(1) {
         /* Compute timeout for the subsequent poll. */
         int timeout = 0;
@@ -156,7 +162,6 @@ static void dill_poller_wait(int block) {
             if(dill_rbtree_empty(&ctx->timers))
                 timeout = -1;
             else {
-                int64_t nw = now();
                 int64_t deadline = dill_cont(dill_rbtree_first(&ctx->timers),
                     struct dill_tmclause, item)->item.val;
                 timeout = (int) (nw >= deadline ? 0 : deadline - nw);
@@ -164,10 +169,10 @@ static void dill_poller_wait(int block) {
         }
         /* Wait for events. */
         int fired = dill_pollset_poll(timeout);
+        if(timeout != 0) nw = now();
         if(dill_slow(fired < 0)) continue;
         /* Fire all expired timers. */
         if(!dill_rbtree_empty(&ctx->timers)) {
-            int64_t nw = now();
             while(!dill_rbtree_empty(&ctx->timers)) {
                 struct dill_tmclause *tmcl = dill_cont(
                     dill_rbtree_first(&ctx->timers),
@@ -184,6 +189,7 @@ static void dill_poller_wait(int block) {
         /* If timeout was hit but there were no expired timers do the poll
            again. It can happen if the timers were canceled in the meantime. */
     }
+    ctx->last_poll = nw;
 }
 
 /******************************************************************************/
@@ -367,25 +373,8 @@ int dill_wait(void)  {
         errno = ctx->r->err;
         return ctx->r->id;
     }
-    if(dill_qlist_empty(&ctx->ready)) {
-        /* If there are no coroutines eligible to run we'll wait for sleeping
-           coroutines and external events. */
-        dill_poller_wait(1);
-        /* Sanity check: External events must have unblocked at least
-           one coroutine. */
-        dill_assert(!dill_qlist_empty(&ctx->ready));
-        ctx->last_poll = now();
-    }
-    else {
-        /* Even if process never gets idle, we have to process external events
-           once in a while. The external signal may very well be a deadline or
-           a user-issued command that cancels the CPU intensive operation. 
-           We'll do so at least once a second. */
-        if(now() > ctx->last_poll + 1000) {
-            dill_poller_wait(0);
-            ctx->last_poll = now();
-        }
-    }
+    /* Wait for timeouts and external events. */
+    dill_poller_wait();
     /* There's a coroutine ready to be executed so jump to it. */
     struct dill_slist *it = dill_qlist_pop(&ctx->ready);
     it->next = NULL;
