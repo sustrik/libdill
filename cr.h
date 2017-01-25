@@ -89,7 +89,8 @@ struct dill_ctx_cr {
     struct dill_qlist ready;
     /* All active timers. */
     struct dill_rbtree timers;
-    int wait_counter;
+    /* Last time the poll was performed. */
+    int64_t last_poll;
     /* Main coroutine. We don't control creation of main coroutine's stack
        so we have to store this info here instead on the top of the stack. */
     struct dill_cr main;
