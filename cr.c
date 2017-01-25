@@ -360,14 +360,6 @@ void dill_waitfor(struct dill_clause *cl, int id,
 
 int dill_wait(void)  {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
-    /* Even if process never gets idle, we have to process external events
-       once in a while. The external signal may very well be a deadline or
-       a user-issued command that cancels the CPU intensive operation. 
-       We'll do so at least once a second. */
-    if(now() > ctx->last_poll + 1000) {
-        dill_poller_wait(0);
-        ctx->last_poll = now();
-    }
     /* Store the context of the current coroutine, if any. */
     if(dill_setjmp(ctx->r->ctx)) {
         /* We get here once the coroutine is resumed. */
@@ -375,14 +367,24 @@ int dill_wait(void)  {
         errno = ctx->r->err;
         return ctx->r->id;
     }
-    /* If there are no coroutines eligible to run we'll wait for sleeping
-       coroutines and external events. */
     if(dill_qlist_empty(&ctx->ready)) {
+        /* If there are no coroutines eligible to run we'll wait for sleeping
+           coroutines and external events. */
         dill_poller_wait(1);
         /* Sanity check: External events must have unblocked at least
            one coroutine. */
         dill_assert(!dill_qlist_empty(&ctx->ready));
         ctx->last_poll = now();
+    }
+    else {
+        /* Even if process never gets idle, we have to process external events
+           once in a while. The external signal may very well be a deadline or
+           a user-issued command that cancels the CPU intensive operation. 
+           We'll do so at least once a second. */
+        if(now() > ctx->last_poll + 1000) {
+            dill_poller_wait(0);
+            ctx->last_poll = now();
+        }
     }
     /* There's a coroutine ready to be executed so jump to it. */
     struct dill_slist *it = dill_qlist_pop(&ctx->ready);
