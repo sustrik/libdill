@@ -33,6 +33,7 @@ coroutine void worker(int count, const char *text) {
     for(i = 0; i != count; ++i) {
         printf("%s\n", text);
         int rc = msleep(now() + 10);
+        if(rc < 0 && errno == ECANCELED) return;
         errno_assert(rc == 0);
     }
 }
