@@ -325,10 +325,13 @@ int dill_wait(void)  {
         errno = ctx->r->err;
         return ctx->r->id;
     }
-    /* Wait for timeouts and external events. */
+    /* For performance reasons we want to avoid excessive checking of current
+       time. Thus we cache the value here. It will be recomputed only after
+       a blocking call. */
     int64_t nw = now();
-    /* If there are ready coroutines no need to poll for external events every
-       time. Still, we'll do it at least once a second. The external signal may
+    /*  Wait for timeouts and external events. However, if there are ready
+       coroutines there's no need to poll for external events every time.
+       Still, we'll do it at least once a second. The external signal may
        very well be a deadline or a user-issued command that cancels the CPU
        intensive operation. */
     if(dill_qlist_empty(&ctx->ready) || nw > ctx->last_poll + 1000) {
@@ -340,7 +343,8 @@ int dill_wait(void)  {
                 if(dill_rbtree_empty(&ctx->timers))
                     timeout = -1;
                 else {
-                    int64_t deadline = dill_cont(dill_rbtree_first(&ctx->timers),
+                    int64_t deadline = dill_cont(
+                        dill_rbtree_first(&ctx->timers),
                         struct dill_tmclause, item)->item.val;
                     timeout = (int) (nw >= deadline ? 0 : deadline - nw);
                 }
@@ -365,7 +369,8 @@ int dill_wait(void)  {
             if(!block || fired)
                 break;
             /* If timeout was hit but there were no expired timers do the poll
-               again. It can happen if the timers were canceled in the meantime. */
+               again. It can happen if the timers were canceled in the
+               meantime. */
         }
         ctx->last_poll = nw;
     }
