@@ -1,0 +1,39 @@
+#!/bin/sh -e
+
+#Lazily convert md->html
+lz_md_to_html()
+{
+    md=$1
+    html=${md%.*}.html
+    if ! [ "$html" -nt "$md" ]; then
+        echo "$html <- $md"
+        {
+            cat templates/header.html
+            pandoc -f markdown_github $md
+            cat templates/footer.html
+        } > $html.tmp
+        #this indirection is for livereload.js to reload smoothly
+        mv $html.tmp $html 
+        #coarsen the timestamp
+        touch -d 'now+1second' $html
+    fi
+}
+g_documentation_md(){
+    if ! [  documentation.html -nt man/ ]; then
+        {
+            cat templates/documentation-header.md
+            for f in man/*.md; do
+                name=$f; name=${name##*/}; name=${name%.*}
+                echo "* [$name](http://libdill.org/man/$name.html)"
+            done 
+            cat templates/documentation-footer.md
+        } > documentation.md
+    fi
+}
+main(){
+    git checkout master -- 'man/*.md'
+    g_documentation_md
+    for f in man/*.md *.md; do lz_md_to_html "$f"; done
+}
+#git add .
+main "$@"
