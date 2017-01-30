@@ -17,7 +17,7 @@
 </ul>
 <h1 id="tutorial">Tutorial</h1>
 <h2 id="introduction">Introduction</h2>
-<p>In this tutorial you will develop a simple TCP &quot;greet&quot; server. The client is meant to connect to it via telnet. After doing so, the server will ask for their name, reply with a greeting and close the connection.</p>
+<p>In this tutorial, you will develop a simple TCP &quot;greet&quot; server. Clients are meant to connect to it by telnet. After a client has connected, the server will ask for their name, reply with a greeting, and then proceed to close the connection.</p>
 <p>An interaction with our server will look like this:</p>
 <pre><code>$ telnet 127.0.0.1 5555
 Trying 127.0.0.1...
@@ -27,9 +27,9 @@ What&#39;s your name?
 Bartholomaeus
 Hello, Bartholomaeus!
 Connection closed by foreign host.</code></pre>
-<p>In the process you will learn how to use coroutines, channels and sockets.</p>
+<p>Throughout the tutorial, you will learn how to use coroutines, channels, and sockets.</p>
 <h2 id="step-1-setting-up-the-stage">Step 1: Setting up the stage</h2>
-<p>First, include libdill and dsock header files. Later on we'll need some functionality from the standard library, so include those headers as well:</p>
+<p>Start by including the libdill and dsock header files. Later we'll need some functionality from the standard library, so include those headers as well:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
 <span class="ot">#include &lt;dsock.h&gt;</span>
 <span class="ot">#include &lt;assert.h&gt;</span>
@@ -38,34 +38,33 @@ Connection closed by foreign host.</code></pre>
 <span class="ot">#include &lt;stdlib.h&gt;</span>
 <span class="ot">#include &lt;string.h&gt;</span>
 <span class="ot">#include &lt;unistd.h&gt;</span></code></pre>
-<p>Add the <code>main</code> function. We'll assume, that the first argument, if present, will be the port number to be used by the server. If not specified, we will default to 5555:</p>
+<p>Add a <code>main</code> function. We'll assume that the first argument, if present, will be the port number to be used by the server. If not specified, the port number will default to <em>5555</em>:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> main(<span class="dt">int</span> argc, <span class="dt">char</span> *argv[]) {
     <span class="dt">int</span> port = <span class="dv">5555</span>;
     <span class="kw">if</span>(argc &gt; <span class="dv">1</span>) port = atoi(argv[<span class="dv">1</span>]);
 
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
-<p>Now we can start doing the actual interesting stuff.</p>
-<p><code>tcp_listen()</code> function can be used to create listening TCP socket. The socket will be used to accept new TCP connections from the clients:</p>
+<p>Now we can move on to the actual interesting stuff.</p>
+<p>The <code>tcp_listen()</code> function creates a listening TCP socket. The socket can be used to accept new TCP connections from clients:</p>
 <pre class="sourceCode c"><code class="sourceCode c">ipaddr addr;
 <span class="dt">int</span> rc = ipaddr_local(&amp;addr, NULL, port, <span class="dv">0</span>);
-assert(rc == <span class="dv">0</span>);
-<span class="dt">int</span> ls = tcp_listen(&amp;addr, <span class="dv">10</span>);
-<span class="kw">if</span>(ls &lt; <span class="dv">0</span>) {
+<span class="kw">if</span> (rc &lt; <span class="dv">0</span>) {
     perror(<span class="st">&quot;Can&#39;t open listening socket&quot;</span>);
     <span class="kw">return</span> <span class="dv">1</span>;
-}</code></pre>
-<p><code>ipaddr_local()</code> function is used to convert textual representation of a local IP address to the actual address. Second argument can be used to specify local network interface to bind to. This is an advanced functionality and you likely won't need it. Conveniently, you can just ignore it and set the argument to <code>NULL</code>. The server will then bind to all available local network interfaces.</p>
-<p>The third argument is, unsurprisingly, the port that the clients will connect to. When testing the program keep in mind that the range of valid port numbers is 1 to 65535 and binding to the ports from 1 to 1023 typically requires superuser privileges.</p>
-<p>If <code>tcp_listen()</code> fails it returns -1 and sets <code>errno</code> to appropriate error code. Libdill/dscok API is in this respect very similar to standard POSIX APIs. What it means is that we can use standard POSIX mechanims -- <code>perror()</code> in this case -- to deal with errors.</p>
-<p>As for errors that are not likely, we'll just use asserts to catch them, so that the tutorial code is kept succint and readable.</p>
-<p>If you run the program at this stage you'll find out that it finishes immediately rather than pausing and waiting for a connection from the client to arrive. That is what <code>tcp_accept()</code> function is for:</p>
+}
+<span class="dt">int</span> ls = tcp_listen(&amp;addr, <span class="dv">10</span>);
+assert( ls &gt;= <span class="dv">0</span> );</code></pre>
+<p>The <code>ipaddr_local()</code> function converts the textual representation of a local IP address to the actual address. Its second argument can be used to specify a local network interface to bind to. This is an advanced feature and you likely won't need it. For now, you can simply ignore it by setting it to <code>NULL</code>. This will cause the server to bind to all local network interfaces available.</p>
+<p>The third argument is, unsurprisingly, the port that clients will connect to. When testing the program, keep in mind that valid port numbers range from <em>1</em> to <em>65535</em> and that binding to ports <em>1</em> through <em>1023</em> will typically require superuser privileges.</p>
+<p>If <code>tcp_listen()</code> fails, it will return <code>-1</code> and <code>set errno</code> to the appropriate error code. The libdill/dscok API is in this respect very similar to standard POSIX APIs. Consequently, we can use standard POSIX error-handling mechanims such as <code>perror()</code> in this case.</p>
+<p>As for unlikely errors, the tutorial will simply use <code>assert</code>s to catch them so as to stay succinct and readable.</p>
+<p>If you run the program at this stage, you'll find out that it terminates immediately without pausing or waiting for a client to connect. That is what the <code>tcp_accept()</code> function is for:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = tcp_accept(ls, NULL, -<span class="dv">1</span>);
 assert(s &gt;= <span class="dv">0</span>);</code></pre>
 <p>The function returns the newly established connection.</p>
-<p>The third argument of the function is a deadline. We'll cover the deadlines later on in this tutorial. For now, remember that constant -1 can be used to mean 'no deadline' -- if there is no incoming connection the call will block forever.</p>
-<p>Finally, we want to handle many connections from the clients rather than a single one so we put the <code>tcp_accept()</code> call into an infinite loop.</p>
-<p>For now we'll just print a message when new connection is established we won't even check for error and close it immediately:</p>
+<p>Its third argument is a deadline. We'll cover deadlines later on in this tutorial. For now, remember that the constant <code>-1</code> can be used to mean 'no deadline' — if there is no incoming connection, the call will block forever.</p>
+<p>Finally, we want to handle multiple client connections instead of just one so we put the <code>tcp_accept()</code> call into an infinite loop. For now we'll just print a message when a new connection is established. We will close it immediately and not even check for errors:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">while</span>(<span class="dv">1</span>) {
     <span class="dt">int</span> s = tcp_accept(ls, NULL, -<span class="dv">1</span>);
     assert(s &gt;= <span class="dv">0</span>);
@@ -73,51 +72,50 @@ assert(s &gt;= <span class="dv">0</span>);</code></pre>
     rc = hclose(s);
     assert(rc == <span class="dv">0</span>);
 }</code></pre>
-<p>The source code for this step can be found in dsock repository named <code>tutorial/step1.c</code>. All the following steps will be available in the same directory.</p>
-<p>Build it like this:</p>
+<p>The source code for this step can be found in the dsock repository under tutorial/step1.c. All the other steps that follow are in the same directory.</p>
+<p>Build the program like this:</p>
 <pre><code>$ gcc -o greetserver step1.c -ldill -ldsock</code></pre>
 <p>Then run the resulting executable:</p>
 <pre><code>$ ./greetserver</code></pre>
-<p>The server now waits for a new connection. Establish one from a different terminal using telnet and check whether it works like expected:</p>
+<p>The server is now waiting for a new connection. Use telnet at a different terminal to establish one and then check whether the program works as expected:</p>
 <pre><code>$ telnet 127.0.0.1 5555</code></pre>
-<p>To test whether error hadling works all right try to use invalid port number:</p>
+<p>To test whether error hadling works, try using an invalid port number:</p>
 <pre><code>$ ./greetserver 70000
 Can&#39;t open listening socket: Invalid argument
 $</code></pre>
-<p>Everyting seems to work as expected. Let's now move to the step 2.</p>
+<p>Everything seems to work as expected. Let's now move on to step 2.</p>
 <h2 id="step-2-the-business-logic">Step 2: The business logic</h2>
-<p>When new connection arrives, the first thing that we want to do is to set up the network protocol we'll use. dsock is a library of easily composable microprotocols and thus you can create a wide range of protocols just by plugging different microprotocols each to another, in lego brick fashion. However, in this tutorial we are going to use just a very simple setup. There's the TCP connection we've just created and on top there will be a simple protocol that delimits the TCP bytestream into discrete messages using line breaks (CR+LF) as delimiters:</p>
+<p>When new a connection arrives, the first thing that we want to do is establish the network protocol we'll be using. dsock is a library of easily composable microprotocols that allows you to compose a wide range of protocols just by plugging different microprotocols onto each other in a lego brick fashion. In this tutorial, however, we are going to limit ourselves to just a very simple setup. On top of the TCP connection that we've just created, we'll have a simple protocol that will split the TCP bytestream into discrete messages, using line breaks (<code>CR+LF</code>) as delimiters:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = crlf_start(s);
 assert(s &gt;= <span class="dv">0</span>);</code></pre>
-<p>Note that <code>hclose()</code> works in recursive manner. Given that our CRLF socket wraps the underlying TCP socket, single call to <code>hclose()</code> will close both of them.</p>
-<p>Once done we can send the &quot;What's your name?&quot; question to the client:</p>
+<p>Note that <code>hclose()</code> works recursively. Given that our CRLF socket wraps an underlying TCP socket, a single call to <code>hclose()</code> will close both of them.</p>
+<p>Once finished with the setup, we can send the &quot;What's your name?&quot; question to the client:</p>
 <pre class="sourceCode c"><code class="sourceCode c">rc = msend(s, <span class="st">&quot;What&#39;s your name?&quot;</span>, <span class="dv">17</span>, -<span class="dv">1</span>);
 <span class="kw">if</span>(rc != <span class="dv">0</span>) <span class="kw">goto</span> cleanup;</code></pre>
-<p>Note that <code>msend()</code> works with messages, not bytes (the name stands for &quot;message send&quot;). Therefore, the data acts as a single unit: either all of it is received or none of it. Also, we don't have to care about delimitation of messages. That's done for us by the CRLF protocol.</p>
-<p>To handle possible errors from <code>msend()</code> (such as when the client closes the connection) add <code>cleanup</code> label before the <code>hclose</code> line and jump to it whenever you want to close the connection and proceed without crashing the server.</p>
+<p>Note that <code>msend()</code> works with messages, not bytes (the name stands for &quot;message send&quot;). Consequently, the data will act as a single unit: either all of it is received or none of it is. Also, we don't have to care about message delimiters. That's done for us by the CRLF protocol.</p>
+<p>To handle possible errors from <code>msend()</code> (such as when the client has closed the connection), add a <code>cleanup</code> label before the <code>hclose</code> line and jump to it whenever you want to close the connection and proceed without crashing the server.</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> inbuf[<span class="dv">256</span>];
 ssize_t sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), -<span class="dv">1</span>);
 <span class="kw">if</span>(sz &lt; <span class="dv">0</span>) <span class="kw">goto</span> cleanup;</code></pre>
-<p>This piece of code simply reads the reply from the client. Reply is a single message which in case of CRLF protocol translates to a single line of text. The function returns number of bytes in the message.</p>
-<p>Having received the reply from the client, we can now construct the greeting and send it to the client. The analysis of this code is left as an exercise to the reader:</p>
+<p>This piece of code simply reads the reply from the client. The reply is a single message, which in the case of the CRLF protocol translates to a single line of text. The function returns the number of bytes in the message.</p>
+<p>Having received a reply, we can now construct the greeting and send it to the client. The analysis of this code is left as an exercise to the reader:</p>
 <pre class="sourceCode c"><code class="sourceCode c">inbuf[sz] = <span class="dv">0</span>;
 <span class="dt">char</span> outbuf[<span class="dv">256</span>];
 rc = snprintf(outbuf, <span class="kw">sizeof</span>(outbuf), <span class="st">&quot;Hello, %s!&quot;</span>, inbuf);
 rc = msend(s, outbuf, rc, -<span class="dv">1</span>);
 <span class="kw">if</span>(rc != <span class="dv">0</span>) <span class="kw">goto</span> cleanup;</code></pre>
-<p>Compile the program and check whether it works like expected!</p>
+<p>Compile the program and check whether it works as expected.</p>
 <h2 id="step-3-making-it-parallel">Step 3: Making it parallel</h2>
-<p>At this point the client can't crash the server, but it can block it. Do the following experiment:</p>
+<p>At this point, the client cannot crash the server, but it can block it. Do the following experiment:</p>
 <ol>
 <li>Start the server.<br /></li>
-<li>From a different terminal start a telnet session and let it hang without entering your name.<br /></li>
-<li>From yet different terminal open a new telnet session.<br /></li>
+<li>At a different terminal, start a telnet session and, without entering your name, let it hang.<br /></li>
+<li>At yet another terminal, open a new telnet session.<br /></li>
 <li>Observe that the second session hangs without even asking you for your name.</li>
 </ol>
-<p>The reason for the behaviour is that the program doesn't even start accepting new connection until the entire dialogue with the client is finished. What we want instead is running any number of dialogues with the clients in parallel. And that is where coroutines kick in.</p>
-<p>Coroutines are very much like threads. They are very lightweight though. Measuring on a modern hardware you can run up to something like twenty million libdill coroutines per second.</p>
-<p>Coroutines are defined using <code>coroutine</code> keyword and launched using <code>go()</code> construct.</p>
-<p>In our case we can move the code performing the dialogue with the client into a separate function and launch it as a coroutine:</p>
+<p>The reason for this behaviour is that the program doesn't even start accepting new connections until the entire dialogue with the client has finished. What we want instead is to run any number of dialogues with clients in parallel. And that is where coroutines kick in.</p>
+<p>Coroutines are defined using the <code>coroutine</code> keyword and launched with the <code>go()</code> construct.</p>
+<p>In our case, we can move the code performing the dialogue with the client into a separate function and launch it as a coroutine:</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> dialogue(<span class="dt">int</span> s) {
     <span class="dt">int</span> rc = msend(s, <span class="st">&quot;What&#39;s your name?&quot;</span>, <span class="dv">17</span>, -<span class="dv">1</span>);
 
@@ -141,30 +139,30 @@ cleanup:
         assert(cr &gt;= <span class="dv">0</span>);
     }
 }</code></pre>
-<p>Let's compile it and try the initial experiment once again. As can be seen, one client now cannot block another one. Great. Let's move on.</p>
+<p>Let's compile it and try the initial experiment once again. As can be seen, one client now cannot block another one. Excellent. Let's move on.</p>
 <h2 id="step-4-deadlines">Step 4: Deadlines</h2>
-<p>File descriptors can be a scarce resource. If a client connects to greetserver and lets the dialogue hang without entering the name, one file descriptor on the server side is, for all practical purposes, wasted.</p>
-<p>To deal with the problem we are going to timeout the whole client/server dialogue. If it takes more than 10 seconds, server will kill the connection straight away.</p>
-<p>One thing to note is that libdill uses deadlines rather than more conventional timeouts. In other words, you specify the time instant when you want the operation to finish rather than maximum time it should take to run. To construct deadlines easily, libdill provides <code>now()</code> function. The deadline is expressed in milliseconds so you can create a deadline 10 seconds in the future like this:</p>
+<p>File descriptors can be a scarce resource. If a client connects to the greetserver and lets the dialogue hang without entering a name, one file descriptor on the server side is, for all intents and purposes, wasted.</p>
+<p>To deal with the problem, we are going to timeout the whole client/server dialogue. If it takes more than <em>10</em> seconds, the server will kill the connection at once.</p>
+<p>One thing to note is that libdill uses deadlines rather than the more conventional timeouts. In other words, you specify the time instant by which you want the operation to finish rather than the maximum time it should take to run it. To construct deadlines easily, libdill provides the <code>now()</code> function. The deadline is expressed in milliseconds, which means you can create a deadline <em>10</em> seconds in the future as follows:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int64_t</span> deadline = now() + <span class="dv">10000</span>;</code></pre>
-<p>Further, you have to modify all the potentially blocking function calls in the program to take the deadline parameter. In our case:</p>
+<p>Furthermore, you have to modify all potentially blocking function calls in the program to take the deadline parameter. In our case:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> rc = msend(s, <span class="st">&quot;What&#39;s your name?&quot;</span>, <span class="dv">17</span>, deadline);
 <span class="kw">if</span>(rc != <span class="dv">0</span>) <span class="kw">goto</span> cleanup;
 <span class="dt">char</span> inbuf[<span class="dv">256</span>];
 ssize_t sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), deadline);
 <span class="kw">if</span>(sz &lt; <span class="dv">0</span>) <span class="kw">goto</span> cleanup;</code></pre>
-<p>Note that <code>errno</code> is set to <code>ETIMEDOUT</code> in case the deadline is reached. However, we treat all the errors in the same way (by closing the connection) and thus we don't have to do any specific provisions for the deadline case.</p>
-<h2 id="step-5-communicating-among-coroutines">Step 5: Communicating among coroutines</h2>
-<p>Imagine we want to keep statistics in the greetserver: Number of overall connections, number of those that are active at the moment and number of those that have failed.</p>
-<p>In a classic thread-based application we would keep the statistics in global variables and synchronise access to them using mutexes.</p>
-<p>With libdill, however, we are aiming at &quot;concurrency by message passing&quot; and thus we are going to implement the feature in a different way.</p>
-<p>We will create a new coroutine that will keep track of the statistics and a channel that will be used by <code>dialogue()</code> coroutines to communicate with it:</p>
+<p>Note that <code>errno</code> is set to <code>ETIMEDOUT</code> if the deadline is reached. Since we're treating all errors the same (by closing the connection), we don't make any specific provisions for deadline expiries.</p>
+<h2 id="step-5-communication-among-coroutines">Step 5: Communication among coroutines</h2>
+<p>Suppose we want the greetserver to keep statistics: The overall number of connections made, the number of those that are active at the moment and the number of those that have failed.</p>
+<p>In a classic, thread-based application, we would keep the statistics in global variables and synchronise access to them using mutexes.</p>
+<p>With libdill, however, we aim at &quot;concurrency by message passing&quot;, and so we are going to implement the feature in a different way.</p>
+<p>We will create a new coroutine that will keep track of the statistics and a channel that will be used by the <code>dialogue()</code> coroutines to communicate with it:</p>
 <p><img src="tutorial1.png"/></p>
-<p>First, we define values that will be passed through the channel:</p>
+<p>First, we define the values that will be passed through the channel:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#define CONN_ESTABLISHED 1</span>
 <span class="ot">#define CONN_SUCCEEDED 2</span>
 <span class="ot">#define CONN_FAILED 3</span></code></pre>
-<p>Now we can create the channel and pass it to <code>dialogue()</code> coroutines:</p>
+<p>Now we can create the channel and pass it to the <code>dialogue()</code> coroutines:</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> dialogue(<span class="dt">int</span> s, <span class="dt">int</span> ch) {
     ...
 }
@@ -185,10 +183,10 @@ ssize_t sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), deadline);
         assert(cr &gt;= <span class="dv">0</span>);
     }
 }</code></pre>
-<p>The argument to <code>chmake()</code> is the type of the values that will be passed through the channel. In our case, they are simple integers.</p>
+<p>The argument to <code>chmake()</code> is the type of values that will be passed through the channel. In our case, the type is simply an integer.</p>
 <p>Libdill channels are &quot;unbuffered&quot;. In other words, the sending coroutine will block each time until the receiving coroutine can process the message.</p>
-<p>This kind of behaviour could, in theory, become a bottleneck, however, in our case we assume that <code>statistics()</code> coroutine will be extremely fast and not likely to turn into a performance bottleneck.</p>
-<p>At this point we can implement the <code>statistics()</code> coroutine that will run forever in a busy loop and collect the statistics from all the <code>dialogue()</code> coroutines. Each time the statistics change, it will print them to <code>stdout</code>:</p>
+<p>This kind of behaviour could, in theory, become a bottleneck, however, in our case we assume that the <code>statistics()</code> coroutine will be extremely fast and not turn into one.</p>
+<p>At this point we can implement the <code>statistics()</code> coroutine, which will run forever in a busy loop and collect statistics from all the <code>dialogue()</code> coroutines. Each time the statistics change, it will print them to <code>stdout</code>:</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> statistics(<span class="dt">int</span> ch) {
     <span class="dt">int</span> active = <span class="dv">0</span>;
     <span class="dt">int</span> succeeded = <span class="dv">0</span>;
@@ -230,8 +228,8 @@ ssize_t sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), deadline);
     ...
 
 }</code></pre>
-<p><code>chrecv()</code> function will retrieve one message from the channel or block if there is none available. At the moment we are not sending anything to the channel, so the coroutine will simply block forever.</p>
-<p>To fix that, let's modify <code>dialogue()</code> coroutine to send some messages to the channel. <code>chsend()</code> function will be used to do that:</p>
+<p>The <code>chrecv()</code> function will retrieve one message from the channel or block if there is none available. At the moment we are not sending anything to it, so the coroutine will simply block forever.</p>
+<p>To fix that, let's modify the <code>dialogue()</code> coroutine to send some messages to the channel. The <code>chsend()</code> function will be used to do that:</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> dialogue(<span class="dt">int</span> s, <span class="dt">int</span> ch) {
     <span class="dt">int</span> op = CONN_ESTABLISHED;
     <span class="dt">int</span> rc = chsend(ch, &amp;op, <span class="kw">sizeof</span>(op), -<span class="dv">1</span>);
@@ -246,13 +244,13 @@ cleanup:
     rc = hclose(s);
     assert(rc == <span class="dv">0</span>);
 }</code></pre>
-<p>Now compile the server and run it. Create a telnet session and let it timeout. The output on the server side will look like this:</p>
+<p>Now recompile the server and run it. Create a telnet session and let it time out. The output on the server side will look like this:</p>
 <pre><code>$ ./greetserver
 active: 1      succeeded: 0      failed: 0
 active: 0      succeeded: 0      failed: 1</code></pre>
-<p>The first line is displayed when the connection is established: There is one active connection and no connection have succeeded or failed yet.</p>
-<p>Second line shows up when the connection times out: There are no active connection any longer and one connection have failed in the past.</p>
-<p>Now try pressing enter in telnet when asked for the name. The connection is terminated by server immediately, without sending the greeting and the server log reports one failed connection. What's going on here?</p>
-<p>The reason for the bahavior is that CRLF protocol treats an empty line as a connection termination request. Thus, when you press enter in telnet, you send an empty line whicha causes <code>mrecv()</code> on the server side to return <code>EPIPE</code> error which stands for &quot;connection terminated by the peer&quot;. Server thus jumps directly to the cleanup code.</p>
-<p>We are done with the tutorial now. Enjoy your time with the library!</p>
+<p>The first line is displayed when the connection is established: There is one active connection and no connection has succeeded or failed yet.</p>
+<p>The second line shows up when the connection times out: There are no active connection anymore and one connection has failed so far.</p>
+<p>Now try pressing enter in telnet when asked for your name. The connection will be terminated by the server immediately, without sending the greeting, and the server log will report one failed connection. What's going on here?</p>
+<p>The reason for the bahavior is that the CRLF protocol treats an empty line as a connection termination request. Thus, when you press enter in telnet, you send an empty line which causes <code>mrecv()</code> on the server side to return the <code>EPIPE</code> error, which represents &quot;connection terminated by peer&quot;. The server will jump directly into to the cleanup code.</p>
+<p>And that's the end of the tutorial. Enjoy your time with the library!</p>
 </body>

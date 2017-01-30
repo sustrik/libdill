@@ -1,7 +1,7 @@
 
 Libdill is a C library that makes writing [structured concurrent programs](structured-concurrency.html) easy.
 
-The following example launches two concurrent worker functions that print "Hello!" or "World!", respectively, in random intervals. Program runs for five seconds, then it shuts down.
+The following example launches two concurrent worker functions that print "Hello!" or "World!", respectively, at random intervals. The program runs for five seconds and then it shuts down.
 
 ```c
 #include <libdill.h>
@@ -23,11 +23,11 @@ int main() {
 }
 ```
 
-Code using libdill is compiled in standard C way. The only additional requirement is to link it with libdill library:
+Code dependant on libdill is compiled like any other C code. The only extra requirement is that it be linked with libdill library:
 
 ```
 $ cc -ldill -o hello hello.c
 ```
 
-Libdill is licensed under MIT/X11 license.
+Libdill is licensed under the MIT/X11 license.
 

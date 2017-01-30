@@ -16,7 +16,7 @@
 <li><a href="http://libdill.org/tutorial.html">Tutorial</a></li>
 </ul>
 <p>Libdill is a C library that makes writing <a href="structured-concurrency.html">structured concurrent programs</a> easy.</p>
-<p>The following example launches two concurrent worker functions that print &quot;Hello!&quot; or &quot;World!&quot;, respectively, in random intervals. Program runs for five seconds, then it shuts down.</p>
+<p>The following example launches two concurrent worker functions that print &quot;Hello!&quot; or &quot;World!&quot;, respectively, at random intervals. The program runs for five seconds and then it shuts down.</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
 <span class="ot">#include &lt;stdio.h&gt;</span>
 <span class="ot">#include &lt;stdlib.h&gt;</span>
@@ -34,7 +34,7 @@ coroutine <span class="dt">void</span> worker(<span class="dt">const</span> <spa
     msleep(now() + <span class="dv">5000</span>);
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
-<p>Code using libdill is compiled in standard C way. The only additional requirement is to link it with libdill library:</p>
+<p>Code dependant on libdill is compiled like any other C code. The only extra requirement is that it be linked with libdill library:</p>
 <pre><code>$ cc -ldill -o hello hello.c</code></pre>
-<p>Libdill is licensed under MIT/X11 license.</p>
+<p>Libdill is licensed under the MIT/X11 license.</p>
 </body>
