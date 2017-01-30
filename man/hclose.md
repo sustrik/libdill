@@ -4,26 +4,26 @@ hclose - hard-cancels a handle
 
 # SYNOPSIS
 
-```c
-#include <libdill.h>
-int hclose(int h);
-```
+**#include &lt;libdill.h>**
+
+**int hclose(int** _h_**);**
 
 # DESCRIPTION
 
 Closes a handle.
 
-Once all handles pointing to the same underlying object are closed the object is deallocated immediately.
+Once all handles pointing to the same underlying object have been closed, the object is deallocated immediately.
 
-The function guarantees that all resources will be deallocated, however, it does not guarantee that handle's work will be fully finished. E.g. it may not flush data to network or similar.
+The function guarantees that all associated resources are deallocated. However, it does
+not guarantee that the handle's work will have been fully finished. E.g., outbound network data may not be flushed.
 
 # RETURN VALUE
 
-Returns 0 in case of success. In case of failure it returns -1 and sets `errno` to one of the following values.
+Returns a coroutine handle. In the case of an error, it returns -1 and sets _errno_ to one of the values.
 
 # ERRORS
 
-* `EBADF`: Invalid handle.
+* **EBADF**: Invalid handle.
 
 # EXAMPLE
 
