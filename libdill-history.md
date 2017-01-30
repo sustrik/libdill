@@ -3,7 +3,7 @@
 
 **Feb 5th, 2017 <http://libdill.org/libdill-1.2.tar.gz>**
 
-* If CPU is at 100%, external events, such as those from file descriptors, are checked once per second.
+* If the CPU is at 100%, external events, such as those from file descriptors, are checked once per second.
 * Multiple optimizations.
 * Multiple bug fixes.
 
@@ -21,7 +21,7 @@
 
 * Simplification of channel semantics
     - Channels are always unbuffered
-    - `choose` has deterministic behaviour
+    - `choose` has deterministic behavior
 
 * `chmake_mem` function added
 
@@ -35,15 +35,15 @@
 
 **Nov 27, 2016 <http://libdill.org/libdill-0.10-beta.tar.gz>**
 
-* Rename hcreate() to hmake(). hcreate() clashes with POSIX function of the same name.
+* Rename hcreate() to hmake(). hcreate() clashes with the POSIX function of the same name.
 
 **Nov 19, 2016 <http://libdill.org/libdill-0.9-beta.tar.gz>**
 
-* A lot of optimizations. Context switch have been seen to execute in 6ns, coroutine creation in 26ns. Passing a message via a channel in 40ns.
+* A lot of optimizations. A context switch has been seen to execute in 6ns, coroutine creation in 26ns and passing a message through a channel in 40ns.
 
-* New `go_stack()` construct allows to run coroutine on a user-allocated stack.
+* The new `go_stack()` construct allows running coroutines on a user-allocated stack.
 
-* New `--enable-census` option monitors coroutines' stack usage and prints thr statistics on process shutdown.
+* The New `--enable-census` option monitors coroutines' stack usage and prints statistics on process shutdown.
 
 * Mutliple bug fixes.
 

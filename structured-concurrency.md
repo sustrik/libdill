@@ -36,7 +36,7 @@ This is structured concurrency:
 
 The goal of structured concurrency is to guarantee encapsulation. If the `main` function calls `foo`, which in turn launches `bar` in a concurrent fashion, `main` will be guaranteed that once `foo` has finished, there will be no leftover functions still running in the background.
 
-What you end up with is a tree of coroutines rooted in the `main` function. This tree spreads out towards the smallest worker functions, and you may think of this as a generalisation of the call stack — a call tree, if you will. In it, you can walk from any particular function towards the root until you reach the `main` function:
+What you end up with is a tree of coroutines rooted in the `main` function. This tree spreads out towards the smallest worker functions, and you may think of this as a generalization of the call stack — a call tree, if you will. In it, you can walk from any particular function towards the root until you reach the `main` function:
 
 ![](index3.jpeg)
 
@@ -74,7 +74,7 @@ coroutine void foo(void) {
 ## What about asynchronous objects?
 
 Sometimes, instead of launching a coroutine, you may want to create an object that runs coroutines in the background.
-For example, an object called `tcp_connection` may run two coroutines, one for asynchrounously reading data from and one for asynchronously writing data to the network.
+For example, an object called `tcp_connection` may run two coroutines, one for asynchronously reading data from and one for asynchronously writing data to the network.
 
 Still, it would be nice if the object was a node in the calltree, just like a coroutine is.
 

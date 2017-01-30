@@ -18,7 +18,7 @@ $ sudo make install
 
 ##### dsock
 
-Note that dsock library is still in alpha stage and the API may change. You may want to use raw POSIX sockets instead.
+Note that the dsock library is still in the alpha stage and the API may change. You may want to use raw POSIX sockets instead.
 
 <http://libdill.org/dsock-0.5-alpha.tar.gz>
 

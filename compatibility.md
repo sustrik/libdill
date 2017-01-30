@@ -7,7 +7,7 @@ Currently, only modern POSIX systems are supported. The library has been tested 
 
 It is likely to work with DragonFlyBSD as well. NetBSD and OpenBSD will probably need `DILL_THREAD_FALLBACK` to work as they don't have support for thread local storage. If you are using libdill on these platforms, please let us know.
 
-There is currently no support for Windows. Cygwin is very broken. It doesn't support `AF_UNIX` properly, and so no furhter development will be done for this platform. 
+There is currently no support for Windows. Cygwin is very broken. It doesn't support `AF_UNIX` properly, and so no further development will be done for this platform. 
 Libdill is planned to be ported to Mingw and Windows IOCP instead. Help is welcome.
 
 ### Compilers
@@ -25,7 +25,7 @@ The non-standard language features libdill requires are as follows:
 Compiler features and incompatibilities:
 
 - On x86 and x86-64 platforms, the `DILL_ARCH_FALLBACK` option is incompatible with GCC 6.2.1 when `-fstack-protector` is enabled. Please compile libdill and your application with `-fno-stack-protector` if you need to use the fallback. Non-x86 platforms have not been tested with GCC 6.2.1. Please report your mileage.
-- Address sanitisation and other stack checking compiler features are likely to break your `libdill` build.
+- Address sanitization and other stack checking compiler features are likely to break your `libdill` build.
 - x32 addressing probably doesn't work, this has not been tested yet.
 
 ### Standard Libraries
