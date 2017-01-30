@@ -4,18 +4,18 @@ now - get current time
 
 # SYNOPSIS
 
-```c
-#include <libdill.h>
-int64_t now(void);
-```
+**#include &lt;libdill.h>**
+
+**int64_t now(void);**
 
 # DESCRIPTION
 
 Returns current time, in milliseconds.
 
-The function is meant to be used for creating deadlines. For example, a point of time one second on from now can be expressed as `now() + 1000`.
+The function is meant for creating deadlines. For example, a point of time one
+second from now can be expressed as **now() + 1000**.
 
-Following values have special meaning and cannot be returned by the function:
+The following values have special meaning and cannot be returned by the function:
 
 * *0*: Immediate deadline.
 * *-1*: Infinite deadline.

@@ -1,30 +1,28 @@
 # NAME
 
-fdout - waits while file descriptor becomes writeable
+fdout - wait on file descriptor to become writable
 
 # SYNOPSIS
 
-```c
-#include <libdill.h>
-int fdout(int fd, int64_t deadline);
-```
+**#include &lt;libdill.h>**
+**int fdout(int** _fd_**, int64_t** _deadline_**);**
 
 # DESCRIPTION
 
-Waits until file descriptor becomes writeable or until it gets into an error state. Both options cause successful return from the function. To distinguish between the two outcomes you have to do subsequent write operation on the file descriptor.
+Waits on a file descriptor to either become readable or get into an error state.  Either case leads to a sucessful return from the function.  To distinguish the two outcomes, follow up with a write operation on the file descriptor.
 
-`deadline` is a point in time when the operation should time out. Use `now` function to get current point in time. 0 means immediate timeout, i.e. return immediately if file descriptor is writeable, return without blocking if it is not. -1 means no deadline, i.e. the call will block forever, if needed.
+_deadline_ is a point in time when the operation should time out. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e.  perform the operation if possible or return without blocking if not. -1 means no deadline, i.e. the call will block forever if need be.  
 
 # RETURN VALUE
 
-The function returns 0 in case of success or -1 in case of error. In the latter case is sets `errno` to one of the following values.
+The function returns 0 on success. On error, it returns -1 and sets _errno_ to one of the values below.
 
 # ERRORS
 
-* `EBADF`: Not a file descriptor.
-* `EBUSY`: Another coroutine is already blocked on `fdout` with this file descriptor.
-* `ECANCELED`: Current coroutine is being shut down.
-* `ETIMEDOUT`: Deadline expired while waiting for the file descriptor.
+* **EBADF**: Not a file descriptor.
+* **EBUSY**: Another coroutine already blocked on **fdout** with this file descriptor.
+* **ECANCELED**: Current coroutine is being shut down.
+* **ETIMEDOUT**: Deadline expired while waiting on the file descriptor. 
 
 # EXAMPLE
 
