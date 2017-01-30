@@ -4,24 +4,23 @@ hdup - duplicates a handle
 
 # SYNOPSIS
 
-```c
-#include <libdill.h>
-int hdup(int h);
-```
+**#include &lt;libdill.h>**
+
+**int hdup(int** _h_**);**
 
 # DESCRIPTION
 
-Duplicates a handle. Both handles will refer to the same underlying object.
+Duplicates a handle. The new handle will refer to the same underlying object.
 
-Each duplicate of the handle requires it's own call to `hclose`. The underlying object is deallocated once all the handles pointing to it are closed.
+Each duplicate of a handle requires its own call to **hclose**. The underlying object is deallocated when all handles pointing to it have been closed.
 
 # RETURN VALUE
 
-The duplicated handle in case of success or -1 in case of failure. In the latter case `errno` is set to one of the following values.
+Returns the new handle duplicate on success. On error, -1 is returned and _errno_ is set to one of the following values.
 
 # ERRORS
 
-* `EBADF`: Invalid handle.
+* **EBADF**: Invalid handle.
 
 # EXAMPLE
 

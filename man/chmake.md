@@ -4,25 +4,24 @@ chmake - create a channel
 
 # SYNOPSIS
 
-```c
-#include <libdill.h>
-int chmake(size_t itemsz);
-```
+**#include &lt;libdill.h>**
+
+**int chmake(size_t **_itemsz_**);**
 
 # DESCRIPTION
 
-Creates a channel. The parameter is the size of the items to be sent through the channel, in bytes.
+Creates a channel. _itemsz_ is the byte size of the items to be sent through the channel.
 
-The channel is a synchronizationn primitive, not a container. It doesn't store any items.
+A channel is a synchronizationn primitive, not a container. It doesn't store any items.
 
 # RETURN VALUE
 
-Returns a channel handle. In the case of error it returns -1 and sets `errno` to one of the values below.
+Returns a channel handle. In the case of an error, it returns -1 and sets _errno_ to one of the values below.
 
 # ERRORS
 
-* `ECANCELED`: Current coroutine is in the process of shutting down.
-* `ENOMEM`: Not enough memory to allocate the channel.
+* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ENOMEM**: Not enough memory to allocate a new channel.
 
 # EXAMPLE
 

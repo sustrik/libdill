@@ -4,22 +4,17 @@ go - start a coroutine
 
 # SYNOPSIS
 
-```c
-#include <libdill.h>
-int go(expression);
-```
+**#include &lt;libdill.h>**
+
+**int go(**_expression_**);**
 
 # DESCRIPTION
 
-Launches a coroutine that executes the function invocation passed as the argument.
+Launches a coroutine that executes the function invocation passed as argument.  The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller.  The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.
 
-Coroutine is executed in concurrent manner and its lifetime may exceed the lifetime of the caller.
+Any function to be invoked with **go()** must be declared with the **coroutine** specifier.
 
-The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.
-
-Any function to be invoked using go() must be declared with `coroutine` specifier.
-
-*WARNING*: Coroutine will most likely work even without `coroutine` specifier. However, it may fail in random non-deterministic fashion, depending on a particular combination of compiler, optimisation level and code in question. Also, all arguments to a coroutine must not be function calls. If they are the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine do the computation first, then pass the result as an argument. Instead of:
+*WARNING*: Coroutines will most likely work even without the **coroutine** specifier. However, they may fail in random non-deterministic ways, depending on the code in question and the particular combination of a compiler and optimisation level. Additionally, arguments to a coroutine must not be function calls. If they are, the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine, do the computation first, and then pass the result as an argument. Instead of:
 
 ```c
 go(bar(foo(a)));
@@ -34,12 +29,12 @@ go(bar(a));
 
 # RETURN VALUE
 
-Returns a coroutine handle. In the case of error it returns -1 and sets `errno` to one of the values below.
+Returns a coroutine handle. In the case of an error, it returns -1 and sets _errno_ to one of the values below.
 
 # ERRORS
 
-* `ECANCELED`: Current coroutine is in the process of shutting down.
-* `ENOMEM`: Not enough memory to allocate the coroutine stack.
+* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ENOMEM**: Not enough memory to allocate the coroutine stack.
 
 # EXAMPLE
 

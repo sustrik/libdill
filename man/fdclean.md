@@ -4,16 +4,16 @@ fdclean - erases cached info about a file descriptor
 
 # SYNOPSIS
 
-```c
-#include <libdill.h>
-void fdclean(int fd);
-```
+**#include &lt;libdill.h>**
+
+**void fdclean(int **_fd_**);**
+
 
 # DESCRIPTION
 
-This function drops any state cached by `libdill` associated with the file descriptor. It has to be called before the file descriptor is closed. If it is not, undefined behaviour may ensue.
+This function drops any state that libdill associates with filedescriptor _fd_. It has to be called before the file descriptor is closed. If it is not, the behaviour is undefined.
 
-It should also be used when you are temporarily provided with a file descriptor by a third party library, just before returning the descriptor back to the original owner.
+It should also be used with file descriptors provided by third-party libraries, just before returning them back to their original owners.
 
 # RETURN VALUE
 

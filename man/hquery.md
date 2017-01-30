@@ -4,23 +4,22 @@ hquery - gets an opaque pointer associated with a handle and a type
 
 # SYNOPSIS
 
-```c
-#include <libdill.h>
-void *hquery(int h, const void *type);
-```
+**#include &lt;libdill.h>**
+
+**void \*hquery(int** _h_**, const void** \*_type_**);**
 
 # DESCRIPTION
 
-Returns opaque pointer associated with the handle and the type. This function is a fundamental construct for building APIs on top of handles.
+Returns an opaque pointer associated with the passed handle and the type. This function is a fundamental construct for building APIs on top of handles.
 
-Argument `type` is not interpreted in any way. It is used only as an unique ID. An unique ID can be created, for instance, like this:
+The _type_ argument is not interpreted in any way. It is used only as a unique ID. A unique ID can be created, for instance, like this:
 
 ```c
 int foobar_placeholder = 0;
 const void *foobar_type = &foobar_placeholder;
 ```
 
-The return value has no specified semantics, it is an opaque pointer. Typical use case is to return pointer to a table of virtual functions. These virtual functions can be the used to access handle's functionality:
+The return value has no specified semantics. It is an opaque pointer.  One typical use case for it is to return a pointer to a table of function pointers.  These function pointers can then be used to access the handle's functionality:
 
 ```c
 struct foobar_vfs {
@@ -42,16 +41,17 @@ int foo(int h, char *c) {
 }
 ```
 
-Pointers returned by hquery are meant to be cacheable. In other words, if you call `hquery` on the same handle with the same type multiple times, the result should be the same.
+Pointers returned by **hquery** are meant to be cachable. In other words, if you call **hquery** on the same handle with the same type multiple times, the result should be the same.
 
 # RETURN VALUE
 
-An opaque pointer in case of success. In case of failure, `NULL` is returned and `errno` is set to one of the following values.
+Returns an opaque pointer on success. On error, **NULL** is returned and _errno_ is set to one of the following values.
+
 
 # ERRORS
 
-* `EDADF`: Invalid handle.
-* `ENOTSUP`: Provided type parameter doesn't match any of the types supported by the handle.
+* **EDADF**: Invalid handle.
+* **ENOTSUP**: Provided type parameter doesn't match any of the types supported by the handle.
 
 # EXAMPLE
 
