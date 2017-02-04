@@ -117,8 +117,9 @@ void dill_ctx_cr_term(struct dill_ctx_cr *ctx) {
 /******************************************************************************/
 
 static void dill_timer_cancel(struct dill_clause *cl) {
+    struct dill_ctx_cr *ctx = &dill_getctx->cr;
     struct dill_tmclause *tmcl = dill_cont(cl, struct dill_tmclause, cl);
-    dill_rbtree_erase(&tmcl->item);
+    dill_rbtree_erase(&ctx->timers, &tmcl->item);
     /* This is a sfaeguard. If item isn't properly removed from the rb-tree
        we can spot the fact by seeing cr set to NULL. */
     tmcl->cl.cr = NULL;

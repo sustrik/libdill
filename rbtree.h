@@ -25,12 +25,17 @@
 
 #include <stdint.h>
 
-struct dill_rbtree {
+struct dill_rbtree_item {
     int red;
-    struct dill_rbtree *left;
-    struct dill_rbtree *right;
-    struct dill_rbtree *up;
+    struct dill_rbtree_item *left;
+    struct dill_rbtree_item *right;
+    struct dill_rbtree_item *up;
     int64_t val;
+};
+
+struct dill_rbtree {
+    struct dill_rbtree_item root;
+    struct dill_rbtree_item nil;
 };
 
 /* Initialize the tree. */
@@ -41,23 +46,25 @@ int dill_rbtree_empty(struct dill_rbtree *self);
 
 /* Isert item into the tree. Set its value to 'val' */
 void dill_rbtree_insert(struct dill_rbtree *self, int64_t val,
-    struct dill_rbtree *item);
+    struct dill_rbtree_item *item);
 
 /* Remove an item from a tree. */
-void dill_rbtree_erase(struct dill_rbtree *item);
+void dill_rbtree_erase(struct dill_rbtree *self, struct dill_rbtree_item *item);
 
 /* Find item with specified value. If there are multiple such items,
    one of them is returned. */
-struct dill_rbtree *dill_rbtree_find(struct dill_rbtree *self, int64_t val);
+struct dill_rbtree_item *dill_rbtree_find(struct dill_rbtree *self,
+    int64_t val);
 
 /* Return item with the lowest value. If there are no items in the tree NULL
    is returned*/
-struct dill_rbtree *dill_rbtree_first(struct dill_rbtree *self);
+struct dill_rbtree_item *dill_rbtree_first(struct dill_rbtree *self);
 
 /* Iterate throught the tree. Items are returned starting with those with
    the lowest values and ending with those with highest values. Items with
    equal values are returned in no particular order. If 'it' points to the
-   las item NULL is returned. */
-struct dill_rbtree *dill_rbtree_next(struct dill_rbtree *it);
+   last item NULL is returned. */
+struct dill_rbtree_item *dill_rbtree_next(struct dill_rbtree *self,
+    struct dill_rbtree_item *it);
 
 #endif

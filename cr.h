@@ -114,7 +114,7 @@ struct dill_clause {
 struct dill_tmclause {
     struct dill_clause cl;
     /* An item in dill_ctx_cr::timers. */
-    struct dill_rbtree item;
+    struct dill_rbtree_item item;
 };
 
 /* File descriptor clause. */
