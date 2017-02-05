@@ -140,6 +140,7 @@ cleanup:
     }
 }</code></pre>
 <p>Let's compile it and try the initial experiment once again. As can be seen, one client now cannot block another one. Excellent. Let's move on.</p>
+<p>NOTE: Please note that for the sake of simplicity the program above doesn't track the running coroutines and close them when they are finished. This results in memory leaks. To understand how should this kind of thing be done properly check the article about <a href="structured-concurrency.html">structured concurrency</a>.</p>
 <h2 id="step-4-deadlines">Step 4: Deadlines</h2>
 <p>File descriptors can be a scarce resource. If a client connects to the greetserver and lets the dialogue hang without entering a name, one file descriptor on the server side is, for all intents and purposes, wasted.</p>
 <p>To deal with the problem, we are going to timeout the whole client/server dialogue. If it takes more than <em>10</em> seconds, the server will kill the connection at once.</p>

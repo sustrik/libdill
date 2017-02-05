@@ -206,6 +206,8 @@ int main(int argc, char *argv[]) {
 
 Let's compile it and try the initial experiment once again. As can be seen, one client now cannot block another one. Excellent. Let's move on.
 
+NOTE: Please note that for the sake of simplicity the program above doesn't track the running coroutines and close them when they are finished. This results in memory leaks. To understand how should this kind of thing be done properly check the article about [structured concurrency](structured-concurrency.html). 
+
 ## Step 4: Deadlines
 
 File descriptors can be a scarce resource. If a client connects to the greetserver and lets the dialogue hang without entering a name, one file descriptor on the server side is, for all intents and purposes, wasted.
