@@ -27,9 +27,10 @@ The function returns 0 on success. On error, it returns -1 and sets _errno_ to o
 
 # EXAMPLE
 
-```
-c int result = fcntl(fd, F_SETFL, O_NONBLOCK); assert(result == 0); while(1)
-{ result = fdin(fd, -1); assert(result == 0);
+```c
+int result = fcntl(fd, F_SETFL, O_NONBLOCK); assert(result == 0);
+while(1) {
+    result = fdin(fd, -1); assert(result == 0);
     char buf[1024];
     ssize_t len = recv(fd, buf, sizeof(buf), 0);
     assert(len > 0);
