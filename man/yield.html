@@ -18,16 +18,16 @@
 <h1 id="name">NAME</h1>
 <p>yield - yields CPU to other coroutines</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
-<span class="dt">int</span> yield(<span class="dt">void</span>);</code></pre>
+<p><strong>#include &lt;libdill.h&gt;</strong></p>
+<p><strong>int yield(void);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
-<p>By calling this function you give other coroutines a chance to run.</p>
-<p>You should consider using yield() when doing lengthy computations which don't involve natural coroutine switching points such as <code>chsend</code>, <code>chrecv</code>, <code>fdin</code>, <code>fdout</code> or <code>msleep</code>.</p>
+<p>By calling this function, you give other coroutines a chance to run.</p>
+<p>You should consider using <strong>yield()</strong> when doing lengthy computations which don't have natural coroutine switching points such as <strong>chsend</strong>, <strong>chrecv</strong>, <strong>fdin</strong>, <strong>fdout</strong> or <strong>msleep</strong>.</p>
 <h1 id="return-value">RETURN VALUE</h1>
-<p>The function returns 0 in case of success or -1 in case of error. In the latter case it sets <code>errno</code> to one of the following values.</p>
+<p>The function returns 0 on success and -1 on error. In the latter case, it sets <em>errno</em> to one of the following values.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><code>ECANCELED</code>: Current coroutine is being shut down.</li>
+<li><strong>ECANCELED</strong>: Current coroutine is being shut down.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">for</span>(i = <span class="dv">0</span>; i != <span class="dv">1000000</span>; ++i) {

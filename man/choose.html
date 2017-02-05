@@ -18,9 +18,7 @@
 <h1 id="name">NAME</h1>
 <p>choose - perform one of multiple channel operations</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
-
-<span class="ot">#define CHSEND 1</span>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#define CHSEND 1</span>
 <span class="ot">#define CHRECV 2</span>
 
 <span class="kw">struct</span> chclause {
@@ -28,29 +26,29 @@
     <span class="dt">int</span> ch;
     <span class="dt">void</span> *val;
     size_t len;
-};
-
-<span class="dt">int</span> choose(<span class="kw">struct</span> chclause *clauses, <span class="dt">int</span> nclauses, <span class="dt">int64_t</span> deadline);</code></pre>
+};</code></pre>
+<p><strong>#include &lt;libdill.h&gt;</strong></p>
+<p><strong>int choose(struct chclause </strong>*<em>clauses</em><strong>, int</strong> <em>nclauses</em><strong>, int64_t</strong> <em>deadline</em><strong>);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
-<p>Accepts a list of channel operations. Performs one that can be done first. If multiple operations can be done immediately, one that comes earlier in the array is executed.</p>
-<p><code>op</code> is operation code, either <code>CHSEND</code> or <code>CHRECV</code>. <code>ch</code> is a channel handle. <code>val</code> is a pointer to buffer to send from or receive to. <code>len</code> is size of the buffer, in bytes.</p>
-<p><code>deadline</code> is a point in time when the operation should time out. Use <code>now</code> function to get current point in time. 0 means immediate timeout, i.e. perform the operation if possible, return without blocking if not. -1 means no deadline, i.e. the call will block forever if the operation cannot be performed.</p>
-<p>If deadline expires before any operation can be performed, the function fails with <code>ETIMEDOUT</code> error.</p>
+<p>Accepts a list of channel operations. Performs one that can be done first. If multiple operations can be done immediately, the one that comes earlier in the array is executed.</p>
+<p><em>op</em> is a code denoting the operation to be done, and it's either <strong>CHSEND</strong> or <strong>CHRECV</strong>. <em>ch</em> is a channel handle. <em>val</em> is a pointer to a buffer to send data from or receive data to. <em>len</em> is the byte size of the buffer.</p>
+<p><em>deadline</em> is a point in time when the operation should time out. Use the <strong>now</strong> function to get the current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
+<p>If the deadline expires before any operation can be performed, the function will fail with an <strong>ETIMEDOUT</strong> error.</p>
 <h1 id="return-value">RETURN VALUE</h1>
-<p>Returns -1 if an error occured. Index of the clause that caused the function to exit otherwise. Even in the latter case <code>errno</code> may be set to indicate a failure.</p>
+<p>Returns -1 if an error occurred. Otherwise, it returns the index of the clause that caused the function to exit. Even in the latter case, <em>errno</em> may be set to indicate failure.</p>
 <h1 id="errors">ERRORS</h1>
-<p>If function returns -1 it sets <code>errno</code> to one of the following values:</p>
+<p>If the function returns -1, <em>errno</em> is set to one of the following values:</p>
 <ul>
-<li><code>ECANCELED</code>: Current coroutine is being shut down.<br /></li>
-<li><code>ETIMEDOUT</code>: The deadline was exceeded.</li>
+<li><strong>ECANCELED</strong>: Current coroutine is being shut down.<br /></li>
+<li><strong>ETIMEDOUT</strong>: Deadline has expired.</li>
 </ul>
-<p>If function returns index of operation it sets <code>errno</code> to one of the following values:</p>
+<p>If the function returns an index, it set <em>errno</em> to one of the following values:</p>
 <ul>
-<li><code>0</code>: Operation completed successfully.<br /></li>
-<li><code>EBADF</code>: Invalid handle.<br /></li>
-<li><code>EINVAL</code>: Invalid parameter.<br /></li>
-<li><code>ENOTSUP</code>: Operation not supported. Presumably, the handle isn't a channel.<br /></li>
-<li><code>EPIPE</code>: The channel was closed using <code>chdone</code> function.</li>
+<li>0: Operation completed successfully.<br /></li>
+<li><strong>EBADF</strong>: Invalid handle.<br /></li>
+<li><strong>EINVAL</strong>: Invalid parameter.<br /></li>
+<li><strong>ENOTSUP</strong>: Operation not supported. Presumably, the handle isn't a channel.<br /></li>
+<li><strong>EPIPE</strong>: Channel has been closed with <strong>chdone</strong>.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> val1 = <span class="dv">0</span>;

@@ -18,24 +18,22 @@
 <h1 id="name">NAME</h1>
 <p>go - start a coroutine</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
-<span class="dt">int</span> go(expression);</code></pre>
+<p><strong>#include &lt;libdill.h&gt;</strong></p>
+<p><strong>int go(</strong><em>expression</em><strong>);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
-<p>Launches a coroutine that executes the function invocation passed as the argument.</p>
-<p>Coroutine is executed in concurrent manner and its lifetime may exceed the lifetime of the caller.</p>
-<p>The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.</p>
-<p>Any function to be invoked using go() must be declared with <code>coroutine</code> specifier.</p>
-<p><em>WARNING</em>: Coroutine will most likely work even without <code>coroutine</code> specifier. However, it may fail in random non-deterministic fashion, depending on a particular combination of compiler, optimisation level and code in question. Also, all arguments to a coroutine must not be function calls. If they are the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine do the computation first, then pass the result as an argument. Instead of:</p>
+<p>Launches a coroutine that executes the function invocation passed as argument. The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller. The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.</p>
+<p>Any function to be invoked with <strong>go()</strong> must be declared with the <strong>coroutine</strong> specifier.</p>
+<p><em>WARNING</em>: Coroutines will most likely work even without the <strong>coroutine</strong> specifier. However, they may fail in random non-deterministic ways, depending on the code in question and the particular combination of a compiler and optimization level. Additionally, arguments to a coroutine must not be function calls. If they are, the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine, do the computation first, and then pass the result as an argument. Instead of:</p>
 <pre class="sourceCode c"><code class="sourceCode c">go(bar(foo(a)));</code></pre>
 <p>Do this:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> a = foo();
 go(bar(a));</code></pre>
 <h1 id="return-value">RETURN VALUE</h1>
-<p>Returns a coroutine handle. In the case of error it returns -1 and sets <code>errno</code> to one of the values below.</p>
+<p>Returns a coroutine handle. In the case of an error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><code>ECANCELED</code>: Current coroutine is in the process of shutting down.<br /></li>
-<li><code>ENOMEM</code>: Not enough memory to allocate the coroutine stack.</li>
+<li><strong>ECANCELED</strong>: Current coroutine is in the process of shutting down.<br /></li>
+<li><strong>ENOMEM</strong>: Not enough memory to allocate the coroutine stack.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> add(<span class="dt">int</span> a, <span class="dt">int</span> b) {

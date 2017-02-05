@@ -18,17 +18,17 @@
 <h1 id="name">NAME</h1>
 <p>chmake - create a channel</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
-<span class="dt">int</span> chmake(size_t itemsz);</code></pre>
+<p><strong>#include &lt;libdill.h&gt;</strong></p>
+<p><strong>int chmake(size_t </strong><em>itemsz</em><strong>);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
-<p>Creates a channel. The parameter is the size of the items to be sent through the channel, in bytes.</p>
-<p>The channel is a synchronizationn primitive, not a container. It doesn't store any items.</p>
+<p>Creates a channel. <em>itemsz</em> is the byte size of the items to be sent through the channel.</p>
+<p>A channel is a synchronization primitive, not a container. It doesn't store any items.</p>
 <h1 id="return-value">RETURN VALUE</h1>
-<p>Returns a channel handle. In the case of error it returns -1 and sets <code>errno</code> to one of the values below.</p>
+<p>Returns a channel handle. In the case of an error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><code>ECANCELED</code>: Current coroutine is in the process of shutting down.<br /></li>
-<li><code>ENOMEM</code>: Not enough memory to allocate the channel.</li>
+<li><strong>ECANCELED</strong>: Current coroutine is in the process of shutting down.<br /></li>
+<li><strong>ENOMEM</strong>: Not enough memory to allocate a new channel.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> ch = chmake(<span class="kw">sizeof</span>(<span class="dt">int</span>));

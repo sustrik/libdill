@@ -18,11 +18,11 @@
 <h1 id="name">NAME</h1>
 <p>fdclean - erases cached info about a file descriptor</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
-<span class="dt">void</span> fdclean(<span class="dt">int</span> fd);</code></pre>
+<p><strong>#include &lt;libdill.h&gt;</strong></p>
+<p><strong>void fdclean(int </strong><em>fd</em><strong>);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
-<p>This function drops any state cached by <code>libdill</code> associated with the file descriptor. It has to be called before the file descriptor is closed. If it is not, undefined behaviour may ensue.</p>
-<p>It should also be used when you are temporarily provided with a file descriptor by a third party library, just before returning the descriptor back to the original owner.</p>
+<p>This function drops any state that libdill associates with file descriptor <em>fd</em>. It has to be called before the file descriptor is closed. If it is not, the behavior is undefined.</p>
+<p>It should also be used with file descriptors provided by third-party libraries, just before returning them back to their original owners.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>None.</p>
 <h1 id="errors">ERRORS</h1>

@@ -1,7 +1,13 @@
 
 # Past versions
 
-**Jan 1st, 2016 <http://libdill.org/libdill-1.1.tar.gz>**
+**Feb 5th, 2017 <http://libdill.org/libdill-1.2.tar.gz>**
+
+* If CPU is at 100%, external events, such as those from file descriptors, are checked once per second.
+* Multiple optimizations.
+* Multiple bug fixes.
+
+**Jan 1st, 2017 <http://libdill.org/libdill-1.1.tar.gz>**
 
 * Multiple bugfixes.
 * Multiple performance enhancements.

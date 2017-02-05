@@ -18,12 +18,12 @@
 <h1 id="name">NAME</h1>
 <p>now - get current time</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
-<span class="dt">int64_t</span> now(<span class="dt">void</span>);</code></pre>
+<p><strong>#include &lt;libdill.h&gt;</strong></p>
+<p><strong>int64_t now(void);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
 <p>Returns current time, in milliseconds.</p>
-<p>The function is meant to be used for creating deadlines. For example, a point of time one second on from now can be expressed as <code>now() + 1000</code>.</p>
-<p>Following values have special meaning and cannot be returned by the function:</p>
+<p>The function is meant for creating deadlines. For example, a point of time one<br />second from now can be expressed as <strong>now() + 1000</strong>.</p>
+<p>The following values have special meaning and cannot be returned by the function:</p>
 <ul>
 <li><em>0</em>: Immediate deadline.<br /></li>
 <li><em>-1</em>: Infinite deadline.</li>

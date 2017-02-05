@@ -18,15 +18,15 @@
 <h1 id="name">NAME</h1>
 <p>msleep - waits until deadline expires</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
-<span class="dt">int</span> msleep(<span class="dt">int64_t</span> deadline);</code></pre>
+<p><strong>#include &lt;libdill.h&gt;</strong></p>
+<p><strong>int msleep(int64_t</strong> <em>deadline</em><strong>);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
-<p><code>deadline</code> is a point in time when the operation should finish. Use <code>now</code> function to get current point in time. 0 will cause the function to return without blocking. -1 will cause it to block forever.</p>
+<p><em>deadline</em> is a point in time when the operation should finish. Use the <strong>now</strong> function to get your current point in time. 0 will cause the function to return without blocking. -1 will cause it to block forever.</p>
 <h1 id="return-value">RETURN VALUE</h1>
-<p>Returns 0 in case of success, -1 in case of error. In the latter case it sets <code>errno</code> to one of the values below.</p>
+<p>Returns 0 on success. One error, -1 is returned and <em>errno</em> is set to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><code>ECANCELED</code>: Current coroutine is being shut down.</li>
+<li><strong>ECANCELED</strong>: Current coroutine is being shut down.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> result = msleep(now() + <span class="dv">1000</span>);

@@ -88,8 +88,8 @@ These instructions are intended for the project maintainers:
 * Clone a clean repo from GitHub.
 * Build the package (`./autogen.sh; ./configure; make distcheck`).
 * Add the package to `gh-pages` branch.
-* Adjust the download.md in `gh-pages` branch.
-* Regenerate the documentaton using `./gendocs.sh`.
+* Adjust the `download.md` and `libdill-history.md` in `gh-pages` branch.
+* Regenerate the documentaton using `./gendocs.sh <version-number>`.
 * Commit and push to `gh-pages`.
 * Announce the release on twitter, etc.
 

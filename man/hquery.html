@@ -18,14 +18,14 @@
 <h1 id="name">NAME</h1>
 <p>hquery - gets an opaque pointer associated with a handle and a type</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
-<span class="dt">void</span> *hquery(<span class="dt">int</span> h, <span class="dt">const</span> <span class="dt">void</span> *type);</code></pre>
+<p><strong>#include &lt;libdill.h&gt;</strong></p>
+<p><strong>void *hquery(int</strong> <em>h</em><strong>, const void</strong> *<em>type</em><strong>);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
-<p>Returns opaque pointer associated with the handle and the type. This function is a fundamental construct for building APIs on top of handles.</p>
-<p>Argument <code>type</code> is not interpreted in any way. It is used only as an unique ID. An unique ID can be created, for instance, like this:</p>
+<p>Returns an opaque pointer associated with the passed handle and the type. This function is a fundamental construct for building APIs on top of handles.</p>
+<p>The <em>type</em> argument is not interpreted in any way. It is used only as a unique ID. A unique ID can be created, for instance, like this:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> foobar_placeholder = <span class="dv">0</span>;
 <span class="dt">const</span> <span class="dt">void</span> *foobar_type = &amp;foobar_placeholder;</code></pre>
-<p>The return value has no specified semantics, it is an opaque pointer. Typical use case is to return pointer to a table of virtual functions. These virtual functions can be the used to access handle's functionality:</p>
+<p>The return value has no specified semantics. It is an opaque pointer. One typical use case for it is to return a pointer to a table of function pointers. These function pointers can then be used to access the handle's functionality:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> foobar_vfs {
     <span class="dt">int</span> (*foo)(<span class="kw">struct</span> foobar_vfs *vfs, <span class="dt">int</span> a, <span class="dt">int</span> b);
     <span class="dt">void</span> (*bar)(<span class="kw">struct</span> foobar_vfs *vfs, <span class="dt">char</span> *c);
@@ -43,13 +43,13 @@
     vfs-&gt;bar(vfs, c);
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
-<p>Pointers returned by hquery are meant to be cacheable. In other words, if you call <code>hquery</code> on the same handle with the same type multiple times, the result should be the same.</p>
+<p>Pointers returned by <strong>hquery</strong> are meant to be cachable. In other words, if you call <strong>hquery</strong> on the same handle with the same type multiple times, the result should be the same.</p>
 <h1 id="return-value">RETURN VALUE</h1>
-<p>An opaque pointer in case of success. In case of failure, <code>NULL</code> is returned and <code>errno</code> is set to one of the following values.</p>
+<p>Returns an opaque pointer on success. On error, <strong>NULL</strong> is returned and <em>errno</em> is set to one of the following values.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><code>EDADF</code>: Invalid handle.<br /></li>
-<li><code>ENOTSUP</code>: Provided type parameter doesn't match any of the types supported by the handle.</li>
+<li><strong>EDADF</strong>: Invalid handle.<br /></li>
+<li><strong>ENOTSUP</strong>: Provided type parameter doesn't match any of the types supported by the handle.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> foobar_vfs *vfs = hquery(h, foobar_type);</code></pre>

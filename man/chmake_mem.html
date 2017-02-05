@@ -18,21 +18,21 @@
 <h1 id="name">NAME</h1>
 <p>chmake_mem - create a channel in user-supplied memory</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
-<span class="kw">struct</span> chmem;
-<span class="dt">int</span> chmake_mem(size_t itemsz, <span class="kw">struct</span> chmem *mem);</code></pre>
+<p><strong>#include &lt;libdill.h&gt;</strong></p>
+<p><strong>struct chmem;</strong></p>
+<p><strong>int chmake_mem(size_t </strong><em>itemsz</em><strong>, struct chmem </strong>*<em>mem</em><strong>);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
 <p>Creates a channel in user-supplied memory.</p>
-<p>First parameter is the size of the items to be sent through the channel, in bytes.</p>
-<p>Second parameter is the memory to store channel data in. The memory cannot be deallocated before all handles referring to the channel are closed using <code>hclose</code> function. Otherwise, undefined behaviour ensues.</p>
-<p>Do not use this function unless you are hyper-otimizing your code and you want to avoid a single memory allocation per channel. Whenever possible, use <code>chmake</code> instead.</p>
-<p>The channel is a synchronizationn primitive, not a container. It doesn't store any items.</p>
+<p><em>itemsz</em> is the byte size of the items to be sent through the channel.</p>
+<p><em>mem</em> is the memory to store channel data in. The memory must not be deallocated before all handles referring to the channel are closed with the <strong>hclose</strong> function, or the behavior is undefined.</p>
+<p>Do not use this function unless you are hyper-optimizing your code and you want to avoid a single memory allocation per channel. Whenever possible, use <strong>chmake</strong> instead.</p>
+<p>The channel is a synchronization primitive, not a container. It doesn't store any items.</p>
 <h1 id="return-value">RETURN VALUE</h1>
-<p>Returns a channel handle. In the case of error it returns -1 and sets <code>errno</code> to one of the values below.</p>
+<p>Returns a channel handle. In the case of an error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><code>ECANCELED</code>: Current coroutine is in the process of shutting down.<br /></li>
-<li><code>EINVAL</code>: Invalid parameter.</li>
+<li><strong>ECANCELED</strong>: Current coroutine is in the process of shutting down.<br /></li>
+<li><strong>EINVAL</strong>: Invalid parameter.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> chitem {

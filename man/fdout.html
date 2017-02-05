@@ -16,21 +16,20 @@
 <li><a href="http://libdill.org/tutorial.html">Tutorial</a></li>
 </ul>
 <h1 id="name">NAME</h1>
-<p>fdout - waits while file descriptor becomes writeable</p>
+<p>fdout - wait on file descriptor to become writable</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdill.h&gt;</span>
-<span class="dt">int</span> fdout(<span class="dt">int</span> fd, <span class="dt">int64_t</span> deadline);</code></pre>
+<p><strong>#include &lt;libdill.h&gt;</strong><br /><strong>int fdout(int</strong> <em>fd</em><strong>, int64_t</strong> <em>deadline</em><strong>);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
-<p>Waits until file descriptor becomes writeable or until it gets into an error state. Both options cause successful return from the function. To distinguish between the two outcomes you have to do subsequent write operation on the file descriptor.</p>
-<p><code>deadline</code> is a point in time when the operation should time out. Use <code>now</code> function to get current point in time. 0 means immediate timeout, i.e. return immediately if file descriptor is writeable, return without blocking if it is not. -1 means no deadline, i.e. the call will block forever, if needed.</p>
+<p>Waits on a file descriptor to either become readable or get into an error state. Either case leads to a successful return from the function. To distinguish the two outcomes, follow up with a write operation on the file descriptor.</p>
+<p><em>deadline</em> is a point in time when the operation should time out. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if need be.</p>
 <h1 id="return-value">RETURN VALUE</h1>
-<p>The function returns 0 in case of success or -1 in case of error. In the latter case is sets <code>errno</code> to one of the following values.</p>
+<p>The function returns 0 on success. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><code>EBADF</code>: Not a file descriptor.<br /></li>
-<li><code>EBUSY</code>: Another coroutine is already blocked on <code>fdout</code> with this file descriptor.<br /></li>
-<li><code>ECANCELED</code>: Current coroutine is being shut down.<br /></li>
-<li><code>ETIMEDOUT</code>: Deadline expired while waiting for the file descriptor.</li>
+<li><strong>EBADF</strong>: Not a file descriptor.<br /></li>
+<li><strong>EBUSY</strong>: Another coroutine already blocked on <strong>fdout</strong> with this file descriptor.<br /></li>
+<li><strong>ECANCELED</strong>: Current coroutine is being shut down.<br /></li>
+<li><strong>ETIMEDOUT</strong>: Deadline expired while waiting on the file descriptor.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">void</span> sendbuf(<span class="dt">int</span> fd, <span class="dt">const</span> <span class="dt">char</span> *buf, size_t len) {
