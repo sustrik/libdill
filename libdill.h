@@ -209,19 +209,24 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
    Given that there's no other way to do this, screw other compilers for now.
    See https://gcc.gnu.org/onlinedocs/gcc-3.2/gcc/Statement-Exprs.html */
 
+/* A bug in gcc have been observed where name clash between variable in the
+   outer scope and a local variable in this macro causes the variable to
+   get weird values. To avoid that, we use fancy names (dill_*__). */ 
+
 #define go_mem(fn, ptr, len) \
     ({\
-        sigjmp_buf *ctx;\
-        void *stk = (ptr);\
-        int h = dill_prologue(&ctx, &stk, (len), __FILE__, __LINE__);\
-        if(h >= 0) {\
-            if(!dill_setjmp(*ctx)) {\
-                DILL_SETSP(stk);\
+        sigjmp_buf *dill_ctx__;\
+        void *dill_stk__ = (ptr);\
+        int dill_handle__ = dill_prologue(&dill_ctx__, &dill_stk__, (len),\
+            __FILE__, __LINE__);\
+        if(dill_handle__ >= 0) {\
+            if(!dill_setjmp(*dill_ctx__)) {\
+                DILL_SETSP(dill_stk__);\
                 fn;\
                 dill_epilogue();\
             }\
         }\
-        h;\
+        dill_handle__;\
     })
 
 #define go(fn) go_mem(fn, NULL, 0)
