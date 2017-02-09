@@ -24,23 +24,29 @@
 #define DILL_POLLER_INCLUDED
 
 #include "apoll.h"
+#include "list.h"
 
 /* This is a super-optimized I/O poller. It keeps the state for each fd in
-   the user-space. It flushes its state to kernel-space only once in a while
-   when actuall polling is performed. For example, if user unregisters an fd,
-   then registers the same fd again, no call to underlying polling mechanism
-   is done. */
+   the user-space. It flushes the diff in state to kernel-space only once in
+   a while when actuall polling is performed. For example, if user unregisters
+   an fd, then registers the same fd again, no call to underlying polling
+   mechanism is done. */
 
 struct dill_pollerfd {
-    int events;
-    int next;
+    /* Current events. */
+    int curr;
+    /* Events as set in apoll. */
+    int old;
+    /* Member of diff list. */
+    struct dill_list item;
 };
  
 struct dill_poller {
     struct dill_apoll apoll;
     struct dill_pollerfd *fds;
     int nfds;
-    int next;
+    /* List of fds that were changed since the last call to dill_apoll_wait. */
+    struct dill_list diff;
 };
 
 int dill_poller_init(struct dill_poller *self);
@@ -49,7 +55,10 @@ void dill_poller_term(struct dill_poller *self);
 int dill_poller_in(struct dill_poller *self, int fd);
 int dill_poller_out(struct dill_poller *self, int fd);
 
-int dill_poller_event(struct dill_poller *self, int *fd, int *event);
+int dill_poller_clean(struct dill_poller *self, int fd);
+
+int dill_poller_event(struct dill_poller *self, int *fd, int *event,
+    int timeout);
 
 #endif
 

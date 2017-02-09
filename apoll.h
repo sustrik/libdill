@@ -56,30 +56,33 @@ void dill_apoll_term(struct dill_apoll *self);
 
 /* The API works in three phases:
 
-   1. Adjust the pollset using dill_apoll_ctl.
-   2. Do the poll using dill_apoll_poll.
+   1. Adjust the pollset using dill_apoll_ctl/dill_apoll_clean.
+   2. Do the poll using dill_apoll_wait.
    3. Retrieve all the events using dill_apoll_event.
    4. Repeat.
 
    Using it in any other way results in undefined behaviour.
-
-   This way we can ignore pathologic cases like modifying the pollset while
-   retrieving the results from previous poll.
 */
 
 /* Events is a combination of DILL_IN and DILL_OUT. 'old' is a hint about
    currently active triggers. Implementation may or may not use the value. */
 void dill_apoll_ctl(struct dill_apoll *self, int fd, int events, int old);
 
-/* Waits for events. Timeout is in milliseconds. */
+/* Similar to dill_apoll_ctl with events=0, however, it also makes sure that
+   all internal references to the fd in question are dropped. For example, any
+   pending events from this fd should be dropped immediately. */
+void dill_apoll_clean(struct dill_apoll *self, int fd, int old);
+
+/* Waits for an event. Timeout is in milliseconds. */
 int dill_apoll_wait(struct dill_apoll *self, int timeout);
 
 /* If both IN and OUT are triggered on the same file descriptor, the function
    is free to return them as two separate events or as a single event with
    events argument set to DILL_NPOLL_IN | DILL_NPOLL_OUT. The implementation
    must not return the same event twice without intermittent call to
-   dill_apoll_poll. Returns 0 in case of success, -1 if there are no more
-   events to report. */
+   dill_apoll_poll. It is OK to return pending events even if they are no longer
+   being polled for (unless dill_apoll_clean was called). Returns 0 in case of
+   success, -1 if there are no more events to report. */
 int dill_apoll_event(struct dill_apoll *self, int *fd, int *events);
 
 #endif

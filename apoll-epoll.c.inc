@@ -42,15 +42,18 @@ void dill_apoll_term(struct dill_apoll *self) {
 }
 
 void dill_apoll_ctl(struct dill_apoll *self, int fd, int events, int old) {
+    if(events == old) return;
     int op;
     struct epoll_event ev;
     ev.data.fd = fd;
-    ev.events = 0;
     if(old == 0) {
         op = EPOLL_CTL_ADD;
+        if(events & DILL_IN) ev.events |= EPOLLIN;
+        if(events & DILL_OUT) ev.events |= EPOLLOUT;
     }
     else if(events == 0) {
         op = EPOLL_CTL_DEL;
+        ev.events = 0;
     }
     else {
         op = EPOLL_CTL_MOD;
@@ -61,25 +64,39 @@ void dill_apoll_ctl(struct dill_apoll *self, int fd, int events, int old) {
     dill_assert(rc == 0);
 }
 
-int dill_apoll_poll(struct dill_apoll *self, int timeout) {
+void dill_apoll_clean(struct dill_apoll *self, int fd, int old) {
+    dill_apoll_ctl(self, fd, 0, old);
+    int i;
+    for(i = self->pos; i != self->numevs; ++i) {
+        if(self->events[i].data.fd == fd) {
+            self->events[i].data.fd = -1;
+        }
+    }
+}
+
+int dill_apoll_wait(struct dill_apoll *self, int timeout) {
+    self->pos = 0;
     self->numevs = epoll_wait(self->efd, self->events, DILL_EPOLLSETSIZE,
         timeout);
     if(dill_slow(self->numevs < 0 && errno == EINTR)) {
         self->numevs = 0; return -1;}
     dill_assert(self->numevs >= 0);
     if(self->numevs == 0) {errno = ETIMEDOUT; return -1;}
-    self->pos = 0;
     return 0;
 }
 
 int dill_apoll_event(struct dill_apoll *self, int *fd, int *events) {
-    if(self->pos >= self->numevs) return -1;
-    struct epoll_event *ev = &self->events[self->pos];
+    struct epoll_event *ev;
+    while(1) {
+        if(self->pos >= self->numevs) return -1;
+        ev = &self->events[self->pos];
+        if(ev->data.fd >= 0) break;
+        ++self->pos;
+    }
     *fd = ev->data.fd;
     *events = 0;
     if(ev->events & (EPOLLIN | EPOLLERR | EPOLLHUP)) *events |= DILL_IN;
     if(ev->events & (EPOLLOUT | EPOLLERR | EPOLLHUP)) *events |= DILL_OUT;
-    ++self->pos;
     return 0;
 }
 
