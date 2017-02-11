@@ -33,10 +33,14 @@
    mechanism is done. */
 
 struct dill_pollerfd {
-    /* Current events. */
+    /* Current events. TODO: Maybe we can rely on hints instead of this? */
     int curr;
     /* Events as set in apoll. */
     int old;
+    /* Hint for the coroutine waiting for in. */
+    void *inhint;
+    /* Hint for the coroutine waiting for in. */
+    void *outhint;
     /* Member of diff list. */
     struct dill_list item;
 };
@@ -52,13 +56,12 @@ struct dill_poller {
 int dill_poller_init(struct dill_poller *self);
 void dill_poller_term(struct dill_poller *self);
 
-int dill_poller_in(struct dill_poller *self, int fd);
-int dill_poller_out(struct dill_poller *self, int fd);
+int dill_poller_in(struct dill_poller *self, int fd, void *hint);
+int dill_poller_out(struct dill_poller *self, int fd, void *hint);
 
 int dill_poller_clean(struct dill_poller *self, int fd);
 
-int dill_poller_event(struct dill_poller *self, int *fd, int *event,
-    int timeout);
+int dill_poller_event(struct dill_poller *self, void **hint, int timeout);
 
 #endif
 

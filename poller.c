@@ -48,17 +48,19 @@ void dill_poller_term(struct dill_poller *self) {
     dill_apoll_term(&self->apoll);
 }
 
-int dill_poller_in(struct dill_poller *self, int fd) {
+int dill_poller_in(struct dill_poller *self, int fd, void *hint) {
     if(dill_slow(fd < 0 || fd >= self->nfds)) {errno = EBADF; return -1;}
     struct dill_pollerfd *pfd = &self->fds[fd];
     pfd->curr |= DILL_IN;
+    pfd->inhint = hint;
     if(!pfd->item.prev) dill_list_insert(&pfd->item, &self->diff);
 }
 
-int dill_poller_out(struct dill_poller *self, int fd) {
+int dill_poller_out(struct dill_poller *self, int fd, void *hint) {
     if(dill_slow(fd < 0 || fd >= self->nfds)) {errno = EBADF; return -1;}
     struct dill_pollerfd *pfd = &self->fds[fd];
     pfd->curr |= DILL_OUT;
+    pfd->outhint = hint;
     if(!pfd->item.prev) dill_list_insert(&pfd->item, &self->diff);
 }
 
@@ -68,18 +70,21 @@ int dill_poller_clean(struct dill_poller *self, int fd) {
     dill_apoll_clean(&self->apoll, fd, pfd->old);
     pfd->curr = 0;
     pfd->old = 0;
+    pfd->inhint = NULL;
+    pfd->outhint = NULL;
     if(pfd->item.prev) dill_list_erase(&pfd->item);
     return 0;
 }
 
-int dill_poller_event(struct dill_poller *self, int *fd, int *event,
-      int timeout) {
+int dill_poller_event(struct dill_poller *self, void **hint, int timeout) {
     /* Get an event from apoll. Ignore any events that the user is no longer
        polling for. */
+    int fd;
+    int event;
     while(1) {
-        int rc = dill_apoll_event(&self->apoll, fd, event);
+        int rc = dill_apoll_event(&self->apoll, &fd, &event);
         if(rc < 0) break;
-        if(*event & self->fds[*fd].curr) return 0;
+        if(event & self->fds[fd].curr) goto done;
     }
     /* There are no more events to be reported from apoll.
        Let's adjust the pollset and poll again. */
@@ -95,8 +100,21 @@ int dill_poller_event(struct dill_poller *self, int *fd, int *event,
     int rc = dill_apoll_wait(&self->apoll, timeout);
     if(dill_slow(rc < 0)) return -1;
     /* Now there should be at least one event in apoll. */
-    rc = dill_apoll_event(&self->apoll, fd, event);
+    rc = dill_apoll_event(&self->apoll, &fd, &event);
     dill_assert(rc >= 0);
+done:;
+    struct dill_pollerfd *pfd = &self->fds[fd];
+    if(event & DILL_IN) {
+        *hint = pfd->inhint;
+        pfd->inhint = NULL;
+        pfd->curr |= ~DILL_IN;
+    }
+    else {
+        *hint = pfd->outhint;
+        pfd->outhint = NULL;
+        pfd->curr |= ~DILL_OUT;
+    }
+    if(!pfd->item.prev) dill_list_insert(&pfd->item, &self->diff);
     return 0;
 }
 
