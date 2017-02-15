@@ -52,7 +52,7 @@ struct dill_fdinfo {
     uint16_t currevs;
     uint16_t firing;
     /* 1-based index, 0 stands for "not part of the list", DILL_ENDLIST
-       stads for "no more elements in the list. */
+       stands for "no more elements in the list. */
     uint32_t next;
     /* 1 if the file descriptor is cached. 0 otherwise. */
     unsigned int cached : 1;
@@ -111,7 +111,7 @@ static void dill_fdcancelout(struct dill_clause *cl) {
 int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
-    /* If not yet cached check whether fd exists and if so add it to pollset. */
+    /* If not yet cached, check whether fd exists and if so add it to pollset. */
     if(dill_slow(!fdi->cached)) {
         struct kevent ev;
         EV_SET(&ev, fd, EVFILT_READ, EV_ADD, 0, 0, 0);
@@ -126,7 +126,7 @@ int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
         fdi->cached = 1;
     }
     if(dill_slow(fdi->in)) {errno = EBUSY; return -1;}
-    /* If fd is not yet in the pollset add it there. */
+    /* If fd is not yet in the pollset, add it there. */
     else if(!fdi->next) {
         fdi->next = ctx->changelist;
         ctx->changelist = fd + 1;
@@ -140,7 +140,7 @@ int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
 int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
-    /* If not yet cached check whether fd exists and if so add it to pollset. */    
+    /* If not yet cached, check whether the fd exists and if it does, add it to the pollset. */    
     if(dill_slow(!fdi->cached)) {
         struct kevent ev;
         EV_SET(&ev, fd, EVFILT_WRITE, EV_ADD, 0, 0, 0);
@@ -155,7 +155,7 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
         fdi->cached = 1;
     }
     if(dill_slow(fdi->out)) {errno = EBUSY; return -1;}
-    /* If fd is not yet in the pollset add it there. */
+    /* If the fd is not yet in the pollset, add it there. */
     else if(!fdi->next) {
         fdi->next = ctx->changelist;
         ctx->changelist = fd + 1;
@@ -172,7 +172,7 @@ int dill_pollset_clean(int fd) {
     if(!fdi->cached) return 0;
     /* We cannot clean an fd that someone is waiting for. */
     if(dill_slow(fdi->in || fdi->out)) {errno = EBUSY; return -1;}
-    /* Remove the file descriptor from the pollset, if it is still there. */
+    /* Remove the file descriptor from the pollset if it is still there. */
     int nevs = 0;
     struct kevent evs[2];
     if(fdi->currevs & FDW_IN) {
@@ -210,8 +210,8 @@ int dill_pollset_poll(int timeout) {
     struct kevent chngs[DILL_CHNGSSIZE];
     int nchngs = 0;
     while(ctx->changelist != DILL_ENDLIST) {
-        /* Flush the changes to the pollset even if there is one emtpy entry
-           left in the changeset. That way we make sure that both in & out
+        /* Flush the changes to the pollset even if there is one empty entry
+           left in the changeset. That way, we make sure that both in & out
            associated with the next file descriptor can be filled in if we
            choose not to flush the changes yet. */
         if(nchngs >= DILL_CHNGSSIZE - 1) {
@@ -285,7 +285,7 @@ int dill_pollset_poll(int timeout) {
             ctx->changelist = fd + 1;
         }
     }
-    /* Resume the blocked coroutines. */
+    /* Resume blocked coroutines. */
     uint32_t chl = ctx->changelist;
     while(chl != DILL_ENDLIST) {
         int fd = chl - 1;
@@ -297,7 +297,7 @@ int dill_pollset_poll(int timeout) {
         fdi->firing = 0;
         chl = fdi->next;
     }    
-    /* Return 0 in case of time out. 1 if at least one coroutine was resumed. */
+    /* Return 0 on timeout or 1 if at least one coroutine was resumed. */
     return nevs > 0 ? 1 : 0;
 }
 

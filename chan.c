@@ -41,16 +41,16 @@ struct dill_chan {
     struct dill_list in;
     /* List of clauses wanting to send to the channel. */
     struct dill_list out;
-    /* 1 if chdone() was already called. 0 otherwise. */
+    /* 1 if chdone() has been called on this channel. 0 otherwise. */
     unsigned int done : 1;
-    /* 1 if the object was created via chmake_mem() function. */
+    /* 1 if the object was created with chmake_mem(). */
     unsigned int mem : 1;
 };
 
 /* Channel clause. */
 struct dill_chclause {
     struct dill_clause cl;
-    /* Either item in dill_chan::in or dill_chan::out list. */
+    /* An item in either the dill_chan::in or dill_chan::out list. */
     struct dill_list item;
     void *val;
 };
@@ -72,7 +72,7 @@ static void dill_chan_close(struct hvfs *vfs);
 
 int chmake_mem(size_t itemsz, struct chmem *mem) {
     if(dill_slow(!mem)) {errno = EINVAL; return -1;}
-    /* Return ECANCELED if the coroutine is shutting down. */
+    /* Returns ECANCELED if the coroutine is shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     struct dill_chan *ch = (struct dill_chan*)mem;
@@ -111,7 +111,7 @@ static void dill_chan_close(struct hvfs *vfs) {
     struct dill_chan *ch = (struct dill_chan*)vfs;
     dill_assert(ch);
     /* Resume any remaining senders and receivers on the channel
-       with EPIPE error. */
+       with the EPIPE error. */
     while(!dill_list_empty(&ch->in)) {
         struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->in),
             struct dill_chclause, item);
@@ -176,9 +176,9 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     if(dill_slow(!ch)) return -1;
     /* Check that the length provided matches the channel length */
     if(dill_slow(len != ch->sz)) {errno = EINVAL; return -1;}
-    /* Check whether channel is done. */
+    /* Check whether the channel is done. */
     if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
-    /* If there's a sender waiting copy the message directly from the sender. */
+    /* If there's a sender waiting, copy the message directly from the sender. */
     if(!dill_list_empty(&ch->out)) {
         struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->out),
             struct dill_chclause, item);
@@ -186,7 +186,7 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
         dill_trigger(&chcl->cl, 0);
         return 0;
     }
-    /* The clause is not available immediately. */
+    /* The clause is not immediately available. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
     struct dill_chclause chcl;
@@ -208,7 +208,7 @@ int chdone(int h) {
     if(ch->done) {errno = EPIPE; return -1;}
     ch->done = 1;
     /* Resume any remaining senders and receivers on the channel
-       with EPIPE error. */
+       with the EPIPE error. */
     while(!dill_list_empty(&ch->in)) {
         struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->in),
             struct dill_chclause, item);
@@ -259,7 +259,7 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
             return i;
         } 
     }
-    /* There are no clauses available immediately. */
+    /* There are no clauses immediately available. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
     struct dill_chclause chcls[nclauses];

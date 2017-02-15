@@ -28,26 +28,26 @@
 #include "slist.h"
 #include "utils.h"
 
-/* Singly-linked list. Works in FIFO manner, so it's actually a queue.
-   To iterate over the items use the underlying slist. */
+/* Singly-linked list that's first-in-first-out, so it's actually a queue.
+   To iterate over the items, use the underlying slist. */
 
 struct dill_qlist {
     struct dill_slist slist;
     struct dill_slist *last;
 };
 
-/* Initialise the list. */
+/* Initialize the list. */
 static inline void dill_qlist_init(struct dill_qlist *self) {
     dill_slist_init(&self->slist);
     self->last = &self->slist;
 }
 
-/* True is the list has no items. */
+/* True if the list has no items. */
 static inline int dill_qlist_empty(struct dill_qlist *self) {
     return self->slist.next == &self->slist;
 }
 
-/* Push the item to the end of the list. */
+/* Push an item to the end of the list. */
 static inline void dill_qlist_push(struct dill_qlist *self,
       struct dill_slist *item) {
     item->next = &self->slist;

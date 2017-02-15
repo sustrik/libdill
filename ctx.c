@@ -78,7 +78,7 @@ static int dill_ismain() {
     return pthread_self() == 1;
 }
 #else
-#error "Cannot determine which thread is main."
+#error "Cannot determine which thread is the main thread."
 #endif
 
 #if defined __GNUC__ && !defined DILL_THREAD_FALLBACK

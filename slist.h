@@ -27,26 +27,26 @@
 
 #include "utils.h"
 
-/* Singly-linked list. Works in LIFO manner, so it's actually a stack.
-   However, not to confuse it with C language stack, let's call it a qlist. */
+/* A Singly-linked list that's last-in-first-out, so it's actually a stack.
+   To prevent confusion with C's call stack, we'll call it slist. */
 
 struct dill_slist {
     struct dill_slist *next;
 };
 
-/* Initialise the list. */
+/* Initialize the list. */
 static inline void dill_slist_init(struct dill_slist *self) {
     self->next = self;
 }
 
-/* True is the list has no items. */
+/* True if the list has no items. */
 static inline int dill_slist_empty(struct dill_slist *self) {
     return self->next == self;
 }
 
-/* Returns next item in the list. If 'it' is the list itself, it returns the
-   first element in the list. If there are no more elements in the list
-   returns pointer to the list itself. */
+/* Returns the next item in the list. If 'it' is the list itself, it returns the
+   first element in the list. If there are no more elements in the list,
+   returns a pointer to the list itself. */
 #define dill_slist_next(it) ((it)->next)
 
 /* Push the item to the beginning of the list. */

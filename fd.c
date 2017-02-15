@@ -29,17 +29,17 @@
 #include "utils.h"
 
 int dill_maxfds(void) {
-    /* Return cached value if possible. */
+    /* Return a cached value if possible. */
     static int maxfds = -1;
     if(dill_fast(maxfds >= 0)) return maxfds;
-    /* Get the max number of file descriptors. */
+    /* Get the maximum number of file descriptors. */
     struct rlimit rlim;
     int rc = getrlimit(RLIMIT_NOFILE, &rlim);
     dill_assert(rc == 0);
     maxfds = rlim.rlim_max;
 #if defined BSD
-    /* The above behaves weirdly on newer versions of OSX, ruturning limit
-       of -1. Fix it by using OPEN_MAX instead. */
+    /* On newer versions of OSX, the above behaves weirdly and returns -1, 
+       so use OPEN_MAX instead. */
     if(maxfds < 0)
         maxfds = OPEN_MAX;
 #endif
