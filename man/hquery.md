@@ -10,7 +10,7 @@ hquery - gets an opaque pointer associated with a handle and a type
 
 # DESCRIPTION
 
-Returns an opaque pointer associated with the passed handle and the type. This function is a fundamental construct for building APIs on top of handles.
+Returns an opaque pointer associated with the passed handle and type. This function is a fundamental construct for building APIs on top of handles.
 
 The _type_ argument is not interpreted in any way. It is used only as a unique ID. A unique ID can be created, for instance, like this:
 
