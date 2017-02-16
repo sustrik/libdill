@@ -35,7 +35,7 @@ Returns the newly allocated handle on success. On error, -1 is returned and _err
 
 # ERRORS
 
-* `ECANCELED`: Current coroutine is being shut down.
-* `EINVAL`: Invalid argument.
-* `ENOMEM`: Not enough free memory to create a handle.
+* **ECANCELED**: Current coroutine is being shut down.
+* **EINVAL**: Invalid argument.
+* **ENOMEM**: Not enough free memory to create a handle.
 

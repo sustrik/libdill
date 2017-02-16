@@ -33,7 +33,7 @@ struct dill_list {
     struct dill_list *prev;
 };
 
-/* Initialise the list. */
+/* Initialize the list. */
 static inline void dill_list_init(struct dill_list *self) {
     self->next = self;
     self->prev = self;
@@ -44,9 +44,9 @@ static inline int dill_list_empty(struct dill_list *self) {
     return self->next == self;
 }
 
-/* Returns iterator to one past the item pointed to by 'it'. If 'it' is the
+/* Returns an iterator to one past the item pointed to by 'it'. If 'it' is the
    list itself it returns the first item of the list. At the end of
-   the list it returns the list itself. */
+   the list, it returns the list itself. */
 #define dill_list_next(it) ((it)->next)
 
 /* Adds the item to the list before the item pointed to by 'before'. If 'before'

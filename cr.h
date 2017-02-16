@@ -35,39 +35,39 @@
    |                                                      stack  | dill_cr |
    +-------------------------------------------------------------+---------+
    - dill_cr contains generic book-keeping info about the coroutine
-   - stack is a standard C stack; it grows downwards (at the moment libdill
-     doesn't support microarchitectures where stack grows upwards)
+   - the stack is a standard C stack; it grows downwards (at the moment, libdill
+     doesn't support microarchitectures where stacks grow upwards)
 */
 struct dill_cr {
-    /* When coroutine is ready for execution but not running yet,
-       it lives in this list (ctx->ready). 'id' is a result value to return
-       from dill_wait() once the coroutine is resumed. Additionally, errno
-       will be set to value of 'err'. */
+    /* When the coroutine is ready for execution but not running yet,
+       it lives on this list (ctx->ready). 'id' is the result value to return
+       from dill_wait() when the coroutine is resumed. Additionally, errno
+       will be set to 'err'. */
     struct dill_slist ready;
     /* Virtual function table. */
     struct hvfs vfs;
     int id;
     int err;
-    /* When coroutine is suspended 'ctx' holds the context
-       (registers and such). */
+    /* When the coroutine is suspended 'ctx' holds the context
+       (registers and such).*/
     sigjmp_buf ctx;
-    /* If coroutine is blocked, here's the list of clauses it waits for. */
+    /* If the coroutine is blocked, here's the list of the clauses it's waiting on. */
     struct dill_slist clauses;
     /* There are two possible reasons to disable blocking calls.
        1. The coroutine is being closed by its owner.
-       2. The execution is happening within a context of hclose() function. */
+       2. The execution is happening within the context of an hclose() call. */
     unsigned int no_blocking1 : 1;
     unsigned int no_blocking2 : 1;
-    /* Set once coroutine has finished its execution. */
+    /* Set when the coroutine has finished its execution. */
     unsigned int done : 1;
-    /* If true, the coroutine was launched via go_mem. */
+    /* If true, the coroutine was launched with go_mem. */
     unsigned int mem : 1;
-    /* When coroutine handle is being closed, this is the pointer to the
+    /* When the coroutine handle is being closed, this points to the
        coroutine that is doing the hclose() call. */
     struct dill_cr *closer;
 #if defined DILL_VALGRIND
-    /* Valgrind stack identifier. This way valgrind knows which areas of
-       memory are used as a stacks and doesn't produce spurious warnings.
+    /* Valgrind stack identifier. This way, valgrind knows which areas of
+       memory are used as stacks, and so it doesn't produce spurious warnings.
        Well, sort of. The mechanism is not perfect, but it's still better
        than nothing. */
     int sid;
@@ -78,8 +78,8 @@ struct dill_cr {
     size_t stacksz;
 #endif
 /* Clang assumes that the client stack is aligned to 16-bytes on x86-64
-   architectures; to achieve this we align this structure (with the added
-   benefit of a minor optimisation). */
+   architectures. To achieve this, we align this structure (with the added
+   benefit of a minor optimization). */
 } __attribute__((aligned(16)));
 
 struct dill_ctx_cr {
@@ -89,10 +89,10 @@ struct dill_ctx_cr {
     struct dill_qlist ready;
     /* All active timers. */
     struct dill_rbtree timers;
-    /* Last time the poll was performed. */
+    /* Last time poll was performed. */
     int64_t last_poll;
-    /* Main coroutine. We don't control creation of main coroutine's stack
-       so we have to store this info here instead on the top of the stack. */
+    /* The main coroutine. We don't control the creation of the main coroutine's stack,
+       so we have to store this info here instead of the top of the stack. */
     struct dill_cr main;
 #if defined DILL_CENSUS
     struct dill_slist census;
@@ -102,7 +102,7 @@ struct dill_ctx_cr {
 struct dill_clause {
     /* The coroutine that owns this clause. */
     struct dill_cr *cr;
-    /* List of clauses coroutine is waiting for. See dill_cr::clauses. */
+    /* List of the clauses the coroutine is waiting on. See dill_cr::clauses. */
     struct dill_slist item;
     /* Number to return from dill_wait() if this clause triggers. */
     int id;
@@ -124,7 +124,7 @@ int dill_ctx_cr_init(struct dill_ctx_cr *ctx);
 void dill_ctx_cr_term(struct dill_ctx_cr *ctx);
 
 /* When dill_wait() is called next time, the coroutine will wait
-   (among other clauses) for this clause. 'id' must not be negative.
+   (among other clauses) on this clause. 'id' must not be negative.
    'cancel' is a function to be called when the clause is canceled
    without being triggered. */
 void dill_waitfor(struct dill_clause *cl, int id,
@@ -132,24 +132,24 @@ void dill_waitfor(struct dill_clause *cl, int id,
 
 /* Suspend running coroutine. Move to executing different coroutines.
    The coroutine will be resumed once one of the clauses previously added by
-   dill_waitfor() is triggered. Once that happens all the clauses, whether
-   triggered or not, will be canceled. Function returns ID of the triggered
-   clause or -1 in case of error. In either case it sets errno to 0 indicate
+   dill_waitfor() is triggered. When that happens, all the clauses, whether
+   triggered or not, will be canceled. The function returns the ID of the triggered
+   clause or -1 on error. In either case, it sets errno to 0 indicate
    success or non-zero value to indicate error. */
 int dill_wait(void);
 
-/* Schedule previously suspended coroutine for execution. Keep in mind that it
-   doesn't immediately run it, just put it into the queue of ready coroutines.
-   It will cause dill_wait() return the id supplied in dill_waitfor(). */
+/* Schedule a previously suspended coroutine for execution. Keep in mind that this
+   doesn't immediately run it, it just puts it into the coroutine ready queue.
+   It will cause dill_wait() to return the id supplied in dill_waitfor(). */
 void dill_trigger(struct dill_clause *cl, int err);
 
-/* Add timer to the list of active clauses. */
+/* Add a timer to the list of active clauses. */
 void dill_timer(struct dill_tmclause *tmcl, int id, int64_t deadline);
 
-/* Wait for in event on a file descriptor. */
+/* Wait for an in event on a file descriptor. */
 int dill_in(struct dill_fdclause *fdcl, int id, int fd);
 
-/* Wait for out event on a file descriptor. */
+/* Wait for an out event on a file descriptor. */
 int dill_out(struct dill_fdclause *fdcl, int id, int fd);
 
 /* Returns 0 if blocking functions are allowed.
@@ -157,7 +157,7 @@ int dill_out(struct dill_fdclause *fdcl, int id, int fd);
 int dill_canblock(void);
 
 /* When set to 1, blocking calls return ECANCELED.
-   Returns old value of the flag */
+   Returns the old value of the flag */
 int dill_no_blocking(int val);
 
 /* Cleans cached info about the fd. */

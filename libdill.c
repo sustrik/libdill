@@ -46,7 +46,7 @@ int64_t now(void) {
     dill_assert (rc == 0);
     return ((int64_t)ts.tv_sec) * 1000 + (((int64_t)ts.tv_nsec) / 1000000);
 #else
-    /* This is slow and error-prone (time can jump backwards!) but it's just
+    /* This is slow and error-prone (the time can jump backwards!), but it's just
        a last resort option. */
     struct timeval tv;
     int rc = gettimeofday(&tv, NULL);

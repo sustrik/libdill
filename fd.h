@@ -25,7 +25,7 @@
 #ifndef DILL_FD_INCLUDED
 #define DILL_FD_INCLUDED
 
-/* Returns maximum possible number of file descriptors. */
+/* Returns the maximum possible file descriptor number */
 int dill_maxfds(void);
 
 #endif

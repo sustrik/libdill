@@ -38,8 +38,8 @@
 
 #if defined DILL_CENSUS
 
-/* When doing stack size census we will keep maximum stack size in a list
-   indexed by go() call, i.e. by file name and line number. */
+/* When taking the stack size census, we will keep the maximum stack size in a list
+   indexed by the go() call, i.e., by file name and line number. */
 struct dill_census_item {
     struct dill_slist crs;
     const char *file;
@@ -49,7 +49,7 @@ struct dill_census_item {
 
 #endif
 
-/* Storage for constant used by go() macro. */
+/* Storage for the constant used by the go() macro. */
 volatile void *dill_unoptimisable = NULL;
 
 /******************************************************************************/
@@ -82,14 +82,14 @@ int dill_no_blocking(int val) {
 /******************************************************************************/
 
 int dill_ctx_cr_init(struct dill_ctx_cr *ctx) {
-    /* This function is definitely called from the main coroutine given that
-       it's called once only and you can't even create a different coroutine
+    /* This function is definitely called from the main coroutine, given that
+       it's called only once and you can't even create a different coroutine
        without calling it. */
     ctx->r = &ctx->main;
     dill_qlist_init(&ctx->ready);
     dill_rbtree_init(&ctx->timers);
     ctx->last_poll = now();
-    /* Initialize main coroutine. */
+    /* Initialize the main coroutine. */
     memset(&ctx->main, 0, sizeof(ctx->main));
     ctx->main.ready.next = NULL;
     dill_slist_init(&ctx->main.clauses);
@@ -120,15 +120,15 @@ static void dill_timer_cancel(struct dill_clause *cl) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     struct dill_tmclause *tmcl = dill_cont(cl, struct dill_tmclause, cl);
     dill_rbtree_erase(&ctx->timers, &tmcl->item);
-    /* This is a sfaeguard. If item isn't properly removed from the rb-tree
-       we can spot the fact by seeing cr set to NULL. */
+    /* This is a safeguard. If an item isn't properly removed from the rb-tree,
+       we can spot the fact by seeing that the cr has been set to NULL. */
     tmcl->cl.cr = NULL;
 }
 
-/* Adds a timer clause to the list of waited for clauses. */
+/* Adds a timer clause to the list of clauses being waited on. */
 void dill_timer(struct dill_tmclause *tmcl, int id, int64_t deadline) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
-    /* If the deadline is infinite there's nothing to wait for. */
+    /* If the deadline is infinite, there's nothing to wait for. */
     if(deadline < 0) return;
     dill_rbtree_insert(&ctx->timers, deadline, &tmcl->item);
     dill_waitfor(&tmcl->cl, id, dill_timer_cancel);
@@ -158,12 +158,12 @@ static void *dill_cr_query(struct hvfs *vfs, const void *type);
 static void dill_cr_close(struct hvfs *vfs);
 
 /******************************************************************************/
-/*  Creation and termination of coroutines.                                   */
+/*  Coroutine creation and termination                                        */
 /******************************************************************************/
 
 static void dill_cancel(struct dill_cr *cr, int err);
 
-/* The intial part of go(). Allocates a new stack and handle. */
+/* The initial part of go(). Allocates a new stack and handle. */
 int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
       const char *file, int line) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
@@ -173,13 +173,13 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     struct dill_cr *cr;
     size_t stacksz;
     if(!*ptr) {
-        /* Allocate new stack. */
+        /* Allocate a new stack. */
         cr = (struct dill_cr*)dill_allocstack(&stacksz);
         if(dill_slow(!cr)) return -1;
     }
     else {
-        /* Stack is supplied by the user.
-           Align top of the stack to 16-byte boundary. */
+        /* The stack is supplied by the user.
+           Align the top of the stack to a 16-byte boundary. */
         uintptr_t top = (uintptr_t)*ptr;
         top += len;
         top &= ~(uintptr_t)15;
@@ -189,7 +189,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
             errno = ENOMEM; return -1;}
     }
 #if defined DILL_CENSUS
-    /* Mark the bytes in stack as unused. */
+    /* Mark the bytes in the stack as unused. */
     uint8_t *bottom = ((char*)cr) - stacksz;
     int i;
     for(i = 0; i != stacksz; ++i)
@@ -233,7 +233,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     cr->stacksz = stacksz - sizeof(struct dill_cr);
 #endif
     /* Return the context of the parent coroutine to the caller so that it can
-       store its current state. It can't be done here becuse we are at the
+       store its current state. It can't be done here because we are at the
        wrong stack frame here. */
     *jb = &ctx->r->ctx;
     /* Add parent coroutine to the list of coroutines ready for execution. */
@@ -243,12 +243,12 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     return hndl;
 }
 
-/* The final part of go(). Gets called one the coroutine is finished. */
+/* The final part of go(). Gets called when the coroutine is finished. */
 void dill_epilogue(void) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     /* Mark the coroutine as finished. */
     ctx->r->done = 1;
-    /* If there's a coroutine waiting till we finish, unblock it now. */
+    /* If there's a coroutine waiting for us to finish, unblock it now. */
     if(ctx->r->closer)
         dill_cancel(ctx->r->closer, 0);
     /* With no clauses added, this call will never return. */
@@ -266,32 +266,32 @@ static void *dill_cr_query(struct hvfs *vfs, const void *type) {
 static void dill_cr_close(struct hvfs *vfs) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     struct dill_cr *cr = dill_cont(vfs, struct dill_cr, vfs);
-    /* If the coroutine have already finished, we are done. */
+    /* If the coroutine has already finished, we are done. */
     if(!cr->done) {
         /* No blocking calls from this point on. */
         cr->no_blocking1 = 1;
         /* Resume the coroutine if it was blocked. */
         if(!cr->ready.next)
             dill_cancel(cr, ECANCELED);
-        /* Wait till the coroutine finishes execution. With no clauses added
-           the only mechanism to resume is dill_cancel(). This is not really
-           a blocking call although it looks like one. Given that the coroutine
-           that is being shut down is not permitted to block we should get
+        /* Wait for the coroutine to stop executing. With no clauses added,
+           the only mechanism to resume is through dill_cancel(). This is not really
+           a blocking call, although it looks like one. Given that the coroutine
+           that is being shut down is not permitted to block, we should get
            control back pretty quickly. */
         cr->closer = ctx->r;
         int rc = dill_wait();
         dill_assert(rc == -1 && errno == 0);
     }
 #if defined DILL_CENSUS
-    /* Find first overwritten byte on the stack.
+    /* Find the first overwritten byte on the stack.
        Determine stack usage based on that. */
     uint8_t *bottom = ((uint8_t*)cr) - cr->stacksz;
     int i;
     for(i = 0; i != cr->stacksz; ++i) {
         if(bottom[i] != 0xa0 + (i % 13)) {
-            /* dill_cr is located on stack so we have take that to account.
+            /* dill_cr is located on the stack so we have to take that into account.
                Also, it may be necessary to align the top of the stack to
-               16-byte boundary, so add 16 bytes to account for that. */
+               a 16-byte boundary, so add 16 bytes to account for that. */
             size_t used = cr->stacksz - i - sizeof(struct dill_cr) + 16;
             if(used > cr->census->max_stack)
                 cr->census->max_stack = used;
@@ -302,7 +302,7 @@ static void dill_cr_close(struct hvfs *vfs) {
 #if defined DILL_VALGRIND
     VALGRIND_STACK_DEREGISTER(cr->sid);
 #endif
-    /* Now that the coroutine is finished deallocate it. */
+    /* Now that the coroutine is finished, deallocate it. */
     if(!cr->mem) dill_freestack(cr + 1);
 }
 
@@ -313,7 +313,7 @@ static void dill_cr_close(struct hvfs *vfs) {
 void dill_waitfor(struct dill_clause *cl, int id,
       void (*cancel)(struct dill_clause *cl)) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
-    /* Add clause to the coroutine list of active clauses. */
+    /* Add a clause to the coroutine list of active clauses. */
     cl->cr = ctx->r;
     dill_slist_push(&ctx->r->clauses, &cl->item);
     cl->id = id;
@@ -329,8 +329,8 @@ int dill_wait(void)  {
         errno = ctx->r->err;
         return ctx->r->id;
     }
-    /* For performance reasons we want to avoid excessive checking of current
-       time. Thus we cache the value here. It will be recomputed only after
+    /* For performance reasons, we want to avoid excessive checking of current
+       time, so we cache the value here. It will be recomputed only after
        a blocking call. */
     int64_t nw = now();
     /*  Wait for timeouts and external events. However, if there are ready
@@ -341,7 +341,7 @@ int dill_wait(void)  {
     if(dill_qlist_empty(&ctx->ready) || nw > ctx->last_poll + 1000) {
         int block = dill_qlist_empty(&ctx->ready);
         while(1) {
-            /* Compute timeout for the subsequent poll. */
+            /* Compute the timeout for the subsequent poll. */
             int timeout = 0;
             if(block) {
                 if(dill_rbtree_empty(&ctx->timers))
@@ -369,10 +369,10 @@ int dill_wait(void)  {
                     fired = 1;
                 }
             }
-            /* Never retry the poll in non-blocking mode. */
+            /* Never retry the poll when in non-blocking mode. */
             if(!block || fired)
                 break;
-            /* If timeout was hit but there were no expired timers do the poll
+            /* If the timeout was hit but there were no expired timers, do the poll
                again. It can happen if the timers were canceled in the
                meantime. */
         }
@@ -382,7 +382,7 @@ int dill_wait(void)  {
     struct dill_slist *it = dill_qlist_pop(&ctx->ready);
     it->next = NULL;
     ctx->r = dill_cont(it, struct dill_cr, ready);
-    /* dill_longjmp has to be at the end of a function body otherwise stack
+    /* dill_longjmp has to be at the end of a function body, otherwise stack
        unwinding information will be trimmed if a crash occurs in this
        function. */
     dill_longjmp(ctx->r->ctx);
