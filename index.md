@@ -23,7 +23,7 @@ int main() {
 }
 ```
 
-Code dependant on libdill is compiled like any other C code. The only extra requirement is that it be linked with libdill library:
+Code dependent on libdill is compiled like any other C code. The only extra requirement is that it be linked with libdill library:
 
 ```
 $ cc -ldill -o hello hello.c

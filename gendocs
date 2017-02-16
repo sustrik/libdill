@@ -1,25 +1,16 @@
 #!/bin/sh -e
 
-#Lazily convert md->html
-lz_md_to_html()
-{
-    md=$1
-    html=${md%.*}.html
-    if ! [ "$html" -nt "$md" ]; then
-        echo "$html <- $md"
-        {
-            cat templates/header.html
-            pandoc -f markdown_github $md
-            cat templates/footer.html
-        } > $html.tmp
-        #this indirection is for livereload.js to reload smoothly
-        mv $html.tmp $html 
-        #coarsen the timestamp
-        touch -d 'now+1second' $html
-    fi
+should_rebuild(){  #args: target deps...
+    local target=$1 dep; shift 
+    [ -f "$target" ] || { echo "$target(NEW)"; return 0; }
+    for dep; do 
+        [ "$target" -nt $dep ] || { echo "$target <- $dep"; return 0; }
+    done
+    return 1
 }
 g_documentation_md(){
-    if ! [  documentation.html -nt man/ ]; then
+    if should_rebuild documentation.md \
+        templates/documentation-header.md templates/documentation-footer.md; then
         {
             cat templates/documentation-header.md
             for f in man/*.md; do
@@ -27,7 +18,24 @@ g_documentation_md(){
                 echo "* [$name](http://libdill.org/man/$name.html)"
             done 
             cat templates/documentation-footer.md
-        } > documentation.md
+        } > documentation.md.tmp
+        mv documentation.md.tmp documentation.md
+        touch -d 'now+1second' documentation.md
+    fi
+}
+lz_md_to_html()
+{
+    md=$1
+    html=${md%.*}.html
+    if should_rebuild "$html" \
+        "$md" templates/header.html templates/footer.html; then
+        {
+            cat templates/header.html
+            pandoc -f markdown_github $md
+            cat templates/footer.html
+        } > $html.tmp
+        mv $html.tmp $html #this indirection is for livereload.js to reload smoothly
+        touch -d 'now+1second' $html #coarsen the timestamp
     fi
 }
 main(){

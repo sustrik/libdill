@@ -43,41 +43,41 @@
 <h2 id="faq-whats-structured-concurrency">FAQ: What's structured concurrency?</h2>
 <p>Check this short introductory <a href="structured-concurrency.html">article</a> about structured concurrency.</p>
 <h2 id="faq-whats-libdills-performance">FAQ: What's libdill's performance?</h2>
-<p>The best way to find out is to check for yourself. In <code>perf</code> subdirectory you'll find small performance bencharks.</p>
-<p>Generally speaking, though, libdill's concurrency primitives only a bit slower than simple C flow control statements. Context switch have been seen to execute in 6 ns, coroutine creation in 26 ns. Passing a message via a channel in 40 ns.</p>
-<h2 id="faq-how-does-libdill-concurrency-differ-from-go-concurrency">FAQ: How does libdill concurrency differ from Go concurrency?</h2>
+<p>The best way to find out is to check for yourself. You will find some small performance benchmarks in the <code>perf</code> subdirectory.</p>
+<p>Generally speaking, though, libdill's concurrency primitives are only a bit slower than basic C flow control statements. A context switch has been seen to execute in as little as 6 ns, with coroutine creation taking 26 ns. Passing a message through a channel takes about 40 ns.</p>
+<h2 id="faq-how-does-libdills-concurrency-differ-from-gos-concurrency">FAQ: How does libdill's concurrency differ from Go's concurrency?</h2>
 <ol>
 <li>No interaction between threads. Each thread is treated as a separate process.<br /></li>
 <li>Channels are always unbuffered.<br /></li>
-<li><code>choose</code>, unlike <code>select</code> is deterministic. If multiple clauses can be executed, a clause closer to the beginning of the pollset wins.<br /></li>
-<li><code>chdone</code> signals closing of the channel to both senders and receivers.<br /></li>
+<li><code>choose</code>, unlike <code>select</code>, is deterministic. If multiple clauses can be executed, the clause closest to the beginning of the pollset wins.<br /></li>
+<li><code>chdone</code> signals the closing of a channel to both senders and receivers.<br /></li>
 <li>Coroutines can be canceled.</li>
 </ol>
 <h2 id="faq-how-does-libdill-differ-from-libmill">FAQ: How does libdill differ from libmill?</h2>
-<p><code>libmill</code> was a project to copy Go's concurrency model to C 1:1 without introducing any innovations or experiments. The project is finished now. It will be maintained but won't change in the future.</p>
-<p><code>libdill</code> is a follow-up project that diverges from the Go model and experiments with structured concurrency.</p>
-<p>Technically, there are following differences:</p>
+<p><code>libmill</code> was a project that aimed to copy Go's concurrency model to C 1:1 without introducing any innovations or experiments. The project is finished now. It will be maintained but won't change in the future.</p>
+<p><code>libdill</code> is a follow-up project that experiments with structured concurrency and diverges from the Go model.</p>
+<p>Technically, these are the differences:</p>
 <ol>
-<li>It's C-idiomatic. Whereas libmill takes Go's concurrency API and implements them in almost identical manner in C, libdill tries to provide the same functionality via more C-like and POSIX-y API. For example, <code>choose</code> is a function rather than a language construct, Go-style panic is replaced by returning an error code and so on.<br /></li>
+<li>Libdill is idiomatic C. Whereas libmill takes Go's concurrency API and implements it in an almost identical manner in C, libdill tries to provide the same functionality via a more C-like and POSIX-like API. For example, <code>choose</code> is a function in libdill rather than a language construct, or Go's panic is replaced with error returns.<br /></li>
 <li>Coroutines can be canceled. This creates a foundation for &quot;structured concurrency&quot;.<br /></li>
-<li><code>chdone</code> causes blocked <code>recv</code> on the channel to return <code>EPIPE</code> error rather than a value.<br /></li>
-<li><code>chdone</code> will signal senders to the channel as well as receivers. This allows for scenarios like multiple senders and single receiver communicating via single channel. The receiver can let the senders know that it's terminating via <code>chdone</code>.<br /></li>
-<li>libmill's <code>fdwait</code> was replaced by <code>fdin</code> and <code>fdout</code>. The idea is that if we want data to flow via the connection in both directions in parallel we should use two coroutines rather than single one.<br /></li>
-<li>There's no networking library in libdill itself. It is a separate library (dsock).</li>
+<li><code>chdone</code> causes blocked <code>recv</code> on the channel to return the <code>EPIPE</code> error rather than a value.<br /></li>
+<li><code>chdone</code> will signal both the senders and the receivers of a channel. This allows for scenarios such as multiple senders and a single receiver communicating via a single channel. The receiver can use <code>chdone</code> to let the senders know that it's terminating.<br /></li>
+<li>libmill's <code>fdwait</code> was replaced by <code>fdin</code> and <code>fdout</code>. The idea is that if we want data to flow through the connection in both directions in parallel, we should use two coroutines rather than one.<br /></li>
+<li>There's no networking library in libdill itself. A networking library (dsock) is provided separately.</li>
 </ol>
-<h2 id="faq-how-can-i-access-source-code">FAQ: How can I access source code?</h2>
-<p>To clone the repository:</p>
+<h2 id="faq-how-can-i-access-the-source-code">FAQ: How can I access the source code?</h2>
+<p>To clone the repository, run:</p>
 <pre><code>$ git clone https://github.com/sustrik/libdill.git</code></pre>
-<p>To build from the source (you'll need automake and libtool):</p>
+<p>To build from the source (you'll need automake and libtool), run:</p>
 <pre><code>$ ./autogen.sh
 $ ./configure
 $ make
 $ make check
 $ sudo make install</code></pre>
-<p>For easy debugging use the following configure options:</p>
+<p>For easy debugging, use the following configure options:</p>
 <pre><code>$ ./configure --disable-shared --enable-debug --enable-valgrind</code></pre>
-<p>The above will turn the optimisation out, generate debug symbols and link all the tests with the static version of the library. The second option means that the executables in <code>tests</code> subdirectory will be actual debuggable binaries rather that wrapper shell scripts. The last option instructs valgrind about where are the coroutine stacks located and thus prevents spurios valgrind warnings.</p>
-<h2 id="faq-is-there-continuous-integration-for-libdill">FAQ: Is there continuous integration for libdill?</h2>
+<p>The above will turn optimization off, generate debug symbols, and link all the tests with the static version of the library. The second option will cause executables in the <code>tests</code> subdirectory to be actual debuggable binaries rather that wrapper shell scripts. The last option instructs valgrind about where the coroutine stacks are located, thereby preventing valgrind from generating spurious warnings.</p>
+<h2 id="faq-is-continuous-integration-available-for-libdill">FAQ: Is continuous integration available for libdill?</h2>
 <iframe width="100%" height="20" frameBorder="0"
 src="https://api.travis-ci.org/sustrik/libdill.svg?branch=master">
 </iframe>
@@ -85,20 +85,20 @@ src="https://api.travis-ci.org/sustrik/libdill.svg?branch=master">
 
 <p>Travis: <a href="https://travis-ci.org/sustrik/libdill">https://travis-ci.org/sustrik/libdill</a></p>
 <h2 id="faq-how-can-i-contribute">FAQ: How can I contribute?</h2>
-<p>To contribute to libdill create a GitHub pull request. You have to state that your patch is submitted under MIT/X11 license, so that it can be incorporated into the mainline codebase without licensing issues.</p>
-<p>If you make a substantial contribution to a file, add your copyright to the file header. Irrespective of whether you do so, your name will be added to the AUTHORS file to indicate you own copyright to a part of the codebase.</p>
+<p>To contribute to libdill, create a GitHub pull request. You have to state that your patch is submitted under the MIT/X11 license, so that it can be incorporated into the mainline codebase without licensing issues.</p>
+<p>If you make a substantial contribution to a file, add your copyright to the file header. Irrespective of whether you do so or not, your name will be added to the AUTHORS file to indicate you own copyright to part of the codebase.</p>
 <h2 id="faq-what-is-the-release-process">FAQ: What is the release process?</h2>
-<p>These instructions are intended for the project maintainers:</p>
+<p>These instructions are intended for project maintainers:</p>
 <ul>
 <li>Run <code>make distcheck</code> to check whether the packaging process still works.<br /></li>
-<li>Bump ABI version as appropriate (see here: <a href="http://250bpm.com/blog:41">http://250bpm.com/blog:41</a>).<br /></li>
-<li>Commit it and push it back to the master on GitHub.<br /></li>
+<li>Bump the ABI version appropriately (see here: <a href="http://250bpm.com/blog:41">http://250bpm.com/blog:41</a>).<br /></li>
+<li>Commit and push your commits back to the master branch on GitHub.<br /></li>
 <li>Tag the new version and push the tag to GitHub (e.g. <code>git tag -a 0.3-beta; git push origin 0.3-beta</code>).<br /></li>
 <li>Clone a clean repo from GitHub.<br /></li>
 <li>Build the package (<code>./autogen.sh; ./configure; make distcheck</code>).<br /></li>
-<li>Add the package to <code>gh-pages</code> branch.<br /></li>
-<li>Adjust the <code>download.md</code> and <code>libdill-history.md</code> in <code>gh-pages</code> branch.<br /></li>
-<li>Regenerate the documentaton using <code>./gendocs.sh &lt;version-number&gt;</code>.<br /></li>
+<li>Add the package to the <code>gh-pages</code> branch.<br /></li>
+<li>Adjust <code>download.md</code> in <code>gh-pages</code> branch.<br /></li>
+<li>Regenerate the documentation using <code>./gendocs.sh &lt;version-number&gt;</code>.<br /></li>
 <li>Commit and push to <code>gh-pages</code>.<br /></li>
 <li>Announce the release on twitter, etc.</li>
 </ul>

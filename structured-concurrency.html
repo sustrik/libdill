@@ -32,7 +32,7 @@
 <p>This is structured concurrency:</p>
 <p><img src="index2.jpeg" /></p>
 <p>The goal of structured concurrency is to guarantee encapsulation. If the <code>main</code> function calls <code>foo</code>, which in turn launches <code>bar</code> in a concurrent fashion, <code>main</code> will be guaranteed that once <code>foo</code> has finished, there will be no leftover functions still running in the background.</p>
-<p>What you end up with is a tree of coroutines rooted in the <code>main</code> function. This tree spreads out towards the smallest worker functions, and you may think of this as a generalisation of the call stack — a call tree, if you will. In it, you can walk from any particular function towards the root until you reach the <code>main</code> function:</p>
+<p>What you end up with is a tree of coroutines rooted in the <code>main</code> function. This tree spreads out towards the smallest worker functions, and you may think of this as a generalization of the call stack — a call tree, if you will. In it, you can walk from any particular function towards the root until you reach the <code>main</code> function:</p>
 <p><img src="index3.jpeg" /></p>
 <h2 id="how-is-structured-concurrency-implemented-in-libdill">How is structured concurrency implemented in libdill?</h2>
 <p>As with all idiomatic C, you have to do it by hand.</p>
@@ -54,7 +54,7 @@ hclose(h);</code></pre>
     }
 }</code></pre>
 <h2 id="what-about-asynchronous-objects">What about asynchronous objects?</h2>
-<p>Sometimes, instead of launching a coroutine, you may want to create an object that runs coroutines in the background.<br />For example, an object called <code>tcp_connection</code> may run two coroutines, one for asynchrounously reading data from and one for asynchronously writing data to the network.</p>
+<p>Sometimes, instead of launching a coroutine, you may want to create an object that runs coroutines in the background.<br />For example, an object called <code>tcp_connection</code> may run two coroutines, one for asynchronously reading data from and one for asynchronously writing data to the network.</p>
 <p>Still, it would be nice if the object was a node in the calltree, just like a coroutine is.</p>
 <p>In other words, you may want a guarantee that once the object is deallocated there will be no leftover coroutines running:</p>
 <p><img src="index4.jpeg" /></p>

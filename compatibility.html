@@ -19,7 +19,7 @@
 <h3 id="operating-systems">Operating Systems</h3>
 <p>Currently, only modern POSIX systems are supported. The library has been tested mainly on Linux, FreeBSD, and OSX.</p>
 <p>It is likely to work with DragonFlyBSD as well. NetBSD and OpenBSD will probably need <code>DILL_THREAD_FALLBACK</code> to work as they don't have support for thread local storage. If you are using libdill on these platforms, please let us know.</p>
-<p>There is currently no support for Windows. Cygwin is very broken. It doesn't support <code>AF_UNIX</code> properly, and so no furhter development will be done for this platform.<br />Libdill is planned to be ported to Mingw and Windows IOCP instead. Help is welcome.</p>
+<p>There is currently no support for Windows. Cygwin is very broken. It doesn't support <code>AF_UNIX</code> properly, and so no further development will be done for this platform.<br />Libdill is planned to be ported to Mingw and Windows IOCP instead. Help is welcome.</p>
 <h3 id="compilers">Compilers</h3>
 <p>libdill requires either GCC and Clang. Your mileage with other compilers may vary:</p>
 <ul>
@@ -34,7 +34,7 @@
 <p>Compiler features and incompatibilities:</p>
 <ul>
 <li>On x86 and x86-64 platforms, the <code>DILL_ARCH_FALLBACK</code> option is incompatible with GCC 6.2.1 when <code>-fstack-protector</code> is enabled. Please compile libdill and your application with <code>-fno-stack-protector</code> if you need to use the fallback. Non-x86 platforms have not been tested with GCC 6.2.1. Please report your mileage.<br /></li>
-<li>Address sanitisation and other stack checking compiler features are likely to break your <code>libdill</code> build.<br /></li>
+<li>Address sanitization and other stack checking compiler features are likely to break your <code>libdill</code> build.<br /></li>
 <li>x32 addressing probably doesn't work, this has not been tested yet.</li>
 </ul>
 <h3 id="standard-libraries">Standard Libraries</h3>

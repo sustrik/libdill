@@ -33,11 +33,12 @@
 <li><strong>ETIMEDOUT</strong>: Deadline expired while waiting on the file descriptor.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre><code>c int result = fcntl(fd, F_SETFL, O_NONBLOCK); assert(result == 0); while(1)
-{ result = fdin(fd, -1); assert(result == 0);
-    char buf[1024];
-    ssize_t len = recv(fd, buf, sizeof(buf), 0);
-    assert(len &gt; 0);
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> result = fcntl(fd, F_SETFL, O_NONBLOCK); assert(result == <span class="dv">0</span>);
+<span class="kw">while</span>(<span class="dv">1</span>) {
+    result = fdin(fd, -<span class="dv">1</span>); assert(result == <span class="dv">0</span>);
+    <span class="dt">char</span> buf[<span class="dv">1024</span>];
+    ssize_t len = recv(fd, buf, <span class="kw">sizeof</span>(buf), <span class="dv">0</span>);
+    assert(len &gt; <span class="dv">0</span>);
     process_input(buf, len);
 }</code></pre>
 </body>

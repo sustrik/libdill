@@ -34,7 +34,7 @@ coroutine <span class="dt">void</span> worker(<span class="dt">const</span> <spa
     msleep(now() + <span class="dv">5000</span>);
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
-<p>Code dependant on libdill is compiled like any other C code. The only extra requirement is that it be linked with libdill library:</p>
+<p>Code dependent on libdill is compiled like any other C code. The only extra requirement is that it be linked with libdill library:</p>
 <pre><code>$ cc -ldill -o hello hello.c</code></pre>
 <p>Libdill is licensed under the MIT/X11 license.</p>
 </body>
