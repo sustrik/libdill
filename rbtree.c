@@ -28,7 +28,6 @@
    red-black tree implementation. */
 
 #define dill_rbtree_isnil(self, x) ((x) == &(self)->nil)
-#define dill_rbtree_isroot(self, x) ((x)->up->up == &(self)->nil)
 
 void dill_rbtree_init(struct dill_rbtree *self) {
     self->root.red = 0;
@@ -164,7 +163,8 @@ struct dill_rbtree_item *dill_rbtree_next(struct dill_rbtree *self,
 
 static void dill_rbtree_erase_fixup(struct dill_rbtree *self,
       struct dill_rbtree_item *x) {
-    while(!x->red && !dill_rbtree_isroot(self, x)) {
+    struct dill_rbtree_item *root = self->root.left;
+    while(!x->red && root != x) {
         if(x == x->up->left) {
             struct dill_rbtree_item *w = x->up->right;
             if(w->red) {
@@ -184,10 +184,12 @@ static void dill_rbtree_erase_fixup(struct dill_rbtree *self,
 	              x->up->red = 0;
 	              w->right->red = 0;
 	              dill_rbtree_rleft(self, x->up);
-	              return;
+	              x = root;
             }
-            w->red = 1;
-            x = x->up;
+            else {
+                w->red = 1;
+                x = x->up;
+            }
         }
         else {
             struct dill_rbtree_item *w = x->up->left;
@@ -208,23 +210,26 @@ static void dill_rbtree_erase_fixup(struct dill_rbtree *self,
 	              x->up->red = 0;
 	              w->left->red = 0;
 	              dill_rbtree_rright(self, x->up);
-	              return;
+	              x = root;
             }
-            w->red = 1;
-            x = x->up;
+            else {
+                w->red = 1;
+                x = x->up;
+            }
         }
     }
     x->red = 0;
 }
 
 void dill_rbtree_erase(struct dill_rbtree *self, struct dill_rbtree_item *z) {
+    struct dill_rbtree_item *root = &self->root;
     struct dill_rbtree_item *y = (dill_rbtree_isnil(self, z->left) ||
         dill_rbtree_isnil(self, z->right)) ? z : dill_rbtree_next(self, z);
     struct dill_rbtree_item *x = dill_rbtree_isnil(self, y->left) ?
         y->right : y->left;
     x->up = y->up;
-    if(dill_rbtree_isroot(self, x)) {
-        x->up->left = x;
+    if(x->up == root) {
+        root->left = x;
     }
     else {
         if(y == y->up->left) y->up->left = x;
