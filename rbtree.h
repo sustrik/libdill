@@ -23,6 +23,7 @@
 #ifndef DILL_RBTREE_INCLUDED
 #define DILL_RBTREE_INCLUDED
 
+#include <stddef.h>
 #include <stdint.h>
 
 struct dill_rbtree_item {
@@ -51,13 +52,8 @@ void dill_rbtree_insert(struct dill_rbtree *self, int64_t val,
 /* Remove an item from a tree. */
 void dill_rbtree_erase(struct dill_rbtree *self, struct dill_rbtree_item *item);
 
-/* Find an item with the specified value. If there are multiple such items,
-   one of them is returned. */
-struct dill_rbtree_item *dill_rbtree_find(struct dill_rbtree *self,
-    int64_t val);
-
 /* Return an item with the lowest value. If there are no items in the tree, NULL
-   is returned*/
+   is returned. */
 struct dill_rbtree_item *dill_rbtree_first(struct dill_rbtree *self);
 
 /* Iterate through the tree. Items are returned starting with those with

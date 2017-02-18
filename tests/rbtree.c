@@ -37,10 +37,6 @@ int main(void) {
     for(i = 0; i != 10; ++i) {
         dill_rbtree_insert(&tree, i, &items[i]);
     }
-    for(i = 0; i != 10; ++i) {
-        struct dill_rbtree_item *it = dill_rbtree_find(&tree, i);
-        assert(it == &items[i]);
-    }
 
     i = 0;
     struct dill_rbtree_item *it = dill_rbtree_first(&tree);
