@@ -65,7 +65,7 @@ static const int dill_chan_type_placeholder = 0;
 static const void *dill_chan_type = &dill_chan_type_placeholder;
 static void *dill_chan_query(struct hvfs *vfs, const void *type);
 static void dill_chan_close(struct hvfs *vfs);
-static int dill_chan_done(struct hvfs *vfs, int64_t deadline);
+static int dill_chan_done(struct hvfs *vfs);
 
 /******************************************************************************/
 /*  Channel creation and deallocation.                                        */
@@ -204,7 +204,7 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     return 0;
 }
 
-static int dill_chan_done(struct hvfs *vfs, int64_t deadline) {
+static int dill_chan_done(struct hvfs *vfs) {
     struct dill_chan *ch = (struct dill_chan*)vfs;
     dill_assert(ch);
     if(ch->done) {errno = EPIPE; return -1;}

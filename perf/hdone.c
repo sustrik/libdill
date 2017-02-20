@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     for(i = 0; i != count; ++i) {
         int ch = chmake(sizeof(int));
         int h = go(worker(ch));
-        hdone(ch, -1);
+        hdone(ch);
         hclose(h);
         hclose(ch);
     }

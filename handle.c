@@ -147,10 +147,10 @@ int hclose(int h) {
     return 0;
 }
 
-int hdone(int h, int64_t deadline) {
+int hdone(int h) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
     CHECKHANDLE(h, -1);
     if(dill_slow(!hndl->vfs->done)) {errno = ENOTSUP; return -1;}
-    return hndl->vfs->done(hndl->vfs, deadline);
+    return hndl->vfs->done(hndl->vfs);
 }
 
