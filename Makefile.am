@@ -107,11 +107,11 @@ TESTS = $(check_PROGRAMS)
 ################################################################################
 
 noinst_PROGRAMS = \
-    perf/go\
-    perf/ctxswitch\
-    perf/chan\
-    perf/chdone\
-    perf/choose\
+    perf/go \
+    perf/ctxswitch \
+    perf/chan \
+    perf/choose \
+    perf/hdone \
     perf/whispers
 
 ################################################################################

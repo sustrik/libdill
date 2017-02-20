@@ -41,7 +41,7 @@ struct dill_chan {
     struct dill_list in;
     /* List of clauses wanting to send to the channel. */
     struct dill_list out;
-    /* 1 if chdone() has been called on this channel. 0 otherwise. */
+    /* 1 if hdone() has been called on this channel. 0 otherwise. */
     unsigned int done : 1;
     /* 1 if the object was created with chmake_mem(). */
     unsigned int mem : 1;
@@ -65,6 +65,7 @@ static const int dill_chan_type_placeholder = 0;
 static const void *dill_chan_type = &dill_chan_type_placeholder;
 static void *dill_chan_query(struct hvfs *vfs, const void *type);
 static void dill_chan_close(struct hvfs *vfs);
+static int dill_chan_done(struct hvfs *vfs);
 
 /******************************************************************************/
 /*  Channel creation and deallocation.                                        */
@@ -78,6 +79,7 @@ int chmake_mem(size_t itemsz, struct chmem *mem) {
     struct dill_chan *ch = (struct dill_chan*)mem;
     ch->vfs.query = dill_chan_query;
     ch->vfs.close = dill_chan_close;
+    ch->vfs.done = dill_chan_done;
     ch->sz = itemsz;
     dill_list_init(&ch->in);
     dill_list_init(&ch->out);
@@ -202,9 +204,9 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     return 0;
 }
 
-int chdone(int h) {
-    struct dill_chan *ch = hquery(h, dill_chan_type);
-    if(dill_slow(!ch)) return -1;
+static int dill_chan_done(struct hvfs *vfs) {
+    struct dill_chan *ch = (struct dill_chan*)vfs;
+    dill_assert(ch);
     if(ch->done) {errno = EPIPE; return -1;}
     ch->done = 1;
     /* Resume any remaining senders and receivers on the channel

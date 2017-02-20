@@ -47,7 +47,7 @@ If the function returns an index, it set _errno_ to one of the following values:
 * **EBADF**: Invalid handle.
 * **EINVAL**: Invalid parameter.
 * **ENOTSUP**: Operation not supported. Presumably, the handle isn't a channel.
-* **EPIPE**: Channel has been closed with **chdone**.
+* **EPIPE**: Channel has been closed with **hdone**.
 
 # EXAMPLE
 

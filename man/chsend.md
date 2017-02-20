@@ -28,7 +28,7 @@ The function returns 0 on success. On error, it returns -1 and sets _errno_ to o
 * **ECANCELED**: Current coroutine is being shut down.
 * **EINVAL**: Invalid parameter.
 * **ENOTSUP**: Operation not supported. Presumably, the handle isn't a channel.
-* **EPIPE**: Channel has been closed with **chdone**.
+* **EPIPE**: Channel has been closed with **hdone**.
 * **ETIMEDOUT**: Deadline expired while waiting on a message.
 
 # EXAMPLE

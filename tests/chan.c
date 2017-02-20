@@ -108,7 +108,7 @@ int main() {
     errno_assert(ch1 >= 0);
     int hndl1 = go(sender(ch1, 1, 333));
     errno_assert(hndl1 >= 0);
-    rc = chdone(hndl1);
+    rc = hdone(hndl1);
     errno_assert(rc == -1 && errno == ENOTSUP);
     rc = chrecv(ch1, &val, sizeof(val), -1);
     errno_assert(rc == 0);
@@ -197,10 +197,10 @@ int main() {
     rc = hclose(hndl5[1]);
     errno_assert(rc == 0);
 
-    /* Test simple chdone() scenarios. */
+    /* Test simple hdone() scenarios. */
     int ch8 = chmake(sizeof(int));
     errno_assert(ch8 >= 0);
-    rc = chdone(ch8);
+    rc = hdone(ch8);
     errno_assert(rc == 0);
     rc = chrecv(ch8, &val, sizeof(val), -1);
     errno_assert(rc == -1 && errno == EPIPE);
@@ -210,7 +210,7 @@ int main() {
     errno_assert(rc == -1 && errno == EPIPE);
     hclose(ch8);
 
-    /* Test whether chdone() unblocks all receivers. */
+    /* Test whether hdone() unblocks all receivers. */
     int ch12 = chmake(sizeof(int));
     errno_assert(ch12 >= 0);
     int ch13 = chmake(sizeof(int));
@@ -220,7 +220,7 @@ int main() {
     errno_assert(hndl6[0] >= 0);
     hndl6[1] = go(receiver2(ch12, ch13));
     errno_assert(hndl6[1] >= 0);
-    rc = chdone(ch12);
+    rc = hdone(ch12);
     errno_assert(rc == 0);
     rc = chrecv(ch13, &val, sizeof(val), -1);
     errno_assert(rc == 0);
@@ -235,7 +235,7 @@ int main() {
     rc = hclose(hndl6[1]);
     errno_assert(rc == 0);
 
-    /* Test whether chdone() unblocks blocked senders. */
+    /* Test whether hdone() unblocks blocked senders. */
     int ch15 = chmake(sizeof(int));
     errno_assert(ch15 >= 0);
     int hndl8[3];
@@ -247,7 +247,7 @@ int main() {
     errno_assert(hndl8[2] >= 0);
     rc = msleep(now() + 50);
     errno_assert(rc == 0);
-    rc = chdone(ch15);
+    rc = hdone(ch15);
     errno_assert(rc == 0);
     hclose(ch15);
     rc = hclose(hndl8[0]);

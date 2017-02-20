@@ -21,7 +21,6 @@
 # IN THE SOFTWARE.
 
 man3_MANS = \
-    chdone.3 \
     chmake.3 \
     chmake_mem.3 \
     choose.3 \
@@ -33,6 +32,7 @@ man3_MANS = \
     go.3 \
     go_mem.3 \
     hclose.3 \
+    hdone.3 \
     hdup.3 \
     hmake.3 \
     hquery.3 \

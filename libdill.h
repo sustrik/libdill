@@ -87,6 +87,7 @@ DILL_EXPORT int64_t now(void);
 struct hvfs {
     void *(*query)(struct hvfs *vfs, const void *type);
     void (*close)(struct hvfs *vfs);
+    int (*done)(struct hvfs *vfs);
     /* Reserved. Do not use directly! */
     unsigned int refcount;
 };
@@ -95,6 +96,7 @@ DILL_EXPORT int hmake(struct hvfs *vfs);
 DILL_EXPORT void *hquery(int h, const void *type);
 DILL_EXPORT int hdup(int h);
 DILL_EXPORT int hclose(int h);
+DILL_EXPORT int hdone(int h);
 
 /******************************************************************************/
 /*  Coroutines                                                                */
@@ -253,9 +255,9 @@ struct chclause {
 
 struct chmem {
 #if defined(__i386__)
-    char reserved[36];
+    char reserved[40];
 #else
-    char reserved[72];
+    char reserved[80];
 #endif
 };
 
@@ -263,9 +265,11 @@ DILL_EXPORT int chmake(size_t itemsz);
 DILL_EXPORT int chmake_mem(size_t itemsz, struct chmem *mem);
 DILL_EXPORT int chsend(int ch, const void *val, size_t len, int64_t deadline);
 DILL_EXPORT int chrecv(int ch, void *val, size_t len, int64_t deadline);
-DILL_EXPORT int chdone(int ch);
 DILL_EXPORT int choose(struct chclause *clauses, int nclauses,
     int64_t deadline);
+
+/* chdone() is deprecated in favour of hdone(). */
+#define chdone hdone
 
 #endif
 

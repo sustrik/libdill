@@ -46,6 +46,6 @@ perf/chan
 perf/ctxswitch
 perf/go
 perf/whispers
-perf/chdone
+perf/hdone
 perf/choose
 man/*.3

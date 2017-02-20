@@ -291,7 +291,7 @@ int main() {
     /* Test that 'in' on done-with channel fires. */
     int ch18 = chmake(sizeof(int));
     errno_assert(ch18 >= 0);
-    rc = chdone(ch18);
+    rc = hdone(ch18);
     errno_assert(rc == 0);
     struct chclause cls15[] = {{CHRECV, ch18, &val, sizeof(val)}};
     rc = choose(cls15, 1, -1);
