@@ -84,9 +84,11 @@ static void dill_ctx_timer_handler(int sig, siginfo_t *si, void *uc) {
 #ifndef __APPLE__
     struct dill_ctx_cr *ctx = si->si_value.sival_ptr;
     int or = timer_getoverrun(ctx->timer);
-    if(or) ctx->do_poll = 1;
+    if(or) {
+        __sync_lock_test_and_set(&ctx->do_poll, 1);
+    }
 #else
-    dill_poll_count++;
+    __sync_fetch_and_add(&dill_poll_count, 1);
 #endif
 }
 
@@ -370,13 +372,12 @@ int dill_wait(void)  {
         return ctx->r->id;
     }
 #ifdef __APPLE__
-    int last_poll = dill_poll_count;
+    int last_poll = __sync_fetch_and_add(&dill_last_poll, 0);
     int do_poll = ctx->last_poll != last_poll;
     ctx->last_poll = last_poll;
 #else
-    int do_poll = ctx->do_poll;
-    /* Clear the polling flag. */
-    ctx->do_poll = 0;
+    /* Fetch and clear the polling flag. */
+    int do_poll = __sync_fetch_and_and(&ctx->do_poll, 0);
 #endif
     /*  Wait for timeouts and external events. However, if there are ready
        coroutines there's no need to poll for external events every time.
