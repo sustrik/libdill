@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #if defined DILL_VALGRIND
 #include <valgrind/valgrind.h>
@@ -77,6 +78,12 @@ int dill_no_blocking(int val) {
     return old;
 }
 
+static void dill_ctx_timer_handler(int sig, siginfo_t *si, void *uc) {
+    struct dill_ctx_cr *ctx = si->si_value.sival_ptr;
+    int or = timer_getoverrun(ctx->timer);
+    if(or) ctx->do_poll = 1;
+}
+
 /******************************************************************************/
 /*  Context.                                                                  */
 /******************************************************************************/
@@ -88,7 +95,6 @@ int dill_ctx_cr_init(struct dill_ctx_cr *ctx) {
     ctx->r = &ctx->main;
     dill_qlist_init(&ctx->ready);
     dill_rbtree_init(&ctx->timers);
-    ctx->last_poll = now();
     /* Initialize the main coroutine. */
     memset(&ctx->main, 0, sizeof(ctx->main));
     ctx->main.ready.next = NULL;
@@ -96,6 +102,25 @@ int dill_ctx_cr_init(struct dill_ctx_cr *ctx) {
 #if defined DILL_CENSUS
     dill_slist_init(&ctx->census);
 #endif
+    /* Initialize the external event poll timer for 1 second intervals. */
+    struct sigaction sa;
+    sa.sa_flags = SA_SIGINFO;
+    sa.sa_sigaction = dill_ctx_timer_handler;
+    sigemptyset(&sa.sa_mask);
+    if (sigaction(SIGRTMIN, &sa, NULL) == -1) return 1;
+    struct sigevent sev;
+    sev.sigev_notify = SIGEV_SIGNAL;
+    sev.sigev_signo = SIGRTMIN;
+    sev.sigev_value.sival_ptr = ctx;
+    struct itimerspec its;
+    its.it_value.tv_sec = 1;
+    its.it_value.tv_nsec = 0;
+    its.it_interval.tv_sec = its.it_value.tv_sec;
+    its.it_interval.tv_nsec = its.it_value.tv_nsec;
+    int rc = timer_create(CLOCK_REALTIME, &sev, &ctx->timer);
+    if(dill_slow(rc < 0)) return -1;
+    rc = timer_settime(ctx->timer, 0, &its, NULL);
+    if(dill_slow(rc < 0)) return -1;
     return 0;
 }
 
@@ -110,6 +135,7 @@ void dill_ctx_cr_term(struct dill_ctx_cr *ctx) {
             ci->file, ci->line, ci->max_stack);
     }
 #endif
+    timer_delete(ctx->timer);
 }
 
 /******************************************************************************/
@@ -330,16 +356,18 @@ int dill_wait(void)  {
         errno = ctx->r->err;
         return ctx->r->id;
     }
-    /* For performance reasons, we want to avoid excessive checking of current
-       time, so we cache the value here. It will be recomputed only after
-       a blocking call. */
-    int64_t nw = now();
     /*  Wait for timeouts and external events. However, if there are ready
        coroutines there's no need to poll for external events every time.
        Still, we'll do it at least once a second. The external signal may
        very well be a deadline or a user-issued command that cancels the CPU
        intensive operation. */
-    if(dill_qlist_empty(&ctx->ready) || nw > ctx->last_poll + 1000) {
+    if(dill_qlist_empty(&ctx->ready) || ctx->do_poll) {
+        /* Clear the polling flag. */
+        ctx->do_poll = 0;
+        /* For performance reasons, we want to avoid excessive checking of current
+           time, so we cache the value here. It will be recomputed only after
+           a blocking call. */
+        int64_t nw = now();
         int block = dill_qlist_empty(&ctx->ready);
         while(1) {
             /* Compute the timeout for the subsequent poll. */
@@ -377,7 +405,6 @@ int dill_wait(void)  {
                again. It can happen if the timers were canceled in the
                meantime. */
         }
-        ctx->last_poll = nw;
     }
     /* There's a coroutine ready to be executed so jump to it. */
     struct dill_slist *it = dill_qlist_pop(&ctx->ready);

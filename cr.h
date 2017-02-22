@@ -24,6 +24,7 @@
 #define DILL_CR_INCLUDED
 
 #include <stdint.h>
+#include <signal.h>
 
 #include "libdill.h"
 #include "qlist.h"
@@ -89,14 +90,16 @@ struct dill_ctx_cr {
     struct dill_qlist ready;
     /* All active timers. */
     struct dill_rbtree timers;
-    /* Last time poll was performed. */
-    int64_t last_poll;
     /* The main coroutine. We don't control the creation of the main coroutine's stack,
        so we have to store this info here instead of the top of the stack. */
     struct dill_cr main;
 #if defined DILL_CENSUS
     struct dill_slist census;
 #endif
+    /* POSIX timer for polling external events. */
+    timer_t timer;
+    /* Flag to indicate whether to poll. */
+    sig_atomic_t do_poll;
 };
 
 struct dill_clause {
