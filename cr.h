@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 #include <signal.h>
+#include <time.h>
 
 #include "libdill.h"
 #include "qlist.h"

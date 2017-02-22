@@ -24,7 +24,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 
 #if defined DILL_VALGRIND
 #include <valgrind/valgrind.h>
