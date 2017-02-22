@@ -25,7 +25,7 @@
 
 #include <stdint.h>
 #include <signal.h>
-#ifdef __APPLE__
+#if defined __APPLE__
 #include <sys/time.h>
 #else
 #include <time.h>

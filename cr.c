@@ -52,8 +52,10 @@ struct dill_census_item {
 /* Storage for the constant used by the go() macro. */
 volatile void *dill_unoptimisable = NULL;
 
+#if defined __APPLE__
 /* Poll count for tracking when we should trigger external events again. */
 int dill_poll_count = 0;
+#endif
 
 /******************************************************************************/
 /*  Helpers.                                                                  */
@@ -81,14 +83,14 @@ int dill_no_blocking(int val) {
 }
 
 static void dill_ctx_timer_handler(int sig, siginfo_t *si, void *uc) {
-#ifndef __APPLE__
+#if defined __APPLE__
+    __sync_fetch_and_add(&dill_poll_count, 1);
+#else
     struct dill_ctx_cr *ctx = si->si_value.sival_ptr;
     int or = timer_getoverrun(ctx->timer);
     if(or) {
         __sync_lock_test_and_set(&ctx->do_poll, 1);
     }
-#else
-    __sync_fetch_and_add(&dill_poll_count, 1);
 #endif
 }
 
@@ -120,7 +122,7 @@ int dill_ctx_cr_init(struct dill_ctx_cr *ctx) {
     sa.sa_flags = SA_SIGINFO;
     sa.sa_sigaction = dill_ctx_timer_handler;
     sigemptyset(&sa.sa_mask);
-#ifdef __APPLE__
+#if defined __APPLE__
     if (sigaction(SIGALRM, &sa, NULL) == -1) return 1;
     setitimer(ITIMER_REAL, &its, NULL);
 #else
@@ -148,7 +150,7 @@ void dill_ctx_cr_term(struct dill_ctx_cr *ctx) {
             ci->file, ci->line, ci->max_stack);
     }
 #endif
-#ifndef __APPLE__
+#if !defined __APPLE__
     timer_delete(ctx->timer);
 #endif
 }
@@ -371,7 +373,7 @@ int dill_wait(void)  {
         errno = ctx->r->err;
         return ctx->r->id;
     }
-#ifdef __APPLE__
+#if defined __APPLE__
     int last_poll = __sync_fetch_and_add(&dill_last_poll, 0);
     int do_poll = ctx->last_poll != last_poll;
     ctx->last_poll = last_poll;
