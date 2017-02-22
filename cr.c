@@ -52,6 +52,9 @@ struct dill_census_item {
 /* Storage for the constant used by the go() macro. */
 volatile void *dill_unoptimisable = NULL;
 
+/* Poll count for tracking when we should trigger external events again. */
+int dill_poll_count = 0;
+
 /******************************************************************************/
 /*  Helpers.                                                                  */
 /******************************************************************************/
@@ -78,9 +81,13 @@ int dill_no_blocking(int val) {
 }
 
 static void dill_ctx_timer_handler(int sig, siginfo_t *si, void *uc) {
+#ifndef __APPLE__
     struct dill_ctx_cr *ctx = si->si_value.sival_ptr;
     int or = timer_getoverrun(ctx->timer);
     if(or) ctx->do_poll = 1;
+#else
+    dill_poll_count++;
+#endif
 }
 
 /******************************************************************************/
@@ -102,24 +109,29 @@ int dill_ctx_cr_init(struct dill_ctx_cr *ctx) {
     dill_slist_init(&ctx->census);
 #endif
     /* Initialize the external event poll timer for 1 second intervals. */
-    struct sigaction sa;
-    sa.sa_flags = SA_SIGINFO;
-    sa.sa_sigaction = dill_ctx_timer_handler;
-    sigemptyset(&sa.sa_mask);
-    if (sigaction(SIGRTMIN, &sa, NULL) == -1) return 1;
-    struct sigevent sev;
-    sev.sigev_notify = SIGEV_SIGNAL;
-    sev.sigev_signo = SIGRTMIN;
-    sev.sigev_value.sival_ptr = ctx;
     struct itimerspec its;
     its.it_value.tv_sec = 1;
     its.it_value.tv_nsec = 0;
     its.it_interval.tv_sec = its.it_value.tv_sec;
     its.it_interval.tv_nsec = its.it_value.tv_nsec;
+    struct sigaction sa;
+    sa.sa_flags = SA_SIGINFO;
+    sa.sa_sigaction = dill_ctx_timer_handler;
+    sigemptyset(&sa.sa_mask);
+#ifdef __APPLE__
+    if (sigaction(SIGALRM, &sa, NULL) == -1) return 1;
+    setitimer(ITIMER_REAL, &its, NULL);
+#else
+    if (sigaction(SIGRTMIN, &sa, NULL) == -1) return 1;
+    struct sigevent sev;
+    sev.sigev_notify = SIGEV_SIGNAL;
+    sev.sigev_signo = SIGRTMIN;
+    sev.sigev_value.sival_ptr = ctx;
     int rc = timer_create(CLOCK_REALTIME, &sev, &ctx->timer);
     if(dill_slow(rc < 0)) return -1;
     rc = timer_settime(ctx->timer, 0, &its, NULL);
     if(dill_slow(rc < 0)) return -1;
+#endif
     return 0;
 }
 
@@ -134,7 +146,9 @@ void dill_ctx_cr_term(struct dill_ctx_cr *ctx) {
             ci->file, ci->line, ci->max_stack);
     }
 #endif
+#ifndef __APPLE__
     timer_delete(ctx->timer);
+#endif
 }
 
 /******************************************************************************/
@@ -355,14 +369,21 @@ int dill_wait(void)  {
         errno = ctx->r->err;
         return ctx->r->id;
     }
+#ifdef __APPLE__
+    int last_poll = dill_poll_count;
+    int do_poll = ctx->last_poll != last_poll;
+    ctx->last_poll = last_poll;
+#else
+    int do_poll = ctx->do_poll;
+    /* Clear the polling flag. */
+    ctx->do_poll = 0;
+#endif
     /*  Wait for timeouts and external events. However, if there are ready
        coroutines there's no need to poll for external events every time.
        Still, we'll do it at least once a second. The external signal may
        very well be a deadline or a user-issued command that cancels the CPU
        intensive operation. */
-    if(dill_qlist_empty(&ctx->ready) || ctx->do_poll) {
-        /* Clear the polling flag. */
-        ctx->do_poll = 0;
+    if(dill_qlist_empty(&ctx->ready) || do_poll) {
         /* For performance reasons, we want to avoid excessive checking of current
            time, so we cache the value here. It will be recomputed only after
            a blocking call. */
