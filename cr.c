@@ -88,9 +88,7 @@ static void dill_ctx_timer_handler(int sig, siginfo_t *si, void *uc) {
 #else
     struct dill_ctx_cr *ctx = si->si_value.sival_ptr;
     int or = timer_getoverrun(ctx->timer);
-    if(or) {
-        __sync_lock_test_and_set(&ctx->do_poll, 1);
-    }
+    if(or) __sync_fetch_and_or(&ctx->do_poll, -1);
 #endif
 }
 
