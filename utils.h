@@ -71,7 +71,7 @@
 #if defined __clang__
 #if (!defined(__apple_build_version__) &&\
         ((__clang_major__ < 3) || ((__clang_major__ == 3) && (__clang_minor__ < 5))))\
-    || (defined(__apple_build_version__) && (__clang_major__ >= 6))
+    || (defined(__apple_build_version__) && (__clang_major__ < 6))
 static inline uint64_t __rdtsc() {
 #if defined __i386__
     uint64_t x; asm volatile ("rdtsc" : "=A" (x)); return x;
