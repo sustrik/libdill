@@ -21,6 +21,7 @@
 */
 
 #include "ctx.h"
+#include "alarm.h"
 
 #if !defined DILL_THREADS
 
@@ -34,7 +35,9 @@ static void dill_ctx_atexit(void) {
 }
 
 struct dill_ctx *dill_ctx_init(void) {
-    int rc = dill_ctx_cr_init(&dill_ctx_.cr);
+    int rc = dill_alarm_init();
+    dill_assert(rc == 0);
+    rc = dill_ctx_cr_init(&dill_ctx_.cr);
     dill_assert(rc == 0);
     rc = dill_ctx_handle_init(&dill_ctx_.handle);
     dill_assert(rc == 0);
@@ -108,7 +111,10 @@ static void dill_makekey(void) {
 }
 
 struct dill_ctx *dill_ctx_init(void) {
-    int rc = dill_ctx_cr_init(&dill_ctx_.cr);
+    int rc = dill_alarm_init();
+    rc = dill_ctx_cr_init(&dill_ctx_.cr);
+    dill_assert(rc == 0);
+    rc = dill_ctx_cr_init(&dill_ctx_.cr);
     dill_assert(rc == 0);
     rc = dill_ctx_handle_init(&dill_ctx_.handle);
     dill_assert(rc == 0);

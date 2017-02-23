@@ -24,7 +24,6 @@
 #define DILL_CR_INCLUDED
 
 #include <stdint.h>
-#include <signal.h>
 
 #include "libdill.h"
 #include "qlist.h"

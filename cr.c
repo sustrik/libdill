@@ -24,7 +24,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/time.h>
 
 #if defined DILL_VALGRIND
 #include <valgrind/valgrind.h>
@@ -36,6 +35,7 @@
 #include "stack.h"
 #include "utils.h"
 #include "ctx.h"
+#include "alarm.h"
 
 #if defined DILL_CENSUS
 
@@ -52,9 +52,6 @@ struct dill_census_item {
 
 /* Storage for the constant used by the go() macro. */
 volatile void *dill_unoptimisable = NULL;
-
-/* Poll count for tracking when we should trigger external events again. */
-int dill_poll_count = 0;
 
 /******************************************************************************/
 /*  Helpers.                                                                  */
@@ -81,10 +78,6 @@ int dill_no_blocking(int val) {
     return old;
 }
 
-static void dill_ctx_timer_handler(int sig, siginfo_t *si, void *uc) {
-    dill_poll_count++;
-}
-
 /******************************************************************************/
 /*  Context.                                                                  */
 /******************************************************************************/
@@ -103,18 +96,6 @@ int dill_ctx_cr_init(struct dill_ctx_cr *ctx) {
 #if defined DILL_CENSUS
     dill_slist_init(&ctx->census);
 #endif
-    /* Initialize the external event poll timer for 1 second intervals. */
-    struct itimerval its;
-    its.it_value.tv_sec = 1;
-    its.it_value.tv_usec = 0;
-    its.it_interval.tv_sec = its.it_value.tv_sec;
-    its.it_interval.tv_usec = its.it_value.tv_usec;
-    struct sigaction sa;
-    sa.sa_flags = SA_SIGINFO;
-    sa.sa_sigaction = dill_ctx_timer_handler;
-    sigemptyset(&sa.sa_mask);
-    if (sigaction(SIGALRM, &sa, NULL) == -1) return 1;
-    setitimer(ITIMER_REAL, &its, NULL);
     return 0;
 }
 

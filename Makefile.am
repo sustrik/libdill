@@ -32,6 +32,8 @@ dillinclude_HEADERS = libdill.h
 lib_LTLIBRARIES = libdill.la
 
 libdill_la_SOURCES = \
+    alarm.c \
+    alarm.h \
     chan.c \
     cr.h \
     cr.c \
