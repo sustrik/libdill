@@ -37,15 +37,12 @@
 #include "pollset.h"
 #include "utils.h"
 
-//static uint64_t rdtsc_diff = 500000000ULL;
-
 static __attribute__((noinline)) uint64_t dill_now_measure(void) {
     uint64_t start_rdtsc = __rdtsc();
     usleep(100);
     uint64_t stop_rdtsc = __rdtsc();
     int64_t diff_rdtsc = stop_rdtsc - start_rdtsc;
     if(diff_rdtsc < 0) diff_rdtsc = -diff_rdtsc;
-    //printf("%llu\n", diff_rdtsc * 10);
     return diff_rdtsc * 5;
 }
 
