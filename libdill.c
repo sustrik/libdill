@@ -30,6 +30,8 @@
 
 #if defined(__x86_64__) || defined(__i386__)
 #include <x86intrin.h>
+
+#define DILL_RDTSC_DIFF 1000000
 #endif
 
 #include "cr.h"
@@ -37,20 +39,7 @@
 #include "pollset.h"
 #include "utils.h"
 
-#if defined(__x86_64__) || defined(__i386__)
-#define DILL_NOW_ERROR_US 250
-#define DILL_NOW_MEASURE_UNIT 50
 
-static __attribute__((noinline)) uint64_t dill_now_measure(void) {
-    uint64_t start_rdtsc = __rdtsc();
-    usleep(DILL_NOW_MEASURE_UNIT);
-    uint64_t stop_rdtsc = __rdtsc();
-    int64_t diff_rdtsc = stop_rdtsc - start_rdtsc;
-    if(diff_rdtsc < 0) diff_rdtsc = -diff_rdtsc;
-    /* 50us * 10 = 500us */
-    return diff_rdtsc * (DILL_NOW_ERROR_US/DILL_NOW_MEASURE_UNIT);
-}
-#endif
 
 static int64_t mnow(void) {
 #if defined __APPLE__
@@ -90,12 +79,10 @@ int64_t now(void) {
 #if defined(__x86_64__) || defined(__i386__)
     static int64_t last_tick = 0;
     static uint64_t last_rdtsc = 0;
-    static uint64_t rdtsc_diff = 0ULL;
     uint64_t rdtsc = __rdtsc();
     int64_t diff = rdtsc - last_rdtsc;
-    if(dill_slow(!rdtsc_diff)) rdtsc_diff = dill_now_measure();
     if(diff < 0) diff = -diff;
-    if(dill_fast(diff < rdtsc_diff))
+    if(dill_fast(diff < DILL_RDTSC_DIFF))
         return last_tick;
     else
         last_rdtsc = rdtsc;
