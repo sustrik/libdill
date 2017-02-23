@@ -28,21 +28,45 @@
 #include <mach/mach_time.h>
 #endif
 
+#if defined(__x86_64__) || defined(__i386__)
+#include <x86intrin.h>
+#endif
+
 #include "cr.h"
 #include "libdill.h"
 #include "pollset.h"
 #include "utils.h"
 
-int64_t now(void) {
+static __attribute__((noinline)) uint64_t dill_now_measure(void) {
+    uint64_t start_rdtsc = __rdtsc();
+    usleep(100);
+    uint64_t stop_rdtsc = __rdtsc();
+    int64_t diff_rdtsc = stop_rdtsc - start_rdtsc;
+    if(diff_rdtsc < 0) diff_rdtsc = -diff_rdtsc;
+    return diff_rdtsc * 5;
+}
+
+static int64_t mnow(void) {
 #if defined __APPLE__
     static mach_timebase_info_data_t dill_mtid = {0};
     if (dill_slow(!dill_mtid.denom))
         mach_timebase_info(&dill_mtid);
     uint64_t ticks = mach_absolute_time();
     return (int64_t)(ticks * dill_mtid.numer / dill_mtid.denom / 1000000);
+#else
+
+#if defined CLOCK_MONOTONIC_COARSE
+    clock_t id = CLOCK_MONOTONIC_COARSE;
+#elif defined CLOCK_MONOTONIC_FAST
+    clock_t id = CLOCK_MONOTONIC_FAST;
 #elif defined CLOCK_MONOTONIC
+    clock_t id = CLOCK_MONOTONIC;
+#else
+#define DILL_NOW_FALLBACK
+#endif
+#if !defined DILL_NOW_FALLBACK
     struct timespec ts;
-    int rc = clock_gettime(CLOCK_MONOTONIC, &ts);
+    int rc = clock_gettime(id, &ts);
     dill_assert (rc == 0);
     return ((int64_t)ts.tv_sec) * 1000 + (((int64_t)ts.tv_nsec) / 1000000);
 #else
@@ -52,6 +76,26 @@ int64_t now(void) {
     int rc = gettimeofday(&tv, NULL);
     dill_assert (rc == 0);
     return ((int64_t)tv.tv_sec) * 1000 + (((int64_t)tv.tv_usec) / 1000);
+#endif
+#endif
+}
+
+int64_t now(void) {
+#if defined(__x86_64__) || defined(__i386__)
+    static int64_t last_tick = 0;
+    static uint64_t last_rdtsc = 0;
+    static uint64_t rdtsc_diff = 0ULL;
+    uint64_t rdtsc = __rdtsc();
+    int64_t diff = rdtsc - last_rdtsc;
+    if(dill_slow(!rdtsc_diff)) rdtsc_diff = dill_now_measure();
+    if(diff < 0) diff = -diff;
+    if(dill_fast(diff < rdtsc_diff))
+        return last_tick;
+    else
+        last_rdtsc = rdtsc;
+    return (last_tick = mnow());
+#else
+    return mnow();
 #endif
 }
 
