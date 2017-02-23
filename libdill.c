@@ -37,14 +37,20 @@
 #include "pollset.h"
 #include "utils.h"
 
+#if defined(__x86_64__) || defined(__i386__)
+#define DILL_NOW_ERROR_US 250
+#define DILL_NOW_MEASURE_UNIT 50
+
 static __attribute__((noinline)) uint64_t dill_now_measure(void) {
     uint64_t start_rdtsc = __rdtsc();
-    usleep(100);
+    usleep(DILL_NOW_MEASURE_UNIT);
     uint64_t stop_rdtsc = __rdtsc();
     int64_t diff_rdtsc = stop_rdtsc - start_rdtsc;
     if(diff_rdtsc < 0) diff_rdtsc = -diff_rdtsc;
-    return diff_rdtsc * 5;
+    /* 50us * 10 = 500us */
+    return diff_rdtsc * (DILL_NOW_ERROR_US/DILL_NOW_MEASURE_UNIT);
 }
+#endif
 
 static int64_t mnow(void) {
 #if defined __APPLE__
