@@ -65,5 +65,23 @@
         }\
     } while (0)
 
+
+/* Workaround missing __rdtsc in Clang < 3.5 (or Clang < 6.0 on Xcode) */
+#if defined(__x86_64__) || defined(__i386__)
+#if defined __clang__
+#if (!defined(__apple_build_version__) &&\
+        ((__clang_major__ < 3) || ((__clang_major__ == 3) && (__clang_minor__ < 5))))\
+    || (defined(__apple_build_version__) && (__clang_major__ >= 6))
+static inline uint64_t __rdtsc() {
+#if defined __i386__
+    uint64_t x; asm volatile ("rdtsc" : "=A" (x)); return x;
+#else
+    uint64_t a, d; asm volatile ("rdtsc" : "=a" (a), "=d" (d)); return (d<<32) | a;
+#endif
+}
+#endif
+#endif
+#endif
+
 #endif
 
