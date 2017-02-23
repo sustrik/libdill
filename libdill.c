@@ -39,8 +39,6 @@
 #include "pollset.h"
 #include "utils.h"
 
-
-
 static int64_t mnow(void) {
 #if defined __APPLE__
     static mach_timebase_info_data_t dill_mtid = {0};
