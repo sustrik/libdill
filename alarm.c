@@ -23,6 +23,7 @@
 #include <sys/time.h>
 #include <signal.h>
 
+#include "libdill.h"
 #include "utils.h"
 
 /* Poll count for tracking when we should trigger external events again. */
@@ -34,6 +35,8 @@ static void dill_ctx_timer_handler(int sig, siginfo_t *si, void *uc) {
 
 int dill_alarm_init(void) {
     if(dill_fast(dill_poll_count != 0)) return 0;
+    /* Call now() once to initialise. */
+    now();
     /* Initialize the external event poll timer for 1 second intervals. */
     struct itimerval its;
     its.it_value.tv_sec = 1;
