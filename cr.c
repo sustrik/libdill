@@ -81,7 +81,7 @@ int dill_no_blocking(int val) {
 }
 
 static void dill_ctx_timer_handler(int sig, siginfo_t *si, void *uc) {
-    __sync_fetch_and_add(&dill_poll_count, 1);
+    dill_poll_count++;
 }
 
 /******************************************************************************/
@@ -348,15 +348,13 @@ int dill_wait(void)  {
         errno = ctx->r->err;
         return ctx->r->id;
     }
-    int last_poll = __sync_fetch_and_add(&dill_poll_count, 0);
-    int do_poll = ctx->last_poll != last_poll;
-    ctx->last_poll = last_poll;
     /*  Wait for timeouts and external events. However, if there are ready
        coroutines there's no need to poll for external events every time.
        Still, we'll do it at least once a second. The external signal may
        very well be a deadline or a user-issued command that cancels the CPU
        intensive operation. */
-    if(dill_qlist_empty(&ctx->ready) || do_poll) {
+    if(dill_qlist_empty(&ctx->ready) || dill_poll_count != ctx->last_poll) {
+        ctx->last_poll = dill_poll_count;
         /* For performance reasons, we want to avoid excessive checking of current
            time, so we cache the value here. It will be recomputed only after
            a blocking call. */
