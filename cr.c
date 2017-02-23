@@ -52,10 +52,8 @@ struct dill_census_item {
 /* Storage for the constant used by the go() macro. */
 volatile void *dill_unoptimisable = NULL;
 
-#if defined __APPLE__
 /* Poll count for tracking when we should trigger external events again. */
 int dill_poll_count = 0;
-#endif
 
 /******************************************************************************/
 /*  Helpers.                                                                  */
@@ -83,13 +81,7 @@ int dill_no_blocking(int val) {
 }
 
 static void dill_ctx_timer_handler(int sig, siginfo_t *si, void *uc) {
-#if defined __APPLE__
     __sync_fetch_and_add(&dill_poll_count, 1);
-#else
-    struct dill_ctx_cr *ctx = si->si_value.sival_ptr;
-    int or = timer_getoverrun(ctx->timer);
-    if(or) __sync_fetch_and_or(&ctx->do_poll, -1);
-#endif
 }
 
 /******************************************************************************/
@@ -111,29 +103,17 @@ int dill_ctx_cr_init(struct dill_ctx_cr *ctx) {
     dill_slist_init(&ctx->census);
 #endif
     /* Initialize the external event poll timer for 1 second intervals. */
-    struct itimerspec its;
+    struct itimerval its;
     its.it_value.tv_sec = 1;
-    its.it_value.tv_nsec = 0;
+    its.it_value.tv_usec = 0;
     its.it_interval.tv_sec = its.it_value.tv_sec;
-    its.it_interval.tv_nsec = its.it_value.tv_nsec;
+    its.it_interval.tv_usec = its.it_value.tv_usec;
     struct sigaction sa;
     sa.sa_flags = SA_SIGINFO;
     sa.sa_sigaction = dill_ctx_timer_handler;
     sigemptyset(&sa.sa_mask);
-#if defined __APPLE__
     if (sigaction(SIGALRM, &sa, NULL) == -1) return 1;
     setitimer(ITIMER_REAL, &its, NULL);
-#else
-    if (sigaction(SIGRTMIN, &sa, NULL) == -1) return 1;
-    struct sigevent sev;
-    sev.sigev_notify = SIGEV_SIGNAL;
-    sev.sigev_signo = SIGRTMIN;
-    sev.sigev_value.sival_ptr = ctx;
-    int rc = timer_create(CLOCK_REALTIME, &sev, &ctx->timer);
-    if(dill_slow(rc < 0)) return -1;
-    rc = timer_settime(ctx->timer, 0, &its, NULL);
-    if(dill_slow(rc < 0)) return -1;
-#endif
     return 0;
 }
 
@@ -147,9 +127,6 @@ void dill_ctx_cr_term(struct dill_ctx_cr *ctx) {
         fprintf(stderr, "%s:%d - maximum stack size %zu B\n",
             ci->file, ci->line, ci->max_stack);
     }
-#endif
-#if !defined __APPLE__
-    timer_delete(ctx->timer);
 #endif
 }
 
@@ -371,14 +348,9 @@ int dill_wait(void)  {
         errno = ctx->r->err;
         return ctx->r->id;
     }
-#if defined __APPLE__
-    int last_poll = __sync_fetch_and_add(&dill_last_poll, 0);
+    int last_poll = __sync_fetch_and_add(&dill_poll_count, 0);
     int do_poll = ctx->last_poll != last_poll;
     ctx->last_poll = last_poll;
-#else
-    /* Fetch and clear the polling flag. */
-    int do_poll = __sync_fetch_and_and(&ctx->do_poll, 0);
-#endif
     /*  Wait for timeouts and external events. However, if there are ready
        coroutines there's no need to poll for external events every time.
        Still, we'll do it at least once a second. The external signal may

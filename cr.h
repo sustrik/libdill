@@ -25,11 +25,7 @@
 
 #include <stdint.h>
 #include <signal.h>
-#if defined __APPLE__
 #include <sys/time.h>
-#else
-#include <time.h>
-#endif
 
 #include "libdill.h"
 #include "qlist.h"
@@ -101,15 +97,8 @@ struct dill_ctx_cr {
 #if defined DILL_CENSUS
     struct dill_slist census;
 #endif
-#ifdef __APPLE__
     /* Previous poll count. */
     int last_poll;
-#else
-    /* POSIX timer for polling external events. */
-    timer_t timer;
-    /* Flag to indicate whether to poll. */
-    sig_atomic_t do_poll;
-#endif
 };
 
 struct dill_clause {
