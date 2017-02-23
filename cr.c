@@ -35,6 +35,7 @@
 #include "stack.h"
 #include "utils.h"
 #include "ctx.h"
+#include "alarm.h"
 
 #if defined DILL_CENSUS
 
@@ -88,7 +89,6 @@ int dill_ctx_cr_init(struct dill_ctx_cr *ctx) {
     ctx->r = &ctx->main;
     dill_qlist_init(&ctx->ready);
     dill_rbtree_init(&ctx->timers);
-    ctx->last_poll = now();
     /* Initialize the main coroutine. */
     memset(&ctx->main, 0, sizeof(ctx->main));
     ctx->main.ready.next = NULL;
@@ -330,16 +330,17 @@ int dill_wait(void)  {
         errno = ctx->r->err;
         return ctx->r->id;
     }
-    /* For performance reasons, we want to avoid excessive checking of current
-       time, so we cache the value here. It will be recomputed only after
-       a blocking call. */
-    int64_t nw = now();
     /*  Wait for timeouts and external events. However, if there are ready
        coroutines there's no need to poll for external events every time.
        Still, we'll do it at least once a second. The external signal may
        very well be a deadline or a user-issued command that cancels the CPU
        intensive operation. */
-    if(dill_qlist_empty(&ctx->ready) || nw > ctx->last_poll + 1000) {
+    if(dill_qlist_empty(&ctx->ready) || dill_poll_count != ctx->last_poll) {
+        ctx->last_poll = dill_poll_count;
+        /* For performance reasons, we want to avoid excessive checking of current
+           time, so we cache the value here. It will be recomputed only after
+           a blocking call. */
+        int64_t nw = now();
         int block = dill_qlist_empty(&ctx->ready);
         while(1) {
             /* Compute the timeout for the subsequent poll. */
@@ -377,7 +378,6 @@ int dill_wait(void)  {
                again. It can happen if the timers were canceled in the
                meantime. */
         }
-        ctx->last_poll = nw;
     }
     /* There's a coroutine ready to be executed so jump to it. */
     struct dill_slist *it = dill_qlist_pop(&ctx->ready);
