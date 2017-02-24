@@ -45,6 +45,8 @@ libdill_la_SOURCES = \
     kqueue.c.inc \
     libdill.c \
     list.h \
+    now.h \
+    now.c \
     poll.h.inc \
     poll.c.inc \
     pollset.h \
