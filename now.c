@@ -30,15 +30,13 @@
 
 #if defined(__x86_64__) || defined(__i386__)
 #include <x86intrin.h>
-#define DILL_RDTSC_DIFF 1000000ULL
 #endif
 
-#include "cr.h"
-#include "libdill.h"
-#include "pollset.h"
-#include "utils.h"
+#include "ctx.h"
 
-static int64_t mnow(void) {
+int64_t mnow(void) {
+
+/* Implementation using Mach timers. */
 #if defined __APPLE__
     static mach_timebase_info_data_t dill_mtid = {0};
     if (dill_slow(!dill_mtid.denom))
@@ -47,6 +45,7 @@ static int64_t mnow(void) {
     return (int64_t)(ticks * dill_mtid.numer / dill_mtid.denom / 1000000);
 #else
 
+/* Implementation using clock_gettime(). */
 #if defined CLOCK_MONOTONIC_COARSE
     clock_t id = CLOCK_MONOTONIC_COARSE;
 #elif defined CLOCK_MONOTONIC_FAST
@@ -56,15 +55,15 @@ static int64_t mnow(void) {
 #else
 #define DILL_NOW_FALLBACK
 #endif
-
 #if !defined DILL_NOW_FALLBACK
     struct timespec ts;
     int rc = clock_gettime(id, &ts);
     dill_assert (rc == 0);
     return ((int64_t)ts.tv_sec) * 1000 + (((int64_t)ts.tv_nsec) / 1000000);
+
+/* Implementation using gettimeofday(). This is slow and error-prone
+   (the time can jump backwards!), but it's just a last resort option. */
 #else
-    /* This is slow and error-prone (the time can jump backwards!), but it's just
-       a last resort option. */
     struct timeval tv;
     int rc = gettimeofday(&tv, NULL);
     dill_assert (rc == 0);
@@ -76,18 +75,37 @@ static int64_t mnow(void) {
 
 int64_t now(void) {
 #if defined(__x86_64__) || defined(__i386__)
-    static int64_t last_tick = 0;
-    static uint64_t last_rdtsc = 0;
-    uint64_t rdtsc = __rdtsc();
-    int64_t diff = rdtsc - last_rdtsc;
+    /* On x86 platforms, rdtsc instruction can be used to quickly check time
+       in form of CPU cycles. If less than 1M cycles have elapsed since the
+       last mnow() call we assume it's still the same millisecond and return
+       cached time. This optimization can give a huge speedup with old systems.
+       1M number is chosen is such a way that it results in getting time every
+       millisecond on 1GHz processors. On faster processors we'll query time
+       somewhat more often but the number of queries should still be
+       statistically insignificant. On slower processors we'll start losing
+       precision, e.g. on 500MHz processor we can diverge by 1ms. */
+    struct dill_ctx_now *ctx = &dill_getctx->now;
+    uint64_t tsc = __rdtsc();
+    int64_t diff = tsc - ctx->last_tsc;
     if(diff < 0) diff = -diff;
-    if(dill_fast(diff < DILL_RDTSC_DIFF))
-        return last_tick;
+    if(dill_fast(diff < 1000000ULL))
+        return ctx->last_time;
     else
-        last_rdtsc = rdtsc;
-    return (last_tick = mnow());
+        ctx->last_tsc = tsc;
+    return ctx->last_time = mnow();
 #else
     return mnow();
 #endif
+}
+
+int dill_ctx_now_init(struct dill_ctx_now *ctx) {
+#if defined(__x86_64__) || defined(__i386__)
+    ctx->last_time = mnow();
+    ctx->last_tsc = __rdtsc();
+#endif
+    return 0;
+}
+
+void dill_ctx_now_term(struct dill_ctx_now *ctx) {
 }
 

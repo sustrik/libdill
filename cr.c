@@ -88,7 +88,8 @@ int dill_ctx_cr_init(struct dill_ctx_cr *ctx) {
     ctx->r = &ctx->main;
     dill_qlist_init(&ctx->ready);
     dill_rbtree_init(&ctx->timers);
-    ctx->last_poll = now();
+    /* We can't use now() here as the context is still being intialized. */
+    ctx->last_poll = mnow();
     /* Initialize the main coroutine. */
     memset(&ctx->main, 0, sizeof(ctx->main));
     ctx->main.ready.next = NULL;

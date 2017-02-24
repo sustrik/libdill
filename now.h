@@ -25,5 +25,21 @@
 #ifndef DILL_NOW_INCLUDED
 #define DILL_NOW_INCLUDED
 
+#include <stdint.h>
+
+struct dill_ctx_now {
+#if defined(__x86_64__) || defined(__i386__)
+    int64_t last_time;
+    uint64_t last_tsc;
+#endif
+};
+
+int dill_ctx_now_init(struct dill_ctx_now *ctx);
+void dill_ctx_now_term(struct dill_ctx_now *ctx);
+
+/* Same as now() except that it doesn't use the context.
+   I.e. it can be called before calling dill_ctx_now_init(). */
+int64_t mnow(void);
+
 #endif
 

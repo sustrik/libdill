@@ -31,10 +31,13 @@ static void dill_ctx_atexit(void) {
     dill_ctx_stack_term(&dill_ctx_.stack);
     dill_ctx_handle_term(&dill_ctx_.handle);
     dill_ctx_cr_term(&dill_ctx_.cr);
+    dill_ctx_now_term(&dill_ctx_.now);
 }
 
 struct dill_ctx *dill_ctx_init(void) {
-    int rc = dill_ctx_cr_init(&dill_ctx_.cr);
+    int rc = dill_ctx_now_init(&dill_ctx_.now);
+    dill_assert(rc == 0);
+    rc = dill_ctx_cr_init(&dill_ctx_.cr);
     dill_assert(rc == 0);
     rc = dill_ctx_handle_init(&dill_ctx_.handle);
     dill_assert(rc == 0);
@@ -95,6 +98,7 @@ static void dill_ctx_term(void *ptr) {
     dill_ctx_stack_term(&ctx->stack);
     dill_ctx_handle_term(&ctx->handle);
     dill_ctx_cr_term(&ctx->cr);
+    dill_ctx_now_term(&ctx->now);
     if(dill_ismain()) dill_main = NULL;
 }
 
@@ -108,7 +112,9 @@ static void dill_makekey(void) {
 }
 
 struct dill_ctx *dill_ctx_init(void) {
-    int rc = dill_ctx_cr_init(&dill_ctx_.cr);
+    int rc = dill_ctx_now_init(&dill_ctx_.now);
+    dill_assert(rc == 0);
+    rc = dill_ctx_cr_init(&dill_ctx_.cr);
     dill_assert(rc == 0);
     rc = dill_ctx_handle_init(&dill_ctx_.handle);
     dill_assert(rc == 0);
@@ -141,6 +147,7 @@ static void dill_ctx_term(void *ptr) {
     dill_ctx_stack_term(&ctx->stack);
     dill_ctx_handle_term(&ctx->handle);
     dill_ctx_cr_term(&ctx->cr);
+    dill_ctx_now_term(&ctx->now);
     free(ctx);
     if(dill_ismain()) dill_main = NULL;
 }
@@ -161,6 +168,8 @@ struct dill_ctx *dill_getctx_(void) {
     if(dill_fast(ctx)) return ctx;
     ctx = malloc(sizeof(struct dill_ctx));
     dill_assert(ctx);
+    rc = dill_ctx_now_init(&ctx->now);
+    dill_assert(rc == 0);
     rc = dill_ctx_cr_init(&ctx->cr);
     dill_assert(rc == 0);
     rc = dill_ctx_handle_init(&ctx->handle);

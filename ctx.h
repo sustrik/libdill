@@ -25,6 +25,7 @@
 
 #include "cr.h"
 #include "handle.h"
+#include "now.h"
 #include "pollset.h"
 #include "stack.h"
 
@@ -32,6 +33,7 @@ struct dill_ctx {
 #if !defined DILL_THREAD_FALLBACK
     int initialized;
 #endif
+    struct dill_ctx_now now;
     struct dill_ctx_cr cr;
     struct dill_ctx_handle handle;
     struct dill_ctx_stack stack;
