@@ -114,7 +114,7 @@ void dill_ctx_cr_term(struct dill_ctx_cr *ctx) {
 }
 
 /******************************************************************************/
-/*  Poller.                                                                   */
+/*  Timers.                                                                   */
 /******************************************************************************/
 
 static void dill_timer_cancel(struct dill_clause *cl) {
@@ -133,20 +133,6 @@ void dill_timer(struct dill_tmclause *tmcl, int id, int64_t deadline) {
     if(deadline < 0) return;
     dill_rbtree_insert(&ctx->timers, deadline, &tmcl->item);
     dill_waitfor(&tmcl->cl, id, dill_timer_cancel);
-}
-
-int dill_in(struct dill_fdclause *fdcl, int id, int fd) {
-    if(dill_slow(fd < 0 || fd >= dill_maxfds())) {errno = EBADF; return -1;}
-    return dill_pollset_in(fdcl, id, fd);
-}
-
-int dill_out(struct dill_fdclause *fdcl, int id, int fd) {
-    if(dill_slow(fd < 0 || fd >= dill_maxfds())) {errno = EBADF; return -1;}
-    return dill_pollset_out(fdcl, id, fd);
-}
-
-int dill_clean(int fd) {
-    return dill_pollset_clean(fd);
 }
 
 /******************************************************************************/

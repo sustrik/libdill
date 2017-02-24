@@ -146,12 +146,6 @@ void dill_trigger(struct dill_clause *cl, int err);
 /* Add a timer to the list of active clauses. */
 void dill_timer(struct dill_tmclause *tmcl, int id, int64_t deadline);
 
-/* Wait for an in event on a file descriptor. */
-int dill_in(struct dill_fdclause *fdcl, int id, int fd);
-
-/* Wait for an out event on a file descriptor. */
-int dill_out(struct dill_fdclause *fdcl, int id, int fd);
-
 /* Returns 0 if blocking functions are allowed.
    Returns -1 and sets errno to ECANCELED otherwise. */
 int dill_canblock(void);

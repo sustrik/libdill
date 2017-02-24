@@ -41,6 +41,7 @@ struct dill_ctx_pollset {
     struct pollfd *pollset;
     /* Info about all file descriptors.
        File descriptors are used as indices in this array. */
+    int nfdinfos;
     struct dill_fdinfo *fdinfos;
 };
 

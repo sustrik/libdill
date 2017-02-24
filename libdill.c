@@ -45,7 +45,7 @@ int fdin(int fd, int64_t deadline) {
     if(dill_slow(rc < 0)) return -1;
     /* Start waiting for the fd. */
     struct dill_fdclause fdcl;
-    rc = dill_in(&fdcl, 1, fd);
+    rc = dill_pollset_in(&fdcl, 1, fd);
     if(dill_slow(rc < 0)) return -1;
     /* Optionally, start waiting for a timer. */
     struct dill_tmclause tmcl;
@@ -63,7 +63,7 @@ int fdout(int fd, int64_t deadline) {
     if(dill_slow(rc < 0)) return -1;
     /* Start waiting for the fd. */
     struct dill_fdclause fdcl;
-    rc = dill_out(&fdcl, 1, fd);
+    rc = dill_pollset_out(&fdcl, 1, fd);
     if(dill_slow(rc < 0)) return -1;
     /* Optionally, start waiting for a timer. */
     struct dill_tmclause tmcl;
@@ -76,6 +76,6 @@ int fdout(int fd, int64_t deadline) {
 }
 
 int fdclean(int fd) {
-    return dill_clean(fd);
+    return dill_pollset_clean(fd);
 }
 

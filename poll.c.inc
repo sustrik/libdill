@@ -52,7 +52,7 @@
   +------+------+------+----------------------------------------+--------+
   ctx->fdinfos                                                           ^
                                                                          |
-                                                                  dill_maxfds
+                                                                  ctx->nfdinfos
 
 */
 
@@ -71,16 +71,17 @@ struct dill_fdinfo {
 
 int dill_ctx_pollset_init(struct dill_ctx_pollset *ctx) {
     int err;
+    ctx->nfdinfos = dill_maxfds();
     /* Allocate largest possible pollset. */
     ctx->pollset_size = 0;
-    ctx->pollset = malloc(sizeof(struct pollfd) * dill_maxfds());
+    ctx->pollset = malloc(sizeof(struct pollfd) * ctx->nfdinfos);
     if(dill_slow(!ctx->pollset)) {err = ENOMEM; goto error1;}
-    ctx->fdinfos = malloc(sizeof(struct dill_fdinfo) * dill_maxfds());
+    ctx->fdinfos = malloc(sizeof(struct dill_fdinfo) * ctx->nfdinfos);
     if(dill_slow(!ctx->fdinfos)) {err = ENOMEM; goto error2;}
     /* Intialise fd infos. There's no fd in the pollset,
        so set all indices to -1. */
     int i;
-    for(i = 0; i != dill_maxfds(); ++i) {
+    for(i = 0; i != ctx->nfdinfos; ++i) {
         ctx->fdinfos[i].idx = -1;
         ctx->fdinfos[i].in = NULL;
         ctx->fdinfos[i].out = NULL;
@@ -120,6 +121,7 @@ static void dill_fdcancelout(struct dill_clause *cl) {
 
 int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
+    if(dill_slow(fd < 0 || fd >= ctx->nfdinfos)) {errno = EBADF; return -1;}
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(dill_slow(!fdi->cached)) {
         int flags = fcntl(fd, F_GETFD);
@@ -128,7 +130,6 @@ int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
         fdi->cached = 1;
     }
     if(fdi->idx < 0) {
-        dill_assert(ctx->pollset_size < dill_maxfds());
         fdi->idx = ctx->pollset_size;
         ++ctx->pollset_size;
         ctx->pollset[fdi->idx].fd = fd;
@@ -143,6 +144,7 @@ int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
 
 int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
+    if(dill_slow(fd < 0 || fd >= ctx->nfdinfos)) {errno = EBADF; return -1;}
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(dill_slow(!fdi->cached)) {
         int flags = fcntl(fd, F_GETFD);
@@ -151,7 +153,6 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
         fdi->cached = 1;
     }
     if(fdi->idx < 0) {
-        dill_assert(ctx->pollset_size < dill_maxfds());
         fdi->idx = ctx->pollset_size;
         ++ctx->pollset_size;
         ctx->pollset[fdi->idx].fd = fd;

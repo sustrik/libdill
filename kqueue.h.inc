@@ -1,4 +1,3 @@
-/* -*- mode: c; -*- */
 /*
 
   Copyright (c) 2016 Martin Sustrik
@@ -36,6 +35,7 @@ struct dill_fdclause {
 
 struct dill_ctx_pollset {
     int kfd;
+    int nfdinfos;
     struct dill_fdinfo *fdinfos;
     uint32_t changelist;
 };

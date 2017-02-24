@@ -57,7 +57,8 @@ struct dill_fdinfo {
 int dill_ctx_pollset_init(struct dill_ctx_pollset *ctx) {
     int err;
     /* Allocate one info per fd. */
-    ctx->fdinfos = calloc(dill_maxfds(), sizeof(struct dill_fdinfo));
+    ctx->nfdinfos = dill_maxfds();
+    ctx->fdinfos = calloc(ctx->nfdinfos, sizeof(struct dill_fdinfo));
     if(dill_slow(!ctx->fdinfos)) {err = ENOMEM; goto error1;}
     /* Changelist is empty. */
     ctx->changelist = DILL_ENDLIST;
@@ -103,8 +104,10 @@ static void dill_fdcancelout(struct dill_clause *cl) {
 
 int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
+    if(dill_slow(fd < 0 || fd >= ctx->nfdinfos)) {errno = EBADF; return -1;}
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
-    /* If not yet cached, check whether the fd exists and if it does, add it to the pollset. */    
+    /* If not yet cached, check whether the fd exists and if it does,
+       add it to the pollset. */    
     if(dill_slow(!fdi->cached)) {
         struct epoll_event ev;
         ev.data.fd = fd;
@@ -134,8 +137,10 @@ int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
 
 int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
+    if(dill_slow(fd < 0 || fd >= ctx->nfdinfos)) {errno = EBADF; return -1;}
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
-    /* If not yet cached, check whether the fd exists and if it does, add it to pollset. */    
+    /* If not yet cached, check whether the fd exists and if it does,
+       add it to pollset. */    
     if(dill_slow(!fdi->cached)) {
         struct epoll_event ev;
         ev.data.fd = fd;
