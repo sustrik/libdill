@@ -29,7 +29,6 @@
 #include <unistd.h>
 
 #include "cr.h"
-#include "fd.h"
 #include "list.h"
 #include "pollset.h"
 #include "utils.h"

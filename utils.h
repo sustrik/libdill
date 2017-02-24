@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2016 Martin Sustrik
+  Copyright (c) 2017 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -86,6 +86,9 @@ static inline uint64_t __rdtsc() {
 #endif
 #endif
 #endif
+
+/* Returns the maximum possible file descriptor number */
+int dill_maxfds(void);
 
 #endif
 

@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2016 Martin Sustrik
+  Copyright (c) 2017 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -22,10 +22,22 @@
 
 */
 
-#ifndef DILL_FD_INCLUDED
-#define DILL_FD_INCLUDED
+#include <sys/param.h>
+#include <sys/resource.h>
 
-/* Returns the maximum possible file descriptor number */
-int dill_maxfds(void);
+#include "utils.h"
 
+int dill_maxfds(void) {
+    /* Get the maximum number of file descriptors. */
+    struct rlimit rlim;
+    int rc = getrlimit(RLIMIT_NOFILE, &rlim);
+    dill_assert(rc == 0);
+    int maxfds = rlim.rlim_max;
+#if defined BSD
+    /* On newer versions of OSX, the above behaves weirdly and returns -1, 
+       so use OPEN_MAX instead. */
+    if(maxfds < 0) return OPEN_MAX;
 #endif
+    return maxfds;
+}
+
