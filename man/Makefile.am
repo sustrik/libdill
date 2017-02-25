@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2016 Martin Sustrik  All rights reserved.
+# Copyright (c) 2017 Martin Sustrik  All rights reserved.
 # Copyright (c) 2016 Tai Chi Minh Ralph Eastwood
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -38,7 +38,16 @@ man3_MANS = \
     hquery.3 \
     msleep.3 \
     now.3 \
-    yield.3
+    yield.3 \
+    \
+    ipaddr_family.3 \
+    ipaddr_len.3 \
+    ipaddr_local.3 \
+    ipaddr_port.3 \
+    ipaddr_remote.3 \
+    ipaddr_setport.3 \
+    ipaddr_sockaddr.3 \
+    ipaddr_str.3
 
 SUFFIXES = .md .3
 
