@@ -125,7 +125,8 @@ noinst_PROGRAMS = \
     perf/chan \
     perf/choose \
     perf/hdone \
-    perf/whispers
+    perf/whispers \
+    perf/timer
 
 ################################################################################
 #  manpage documentation generation                                            #
