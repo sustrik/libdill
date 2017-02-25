@@ -27,7 +27,14 @@
 
 #include <stdint.h>
 
+#if defined __APPLE__
+#include <mach/mach_time.h>
+#endif
+
 struct dill_ctx_now {
+#if defined __APPLE__
+    mach_timebase_info_data_t mtid;
+#endif
 #if defined(__x86_64__) || defined(__i386__)
     int64_t last_time;
     uint64_t last_tsc;

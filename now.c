@@ -24,10 +24,6 @@
 #include <sys/time.h>
 #include <time.h>
 
-#if defined __APPLE__
-#include <mach/mach_time.h>
-#endif
-
 #if defined(__x86_64__) || defined(__i386__)
 #include <x86intrin.h>
 #endif
@@ -99,6 +95,9 @@ int64_t now(void) {
 }
 
 int dill_ctx_now_init(struct dill_ctx_now *ctx) {
+#if defined __APPLE__
+    mach_timebase_info(&ctx->mtid);
+#endif
 #if defined(__x86_64__) || defined(__i386__)
     ctx->last_time = mnow();
     ctx->last_tsc = __rdtsc();
