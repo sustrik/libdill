@@ -69,11 +69,17 @@ int64_t mnow(void) {
 #endif
 }
 
+/* Like now(), this function can be called only after context is initialized
+   but unlike now() it doesn't do time caching. */
+int64_t now_(void) {
+    return mnow();
+}
+
 int64_t now(void) {
 #if defined(__x86_64__) || defined(__i386__)
     /* On x86 platforms, rdtsc instruction can be used to quickly check time
        in form of CPU cycles. If less than 1M cycles have elapsed since the
-       last mnow() call we assume it's still the same millisecond and return
+       last now_() call we assume it's still the same millisecond and return
        cached time. This optimization can give a huge speedup with old systems.
        1M number is chosen is such a way that it results in getting time every
        millisecond on 1GHz processors. On faster processors we'll query time
@@ -88,9 +94,9 @@ int64_t now(void) {
         return ctx->last_time;
     else
         ctx->last_tsc = tsc;
-    return ctx->last_time = mnow();
+    return ctx->last_time = now_();
 #else
-    return mnow();
+    return now_();
 #endif
 }
 
