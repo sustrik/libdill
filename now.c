@@ -96,11 +96,10 @@ int64_t now(void) {
     uint64_t tsc = __rdtsc();
     int64_t diff = tsc - ctx->last_tsc;
     if(diff < 0) diff = -diff;
-    if(dill_fast(diff < 1000000ULL))
-        return ctx->last_time;
-    else
-        ctx->last_tsc = tsc;
-    return ctx->last_time = now_();
+    if(dill_fast(diff < 1000000ULL)) return ctx->last_time;
+    ctx->last_tsc = tsc;
+    ctx->last_time = now_();
+    return ctx->last_time;
 #else
     return now_();
 #endif
