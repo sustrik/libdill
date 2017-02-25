@@ -24,10 +24,6 @@
 #include <sys/time.h>
 #include <time.h>
 
-#if defined __APPLE__
-#include <mach/mach_time.h>
-#endif
-
 #if defined(__x86_64__) || defined(__i386__)
 #include <x86intrin.h>
 #endif
@@ -73,6 +69,18 @@ int64_t mnow(void) {
 #endif
 }
 
+/* Like now(), this function can be called only after context is initialized
+   but unlike now() it doesn't do time caching. */
+int64_t now_(void) {
+#if defined __APPLE__
+    struct dill_ctx_now *ctx = &dill_getctx->now;
+    uint64_t ticks = mach_absolute_time();
+    return (int64_t)(ctx->mtid.numer / ctx->mtid.denom / 1000000);
+#else
+    return mnow();
+#endif
+}
+
 int64_t now(void) {
 #if defined(__x86_64__) || defined(__i386__)
     /* On x86 platforms, rdtsc instruction can be used to quickly check time
@@ -90,15 +98,18 @@ int64_t now(void) {
     if(diff < 0) diff = -diff;
     if(dill_fast(diff < 1000000ULL))
         return ctx->last_time;
-    else
-        ctx->last_tsc = tsc;
-    return ctx->last_time = mnow();
+    ctx->last_tsc = tsc;
+    ctx->last_time = now_();
+    return ctx->last_time;
 #else
-    return mnow();
+    return now_();
 #endif
 }
 
 int dill_ctx_now_init(struct dill_ctx_now *ctx) {
+#if defined __APPLE__
+    mach_timebase_info(&ctx->mtid);
+#endif
 #if defined(__x86_64__) || defined(__i386__)
     ctx->last_time = mnow();
     ctx->last_tsc = __rdtsc();
