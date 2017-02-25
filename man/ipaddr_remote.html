@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="http://libdill.org/main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="http://libdill.org/index.html">Home</a></li>
+<li><a href="http://libdill.org/download.html">Download</a></li>
+<li><a href="http://libdill.org/documentation.html">Documentation</a></li>
+<li><a href="http://libdill.org/tutorial.html">Tutorial</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>ipaddr_local - resolve a name of a local network interface</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p><strong>int ipaddr_remote(struct ipaddr </strong>*<em>addr</em><strong>, const char </strong>*<em>name</em><strong>, int</strong> <em>port</em><strong>, int</strong> <em>mode</em><strong>, int64_t</strong> <em>deadline</em><strong>);</strong></p>
+<h1 id="description">DESCRIPTION</h1>
+<p>Converts an IP address in human-readable format, or a name of a remote host into an ipaddr structure:</p>
+<pre><code>ipaddr_remote(&amp;addr, &quot;192.168.0.111&quot;, 80, 0, -1);
+ipaddr_remote(&amp;addr, &quot;www.expamle.org&quot;, 443, 0, -1);</code></pre>
+<p><em>addr</em> is thr address strucure to hold the result. <em>name</em> is the string to convert. <em>port</em> is the port number to use. <em>mode</em> specifies which kind of addresses should be returned. Possible values are:</p>
+<ul>
+<li><strong>IPADDR_IPV4</strong>: Get IPv4 address.<br /></li>
+<li><strong>IPADDR_IPV6</strong>: Get IPv6 address.<br /></li>
+<li><strong>IPADDR_PREF_IPV4</strong>: Get IPv4 address if possible, IPv6 address otherwise.<br /></li>
+<li><strong>IPADDR_PREF_IPV6</strong>: Get IPv6 address if possible, IPv4 address otherwise.</li>
+</ul>
+<p>Setting the argument to zero invokes default behaviour, which, at the present, is IPADDR_PREF_IPV4. However, in the future when IPv6 becomes more common it may be switched to IPADDR_PREF_IPV6.</p>
+<p>Finally, the last argument is the deadline. It allows to deal with situations where resolving a remote host name requires a DNS query and the query is taking substantial amount of time to complete.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>The function returns 0 on success. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EADDRNOTAVAIL</strong>: The name of the remote host cannot be resolved to an address of the specified type.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> ipaddr addr;
+<span class="dt">int</span> rc = ipaddr_remote(&amp;addr, <span class="st">&quot;www.example.org&quot;</span>, <span class="dv">80</span>, <span class="dv">0</span>, -<span class="dv">1</span>);</code></pre>
+</body>

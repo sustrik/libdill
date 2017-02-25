@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="http://libdill.org/main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="http://libdill.org/index.html">Home</a></li>
+<li><a href="http://libdill.org/download.html">Download</a></li>
+<li><a href="http://libdill.org/documentation.html">Documentation</a></li>
+<li><a href="http://libdill.org/tutorial.html">Tutorial</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>ipaddr_local - resolve a name of a local network interface</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p><strong>int ipaddr_local(struct ipaddr </strong>*<em>addr</em><strong>, const char </strong>*<em>name</em><strong>, int</strong> <em>port</em><strong>, int</strong> <em>mode</em><strong>);</strong></p>
+<h1 id="description">DESCRIPTION</h1>
+<p>Converts an IP address in human-readable format, or a name of a local network interface, into an ipaddr object:</p>
+<pre><code>ipaddr_local(&amp;addr, &quot;192.168.0.111&quot;, 80, 0);
+ipaddr_local(&amp;addr, &quot;::1&quot;, 443, 0);
+ipaddr_local(&amp;addr, &quot;eth0&quot;, 25, 0);</code></pre>
+<p><em>addr</em> is thr address strucure to hold the result. <em>name</em> is the string to convert. <em>port</em> is the port number to use. <em>mode</em> specifies which kind of addresses should be returned. Possible values are:</p>
+<ul>
+<li><strong>IPADDR_IPV4</strong>: Get IPv4 address.<br /></li>
+<li><strong>IPADDR_IPV6</strong>: Get IPv6 address.<br /></li>
+<li><strong>IPADDR_PREF_IPV4</strong>: Get IPv4 address if possible, IPv6 address otherwise.<br /></li>
+<li><strong>IPADDR_PREF_IPV6</strong>: Get IPv6 address if possible, IPv4 address otherwise.</li>
+</ul>
+<p>Setting the argument to zero invokes default behaviour, which, at the present, is IPADDR_PREF_IPV4. However, in the future when IPv6 becomes more common it may be switched to IPADDR_PREF_IPV6.</p>
+<p>If address parameter is set to NULL, INADDR_ANY or in6addr_any, respectively, is returned. This value is useful when binding to all local network interfaces.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>The function returns 0 on success. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>ENODEV</strong>: Local network interface with the specified name does not exist.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> ipaddr addr;
+<span class="dt">int</span> rc = ipaddr_local(&amp;addr, <span class="st">&quot;eth0&quot;</span>, <span class="dv">5555</span>, <span class="dv">0</span>);</code></pre>
+</body>

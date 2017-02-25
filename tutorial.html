@@ -47,7 +47,7 @@ Connection closed by foreign host.</code></pre>
 }</code></pre>
 <p>Now we can move on to the actual interesting stuff.</p>
 <p>The <code>tcp_listen()</code> function creates a listening TCP socket. The socket can be used to accept new TCP connections from clients:</p>
-<pre class="sourceCode c"><code class="sourceCode c">ipaddr addr;
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> ipaddr addr;
 <span class="dt">int</span> rc = ipaddr_local(&amp;addr, NULL, port, <span class="dv">0</span>);
 <span class="kw">if</span> (rc &lt; <span class="dv">0</span>) {
     perror(<span class="st">&quot;Can&#39;t open listening socket&quot;</span>);
