@@ -75,7 +75,8 @@ int64_t now_(void) {
 #if defined __APPLE__
     struct dill_ctx_now *ctx = &dill_getctx->now;
     uint64_t ticks = mach_absolute_time();
-    return (int64_t)(ctx->mtid.numer / ctx->mtid.denom / 1000000);
+    //return (int64_t)(ctx->mtid.numer / ctx->mtid.denom / 1000000);
+    return mnow();
 #else
     return mnow();
 #endif
