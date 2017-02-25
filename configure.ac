@@ -131,6 +131,19 @@ else
 fi
 
 ################################################################################
+#  --disable-sockets                                                           #
+################################################################################
+
+AC_ARG_ENABLE([sockets], [AS_HELP_STRING([--disable-sockets],
+    [Disable socket support [default=no]])])
+
+if test "x$enable_sockets" = "xno"; then
+    AM_CONDITIONAL([DILL_SOCKETS], false)
+else
+    AM_CONDITIONAL([DILL_SOCKETS], true)
+fi
+
+################################################################################
 #  Feature checks.                                                             #
 ################################################################################
 

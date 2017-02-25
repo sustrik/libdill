@@ -7,15 +7,18 @@ Jim Jagielski <jimjag@gmail.com>
 Jim Schimpf <jim.schimpf@gmail.com>
 Luca Barbato <luca.barbato@gmail.com>
 Martin Lucina <martin@lucina.net>
-Martin Sustrik <sustrik@250bpm.com>
+Martin Sustrik <sustrik@250bpm.com>*
 Michael Gehring <mg@ebfe.org>
 Nick Desaulniers <nick@mozilla.com>
 Nir Soffer <nsoffer@redhat.com>
 Paul Banks <banks@banksdesigns.co.uk>
 Petr Skocik <pskocik@gmail.com>
 Sergey Avseyev <sergey.avseyev@gmail.com>
-Tai Chi Minh Ralph Eastwood <tcmreastwood@gmail.com>
+Tai Chi Minh Ralph Eastwood <tcmreastwood@gmail.com>*
 Yue Xu <red_angelx@qq.com>
 Zach Banks <zbanks@mit.edu>
 
 * Future patches by this author are submitted under the MIT/X11 license
+
+Copyrights for DNS resolution library in dns subdirectory are owned by:
+William Ahern <william@25thandClement.com>

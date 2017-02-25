@@ -271,5 +271,51 @@ DILL_EXPORT int choose(struct chclause *clauses, int nclauses,
 /* chdone() is deprecated in favour of hdone(). */
 #define chdone hdone
 
+#if !defined DILL_DISABLE_SOCKETS
+
+/******************************************************************************/
+/*  IP address resolution.                                                    */
+/******************************************************************************/
+
+struct sockaddr;
+
+#define IPADDR_IPV4 1
+#define IPADDR_IPV6 2
+#define IPADDR_PREF_IPV4 3
+#define IPADDR_PREF_IPV6 4
+#define IPADDR_MAXSTRLEN 46
+
+struct ipaddr {
+    char data[32];
+};
+
+DILL_EXPORT int ipaddr_local(
+    struct ipaddr *addr,
+    const char *name,
+    int port,
+    int mode);
+DILL_EXPORT int ipaddr_remote(
+    struct ipaddr *addr,
+    const char *name,
+    int port,
+    int mode,
+    int64_t deadline);
+DILL_EXPORT const char *ipaddr_str(
+    const struct ipaddr *addr,
+    char *ipstr);
+DILL_EXPORT int ipaddr_family(
+    const struct ipaddr *addr);
+DILL_EXPORT const struct sockaddr *ipaddr_sockaddr(
+    const struct ipaddr *addr);
+DILL_EXPORT int ipaddr_len(
+    const struct ipaddr *addr);
+DILL_EXPORT int ipaddr_port(
+    const struct ipaddr *addr);
+DILL_EXPORT void ipaddr_setport(
+    struct ipaddr *addr,
+    int port);
+
+#endif
+
 #endif
 

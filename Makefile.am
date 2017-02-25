@@ -60,6 +60,13 @@ libdill_la_SOURCES = \
     utils.h \
     utils.c
 
+if DILL_SOCKETS
+libdill_la_SOURCES += \
+    ipaddr.c \
+    dns/dns.h \
+    dns/dns.c
+endif
+
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libdill.pc
 
@@ -94,6 +101,11 @@ if DILL_THREADS
 check_PROGRAMS += \
     tests/threads \
     tests/threads2
+endif
+
+if DILL_SOCKETS
+check_PROGRAMS += \
+    tests/ipaddr
 endif
 
 check_HEADERS = \

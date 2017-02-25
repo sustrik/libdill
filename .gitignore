@@ -29,6 +29,8 @@ tests/*.log
 tests/*.trs
 tests/*.o
 test-suite.log
+dns/.deps/
+dns/.dirstamp
 tests/chan
 tests/choose
 tests/example
@@ -41,6 +43,7 @@ tests/handle
 tests/threads
 tests/threads2
 tests/rbtree
+tests/ipaddr
 perf/.dirstamp
 perf/chan
 perf/ctxswitch
