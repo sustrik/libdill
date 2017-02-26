@@ -50,7 +50,7 @@ Now we can move on to the actual interesting stuff.
 The `tcp_listen()` function creates a listening TCP socket. The socket can be used to accept new TCP connections from clients:
 
 ```c
-ipaddr addr;
+struct ipaddr addr;
 int rc = ipaddr_local(&addr, NULL, port, 0);
 if (rc < 0) {
     perror("Can't open listening socket");

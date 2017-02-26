@@ -3,33 +3,16 @@
 
 ##### libdill
 
-<http://libdill.org/libdill-1.2.tar.gz>
+<http://libdill.org/libdill-1.3.tar.gz>
 
 ```
-$ wget http://libdill.org/libdill-1.2.tar.gz
-$ tar -xzf libdill-1.2.tar.gz 
-$ cd libdill-1.2
+$ wget http://libdill.org/libdill-1.3.tar.gz
+$ tar -xzf libdill-1.3.tar.gz 
+$ cd libdill-1.3
 $ ./configure
 $ make
 $ sudo make install
 ```
 
 [Past versions of libdill](libdill-history.html)
-
-##### dsock
-
-Note that the dsock library is still in the alpha stage and the API may change. You may want to use raw POSIX sockets instead.
-
-<http://libdill.org/dsock-0.5-alpha.tar.gz>
-
-```
-$ wget http://libdill.org/dsock-0.5-alpha.tar.gz
-$ tar -xzf dsock-0.5-alpha.tar.gz 
-$ cd dsock-0.5-alpha
-$ ./configure
-$ make
-$ sudo make install
-```
-
-[Past versions of dsock](dsock-history.html)
 

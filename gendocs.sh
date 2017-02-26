@@ -39,7 +39,6 @@ other="\
     compatibility \
     documentation \
     download \
-    dsock-history \
     index \
     libdill-history \
     structured-concurrency \

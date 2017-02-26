@@ -1,6 +1,13 @@
 
 # Past versions
 
+**Feb 25th, 2017 <http://libdill.org/libdill-1.3.tar.gz>**
+
+* DNS resolution functions added.
+* hdone() added.
+* Bug fixes.
+* Performance improvements.
+
 **Feb 5th, 2017 <http://libdill.org/libdill-1.2.tar.gz>**
 
 * If the CPU is at 100%, external events, such as those from file descriptors, are checked once per second.
