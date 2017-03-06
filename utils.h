@@ -30,6 +30,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define dill_concat(x,y) x##y
+
+/* Defines a unique identifier of type const void*. */
+#define dill_unique_id(name) \
+    static const int dill_concat(name, ___) = 0;\
+    const void *name = & dill_concat(name, ___);
+
 /*  Takes a pointer to a member variable and computes pointer to the structure
     that contains it. 'type' is type of the structure, not the member. */
 #define dill_cont(ptr, type, member) \

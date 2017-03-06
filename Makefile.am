@@ -27,7 +27,7 @@ ACLOCAL_AMFLAGS = -I m4
 ################################################################################
 
 dillincludedir = $(includedir)
-dillinclude_HEADERS = libdill.h
+dillinclude_HEADERS = libdill.h libdillimpl.h
 
 lib_LTLIBRARIES = libdill.la
 
@@ -62,7 +62,9 @@ libdill_la_SOURCES = \
 
 if DILL_SOCKETS
 libdill_la_SOURCES += \
+    bsock.c \
     ipaddr.c \
+    msock.c \
     dns/dns.h \
     dns/dns.c
 endif

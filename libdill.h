@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2016 Martin Sustrik
+  Copyright (c) 2017 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -272,6 +272,67 @@ DILL_EXPORT int choose(struct chclause *clauses, int nclauses,
 #define chdone hdone
 
 #if !defined DILL_DISABLE_SOCKETS
+
+/******************************************************************************/
+/*  Gather/scatter list.                                                      */
+/******************************************************************************/
+
+struct iolist {
+    void *iol_base;
+    size_t iol_len;
+    struct iolist *iol_next;
+    int iol_rsvd;
+};
+
+/******************************************************************************/
+/*  Bytestream sockets.                                                       */
+/******************************************************************************/
+
+DILL_EXPORT int bsend(
+    int s,
+    const void *buf,
+    size_t len,
+    int64_t deadline);
+DILL_EXPORT int brecv(
+    int s,
+    void *buf,
+    size_t len,
+    int64_t deadline);
+DILL_EXPORT int bsendl(
+    int s,
+    struct iolist *first,
+    struct iolist *last,
+    int64_t deadline);
+DILL_EXPORT int brecvl(
+    int s,
+    struct iolist *first,
+    struct iolist *last,
+    int64_t deadline);
+
+/******************************************************************************/
+/*  Message sockets.                                                          */
+/******************************************************************************/
+
+DILL_EXPORT int msend(
+    int s,
+    const void *buf,
+    size_t len,
+    int64_t deadline);
+DILL_EXPORT ssize_t mrecv(
+    int s,
+    void *buf,
+    size_t len,
+    int64_t deadline);
+DILL_EXPORT int msendl(
+    int s,
+    struct iolist *first,
+    struct iolist *last,
+    int64_t deadline);
+DILL_EXPORT ssize_t mrecvl(
+    int s,
+    struct iolist *first,
+    struct iolist *last,
+    int64_t deadline);
 
 /******************************************************************************/
 /*  IP address resolution.                                                    */
