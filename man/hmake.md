@@ -11,7 +11,7 @@ struct hvfs {
 };
 ```
 
-**#include **&lt;libdill.h>**
+**#include **&lt;libdillimpl.h>**
 
 **int hmake(struct hvfs **\*_vfs_**);**
 
