@@ -25,7 +25,7 @@
 
 #include <stdint.h>
 
-#include "libdill.h"
+#include "libdillimpl.h"
 #include "qlist.h"
 #include "rbtree.h"
 #include "slist.h"

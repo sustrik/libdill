@@ -31,7 +31,7 @@
 
 #include "cr.h"
 #include "handle.h"
-#include "libdill.h"
+#include "libdillimpl.h"
 #include "utils.h"
 #include "ctx.h"
 

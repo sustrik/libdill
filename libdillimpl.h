@@ -27,7 +27,19 @@
 
 #include "libdill.h"
 
-/* Include this header if you want to implement your own socket type. */
+/******************************************************************************/
+/*  Handles                                                                   */
+/******************************************************************************/
+
+struct hvfs {
+    void *(*query)(struct hvfs *vfs, const void *type);
+    void (*close)(struct hvfs *vfs);
+    int (*done)(struct hvfs *vfs);
+    /* Reserved. Do not use directly! */
+    unsigned int refcount;
+};
+
+DILL_EXPORT int hmake(struct hvfs *vfs);
 
 /******************************************************************************/
 /*  Bytestream sockets.                                                       */

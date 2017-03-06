@@ -23,7 +23,7 @@
 */
 
 #include "assert.h"
-#include "../libdill.h"
+#include "../libdillimpl.h"
 
 static int status = 0;
 

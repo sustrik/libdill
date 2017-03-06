@@ -28,7 +28,7 @@
 #include <string.h>
 
 #include "cr.h"
-#include "libdill.h"
+#include "libdillimpl.h"
 #include "list.h"
 #include "utils.h"
 

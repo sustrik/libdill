@@ -84,15 +84,6 @@ DILL_EXPORT int64_t now(void);
 /*  Handles                                                                   */
 /******************************************************************************/
 
-struct hvfs {
-    void *(*query)(struct hvfs *vfs, const void *type);
-    void (*close)(struct hvfs *vfs);
-    int (*done)(struct hvfs *vfs);
-    /* Reserved. Do not use directly! */
-    unsigned int refcount;
-};
-
-DILL_EXPORT int hmake(struct hvfs *vfs);
 DILL_EXPORT void *hquery(int h, const void *type);
 DILL_EXPORT int hdup(int h);
 DILL_EXPORT int hclose(int h);
