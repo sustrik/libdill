@@ -41,6 +41,8 @@ struct hvfs {
 
 DILL_EXPORT int hmake(struct hvfs *vfs);
 
+#if !defined DILL_DISABLE_SOCKETS
+
 /******************************************************************************/
 /*  Bytestream sockets.                                                       */
 /******************************************************************************/
@@ -66,6 +68,8 @@ struct msock_vfs {
     ssize_t (*mrecvl)(struct msock_vfs *vfs,
         struct iolist *first, struct iolist *last, int64_t deadline);
 };
+
+#endif
 
 #endif
 
