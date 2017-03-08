@@ -385,6 +385,25 @@ DILL_EXPORT int tcp_close(
     int s,
     int64_t deadline);
 
+/******************************************************************************/
+/*  IPC protocol.                                                            */
+/******************************************************************************/
+
+DILL_EXPORT int ipc_listen(
+    const char *addr,
+    int backlog);
+DILL_EXPORT int ipc_accept(
+    int s,
+    int64_t deadline);
+DILL_EXPORT int ipc_connect(
+    const char *addr,
+    int64_t deadline);
+DILL_EXPORT int ipc_close(
+    int s,
+    int64_t deadline);
+DILL_EXPORT int ipc_pair(
+    int s[2]);
+
 #endif
 
 #endif

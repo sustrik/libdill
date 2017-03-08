@@ -67,6 +67,7 @@ libdill_la_SOURCES += \
     fd.c \
     iol.h \
     iol.c \
+    ipc.c \
     ipaddr.c \
     msock.c \
     tcp.h \
@@ -114,7 +115,8 @@ endif
 if DILL_SOCKETS
 check_PROGRAMS += \
     tests/ipaddr \
-    tests/tcp
+    tests/tcp \
+    tests/ipc
 endif
 
 check_HEADERS = \
