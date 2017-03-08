@@ -367,6 +367,24 @@ DILL_EXPORT void ipaddr_setport(
     struct ipaddr *addr,
     int port);
 
+/******************************************************************************/
+/*  TCP protocol.                                                             */
+/******************************************************************************/
+
+DILL_EXPORT int tcp_listen(
+    struct ipaddr *addr,
+    int backlog);
+DILL_EXPORT int tcp_accept(
+    int s,
+    struct ipaddr *addr,
+    int64_t deadline);
+DILL_EXPORT int tcp_connect(
+    const struct ipaddr *addr,
+    int64_t deadline);
+DILL_EXPORT int tcp_close(
+    int s,
+    int64_t deadline);
+
 #endif
 
 #endif

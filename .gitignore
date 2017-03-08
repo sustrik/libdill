@@ -44,6 +44,7 @@ tests/threads
 tests/threads2
 tests/rbtree
 tests/ipaddr
+tests/tcp
 perf/.dirstamp
 perf/chan
 perf/ctxswitch
