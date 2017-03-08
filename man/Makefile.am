@@ -21,8 +21,6 @@
 # IN THE SOFTWARE.
 
 man3_MANS = \
-    brecv.3 \
-    bsend.3 \
     chmake.3 \
     chmake_mem.3 \
     choose.3 \
@@ -42,6 +40,8 @@ man3_MANS = \
     now.3 \
     yield.3 \
     \
+    brecv.3 \
+    bsend.3 \
     ipaddr_family.3 \
     ipaddr_len.3 \
     ipaddr_local.3 \
@@ -49,7 +49,9 @@ man3_MANS = \
     ipaddr_remote.3 \
     ipaddr_setport.3 \
     ipaddr_sockaddr.3 \
-    ipaddr_str.3
+    ipaddr_str.3 \
+    mrecv.3 \
+    msend.3
 
 SUFFIXES = .md .3
 
