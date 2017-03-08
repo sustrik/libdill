@@ -50,8 +50,17 @@ man3_MANS = \
     ipaddr_setport.3 \
     ipaddr_sockaddr.3 \
     ipaddr_str.3 \
+    ipc_accept.3 \
+    ipc_close.3 \
+    ipc_connect.3 \
+    ipc_listen.3 \
+    ipc_pair.3 \
     mrecv.3 \
-    msend.3
+    msend.3 \
+    tcp_accept.3 \
+    tcp_close.3 \
+    tcp_connect.3 \
+    tcp_listen.3
 
 SUFFIXES = .md .3
 
