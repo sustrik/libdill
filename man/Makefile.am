@@ -21,6 +21,8 @@
 # IN THE SOFTWARE.
 
 man3_MANS = \
+    brecv.3 \
+    bsend.3 \
     chmake.3 \
     chmake_mem.3 \
     choose.3 \
