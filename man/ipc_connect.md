@@ -42,5 +42,5 @@ Newly created socket handle. On error, it returns -1 and sets _errno_ to one of 
 # EXAMPLE
 
 ```c
-int s = ipc_connect("/tmp/test.ipc", 10);
+int s = ipc_connect("/tmp/test.ipc", -1);
 ```
