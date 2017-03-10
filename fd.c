@@ -143,6 +143,11 @@ int fd_send(int s, struct iolist *first, struct iolist *last,
             hdr.msg_iov++;
             hdr.msg_iovlen--;
             if(!hdr.msg_iovlen) return 0;
+            while(!hdr.msg_iov[0].iov_len) {
+                hdr.msg_iov++;
+                hdr.msg_iovlen--;
+            }
+            if(!hdr.msg_iovlen) return 0;
         }
         /* Wait till more data can be sent. */
         int rc = fdout(s, deadline);
