@@ -122,7 +122,13 @@ int fd_send(int s, struct iolist *first, struct iolist *last,
        to improve efficiency, try to send and resort to fdout() only after
        send failed. */
     while(1) {
+        while(hdr.msg_iovlen && !hdr.msg_iov[0].iov_len) {
+            hdr.msg_iov++;
+            hdr.msg_iovlen--;
+        }
+        if(!hdr.msg_iovlen) return 0;
         ssize_t sz = sendmsg(s, &hdr, FD_NOSIGNAL);
+        dill_assert(sz != 0);
         if(sz < 0) {
             if(dill_slow(errno != EWOULDBLOCK && errno != EAGAIN)) {
                 if(errno == EPIPE) errno = ECONNRESET;
@@ -142,11 +148,6 @@ int fd_send(int s, struct iolist *first, struct iolist *last,
             sz -= head->iov_len;
             hdr.msg_iov++;
             hdr.msg_iovlen--;
-            if(!hdr.msg_iovlen) return 0;
-            while(!hdr.msg_iov[0].iov_len) {
-                hdr.msg_iov++;
-                hdr.msg_iovlen--;
-            }
             if(!hdr.msg_iovlen) return 0;
         }
         /* Wait till more data can be sent. */
