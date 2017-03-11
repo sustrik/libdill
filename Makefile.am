@@ -115,6 +115,7 @@ endif
 if DILL_SOCKETS
 check_PROGRAMS += \
     tests/ipaddr \
+    tests/iol \
     tests/tcp \
     tests/ipc
 endif
