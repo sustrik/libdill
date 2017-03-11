@@ -7,13 +7,15 @@ tcp_accept - accepts an incoming TCP connection
 
 **#include &lt;libdill.h>**
 
-**int tcp_accept(int **_s_**, int64_t** _deadline_**);**
+**int tcp_accept(int **_s_**, struct ipaddr **\*_addr_**, int64_t** _deadline_**);**
 
 # DESCRIPTION
 
 TCP protocol is a bytestream protocol (i.e. data can be sent via **bsend()** and received via **brecv()**) for transporting data among machines.
 
 This function accepts an incoming TCP connection from the listening socket _s_.
+
+If _addr_ paramerer is not **NULL** the IP address of the connecting peer will be stored inside it.
 
 _deadline_ is a point in time when the operation should time out. Use the **now()** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
 
