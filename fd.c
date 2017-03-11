@@ -234,7 +234,7 @@ int fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
     /* Copy the current iolist element so that we can modify it without
        changing the original list. */
     struct iolist curr;
-    curr.iol_base = first->iol_base + sz;
+    curr.iol_base = first->iol_base ? first->iol_base + sz : NULL;
     curr.iol_len = first->iol_len - sz;
     curr.iol_next = first->iol_next;
     curr.iol_rsvd = 0;
@@ -271,7 +271,7 @@ int fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
             if(!curr.iol_next) return 0;
             curr = *curr.iol_next;
         }
-        curr.iol_base += sz;
+        if(curr.iol_base) curr.iol_base += sz;
         curr.iol_len -= sz;
         /* Wait for more data. */
         int rc = fdin(s, deadline);
