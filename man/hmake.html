@@ -22,7 +22,7 @@
     <span class="dt">void</span> *(*query)(<span class="kw">struct</span> hvfs *vfs, <span class="dt">const</span> <span class="dt">void</span> *type);
     <span class="dt">void</span> (*close)(<span class="dt">int</span> h);
 };</code></pre>
-<p><strong>#include </strong>&lt;libdill.h&gt;**</p>
+<p><strong>#include </strong>&lt;libdillimpl.h&gt;**</p>
 <p><strong>int hmake(struct hvfs </strong>*<em>vfs</em><strong>);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
 <p>A handle is the user-space equivalent of a file descriptor. Coroutines and channels are represented by handles.</p>

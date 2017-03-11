@@ -1,6 +1,12 @@
 
 # Past versions
 
+**Mar 11th, 2017 <http://libdill.org/libdill-1.4.tar.gz>**
+
+* TCP and IPC (AF_UNIX) support added.
+* libdillimpl.h created for stuff needed by protocol implementors.
+* hmake() and hquery() functions moved to libdillimpl.h
+
 **Feb 25th, 2017 <http://libdill.org/libdill-1.3.tar.gz>**
 
 * DNS resolution functions added.

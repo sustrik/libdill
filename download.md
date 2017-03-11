@@ -3,12 +3,12 @@
 
 ##### libdill
 
-<http://libdill.org/libdill-1.3.tar.gz>
+<http://libdill.org/libdill-1.4.tar.gz>
 
 ```
-$ wget http://libdill.org/libdill-1.3.tar.gz
-$ tar -xzf libdill-1.3.tar.gz 
-$ cd libdill-1.3
+$ wget http://libdill.org/libdill-1.4.tar.gz
+$ tar -xzf libdill-1.4.tar.gz 
+$ cd libdill-1.4
 $ ./configure
 $ make
 $ sudo make install
