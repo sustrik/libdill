@@ -4,7 +4,7 @@ hquery - gets an opaque pointer associated with a handle and a type
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+**#include &lt;libdillimpl.h>**
 
 **void \*hquery(int** _h_**, const void** \*_type_**);**
 

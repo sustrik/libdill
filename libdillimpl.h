@@ -40,6 +40,7 @@ struct hvfs {
 };
 
 DILL_EXPORT int hmake(struct hvfs *vfs);
+DILL_EXPORT void *hquery(int h, const void *type);
 
 #if !defined DILL_DISABLE_SOCKETS
 

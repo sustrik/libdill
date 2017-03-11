@@ -84,7 +84,6 @@ DILL_EXPORT int64_t now(void);
 /*  Handles                                                                   */
 /******************************************************************************/
 
-DILL_EXPORT void *hquery(int h, const void *type);
 DILL_EXPORT int hdup(int h);
 DILL_EXPORT int hclose(int h);
 DILL_EXPORT int hdone(int h);
