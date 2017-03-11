@@ -46,6 +46,7 @@ tests/rbtree
 tests/ipaddr
 tests/tcp
 tests/ipc
+tests/iol
 perf/.dirstamp
 perf/chan
 perf/ctxswitch
