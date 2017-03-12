@@ -14,5 +14,7 @@ $ make
 $ sudo make install
 ```
 
+[GitHub repository](https://github.com/sustrik/libdill)
+
 [Past versions of libdill](libdill-history.html)
 
