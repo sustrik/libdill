@@ -183,6 +183,16 @@ int main(void) {
     rc = hclose(cr);
     errno_assert(rc == 0);
 
+    /* Test ephemeral ports. */
+    rc = ipaddr_local(&addr, NULL, 0, 0);
+    errno_assert(rc == 0);
+    ls = tcp_listen(&addr, 10);
+    errno_assert(ls >= 0);
+    int port = ipaddr_port(&addr);
+    assert(port > 0);
+    rc = hclose(ls);
+    errno_assert(rc == 0);
+
     return 0;
 }
-
+  
