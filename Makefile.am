@@ -175,6 +175,8 @@ EXTRA_DIST = \
     ./abi_version.sh \
     ./package_version.sh
 
+CLEANFILES = *.gcno *.gcda dns/*.gcno dns/*.gcda tests/*.gcno tests/*.gcda
+
 distclean-local:
 	-rm -f config.h
 
