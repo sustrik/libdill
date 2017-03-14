@@ -77,6 +77,18 @@ To contribute to libdill, create a GitHub pull request. You have to state that y
 
 If you make a substantial contribution to a file, add your copyright to the file header. Irrespective of whether you do so or not, your name will be added to the AUTHORS file to indicate you own copyright to part of the codebase.
 
+## FAQ: How can I see coverage report for the tests?
+
+```
+$ ./configure --enable-gcov
+$ make clean
+$ make check
+$ lcov -t "libdill" -o libdill.info -c -d .
+$ genhtml -o lcov libdill.info
+```
+
+After doing the steps above open `lcov/index.html` in your browser.
+
 ## FAQ: What is the release process?
 
 These instructions are intended for project maintainers:
