@@ -41,7 +41,7 @@ dill_unique_id(tcp_type);
 
 static void *tcp_hquery(struct hvfs *hvfs, const void *type);
 static void tcp_hclose(struct hvfs *hvfs);
-static int tcp_hdone(struct hvfs *hvfs);
+static int tcp_hdone(struct hvfs *hvfs, int64_t deadline);
 static int tcp_bsendl(struct bsock_vfs *bvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 static int tcp_brecvl(struct bsock_vfs *bvfs,
@@ -112,7 +112,7 @@ static int tcp_brecvl(struct bsock_vfs *bvfs,
     return -1;
 }
 
-static int tcp_hdone(struct hvfs *hvfs) {
+static int tcp_hdone(struct hvfs *hvfs, int64_t deadline) {
     struct tcp_conn *obj = (struct tcp_conn*)hvfs;
     if(dill_slow(obj->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(obj->outerr)) {errno = ECONNRESET; return -1;}
@@ -131,7 +131,7 @@ int tcp_close(int s, int64_t deadline) {
     /* If not done already, flush the outbound data and start the terminal
        handshake. */
     if(!obj->outdone) {
-        int rc = tcp_hdone(&obj->hvfs);
+        int rc = tcp_hdone(&obj->hvfs, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     /* Now we are going to read all the inbound data until we reach end of the

@@ -43,7 +43,7 @@ dill_unique_id(ipc_type);
 
 static void *ipc_hquery(struct hvfs *hvfs, const void *type);
 static void ipc_hclose(struct hvfs *hvfs);
-static int ipc_hdone(struct hvfs *hvfs);
+static int ipc_hdone(struct hvfs *hvfs, int64_t deadline);
 static int ipc_bsendl(struct bsock_vfs *bvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 static int ipc_brecvl(struct bsock_vfs *bvfs,
@@ -118,11 +118,12 @@ static int ipc_brecvl(struct bsock_vfs *bvfs,
     return -1;
 }
 
-static int ipc_hdone(struct hvfs *hvfs) {
+static int ipc_hdone(struct hvfs *hvfs, int64_t deadline) {
     struct ipc_conn *obj = (struct ipc_conn*)hvfs;
     if(dill_slow(obj->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(obj->outerr)) {errno = ECONNRESET; return -1;}
-    /* Flushing the tx buffer is done asynchronously on kernel level. */
+    /* Shutdown is done asynchronously on kernel level.
+       No need to use the deadline. */
     int rc = shutdown(obj->fd, SHUT_WR);
     dill_assert(rc == 0);
     obj->outdone = 1;
@@ -137,7 +138,7 @@ int ipc_close(int s, int64_t deadline) {
     /* If not done already, flush the outbound data and start the terminal
        handshake. */
     if(!obj->outdone) {
-        int rc = ipc_hdone(&obj->hvfs);
+        int rc = ipc_hdone(&obj->hvfs, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     /* Now we are going to read all the inbound data until we reach end of the
