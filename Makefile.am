@@ -132,10 +132,21 @@ LDADD = libdill.la
 TESTS = $(check_PROGRAMS)
 
 ################################################################################
-#  performance tests                                                           #
+#  tutorial                                                                    #
 ################################################################################
 
 noinst_PROGRAMS = \
+    tutorial/step1 \
+    tutorial/step2 \
+    tutorial/step3 \
+    tutorial/step4 \
+    tutorial/step5
+
+################################################################################
+#  performance tests                                                           #
+################################################################################
+
+noinst_PROGRAMS += \
     perf/go \
     perf/ctxswitch \
     perf/chan \
