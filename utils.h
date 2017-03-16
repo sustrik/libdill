@@ -97,5 +97,13 @@ static inline uint64_t __rdtsc() {
 /* Returns the maximum possible file descriptor number */
 int dill_maxfds(void);
 
+/* Encoding and decoding integers from network byte order. */
+uint16_t dill_gets(const uint8_t *buf);
+void dill_puts(uint8_t *buf, uint16_t val);
+uint32_t dill_getl(const uint8_t *buf);
+void dill_putl(uint8_t *buf, uint32_t val);
+uint64_t dill_getll(const uint8_t *buf);
+void dill_putll(uint8_t *buf, uint64_t val);
+
 #endif
 

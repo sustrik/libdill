@@ -47,6 +47,8 @@ tests/ipaddr
 tests/tcp
 tests/ipc
 tests/iol
+tests/crlf
+tests/pfx
 perf/.dirstamp
 perf/chan
 perf/ctxswitch
