@@ -1,0 +1,29 @@
+# NAME
+
+pfx_detach - terminates PFX protocol and returns the underlying socket
+
+# SYNOPSIS
+
+**#include &lt;libdill.h>**
+
+**int pfx_detach(int **_s_**, int64_t **_deadline_**);**
+
+# DESCRIPTION
+
+TODO
+
+# RETURN VALUE
+
+Underlying socket handle. On error, it returns -1 and sets _errno_ to one of the values below.
+
+# ERRORS
+
+* **EBADF**: Invalid socket handle.
+* **ENOTSUP**: The handle is not a PFX protocol handle.
+* **ETIMEDOUT**: Deadline was reached.
+
+# EXAMPLE
+
+```c
+int u = pfx_detach(s);
+```

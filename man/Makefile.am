@@ -42,6 +42,8 @@ man3_MANS = \
     \
     brecv.3 \
     bsend.3 \
+    crlf_attach.3 \
+    crlf_detach.3 \
     ipaddr_family.3 \
     ipaddr_len.3 \
     ipaddr_local.3 \
@@ -57,6 +59,8 @@ man3_MANS = \
     ipc_pair.3 \
     mrecv.3 \
     msend.3 \
+    pfx_attach.3 \
+    pfx_detach.3 \
     tcp_accept.3 \
     tcp_close.3 \
     tcp_connect.3 \
