@@ -72,6 +72,7 @@ int crlf_attach(int s) {
     obj->mvfs.mrecvl = crlf_mrecvl;
     obj->u = -1;
     obj->uvfs = hquery(s, bsock_type);
+    if(dill_slow(!obj->uvfs && errno == ENOTSUP)) {err = EPROTO; goto error2;}
     if(dill_slow(!obj->uvfs)) {err = errno; goto error2;}
     obj->indone = 0;
     obj->outdone = 0;

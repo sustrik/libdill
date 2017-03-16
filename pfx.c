@@ -60,7 +60,9 @@ static void *pfx_hquery(struct hvfs *hvfs, const void *type) {
 int pfx_attach(int s) {
     int err;
     /* Check whether underlying socket is a bytestream. */
-    if(dill_slow(!hquery(s, bsock_type))) {err = errno; goto error1;}
+    void *q = hquery(s, bsock_type);
+    if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
+    if(dill_slow(!q)) {err = errno; goto error1;}
     /* Create the object. */
     struct pfx_sock *obj = malloc(sizeof(struct pfx_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
