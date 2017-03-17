@@ -190,7 +190,7 @@ static ssize_t crlf_mrecvl(struct msock_vfs *mvfs,
         c1 = c2;
         /* c2 <- socket */
         int rc = obj->uvfs->brecvl(obj->uvfs, &iol, &iol, deadline);
-        if(dill_slow(rc < 0)) {obj->inerr = -1; return -1;}
+        if(dill_slow(rc < 0)) {obj->inerr = 1; return -1;}
         ++recvd;
         if(c1 == '\r' && c2 == '\n') break;
     }
