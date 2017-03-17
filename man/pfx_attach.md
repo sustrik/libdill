@@ -10,7 +10,11 @@ pfx_attach - creates PFX protocol on top of underlying socket
 
 # DESCRIPTION
 
-TODO
+PFX is a message-based protocol to send binary messages prefixed by 8-byte size in network byte order. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending eight 0xFF bytes.
+
+This function instantiates PFX protocol on top of underlying bytestream protocol _s_.
+
+The socket can be cleanly shut down using **pfx_detach()** function.
 
 # RETURN VALUE
 
@@ -27,5 +31,6 @@ Newly created socket handle. On error, it returns -1 and sets _errno_ to one of 
 # EXAMPLE
 
 ```c
+int u = tcp_connect(&addr, -1);
 int s = pfx_attach(u);
 ```
