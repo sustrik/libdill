@@ -5,7 +5,7 @@
 
 In this tutorial, you will develop a simple TCP "greet" server. Clients are meant to connect to it by telnet. After a client has connected, the server will ask for their name, reply with a greeting, and then proceed to close the connection.
 
-An interaction with our server will look like this:
+An interaction with the server will look like this:
 
 ```
 $ telnet 127.0.0.1 5555
@@ -21,11 +21,10 @@ Throughout the tutorial, you will learn how to use coroutines, channels, and soc
 
 ## Step 1: Setting up the stage
 
-Start by including the libdill and dsock header files. Later we'll need some functionality from the standard library, so include those headers as well:
+Start by including the libdill header file. Later we'll need some functionality from the standard library, so include those headers as well:
     
 ```c
 #include <libdill.h>
-#include <dsock.h>
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
@@ -64,7 +63,7 @@ The `ipaddr_local()` function converts the textual representation of a local IP 
 
 The third argument is, unsurprisingly, the port that clients will connect to.  When testing the program, keep in mind that valid port numbers range from *1* to *65535* and that binding to ports *1* through *1023* will typically require superuser privileges.
 
-If `tcp_listen()` fails, it will return `-1` and `set errno` to the appropriate error code. The libdill/dscok API is in this respect very similar to standard POSIX APIs. Consequently, we can use standard POSIX error-handling mechanisms such as `perror()` in this case.
+If `tcp_listen()` fails, it will return `-1` and `set errno` to the appropriate error code. The libdill API is in this respect very similar to standard POSIX APIs. Consequently, we can use standard POSIX error-handling mechanisms such as `perror()` in this case.
 
 As for unlikely errors, the tutorial will simply use `assert`s to catch them so as to stay succinct and readable.
 
@@ -79,7 +78,7 @@ The function returns the newly established connection.
 
 Its third argument is a deadline. We'll cover deadlines later on in this tutorial. For now, remember that the constant `-1` can be used to mean 'no deadline' — if there is no incoming connection, the call will block forever.
 
-Finally, we want to handle multiple client connections instead of just one so we put the `tcp_accept()` call into an infinite loop.  For now we'll just print a message when a new connection is established. We will close it immediately and not even check for errors:
+Finally, we want to handle any number of client connections instead of just one so we put the `tcp_accept()` call into an infinite loop.  For now we'll just print a message when a new connection is established. We will close it immediately:
 
 ```c
 while(1) {
@@ -91,12 +90,12 @@ while(1) {
 }
 ```
 
-The source code for this step can be found in the dsock repository under tutorial/step1.c. All the other steps that follow are in the same directory.
+The source code for this step can be found in the libdill repository as tutorial/step1.c. All the steps that follow can be found in the same directory.
 
 Build the program like this:
 
 ```
-$ gcc -o greetserver step1.c -ldill -ldsock
+$ gcc -o greetserver step1.c -ldill
 ```
 
 Then run the resulting executable:
@@ -119,14 +118,14 @@ Can't open listening socket: Invalid argument
 $
 ```
 
-Everything seems to work as expected. Let's now move on to step 2.
+Everything seems to work as expected. Let's now move on to the step 2.
 
 ## Step 2: The business logic
 
-When a new connection arrives, the first thing that we want to do is establish the network protocol we'll be using. dsock is a library of easily composable microprotocols that allows you to compose a wide range of protocols just by plugging different microprotocols onto each other in a lego brick fashion.  In this tutorial, however, we are going to limit ourselves to just a very simple setup.  On top of the TCP connection that we've just created, we'll have a simple protocol that will split the TCP bytestream into discrete messages, using line breaks (`CR+LF`) as delimiters:
+When a new connection arrives, the first thing that we want to do is to establish the network protocol we'll be using. libdill contains a small library of easily composable microprotocols that allows you to compose a wide range of protocols just by plugging different microprotocols into each other in a lego brick fashion. In this tutorial, however, we are going to limit ourselves to just a very simple setup.  On top of the TCP connection that we've just created, we'll have a simple protocol that will split the TCP bytestream into discrete messages, using line breaks (`CR+LF`) as delimiters:
 
 ```c
-int s = crlf_start(s);
+int s = crlf_attach(s);
 assert(s >= 0);
 ```
 
@@ -146,10 +145,10 @@ To handle possible errors from `msend()` (such as when the client has closed the
 ```c
 char inbuf[256];
 ssize_t sz = mrecv(s, inbuf, sizeof(inbuf), -1);
-if(sz < 0) goto cleanup;
+if(sz &lt; 0) goto cleanup;
 ```
 
-This piece of code simply reads the reply from the client. The reply is a single message, which in the case of the CRLF protocol translates to a single line of text. The function returns the number of bytes in the message.
+The above piece of code simply reads the reply from the client. The reply is a single message, which in the case of the CRLF protocol translates to a single line of text. The `mrecv` function returns the number of bytes in the message.
 
 Having received a reply, we can now construct the greeting and send it to the client. The analysis of this code is left as an exercise to the reader:
 
@@ -196,7 +195,7 @@ int main(int argc, char *argv[]) {
     while(1) {
         int s = tcp_accept(ls, NULL, -1);
         assert(s >= 0);
-        s = crlf_start(s);
+        s = crlf_attach(s);
         assert(s >= 0);
         int cr = go(dialog(s));
         assert(cr >= 0);
@@ -223,11 +222,12 @@ int64_t deadline = now() + 10000;
 Furthermore, you have to modify all potentially blocking function calls in the program to take the deadline parameter. In our case:
 
 ```c
+int64_t deadline = now() + 10000;
 int rc = msend(s, "What's your name?", 17, deadline);
 if(rc != 0) goto cleanup;
 char inbuf[256];
 ssize_t sz = mrecv(s, inbuf, sizeof(inbuf), deadline);
-if(sz < 0) goto cleanup;
+if(sz &lt; 0) goto cleanup;
 ```
 
 Note that `errno` is set to `ETIMEDOUT` if the deadline is reached. Since we're treating all errors the same (by closing the connection), we don't make any specific provisions for deadline expiries.
@@ -270,7 +270,7 @@ int main(int argc, char *argv[]) {
     while(1) {
         int s = tcp_accept(ls, NULL, -1);
         assert(s >= 0);
-        s = crlf_start(s);
+        s = crlf_attach(s);
         assert(s >= 0);
         int cr = go(dialog(s, ch));
         assert(cr >= 0);
