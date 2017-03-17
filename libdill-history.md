@@ -1,6 +1,12 @@
 
 # Past versions
 
+**Mar 17th, 2017 <http://libdill.org/libdill-1.5.tar.gz>**
+
+* Two simple framing protocols added (CRLF and PFX).
+* hdone() function has deadline parameter.
+* Support for gcov added.
+
 **Mar 11th, 2017 <http://libdill.org/libdill-1.4.tar.gz>**
 
 * TCP and IPC (AF_UNIX) support added.

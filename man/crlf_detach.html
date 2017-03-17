@@ -16,24 +16,22 @@
 <li><a href="http://libdill.org/tutorial.html">Tutorial</a></li>
 </ul>
 <h1 id="name">NAME</h1>
-<p>tcp_close - closes TCP connection in an orderly manner</p>
+<p>crlf_detach - terminates CRLF protocol and returns the underlying socket</p>
 <h1 id="synopsis">SYNOPSIS</h1>
 <p><strong>#include &lt;libdill.h&gt;</strong></p>
-<p><strong>int tcp_close(int </strong><em>s</em><strong>, int64_t</strong> <em>deadline</em><strong>);</strong></p>
+<p><strong>int crlf_detach(int </strong><em>s</em><strong>, int64_t </strong><em>deadline</em><strong>);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
-<p>TCP protocol is a bytestream protocol (i.e. data can be sent via <strong>bsend()</strong> and received via <strong>brecv()</strong>) for transporting data among machines.</p>
-<p>This function closes a TCP socket cleanly. Unlike <strong>hclose()</strong> it lets the peer know that it is shutting down and waits till the peer acknowledged the shutdown. If this terminal handshake cannot be done it returns error. The socket is closed even in the case of error.</p>
+<p>CRLF is a message-based protocol that delimits messages usign CR+LF byte sequence (0x0D 0x0A). In other words, it's a protocol to send text messages separated by newlines. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending an empty line.</p>
+<p>This function does the terminal handshake and returns underlying socket to the user. The socket is closed even in the case of error.</p>
 <p><em>deadline</em> is a point in time when the operation should time out. Use the <strong>now()</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
 <h1 id="return-value">RETURN VALUE</h1>
-<p>Zero in case of success. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
+<p>Underlying socket handle. On error returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><strong>EBADF</strong>: Invalid handle.<br /></li>
-<li><strong>ECANCELED</strong>: Current coroutine is being shut down.<br /></li>
-<li><strong>ECONNRESET</strong>: Broken connection.<br /></li>
-<li><strong>ENOTSUP</strong>: The operation is not supported.<br /></li>
+<li><strong>EBADF</strong>: Invalid socket handle.<br /></li>
+<li><strong>ENOTSUP</strong>: The handle is not a CRLF protocol handle.<br /></li>
 <li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> rc = tcp_close(s, -<span class="dv">1</span>);</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> u = crlf_detach(s);</code></pre>
 </body>

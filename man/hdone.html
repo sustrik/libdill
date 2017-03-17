@@ -19,9 +19,10 @@
 <p>hdone - announce end of input to a handle</p>
 <h1 id="synopsis">SYNOPSIS</h1>
 <p><strong>#include</strong> <strong>&lt;libdill.h&gt;</strong></p>
-<p><strong>int hdone(int</strong> <em>h</em><strong>);</strong></p>
+<p><strong>int hdone(int</strong> <em>h</em><strong>, int64_t</strong> <em>deadline</em><strong>);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
 <p>This function is used to inform the handle that there will be no more input. This gives it time to finish it's work and possibly inform the user when it is safe to close the handle.</p>
+<p><em>deadline</em> is a point in time when the operation should time out. Use the <strong>now()</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
 <p>After <strong>hdone</strong> is called on a handle, any attempts to send more data to the handle will result in <strong>EPIPE</strong> error.</p>
 <p>Handle implementation may also decide to prevent any further receiving of data and return <strong>EPIPE</strong> error instead.</p>
 <h1 id="return-value">RETURN VALUE</h1>
@@ -30,7 +31,8 @@
 <ul>
 <li><strong>EBADF</strong>: Not a valid handle.<br /></li>
 <li><strong>ENOTSUP</strong>: Operation not supported.<br /></li>
-<li><strong>EPIPE</strong>: Pipe broken. Possibly, <strong>hdone</strong> has already been called for this channel.</li>
+<li><strong>EPIPE</strong>: Pipe broken. Possibly, <strong>hdone</strong> has already been called for this channel.<br /></li>
+<li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> rc = hdone(h);</code></pre>
