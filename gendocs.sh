@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# Clean up the old man pages
-git rm man/*.html
+echo ">>> Cleaning up old man pages."
+git rm -f man/*.html
 mkdir -p man
 
-# Get the man page source files from the libdill repo.
+echo ">>> Getting the man page source files from the libdill repo."
 git clone git@github.com:sustrik/libdill.git libdill-tmp
 cd libdill-tmp
 git checkout $1 --quiet
@@ -12,7 +12,7 @@ cd ..
 cp libdill-tmp/man/*.md man
 rm -rf libdill-tmp
 
-# Build manpages
+echo ">>> Building manpages."
 echo "" > manpage-index.md
 for f in man/*.md
 do
@@ -28,12 +28,11 @@ do
     echo "* [$name](http://libdill.org/man/$name.html)" >> manpage-index.md
 done
 
-# Build documenentation.md
+echo ">>> Building documenentation.md"
 cat templates/documentation-header.md manpage-index.md templates/documentation-footer.md > documentation.md
 rm manpage-index.md
 
-# Build other documentation
-git rm *.html
+git rm -f *.html
 other="\
     build_options \
     compatibility \
@@ -43,9 +42,12 @@ other="\
     libdill-history \
     structured-concurrency \
     threads \
-    tutorial"
+    tutorial \
+    tutorial-basics \
+    tutorial-protocol"
 for f in $other
 do
+    echo ">>> Building $f.md"
     pandoc -f markdown_github $f.md > $f.tmp
     cat templates/header.html $f.tmp templates/footer.html > $f.html
     rm $f.tmp
