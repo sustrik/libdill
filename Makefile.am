@@ -132,7 +132,7 @@ LDADD = libdill.la
 TESTS = $(check_PROGRAMS)
 
 ################################################################################
-#  tutorial                                                                    #
+#  tutorials                                                                   #
 ################################################################################
 
 noinst_PROGRAMS = \
@@ -141,6 +141,12 @@ noinst_PROGRAMS = \
     tutorial/basics/step3 \
     tutorial/basics/step4 \
     tutorial/basics/step5
+
+noinst_PROGRAMS += \
+    tutorial/protocol/step1 \
+    tutorial/protocol/step2 \
+    tutorial/protocol/step3 \
+    tutorial/protocol/step4
 
 ################################################################################
 #  performance tests                                                           #

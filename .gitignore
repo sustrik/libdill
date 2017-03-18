@@ -69,4 +69,11 @@ tutorial/basics/step2
 tutorial/basics/step3
 tutorial/basics/step4
 tutorial/basics/step5
+tutorial/basics/*.o
 tutorial/basics/.dirstamp
+tutorial/protocol/step1
+tutorial/protocol/step2
+tutorial/protocol/step3
+tutorial/protocol/step4
+tutorial/protocol/*.o
+tutorial/protocol/.dirstamp
