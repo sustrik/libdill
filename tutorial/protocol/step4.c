@@ -25,8 +25,12 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "../../libdillimpl.h"
+
+#define cont(ptr, type, member) \
+    ((type*)(((char*) ptr) - offsetof(type, member)))
 
 static const int quux_type_placeholder = 0;
 static const void *quux_type = &quux_type_placeholder;
@@ -93,14 +97,41 @@ static int quux_hdone(struct hvfs *hvfs, int64_t deadline) {
 
 static int quux_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    errno = ENOTSUP;
-    return -1;
+    struct quux *self = cont(mvfs, struct quux, mvfs);
+    size_t sz = 0;
+    struct iolist *it;
+    for(it = first; it; it = it->iol_next)
+        sz += it->iol_len;
+    if(sz > 0xff) {errno = EMSGSIZE; return -1;}
+    uint8_t c = (uint8_t)sz;
+    int rc = bsend(self->u, &c, 1, deadline);
+    if(rc < 0) return -1;
+    rc = bsendl(self->u, first, last, deadline);
+    if(rc < 0) return -1;
+    return 0;
 }
 
 static ssize_t quux_mrecvl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    errno = ENOTSUP;
-    return -1;
+    struct quux *self = cont(mvfs, struct quux, mvfs);
+    uint8_t c;
+    int rc = brecv(self->u, &c, 1, deadline);
+    if(rc < 0) return -1;
+    size_t rmn = c;
+    struct iolist *it = first;
+    while(1) {
+        if(it->iol_len >= rmn) break;
+        rmn -= it->iol_len;
+        it = it->iol_next;
+        if(!it) {errno = EMSGSIZE; return -1;}
+    }
+    struct iolist orig = *it;
+    it->iol_len = rmn;
+    it->iol_next = NULL;
+    rc = brecvl(self->u, first, last, deadline);
+    *it = orig;
+    if(rc < 0) return -1;
+    return c;
 }
 
 int main(void) {
@@ -111,7 +142,12 @@ int main(void) {
     assert(q1 >= 0);
     int q2 = quux_attach(ss[1]);
     assert(q2 >= 0);
-    /* Do something useful here! */
+    rc = msend(q1, "Hello, world!", 14, -1);
+    assert(rc == 0);
+    char buf[256];
+    ssize_t sz = mrecv(q2, buf, sizeof(buf), -1);
+    assert(sz >= 0);
+    printf("%s\n", buf);
     int s = quux_detach(q2);
     assert(s >= 0);
     rc = hclose(s);
