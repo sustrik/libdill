@@ -64,9 +64,9 @@ tests/*.gcno
 tests/*.gcda
 dns/*.gcno
 dns/*.gcda
-tutorial/step1
-tutorial/step2
-tutorial/step3
-tutorial/step4
-tutorial/step5
-tutorial/.dirstamp
+tutorial/basics/step1
+tutorial/basics/step2
+tutorial/basics/step3
+tutorial/basics/step4
+tutorial/basics/step5
+tutorial/basics/.dirstamp

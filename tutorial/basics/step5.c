@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "../libdill.h"
+#include "../../libdill.h"
 
 #define CONN_ESTABLISHED 1
 #define CONN_SUCCEEDED 2

@@ -28,7 +28,23 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "../libdill.h"
+#include "../../libdill.h"
+
+coroutine void dialogue(int s) {
+    int rc = msend(s, "What's your name?", 17, -1);
+    if(rc != 0) goto cleanup;
+    char inbuf[256];
+    ssize_t sz = mrecv(s, inbuf, sizeof(inbuf), -1);
+    if(sz < 0) goto cleanup;
+    inbuf[sz] = 0;
+    char outbuf[256];
+    rc = snprintf(outbuf, sizeof(outbuf), "Hello, %s!", inbuf);
+    rc = msend(s, outbuf, rc, -1);
+    if(rc != 0) goto cleanup;
+cleanup:
+    rc = hclose(s);
+    assert(rc == 0);
+}
 
 int main(int argc, char *argv[]) {
 
@@ -50,19 +66,8 @@ int main(int argc, char *argv[]) {
         assert(s >= 0);
         s = crlf_attach(s);
         assert(s >= 0);
-        rc = msend(s, "What's your name?", 17, -1);
-        if(rc != 0) goto cleanup;
-        char inbuf[256];
-        ssize_t sz = mrecv(s, inbuf, sizeof(inbuf), -1);
-        if(sz < 0) goto cleanup;
-        inbuf[sz] = 0;
-        char outbuf[256];
-        rc = snprintf(outbuf, sizeof(outbuf), "Hello, %s!", inbuf);
-        rc = msend(s, outbuf, rc, -1);
-        if(rc != 0) goto cleanup;
-cleanup:
-        rc = hclose(s);
-        assert(rc == 0);
+        int cr = go(dialogue(s));
+        assert(cr >= 0);
     }
 }
 

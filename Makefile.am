@@ -136,11 +136,11 @@ TESTS = $(check_PROGRAMS)
 ################################################################################
 
 noinst_PROGRAMS = \
-    tutorial/step1 \
-    tutorial/step2 \
-    tutorial/step3 \
-    tutorial/step4 \
-    tutorial/step5
+    tutorial/basics/step1 \
+    tutorial/basics/step2 \
+    tutorial/basics/step3 \
+    tutorial/basics/step4 \
+    tutorial/basics/step5
 
 ################################################################################
 #  performance tests                                                           #

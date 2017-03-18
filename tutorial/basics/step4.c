@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "../libdill.h"
+#include "../../libdill.h"
 
 coroutine void dialogue(int s) {
     int64_t deadline = now() + 10000;
