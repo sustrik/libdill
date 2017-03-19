@@ -242,37 +242,37 @@ rc = brecvl(self-&gt;u, first, last, deadline);
 <p>When building on top of a bytestream protocol, which in unrecoverable by definition, you thus have to track failures and once error happens return an error for any subsequent attampts to receive a message. Same reasoning and same solution applies to outbound messages.</p>
 <p>(Note that this does not apply when you are building on top of a message socket. Message sockets may be recoverable. Just think of UDP. Thus, in that case you should just forward and send and received requests to the underlying socket and let it take care of error handling for you.)</p>
 <p>Anyway, to implement error handling in quux protocol, let's add to booleans to the socket to track whether sending/receiving had failed already:</p>
-<pre><code>struct quux {
-    struct hvfs hvfs;
-    struct msock_vfs mvfs;
-    int u;
-    int senderr;
-    int recverr;
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> quux {
+    <span class="kw">struct</span> hvfs hvfs;
+    <span class="kw">struct</span> msock_vfs mvfs;
+    <span class="dt">int</span> u;
+    <span class="dt">int</span> senderr;
+    <span class="dt">int</span> recverr;
 };</code></pre>
 <p>Initialize them to false in <code>quux_attach()</code> function:</p>
-<pre><code>self-&gt;senderr = 0;
-self-&gt;recverr = 0;</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c">self-&gt;senderr = <span class="dv">0</span>;
+self-&gt;recverr = <span class="dv">0</span>;</code></pre>
 <p>Set <code>senderr</code> to true every time when sending fails and <code>recverr</code> to true every time when receiving fails. For example:</p>
-<pre><code>if(sz &gt; 253) {self-&gt;senderr = 1; errno = EMSGSIZE; return -1;}</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">if</span>(sz &gt; <span class="dv">253</span>) {self-&gt;senderr = <span class="dv">1</span>; errno = EMSGSIZE; <span class="kw">return</span> -<span class="dv">1</span>;}</code></pre>
 <p>Finally, fail send and receive function if the error flag is set:</p>
-<pre><code>static int quux_msendl(struct msock_vfs *mvfs,
-      struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct quux *self = cont(mvfs, struct quux, mvfs);
-    if(self-&gt;senderr) {errno = ECONNRESET; return -1;}
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">int</span> quux_msendl(<span class="kw">struct</span> msock_vfs *mvfs,
+      <span class="kw">struct</span> iolist *first, <span class="kw">struct</span> iolist *last, <span class="dt">int64_t</span> deadline) {
+    <span class="kw">struct</span> quux *self = cont(mvfs, <span class="kw">struct</span> quux, mvfs);
+    <span class="kw">if</span>(self-&gt;senderr) {errno = ECONNRESET; <span class="kw">return</span> -<span class="dv">1</span>;}
     ...
 }</code></pre>
 <h2 id="step-6-initial-handshake">Step 6: Initial handshake</h2>
 <p>Let's say we want to support mutliple versions on quux protocol. When a quux connection is established peers will exchange their version numbers and if they don't match, they will fail.</p>
 <p>In fact, we don't even need proper handshake for that. Each peer can simply send its version number and wait for version number from the other party. We'll do this work in <code>quux_attach()</code> function. And given that sending and receiving are blocking operations <code>quux_attach()</code> will become a blocking operation itself:</p>
-<pre><code>int quux_attach(int u, int64_t deadline) {
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_attach(<span class="dt">int</span> u, <span class="dt">int64_t</span> deadline) {
     ...
-    const int8_t local_version = 1;
-    int rc = bsend(u, &amp;local_version, 1, deadline);
-    if(rc &amp;lt; 0) {err = errno; goto error2;}
-    uint8_t remote_version;
-    rc = brecv(u, &amp;remote_version, 1, deadline);
-    if(rc &amp;lt; 0) {err = errno; goto error2;}
-    if(remote_version != local_version) {err = EPROTO; goto error2;}
+    <span class="dt">const</span> <span class="dt">int8_t</span> local_version = <span class="dv">1</span>;
+    <span class="dt">int</span> rc = bsend(u, &amp;local_version, <span class="dv">1</span>, deadline);
+    <span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) {err = errno; <span class="kw">goto</span> error2;}
+    <span class="dt">uint8_t</span> remote_version;
+    rc = brecv(u, &amp;remote_version, <span class="dv">1</span>, deadline);
+    <span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) {err = errno; <span class="kw">goto</span> error2;}
+    <span class="kw">if</span>(remote_version != local_version) {err = EPROTO; <span class="kw">goto</span> error2;}
     ...
 }</code></pre>
 <p>Note that failure of initial handshake not only prevent initialization of quux sockets, it also closes the underlying sockets. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.</p>

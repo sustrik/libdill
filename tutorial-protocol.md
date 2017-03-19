@@ -355,7 +355,7 @@ When building on top of a bytestream protocol, which in unrecoverable by definit
 
 Anyway, to implement error handling in quux protocol, let's add to booleans to the socket to track whether sending/receiving had failed already:
 
-```
+```c
 struct quux {
     struct hvfs hvfs;
     struct msock_vfs mvfs;
@@ -367,20 +367,20 @@ struct quux {
 
 Initialize them to false in `quux_attach()` function:
 
-```
+```c
 self->senderr = 0;
 self->recverr = 0;
 ```
 
 Set `senderr` to true every time when sending fails and `recverr` to true every time when receiving fails. For example:
 
-```
+```c
 if(sz > 253) {self->senderr = 1; errno = EMSGSIZE; return -1;}
 ```
 
 Finally, fail send and receive function if the error flag is set:
 
-```
+```c
 static int quux_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct quux *self = cont(mvfs, struct quux, mvfs);
@@ -395,7 +395,7 @@ Let's say we want to support mutliple versions on quux protocol. When a quux con
 
 In fact, we don't even need proper handshake for that. Each peer can simply send its version number and wait for version number from the other party. We'll do this work in `quux_attach()` function. And given that sending and receiving are blocking operations `quux_attach()` will become a blocking operation itself:
 
-```
+```c
 int quux_attach(int u, int64_t deadline) {
     ...
     const int8_t local_version = 1;
