@@ -298,6 +298,16 @@ int rc = brecv(self->u, &c, 1, deadline);
 if(rc &lt; 0) return -1;
 ```
 
+User may pass in **NULL** instead of the buffer which means we should silently drop the message:
+
+```c
+if(!first) {
+    rc = brecv(self->u, NULL, c, deadline);
+    if(rc &lt; 0) return -1;
+    return c;
+}
+```
+
 The size of the message may not match size of the buffer supplied by the user. If message is larger than the buffer we will simply return an error. However, if message is smaller than the buffer we have to shrink the buffer to the appropriate size. We can do so by modifying the iolist. Note that iolist is not supposed be thread- or coroutine-safe and thus we can modify it as long as we revert it to its original state before returning from the function. Once the iolist is modified we can read the message payload from the underlying socket:
 
 ```c
@@ -391,7 +401,7 @@ static int quux_msendl(struct msock_vfs *mvfs,
 
 ## Step 6: Initial handshake
 
-Let's say we want to support mutliple versions on quux protocol. When a quux connection is established peers will exchange their version numbers and if they don't match, they will fail.
+Let's say we want to support mutliple versions of quux protocol. When a quux connection is established peers will exchange their version numbers and if they don't match, they will fail.
 
 In fact, we don't even need proper handshake for that. Each peer can simply send its version number and wait for version number from the other party. We'll do this work in `quux_attach()` function. And given that sending and receiving are blocking operations `quux_attach()` will become a blocking operation itself:
 
@@ -411,5 +421,16 @@ int quux_attach(int u, int64_t deadline) {
 
 Note that failure of initial handshake not only prevent initialization of quux sockets, it also closes the underlying sockets. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.
 
-Of course, we'll have to modify the test program to pass dealines to `quux_attach()` function invocations.
+Of course, we'll have to modify the test program to pass deadlines to `quux_attach()` function invocations.
+
+## Step 7: Terminal handshake
+
+Imagine that user wants to close the quux protocol and start a new protocol, say HTTP, on top of the same underlying connection. For that to work both peers would have to make sure that they've received all quux-related data before proceeding. If they did not the leftover quux data would confuse the HTTP protocol implementation.
+
+To achieve that peers will send a single termination byte (255) each to another to mark end of the stream of quux messages. After doing so they will read any receive and drop quux messages from the peer until they receive the 255 byte. At that point all the quux data is cleaned up and HTTP protocol can be safely initiated.
+
+
+
+
+
 

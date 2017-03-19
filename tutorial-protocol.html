@@ -204,6 +204,12 @@ rc = bsendl(self-&gt;u, first, last, deadline);
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">uint8_t</span> c;
 <span class="dt">int</span> rc = brecv(self-&gt;u, &amp;c, <span class="dv">1</span>, deadline);
 <span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;</code></pre>
+<p>User may pass in <strong>NULL</strong> instead of the buffer which means we should silently drop the message:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">if</span>(!first) {
+    rc = brecv(self-&gt;u, NULL, c, deadline);
+    <span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;
+    <span class="kw">return</span> c;
+}</code></pre>
 <p>The size of the message may not match size of the buffer supplied by the user. If message is larger than the buffer we will simply return an error. However, if message is smaller than the buffer we have to shrink the buffer to the appropriate size. We can do so by modifying the iolist. Note that iolist is not supposed be thread- or coroutine-safe and thus we can modify it as long as we revert it to its original state before returning from the function. Once the iolist is modified we can read the message payload from the underlying socket:</p>
 <pre class="sourceCode c"><code class="sourceCode c">size_t rmn = c;
 <span class="kw">struct</span> iolist *it = first;
@@ -262,7 +268,7 @@ self-&gt;recverr = <span class="dv">0</span>;</code></pre>
     ...
 }</code></pre>
 <h2 id="step-6-initial-handshake">Step 6: Initial handshake</h2>
-<p>Let's say we want to support mutliple versions on quux protocol. When a quux connection is established peers will exchange their version numbers and if they don't match, they will fail.</p>
+<p>Let's say we want to support mutliple versions of quux protocol. When a quux connection is established peers will exchange their version numbers and if they don't match, they will fail.</p>
 <p>In fact, we don't even need proper handshake for that. Each peer can simply send its version number and wait for version number from the other party. We'll do this work in <code>quux_attach()</code> function. And given that sending and receiving are blocking operations <code>quux_attach()</code> will become a blocking operation itself:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_attach(<span class="dt">int</span> u, <span class="dt">int64_t</span> deadline) {
     ...
@@ -276,5 +282,8 @@ self-&gt;recverr = <span class="dv">0</span>;</code></pre>
     ...
 }</code></pre>
 <p>Note that failure of initial handshake not only prevent initialization of quux sockets, it also closes the underlying sockets. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.</p>
-<p>Of course, we'll have to modify the test program to pass dealines to <code>quux_attach()</code> function invocations.</p>
+<p>Of course, we'll have to modify the test program to pass deadlines to <code>quux_attach()</code> function invocations.</p>
+<h2 id="step-7-terminal-handshake">Step 7: Terminal handshake</h2>
+<p>Imagine that user wants to close the quux protocol and start a new protocol, say HTTP, on top of the same underlying connection. For that to work both peers would have to make sure that they've received all quux-related data before proceeding. If they did not the leftover quux data would confuse the HTTP protocol implementation.</p>
+<p>To achieve that peers will send a single termination byte (255) each to another to mark end of the stream of quux messages. After doing so they will read any receive and drop quux messages from the peer until they receive the 255 byte. At that point all the quux data is cleaned up and HTTP protocol can be safely initiated.</p>
 </body>
