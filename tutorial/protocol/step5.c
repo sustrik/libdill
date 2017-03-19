@@ -39,6 +39,8 @@ struct quux {
     struct hvfs hvfs;
     struct msock_vfs mvfs;
     int u;
+    int senderr;
+    int recverr;
 };
 
 static void *quux_hquery(struct hvfs *hvfs, const void *type);
@@ -59,6 +61,8 @@ int quux_attach(int u) {
     self->mvfs.msendl = quux_msendl;
     self->mvfs.mrecvl = quux_mrecvl;
     self->u = u;
+    self->senderr = 0;
+    self->recverr = 0;
     int h = hmake(&self->hvfs);
     if(h < 0) {int err = errno; goto error2;}
     return h;
@@ -98,39 +102,41 @@ static int quux_hdone(struct hvfs *hvfs, int64_t deadline) {
 static int quux_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct quux *self = cont(mvfs, struct quux, mvfs);
+    if(self->senderr) {errno = ECONNRESET; return -1;}
     size_t sz = 0;
     struct iolist *it;
     for(it = first; it; it = it->iol_next)
         sz += it->iol_len;
-    if(sz > 253) {errno = EMSGSIZE; return -1;}
+    if(sz > 253) {self->senderr = 1; errno = EMSGSIZE; return -1;}
     uint8_t c = (uint8_t)sz;
     int rc = bsend(self->u, &c, 1, deadline);
-    if(rc < 0) return -1;
+    if(rc < 0) {self->senderr = 1; return -1;}
     rc = bsendl(self->u, first, last, deadline);
-    if(rc < 0) return -1;
+    if(rc < 0) {self->senderr = 1; return -1;}
     return 0;
 }
 
 static ssize_t quux_mrecvl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct quux *self = cont(mvfs, struct quux, mvfs);
+    if(self->recverr) {errno = ECONNRESET; return -1;}
     uint8_t c;
     int rc = brecv(self->u, &c, 1, deadline);
-    if(rc < 0) return -1;
+    if(rc < 0) {self->recverr = 1; return -1;}
     size_t rmn = c;
     struct iolist *it = first;
     while(1) {
         if(it->iol_len >= rmn) break;
         rmn -= it->iol_len;
         it = it->iol_next;
-        if(!it) {errno = EMSGSIZE; return -1;}
+        if(!it) {self->recverr = 1; errno = EMSGSIZE; return -1;}
     }
     struct iolist orig = *it;
     it->iol_len = rmn;
     it->iol_next = NULL;
     rc = brecvl(self->u, first, last, deadline);
     *it = orig;
-    if(rc < 0) return -1;
+    if(rc < 0) {self->recverr = 1; return -1;}
     return c;
 }
 
