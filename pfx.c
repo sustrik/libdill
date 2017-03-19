@@ -42,7 +42,7 @@ static ssize_t pfx_mrecvl(struct msock_vfs *mvfs,
 struct pfx_sock {
     struct hvfs hvfs;
     struct msock_vfs mvfs;
-    int s;
+    int u;
     unsigned int indone : 1;
     unsigned int outdone: 1;
     unsigned int inerr : 1;
@@ -59,8 +59,13 @@ static void *pfx_hquery(struct hvfs *hvfs, const void *type) {
 
 int pfx_attach(int s) {
     int err;
+    /* Make a private copy of the underlying socket. */
+    int u = hdup(s);
+    if(dill_slow(u < 0)) return -1;
+    int rc = hclose(s);
+    dill_assert(rc == 0);
     /* Check whether underlying socket is a bytestream. */
-    void *q = hquery(s, bsock_type);
+    void *q = hquery(u, bsock_type);
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
     if(dill_slow(!q)) {err = errno; goto error1;}
     /* Create the object. */
@@ -71,7 +76,7 @@ int pfx_attach(int s) {
     obj->hvfs.done = pfx_hdone;
     obj->mvfs.msendl = pfx_msendl;
     obj->mvfs.mrecvl = pfx_mrecvl;
-    obj->s = -1;
+    obj->u = u;
     obj->indone = 0;
     obj->outdone = 0;
     obj->inerr = 0;
@@ -79,18 +84,12 @@ int pfx_attach(int s) {
     /* Create the handle. */
     int h = hmake(&obj->hvfs);
     if(dill_slow(h < 0)) {int err = errno; goto error2;}
-    /* Make a private copy of the underlying socket. */
-    obj->s = hdup(s);
-    if(dill_slow(obj->s < 0)) {err = errno; goto error3;}
-    int rc = hclose(s);
-    dill_assert(rc == 0);
     return h;
-error3:
-    rc = hclose(h);
-    dill_assert(rc == 0);
 error2:
     free(obj);
 error1:
+    rc = hclose(u);
+    dill_assert(rc == 0);
     errno = err;
     return -1;
 }
@@ -99,9 +98,8 @@ static int pfx_hdone(struct hvfs *hvfs, int64_t deadline) {
     struct pfx_sock *obj = (struct pfx_sock*)hvfs;
     if(dill_slow(obj->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(obj->outerr)) {errno = ECONNRESET; return -1;}
-    /* Send termination message. TODO: This should be done asynchronously. */
     uint64_t sz = 0xffffffffffffffff;
-    int rc = bsend(obj->s, &sz, 8, deadline);
+    int rc = bsend(obj->u, &sz, 8, deadline);
     if(dill_slow(rc < 0)) {obj->outerr = 1; return -1;}
     obj->outdone = 1;
     return 0;
@@ -123,7 +121,7 @@ int pfx_detach(int s, int64_t deadline) {
         if(sz < 0 && errno == EPIPE) break;
         if(dill_slow(sz < 0)) {err = errno; goto error;}
     }
-    int u = obj->s;
+    int u = obj->u;
     free(obj);
     return u;
 error:
@@ -144,7 +142,7 @@ static int pfx_msendl(struct msock_vfs *mvfs,
         sz += it->iol_len;
     dill_putll(szbuf, (uint64_t)sz);
     struct iolist hdr = {szbuf, 8, first, 0};
-    int rc = bsendl(obj->s, &hdr, last, deadline);
+    int rc = bsendl(obj->u, &hdr, last, deadline);
     if(dill_slow(rc < 0)) {obj->outerr = 1; return -1;}
     return 0;
 }
@@ -155,7 +153,7 @@ static ssize_t pfx_mrecvl(struct msock_vfs *mvfs,
     if(dill_slow(obj->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(obj->inerr)) {errno = ECONNRESET; return -1;}
     uint8_t szbuf[8];
-    int rc = brecv(obj->s, szbuf, 8, deadline);
+    int rc = brecv(obj->u, szbuf, 8, deadline);
     if(dill_slow(rc < 0)) {obj->inerr = 1; return -1;}
     uint64_t sz = dill_getll(szbuf);
     /* Peer is terminating. */
@@ -174,7 +172,7 @@ static ssize_t pfx_mrecvl(struct msock_vfs *mvfs,
     struct iolist *old_next = it->iol_next;
     it->iol_len = rmn;
     it->iol_next = NULL;
-    rc = brecvl(obj->s, first, last, deadline);
+    rc = brecvl(obj->u, first, last, deadline);
     /* Get iolist to its original state. */
     it->iol_len = old_len;
     it->iol_next = old_next;
@@ -184,8 +182,8 @@ static ssize_t pfx_mrecvl(struct msock_vfs *mvfs,
 
 static void pfx_hclose(struct hvfs *hvfs) {
     struct pfx_sock *obj = (struct pfx_sock*)hvfs;
-    if(dill_fast(obj->s >= 0)) {
-        int rc = hclose(obj->s);
+    if(dill_fast(obj->u >= 0)) {
+        int rc = hclose(obj->u);
         dill_assert(rc == 0);
     }
     free(obj);

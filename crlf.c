@@ -62,6 +62,11 @@ static void *crlf_hquery(struct hvfs *hvfs, const void *type) {
 
 int crlf_attach(int s) {
     int err;
+    /* Make a private copy of the underlying socket. */
+    int u = hdup(s);
+    if(dill_slow(u < 0)) return -1;
+    int rc = hclose(s);
+    dill_assert(rc == 0);
     /* Create the object. */
     struct crlf_sock *obj = malloc(sizeof(struct crlf_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
@@ -70,8 +75,8 @@ int crlf_attach(int s) {
     obj->hvfs.done = crlf_hdone;
     obj->mvfs.msendl = crlf_msendl;
     obj->mvfs.mrecvl = crlf_mrecvl;
-    obj->u = -1;
-    obj->uvfs = hquery(s, bsock_type);
+    obj->u = u;
+    obj->uvfs = hquery(u, bsock_type);
     if(dill_slow(!obj->uvfs && errno == ENOTSUP)) {err = EPROTO; goto error2;}
     if(dill_slow(!obj->uvfs)) {err = errno; goto error2;}
     obj->indone = 0;
@@ -81,18 +86,12 @@ int crlf_attach(int s) {
     /* Create the handle. */
     int h = hmake(&obj->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
-    /* Make a private copy of the underlying socket. */
-    obj->u = hdup(s);
-    if(dill_slow(obj->u < 0)) {err = errno; goto error3;}
-    int rc = hclose(s);
-    dill_assert(rc == 0);
     return h;
-error3:
-    rc = hclose(h);
-    dill_assert(rc == 0);
 error2:
     free(obj);
 error1:
+    rc = hclose(u);
+    dill_assert(rc == 0);
     errno = err;
     return -1;
 }

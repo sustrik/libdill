@@ -147,7 +147,8 @@ noinst_PROGRAMS += \
     tutorial/protocol/step2 \
     tutorial/protocol/step3 \
     tutorial/protocol/step4 \
-    tutorial/protocol/step5
+    tutorial/protocol/step5 \
+    tutorial/protocol/step6
 
 ################################################################################
 #  performance tests                                                           #

@@ -24,7 +24,9 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "../../libdillimpl.h"
 
@@ -83,20 +85,25 @@ static int quux_hdone(struct hvfs *hvfs, int64_t deadline) {
     return -1;
 }
 
+coroutine void client(int s) {
+    int q = quux_attach(s);
+    assert(q >= 0);
+    /* Do something useful here! */
+    s = quux_detach(q);
+    assert(s >= 0);
+    int rc = hclose(s);
+    assert(rc == 0);
+}
+
 int main(void) {
     int ss[2];
     int rc = ipc_pair(ss);
     assert(rc == 0);
-    int q1 = quux_attach(ss[0]);
-    assert(q1 >= 0);
-    int q2 = quux_attach(ss[1]);
-    assert(q2 >= 0);
+    go(client(ss[0]));
+    int q = quux_attach(ss[1]);
+    assert(q >= 0);
     /* Do something useful here! */
-    int s = quux_detach(q2);
-    assert(s >= 0);
-    rc = hclose(s);
-    assert(rc == 0);
-    s = quux_detach(q1);
+    int s = quux_detach(q);
     assert(s >= 0);
     rc = hclose(s);
     assert(rc == 0);
