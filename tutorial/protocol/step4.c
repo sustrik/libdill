@@ -118,6 +118,11 @@ static ssize_t quux_mrecvl(struct msock_vfs *mvfs,
     uint8_t c;
     int rc = brecv(self->u, &c, 1, deadline);
     if(rc < 0) return -1;
+    if(!first) {
+        rc = brecv(self->u, NULL, c, deadline);
+        if(rc < 0) return -1;
+        return c;
+    }
     size_t rmn = c;
     struct iolist *it = first;
     while(1) {
