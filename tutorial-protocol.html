@@ -284,6 +284,71 @@ self-&gt;recverr = <span class="dv">0</span>;</code></pre>
 <p>Note that failure of initial handshake not only prevent initialization of quux sockets, it also closes the underlying sockets. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.</p>
 <p>Of course, we'll have to modify the test program to pass deadlines to <code>quux_attach()</code> function invocations.</p>
 <h2 id="step-7-terminal-handshake">Step 7: Terminal handshake</h2>
-<p>Imagine that user wants to close the quux protocol and start a new protocol, say HTTP, on top of the same underlying connection. For that to work both peers would have to make sure that they've received all quux-related data before proceeding. If they did not the leftover quux data would confuse the HTTP protocol implementation.</p>
-<p>To achieve that peers will send a single termination byte (255) each to another to mark end of the stream of quux messages. After doing so they will read any receive and drop quux messages from the peer until they receive the 255 byte. At that point all the quux data is cleaned up and HTTP protocol can be safely initiated.</p>
+<p>Imagine that user wants to close the quux protocol and start a new protocol, say HTTP, on top of the same underlying connection. For that to work both peers would have to make sure that they've received all quux-related data before proceeding. If they did not the leftover quux data would confuse the subsequent HTTP protocol.</p>
+<p>To achieve that peers will send a single termination byte (255) each to another to mark end of the stream of quux messages. After doing so they will read any receive and drop quux messages from the peer until they receive the 255 byte. At that point all the quux data are cleaned up, both peers have consistent view of the world and HTTP protocol can be safely initiated.</p>
+<p>Let's add to flags to the quux socket object, one meaning &quot;termination byte was already sent&quot;, the other &quot;termination byte was already received&quot;:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> quux {
+    ...
+    <span class="dt">int</span> senddone;
+    <span class="dt">int</span> recvdone;
+};</code></pre>
+<p>The flags have to be initialized in the <code>quux_attach()</code> function:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_attach(<span class="dt">int</span> u, <span class="dt">int64_t</span> deadline) {
+    ...
+    self-&gt;senddone = <span class="dv">0</span>;
+    self-&gt;recvdone = <span class="dv">0</span>;
+    ...
+}</code></pre>
+<p>If termination byte was already sent send function should return <code>EPIPE</code> error:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">int</span> quux_msendl(<span class="kw">struct</span> msock_vfs *mvfs,
+      <span class="kw">struct</span> iolist *first, <span class="kw">struct</span> iolist *last, <span class="dt">int64_t</span> deadline) {
+    ...
+    <span class="kw">if</span>(self-&gt;senddone) {errno = EPIPE; <span class="kw">return</span> -<span class="dv">1</span>;}
+    ...
+
+}</code></pre>
+<p>If termination byte was already received receive function should return <code>EPIPE</code> error. Also, we should handle the case when termination byte is originally received from the peer:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> ssize_t quux_mrecvl(<span class="kw">struct</span> msock_vfs *mvfs,
+      <span class="kw">struct</span> iolist *first, <span class="kw">struct</span> iolist *last, <span class="dt">int64_t</span> deadline) {
+    ...
+    <span class="kw">if</span>(self-&gt;recvdone) {errno = EPIPE; <span class="kw">return</span> -<span class="dv">1</span>;}
+    ...
+    <span class="kw">if</span>(c == <span class="dv">255</span>) {self-&gt;recvdone = <span class="dv">1</span>; errno = EPIPE; <span class="kw">return</span> -<span class="dv">1</span>;}
+    ...
+}</code></pre>
+<p>Virtual function <code>hdone()</code> that we've so far left unimplemented is supposed to start the terminal handshake. However, it is not supposed to wait till it is finished. The semantics of <code>hdone()</code> &quot;user is not going to send more data&quot;. You can think of it as an EOF marker of kind.</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">int</span> quux_hdone(<span class="kw">struct</span> hvfs *hvfs, <span class="dt">int64_t</span> deadline) {
+    <span class="kw">struct</span> quux *self = (<span class="kw">struct</span> quux*)hvfs;
+    <span class="kw">if</span>(self-&gt;senddone) {errno = EPIPE; <span class="kw">return</span> -<span class="dv">1</span>;}
+    <span class="kw">if</span>(self-&gt;senderr) {errno = ECONNRESET; <span class="kw">return</span> -<span class="dv">1</span>;}
+    <span class="dt">uint8_t</span> c = <span class="dv">255</span>;
+    <span class="dt">int</span> rc = bsend(self-&gt;u, &amp;c, <span class="dv">1</span>, deadline);
+    <span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) {self-&gt;senderr = <span class="dv">1</span>; <span class="kw">return</span> -<span class="dv">1</span>;}
+    self-&gt;senddone = <span class="dv">1</span>;
+    <span class="kw">return</span> <span class="dv">0</span>;
+}</code></pre>
+<p>At this point we can modify <code>quux_detach()</code> function so that it properly cleans up any leftover protocol data.</p>
+<p>First, it will send the termination byte if it was not already sent. Then it will receive and drop messages until it receives the termination byte:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_detach(<span class="dt">int</span> h, <span class="dt">int64_t</span> deadline) {
+    <span class="dt">int</span> err;
+    <span class="kw">struct</span> quux *self = hquery(h, quux_type);
+    <span class="kw">if</span>(!self) <span class="kw">return</span> -<span class="dv">1</span>;
+    <span class="kw">if</span>(self-&gt;senderr || self-&gt;recverr) {err = ECONNRESET; <span class="kw">goto</span> error;}
+    <span class="kw">if</span>(!self-&gt;senddone) {
+        <span class="dt">int</span> rc = quux_hdone(&amp;self-&gt;hvfs, deadline);
+        <span class="kw">if</span>(rc &lt; <span class="dv">0</span>) {err = errno; <span class="kw">goto</span> error;}
+    }
+    <span class="kw">while</span>(<span class="dv">1</span>) {
+        ssize_t sz = quux_mrecvl(&amp;self-&gt;mvfs, NULL, NULL, deadline);
+        <span class="kw">if</span>(sz &lt; <span class="dv">0</span> &amp;&amp; errno == EPIPE) <span class="kw">break</span>;
+        <span class="kw">if</span>(sz &lt; <span class="dv">0</span>) {err = errno; <span class="kw">goto</span> error;}
+    }
+    <span class="dt">int</span> u = self-&gt;u;
+    free(self);
+    <span class="kw">return</span> u;
+error:
+    quux_hclose(&amp;self-&gt;hvfs);
+    errno = err;
+    <span class="kw">return</span> -<span class="dv">1</span>;
+}</code></pre>
 </body>

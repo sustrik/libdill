@@ -425,12 +425,98 @@ Of course, we'll have to modify the test program to pass deadlines to `quux_atta
 
 ## Step 7: Terminal handshake
 
-Imagine that user wants to close the quux protocol and start a new protocol, say HTTP, on top of the same underlying connection. For that to work both peers would have to make sure that they've received all quux-related data before proceeding. If they did not the leftover quux data would confuse the HTTP protocol implementation.
+Imagine that user wants to close the quux protocol and start a new protocol, say HTTP, on top of the same underlying connection. For that to work both peers would have to make sure that they've received all quux-related data before proceeding. If they did not the leftover quux data would confuse the subsequent HTTP protocol.
 
-To achieve that peers will send a single termination byte (255) each to another to mark end of the stream of quux messages. After doing so they will read any receive and drop quux messages from the peer until they receive the 255 byte. At that point all the quux data is cleaned up and HTTP protocol can be safely initiated.
+To achieve that peers will send a single termination byte (255) each to another to mark end of the stream of quux messages. After doing so they will read any receive and drop quux messages from the peer until they receive the 255 byte. At that point all the quux data are cleaned up, both peers have consistent view of the world and HTTP protocol can be safely initiated.
+
+Let's add to flags to the quux socket object, one meaning "termination byte was already sent", the other "termination byte was already received":
 
 
+```c
+struct quux {
+    ...
+    int senddone;
+    int recvdone;
+};
+```
 
+The flags have to be initialized in the `quux_attach()` function:
 
+```c
+int quux_attach(int u, int64_t deadline) {
+    ...
+    self->senddone = 0;
+    self->recvdone = 0;
+    ...
+}
+```
 
+If termination byte was already sent send function should return `EPIPE` error:
+
+```c
+static int quux_msendl(struct msock_vfs *mvfs,
+      struct iolist *first, struct iolist *last, int64_t deadline) {
+    ...
+    if(self->senddone) {errno = EPIPE; return -1;}
+    ...
+
+}
+```
+
+If termination byte was already received receive function should return `EPIPE` error. Also, we should handle the case when termination byte is originally received from the peer:
+
+```c
+static ssize_t quux_mrecvl(struct msock_vfs *mvfs,
+      struct iolist *first, struct iolist *last, int64_t deadline) {
+    ...
+    if(self->recvdone) {errno = EPIPE; return -1;}
+    ...
+    if(c == 255) {self->recvdone = 1; errno = EPIPE; return -1;}
+    ...
+}
+```
+
+Virtual function `hdone()` that we've so far left unimplemented is supposed to start the terminal handshake. However, it is not supposed to wait till it is finished. The semantics of `hdone()` "user is not going to send more data". You can think of it as an EOF marker of kind.
+
+```c
+static int quux_hdone(struct hvfs *hvfs, int64_t deadline) {
+    struct quux *self = (struct quux*)hvfs;
+    if(self->senddone) {errno = EPIPE; return -1;}
+    if(self->senderr) {errno = ECONNRESET; return -1;}
+    uint8_t c = 255;
+    int rc = bsend(self->u, &c, 1, deadline);
+    if(rc &lt; 0) {self->senderr = 1; return -1;}
+    self->senddone = 1;
+    return 0;
+}
+```
+
+At this point we can modify `quux_detach()` function so that it properly cleans up any leftover protocol data.
+
+First, it will send the termination byte if it was not already sent. Then it will receive and drop messages until it receives the termination byte:
+
+```c
+int quux_detach(int h, int64_t deadline) {
+    int err;
+    struct quux *self = hquery(h, quux_type);
+    if(!self) return -1;
+    if(self->senderr || self->recverr) {err = ECONNRESET; goto error;}
+    if(!self->senddone) {
+        int rc = quux_hdone(&self->hvfs, deadline);
+        if(rc < 0) {err = errno; goto error;}
+    }
+    while(1) {
+        ssize_t sz = quux_mrecvl(&self->mvfs, NULL, NULL, deadline);
+        if(sz < 0 && errno == EPIPE) break;
+        if(sz < 0) {err = errno; goto error;}
+    }
+    int u = self->u;
+    free(self);
+    return u;
+error:
+    quux_hclose(&self->hvfs);
+    errno = err;
+    return -1;
+}
+```
 
