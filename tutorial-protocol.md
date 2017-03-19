@@ -262,14 +262,14 @@ struct quux *self = cont(mvfs, struct quux, mvfs);
 
 Let's say that quux protocol will prefix individual messages with 8-bit size. It means that messages can be at most 255 bytes long. But who cares? It's just a tutorial, after all.
 
-To send such message we have to compute the size of the message first. We can iterate over the `iolist` (linked list of buffers, libdill's alternative to POSIX `iovec`) and sum all the buffer sizes. If size is greater than 255, tough luck:
+To send such message we have to compute the size of the message first. We can iterate over the `iolist` (linked list of buffers, libdill's alternative to POSIX `iovec`) and sum all the buffer sizes. If size is greater than 255, tough luck. And actually, we'll use numbers 254 and 255 for special purposes later on, so limit the message size to 253 bytes:
 
 ```c
 size_t sz = 0;
 struct iolist *it;
 for(it = first; it; it = it->iol_next)
     sz += it->iol_len;
-if(sz > 0xff) {errno = EMSGSIZE; return -1;}
+if(sz > 253) {errno = EMSGSIZE; return -1;}
 ```
 
 Now we can send the size and the payload to the underlying socket:
@@ -328,3 +328,48 @@ printf("%s\n", buf);
 
 Compile and test the program!
 
+# Step 5: Error handling
+
+Consider the following scenario: User asks to receive a message. The message is 200 bytes long. However, after reading 100 bytes, receive function times out. That puts you, as the protocol implementor, into an unconfortable position. There's no way to push the 100 bytes that were already received back to the underlying socket. libdill sockets provide no API for that, but even in principle, it would mean that the underlying socket would need an unlimited buffer. Just imagine receiving a 1TB message and timing out just before its fully read...
+
+libdill solves this problem by not trying too hard to recover from errors, even from seemingly recoverable ones like ETIMEOUT.
+
+When building on top of a bytestream protocol, which in unrecoverable by definition, you thus have to track failures and once error happens return an error for any subsequent attampts to receive a message. Same reasoning and same solution applies to outbound messages.
+
+(Note that this does not apply when you are building on top of a message socket. Message sockets may be recoverable. Just think of UDP. Thus, in that case you should just forward and send and received requests to the underlying socket and let it take care of error handling for you.)
+
+Anyway, to implement error handling in quux protocol, let's add to booleans to the socket to track whether sending/receiving had failed already:
+
+```
+struct quux {
+    struct hvfs hvfs;
+    struct msock_vfs mvfs;
+    int u;
+    int senderr;
+    int recverr;
+};
+```
+
+Initialize them to false in `quux_attach()` function:
+
+```
+self->senderr = 0;
+self->recverr = 0;
+```
+
+Set `senderr` to true every time when sending fails and `recverr` to true every time when receiving fails. For example:
+
+```
+if(sz > 253) {self->senderr = 1; errno = EMSGSIZE; return -1;}
+```
+
+Finally, fail send and receive function if the error flag is set:
+
+```
+static int quux_msendl(struct msock_vfs *mvfs,
+      struct iolist *first, struct iolist *last, int64_t deadline) {
+    struct quux *self = cont(mvfs, struct quux, mvfs);
+    if(self->senderr) {errno = ECONNRESET; return -1;}
+    ...
+}
+```
