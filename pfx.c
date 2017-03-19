@@ -159,6 +159,12 @@ static ssize_t pfx_mrecvl(struct msock_vfs *mvfs,
     /* Peer is terminating. */
     if(dill_slow(sz == 0xffffffffffffffff)) {
         obj->indone = 1; errno = EPIPE; return -1;}
+    /* Skip the message. */
+    if(!first) {
+        rc = brecv(obj->u, NULL, sz, deadline);
+        if(dill_slow(rc < 0)) {obj->inerr = 1; return -1;}
+        return sz;
+    }
     /* Trim iolist to reflect the size of the message. */
     size_t rmn = sz;
     struct iolist *it = first;

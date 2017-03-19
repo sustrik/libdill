@@ -56,7 +56,9 @@ ssize_t mrecvl(int s, struct iolist *first, struct iolist *last,
       int64_t deadline) {
     struct msock_vfs *m = hquery(s, msock_type);
     if(dill_slow(!m)) return -1;
-    if(dill_slow(!first || !last || last->iol_next)) {
+    if(dill_slow((last && last->iol_next) ||
+          (!first && last) ||
+          (first && !last))) {
         errno = EINVAL; return -1;}
     return m->mrecvl(m, first, last, deadline);
 }

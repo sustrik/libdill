@@ -94,9 +94,8 @@ int main() {
     sz = mrecv(s1, buf, sizeof(buf), -1);
     errno_assert(sz >= 0);
     assert(sz == 5 && memcmp(buf, "First", 5) == 0);
-    sz = mrecv(s1, buf, sizeof(buf), -1);
+    sz = mrecvl(s1, NULL, NULL, -1);
     errno_assert(sz >= 0);
-    assert(sz == 6 && memcmp(buf, "Second", 5) == 0);
     sz = mrecv(s1, buf, sizeof(buf), -1);
     errno_assert(sz >= 0);
     assert(sz == 5 && memcmp(buf, "Third", 5) == 0);

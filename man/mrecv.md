@@ -30,14 +30,14 @@ int iol_rsvd;            /* Reserved. Must be set to zero. */
 
 **mrecvl()** returns **EINVAL** error in case the list is malformed:
 
-* If _first_ is **NULL**.
-* If _last_ is **NULL**.
 * If _last_->_iol\_next_ is not **NULL**.
 * If _first_ and _last_ don't belong to the same list.
 * If there's a loop in the list.
 * If _iol\_rsvd_ of any item is non-zero.
 
 The list can be temporarily modified while the function is in progress. However, once the function returns the list is guaranteed to be the same as before the call.
+
+If both _first_ and _last_ arguments to **mrecvl()** are set to **NULL** the message is received and silently dropped. The function will still return the size of the message.
 
 # RETURN VALUE
 
