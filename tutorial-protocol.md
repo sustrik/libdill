@@ -22,6 +22,7 @@ Let's say out new handle type will be called `quux`. Now we'll add some testing 
 ```c
 #include <assert.h>
 #include <errno.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -186,15 +187,20 @@ int quux_detach(int h) {
 Now we can modify the test program to build two quux sockets on top of two mutually connected UNIX domain (ipc) sockets:
 
 ```c
+coroutine void client(int s) {
+    quux_attach(s);
+    /* Do something useful here! */
+    s = quux_detach(q);
+    hclose(s);
+}
+
 int main(void) {
     int ss[2];
     ipc_pair(ss);
-    int q1 = quux_attach(ss[0]);
-    int q2 = quux_attach(ss[1]);
+    go(client(ss[0]));
+    int q = quux_attach(ss[1]);
     /* Do something useful here! */
-    int s = quux_detach(q2);
-    hclose(s);
-    s = quux_detach(q1);
+    int s = quux_detach(q);
     hclose(s);
     return 0;
 }
@@ -317,18 +323,27 @@ Now that we have received the message we have to return its size to the user:
 return c;
 ```
 
-And finally, we can test whether the protocol works as expected. Let's send a simple text message (string with a terminating zero) to one end of the connection and receive it at the other end:
+And finally, we can test whether the protocol works as expected. Let's send a simple text message (string with a terminating zero) to one end of the connection and receive it at the other end.
 
 ```c
-msend(q1, "Hello, world!", 14, -1);
-char buf[256];
-mrecv(q2, buf, sizeof(buf), -1);
-printf("%s\n", buf);
+coroutine void client(int s) {
+    ...
+    msend(q, "Hello, world!", 14, -1);
+    ...
+}
+
+int main(void) {
+    ...
+    char buf[256];
+    mrecv(q, buf, sizeof(buf), -1);
+    printf("%s\n", buf);
+    ...
+}
 ```
 
 Compile and test the program!
 
-# Step 5: Error handling
+## Step 5: Error handling
 
 Consider the following scenario: User asks to receive a message. The message is 200 bytes long. However, after reading 100 bytes, receive function times out. That puts you, as the protocol implementor, into an unconfortable position. There's no way to push the 100 bytes that were already received back to the underlying socket. libdill sockets provide no API for that, but even in principle, it would mean that the underlying socket would need an unlimited buffer. Just imagine receiving a 1TB message and timing out just before its fully read...
 
@@ -373,3 +388,28 @@ static int quux_msendl(struct msock_vfs *mvfs,
     ...
 }
 ```
+
+## Step 6: Initial handshake
+
+Let's say we want to support mutliple versions on quux protocol. When a quux connection is established peers will exchange their version numbers and if they don't match, they will fail.
+
+In fact, we don't even need proper handshake for that. Each peer can simply send its version number and wait for version number from the other party. We'll do this work in `quux_attach()` function. And given that sending and receiving are blocking operations `quux_attach()` will become a blocking operation itself:
+
+```
+int quux_attach(int u, int64_t deadline) {
+    ...
+    const int8_t local_version = 1;
+    int rc = bsend(u, &local_version, 1, deadline);
+    if(rc &lt; 0) {err = errno; goto error2;}
+    uint8_t remote_version;
+    rc = brecv(u, &remote_version, 1, deadline);
+    if(rc &lt; 0) {err = errno; goto error2;}
+    if(remote_version != local_version) {err = EPROTO; goto error2;}
+    ...
+}
+```
+
+Note that failure of initial handshake not only prevent initialization of quux sockets, it also closes the underlying sockets. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.
+
+Of course, we'll have to modify the test program to pass dealines to `quux_attach()` function invocations.
+

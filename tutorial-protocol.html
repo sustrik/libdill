@@ -27,6 +27,7 @@
 <p>Let's say out new handle type will be called <code>quux</code>. Now we'll add some testing code. It will do nothing but open and close the handle:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;assert.h&gt;</span>
 <span class="ot">#include &lt;errno.h&gt;</span>
+<span class="ot">#include &lt;stdint.h&gt;</span>
 <span class="ot">#include &lt;stdlib.h&gt;</span>
 <span class="ot">#include &lt;stdio.h&gt;</span>
 
@@ -134,15 +135,20 @@ error1:
     <span class="kw">return</span> u;
 }</code></pre>
 <p>Now we can modify the test program to build two quux sockets on top of two mutually connected UNIX domain (ipc) sockets:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> main(<span class="dt">void</span>) {
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> client(<span class="dt">int</span> s) {
+    quux_attach(s);
+    <span class="co">/* Do something useful here! */</span>
+    s = quux_detach(q);
+    hclose(s);
+}
+
+<span class="dt">int</span> main(<span class="dt">void</span>) {
     <span class="dt">int</span> ss[<span class="dv">2</span>];
     ipc_pair(ss);
-    <span class="dt">int</span> q1 = quux_attach(ss[<span class="dv">0</span>]);
-    <span class="dt">int</span> q2 = quux_attach(ss[<span class="dv">1</span>]);
+    go(client(ss[<span class="dv">0</span>]));
+    <span class="dt">int</span> q = quux_attach(ss[<span class="dv">1</span>]);
     <span class="co">/* Do something useful here! */</span>
-    <span class="dt">int</span> s = quux_detach(q2);
-    hclose(s);
-    s = quux_detach(q1);
+    <span class="dt">int</span> s = quux_detach(q);
     hclose(s);
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
@@ -215,13 +221,22 @@ rc = brecvl(self-&gt;u, first, last, deadline);
 <span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;</code></pre>
 <p>Now that we have received the message we have to return its size to the user:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">return</span> c;</code></pre>
-<p>And finally, we can test whether the protocol works as expected. Let's send a simple text message (string with a terminating zero) to one end of the connection and receive it at the other end:</p>
-<pre class="sourceCode c"><code class="sourceCode c">msend(q1, <span class="st">&quot;Hello, world!&quot;</span>, <span class="dv">14</span>, -<span class="dv">1</span>);
-<span class="dt">char</span> buf[<span class="dv">256</span>];
-mrecv(q2, buf, <span class="kw">sizeof</span>(buf), -<span class="dv">1</span>);
-printf(<span class="st">&quot;%s</span><span class="ch">\n</span><span class="st">&quot;</span>, buf);</code></pre>
+<p>And finally, we can test whether the protocol works as expected. Let's send a simple text message (string with a terminating zero) to one end of the connection and receive it at the other end.</p>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> client(<span class="dt">int</span> s) {
+    ...
+    msend(q, <span class="st">&quot;Hello, world!&quot;</span>, <span class="dv">14</span>, -<span class="dv">1</span>);
+    ...
+}
+
+<span class="dt">int</span> main(<span class="dt">void</span>) {
+    ...
+    <span class="dt">char</span> buf[<span class="dv">256</span>];
+    mrecv(q, buf, <span class="kw">sizeof</span>(buf), -<span class="dv">1</span>);
+    printf(<span class="st">&quot;%s</span><span class="ch">\n</span><span class="st">&quot;</span>, buf);
+    ...
+}</code></pre>
 <p>Compile and test the program!</p>
-<h1 id="step-5-error-handling">Step 5: Error handling</h1>
+<h2 id="step-5-error-handling">Step 5: Error handling</h2>
 <p>Consider the following scenario: User asks to receive a message. The message is 200 bytes long. However, after reading 100 bytes, receive function times out. That puts you, as the protocol implementor, into an unconfortable position. There's no way to push the 100 bytes that were already received back to the underlying socket. libdill sockets provide no API for that, but even in principle, it would mean that the underlying socket would need an unlimited buffer. Just imagine receiving a 1TB message and timing out just before its fully read...</p>
 <p>libdill solves this problem by not trying too hard to recover from errors, even from seemingly recoverable ones like ETIMEOUT.</p>
 <p>When building on top of a bytestream protocol, which in unrecoverable by definition, you thus have to track failures and once error happens return an error for any subsequent attampts to receive a message. Same reasoning and same solution applies to outbound messages.</p>
@@ -246,4 +261,20 @@ self-&gt;recverr = 0;</code></pre>
     if(self-&gt;senderr) {errno = ECONNRESET; return -1;}
     ...
 }</code></pre>
+<h2 id="step-6-initial-handshake">Step 6: Initial handshake</h2>
+<p>Let's say we want to support mutliple versions on quux protocol. When a quux connection is established peers will exchange their version numbers and if they don't match, they will fail.</p>
+<p>In fact, we don't even need proper handshake for that. Each peer can simply send its version number and wait for version number from the other party. We'll do this work in <code>quux_attach()</code> function. And given that sending and receiving are blocking operations <code>quux_attach()</code> will become a blocking operation itself:</p>
+<pre><code>int quux_attach(int u, int64_t deadline) {
+    ...
+    const int8_t local_version = 1;
+    int rc = bsend(u, &amp;local_version, 1, deadline);
+    if(rc &amp;lt; 0) {err = errno; goto error2;}
+    uint8_t remote_version;
+    rc = brecv(u, &amp;remote_version, 1, deadline);
+    if(rc &amp;lt; 0) {err = errno; goto error2;}
+    if(remote_version != local_version) {err = EPROTO; goto error2;}
+    ...
+}</code></pre>
+<p>Note that failure of initial handshake not only prevent initialization of quux sockets, it also closes the underlying sockets. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.</p>
+<p>Of course, we'll have to modify the test program to pass dealines to <code>quux_attach()</code> function invocations.</p>
 </body>
