@@ -19,7 +19,7 @@ Standard include file for libdill is `libdill.h`. In this case, however, we will
 #include <libdillimpl.h>
 ```
 
-To make it clear what API we are trying to implement, let's start with a simple test program. We'll call our protocol `quux` and at this point we will do nothing more than open and close the handle:
+To make it clear what API we are trying to implement, let's start with a simple test program. We'll call our protocol `quux` and at this point we will just open and close the handle:
 
 ```c
 int main(void) {
@@ -66,7 +66,7 @@ error1:
 }
 ```
 
-Function `hmake()` does the trick. You pass it a virtual function table and it returns a handle. When the standard function like `hclose()` is called on the handle libdill will forward the call to the corresponding virtual function, in this particular case to `quux_hclose()`. The interesting part is that the first argument to the virtual function is no longer the handle but rather pointer to the virtual function table. And given that virtual function table is a member of `struct quux` it's easy to convert it to the pointer to the quux object:
+Function `hmake()` does the trick. You pass it a virtual function table and it returns a handle. When the standard function like `hclose()` is called on the handle libdill will forward the call to the corresponding virtual function, in this particular case to `quux_hclose()`. The interesting part is that the first argument to the virtual function is no longer the handle but rather pointer to the virtual function table. And given that virtual function table is a member of `struct quux` it's easy to convert it to the pointer to the quux object itself. `quux_hclose()` virtual function will deallocate the quux object:
 
 ```c
 static void quux_hclose(struct hvfs *hvfs) {
@@ -75,7 +75,7 @@ static void quux_hclose(struct hvfs *hvfs) {
 }
 ```
 
-At the moment we can just return `ENOTSUP` from `quux_hquery()` and `quux_hdone()`. 
+At the moment we can just return -1 from the other two virtual functions and set `errno` to `ENOTSUP`. We'll get back to those functions later on in this tutorial.
 
 Compile the file and run it to test whether it works as expected:
 

@@ -24,7 +24,7 @@
 <p>Handles are libdill's equivalent of file descriptors. A socket implementing our protocol will be pointed to by a handle. Therefore, we have to learn how to create custom handle types.</p>
 <p>Standard include file for libdill is <code>libdill.h</code>. In this case, however, we will include <code>libdillimpl.h</code> which defines all the functions <code>libdill.h</code> does but also adds some extra stuff that can be used to implement different plugins to libdill, such as new handle types or new socket types:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#include &lt;libdillimpl.h&gt;</span></code></pre>
-<p>To make it clear what API we are trying to implement, let's start with a simple test program. We'll call our protocol <code>quux</code> and at this point we will do nothing more than open and close the handle:</p>
+<p>To make it clear what API we are trying to implement, let's start with a simple test program. We'll call our protocol <code>quux</code> and at this point we will just open and close the handle:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> main(<span class="dt">void</span>) {
     <span class="dt">int</span> h = quux_open();
     hclose(h);
@@ -55,12 +55,12 @@ error1:
     errno = err;
     <span class="kw">return</span> -<span class="dv">1</span>;
 }</code></pre>
-<p>Function <code>hmake()</code> does the trick. You pass it a virtual function table and it returns a handle. When the standard function like <code>hclose()</code> is called on the handle libdill will forward the call to the corresponding virtual function, in this particular case to <code>quux_hclose()</code>. The interesting part is that the first argument to the virtual function is no longer the handle but rather pointer to the virtual function table. And given that virtual function table is a member of <code>struct quux</code> it's easy to convert it to the pointer to the quux object:</p>
+<p>Function <code>hmake()</code> does the trick. You pass it a virtual function table and it returns a handle. When the standard function like <code>hclose()</code> is called on the handle libdill will forward the call to the corresponding virtual function, in this particular case to <code>quux_hclose()</code>. The interesting part is that the first argument to the virtual function is no longer the handle but rather pointer to the virtual function table. And given that virtual function table is a member of <code>struct quux</code> it's easy to convert it to the pointer to the quux object itself. <code>quux_hclose()</code> virtual function will deallocate the quux object:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">void</span> quux_hclose(<span class="kw">struct</span> hvfs *hvfs) {
     <span class="kw">struct</span> quux *self = (<span class="kw">struct</span> quux*)hvfs;
     free(self);
 }</code></pre>
-<p>At the moment we can just return <code>ENOTSUP</code> from <code>quux_hquery()</code> and <code>quux_hdone()</code>.</p>
+<p>At the moment we can just return -1 from the other two virtual functions and set <code>errno</code> to <code>ENOTSUP</code>. We'll get back to those functions later on in this tutorial.</p>
 <p>Compile the file and run it to test whether it works as expected:</p>
 <pre><code>$ gcc -o step1 step1.c -ldill</code></pre>
 <h2 id="step-2-implementing-an-operation-on-the-handle">Step 2: Implementing an operation on the handle</h2>
