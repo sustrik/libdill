@@ -91,14 +91,14 @@ libdill provides an extremely generic mechanism to address this multi-faceted na
 
 To see how that can be useful let's implement a new function for quux handle.
 
-First, we have to define an ID for `quux` objects. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you define IDs in different libraries that are then linked together. With pointers there's no such problem. You can take a pointer of a global variable and it's guaranteed to be unique as two pieces of data can't live at the same memory address:
+First, we have to define an ID for `quux` object type. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you defined IDs in different libraries that were then linked together. With pointers there's no such problem. You can take a pointer of a global variable and it's guaranteed to be unique as two pieces of data can't live at the same memory location:
 
 ```c
 static const int quux_id_placeholder = 0;
 static const void *quux_id = &quux_id_placeholder;
 ```
 
-Second, let's implement `quux_hquery` virtual function, empty implementation of which has been created in previous step of this tutorial:
+Second, let's implement `hquery()` virtual function, empty implementation of which has been created in previous step of this tutorial:
 
 ```c
 static void *quux_hquery(struct hvfs *hvfs, const void *id) {
@@ -109,11 +109,11 @@ static void *quux_hquery(struct hvfs *hvfs, const void *id) {
 }
 ```
 
-To understand what this is good for think of it from user's perspective: You call `hquery()` function and pass it a handle and ID of quux handle type. The function will fail with `ENOTSUP` if the handle is not a quux handle. It will return pointer to `quux` structure otherwise. You can use the pointer to perform useful work on the object.
+To understand what this is good for think of it from user's perspective: You call `hquery()` function and pass it a handle and the ID of quux handle type. The function will fail with `ENOTSUP` if the handle is not a quux handle. It will return pointer to `quux` structure if it is. You can use the pointer to perform useful work on the object.
 
-But wait! Doesn't it break encapsulation? Anyone can call `hquery()` function, get the pointer to raw quux object and mess with it in unforeseen ways.
+But wait! Doesn't that break encapsulation? Anyone can call `hquery()` function, get the pointer to raw quux object and mess with it in unforeseen ways.
 
-But no. Note that `quux_id` is defined as static. The ID is not available anywhere except in the file that implements quux handle. No external code will be able to get the raw object pointer. The encapsulation works after all.
+But no. Note that `quux_id` is defined as static. The ID is not available anywhere except in the file that implements quux handle. No external code will be able to get the raw object pointer. The encapsulation works as expected after all.
 
 That being said, we can finally implement our new user-facing function:
 
