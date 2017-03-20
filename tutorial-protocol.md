@@ -40,7 +40,7 @@ struct quux {
 Let's add forward declarations for functions that will be filled into the virtual function table. We'll learn what each of them is good for shortly:
 
 ```c
-static void *quux_hquery(struct hvfs *hvfs, const void *type);
+static void *quux_hquery(struct hvfs *hvfs, const void *id);
 static void quux_hclose(struct hvfs *hvfs);
 static int quux_hdone(struct hvfs *hvfs, int64_t deadline);
 ```
@@ -75,7 +75,7 @@ static void quux_hclose(struct hvfs *hvfs) {
 }
 ```
 
-At the moment we can just return -1 from the other two virtual functions and set `errno` to `ENOTSUP`. We'll get back to those functions later on in this tutorial.
+At the moment we can just return `ENOTSUP` from the other two virtual functions.
 
 Compile the file and run it to test whether it works as expected:
 
@@ -87,42 +87,46 @@ $ gcc -o step1 step1.c -ldill
 
 Consider a UDP socket. It is actually multiple things. It's a handle and as such it exposes functions like `hclose()`. It's a message socket and as such it exposes functions like `msend()` and `mrecv()`. It's also a UDP socket per se and as such it exposes functions like `udp_send()` or `udp_recv()`.
 
-To address this multi-faceted nature of handles libdill provides a mechanism map type identifiers to pointers. Function `hquery()` gets a handle and a type identifier and returns a void pointer. It makes no assumptions about what the resulting pointer points to.
+libdill provides an extremely generic mechanism to address this multi-faceted nature of handles. In fact, the mechanism is so generic that it's almost silly. There's a `hquery()` function which takes ID as an argument and returns a void pointer. No assumptions are made about the nature of the ID or nature of the returned pointer. Everything is completely opaque.
 
-To see how this could be useful let's implement a new function on `quux` handle.
+To see how that can be useful let's implement a new function for quux handle.
 
-First, we have to define a type identifier for `quux` objects. Type identifier is a unique constant void pointer and can be easily generated like this:
+First, we have to define an ID for `quux` objects. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you define IDs in different libraries that are then linked together. With pointers there's no such problem. You can take a pointer of a global variable and it's guaranteed to be unique as two pieces of data can't live at the same memory address:
 
 ```c
-static const int quux_type_placeholder = 0;
-static const void *quux_type = &quux_type_placeholder;
+static const int quux_id_placeholder = 0;
+static const void *quux_id = &quux_id_placeholder;
 ```
 
-Note that `quux_typeid` must be unique within the process because no other int can live at the same memory address.
-
-Second, let's implement `quux_hquery` virtual function, empty implementation of which we have created in previous step of this tutorial:
+Second, let's implement `quux_hquery` virtual function, empty implementation of which has been created in previous step of this tutorial:
 
 ```c
-static void *quux_hquery(struct hvfs *hvfs, const void *type) {
+static void *quux_hquery(struct hvfs *hvfs, const void *id) {
     struct quux *self = (struct quux*)hvfs;
-    if(type == quux_type) return self;
+    if(id == quux_id) return self;
     errno = ENOTSUP;
     return NULL;
 }
 ```
 
-Finally, we can implement our new user-facing function:
+To understand what this is good for think of it from user's perspective: You call `hquery()` function and pass it a handle and ID of quux handle type. The function will fail with `ENOTSUP` if the handle is not a quux handle. It will return pointer to `quux` structure otherwise. You can use the pointer to perform useful work on the object.
+
+But wait! Doesn't it break encapsulation? Anyone can call `hquery()` function, get the pointer to raw quux object and mess with it in unforeseen ways.
+
+But no. Note that `quux_id` is defined as static. The ID is not available anywhere except in the file that implements quux handle. No external code will be able to get the raw object pointer. The encapsulation works after all.
+
+That being said, we can finally implement our new user-facing function:
 
 ```c
 int quux_frobnicate(int h) {
     struct quux *self = hquery(h, quux_type);
     if(!self) return -1;
-    /* Frobnicate the object here! */
+    printf("Kilroy was here!\n");
     return 0;
 }
 ```
 
-Now we can call the new function from the test code:
+Modify the test to call the new function, compile it and run it:
 
 ```c
 int main(void) {
@@ -132,10 +136,6 @@ int main(void) {
     return 0;
 }
 ```
-
-As can be seen, `hquery()` is used to translate the handle to the pointer to the object.
-
-The mechanism also offers type safety. Try calling `quux_frobnicate()` with channel or a coroutine handle and you'll get `ENOTSUP` error. This happens because channel's or coroutine's virtual query function know nothing about `quux_type` and so it fails with `ENOTSUP` error.
 
 ## Step 3: Attaching and detaching a socket
 

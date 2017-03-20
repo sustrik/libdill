@@ -35,7 +35,7 @@
     <span class="kw">struct</span> hvfs hvfs;
 };</code></pre>
 <p>Let's add forward declarations for functions that will be filled into the virtual function table. We'll learn what each of them is good for shortly:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">void</span> *quux_hquery(<span class="kw">struct</span> hvfs *hvfs, <span class="dt">const</span> <span class="dt">void</span> *type);
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">void</span> *quux_hquery(<span class="kw">struct</span> hvfs *hvfs, <span class="dt">const</span> <span class="dt">void</span> *id);
 <span class="dt">static</span> <span class="dt">void</span> quux_hclose(<span class="kw">struct</span> hvfs *hvfs);
 <span class="dt">static</span> <span class="dt">int</span> quux_hdone(<span class="kw">struct</span> hvfs *hvfs, <span class="dt">int64_t</span> deadline);</code></pre>
 <p>The <code>quux_open</code> function itself won't do much except for allocating the object, filling in the table of virtual functions and registering it with libdill runtime:</p>
@@ -60,40 +60,40 @@ error1:
     <span class="kw">struct</span> quux *self = (<span class="kw">struct</span> quux*)hvfs;
     free(self);
 }</code></pre>
-<p>At the moment we can just return -1 from the other two virtual functions and set <code>errno</code> to <code>ENOTSUP</code>. We'll get back to those functions later on in this tutorial.</p>
+<p>At the moment we can just return <code>ENOTSUP</code> from the other two virtual functions.</p>
 <p>Compile the file and run it to test whether it works as expected:</p>
 <pre><code>$ gcc -o step1 step1.c -ldill</code></pre>
 <h2 id="step-2-implementing-an-operation-on-the-handle">Step 2: Implementing an operation on the handle</h2>
 <p>Consider a UDP socket. It is actually multiple things. It's a handle and as such it exposes functions like <code>hclose()</code>. It's a message socket and as such it exposes functions like <code>msend()</code> and <code>mrecv()</code>. It's also a UDP socket per se and as such it exposes functions like <code>udp_send()</code> or <code>udp_recv()</code>.</p>
-<p>To address this multi-faceted nature of handles libdill provides a mechanism map type identifiers to pointers. Function <code>hquery()</code> gets a handle and a type identifier and returns a void pointer. It makes no assumptions about what the resulting pointer points to.</p>
-<p>To see how this could be useful let's implement a new function on <code>quux</code> handle.</p>
-<p>First, we have to define a type identifier for <code>quux</code> objects. Type identifier is a unique constant void pointer and can be easily generated like this:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">const</span> <span class="dt">int</span> quux_type_placeholder = <span class="dv">0</span>;
-<span class="dt">static</span> <span class="dt">const</span> <span class="dt">void</span> *quux_type = &amp;quux_type_placeholder;</code></pre>
-<p>Note that <code>quux_typeid</code> must be unique within the process because no other int can live at the same memory address.</p>
-<p>Second, let's implement <code>quux_hquery</code> virtual function, empty implementation of which we have created in previous step of this tutorial:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">void</span> *quux_hquery(<span class="kw">struct</span> hvfs *hvfs, <span class="dt">const</span> <span class="dt">void</span> *type) {
+<p>libdill provides an extremely generic mechanism to address this multi-faceted nature of handles. In fact, the mechanism is so generic that it's almost silly. There's a <code>hquery()</code> function which takes ID as an argument and returns a void pointer. No assumptions are made about the nature of the ID or nature of the returned pointer. Everything is completely opaque.</p>
+<p>To see how that can be useful let's implement a new function for quux handle.</p>
+<p>First, we have to define an ID for <code>quux</code> objects. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you define IDs in different libraries that are then linked together. With pointers there's no such problem. You can take a pointer of a global variable and it's guaranteed to be unique as two pieces of data can't live at the same memory address:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">const</span> <span class="dt">int</span> quux_id_placeholder = <span class="dv">0</span>;
+<span class="dt">static</span> <span class="dt">const</span> <span class="dt">void</span> *quux_id = &amp;quux_id_placeholder;</code></pre>
+<p>Second, let's implement <code>quux_hquery</code> virtual function, empty implementation of which has been created in previous step of this tutorial:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">void</span> *quux_hquery(<span class="kw">struct</span> hvfs *hvfs, <span class="dt">const</span> <span class="dt">void</span> *id) {
     <span class="kw">struct</span> quux *self = (<span class="kw">struct</span> quux*)hvfs;
-    <span class="kw">if</span>(type == quux_type) <span class="kw">return</span> self;
+    <span class="kw">if</span>(id == quux_id) <span class="kw">return</span> self;
     errno = ENOTSUP;
     <span class="kw">return</span> NULL;
 }</code></pre>
-<p>Finally, we can implement our new user-facing function:</p>
+<p>To understand what this is good for think of it from user's perspective: You call <code>hquery()</code> function and pass it a handle and ID of quux handle type. The function will fail with <code>ENOTSUP</code> if the handle is not a quux handle. It will return pointer to <code>quux</code> structure otherwise. You can use the pointer to perform useful work on the object.</p>
+<p>But wait! Doesn't it break encapsulation? Anyone can call <code>hquery()</code> function, get the pointer to raw quux object and mess with it in unforeseen ways.</p>
+<p>But no. Note that <code>quux_id</code> is defined as static. The ID is not available anywhere except in the file that implements quux handle. No external code will be able to get the raw object pointer. The encapsulation works after all.</p>
+<p>That being said, we can finally implement our new user-facing function:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_frobnicate(<span class="dt">int</span> h) {
     <span class="kw">struct</span> quux *self = hquery(h, quux_type);
     <span class="kw">if</span>(!self) <span class="kw">return</span> -<span class="dv">1</span>;
-    <span class="co">/* Frobnicate the object here! */</span>
+    printf(<span class="st">&quot;Kilroy was here!</span><span class="ch">\n</span><span class="st">&quot;</span>);
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
-<p>Now we can call the new function from the test code:</p>
+<p>Modify the test to call the new function, compile it and run it:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> main(<span class="dt">void</span>) {
     <span class="dt">int</span> h = quux_open(); 
     quux_frobnicate(h);
     hclose(h);
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
-<p>As can be seen, <code>hquery()</code> is used to translate the handle to the pointer to the object.</p>
-<p>The mechanism also offers type safety. Try calling <code>quux_frobnicate()</code> with channel or a coroutine handle and you'll get <code>ENOTSUP</code> error. This happens because channel's or coroutine's virtual query function know nothing about <code>quux_type</code> and so it fails with <code>ENOTSUP</code> error.</p>
 <h2 id="step-3-attaching-and-detaching-a-socket">Step 3: Attaching and detaching a socket</h2>
 <p>Nice. We have a functional handle now, but in the end we want quux to be a network protocol handle. Let's say it will be a message-based protocol that can run on top of arbitrary bytestream protocol such as TCP or UNIX domain sockets.</p>
 <p>First, we need to store the underlying socket in quux object:</p>
