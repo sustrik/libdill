@@ -55,7 +55,8 @@ error1:
     errno = err;
     <span class="kw">return</span> -<span class="dv">1</span>;
 }</code></pre>
-<p>Function <code>hmake()</code> does the trick. You pass it a virtual function table and it returns a handle. When the standard function like <code>hclose()</code> is called on the handle libdill will forward the call to the corresponding virtual function, in this particular case to <code>quux_hclose()</code>. The interesting part is that the first argument to the virtual function is no longer the handle but rather pointer to the virtual function table. And given that virtual function table is a member of <code>struct quux</code> it's easy to convert it to the pointer to the quux object itself. <code>quux_hclose()</code> virtual function will deallocate the quux object:</p>
+<p>Function <code>hmake()</code> does the trick. You pass it a virtual function table and it returns a handle. When the standard function like <code>hclose()</code> is called on the handle libdill will forward the call to the corresponding virtual function, in this particular case to <code>quux_hclose()</code>. The interesting part is that the first argument to the virtual function is no longer the handle but rather pointer to the virtual function table. And given that virtual function table is a member of <code>struct quux</code> it's easy to convert it to the pointer to the quux object itself.</p>
+<p><code>quux_hclose()</code> virtual function will deallocate the quux object:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">void</span> quux_hclose(<span class="kw">struct</span> hvfs *hvfs) {
     <span class="kw">struct</span> quux *self = (<span class="kw">struct</span> quux*)hvfs;
     free(self);
@@ -67,7 +68,7 @@ error1:
 <p>Consider a UDP socket. It is actually multiple things. It's a handle and as such it exposes functions like <code>hclose()</code>. It's a message socket and as such it exposes functions like <code>msend()</code> and <code>mrecv()</code>. It's also a UDP socket per se and as such it exposes functions like <code>udp_send()</code> or <code>udp_recv()</code>.</p>
 <p>libdill provides an extremely generic mechanism to address this multi-faceted nature of handles. In fact, the mechanism is so generic that it's almost silly. There's a <code>hquery()</code> function which takes ID as an argument and returns a void pointer. No assumptions are made about the nature of the ID or nature of the returned pointer. Everything is completely opaque.</p>
 <p>To see how that can be useful let's implement a new function for quux handle.</p>
-<p>First, we have to define an ID for <code>quux</code> object type. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you defined IDs in different libraries that were then linked together. With pointers there's no such problem. You can take a pointer of a global variable and it's guaranteed to be unique as two pieces of data can't live at the same memory location:</p>
+<p>First, we have to define an ID for <code>quux</code> object type. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you defined IDs in different libraries that were then linked together. With pointers there's no such problem. You can take a pointer of a global variable and it is guaranteed to be unique as two pieces of data can't live at the same memory location:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">const</span> <span class="dt">int</span> quux_id_placeholder = <span class="dv">0</span>;
 <span class="dt">static</span> <span class="dt">const</span> <span class="dt">void</span> *quux_id = &amp;quux_id_placeholder;</code></pre>
 <p>Second, let's implement <code>hquery()</code> virtual function, empty implementation of which has been created in previous step of this tutorial:</p>
@@ -130,7 +131,7 @@ error1:
 <p>Now we can modify the test program to build two quux sockets on top of two mutually connected UNIX domain (ipc) sockets:</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> client(<span class="dt">int</span> s) {
     quux_attach(s);
-    <span class="co">/* Do something useful here! */</span>
+    <span class="co">/* Do stuff here! */</span>
     s = quux_detach(q);
     hclose(s);
 }
@@ -140,7 +141,7 @@ error1:
     ipc_pair(ss);
     go(client(ss[<span class="dv">0</span>]));
     <span class="dt">int</span> q = quux_attach(ss[<span class="dv">1</span>]);
-    <span class="co">/* Do something useful here! */</span>
+    <span class="co">/* Do stuff here! */</span>
     <span class="dt">int</span> s = quux_detach(q);
     hclose(s);
     <span class="kw">return</span> <span class="dv">0</span>;
@@ -236,10 +237,10 @@ rc = brecvl(self-&gt;u, first, last, deadline);
 }</code></pre>
 <p>Compile and test the program!</p>
 <h2 id="step-5-error-handling">Step 5: Error handling</h2>
-<p>Consider the following scenario: User asks to receive a message. The message is 200 bytes long. However, after reading 100 bytes, receive function times out. That puts you, as the protocol implementor, into an unconfortable position. There's no way to push the 100 bytes that were already received back to the underlying socket. libdill sockets provide no API for that, but even in principle, it would mean that the underlying socket would need an unlimited buffer. Just imagine receiving a 1TB message and timing out just before its fully read...</p>
+<p>Consider the following scenario: User wants to receive a message. The message is 200 bytes long. However, after reading 100 bytes, receive function times out. That puts you, as the protocol implementor, into an unconfortable position. There's no way to push the 100 bytes that were already received back to the underlying socket. libdill sockets provide no API for that, but even in principle, it would mean that the underlying socket would need an unlimited buffer. Just imagine receiving a 1TB message and timing out just before its fully read...</p>
 <p>libdill solves this problem by not trying too hard to recover from errors, even from seemingly recoverable ones like ETIMEOUT.</p>
 <p>When building on top of a bytestream protocol, which in unrecoverable by definition, you thus have to track failures and once error happens return an error for any subsequent attampts to receive a message. Same reasoning and same solution applies to outbound messages.</p>
-<p>(Note that this does not apply when you are building on top of a message socket. Message sockets may be recoverable. Just think of UDP. Thus, in that case you should just forward and send and received requests to the underlying socket and let it take care of error handling for you.)</p>
+<p>(Note that this does not apply when you are building on top of a message socket. Message sockets may be recoverable. Consider UDP. Thus, in that case you should just forward any send and received requests to the underlying socket and let it take care of error handling for you.)</p>
 <p>Anyway, to implement error handling in quux protocol, let's add to booleans to the socket to track whether sending/receiving had failed already:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> quux {
     <span class="kw">struct</span> hvfs hvfs;
@@ -274,7 +275,7 @@ self-&gt;recverr = <span class="dv">0</span>;</code></pre>
     <span class="kw">if</span>(remote_version != local_version) {err = EPROTO; <span class="kw">goto</span> error2;}
     ...
 }</code></pre>
-<p>Note that failure of initial handshake not only prevent initialization of quux sockets, it also closes the underlying sockets. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.</p>
+<p>Note that failure of initial handshake not only prevents initialization of quux socket, it also closes the underlying socket. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.</p>
 <p>Of course, we'll have to modify the test program to pass deadlines to <code>quux_attach()</code> function invocations.</p>
 <h2 id="step-7-terminal-handshake">Step 7: Terminal handshake</h2>
 <p>Imagine that user wants to close the quux protocol and start a new protocol, say HTTP, on top of the same underlying connection. For that to work both peers would have to make sure that they've received all quux-related data before proceeding. If they did not the leftover quux data would confuse the subsequent HTTP protocol.</p>

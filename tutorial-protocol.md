@@ -66,7 +66,9 @@ error1:
 }
 ```
 
-Function `hmake()` does the trick. You pass it a virtual function table and it returns a handle. When the standard function like `hclose()` is called on the handle libdill will forward the call to the corresponding virtual function, in this particular case to `quux_hclose()`. The interesting part is that the first argument to the virtual function is no longer the handle but rather pointer to the virtual function table. And given that virtual function table is a member of `struct quux` it's easy to convert it to the pointer to the quux object itself. `quux_hclose()` virtual function will deallocate the quux object:
+Function `hmake()` does the trick. You pass it a virtual function table and it returns a handle. When the standard function like `hclose()` is called on the handle libdill will forward the call to the corresponding virtual function, in this particular case to `quux_hclose()`. The interesting part is that the first argument to the virtual function is no longer the handle but rather pointer to the virtual function table. And given that virtual function table is a member of `struct quux` it's easy to convert it to the pointer to the quux object itself.
+
+`quux_hclose()` virtual function will deallocate the quux object:
 
 ```c
 static void quux_hclose(struct hvfs *hvfs) {
@@ -91,7 +93,7 @@ libdill provides an extremely generic mechanism to address this multi-faceted na
 
 To see how that can be useful let's implement a new function for quux handle.
 
-First, we have to define an ID for `quux` object type. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you defined IDs in different libraries that were then linked together. With pointers there's no such problem. You can take a pointer of a global variable and it's guaranteed to be unique as two pieces of data can't live at the same memory location:
+First, we have to define an ID for `quux` object type. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you defined IDs in different libraries that were then linked together. With pointers there's no such problem. You can take a pointer of a global variable and it is guaranteed to be unique as two pieces of data can't live at the same memory location:
 
 ```c
 static const int quux_id_placeholder = 0;
@@ -185,7 +187,7 @@ Now we can modify the test program to build two quux sockets on top of two mutua
 ```c
 coroutine void client(int s) {
     quux_attach(s);
-    /* Do something useful here! */
+    /* Do stuff here! */
     s = quux_detach(q);
     hclose(s);
 }
@@ -195,7 +197,7 @@ int main(void) {
     ipc_pair(ss);
     go(client(ss[0]));
     int q = quux_attach(ss[1]);
-    /* Do something useful here! */
+    /* Do stuff here! */
     int s = quux_detach(q);
     hclose(s);
     return 0;
@@ -351,13 +353,13 @@ Compile and test the program!
 
 ## Step 5: Error handling
 
-Consider the following scenario: User asks to receive a message. The message is 200 bytes long. However, after reading 100 bytes, receive function times out. That puts you, as the protocol implementor, into an unconfortable position. There's no way to push the 100 bytes that were already received back to the underlying socket. libdill sockets provide no API for that, but even in principle, it would mean that the underlying socket would need an unlimited buffer. Just imagine receiving a 1TB message and timing out just before its fully read...
+Consider the following scenario: User wants to receive a message. The message is 200 bytes long. However, after reading 100 bytes, receive function times out. That puts you, as the protocol implementor, into an unconfortable position. There's no way to push the 100 bytes that were already received back to the underlying socket. libdill sockets provide no API for that, but even in principle, it would mean that the underlying socket would need an unlimited buffer. Just imagine receiving a 1TB message and timing out just before its fully read...
 
 libdill solves this problem by not trying too hard to recover from errors, even from seemingly recoverable ones like ETIMEOUT.
 
 When building on top of a bytestream protocol, which in unrecoverable by definition, you thus have to track failures and once error happens return an error for any subsequent attampts to receive a message. Same reasoning and same solution applies to outbound messages.
 
-(Note that this does not apply when you are building on top of a message socket. Message sockets may be recoverable. Just think of UDP. Thus, in that case you should just forward and send and received requests to the underlying socket and let it take care of error handling for you.)
+(Note that this does not apply when you are building on top of a message socket. Message sockets may be recoverable. Consider UDP. Thus, in that case you should just forward any send and received requests to the underlying socket and let it take care of error handling for you.)
 
 Anyway, to implement error handling in quux protocol, let's add to booleans to the socket to track whether sending/receiving had failed already:
 
@@ -415,7 +417,7 @@ int quux_attach(int u, int64_t deadline) {
 }
 ```
 
-Note that failure of initial handshake not only prevent initialization of quux sockets, it also closes the underlying sockets. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.
+Note that failure of initial handshake not only prevents initialization of quux socket, it also closes the underlying socket. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.
 
 Of course, we'll have to modify the test program to pass deadlines to `quux_attach()` function invocations.
 
