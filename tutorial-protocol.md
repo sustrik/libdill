@@ -5,29 +5,23 @@
 
 In this tutorial you will learn how to implement a simple network protocol using libdill.
 
-Given that tutorial is supposed to demonstrate different aspects of the problem the protocol will be relatively complex. In the real world you would want to split it into multiple micro-protocols.
-
-Note that the test program as presented in this text is kept succint by ommitting all the asserts. The source code files for the tutorial, however, do the error checking properly.
-
 The source code for individual steps of this tutorial can be found in `tutorial/protocol` subdirectory.
+
+Please note that the test program as presented in this text is kept succint by ommitting all the asserts. The source code files for the tutorial, however, do the error checking properly.
 
 ## Step 1: Creating a handle
 
-Handles are libdill's equivalent of file descriptors. An instance of our protocol will be pointed to by a socket which is a type of handle. Therefore, we have to learn how to create custom handle types.
+Handles are libdill's equivalent of file descriptors. A socket implementing our protocol will be pointed to by a handle. Therefore, we have to learn how to create custom handle types.
 
-First of all, we have to include `libdillimpl.h` header file. It in turn includes standard `libdill.h` but also adds extra functions used for implementing plugins to libdill.
-
-Let's say out new handle type will be called `quux`. Now we'll add some testing code. It will do nothing but open and close the handle:
+Standard include file for libdill is `libdill.h`. In this case, however, we will include `libdillimpl.h` which defines all the functions `libdill.h` does but also adds some extra stuff that can be used to implement different plugins to libdill, such as new handle types or new socket types:
 
 ```c
-#include <assert.h>
-#include <errno.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-
 #include <libdillimpl.h>
+```
 
+To make it clear what API we are trying to implement, let's start with a simple test program. We'll call our protocol `quux` and at this point we will do nothing more than open and close the handle:
+
+```c
 int main(void) {
     int h = quux_open();
     hclose(h);
@@ -35,7 +29,7 @@ int main(void) {
 }
 ```
 
-We'll need a structure to hold data for our handle. At the moment it will be empty, except for the table of handle's virtual functions:
+To start with the implementation we need a structure to hold data for the handle. At the moment it will contain only handle's virtual function table:
 
 ```c
 struct quux {
@@ -43,7 +37,7 @@ struct quux {
 };
 ```
 
-Let's add forward declarations for functions to be filled into our virtual function table. We'll learn what they are good for shortly.
+Let's add forward declarations for functions that will be filled into the virtual function table. We'll learn what each of them is good for shortly:
 
 ```c
 static void *quux_hquery(struct hvfs *hvfs, const void *type);
@@ -51,7 +45,7 @@ static void quux_hclose(struct hvfs *hvfs);
 static int quux_hdone(struct hvfs *hvfs, int64_t deadline);
 ```
 
-The `quux_open` function itself doesn't do much except for allocating the object, filling in the table of virtual functions and letting libdill know about the handle:
+The `quux_open` function itself won't do much except for allocating the object, filling in the table of virtual functions and registering it with libdill runtime:
 
 ```c
 int quux_open(void) {
@@ -72,7 +66,7 @@ error1:
 }
 ```
 
-Now we can implement the virtual functions. At the moment we can jusr return `ENOTSUP` from `quux_hquery` and `quux_hdone`. As for `quux_hclose` it will be called when user tries to close the handle using `hdone()` function. We can fill in the code to deallocate our object. Note that we are passed pointer to the virtual function table that, given that it's first member in the structure, can be simply cast to `struct quux`:
+Function `hmake()` does the trick. You pass it a virtual function table and it returns a handle. When the standard function like `hclose()` is called on the handle libdill will forward the call to the corresponding virtual function, in this particular case to `quux_hclose()`. The interesting part is that the first argument to the virtual function is no longer the handle but rather pointer to the virtual function table. And given that virtual function table is a member of `struct quux` it's easy to convert it to the pointer to the quux object:
 
 ```c
 static void quux_hclose(struct hvfs *hvfs) {
@@ -80,6 +74,8 @@ static void quux_hclose(struct hvfs *hvfs) {
     free(self);
 }
 ```
+
+At the moment we can just return `ENOTSUP` from `quux_hquery()` and `quux_hdone()`. 
 
 Compile the file and run it to test whether it works as expected:
 
@@ -298,7 +294,7 @@ int rc = brecv(self->u, &c, 1, deadline);
 if(rc &lt; 0) return -1;
 ```
 
-User may pass in **NULL** instead of the buffer which means we should silently drop the message:
+User may pass in `NULL` instead of the buffer which means we should silently drop the message:
 
 ```c
 if(!first) {
