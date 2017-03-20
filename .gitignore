@@ -49,6 +49,8 @@ tests/ipc
 tests/iol
 tests/crlf
 tests/pfx
+tests/btrace
+tests/mtrace
 perf/.dirstamp
 perf/chan
 perf/ctxswitch

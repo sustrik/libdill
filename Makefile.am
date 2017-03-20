@@ -63,6 +63,7 @@ libdill_la_SOURCES = \
 if DILL_SOCKETS
 libdill_la_SOURCES += \
     bsock.c \
+    btrace.c \
     crlf.c \
     fd.h \
     fd.c \
@@ -71,6 +72,7 @@ libdill_la_SOURCES += \
     ipc.c \
     ipaddr.c \
     msock.c \
+    mtrace.c \
     pfx.c \
     tcp.h \
     tcp.c \
@@ -121,7 +123,9 @@ check_PROGRAMS += \
     tests/tcp \
     tests/ipc \
     tests/crlf \
-    tests/pfx
+    tests/pfx \
+    tests/btrace \
+    tests/mtrace
 endif
 
 check_HEADERS = \

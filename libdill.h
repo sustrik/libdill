@@ -426,6 +426,28 @@ DILL_EXPORT int crlf_detach(
     int s,
     int64_t deadline);
 
+/******************************************************************************/
+/*  Bytestream protocol tracing.                                              */
+/*  Logs both inbound and outbound data into stderr.                          */
+/******************************************************************************/
+
+DILL_EXPORT int btrace_attach(
+    int s,
+    const char *name);
+DILL_EXPORT int btrace_detach(
+    int s);
+
+/******************************************************************************/
+/*  Message protocol tracing.                                                 */
+/*  Logs both inbound and outbound data into stderr.                          */
+/******************************************************************************/
+
+DILL_EXPORT int mtrace_attach(
+    int s,
+    const char *name);
+DILL_EXPORT int mtrace_detach(
+    int s);
+
 #endif
 
 #endif
