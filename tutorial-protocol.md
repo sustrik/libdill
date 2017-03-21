@@ -91,7 +91,7 @@ Consider a UDP socket. It is actually multiple things. It's a handle and as such
 
 libdill provides an extremely generic mechanism to address this multi-faceted nature of handles. In fact, the mechanism is so generic that it's almost silly. There's a `hquery()` function which takes ID as an argument and returns a void pointer. No assumptions are made about the nature of the ID or nature of the returned pointer. Everything is completely opaque.
 
-To see how that can be useful let's implement a new function for quux handle.
+To see how that can be useful let's implement a new quux function.
 
 First, we have to define an ID for `quux` object type. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you defined IDs in different libraries that were then linked together. With pointers there's no such problem. You can take a pointer of a global variable and it is guaranteed to be unique as two pieces of data can't live at the same memory location:
 
@@ -111,13 +111,13 @@ static void *quux_hquery(struct hvfs *hvfs, const void *id) {
 }
 ```
 
-To understand what this is good for think of it from user's perspective: You call `hquery()` function and pass it a handle and the ID of quux handle type. The function will fail with `ENOTSUP` if the handle is not a quux handle. It will return pointer to `quux` structure if it is. You can use the pointer to perform useful work on the object.
+To understand what this is good for think of it from user's perspective: You call `hquery()` function and pass it a handle and the ID of quux handle type. The function will fail with `ENOTSUP` if the handle is not a quux handle. It will return pointer to `quux` structure if it is. You can use the returned pointer to perform useful work on the object.
 
 But wait! Doesn't that break encapsulation? Anyone can call `hquery()` function, get the pointer to raw quux object and mess with it in unforeseen ways.
 
 But no. Note that `quux_id` is defined as static. The ID is not available anywhere except in the file that implements quux handle. No external code will be able to get the raw object pointer. The encapsulation works as expected after all.
 
-That being said, we can finally implement our new user-facing function:
+All that being said, we can finally implement our new user-facing function:
 
 ```c
 int quux_frobnicate(int h) {

@@ -67,7 +67,7 @@ error1:
 <h2 id="step-2-implementing-an-operation-on-the-handle">Step 2: Implementing an operation on the handle</h2>
 <p>Consider a UDP socket. It is actually multiple things. It's a handle and as such it exposes functions like <code>hclose()</code>. It's a message socket and as such it exposes functions like <code>msend()</code> and <code>mrecv()</code>. It's also a UDP socket per se and as such it exposes functions like <code>udp_send()</code> or <code>udp_recv()</code>.</p>
 <p>libdill provides an extremely generic mechanism to address this multi-faceted nature of handles. In fact, the mechanism is so generic that it's almost silly. There's a <code>hquery()</code> function which takes ID as an argument and returns a void pointer. No assumptions are made about the nature of the ID or nature of the returned pointer. Everything is completely opaque.</p>
-<p>To see how that can be useful let's implement a new function for quux handle.</p>
+<p>To see how that can be useful let's implement a new quux function.</p>
 <p>First, we have to define an ID for <code>quux</code> object type. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you defined IDs in different libraries that were then linked together. With pointers there's no such problem. You can take a pointer of a global variable and it is guaranteed to be unique as two pieces of data can't live at the same memory location:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">const</span> <span class="dt">int</span> quux_id_placeholder = <span class="dv">0</span>;
 <span class="dt">static</span> <span class="dt">const</span> <span class="dt">void</span> *quux_id = &amp;quux_id_placeholder;</code></pre>
@@ -78,10 +78,10 @@ error1:
     errno = ENOTSUP;
     <span class="kw">return</span> NULL;
 }</code></pre>
-<p>To understand what this is good for think of it from user's perspective: You call <code>hquery()</code> function and pass it a handle and the ID of quux handle type. The function will fail with <code>ENOTSUP</code> if the handle is not a quux handle. It will return pointer to <code>quux</code> structure if it is. You can use the pointer to perform useful work on the object.</p>
+<p>To understand what this is good for think of it from user's perspective: You call <code>hquery()</code> function and pass it a handle and the ID of quux handle type. The function will fail with <code>ENOTSUP</code> if the handle is not a quux handle. It will return pointer to <code>quux</code> structure if it is. You can use the returned pointer to perform useful work on the object.</p>
 <p>But wait! Doesn't that break encapsulation? Anyone can call <code>hquery()</code> function, get the pointer to raw quux object and mess with it in unforeseen ways.</p>
 <p>But no. Note that <code>quux_id</code> is defined as static. The ID is not available anywhere except in the file that implements quux handle. No external code will be able to get the raw object pointer. The encapsulation works as expected after all.</p>
-<p>That being said, we can finally implement our new user-facing function:</p>
+<p>All that being said, we can finally implement our new user-facing function:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_frobnicate(<span class="dt">int</span> h) {
     <span class="kw">struct</span> quux *self = hquery(h, quux_type);
     <span class="kw">if</span>(!self) <span class="kw">return</span> -<span class="dv">1</span>;
