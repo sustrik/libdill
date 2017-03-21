@@ -61,7 +61,7 @@ int quux_attach(int u) {
     self->mvfs.mrecvl = quux_mrecvl;
     self->u = u;
     int h = hmake(&self->hvfs);
-    if(h < 0) {int err = errno; goto error2;}
+    if(h < 0) {err = errno; goto error2;}
     return h;
 error2:
     free(self);

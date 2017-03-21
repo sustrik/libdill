@@ -65,7 +65,7 @@ int quux_attach(int u) {
     self->senderr = 0;
     self->recverr = 0;
     int h = hmake(&self->hvfs);
-    if(h < 0) {int err = errno; goto error2;}
+    if(h < 0) {err = errno; goto error2;}
     return h;
 error2:
     free(self);
