@@ -37,8 +37,7 @@ static int tcp_makeconn(int fd);
 /*  TCP connection socket                                                     */
 /******************************************************************************/
 
-static const int tcp_type___ = 0;
-DILL_EXPORT const void *tcp_type = &tcp_type___;
+dill_unique_id(tcp_type);
 
 static void *tcp_hquery(struct hvfs *hvfs, const void *type);
 static void tcp_hclose(struct hvfs *hvfs);
