@@ -74,7 +74,7 @@ int quux_attach(int u, int64_t deadline) {
     if(remote_version != local_version) {err = EPROTO; goto error2;}
 
     int h = hmake(&self->hvfs);
-    if(h < 0) {int err = errno; goto error2;}
+    if(h < 0) {err = errno; goto error2;}
     return h;
 error2:
     free(self);

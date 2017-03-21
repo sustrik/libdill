@@ -46,7 +46,7 @@ int quux_open(void) {
     self->hvfs.close = quux_hclose;
     self->hvfs.done = quux_hdone;
     int h = hmake(&self->hvfs);
-    if(h < 0) {int err = errno; goto error2;}
+    if(h < 0) {err = errno; goto error2;}
     return h;
 error2:
     free(self);
