@@ -29,13 +29,17 @@
 #include "libdillimpl.h"
 #include "fd.h"
 #include "utils.h"
-#include "tcp.h"
 
 static int tcp_makeconn(int fd);
 
 /******************************************************************************/
 /*  TCP connection socket                                                     */
 /******************************************************************************/
+
+/* Seceretely export the symbols. More thinking should be done about how
+   to do this cleanly without breaking encapsulation. */
+DILL_EXPORT extern const void *tcp_type;
+DILL_EXPORT int tcp_fd(int s);
 
 dill_unique_id(tcp_type);
 
@@ -246,7 +250,7 @@ error1:
     return -1;
 }
 
-DILL_EXPORT int tcp_fd(int s) {
+int tcp_fd(int s) {
     struct tcp_listener *lst = hquery(s, tcp_listener_type);
     if(lst) return lst->fd;
     struct tcp_conn *conn = hquery(s, tcp_type);
