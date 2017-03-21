@@ -287,7 +287,7 @@ int ipaddr_remote(struct ipaddr *addr, const char *name, int port, int mode,
             if(dill_slow(rc < 0)) return -1;
             continue;
         }
-        if(rc == ENOENT)
+        if(rc == ENOENT || (rc >= DNS_EBASE && rc <= DNS_ELAST))
             break;
         if(!ipv4 && it && it->ai_family == AF_INET)
             ipv4 = it;
