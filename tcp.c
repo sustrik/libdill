@@ -37,7 +37,8 @@ static int tcp_makeconn(int fd);
 /*  TCP connection socket                                                     */
 /******************************************************************************/
 
-dill_unique_id(tcp_type);
+static const int tcp_type___ = 0;
+DILL_EXPORT const void *tcp_type = &tcp_type___;
 
 static void *tcp_hquery(struct hvfs *hvfs, const void *type);
 static void tcp_hclose(struct hvfs *hvfs);
@@ -246,7 +247,7 @@ error1:
     return -1;
 }
 
-int tcp_fd(int s) {
+DILL_EXPORT int tcp_fd(int s) {
     struct tcp_listener *lst = hquery(s, tcp_listener_type);
     if(lst) return lst->fd;
     struct tcp_conn *conn = hquery(s, tcp_type);
