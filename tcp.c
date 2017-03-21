@@ -30,16 +30,17 @@
 #include "fd.h"
 #include "utils.h"
 
+/* Secretly export the symbols. More thinking should be done about how
+   to do this cleanly without breaking encapsulation. */
+DILL_EXPORT extern const void *tcp_type;
+DILL_EXPORT extern const void *tcp_listener_type;
+DILL_EXPORT int tcp_fd(int s);
+
 static int tcp_makeconn(int fd);
 
 /******************************************************************************/
 /*  TCP connection socket                                                     */
 /******************************************************************************/
-
-/* Seceretely export the symbols. More thinking should be done about how
-   to do this cleanly without breaking encapsulation. */
-DILL_EXPORT extern const void *tcp_type;
-DILL_EXPORT int tcp_fd(int s);
 
 dill_unique_id(tcp_type);
 
