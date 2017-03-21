@@ -50,9 +50,9 @@ struct pfx_sock {
 };
 
 static void *pfx_hquery(struct hvfs *hvfs, const void *type) {
-    struct pfx_sock *obj = (struct pfx_sock*)hvfs;
-    if(type == msock_type) return &obj->mvfs;
-    if(type == pfx_type) return obj;
+    struct pfx_sock *self = (struct pfx_sock*)hvfs;
+    if(type == msock_type) return &self->mvfs;
+    if(type == pfx_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
@@ -69,24 +69,24 @@ int pfx_attach(int s) {
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
     if(dill_slow(!q)) {err = errno; goto error1;}
     /* Create the object. */
-    struct pfx_sock *obj = malloc(sizeof(struct pfx_sock));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    obj->hvfs.query = pfx_hquery;
-    obj->hvfs.close = pfx_hclose;
-    obj->hvfs.done = pfx_hdone;
-    obj->mvfs.msendl = pfx_msendl;
-    obj->mvfs.mrecvl = pfx_mrecvl;
-    obj->u = u;
-    obj->indone = 0;
-    obj->outdone = 0;
-    obj->inerr = 0;
-    obj->outerr = 0;
+    struct pfx_sock *self = malloc(sizeof(struct pfx_sock));
+    if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    self->hvfs.query = pfx_hquery;
+    self->hvfs.close = pfx_hclose;
+    self->hvfs.done = pfx_hdone;
+    self->mvfs.msendl = pfx_msendl;
+    self->mvfs.mrecvl = pfx_mrecvl;
+    self->u = u;
+    self->indone = 0;
+    self->outdone = 0;
+    self->inerr = 0;
+    self->outerr = 0;
     /* Create the handle. */
-    int h = hmake(&obj->hvfs);
+    int h = hmake(&self->hvfs);
     if(dill_slow(h < 0)) {int err = errno; goto error2;}
     return h;
 error2:
-    free(obj);
+    free(self);
 error1:
     rc = hclose(u);
     dill_assert(rc == 0);
@@ -95,46 +95,46 @@ error1:
 }
 
 static int pfx_hdone(struct hvfs *hvfs, int64_t deadline) {
-    struct pfx_sock *obj = (struct pfx_sock*)hvfs;
-    if(dill_slow(obj->outdone)) {errno = EPIPE; return -1;}
-    if(dill_slow(obj->outerr)) {errno = ECONNRESET; return -1;}
+    struct pfx_sock *self = (struct pfx_sock*)hvfs;
+    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     uint64_t sz = 0xffffffffffffffff;
-    int rc = bsend(obj->u, &sz, 8, deadline);
-    if(dill_slow(rc < 0)) {obj->outerr = 1; return -1;}
-    obj->outdone = 1;
+    int rc = bsend(self->u, &sz, 8, deadline);
+    if(dill_slow(rc < 0)) {self->outerr = 1; return -1;}
+    self->outdone = 1;
     return 0;
 }
 
 int pfx_detach(int s, int64_t deadline) {
     int err;
-    struct pfx_sock *obj = hquery(s, pfx_type);
-    if(dill_slow(!obj)) return -1;
-    if(dill_slow(obj->inerr || obj->outerr)) {err = ECONNRESET; goto error;}
+    struct pfx_sock *self = hquery(s, pfx_type);
+    if(dill_slow(!self)) return -1;
+    if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
     /* If not done already start the terminal handshake. */
-    if(!obj->outdone) {
-        int rc = pfx_hdone(&obj->hvfs, deadline);
+    if(!self->outdone) {
+        int rc = pfx_hdone(&self->hvfs, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     /* Drain incoming messages until termination message is received. */
     while(1) {
-        ssize_t sz = pfx_mrecvl(&obj->mvfs, NULL, NULL, deadline);
+        ssize_t sz = pfx_mrecvl(&self->mvfs, NULL, NULL, deadline);
         if(sz < 0 && errno == EPIPE) break;
         if(dill_slow(sz < 0)) {err = errno; goto error;}
     }
-    int u = obj->u;
-    free(obj);
+    int u = self->u;
+    free(self);
     return u;
 error:
-    pfx_hclose(&obj->hvfs);
+    pfx_hclose(&self->hvfs);
     errno = err;
     return -1;
 }
 
 static int pfx_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct pfx_sock *obj = dill_cont(mvfs, struct pfx_sock, mvfs);
-    if(dill_slow(obj->outdone)) {errno = EPIPE; return -1;}
-    if(dill_slow(obj->outerr)) {errno = ECONNRESET; return -1;}
+    struct pfx_sock *self = dill_cont(mvfs, struct pfx_sock, mvfs);
+    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     uint8_t szbuf[8];
     size_t sz = 0;
     struct iolist *it;
@@ -142,27 +142,27 @@ static int pfx_msendl(struct msock_vfs *mvfs,
         sz += it->iol_len;
     dill_putll(szbuf, (uint64_t)sz);
     struct iolist hdr = {szbuf, 8, first, 0};
-    int rc = bsendl(obj->u, &hdr, last, deadline);
-    if(dill_slow(rc < 0)) {obj->outerr = 1; return -1;}
+    int rc = bsendl(self->u, &hdr, last, deadline);
+    if(dill_slow(rc < 0)) {self->outerr = 1; return -1;}
     return 0;
 }
 
 static ssize_t pfx_mrecvl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct pfx_sock *obj = dill_cont(mvfs, struct pfx_sock, mvfs);
-    if(dill_slow(obj->indone)) {errno = EPIPE; return -1;}
-    if(dill_slow(obj->inerr)) {errno = ECONNRESET; return -1;}
+    struct pfx_sock *self = dill_cont(mvfs, struct pfx_sock, mvfs);
+    if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
     uint8_t szbuf[8];
-    int rc = brecv(obj->u, szbuf, 8, deadline);
-    if(dill_slow(rc < 0)) {obj->inerr = 1; return -1;}
+    int rc = brecv(self->u, szbuf, 8, deadline);
+    if(dill_slow(rc < 0)) {self->inerr = 1; return -1;}
     uint64_t sz = dill_getll(szbuf);
     /* Peer is terminating. */
     if(dill_slow(sz == 0xffffffffffffffff)) {
-        obj->indone = 1; errno = EPIPE; return -1;}
+        self->indone = 1; errno = EPIPE; return -1;}
     /* Skip the message. */
     if(!first) {
-        rc = brecv(obj->u, NULL, sz, deadline);
-        if(dill_slow(rc < 0)) {obj->inerr = 1; return -1;}
+        rc = brecv(self->u, NULL, sz, deadline);
+        if(dill_slow(rc < 0)) {self->inerr = 1; return -1;}
         return sz;
     }
     /* Trim iolist to reflect the size of the message. */
@@ -172,26 +172,26 @@ static ssize_t pfx_mrecvl(struct msock_vfs *mvfs,
         if(it->iol_len >= rmn) break;
         rmn -= it->iol_len;
         it = it->iol_next;
-        if(dill_slow(!it)) {obj->inerr = 1; errno = EMSGSIZE; return -1;}
+        if(dill_slow(!it)) {self->inerr = 1; errno = EMSGSIZE; return -1;}
     }
     size_t old_len = it->iol_len;
     struct iolist *old_next = it->iol_next;
     it->iol_len = rmn;
     it->iol_next = NULL;
-    rc = brecvl(obj->u, first, last, deadline);
+    rc = brecvl(self->u, first, last, deadline);
     /* Get iolist to its original state. */
     it->iol_len = old_len;
     it->iol_next = old_next;
-    if(dill_slow(rc < 0)) {obj->inerr = 1; return -1;}
+    if(dill_slow(rc < 0)) {self->inerr = 1; return -1;}
     return sz;
 }
 
 static void pfx_hclose(struct hvfs *hvfs) {
-    struct pfx_sock *obj = (struct pfx_sock*)hvfs;
-    if(dill_fast(obj->u >= 0)) {
-        int rc = hclose(obj->u);
+    struct pfx_sock *self = (struct pfx_sock*)hvfs;
+    if(dill_fast(self->u >= 0)) {
+        int rc = hclose(self->u);
         dill_assert(rc == 0);
     }
-    free(obj);
+    free(self);
 }
 

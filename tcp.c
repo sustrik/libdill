@@ -64,9 +64,9 @@ struct tcp_conn {
 };
 
 static void *tcp_hquery(struct hvfs *hvfs, const void *type) {
-    struct tcp_conn *obj = (struct tcp_conn*)hvfs;
-    if(type == bsock_type) return &obj->bvfs;
-    if(type == tcp_type) return obj;
+    struct tcp_conn *self = (struct tcp_conn*)hvfs;
+    if(type == bsock_type) return &self->bvfs;
+    if(type == tcp_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
@@ -96,47 +96,47 @@ error1:
 
 static int tcp_bsendl(struct bsock_vfs *bvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct tcp_conn *obj = dill_cont(bvfs, struct tcp_conn, bvfs);
-    if(dill_slow(obj->outdone)) {errno = EPIPE; return -1;}
-    if(dill_slow(obj->outerr)) {errno = ECONNRESET; return -1;}
-    ssize_t sz = fd_send(obj->fd, first, last, deadline);
+    struct tcp_conn *self = dill_cont(bvfs, struct tcp_conn, bvfs);
+    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
+    ssize_t sz = fd_send(self->fd, first, last, deadline);
     if(dill_fast(sz >= 0)) return sz;
-    obj->outerr = 1;
+    self->outerr = 1;
     return -1;
 }
 
 static int tcp_brecvl(struct bsock_vfs *bvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct tcp_conn *obj = dill_cont(bvfs, struct tcp_conn, bvfs);
-    if(dill_slow(obj->indone)) {errno = EPIPE; return -1;}
-    if(dill_slow(obj->inerr)) {errno = ECONNRESET; return -1;}
-    int rc = fd_recv(obj->fd, &obj->rxbuf, first, last, deadline);
+    struct tcp_conn *self = dill_cont(bvfs, struct tcp_conn, bvfs);
+    if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
+    int rc = fd_recv(self->fd, &self->rxbuf, first, last, deadline);
     if(dill_fast(rc == 0)) return 0;
-    if(errno == EPIPE) obj->indone = 1;
-    else obj->inerr = 1;
+    if(errno == EPIPE) self->indone = 1;
+    else self->inerr = 1;
     return -1;
 }
 
 static int tcp_hdone(struct hvfs *hvfs, int64_t deadline) {
-    struct tcp_conn *obj = (struct tcp_conn*)hvfs;
-    if(dill_slow(obj->outdone)) {errno = EPIPE; return -1;}
-    if(dill_slow(obj->outerr)) {errno = ECONNRESET; return -1;}
+    struct tcp_conn *self = (struct tcp_conn*)hvfs;
+    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     /* Flushing the tx buffer is done asynchronously on kernel level. */
-    int rc = shutdown(obj->fd, SHUT_WR);
+    int rc = shutdown(self->fd, SHUT_WR);
     dill_assert(rc == 0);
-    obj->outdone = 1;
+    self->outdone = 1;
     return 0;
 }
 
 int tcp_close(int s, int64_t deadline) {
     int err;
-    struct tcp_conn *obj = hquery(s, tcp_type);
-    if(dill_slow(!obj)) return -1;
-    if(dill_slow(obj->inerr || obj->outerr)) {err = ECONNRESET; goto error;}
+    struct tcp_conn *self = hquery(s, tcp_type);
+    if(dill_slow(!self)) return -1;
+    if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
     /* If not done already, flush the outbound data and start the terminal
        handshake. */
-    if(!obj->outdone) {
-        int rc = tcp_hdone(&obj->hvfs, deadline);
+    if(!self->outdone) {
+        int rc = tcp_hdone(&self->hvfs, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     /* Now we are going to read all the inbound data until we reach end of the
@@ -145,22 +145,22 @@ int tcp_close(int s, int64_t deadline) {
     while(1) {
         char buf[128];
         struct iolist iol = {buf, sizeof(buf), NULL, 0};
-        int rc = tcp_brecvl(&obj->bvfs, &iol, &iol, deadline);
+        int rc = tcp_brecvl(&self->bvfs, &iol, &iol, deadline);
         if(rc < 0 && errno == EPIPE) break;
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     return 0;
 error:
-    tcp_hclose(&obj->hvfs);
+    tcp_hclose(&self->hvfs);
     errno = err;
     return -1;
 }
 
 static void tcp_hclose(struct hvfs *hvfs) {
-    struct tcp_conn *obj = (struct tcp_conn*)hvfs;
-    int rc = fd_close(obj->fd);
+    struct tcp_conn *self = (struct tcp_conn*)hvfs;
+    int rc = fd_close(self->fd);
     dill_assert(rc == 0);
-    free(obj);
+    free(self);
 }
 
 /******************************************************************************/
@@ -179,8 +179,8 @@ struct tcp_listener {
 };
 
 static void *tcp_listener_hquery(struct hvfs *hvfs, const void *type) {
-    struct tcp_listener *obj = (struct tcp_listener*)hvfs;
-    if(type == tcp_listener_type) return obj;
+    struct tcp_listener *self = (struct tcp_listener*)hvfs;
+    if(type == tcp_listener_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
@@ -208,18 +208,18 @@ int tcp_listen(struct ipaddr *addr, int backlog) {
         ipaddr_setport(addr, ipaddr_port(&baddr));
     }
     /* Create the object. */
-    struct tcp_listener *obj = malloc(sizeof(struct tcp_listener));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error2;}
-    obj->hvfs.query = tcp_listener_hquery;
-    obj->hvfs.close = tcp_listener_hclose;
-    obj->hvfs.done = NULL;
-    obj->fd = s;
+    struct tcp_listener *self = malloc(sizeof(struct tcp_listener));
+    if(dill_slow(!self)) {err = ENOMEM; goto error2;}
+    self->hvfs.query = tcp_listener_hquery;
+    self->hvfs.close = tcp_listener_hclose;
+    self->hvfs.done = NULL;
+    self->fd = s;
     /* Create handle. */
-    int h = hmake(&obj->hvfs);
+    int h = hmake(&self->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error3;}
     return h;
 error3:
-    free(obj);
+    free(self);
 error2:
     close(s);
 error1:
@@ -260,10 +260,10 @@ int tcp_fd(int s) {
 }
 
 static void tcp_listener_hclose(struct hvfs *hvfs) {
-    struct tcp_listener *obj = (struct tcp_listener*)hvfs;
-    int rc = fd_close(obj->fd);
+    struct tcp_listener *self = (struct tcp_listener*)hvfs;
+    int rc = fd_close(self->fd);
     dill_assert(rc == 0);
-    free(obj);
+    free(self);
 }
 
 /******************************************************************************/
@@ -273,25 +273,25 @@ static void tcp_listener_hclose(struct hvfs *hvfs) {
 static int tcp_makeconn(int fd) {
     int err;
     /* Create the object. */
-    struct tcp_conn *obj = malloc(sizeof(struct tcp_conn));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    obj->hvfs.query = tcp_hquery;
-    obj->hvfs.close = tcp_hclose;
-    obj->hvfs.done = tcp_hdone;
-    obj->bvfs.bsendl = tcp_bsendl;
-    obj->bvfs.brecvl = tcp_brecvl;
-    obj->fd = fd;
-    fd_initrxbuf(&obj->rxbuf);
-    obj->indone = 0;
-    obj->outdone = 0;
-    obj->inerr = 0;
-    obj->outerr = 0;
+    struct tcp_conn *self = malloc(sizeof(struct tcp_conn));
+    if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    self->hvfs.query = tcp_hquery;
+    self->hvfs.close = tcp_hclose;
+    self->hvfs.done = tcp_hdone;
+    self->bvfs.bsendl = tcp_bsendl;
+    self->bvfs.brecvl = tcp_brecvl;
+    self->fd = fd;
+    fd_initrxbuf(&self->rxbuf);
+    self->indone = 0;
+    self->outdone = 0;
+    self->inerr = 0;
+    self->outerr = 0;
     /* Create the handle. */
-    int h = hmake(&obj->hvfs);
+    int h = hmake(&self->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    free(obj);
+    free(self);
 error1:
     errno = err;
     return -1;

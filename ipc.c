@@ -61,9 +61,9 @@ struct ipc_conn {
 };
 
 static void *ipc_hquery(struct hvfs *hvfs, const void *type) {
-    struct ipc_conn *obj = (struct ipc_conn*)hvfs;
-    if(type == bsock_type) return &obj->bvfs;
-    if(type == ipc_type) return obj;
+    struct ipc_conn *self = (struct ipc_conn*)hvfs;
+    if(type == bsock_type) return &self->bvfs;
+    if(type == ipc_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
@@ -97,48 +97,48 @@ error1:
 
 static int ipc_bsendl(struct bsock_vfs *bvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct ipc_conn *obj = dill_cont(bvfs, struct ipc_conn, bvfs);
-    if(dill_slow(obj->outdone)) {errno = EPIPE; return -1;}
-    if(dill_slow(obj->outerr)) {errno = ECONNRESET; return -1;}
-    ssize_t sz = fd_send(obj->fd, first, last, deadline);
+    struct ipc_conn *self = dill_cont(bvfs, struct ipc_conn, bvfs);
+    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
+    ssize_t sz = fd_send(self->fd, first, last, deadline);
     if(dill_fast(sz >= 0)) return sz;
-    obj->outerr = 1;
+    self->outerr = 1;
     return -1;
 }
 
 static int ipc_brecvl(struct bsock_vfs *bvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct ipc_conn *obj = dill_cont(bvfs, struct ipc_conn, bvfs);
-    if(dill_slow(obj->indone)) {errno = EPIPE; return -1;}
-    if(dill_slow(obj->inerr)) {errno = ECONNRESET; return -1;}
-    int rc = fd_recv(obj->fd, &obj->rxbuf, first, last, deadline);
+    struct ipc_conn *self = dill_cont(bvfs, struct ipc_conn, bvfs);
+    if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
+    int rc = fd_recv(self->fd, &self->rxbuf, first, last, deadline);
     if(dill_fast(rc == 0)) return 0;
-    if(errno == EPIPE) obj->indone = 1;
-    else obj->inerr = 1;
+    if(errno == EPIPE) self->indone = 1;
+    else self->inerr = 1;
     return -1;
 }
 
 static int ipc_hdone(struct hvfs *hvfs, int64_t deadline) {
-    struct ipc_conn *obj = (struct ipc_conn*)hvfs;
-    if(dill_slow(obj->outdone)) {errno = EPIPE; return -1;}
-    if(dill_slow(obj->outerr)) {errno = ECONNRESET; return -1;}
+    struct ipc_conn *self = (struct ipc_conn*)hvfs;
+    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     /* Shutdown is done asynchronously on kernel level.
        No need to use the deadline. */
-    int rc = shutdown(obj->fd, SHUT_WR);
+    int rc = shutdown(self->fd, SHUT_WR);
     dill_assert(rc == 0);
-    obj->outdone = 1;
+    self->outdone = 1;
     return 0;
 }
 
 int ipc_close(int s, int64_t deadline) {
     int err;
-    struct ipc_conn *obj = hquery(s, ipc_type);
-    if(dill_slow(!obj)) return -1;
-    if(dill_slow(obj->inerr || obj->outerr)) {err = ECONNRESET; goto error;}
+    struct ipc_conn *self = hquery(s, ipc_type);
+    if(dill_slow(!self)) return -1;
+    if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
     /* If not done already, flush the outbound data and start the terminal
        handshake. */
-    if(!obj->outdone) {
-        int rc = ipc_hdone(&obj->hvfs, deadline);
+    if(!self->outdone) {
+        int rc = ipc_hdone(&self->hvfs, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     /* Now we are going to read all the inbound data until we reach end of the
@@ -147,22 +147,22 @@ int ipc_close(int s, int64_t deadline) {
     while(1) {
         char buf[128];
         struct iolist iol = {buf, sizeof(buf), NULL};
-        int rc = ipc_brecvl(&obj->bvfs, &iol, &iol, deadline);
+        int rc = ipc_brecvl(&self->bvfs, &iol, &iol, deadline);
         if(rc < 0 && errno == EPIPE) break;
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     return 0;
 error:
-    ipc_hclose(&obj->hvfs);
+    ipc_hclose(&self->hvfs);
     errno = err;
     return -1;
 }
 
 static void ipc_hclose(struct hvfs *hvfs) {
-    struct ipc_conn *obj = (struct ipc_conn*)hvfs;
-    int rc = fd_close(obj->fd);
+    struct ipc_conn *self = (struct ipc_conn*)hvfs;
+    int rc = fd_close(self->fd);
     dill_assert(rc == 0);
-    free(obj);
+    free(self);
 }
 
 /******************************************************************************/
@@ -180,8 +180,8 @@ struct ipc_listener {
 };
 
 static void *ipc_listener_hquery(struct hvfs *hvfs, const void *type) {
-    struct ipc_listener *obj = (struct ipc_listener*)hvfs;
-    if(type == ipc_listener_type) return obj;
+    struct ipc_listener *self = (struct ipc_listener*)hvfs;
+    if(type == ipc_listener_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
@@ -204,18 +204,18 @@ int ipc_listen(const char *addr, int backlog) {
     rc = listen(s, backlog);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the object. */
-    struct ipc_listener *obj = malloc(sizeof(struct ipc_listener));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error2;}
-    obj->hvfs.query = ipc_listener_hquery;
-    obj->hvfs.close = ipc_listener_hclose;
-    obj->hvfs.done = NULL;
-    obj->fd = s;
+    struct ipc_listener *self = malloc(sizeof(struct ipc_listener));
+    if(dill_slow(!self)) {err = ENOMEM; goto error2;}
+    self->hvfs.query = ipc_listener_hquery;
+    self->hvfs.close = ipc_listener_hclose;
+    self->hvfs.done = NULL;
+    self->fd = s;
     /* Create handle. */
-    int h = hmake(&obj->hvfs);
+    int h = hmake(&self->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error3;}
     return h;
 error3:
-    free(obj);
+    free(self);
 error2:
     close(s);
 error1:
@@ -247,10 +247,10 @@ error1:
 }
 
 static void ipc_listener_hclose(struct hvfs *hvfs) {
-    struct ipc_listener *obj = (struct ipc_listener*)hvfs;
-    int rc = fd_close(obj->fd);
+    struct ipc_listener *self = (struct ipc_listener*)hvfs;
+    int rc = fd_close(self->fd);
     dill_assert(rc == 0);
-    free(obj);
+    free(self);
 }
 
 /******************************************************************************/
@@ -303,25 +303,25 @@ static int ipc_resolve(const char *addr, struct sockaddr_un *su) {
 static int ipc_makeconn(int fd) {
     int err;
     /* Create the object. */
-    struct ipc_conn *obj = malloc(sizeof(struct ipc_conn));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    obj->hvfs.query = ipc_hquery;
-    obj->hvfs.close = ipc_hclose;
-    obj->hvfs.done = ipc_hdone;
-    obj->bvfs.bsendl = ipc_bsendl;
-    obj->bvfs.brecvl = ipc_brecvl;
-    obj->fd = fd;
-    fd_initrxbuf(&obj->rxbuf);
-    obj->indone = 0;
-    obj->outdone = 0;
-    obj->inerr = 0;
-    obj->outerr = 0;
+    struct ipc_conn *self = malloc(sizeof(struct ipc_conn));
+    if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    self->hvfs.query = ipc_hquery;
+    self->hvfs.close = ipc_hclose;
+    self->hvfs.done = ipc_hdone;
+    self->bvfs.bsendl = ipc_bsendl;
+    self->bvfs.brecvl = ipc_brecvl;
+    self->fd = fd;
+    fd_initrxbuf(&self->rxbuf);
+    self->indone = 0;
+    self->outdone = 0;
+    self->inerr = 0;
+    self->outerr = 0;
     /* Create the handle. */
-    int h = hmake(&obj->hvfs);
+    int h = hmake(&self->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    free(obj);
+    free(self);
 error1:
     errno = err;
     return -1;

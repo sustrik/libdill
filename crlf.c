@@ -53,9 +53,9 @@ struct crlf_sock {
 };
 
 static void *crlf_hquery(struct hvfs *hvfs, const void *type) {
-    struct crlf_sock *obj = (struct crlf_sock*)hvfs;
-    if(type == msock_type) return &obj->mvfs;
-    if(type == crlf_type) return obj;
+    struct crlf_sock *self = (struct crlf_sock*)hvfs;
+    if(type == msock_type) return &self->mvfs;
+    if(type == crlf_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
@@ -68,27 +68,27 @@ int crlf_attach(int s) {
     int rc = hclose(s);
     dill_assert(rc == 0);
     /* Create the object. */
-    struct crlf_sock *obj = malloc(sizeof(struct crlf_sock));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    obj->hvfs.query = crlf_hquery;
-    obj->hvfs.close = crlf_hclose;
-    obj->hvfs.done = crlf_hdone;
-    obj->mvfs.msendl = crlf_msendl;
-    obj->mvfs.mrecvl = crlf_mrecvl;
-    obj->u = u;
-    obj->uvfs = hquery(u, bsock_type);
-    if(dill_slow(!obj->uvfs && errno == ENOTSUP)) {err = EPROTO; goto error2;}
-    if(dill_slow(!obj->uvfs)) {err = errno; goto error2;}
-    obj->indone = 0;
-    obj->outdone = 0;
-    obj->inerr = 0;
-    obj->outerr = 0;
+    struct crlf_sock *self = malloc(sizeof(struct crlf_sock));
+    if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    self->hvfs.query = crlf_hquery;
+    self->hvfs.close = crlf_hclose;
+    self->hvfs.done = crlf_hdone;
+    self->mvfs.msendl = crlf_msendl;
+    self->mvfs.mrecvl = crlf_mrecvl;
+    self->u = u;
+    self->uvfs = hquery(u, bsock_type);
+    if(dill_slow(!self->uvfs && errno == ENOTSUP)) {err = EPROTO; goto error2;}
+    if(dill_slow(!self->uvfs)) {err = errno; goto error2;}
+    self->indone = 0;
+    self->outdone = 0;
+    self->inerr = 0;
+    self->outerr = 0;
     /* Create the handle. */
-    int h = hmake(&obj->hvfs);
+    int h = hmake(&self->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    free(obj);
+    free(self);
 error1:
     rc = hclose(u);
     dill_assert(rc == 0);
@@ -97,45 +97,45 @@ error1:
 }
 
 static int crlf_hdone(struct hvfs *hvfs, int64_t deadline) {
-    struct crlf_sock *obj = (struct crlf_sock*)hvfs;
-    if(dill_slow(obj->outdone)) {errno = EPIPE; return -1;}
-    if(dill_slow(obj->outerr)) {errno = ECONNRESET; return -1;}
-    int rc = bsend(obj->u, "\r\n", 2, deadline);
-    if(dill_slow(rc < 0)) {obj->outerr = 1; return -1;}
-    obj->outdone = 1;
+    struct crlf_sock *self = (struct crlf_sock*)hvfs;
+    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
+    int rc = bsend(self->u, "\r\n", 2, deadline);
+    if(dill_slow(rc < 0)) {self->outerr = 1; return -1;}
+    self->outdone = 1;
     return 0;
 }
 
 int crlf_detach(int s, int64_t deadline) {
     int err;
-    struct crlf_sock *obj = hquery(s, crlf_type);
-    if(dill_slow(!obj)) return -1;
-    if(dill_slow(obj->inerr || obj->outerr)) {err = ECONNRESET; goto error;}
+    struct crlf_sock *self = hquery(s, crlf_type);
+    if(dill_slow(!self)) return -1;
+    if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
     /* If not done already start the terminal handshake. */
-    if(!obj->outdone) {
-        int rc = crlf_hdone(&obj->hvfs, deadline);
+    if(!self->outdone) {
+        int rc = crlf_hdone(&self->hvfs, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     /* Drain incoming messages until termination message is received. */
     while(1) {
-        ssize_t sz = crlf_mrecvl(&obj->mvfs, NULL, NULL, deadline);
+        ssize_t sz = crlf_mrecvl(&self->mvfs, NULL, NULL, deadline);
         if(sz < 0 && errno == EPIPE) break;
         if(dill_slow(sz < 0)) {err = errno; goto error;}
     }
-    int u = obj->u;
-    free(obj);
+    int u = self->u;
+    free(self);
     return u;
 error:
-    crlf_hclose(&obj->hvfs);
+    crlf_hclose(&self->hvfs);
     errno = err;
     return -1;
 }
 
 static int crlf_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct crlf_sock *obj = dill_cont(mvfs, struct crlf_sock, mvfs);
-    if(dill_slow(obj->outdone)) {errno = EPIPE; return -1;}
-    if(dill_slow(obj->outerr)) {errno = ECONNRESET; return -1;}
+    struct crlf_sock *self = dill_cont(mvfs, struct crlf_sock, mvfs);
+    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     /* Make sure that message doesn't contain CRLF sequence. */
     uint8_t c = 0;
     size_t sz = 0;
@@ -145,26 +145,26 @@ static int crlf_msendl(struct msock_vfs *mvfs,
         for(i = 0; i != it->iol_len; ++i) {
             uint8_t c2 = ((uint8_t*)it->iol_base)[i];
             if(dill_slow(c == '\r' && c2 == '\n')) {
-                obj->outerr = 1; errno = EINVAL; return -1;}
+                self->outerr = 1; errno = EINVAL; return -1;}
             c = c2;
         }
         sz += it->iol_len;
     }
     /* Can't send empty line. Empty line is used as protocol terminator. */
-    if(dill_slow(sz == 0)) {obj->outerr = 1; errno = EINVAL; return -1;}
+    if(dill_slow(sz == 0)) {self->outerr = 1; errno = EINVAL; return -1;}
     struct iolist iol = {(void*)"\r\n", 2, NULL, 0};
     last->iol_next = &iol;
-    int rc = obj->uvfs->bsendl(obj->uvfs, first, &iol, deadline);
+    int rc = self->uvfs->bsendl(self->uvfs, first, &iol, deadline);
     last->iol_next = NULL;
-    if(dill_slow(rc < 0)) {obj->outerr = 1; return -1;}
+    if(dill_slow(rc < 0)) {self->outerr = 1; return -1;}
     return 0;
 }
 
 static ssize_t crlf_mrecvl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct crlf_sock *obj = dill_cont(mvfs, struct crlf_sock, mvfs);
-    if(dill_slow(obj->indone)) {errno = EPIPE; return -1;}
-    if(dill_slow(obj->inerr)) {errno = ECONNRESET; return -1;}
+    struct crlf_sock *self = dill_cont(mvfs, struct crlf_sock, mvfs);
+    if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
     size_t recvd = 0;
     char c1 = 0;
     char c2 = 0;
@@ -175,7 +175,7 @@ static ssize_t crlf_mrecvl(struct msock_vfs *mvfs,
         /* The pipeline looks like this: buffer <- c1 <- c2 <- socket */
         /* buffer <- c1 */
         if(first) {
-            if(!it) {obj->inerr = 1; errno = EMSGSIZE; return -1;}
+            if(!it) {self->inerr = 1; errno = EMSGSIZE; return -1;}
             if(recvd > 1) {
                 if(it->iol_base) ((char*)it->iol_base)[column] = c1;
                 ++column;
@@ -188,22 +188,22 @@ static ssize_t crlf_mrecvl(struct msock_vfs *mvfs,
         /* c1 <- c2 */
         c1 = c2;
         /* c2 <- socket */
-        int rc = obj->uvfs->brecvl(obj->uvfs, &iol, &iol, deadline);
-        if(dill_slow(rc < 0)) {obj->inerr = 1; return -1;}
+        int rc = self->uvfs->brecvl(self->uvfs, &iol, &iol, deadline);
+        if(dill_slow(rc < 0)) {self->inerr = 1; return -1;}
         ++recvd;
         if(c1 == '\r' && c2 == '\n') break;
     }
     /* Empty line means that peer is terminating. */
-    if(dill_slow(recvd == 2)) {obj->indone = 1; errno = EPIPE; return -1;}
+    if(dill_slow(recvd == 2)) {self->indone = 1; errno = EPIPE; return -1;}
     return recvd - 2;
 }
 
 static void crlf_hclose(struct hvfs *hvfs) {
-    struct crlf_sock *obj = (struct crlf_sock*)hvfs;
-    if(dill_fast(obj->u >= 0)) {
-        int rc = hclose(obj->u);
+    struct crlf_sock *self = (struct crlf_sock*)hvfs;
+    if(dill_fast(self->u >= 0)) {
+        int rc = hclose(self->u);
         dill_assert(rc == 0);
     }
-    free(obj);
+    free(self);
 }
 
