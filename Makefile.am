@@ -72,7 +72,6 @@ libdill_la_SOURCES += \
     ipaddr.c \
     msock.c \
     pfx.c \
-    tcp.h \
     tcp.c \
     dns/dns.h \
     dns/dns.c
