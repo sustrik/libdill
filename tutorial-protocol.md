@@ -230,8 +230,8 @@ coroutine void client(int s) {
 int main(void) {
     ...
     char buf[256];
-    mrecv(q, buf, sizeof(buf), -1);
-    printf("%s\n", buf);
+    ssize_t sz = mrecv(q, buf, sizeof(buf), -1);
+    printf("%.*s\n", (size_t)sz, buf);
     ...
 }
 ```

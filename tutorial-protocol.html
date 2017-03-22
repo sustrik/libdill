@@ -161,8 +161,8 @@ error1:
 <span class="dt">int</span> main(<span class="dt">void</span>) {
     ...
     <span class="dt">char</span> buf[<span class="dv">256</span>];
-    mrecv(q, buf, <span class="kw">sizeof</span>(buf), -<span class="dv">1</span>);
-    printf(<span class="st">&quot;%s</span><span class="ch">\n</span><span class="st">&quot;</span>, buf);
+    ssize_t sz = mrecv(q, buf, <span class="kw">sizeof</span>(buf), -<span class="dv">1</span>);
+    printf(<span class="st">&quot;%.*s</span><span class="ch">\n</span><span class="st">&quot;</span>, (size_t)sz, buf);
     ...
 }</code></pre>
 <p>If you run the test program now it will fail becuase <code>msend()</code> and <code>mrecv()</code> are returning <code>ENOTSUP</code> error.</p>
