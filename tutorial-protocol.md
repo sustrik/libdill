@@ -308,7 +308,7 @@ Note that payload data is passed to the send function in form of two pointers to
 
 Iolists are libdill's alternative to POSIX iovecs. Where iovecs are arrays of buffers (so called scatter/gather arrays) iolists are linked lists of buffers. Very much like iovec, iolist has `iol_base` pointer pointing to the data and `iol_len` field containing the size of the data. Unlike iovec though it has `iol_next` field which points to the next buffer in the list. `iol_next` of the last item in the list is set to `NULL`.
 
-To send a quux message one has to compute the size of the message first. We can do so by iterating over the iolist and summing all the buffer sizes. If size is greater than 255, it's an error. And actually, we'll use numbers 255 for a special purposes later on (terminal handshake), so let's limit the message size to 254 bytes:
+To send a quux message one has to compute the size of the message first. We can do so by iterating over the iolist and summing all the buffer sizes. If size is greater than 255, it's an error. And actually, we'll use number 255 for a special purposes later on (to do terminal handshake), so let's limit the message size to 254 bytes:
 
 ```c
 size_t sz = 0;
@@ -348,9 +348,9 @@ if(!first) {
 }
 ```
 
-The size of the message may not match size of the buffer supplied by the user. If message is larger than the buffer we will simply return an error. However, if message is smaller than the buffer we will have to shrink the buffer to the appropriate size.
+The size of the message may not match size of the buffer supplied by the user. If message is larger than the buffer we will simply return an error. However, if message is smaller than the buffer there's a problem. Bytestream receive function has no size argument. It just receives data until the buffer is full. Therefore, we will have to shrink the buffer to the appropriate size.
 
-We can do so by modifying the iolist. Note that in iolist-based functions the list is supposed to be unchanges when the function returns. However, it can be temporarily modified while the function is in progress. In other words, iolists are not guaranteed to be thread- or coroutine-safe.
+We can do so by modifying the iolist. Note that in iolist-based functions the list is supposed to be unchanged when the function returns. However, it can be temporarily modified while the function is in progress. In other words, iolists are not guaranteed to be thread- or coroutine-safe.
 
 Once the iolist is modified we can read the message payload from the underlying socket:
 
