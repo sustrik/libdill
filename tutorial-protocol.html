@@ -68,19 +68,19 @@ error1:
 <p>Consider a UDP socket. It is actually multiple things. It's a handle and as such it exposes functions like <code>hclose()</code>. It's a message socket and as such it exposes functions like <code>msend()</code> and <code>mrecv()</code>. It's also a UDP socket per se and as such it exposes functions like <code>udp_send()</code> or <code>udp_recv()</code>.</p>
 <p>libdill provides an extremely generic mechanism to address this multi-faceted nature of handles. In fact, the mechanism is so generic that it's almost silly. There's a <code>hquery()</code> function which takes ID as an argument and returns a void pointer. No assumptions are made about the nature of the ID or nature of the returned pointer. Everything is completely opaque.</p>
 <p>To see how that can be useful let's implement a new quux function.</p>
-<p>First, we have to define an ID for <code>quux</code> object type. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you defined IDs in different libraries that were then linked together. With pointers there's no such problem. You can take a pointer of a global variable and it is guaranteed to be unique as two pieces of data can't live at the same memory location:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">const</span> <span class="dt">int</span> quux_id_placeholder = <span class="dv">0</span>;
-<span class="dt">static</span> <span class="dt">const</span> <span class="dt">void</span> *quux_id = &amp;quux_id_placeholder;</code></pre>
+<p>First, we have to define an ID for <code>quux</code> object type. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you defined IDs in different libraries that were then linked together. With pointers there's no such problem. You can take a pointer to a global variable and it is guaranteed to be unique as two pieces of data can't live at the same memory location.</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">const</span> <span class="dt">int</span> quux_type_placeholder = <span class="dv">0</span>;
+<span class="dt">static</span> <span class="dt">const</span> <span class="dt">void</span> *quux_type = &amp;quux_type_placeholder;</code></pre>
 <p>Second, let's implement <code>hquery()</code> virtual function, empty implementation of which has been created in previous step of this tutorial:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">void</span> *quux_hquery(<span class="kw">struct</span> hvfs *hvfs, <span class="dt">const</span> <span class="dt">void</span> *id) {
     <span class="kw">struct</span> quux *self = (<span class="kw">struct</span> quux*)hvfs;
-    <span class="kw">if</span>(id == quux_id) <span class="kw">return</span> self;
+    <span class="kw">if</span>(id == quux_type) <span class="kw">return</span> self;
     errno = ENOTSUP;
     <span class="kw">return</span> NULL;
 }</code></pre>
 <p>To understand what this is good for think of it from user's perspective: You call <code>hquery()</code> function and pass it a handle and the ID of quux handle type. The function will fail with <code>ENOTSUP</code> if the handle is not a quux handle. It will return pointer to <code>quux</code> structure if it is. You can use the returned pointer to perform useful work on the object.</p>
 <p>But wait! Doesn't that break encapsulation? Anyone can call <code>hquery()</code> function, get the pointer to raw quux object and mess with it in unforeseen ways.</p>
-<p>But no. Note that <code>quux_id</code> is defined as static. The ID is not available anywhere except in the file that implements quux handle. No external code will be able to get the raw object pointer. The encapsulation works as expected after all.</p>
+<p>But no. Note that <code>quux_type</code> is defined as static. The ID is not available anywhere except in the file that implements quux handle. No external code will be able to get the raw object pointer. The encapsulation works as expected after all.</p>
 <p>All that being said, we can finally implement our new user-facing function:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_frobnicate(<span class="dt">int</span> h) {
     <span class="kw">struct</span> quux *self = hquery(h, quux_type);
@@ -96,39 +96,10 @@ error1:
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
 <h2 id="step-3-attaching-and-detaching-a-socket">Step 3: Attaching and detaching a socket</h2>
-<p>Nice. We have a functional handle now, but in the end we want quux to be a network protocol handle. Let's say it will be a message-based protocol that can run on top of arbitrary bytestream protocol such as TCP or UNIX domain sockets.</p>
-<p>First, we need to store the underlying socket in quux object:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> quux {
-    <span class="kw">struct</span> hvfs hvfs;
-    <span class="dt">int</span> u;
-};</code></pre>
-<p>To accomodate libdill's naming conventions for protocols running on top of other protocols, we have to rename <code>quux_open()</code> to <code>quux_attach()</code>. We can also reuse <code>quux_frobnicate()</code> and rename it to <code>quux_detach()</code>. Attach function will accept a handle of the underlying bytestream protocol and create quux protocol on top of it. <code>quux_detach()</code> will terminate the quux protocol and return the handle of the underlying protocol:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_attach(<span class="dt">int</span> u) {
-    <span class="dt">int</span> err;
-    <span class="kw">struct</span> quux *self = malloc(<span class="kw">sizeof</span>(<span class="kw">struct</span> quux));
-    <span class="kw">if</span>(!self) {err = ENOMEM; <span class="kw">goto</span> error1;}
-    self-&gt;hvfs.query = quux_hquery;
-    self-&gt;hvfs.close = quux_hclose;
-    self-&gt;hvfs.done = quux_hdone;
-    self-&gt;u = u;
-    <span class="dt">int</span> h = hmake(&amp;self-&gt;hvfs);
-    <span class="kw">if</span>(h &amp;lt; <span class="dv">0</span>) {<span class="dt">int</span> err = errno; <span class="kw">goto</span> error2;}
-    <span class="kw">return</span> h;
-error2:
-    free(self);
-error1:
-    errno = err;
-    <span class="kw">return</span> -<span class="dv">1</span>;
-}
-
-<span class="dt">int</span> quux_detach(<span class="dt">int</span> h) {
-    <span class="kw">struct</span> quux *self = hquery(h, quux_type);
-    <span class="kw">if</span>(!self) <span class="kw">return</span> -<span class="dv">1</span>;
-    <span class="dt">int</span> u = self-&gt;u;
-    free(self);
-    <span class="kw">return</span> u;
-}</code></pre>
-<p>Now we can modify the test program to build two quux sockets on top of two mutually connected UNIX domain (ipc) sockets:</p>
+<p>Let's turn the quux handle we have implemented into quux network socket now.</p>
+<p>libdill recognizes two kinds of network sockets: bytestream sockets and messages sockets. The main difference between the two is that the latter preserves the message boundaries while the former does not.</p>
+<p>So, let's say quux will be a message-based protocol.</p>
+<p>Also, we won't implement the entire network stack from scratch. The user will layer the quux socket on top of an existing bytestream protocol, such as TCP. The layering will be done via <code>quux_attach()</code> and <code>quux_detach()</code> functions. In the test program we are going to layer quux protocol on top of ipc protocol (UNIX domain sockets):</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> client(<span class="dt">int</span> s) {
     quux_attach(s);
     <span class="co">/* Do stuff here! */</span>
@@ -145,6 +116,37 @@ error1:
     <span class="dt">int</span> s = quux_detach(q);
     hclose(s);
     <span class="kw">return</span> <span class="dv">0</span>;
+}</code></pre>
+<p>To implement such socket it first needs to remember the handle of the underlying protocol so that it can use it when sending and receiving data:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> quux {
+    ...
+    <span class="dt">int</span> u;
+};</code></pre>
+<p>To accomodate libdill's naming conventions for protocols running on top of other protocols, we have to rename <code>quux_open()</code> to <code>quux_attach()</code>. Attach function will accept a handle of the underlying bytestream protocol and create quux protocol on top of it:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_attach(<span class="dt">int</span> u) {
+    <span class="dt">int</span> err;
+    <span class="kw">struct</span> quux *self = malloc(<span class="kw">sizeof</span>(<span class="kw">struct</span> quux));
+    <span class="kw">if</span>(!self) {err = ENOMEM; <span class="kw">goto</span> error1;}
+    self-&gt;hvfs.query = quux_hquery;
+    self-&gt;hvfs.close = quux_hclose;
+    self-&gt;hvfs.done = quux_hdone;
+    self-&gt;u = u;
+    <span class="dt">int</span> h = hmake(&amp;self-&gt;hvfs);
+    <span class="kw">if</span>(h &amp;lt; <span class="dv">0</span>) {<span class="dt">int</span> err = errno; <span class="kw">goto</span> error2;}
+    <span class="kw">return</span> h;
+error2:
+    free(self);
+error1:
+    errno = err;
+    <span class="kw">return</span> -<span class="dv">1</span>;
+}</code></pre>
+<p>We can reuse <code>quux_frobnicate()</code> and rename it to <code>quux_detach()</code> which will terminate the quux protocol and return the handle of the underlying protocol:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_detach(<span class="dt">int</span> h) {
+    <span class="kw">struct</span> quux *self = hquery(h, quux_type);
+    <span class="kw">if</span>(!self) <span class="kw">return</span> -<span class="dv">1</span>;
+    <span class="dt">int</span> u = self-&gt;u;
+    free(self);
+    <span class="kw">return</span> u;
 }</code></pre>
 <h2 id="step-4-sending-and-receiving-messages">Step 4: Sending and receiving messages</h2>
 <p>Now that we've spent previous three steps with boring scaffolding work we can finally do some fun protocol stuff.</p>

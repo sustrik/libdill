@@ -93,11 +93,11 @@ libdill provides an extremely generic mechanism to address this multi-faceted na
 
 To see how that can be useful let's implement a new quux function.
 
-First, we have to define an ID for `quux` object type. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you defined IDs in different libraries that were then linked together. With pointers there's no such problem. You can take a pointer of a global variable and it is guaranteed to be unique as two pieces of data can't live at the same memory location:
+First, we have to define an ID for `quux` object type. Now, this may be a bit confusing, but the ID is actually a void pointer. The advantage of using a pointer as an ID is that if it was an integer you would have to worry about ID collisions, especially if you defined IDs in different libraries that were then linked together. With pointers there's no such problem. You can take a pointer to a global variable and it is guaranteed to be unique as two pieces of data can't live at the same memory location.
 
 ```c
-static const int quux_id_placeholder = 0;
-static const void *quux_id = &quux_id_placeholder;
+static const int quux_type_placeholder = 0;
+static const void *quux_type = &quux_type_placeholder;
 ```
 
 Second, let's implement `hquery()` virtual function, empty implementation of which has been created in previous step of this tutorial:
@@ -105,7 +105,7 @@ Second, let's implement `hquery()` virtual function, empty implementation of whi
 ```c
 static void *quux_hquery(struct hvfs *hvfs, const void *id) {
     struct quux *self = (struct quux*)hvfs;
-    if(id == quux_id) return self;
+    if(id == quux_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
@@ -115,7 +115,7 @@ To understand what this is good for think of it from user's perspective: You cal
 
 But wait! Doesn't that break encapsulation? Anyone can call `hquery()` function, get the pointer to raw quux object and mess with it in unforeseen ways.
 
-But no. Note that `quux_id` is defined as static. The ID is not available anywhere except in the file that implements quux handle. No external code will be able to get the raw object pointer. The encapsulation works as expected after all.
+But no. Note that `quux_type` is defined as static. The ID is not available anywhere except in the file that implements quux handle. No external code will be able to get the raw object pointer. The encapsulation works as expected after all.
 
 All that being said, we can finally implement our new user-facing function:
 
@@ -141,18 +141,44 @@ int main(void) {
 
 ## Step 3: Attaching and detaching a socket
 
-Nice. We have a functional handle now, but in the end we want quux to be a network protocol handle. Let's say it will be a message-based protocol that can run on top of arbitrary bytestream protocol such as TCP or UNIX domain sockets.
+Let's turn the quux handle we have implemented into quux network socket now.
 
-First, we need to store the underlying socket in quux object:
+libdill recognizes two kinds of network sockets: bytestream sockets and messages sockets. The main difference between the two is that the latter preserves the message boundaries while the former does not.
+
+So, let's say quux will be a message-based protocol.
+
+Also, we won't implement the entire network stack from scratch. The user will layer the quux socket on top of an existing bytestream protocol, such as TCP. The layering will be done via `quux_attach()` and `quux_detach()` functions. In the test program we are going to layer quux protocol on top of ipc protocol (UNIX domain sockets):
+
+```c
+coroutine void client(int s) {
+    quux_attach(s);
+    /* Do stuff here! */
+    s = quux_detach(q);
+    hclose(s);
+}
+
+int main(void) {
+    int ss[2];
+    ipc_pair(ss);
+    go(client(ss[0]));
+    int q = quux_attach(ss[1]);
+    /* Do stuff here! */
+    int s = quux_detach(q);
+    hclose(s);
+    return 0;
+}
+```
+
+To implement such socket it first needs to remember the handle of the underlying protocol so that it can use it when sending and receiving data:
 
 ```c
 struct quux {
-    struct hvfs hvfs;
+    ...
     int u;
 };
 ```
 
-To accomodate libdill's naming conventions for protocols running on top of other protocols, we have to rename `quux_open()` to `quux_attach()`. We can also reuse `quux_frobnicate()` and rename it to `quux_detach()`. Attach function will accept a handle of the underlying bytestream protocol and create quux protocol on top of it. `quux_detach()` will terminate the quux protocol and return the handle of the underlying protocol:
+To accomodate libdill's naming conventions for protocols running on top of other protocols, we have to rename `quux_open()` to `quux_attach()`. Attach function will accept a handle of the underlying bytestream protocol and create quux protocol on top of it:
 
 ```c
 int quux_attach(int u) {
@@ -172,35 +198,17 @@ error1:
     errno = err;
     return -1;
 }
+```
 
+We can reuse `quux_frobnicate()` and rename it to `quux_detach()` which will terminate the quux protocol and return the handle of the underlying protocol:
+
+```c
 int quux_detach(int h) {
     struct quux *self = hquery(h, quux_type);
     if(!self) return -1;
     int u = self->u;
     free(self);
     return u;
-}
-```
-
-Now we can modify the test program to build two quux sockets on top of two mutually connected UNIX domain (ipc) sockets:
-
-```c
-coroutine void client(int s) {
-    quux_attach(s);
-    /* Do stuff here! */
-    s = quux_detach(q);
-    hclose(s);
-}
-
-int main(void) {
-    int ss[2];
-    ipc_pair(ss);
-    go(client(ss[0]));
-    int q = quux_attach(ss[1]);
-    /* Do stuff here! */
-    int s = quux_detach(q);
-    hclose(s);
-    return 0;
 }
 ```
 
