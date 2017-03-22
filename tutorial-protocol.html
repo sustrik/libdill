@@ -47,7 +47,7 @@
     self-&gt;hvfs.close = quux_hclose;
     self-&gt;hvfs.done = quux_hdone;
     <span class="dt">int</span> h = hmake(&amp;self-&gt;hvfs);
-    <span class="kw">if</span>(h &amp;lt; <span class="dv">0</span>) {<span class="dt">int</span> err = errno; <span class="kw">goto</span> error2;}
+    <span class="kw">if</span>(h &lt; <span class="dv">0</span>) {<span class="dt">int</span> err = errno; <span class="kw">goto</span> error2;}
     <span class="kw">return</span> h;
 error2:
     free(self);
@@ -96,10 +96,11 @@ error1:
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
 <h2 id="step-3-attaching-and-detaching-a-socket">Step 3: Attaching and detaching a socket</h2>
-<p>Let's turn the quux handle we have implemented into quux network socket now.</p>
+<p>Let's turn the quux handle that we have implemented into quux network socket now.</p>
 <p>libdill recognizes two kinds of network sockets: bytestream sockets and messages sockets. The main difference between the two is that the latter preserves the message boundaries while the former does not.</p>
 <p>So, let's say quux will be a message-based protocol.</p>
-<p>Also, we won't implement the entire network stack from scratch. The user will layer the quux socket on top of an existing bytestream protocol, such as TCP. The layering will be done via <code>quux_attach()</code> and <code>quux_detach()</code> functions. In the test program we are going to layer quux protocol on top of ipc protocol (UNIX domain sockets):</p>
+<p>Also, we won't implement the entire network stack from scratch. The user will layer the quux socket on top of an existing bytestream protocol, such as TCP. The layering will be done via <code>quux_attach()</code> and <code>quux_detach()</code> functions.</p>
+<p>In the test program we are going to layer quux protocol on top of ipc protocol (UNIX domain sockets):</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> client(<span class="dt">int</span> s) {
     quux_attach(s);
     <span class="co">/* Do stuff here! */</span>
@@ -132,7 +133,7 @@ error1:
     self-&gt;hvfs.done = quux_hdone;
     self-&gt;u = u;
     <span class="dt">int</span> h = hmake(&amp;self-&gt;hvfs);
-    <span class="kw">if</span>(h &amp;lt; <span class="dv">0</span>) {<span class="dt">int</span> err = errno; <span class="kw">goto</span> error2;}
+    <span class="kw">if</span>(h &lt; <span class="dv">0</span>) {<span class="dt">int</span> err = errno; <span class="kw">goto</span> error2;}
     <span class="kw">return</span> h;
 error2:
     free(self);
@@ -192,18 +193,18 @@ error1:
 <p>Now we can send the size and the payload to the underlying socket:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">uint8_t</span> c = (<span class="dt">uint8_t</span>)sz;
 <span class="dt">int</span> rc = bsend(self-&gt;u, &amp;c, <span class="dv">1</span>, deadline);
-<span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;
+<span class="kw">if</span>(rc &lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;
 rc = bsendl(self-&gt;u, first, last, deadline);
-<span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;</code></pre>
+<span class="kw">if</span>(rc &lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;</code></pre>
 <p>Return zero and the send function is done.</p>
 <p>As for receive function we'll have to read 8-bit size first:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">uint8_t</span> c;
 <span class="dt">int</span> rc = brecv(self-&gt;u, &amp;c, <span class="dv">1</span>, deadline);
-<span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;</code></pre>
+<span class="kw">if</span>(rc &lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;</code></pre>
 <p>User may pass in <code>NULL</code> instead of the buffer which means we should silently drop the message:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">if</span>(!first) {
     rc = brecv(self-&gt;u, NULL, c, deadline);
-    <span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;
+    <span class="kw">if</span>(rc &lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;
     <span class="kw">return</span> c;
 }</code></pre>
 <p>The size of the message may not match size of the buffer supplied by the user. If message is larger than the buffer we will simply return an error. However, if message is smaller than the buffer we have to shrink the buffer to the appropriate size. We can do so by modifying the iolist. Note that iolist is not supposed be thread- or coroutine-safe and thus we can modify it as long as we revert it to its original state before returning from the function. Once the iolist is modified we can read the message payload from the underlying socket:</p>
@@ -220,7 +221,7 @@ it-&gt;iol_len = rmn;
 it-&gt;iol_next = NULL;
 rc = brecvl(self-&gt;u, first, last, deadline);
 *it = orig;
-<span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;</code></pre>
+<span class="kw">if</span>(rc &lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;</code></pre>
 <p>Now that we have received the message we have to return its size to the user:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">return</span> c;</code></pre>
 <p>And finally, we can test whether the protocol works as expected. Let's send a simple text message (string with a terminating zero) to one end of the connection and receive it at the other end.</p>
@@ -270,10 +271,10 @@ self-&gt;recverr = <span class="dv">0</span>;</code></pre>
     ...
     <span class="dt">const</span> <span class="dt">int8_t</span> local_version = <span class="dv">1</span>;
     <span class="dt">int</span> rc = bsend(u, &amp;local_version, <span class="dv">1</span>, deadline);
-    <span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) {err = errno; <span class="kw">goto</span> error2;}
+    <span class="kw">if</span>(rc &lt; <span class="dv">0</span>) {err = errno; <span class="kw">goto</span> error2;}
     <span class="dt">uint8_t</span> remote_version;
     rc = brecv(u, &amp;remote_version, <span class="dv">1</span>, deadline);
-    <span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) {err = errno; <span class="kw">goto</span> error2;}
+    <span class="kw">if</span>(rc &lt; <span class="dv">0</span>) {err = errno; <span class="kw">goto</span> error2;}
     <span class="kw">if</span>(remote_version != local_version) {err = EPROTO; <span class="kw">goto</span> error2;}
     ...
 }</code></pre>
@@ -319,7 +320,7 @@ self-&gt;recverr = <span class="dv">0</span>;</code></pre>
     <span class="kw">if</span>(self-&gt;senderr) {errno = ECONNRESET; <span class="kw">return</span> -<span class="dv">1</span>;}
     <span class="dt">uint8_t</span> c = <span class="dv">255</span>;
     <span class="dt">int</span> rc = bsend(self-&gt;u, &amp;c, <span class="dv">1</span>, deadline);
-    <span class="kw">if</span>(rc &amp;lt; <span class="dv">0</span>) {self-&gt;senderr = <span class="dv">1</span>; <span class="kw">return</span> -<span class="dv">1</span>;}
+    <span class="kw">if</span>(rc &lt; <span class="dv">0</span>) {self-&gt;senderr = <span class="dv">1</span>; <span class="kw">return</span> -<span class="dv">1</span>;}
     self-&gt;senddone = <span class="dv">1</span>;
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>

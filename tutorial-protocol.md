@@ -56,7 +56,7 @@ int quux_open(void) {
     self->hvfs.close = quux_hclose;
     self->hvfs.done = quux_hdone;
     int h = hmake(&self->hvfs);
-    if(h &lt; 0) {int err = errno; goto error2;}
+    if(h < 0) {int err = errno; goto error2;}
     return h;
 error2:
     free(self);
@@ -141,13 +141,15 @@ int main(void) {
 
 ## Step 3: Attaching and detaching a socket
 
-Let's turn the quux handle we have implemented into quux network socket now.
+Let's turn the quux handle that we have implemented into quux network socket now.
 
 libdill recognizes two kinds of network sockets: bytestream sockets and messages sockets. The main difference between the two is that the latter preserves the message boundaries while the former does not.
 
 So, let's say quux will be a message-based protocol.
 
-Also, we won't implement the entire network stack from scratch. The user will layer the quux socket on top of an existing bytestream protocol, such as TCP. The layering will be done via `quux_attach()` and `quux_detach()` functions. In the test program we are going to layer quux protocol on top of ipc protocol (UNIX domain sockets):
+Also, we won't implement the entire network stack from scratch. The user will layer the quux socket on top of an existing bytestream protocol, such as TCP. The layering will be done via `quux_attach()` and `quux_detach()` functions.
+
+In the test program we are going to layer quux protocol on top of ipc protocol (UNIX domain sockets):
 
 ```c
 coroutine void client(int s) {
@@ -190,7 +192,7 @@ int quux_attach(int u) {
     self->hvfs.done = quux_hdone;
     self->u = u;
     int h = hmake(&self->hvfs);
-    if(h &lt; 0) {int err = errno; goto error2;}
+    if(h < 0) {int err = errno; goto error2;}
     return h;
 error2:
     free(self);
@@ -289,9 +291,9 @@ Now we can send the size and the payload to the underlying socket:
 ```c
 uint8_t c = (uint8_t)sz;
 int rc = bsend(self->u, &c, 1, deadline);
-if(rc &lt; 0) return -1;
+if(rc < 0) return -1;
 rc = bsendl(self->u, first, last, deadline);
-if(rc &lt; 0) return -1;
+if(rc < 0) return -1;
 ```
 
 Return zero and the send function is done.
@@ -301,7 +303,7 @@ As for receive function we'll have to read 8-bit size first:
 ```c
 uint8_t c;
 int rc = brecv(self->u, &c, 1, deadline);
-if(rc &lt; 0) return -1;
+if(rc < 0) return -1;
 ```
 
 User may pass in `NULL` instead of the buffer which means we should silently drop the message:
@@ -309,7 +311,7 @@ User may pass in `NULL` instead of the buffer which means we should silently dro
 ```c
 if(!first) {
     rc = brecv(self->u, NULL, c, deadline);
-    if(rc &lt; 0) return -1;
+    if(rc < 0) return -1;
     return c;
 }
 ```
@@ -330,7 +332,7 @@ it->iol_len = rmn;
 it->iol_next = NULL;
 rc = brecvl(self->u, first, last, deadline);
 *it = orig;
-if(rc &lt; 0) return -1;
+if(rc < 0) return -1;
 ```
 
 Now that we have received the message we have to return its size to the user:
@@ -416,10 +418,10 @@ int quux_attach(int u, int64_t deadline) {
     ...
     const int8_t local_version = 1;
     int rc = bsend(u, &local_version, 1, deadline);
-    if(rc &lt; 0) {err = errno; goto error2;}
+    if(rc < 0) {err = errno; goto error2;}
     uint8_t remote_version;
     rc = brecv(u, &remote_version, 1, deadline);
-    if(rc &lt; 0) {err = errno; goto error2;}
+    if(rc < 0) {err = errno; goto error2;}
     if(remote_version != local_version) {err = EPROTO; goto error2;}
     ...
 }
@@ -491,7 +493,7 @@ static int quux_hdone(struct hvfs *hvfs, int64_t deadline) {
     if(self->senderr) {errno = ECONNRESET; return -1;}
     uint8_t c = 255;
     int rc = bsend(self->u, &c, 1, deadline);
-    if(rc &lt; 0) {self->senderr = 1; return -1;}
+    if(rc < 0) {self->senderr = 1; return -1;}
     self->senddone = 1;
     return 0;
 }
