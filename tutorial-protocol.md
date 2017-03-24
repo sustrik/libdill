@@ -435,9 +435,9 @@ If the message is 5 bytes long we are going to modify the iolist like this. Grey
 
 ![](hello5.png)
 
-In iolist-based functions the list is supposed to be unchanged when the function returns. However, it can be temporarily modified while the function is in progress. In other words, iolists are not guaranteed to be thread- or coroutine-safe.
+In iolist-based functions the list is supposed to be unchanged when the function returns. However, it can be temporarily modified while the function is in progress. Therefore, iolists are not guaranteed to be thread- or coroutine-safe.
 
-In other words, we are modifying the iolist here, which is all right, but we have to make sure to revert all our changes before the function returns. Note the `orig` pointer in the above diagram. It won't be passed to the underlying socket. Instead, it will be used to restore the original iolist after sending is done.
+We are modifying the iolist here, which is all right, but we have to make sure to revert all our changes before the function returns. Note the `orig` pointer in the above diagram. It won't be passed to the underlying socket. Instead, it will be used to restore the original iolist after sending is done.
 
 The code for the above looks like this:
 

@@ -283,8 +283,8 @@ return sz;</code></pre>
 <p><img src="hello4.png" /></p>
 <p>If the message is 5 bytes long we are going to modify the iolist like this. Grey parts are the iolist structures passed to quux socket by the user. Black parts are the modifications:</p>
 <p><img src="hello5.png" /></p>
-<p>In iolist-based functions the list is supposed to be unchanged when the function returns. However, it can be temporarily modified while the function is in progress. In other words, iolists are not guaranteed to be thread- or coroutine-safe.</p>
-<p>In other words, we are modifying the iolist here, which is all right, but we have to make sure to revert all our changes before the function returns. Note the <code>orig</code> pointer in the above diagram. It won't be passed to the underlying socket. Instead, it will be used to restore the original iolist after sending is done.</p>
+<p>In iolist-based functions the list is supposed to be unchanged when the function returns. However, it can be temporarily modified while the function is in progress. Therefore, iolists are not guaranteed to be thread- or coroutine-safe.</p>
+<p>We are modifying the iolist here, which is all right, but we have to make sure to revert all our changes before the function returns. Note the <code>orig</code> pointer in the above diagram. It won't be passed to the underlying socket. Instead, it will be used to restore the original iolist after sending is done.</p>
 <p>The code for the above looks like this:</p>
 <pre class="sourceCode c"><code class="sourceCode c">size_t rmn = sz;
 it = first;
