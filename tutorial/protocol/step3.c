@@ -38,7 +38,7 @@ struct quux {
     int u;
 };
 
-static void *quux_hquery(struct hvfs *hvfs, const void *type);
+static void *quux_hquery(struct hvfs *hvfs, const void *id);
 static void quux_hclose(struct hvfs *hvfs);
 static int quux_hdone(struct hvfs *hvfs, int64_t deadline);
 
@@ -51,7 +51,7 @@ int quux_attach(int u) {
     self->hvfs.done = quux_hdone;
     self->u = u;
     int h = hmake(&self->hvfs);
-    if(h < 0) {err = errno; goto error2;}
+    if(h < 0) {int err = errno; goto error2;}
     return h;
 error2:
     free(self);

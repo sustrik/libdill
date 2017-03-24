@@ -34,7 +34,7 @@ struct quux {
     struct hvfs hvfs;
 };
 
-static void *quux_hquery(struct hvfs *hvfs, const void *type);
+static void *quux_hquery(struct hvfs *hvfs, const void *id);
 static void quux_hclose(struct hvfs *hvfs);
 static int quux_hdone(struct hvfs *hvfs, int64_t deadline);
 
@@ -77,3 +77,4 @@ int main(void) {
     assert(rc == 0);
     return 0;
 }
+

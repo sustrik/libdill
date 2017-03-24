@@ -40,6 +40,8 @@ struct quux {
     struct hvfs hvfs;
     struct msock_vfs mvfs;
     int u;
+    int senderr;
+    int recverr;
 };
 
 static void *quux_hquery(struct hvfs *hvfs, const void *id);
@@ -50,7 +52,7 @@ static int quux_msendl(struct msock_vfs *mvfs,
 static ssize_t quux_mrecvl(struct msock_vfs *mvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 
-int quux_attach(int u) {
+int quux_attach(int u, int64_t deadline) {
     int err;
     struct quux *self = malloc(sizeof(struct quux));
     if(!self) {err = ENOMEM; goto error1;}
@@ -60,12 +62,24 @@ int quux_attach(int u) {
     self->mvfs.msendl = quux_msendl;
     self->mvfs.mrecvl = quux_mrecvl;
     self->u = u;
+    self->senderr = 0;
+    self->recverr = 0;
+
+    const int8_t local_version = 1;
+    int rc = bsend(u, &local_version, 1, deadline);
+    if(rc < 0) {err = errno; goto error2;}
+    uint8_t remote_version;
+    rc = brecv(u, &remote_version, 1, deadline);
+    if(rc < 0) {err = errno; goto error2;}
+    if(remote_version != local_version) {err = EPROTO; goto error2;}
+
     int h = hmake(&self->hvfs);
     if(h < 0) {int err = errno; goto error2;}
     return h;
 error2:
     free(self);
 error1:
+    hclose(u);
     errno = err;
     return -1;
 }
@@ -99,24 +113,61 @@ static int quux_hdone(struct hvfs *hvfs, int64_t deadline) {
 static int quux_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct quux *self = cont(mvfs, struct quux, mvfs);
-    errno = ENOTSUP;
-    return -1;
+    if(self->senderr) {errno = ECONNRESET; return -1;}
+    size_t sz = 0;
+    struct iolist *it;
+    for(it = first; it; it = it->iol_next)
+        sz += it->iol_len;
+    if(sz > 254) {self->senderr = 1; errno = EMSGSIZE; return -1;}
+    uint8_t c = (uint8_t)sz;
+    struct iolist hdr = {&c, 1, first, 0};
+    int rc = bsendl(self->u, &hdr, last, deadline);
+    if(rc < 0) {self->senderr = 1; return -1;}
+    return 0;
 }
 
 static ssize_t quux_mrecvl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct quux *self = cont(mvfs, struct quux, mvfs);
-    errno = ENOTSUP;
-    return -1;
+    if(self->recverr) {errno = ECONNRESET; return -1;}
+    uint8_t sz;
+    int rc = brecv(self->u, &sz, 1, deadline);
+    if(rc < 0) {self->recverr = 1; return -1;}
+    if(!first) {
+        rc = brecv(self->u, NULL, sz, deadline);
+        if(rc < 0) {self->recverr = 1; return -1;}
+        return sz;
+    }
+    size_t bufsz = 0;
+    struct iolist *it;
+    for(it = first; it; it = it->iol_next)
+        bufsz += it->iol_len;
+    if(bufsz < sz) {self->recverr = 1; errno = EMSGSIZE; return -1;}
+    size_t rmn = sz;
+    it = first;
+    while(1) {
+        if(it->iol_len >= rmn) break;
+        rmn -= it->iol_len;
+        it = it->iol_next;
+        if(!it) {self->recverr = 1; errno = EMSGSIZE; return -1;}
+    }
+    struct iolist orig = *it;
+    it->iol_len = rmn;
+    it->iol_next = NULL;
+    rc = brecvl(self->u, first, last, deadline);
+    *it = orig;
+    if(rc < 0) {self->recverr = 1; return -1;}
+    return sz;
 }
 
 coroutine void client(int s) {
-    int q = quux_attach(s);
+    int q = quux_attach(s, -1);
     assert(q >= 0);
-    /* Do something useful here! */
+    int rc = msend(q, "Hello, world!", 13, -1);
+    assert(rc == 0);
     s = quux_detach(q);
     assert(s >= 0);
-    int rc = hclose(s);
+    rc = hclose(s);
     assert(rc == 0);
 }
 
@@ -125,9 +176,12 @@ int main(void) {
     int rc = ipc_pair(ss);
     assert(rc == 0);
     go(client(ss[0]));
-    int q = quux_attach(ss[1]);
+    int q = quux_attach(ss[1], -1);
     assert(q >= 0);
-    /* Do something useful here! */
+    char buf[256];
+    ssize_t sz = mrecv(q, buf, sizeof(buf), -1);
+    assert(sz >= 0);
+    printf("%.*s\n", (int)sz, buf);
     int s = quux_detach(q);
     assert(s >= 0);
     rc = hclose(s);
