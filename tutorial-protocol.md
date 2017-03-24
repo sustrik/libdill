@@ -423,7 +423,7 @@ for(it = first; it; it = it->iol_next) {
 return sz;
 ```
 
-We are facing the same performance problem here as we did in the send function. Calling `brecv()` multiple times means extra network stack traversals and thus decreased performance. Abd we can apply a similar solution. We can modify the iolist in such a way that it can be simply forwarded to the underlying socket.
+We are facing the same performance problem here as we did in the send function. Calling `brecv()` multiple times means extra network stack traversals and thus decreased performance. And we can apply a similar solution. We can modify the iolist in such a way that it can be simply forwarded to the underlying socket.
 
 The main problem in this case is that the size of the message may not match the size of the buffer supplied by the user. If message is larger than the buffer we will simply return an error. However, if message is smaller than the buffer there's a problem. Bytestream's `brecvl()` function has no size argument. It just receives data until the buffer is completely full. Therefore, we will have to shrink the buffer to match the message size.
 
@@ -431,7 +431,7 @@ Let's say the iolist supplied by the user looks like this:
 
 ![](hello4.png)
 
-If the message is 4 bytes long we are going to modify the iolist like this. Grey parts are the iolist structures passed to quux socket by the user. Black parts are the modifications:
+If the message is 5 bytes long we are going to modify the iolist like this. Grey parts are the iolist structures passed to quux socket by the user. Black parts are the modifications:
 
 ![](hello5.png)
 
