@@ -448,15 +448,15 @@ int main(void) {
 
 ## Step 7: Error handling
 
-Consider the following scenario: User wants to receive a message. The message is 200 bytes long. However, after reading 100 bytes, receive function times out. That puts you, as the protocol implementor, into an unconfortable position. There's no way to push the 100 bytes that were already received back to the underlying socket. libdill sockets provide no API for that, but even in principle, it would mean that the underlying socket would need an unlimited buffer. Just imagine receiving a 1TB message and timing out just before its fully read...
+Consider the following scenario: User wants to receive a message. The message is 200 bytes long. However, after reading 100 bytes, receive function times out. That puts you, as the protocol implementor, into an unconfortable position. There's no way to push the 100 bytes that were already received back to the underlying socket. libdill sockets provide no API for that, but even in principle, it would mean that the underlying socket would need an unlimited buffer in case the user wanted to push back one terrabyte of data.
 
 libdill solves this problem by not trying too hard to recover from errors, even from seemingly recoverable ones like ETIMEOUT.
 
-When building on top of a bytestream protocol, which in unrecoverable by definition, you thus have to track failures and once error happens return an error for any subsequent attampts to receive a message. Same reasoning and same solution applies to outbound messages.
+When building on top of a bytestream protocol -- which in unrecoverable by definition -- you thus have to track failures and once error happens return an error for any subsequent attampts to receive a message. And same reasoning and same solution applies to outbound messages.
 
-(Note that this does not apply when you are building on top of a message socket. Message sockets may be recoverable. Consider UDP. Thus, in that case you should just forward any send and received requests to the underlying socket and let it take care of error handling for you.)
+Note that this does not apply when you are building on top of a message socket. Message sockets may be recoverable. Consider UDP. If receiving one packet fails you can still receive the next packet.
 
-Anyway, to implement error handling in quux protocol, let's add to booleans to the socket to track whether sending/receiving had failed already:
+Anyway, to implement error handling in quux protocol, let's add two booleans to the socket to track whether sending/receiving had failed already:
 
 ```c
 struct quux {

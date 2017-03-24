@@ -284,11 +284,11 @@ rc = brecvl(self-&gt;u, first, last, deadline);
     ...
 }</code></pre>
 <h2 id="step-7-error-handling">Step 7: Error handling</h2>
-<p>Consider the following scenario: User wants to receive a message. The message is 200 bytes long. However, after reading 100 bytes, receive function times out. That puts you, as the protocol implementor, into an unconfortable position. There's no way to push the 100 bytes that were already received back to the underlying socket. libdill sockets provide no API for that, but even in principle, it would mean that the underlying socket would need an unlimited buffer. Just imagine receiving a 1TB message and timing out just before its fully read...</p>
+<p>Consider the following scenario: User wants to receive a message. The message is 200 bytes long. However, after reading 100 bytes, receive function times out. That puts you, as the protocol implementor, into an unconfortable position. There's no way to push the 100 bytes that were already received back to the underlying socket. libdill sockets provide no API for that, but even in principle, it would mean that the underlying socket would need an unlimited buffer in case the user wanted to push back one terrabyte of data.</p>
 <p>libdill solves this problem by not trying too hard to recover from errors, even from seemingly recoverable ones like ETIMEOUT.</p>
-<p>When building on top of a bytestream protocol, which in unrecoverable by definition, you thus have to track failures and once error happens return an error for any subsequent attampts to receive a message. Same reasoning and same solution applies to outbound messages.</p>
-<p>(Note that this does not apply when you are building on top of a message socket. Message sockets may be recoverable. Consider UDP. Thus, in that case you should just forward any send and received requests to the underlying socket and let it take care of error handling for you.)</p>
-<p>Anyway, to implement error handling in quux protocol, let's add to booleans to the socket to track whether sending/receiving had failed already:</p>
+<p>When building on top of a bytestream protocol -- which in unrecoverable by definition -- you thus have to track failures and once error happens return an error for any subsequent attampts to receive a message. And same reasoning and same solution applies to outbound messages.</p>
+<p>Note that this does not apply when you are building on top of a message socket. Message sockets may be recoverable. Consider UDP. If receiving one packet fails you can still receive the next packet.</p>
+<p>Anyway, to implement error handling in quux protocol, let's add two booleans to the socket to track whether sending/receiving had failed already:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> quux {
     <span class="kw">struct</span> hvfs hvfs;
     <span class="kw">struct</span> msock_vfs mvfs;
