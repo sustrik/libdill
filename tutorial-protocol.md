@@ -526,11 +526,11 @@ Modify the test program accordingly (add deadlines), compile and test.
 
 ## Step 9: Terminal handshake
 
-Imagine that user wants to close the quux protocol and start a new protocol, say HTTP, on top of the same underlying connection. For that to work both peers would have to make sure that they've received all quux-related data before proceeding. If they did not the leftover quux data would confuse the subsequent HTTP protocol.
+Imagine that user wants to close the quux protocol and start a new protocol, say HTTP, on top of the same underlying TCP connection. For that to work both peers would have to make sure that they've received all quux-related data before proceeding. If they had left any unconsumed data in TCP buffers, the subsequent HTTP protocol would read it and get confused by it.
 
-To achieve that peers will send a single termination byte (255) each to another to mark end of the stream of quux messages. After doing so they will read any receive and drop quux messages from the peer until they receive the 255 byte. At that point all the quux data are cleaned up, both peers have consistent view of the world and HTTP protocol can be safely initiated.
+To achieve that the peers will send a single termination byte (255) each to another to mark the end of the stream of quux messages. After doing so they will read any receive and drop all quux messages from the peer until they receive the 255 byte. At that point all the quux data are cleaned up, both peers have consistent view of the world and HTTP protocol can be safely initiated.
 
-Let's add to flags to the quux socket object, one meaning "termination byte was already sent", the other "termination byte was already received":
+Let's start with addinbg two flags to the quux socket object, one meaning "termination byte was already sent", the other "termination byte was already received":
 
 
 ```c
@@ -564,7 +564,7 @@ static int quux_msendl(struct msock_vfs *mvfs,
 }
 ```
 
-If termination byte was already received receive function should return `EPIPE` error. Also, we should handle the case when termination byte is originally received from the peer:
+If termination byte was already received receive function should return `EPIPE` error. Also, we should handle the case when termination byte is received from the peer:
 
 ```c
 static ssize_t quux_mrecvl(struct msock_vfs *mvfs,
@@ -572,12 +572,12 @@ static ssize_t quux_mrecvl(struct msock_vfs *mvfs,
     ...
     if(self->recvdone) {errno = EPIPE; return -1;}
     ...
-    if(c == 255) {self->recvdone = 1; errno = EPIPE; return -1;}
+    if(sz == 255) {self->recvdone = 1; errno = EPIPE; return -1;}
     ...
 }
 ```
 
-Virtual function `hdone()` that we've so far left unimplemented is supposed to start the terminal handshake. However, it is not supposed to wait till it is finished. The semantics of `hdone()` "user is not going to send more data". You can think of it as an EOF marker of kind.
+Virtual function `hdone()` is supposed to start the terminal handshake. However, it is not supposed to wait till it is finished. The semantics of `hdone()` are "user is not going to send any more data". You can think of it as of EOF marker of a kind.
 
 ```c
 static int quux_hdone(struct hvfs *hvfs, int64_t deadline) {
@@ -620,4 +620,8 @@ error:
     return -1;
 }
 ```
+
+Note how the socket, including the underlying socket, when the function fails.
+
+Compile and test and you are done with the tuorial. Have fun writing your own network protocols!
 
