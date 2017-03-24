@@ -7,8 +7,6 @@ In this tutorial you will learn how to implement a simple network protocol using
 
 The source code for individual steps of this tutorial can be found in `tutorial/protocol` subdirectory.
 
-Please note that the test program as presented in this text is kept succint by ommitting all the asserts. The source code files for the tutorial, however, do the error checking properly.
-
 ## Step 1: Creating a handle
 
 Handles are libdill's equivalent of file descriptors. A socket implementing our protocol will be pointed to by a handle. Therefore, we have to learn how to create custom handle types.
@@ -24,7 +22,9 @@ To make it clear what API we are trying to implement, let's start with a simple 
 ```c
 int main(void) {
     int h = quux_open();
-    hclose(h);
+    assert(h >= 0);
+    int rc = hclose(h);
+    assert(rc == 0);
     return 0;
 }
 ```
@@ -56,7 +56,7 @@ int quux_open(void) {
     self->hvfs.close = quux_hclose;
     self->hvfs.done = quux_hdone;
     int h = hmake(&self->hvfs);
-    if(h < 0) {int err = errno; goto error2;}
+    if(h < 0) {err = errno; goto error2;}
     return h;
 error2:
     free(self);
@@ -103,9 +103,9 @@ static const void *quux_type = &quux_type_placeholder;
 Second, let's implement `hquery()` virtual function, empty implementation of which has been created in previous step of this tutorial:
 
 ```c
-static void *quux_hquery(struct hvfs *hvfs, const void *id) {
+static void *quux_hquery(struct hvfs *hvfs, const void *type) {
     struct quux *self = (struct quux*)hvfs;
-    if(id == quux_type) return self;
+    if(type == quux_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
@@ -132,10 +132,10 @@ Modify the test to call the new function, compile it and run it:
 
 ```c
 int main(void) {
-    int h = quux_open(); 
-    quux_frobnicate(h);
-    hclose(h);
-    return 0;
+    ...
+    int rc = quux_frobnicate(h);
+    assert(rc == 0);
+    ...
 }
 ```
 
@@ -149,20 +149,27 @@ In the test program we are going to layer quux protocol on top of ipc protocol (
 
 ```c
 coroutine void client(int s) {
-    quux_attach(s);
-    /* Do stuff here! */
+    int q = quux_attach(s);
+    assert(q >= 0);
+    /* Do something useful here! */
     s = quux_detach(q);
-    hclose(s);
+    assert(s >= 0);
+    int rc = hclose(s);
+    assert(rc == 0);
 }
 
 int main(void) {
     int ss[2];
-    ipc_pair(ss);
+    int rc = ipc_pair(ss);
+    assert(rc == 0);
     go(client(ss[0]));
     int q = quux_attach(ss[1]);
-    /* Do stuff here! */
+    assert(q >= 0);
+    /* Do something useful here! */
     int s = quux_detach(q);
-    hclose(s);
+    assert(s >= 0);
+    rc = hclose(s);
+    assert(rc == 0);
     return 0;
 }
 ```
@@ -285,6 +292,7 @@ static int quux_msendl(struct msock_vfs *mvfs,
     errno = ENOTSUP;
     return -1;
 }
+```
 
 Add a similar stub implementation for `quux_mrecvl()` function and proceed to the next step.
 
@@ -297,7 +305,8 @@ Modify the client part of the test program to send a simple text message:
 ```c
 coroutine void client(int s) {
     ...
-    msend(q, "Hello, world!", 13, -1);
+    int rc = msend(q, "Hello, world!", 13, -1);
+    assert(rc == 0);
     ...
 }
 ```
@@ -351,13 +360,26 @@ The code will look like this:
 ```c
 uint8_t c = (uint8_t)sz;
 struct iolist hdr = {&c, 1, first, 0};
-rc = bsendl(self->u, &hdr, last, deadline);
+int rc = bsendl(self->u, &hdr, last, deadline);
 if(rc < 0) return -1;
 ```
 
 ## Step 6: Receiving a message
 
-As for the receive function we'll have to read the 8-bit size first:
+Add the lines to receive a message to the test. Note that `mrecvl()` function returns size of the message:
+
+```c
+int main(void) {
+    ...
+    char buf[256];
+    ssize_t sz = mrecv(q, buf, sizeof(buf), -1);
+    assert(sz >= 0);
+    printf("%.*s\n", (int)sz, buf);
+    ...
+}
+```
+
+To implement the receive function we'll have to read the 8-bit size first:
 
 ```c
 uint8_t sz;
@@ -373,7 +395,7 @@ libdill allows iolist passed to the receive function to be `NULL`. What that mea
 if(!first) {
     rc = brecv(self->u, NULL, sz, deadline);
     if(rc < 0) return -1;
-    return c;
+    return sz;
 }
 ```
 
@@ -390,13 +412,15 @@ if(bufsz < sz) {errno = EMSGSIZE; return -1;}
 It the message fits into the buffer payload can be received:
 
 ```
-struct iolist *it;
+size_t rmn = sz;
 for(it = first; it; it = it->iol_next) {
-    size_t torecv = sz < it->iol_len ? sz : it->iol_len;
+    size_t torecv = rmn < it->iol_len ? rmn : it->iol_len;
     rc = brecv(self->u, it->iol_base, torecv, deadline);
-    sz -= torecv;
-    if(sz == 0) break;
+    if(rc < 0) return -1;
+    rmn -= torecv;
+    if(rmn == 0) break;
 }
+return sz;
 ```
 
 We are facing the same performance problem here as we did in the send function. Calling `brecv()` multiple times means extra network stack traversals and thus decreased performance. Abd we can apply a similar solution. We can modify the iolist in such a way that it can be simply forwarded to the underlying socket.
@@ -419,7 +443,7 @@ The code for the above looks like this:
 
 ```c
 size_t rmn = sz;
-struct iolist *it = first;
+it = first;
 while(1) {
     if(it->iol_len >= rmn) break;
     rmn -= it->iol_len;
@@ -432,19 +456,10 @@ it->iol_next = NULL;
 rc = brecvl(self->u, first, last, deadline);
 *it = orig;
 if(rc < 0) return -1;
+return sz;
 ```
 
-Don't forget to return the size of the message from the send function. Add receiving part to the test, then compile and run!
-
-```c
-int main(void) {
-    ...
-    char buf[256];
-    ssize_t sz = mrecv(q, buf, sizeof(buf), -1);
-    printf("%.*s\n", (size_t)sz, buf);
-    ...
-}
-```
+Compile and run!
 
 ## Step 7: Error handling
 
@@ -460,9 +475,7 @@ Anyway, to implement error handling in quux protocol, let's add two booleans to 
 
 ```c
 struct quux {
-    struct hvfs hvfs;
-    struct msock_vfs mvfs;
-    int u;
+    ...
     int senderr;
     int recverr;
 };
@@ -488,6 +501,13 @@ static int quux_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct quux *self = cont(mvfs, struct quux, mvfs);
     if(self->senderr) {errno = ECONNRESET; return -1;}
+    ...
+}
+
+static ssize_t quux_mrecvl(struct msock_vfs *mvfs,
+      struct iolist *first, struct iolist *last, int64_t deadline) {
+    struct quux *self = cont(mvfs, struct quux, mvfs);
+    if(self->recverr) {errno = ECONNRESET; return -1;}
     ...
 }
 ```
@@ -623,5 +643,5 @@ error:
 
 Note how the socket, including the underlying socket, when the function fails.
 
-Compile and test and you are done with the tuorial. Have fun writing your own network protocols!
+Adjust the test, compile and run. You are done with the tutorial. Have fun writing your own network protocols!
 

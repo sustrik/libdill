@@ -19,7 +19,6 @@
 <h2 id="introduction">Introduction</h2>
 <p>In this tutorial you will learn how to implement a simple network protocol using libdill.</p>
 <p>The source code for individual steps of this tutorial can be found in <code>tutorial/protocol</code> subdirectory.</p>
-<p>Please note that the test program as presented in this text is kept succint by ommitting all the asserts. The source code files for the tutorial, however, do the error checking properly.</p>
 <h2 id="step-1-creating-a-handle">Step 1: Creating a handle</h2>
 <p>Handles are libdill's equivalent of file descriptors. A socket implementing our protocol will be pointed to by a handle. Therefore, we have to learn how to create custom handle types.</p>
 <p>Standard include file for libdill is <code>libdill.h</code>. In this case, however, we will include <code>libdillimpl.h</code> which defines all the functions <code>libdill.h</code> does but also adds some extra stuff that can be used to implement different plugins to libdill, such as new handle types or new socket types:</p>
@@ -27,7 +26,9 @@
 <p>To make it clear what API we are trying to implement, let's start with a simple test program. We'll call our protocol <code>quux</code> and at this point we will just open and close the handle:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> main(<span class="dt">void</span>) {
     <span class="dt">int</span> h = quux_open();
-    hclose(h);
+    assert(h &gt;= <span class="dv">0</span>);
+    <span class="dt">int</span> rc = hclose(h);
+    assert(rc == <span class="dv">0</span>);
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
 <p>To start with the implementation we need a structure to hold data for the handle. At the moment it will contain only handle's virtual function table:</p>
@@ -47,7 +48,7 @@
     self-&gt;hvfs.close = quux_hclose;
     self-&gt;hvfs.done = quux_hdone;
     <span class="dt">int</span> h = hmake(&amp;self-&gt;hvfs);
-    <span class="kw">if</span>(h &lt; <span class="dv">0</span>) {<span class="dt">int</span> err = errno; <span class="kw">goto</span> error2;}
+    <span class="kw">if</span>(h &lt; <span class="dv">0</span>) {err = errno; <span class="kw">goto</span> error2;}
     <span class="kw">return</span> h;
 error2:
     free(self);
@@ -72,9 +73,9 @@ error1:
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">const</span> <span class="dt">int</span> quux_type_placeholder = <span class="dv">0</span>;
 <span class="dt">static</span> <span class="dt">const</span> <span class="dt">void</span> *quux_type = &amp;quux_type_placeholder;</code></pre>
 <p>Second, let's implement <code>hquery()</code> virtual function, empty implementation of which has been created in previous step of this tutorial:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">void</span> *quux_hquery(<span class="kw">struct</span> hvfs *hvfs, <span class="dt">const</span> <span class="dt">void</span> *id) {
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">void</span> *quux_hquery(<span class="kw">struct</span> hvfs *hvfs, <span class="dt">const</span> <span class="dt">void</span> *type) {
     <span class="kw">struct</span> quux *self = (<span class="kw">struct</span> quux*)hvfs;
-    <span class="kw">if</span>(id == quux_type) <span class="kw">return</span> self;
+    <span class="kw">if</span>(type == quux_type) <span class="kw">return</span> self;
     errno = ENOTSUP;
     <span class="kw">return</span> NULL;
 }</code></pre>
@@ -90,30 +91,37 @@ error1:
 }</code></pre>
 <p>Modify the test to call the new function, compile it and run it:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> main(<span class="dt">void</span>) {
-    <span class="dt">int</span> h = quux_open(); 
-    quux_frobnicate(h);
-    hclose(h);
-    <span class="kw">return</span> <span class="dv">0</span>;
+    ...
+    <span class="dt">int</span> rc = quux_frobnicate(h);
+    assert(rc == <span class="dv">0</span>);
+    ...
 }</code></pre>
 <h2 id="step-3-attaching-and-detaching-a-socket">Step 3: Attaching and detaching a socket</h2>
 <p>Let's turn the quux handle that we have implemented into quux network socket now.</p>
 <p>We won't implement the entire network stack from scratch. The user will layer the quux socket on top of an existing bytestream protocol, such as TCP. The layering will be done via <code>quux_attach()</code> and <code>quux_detach()</code> functions.</p>
 <p>In the test program we are going to layer quux protocol on top of ipc protocol (UNIX domain sockets):</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> client(<span class="dt">int</span> s) {
-    quux_attach(s);
-    <span class="co">/* Do stuff here! */</span>
+    <span class="dt">int</span> q = quux_attach(s);
+    assert(q &gt;= <span class="dv">0</span>);
+    <span class="co">/* Do something useful here! */</span>
     s = quux_detach(q);
-    hclose(s);
+    assert(s &gt;= <span class="dv">0</span>);
+    <span class="dt">int</span> rc = hclose(s);
+    assert(rc == <span class="dv">0</span>);
 }
 
 <span class="dt">int</span> main(<span class="dt">void</span>) {
     <span class="dt">int</span> ss[<span class="dv">2</span>];
-    ipc_pair(ss);
+    <span class="dt">int</span> rc = ipc_pair(ss);
+    assert(rc == <span class="dv">0</span>);
     go(client(ss[<span class="dv">0</span>]));
     <span class="dt">int</span> q = quux_attach(ss[<span class="dv">1</span>]);
-    <span class="co">/* Do stuff here! */</span>
+    assert(q &gt;= <span class="dv">0</span>);
+    <span class="co">/* Do something useful here! */</span>
     <span class="dt">int</span> s = quux_detach(q);
-    hclose(s);
+    assert(s &gt;= <span class="dv">0</span>);
+    rc = hclose(s);
+    assert(rc == <span class="dv">0</span>);
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
 <p>To implement such socket it first needs to remember the handle of the underlying protocol so that it can use it when sending and receiving data:</p>
@@ -187,14 +195,20 @@ error1:
 <pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#define cont(ptr, type, member) \</span>
     ((type*)(((<span class="dt">char</span>*) ptr) - offsetof(type, member)))</code></pre>
 <p>Using the <code>cont</code> macro we can convert the <code>mvfs</code> into pointer to quux object. Here, for instance, is a stub implementation of <code>quux_msendl()</code> function:</p>
-<p>```c<br />static int quux_msendl(struct msock_vfs <em>mvfs,<br /> struct iolist </em>first, struct iolist <em>last, int64_t deadline) {<br /> struct quux </em>self = cont(mvfs, struct quux, mvfs);<br /> errno = ENOTSUP;<br /> return -1;<br />}</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">int</span> quux_msendl(<span class="kw">struct</span> msock_vfs *mvfs,
+      <span class="kw">struct</span> iolist *first, <span class="kw">struct</span> iolist *last, <span class="dt">int64_t</span> deadline) {
+    <span class="kw">struct</span> quux *self = cont(mvfs, <span class="kw">struct</span> quux, mvfs);
+    errno = ENOTSUP;
+    <span class="kw">return</span> -<span class="dv">1</span>;
+}</code></pre>
 <p>Add a similar stub implementation for <code>quux_mrecvl()</code> function and proceed to the next step.</p>
 <h2 id="step-5-sending-a-message">Step 5: Sending a message</h2>
 <p>Now that we've spent previous four steps doing boring scaffolding work we can finally do some fun protocol stuff.</p>
 <p>Modify the client part of the test program to send a simple text message:</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> client(<span class="dt">int</span> s) {
     ...
-    msend(q, <span class="st">&quot;Hello, world!&quot;</span>, <span class="dv">13</span>, -<span class="dv">1</span>);
+    <span class="dt">int</span> rc = msend(q, <span class="st">&quot;Hello, world!&quot;</span>, <span class="dv">13</span>, -<span class="dv">1</span>);
+    assert(rc == <span class="dv">0</span>);
     ...
 }</code></pre>
 <p>Function <code>msend</code> will forward the call to our <code>quux_msendl()</code> stub function which, at the moment, does nothing but returns <code>ENOTSUP</code> error. To implement it we have to decide how the quux network protocol will actually look like.</p>
@@ -224,10 +238,19 @@ rc = bsendl(self-&gt;u, first, last, deadline);
 <p>The code will look like this:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">uint8_t</span> c = (<span class="dt">uint8_t</span>)sz;
 <span class="kw">struct</span> iolist hdr = {&amp;c, <span class="dv">1</span>, first, <span class="dv">0</span>};
-rc = bsendl(self-&gt;u, &amp;hdr, last, deadline);
+<span class="dt">int</span> rc = bsendl(self-&gt;u, &amp;hdr, last, deadline);
 <span class="kw">if</span>(rc &lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;</code></pre>
 <h2 id="step-6-receiving-a-message">Step 6: Receiving a message</h2>
-<p>As for the receive function we'll have to read the 8-bit size first:</p>
+<p>Add the lines to receive a message to the test. Note that <code>mrecvl()</code> function returns size of the message:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> main(<span class="dt">void</span>) {
+    ...
+    <span class="dt">char</span> buf[<span class="dv">256</span>];
+    ssize_t sz = mrecv(q, buf, <span class="kw">sizeof</span>(buf), -<span class="dv">1</span>);
+    assert(sz &gt;= <span class="dv">0</span>);
+    printf(<span class="st">&quot;%.*s</span><span class="ch">\n</span><span class="st">&quot;</span>, (<span class="dt">int</span>)sz, buf);
+    ...
+}</code></pre>
+<p>To implement the receive function we'll have to read the 8-bit size first:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">uint8_t</span> sz;
 <span class="dt">int</span> rc = brecv(self-&gt;u, &amp;sz, <span class="dv">1</span>, deadline);
 <span class="kw">if</span>(rc &lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;</code></pre>
@@ -236,7 +259,7 @@ rc = bsendl(self-&gt;u, &amp;hdr, last, deadline);
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">if</span>(!first) {
     rc = brecv(self-&gt;u, NULL, sz, deadline);
     <span class="kw">if</span>(rc &lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;
-    <span class="kw">return</span> c;
+    <span class="kw">return</span> sz;
 }</code></pre>
 <p>If the iolist is not <code>NULL</code> we will find out the overall size of the buffer and check whether message will fit into it:</p>
 <pre class="sourceCode c"><code class="sourceCode c">size_t bufsz = <span class="dv">0</span>;
@@ -245,13 +268,15 @@ rc = bsendl(self-&gt;u, &amp;hdr, last, deadline);
     bufsz += it-&gt;iol_len;
 <span class="kw">if</span>(bufsz &lt; sz) {errno = EMSGSIZE; <span class="kw">return</span> -<span class="dv">1</span>;}</code></pre>
 <p>It the message fits into the buffer payload can be received:</p>
-<pre><code>struct iolist *it;
+<pre><code>size_t rmn = sz;
 for(it = first; it; it = it-&gt;iol_next) {
-    size_t torecv = sz &lt; it-&gt;iol_len ? sz : it-&gt;iol_len;
+    size_t torecv = rmn &lt; it-&gt;iol_len ? rmn : it-&gt;iol_len;
     rc = brecv(self-&gt;u, it-&gt;iol_base, torecv, deadline);
-    sz -= torecv;
-    if(sz == 0) break;
-}</code></pre>
+    if(rc &lt; 0) return -1;
+    rmn -= torecv;
+    if(rmn == 0) break;
+}
+return sz;</code></pre>
 <p>We are facing the same performance problem here as we did in the send function. Calling <code>brecv()</code> multiple times means extra network stack traversals and thus decreased performance. Abd we can apply a similar solution. We can modify the iolist in such a way that it can be simply forwarded to the underlying socket.</p>
 <p>The main problem in this case is that the size of the message may not match the size of the buffer supplied by the user. If message is larger than the buffer we will simply return an error. However, if message is smaller than the buffer there's a problem. Bytestream's <code>brecvl()</code> function has no size argument. It just receives data until the buffer is completely full. Therefore, we will have to shrink the buffer to match the message size.</p>
 <p>Let's say the iolist supplied by the user looks like this:</p>
@@ -262,7 +287,7 @@ for(it = first; it; it = it-&gt;iol_next) {
 <p>In other words, we are modifying the iolist here, which is all right, but we have to make sure to revert all our changes before the function returns. Note the <code>orig</code> pointer in the above diagram. It won't be passed to the underlying socket. Instead, it will be used to restore the original iolist after sending is done.</p>
 <p>The code for the above looks like this:</p>
 <pre class="sourceCode c"><code class="sourceCode c">size_t rmn = sz;
-<span class="kw">struct</span> iolist *it = first;
+it = first;
 <span class="kw">while</span>(<span class="dv">1</span>) {
     <span class="kw">if</span>(it-&gt;iol_len &gt;= rmn) <span class="kw">break</span>;
     rmn -= it-&gt;iol_len;
@@ -274,15 +299,9 @@ it-&gt;iol_len = rmn;
 it-&gt;iol_next = NULL;
 rc = brecvl(self-&gt;u, first, last, deadline);
 *it = orig;
-<span class="kw">if</span>(rc &lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;</code></pre>
-<p>Don't forget to return the size of the message from the send function. Add receiving part to the test, then compile and run!</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> main(<span class="dt">void</span>) {
-    ...
-    <span class="dt">char</span> buf[<span class="dv">256</span>];
-    ssize_t sz = mrecv(q, buf, <span class="kw">sizeof</span>(buf), -<span class="dv">1</span>);
-    printf(<span class="st">&quot;%.*s</span><span class="ch">\n</span><span class="st">&quot;</span>, (size_t)sz, buf);
-    ...
-}</code></pre>
+<span class="kw">if</span>(rc &lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;
+<span class="kw">return</span> sz;</code></pre>
+<p>Compile and run!</p>
 <h2 id="step-7-error-handling">Step 7: Error handling</h2>
 <p>Consider the following scenario: User wants to receive a message. The message is 200 bytes long. However, after reading 100 bytes, receive function times out. That puts you, as the protocol implementor, into an unconfortable position. There's no way to push the 100 bytes that were already received back to the underlying socket. libdill sockets provide no API for that, but even in principle, it would mean that the underlying socket would need an unlimited buffer in case the user wanted to push back one terrabyte of data.</p>
 <p>libdill solves this problem by not trying too hard to recover from errors, even from seemingly recoverable ones like ETIMEOUT.</p>
@@ -290,9 +309,7 @@ rc = brecvl(self-&gt;u, first, last, deadline);
 <p>Note that this does not apply when you are building on top of a message socket. Message sockets may be recoverable. Consider UDP. If receiving one packet fails you can still receive the next packet.</p>
 <p>Anyway, to implement error handling in quux protocol, let's add two booleans to the socket to track whether sending/receiving had failed already:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> quux {
-    <span class="kw">struct</span> hvfs hvfs;
-    <span class="kw">struct</span> msock_vfs mvfs;
-    <span class="dt">int</span> u;
+    ...
     <span class="dt">int</span> senderr;
     <span class="dt">int</span> recverr;
 };</code></pre>
@@ -306,6 +323,13 @@ self-&gt;recverr = <span class="dv">0</span>;</code></pre>
       <span class="kw">struct</span> iolist *first, <span class="kw">struct</span> iolist *last, <span class="dt">int64_t</span> deadline) {
     <span class="kw">struct</span> quux *self = cont(mvfs, <span class="kw">struct</span> quux, mvfs);
     <span class="kw">if</span>(self-&gt;senderr) {errno = ECONNRESET; <span class="kw">return</span> -<span class="dv">1</span>;}
+    ...
+}
+
+<span class="dt">static</span> ssize_t quux_mrecvl(<span class="kw">struct</span> msock_vfs *mvfs,
+      <span class="kw">struct</span> iolist *first, <span class="kw">struct</span> iolist *last, <span class="dt">int64_t</span> deadline) {
+    <span class="kw">struct</span> quux *self = cont(mvfs, <span class="kw">struct</span> quux, mvfs);
+    <span class="kw">if</span>(self-&gt;recverr) {errno = ECONNRESET; <span class="kw">return</span> -<span class="dv">1</span>;}
     ...
 }</code></pre>
 <h2 id="step-8-initial-handshake">Step 8: Initial handshake</h2>
@@ -400,5 +424,5 @@ error:
     <span class="kw">return</span> -<span class="dv">1</span>;
 }</code></pre>
 <p>Note how the socket, including the underlying socket, when the function fails.</p>
-<p>Compile and test and you are done with the tuorial. Have fun writing your own network protocols!</p>
+<p>Adjust the test, compile and run. You are done with the tutorial. Have fun writing your own network protocols!</p>
 </body>
