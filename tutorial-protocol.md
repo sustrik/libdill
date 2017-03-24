@@ -143,11 +143,7 @@ int main(void) {
 
 Let's turn the quux handle that we have implemented into quux network socket now.
 
-libdill recognizes two kinds of network sockets: bytestream sockets and messages sockets. The main difference between the two is that the latter preserves the message boundaries while the former does not.
-
-So, let's say quux will be a message-based protocol.
-
-Also, we won't implement the entire network stack from scratch. The user will layer the quux socket on top of an existing bytestream protocol, such as TCP. The layering will be done via `quux_attach()` and `quux_detach()` functions.
+We won't implement the entire network stack from scratch. The user will layer the quux socket on top of an existing bytestream protocol, such as TCP. The layering will be done via `quux_attach()` and `quux_detach()` functions.
 
 In the test program we are going to layer quux protocol on top of ipc protocol (UNIX domain sockets):
 
@@ -214,31 +210,24 @@ int quux_detach(int h) {
 }
 ```
 
-## Step 4: Sending and receiving messages
+## Step 4: Exposing the socket interface
 
-Now that we've spent previous three steps with boring scaffolding work we can finally do some fun protocol stuff.
+libdill recognizes two kinds of network sockets: bytestream sockets and messages sockets. The main difference between the two is that the latter preserves the message boundaries while the former does not.
 
-Modify the test program to send a simple text message to one end of the connection and receive it at the other end:
+Let's say quux will be a message-based protocol. As such, it should expose functions like `msend` and `mrecv` to the user.
+
+Do you remember the trick with adding new function to a handle? If not so, re-read step 2 of this tutorial. For adding message socket functions to quux we'll use the same mechanism except that instead of defining our own type ID we will use an existing one (`msock_type`) defined by libdill. Passing `msock_type` to hquery function will return pointer to a virtual function table of type `msock_vfs`. The table is once again defined by libdill:
 
 ```c
-coroutine void client(int s) {
-    ...
-    msend(q, "Hello, world!", 13, -1);
-    ...
-}
-
-int main(void) {
-    ...
-    char buf[256];
-    ssize_t sz = mrecv(q, buf, sizeof(buf), -1);
-    printf("%.*s\n", (size_t)sz, buf);
-    ...
-}
+struct msock_vfs {
+    int (*msendl)(struct msock_vfs *vfs,
+        struct iolist *first, struct iolist *last, int64_t deadline);
+    ssize_t (*mrecvl)(struct msock_vfs *vfs,
+        struct iolist *first, struct iolist *last, int64_t deadline);
+};
 ```
 
-If you run the test program now it will fail becuase `msend()` and `mrecv()` are returning `ENOTSUP` error.
-
-To fix the problem we will implement `msock` virtual function table:
+To implement the functions, we have to first add the virtual function table to quux socket object:
 
 ```c
 struct quux {
@@ -247,7 +236,8 @@ struct quux {
     int u;
 };
 ```
-Forward declarations for `msock` functions:
+
+We'll need forward declarations for `msock` functions:
 
 ```c
 static int quux_msendl(struct msock_vfs *mvfs,
@@ -256,7 +246,7 @@ static ssize_t quux_mrecvl(struct msock_vfs *mvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 ```
 
-Fill in the virtual function table in `quux_attach()`:
+And we have to fill in the virtual function table inside `quux_attach()` function:
 
 ```c
 int quux_attach(int u) {
@@ -267,7 +257,7 @@ int quux_attach(int u) {
 }
 ```
 
-Return the `msock` virtual function table when `hquery()` is called with libdill-defined `msock` type ID:
+Return the pointer to the `msock` virtual function table when `hquery()` is called with `msock_type` type ID:
 
 ```c
 static void *quux_hquery(struct hvfs *hvfs, const void *type) {
@@ -279,36 +269,58 @@ static void *quux_hquery(struct hvfs *hvfs, const void *type) {
 }
 ```
 
-Finally, we are going to add implementations for send and receive functions.
-
-Note that `quux_msendl()` and `quux_mrecvl()` get pointer to to msock virtual function table. We'll have to convert it to the pointer to quux object. To make that easier let's define following handy macro. It will convert pointer to an embedded structure to a pointer of the enclosing structure:
+Note that `quux_msendl()` and `quux_mrecvl()` receive pointer to msock virtual function table which is not the same as the pointer to quux object. We'll have to convert it. To make that easier let's define this handy macro. It will convert pointer to an embedded structure to a pointer of the enclosing structure:
 
 ```c
 #define cont(ptr, type, member) \
     ((type*)(((char*) ptr) - offsetof(type, member)))
 ```
 
-Using the `cont` macro we can convert the `mvfs` into pointer to quux object. For example:
+Using the `cont` macro we can convert the `mvfs` into pointer to quux object. Here, for instance, is a stub implementation of `quux_msendl()` function:
 
 ```c
 static int quux_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct quux *self = cont(mvfs, struct quux, mvfs);
+    errno = ENOTSUP;
+    return -1;
+}
+
+Add a similar stub implementation for `quux_mrecvl()` function and proceed to the next step.
+
+## Step 5: Sending a message
+
+Now that we've spent previous four steps doing boring scaffolding work we can finally do some fun protocol stuff.
+
+Modify the client part of the test program to send a simple text message:
+
+```c
+coroutine void client(int s) {
+    ...
+    msend(q, "Hello, world!", 13, -1);
     ...
 }
 ```
 
-Let's say that quux protocol will prefix individual messages with 8-bit size. Our test message is going to look like this on the wire:
+Function `msend` will forward the call to our `quux_msendl()` stub function which, at the moment, does nothing but returns `ENOTSUP` error. To implement it we have to decide how the quux network protocol will actually look like.
+
+Let's say it will prefix individual messages with 8-bit size. The test message from above is going to look like this on the wire:
 
 ![](hello.png)
 
-Given that size field is a single byte messages can be at most 255 bytes long. That may be a problem in real world protocol but this is just a tutorial so we are perfectly comfortable with small messages. 
+Given that size field is a single byte messages can be at most 255 bytes long. That may be a problem in the real world but this is just a tutorial so let's ignore it and move on. 
 
-Note that payload data is passed to the send function in form of two pointers to something called `iolist`.
+Note that payload data is passed to the `quux_msendl()` function in form of two pointers to a structure called `iolist`.
 
-Iolists are libdill's alternative to POSIX iovecs. Where iovecs are arrays of buffers (so called scatter/gather arrays) iolists are linked lists of buffers. Very much like iovec, iolist has `iol_base` pointer pointing to the data and `iol_len` field containing the size of the data. Unlike iovec though it has `iol_next` field which points to the next buffer in the list. `iol_next` of the last item in the list is set to `NULL`.
+Iolists are libdill's alternative to POSIX iovecs. Where iovecs are arrays of buffers (so called scatter/gather arrays) iolists are linked lists of buffers. Very much like iovec, iolist has `iol_base` pointer pointing to the data and `iol_len` field containing the size of the data. Unlike iovec though it has also `iol_next` field which points to the next buffer in the list. `iol_next` of the last item in the list is set to `NULL`.
 
-To send a quux message one has to compute the size of the message first. We can do so by iterating over the iolist and summing all the buffer sizes. If size is greater than 255, it's an error. And actually, we'll use number 255 for a special purposes later on (to do terminal handshake), so let's limit the message size to 254 bytes:
+An iolist instance may look like this:
+
+![](hello2.png)
+
+Don't forget that there's an extra field in iolist, one called `iol_rsvd`, which should be always set to zero.
+
+Given that we decided to prefix quux messages with message size we have to compute the message size first. We can do so by iterating over the iolist and summing all the buffer sizes. If size is greater than 254 (we'll use number 255 for a special purpose later on) it's an error.
 
 ```c
 size_t sz = 0;
@@ -328,34 +340,85 @@ rc = bsendl(self->u, first, last, deadline);
 if(rc < 0) return -1;
 ```
 
-To indicate success the function should return zero.
+To indicate success return zero from the function. Then compile and test.
 
-As for receive function we'll have to read the 8-bit size first:
+We could have been done here. However, let's suppose we want to implement a high-performance protocol. Looking at the code, it's not hard to spot that there's quite a serious performance problem: For each message, the underlying network stack is traversed twice, one for the size byte, second time for the payload. Instead of doing two send calls and traversing the underlying network stack twice we can modify the iolist to include the size byte as well as the payload and send the entire message using a single `bsendl()` call. The modified iolist may look as follows. Grey parts are the original iolist as passed to `quux_msendl()` by the user. Black part is the modification done inside `quux_msendl()`:
+
+![](hello3.png)
+
+The code will look like this:
 
 ```c
-uint8_t c;
-int rc = brecv(self->u, &c, 1, deadline);
+uint8_t c = (uint8_t)sz;
+struct iolist hdr = {&c, 1, first, 0};
+rc = bsendl(self->u, &hdr, last, deadline);
 if(rc < 0) return -1;
 ```
 
-User may pass in `NULL` instead of the iolist which means we should read and silently drop the message:
+## Step 6: Receiving a message
+
+As for the receive function we'll have to read the 8-bit size first:
+
+```c
+uint8_t sz;
+int rc = brecv(self->u, &sz, 1, deadline);
+if(rc < 0) return -1;
+```
+
+Great. Now we know that the message is `sz` bytes long. We are going to read those bytes into user's buffers. But let's take care of one special case first.
+
+libdill allows iolist passed to the receive function to be `NULL`. What that means is that the user wants to skip a message. This can be easily done given that the underlying protocol provides similar skipping functionality:
 
 ```c
 if(!first) {
-    rc = brecv(self->u, NULL, c, deadline);
+    rc = brecv(self->u, NULL, sz, deadline);
     if(rc < 0) return -1;
     return c;
 }
 ```
 
-The size of the message may not match size of the buffer supplied by the user. If message is larger than the buffer we will simply return an error. However, if message is smaller than the buffer there's a problem. Bytestream receive function has no size argument. It just receives data until the buffer is full. Therefore, we will have to shrink the buffer to the appropriate size.
-
-We can do so by modifying the iolist. Note that in iolist-based functions the list is supposed to be unchanged when the function returns. However, it can be temporarily modified while the function is in progress. In other words, iolists are not guaranteed to be thread- or coroutine-safe.
-
-Once the iolist is modified we can read the message payload from the underlying socket:
+If the iolist is not `NULL` we will find out the overall size of the buffer and check whether message will fit into it:
 
 ```c
-size_t rmn = c;
+size_t bufsz = 0;
+struct iolist *it;
+for(it = first; it; it = it->iol_next)
+    bufsz += it->iol_len;
+if(bufsz < sz) {errno = EMSGSIZE; return -1;}
+```
+
+It the message fits into the buffer payload can be received:
+
+```
+struct iolist *it;
+for(it = first; it; it = it->iol_next) {
+    size_t torecv = sz < it->iol_len ? sz : it->iol_len;
+    rc = brecv(self->u, it->iol_base, torecv, deadline);
+    sz -= torecv;
+    if(sz == 0) break;
+}
+```
+
+We are facing the same performance problem here as we did in the send function. Calling `brecv()` multiple times means extra network stack traversals and thus decreased performance. Abd we can apply a similar solution. We can modify the iolist in such a way that it can be simply forwarded to the underlying socket.
+
+The main problem in this case is that the size of the message may not match the size of the buffer supplied by the user. If message is larger than the buffer we will simply return an error. However, if message is smaller than the buffer there's a problem. Bytestream's `brecvl()` function has no size argument. It just receives data until the buffer is completely full. Therefore, we will have to shrink the buffer to match the message size.
+
+Let's say the iolist supplied by the user looks like this:
+
+![](hello4.png)
+
+If the message is 4 bytes long we are going to modify the iolist like this. Grey parts are the iolist structures passed to quux socket by the user. Black parts are the modifications:
+
+![](hello5.png)
+
+In iolist-based functions the list is supposed to be unchanged when the function returns. However, it can be temporarily modified while the function is in progress. In other words, iolists are not guaranteed to be thread- or coroutine-safe.
+
+In other words, we are modifying the iolist here, which is all right, but we have to make sure to revert all our changes before the function returns. Note the `orig` pointer in the above diagram. It won't be passed to the underlying socket. Instead, it will be used to restore the original iolist after sending is done.
+
+The code for the above looks like this:
+
+```c
+size_t rmn = sz;
 struct iolist *it = first;
 while(1) {
     if(it->iol_len >= rmn) break;
@@ -369,12 +432,21 @@ it->iol_next = NULL;
 rc = brecvl(self->u, first, last, deadline);
 *it = orig;
 if(rc < 0) return -1;
-return c;
 ```
 
-Compile and test the program!
+Don't forget to return the size of the message from the send function. Add receiving part to the test, then compile and run!
 
-## Step 5: Error handling
+```c
+int main(void) {
+    ...
+    char buf[256];
+    ssize_t sz = mrecv(q, buf, sizeof(buf), -1);
+    printf("%.*s\n", (size_t)sz, buf);
+    ...
+}
+```
+
+## Step 7: Error handling
 
 Consider the following scenario: User wants to receive a message. The message is 200 bytes long. However, after reading 100 bytes, receive function times out. That puts you, as the protocol implementor, into an unconfortable position. There's no way to push the 100 bytes that were already received back to the underlying socket. libdill sockets provide no API for that, but even in principle, it would mean that the underlying socket would need an unlimited buffer. Just imagine receiving a 1TB message and timing out just before its fully read...
 
@@ -406,7 +478,7 @@ self->recverr = 0;
 Set `senderr` to true every time when sending fails and `recverr` to true every time when receiving fails. For example:
 
 ```c
-if(sz > 253) {self->senderr = 1; errno = EMSGSIZE; return -1;}
+if(sz > 254) {self->senderr = 1; errno = EMSGSIZE; return -1;}
 ```
 
 Finally, fail send and receive function if the error flag is set:
@@ -420,7 +492,7 @@ static int quux_msendl(struct msock_vfs *mvfs,
 }
 ```
 
-## Step 6: Initial handshake
+## Step 8: Initial handshake
 
 Let's say we want to support mutliple versions of quux protocol. When a quux connection is established peers will exchange their version numbers and if they don't match, they will fail.
 
@@ -444,7 +516,7 @@ Note that failure of initial handshake not only prevents initialization of quux 
 
 Of course, we'll have to modify the test program to pass deadlines to `quux_attach()` function invocations.
 
-## Step 7: Terminal handshake
+## Step 9: Terminal handshake
 
 Imagine that user wants to close the quux protocol and start a new protocol, say HTTP, on top of the same underlying connection. For that to work both peers would have to make sure that they've received all quux-related data before proceeding. If they did not the leftover quux data would confuse the subsequent HTTP protocol.
 
