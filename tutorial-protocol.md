@@ -494,9 +494,11 @@ static int quux_msendl(struct msock_vfs *mvfs,
 
 ## Step 8: Initial handshake
 
-Let's say we want to support mutliple versions of quux protocol. When a quux connection is established peers will exchange their version numbers and if they don't match, they will fail.
+Let's say we want to support mutliple versions of quux protocol. When a quux connection is established peers will exchange their version numbers and if those don't match, protocol initialization will fail.
 
-In fact, we don't even need proper handshake for that. Each peer can simply send its version number and wait for version number from the other party. We'll do this work in `quux_attach()` function. And given that sending and receiving are blocking operations `quux_attach()` will become a blocking operation itself:
+In fact, we don't even need proper handshake. Each peer can simply send its version number and wait for version number from the other party. We'll do this work in `quux_attach()` function.
+
+Given that sending and receiving are blocking operations `quux_attach()` will become a blocking operation itself and will accept a deadline parameter:
 
 ```c
 int quux_attach(int u, int64_t deadline) {
@@ -509,12 +511,18 @@ int quux_attach(int u, int64_t deadline) {
     if(rc < 0) {err = errno; goto error2;}
     if(remote_version != local_version) {err = EPROTO; goto error2;}
     ...
+error2:
+    free(self);
+error1:
+    hclose(u);
+    errno = err;
+    return -1;
 }
 ```
 
-Note that failure of initial handshake not only prevents initialization of quux socket, it also closes the underlying socket. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.
+Note how failure of initial handshake not only prevents initialization of quux socket, it also closes the underlying socket. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.
 
-Of course, we'll have to modify the test program to pass deadlines to `quux_attach()` function invocations.
+Modify the test program accordingly (add deadlines), compile and test.
 
 ## Step 9: Terminal handshake
 

@@ -309,8 +309,9 @@ self-&gt;recverr = <span class="dv">0</span>;</code></pre>
     ...
 }</code></pre>
 <h2 id="step-8-initial-handshake">Step 8: Initial handshake</h2>
-<p>Let's say we want to support mutliple versions of quux protocol. When a quux connection is established peers will exchange their version numbers and if they don't match, they will fail.</p>
-<p>In fact, we don't even need proper handshake for that. Each peer can simply send its version number and wait for version number from the other party. We'll do this work in <code>quux_attach()</code> function. And given that sending and receiving are blocking operations <code>quux_attach()</code> will become a blocking operation itself:</p>
+<p>Let's say we want to support mutliple versions of quux protocol. When a quux connection is established peers will exchange their version numbers and if those don't match, protocol initialization will fail.</p>
+<p>In fact, we don't even need proper handshake. Each peer can simply send its version number and wait for version number from the other party. We'll do this work in <code>quux_attach()</code> function.</p>
+<p>Given that sending and receiving are blocking operations <code>quux_attach()</code> will become a blocking operation itself and will accept a deadline parameter:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_attach(<span class="dt">int</span> u, <span class="dt">int64_t</span> deadline) {
     ...
     <span class="dt">const</span> <span class="dt">int8_t</span> local_version = <span class="dv">1</span>;
@@ -321,9 +322,15 @@ self-&gt;recverr = <span class="dv">0</span>;</code></pre>
     <span class="kw">if</span>(rc &lt; <span class="dv">0</span>) {err = errno; <span class="kw">goto</span> error2;}
     <span class="kw">if</span>(remote_version != local_version) {err = EPROTO; <span class="kw">goto</span> error2;}
     ...
+error2:
+    free(self);
+error1:
+    hclose(u);
+    errno = err;
+    <span class="kw">return</span> -<span class="dv">1</span>;
 }</code></pre>
-<p>Note that failure of initial handshake not only prevents initialization of quux socket, it also closes the underlying socket. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.</p>
-<p>Of course, we'll have to modify the test program to pass deadlines to <code>quux_attach()</code> function invocations.</p>
+<p>Note how failure of initial handshake not only prevents initialization of quux socket, it also closes the underlying socket. This is necessary because otherwise the underlying sockets will be left in undefined state, with just half of quux handshake being done.</p>
+<p>Modify the test program accordingly (add deadlines), compile and test.</p>
 <h2 id="step-9-terminal-handshake">Step 9: Terminal handshake</h2>
 <p>Imagine that user wants to close the quux protocol and start a new protocol, say HTTP, on top of the same underlying connection. For that to work both peers would have to make sure that they've received all quux-related data before proceeding. If they did not the leftover quux data would confuse the subsequent HTTP protocol.</p>
 <p>To achieve that peers will send a single termination byte (255) each to another to mark end of the stream of quux messages. After doing so they will read any receive and drop quux messages from the peer until they receive the 255 byte. At that point all the quux data are cleaned up, both peers have consistent view of the world and HTTP protocol can be safely initiated.</p>
