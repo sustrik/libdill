@@ -124,7 +124,7 @@ error1:
     assert(rc == <span class="dv">0</span>);
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
-<p>To implement such socket it first needs to remember the handle of the underlying protocol so that it can use it when sending and receiving data:</p>
+<p>To implement it the socket first need to remember the handle of the underlying protocol so that it can use it when sending and receiving data:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> quux {
     ...
     <span class="dt">int</span> u;
@@ -147,7 +147,7 @@ error1:
     errno = err;
     <span class="kw">return</span> -<span class="dv">1</span>;
 }</code></pre>
-<p>We can reuse <code>quux_frobnicate()</code> and rename it to <code>quux_detach()</code> which will terminate the quux protocol and return the handle of the underlying protocol:</p>
+<p>We can reuse <code>quux_frobnicate()</code> and rename it to <code>quux_detach()</code>. It will terminate the quux protocol and return the handle of the underlying protocol:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_detach(<span class="dt">int</span> h) {
     <span class="kw">struct</span> quux *self = hquery(h, quux_type);
     <span class="kw">if</span>(!self) <span class="kw">return</span> -<span class="dv">1</span>;
@@ -233,7 +233,7 @@ error1:
 rc = bsendl(self-&gt;u, first, last, deadline);
 <span class="kw">if</span>(rc &lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;</code></pre>
 <p>To indicate success return zero from the function. Then compile and test.</p>
-<p>We could have been done here. However, let's suppose we want to implement a high-performance protocol. Looking at the code, it's not hard to spot that there's quite a serious performance problem: For each message, the underlying network stack is traversed twice, one for the size byte, second time for the payload. Instead of doing two send calls and traversing the underlying network stack twice we can modify the iolist to include the size byte as well as the payload and send the entire message using a single <code>bsendl()</code> call. The modified iolist may look as follows. Grey parts are the original iolist as passed to <code>quux_msendl()</code> by the user. Black part is the modification done inside <code>quux_msendl()</code>:</p>
+<p>However, let's suppose we want to implement a high-performance protocol. Looking at the code, it's not hard to spot that there's quite a serious performance problem: For each message, the underlying network stack is traversed twice, one for the size byte, second time for the payload. Instead of doing two send calls and traversing the underlying network stack twice we can modify the iolist to include the size byte as well as the payload and send the entire message using a single <code>bsendl()</code> call. The modified iolist may look as follows. Grey parts are the original iolist as passed to <code>quux_msendl()</code> by the user. Black part is the modification done inside <code>quux_msendl()</code>:</p>
 <p><img src="hello3.png" /></p>
 <p>The code will look like this:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">uint8_t</span> c = (<span class="dt">uint8_t</span>)sz;

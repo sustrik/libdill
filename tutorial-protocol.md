@@ -174,7 +174,7 @@ int main(void) {
 }
 ```
 
-To implement such socket it first needs to remember the handle of the underlying protocol so that it can use it when sending and receiving data:
+To implement it the socket first need to remember the handle of the underlying protocol so that it can use it when sending and receiving data:
 
 ```c
 struct quux {
@@ -205,7 +205,7 @@ error1:
 }
 ```
 
-We can reuse `quux_frobnicate()` and rename it to `quux_detach()` which will terminate the quux protocol and return the handle of the underlying protocol:
+We can reuse `quux_frobnicate()` and rename it to `quux_detach()`. It will terminate the quux protocol and return the handle of the underlying protocol:
 
 ```c
 int quux_detach(int h) {
@@ -351,7 +351,7 @@ if(rc < 0) return -1;
 
 To indicate success return zero from the function. Then compile and test.
 
-We could have been done here. However, let's suppose we want to implement a high-performance protocol. Looking at the code, it's not hard to spot that there's quite a serious performance problem: For each message, the underlying network stack is traversed twice, one for the size byte, second time for the payload. Instead of doing two send calls and traversing the underlying network stack twice we can modify the iolist to include the size byte as well as the payload and send the entire message using a single `bsendl()` call. The modified iolist may look as follows. Grey parts are the original iolist as passed to `quux_msendl()` by the user. Black part is the modification done inside `quux_msendl()`:
+However, let's suppose we want to implement a high-performance protocol. Looking at the code, it's not hard to spot that there's quite a serious performance problem: For each message, the underlying network stack is traversed twice, one for the size byte, second time for the payload. Instead of doing two send calls and traversing the underlying network stack twice we can modify the iolist to include the size byte as well as the payload and send the entire message using a single `bsendl()` call. The modified iolist may look as follows. Grey parts are the original iolist as passed to `quux_msendl()` by the user. Black part is the modification done inside `quux_msendl()`:
 
 ![](hello3.png)
 
