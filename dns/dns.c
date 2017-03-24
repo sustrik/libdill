@@ -23,9 +23,17 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  * ==========================================================================
  */
+#ifdef  HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #if !defined(__FreeBSD__) && !defined(__sun)
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE	600
+#endif
+
+#if defined(__FreeBSD__)
+#define HAVE_STRUCT_SOCKADDR_SA_LEN
 #endif
 
 #undef _BSD_SOURCE
@@ -807,6 +815,9 @@ static int dns_inet_pton(int af, const void *src, void *dst) {
 	union { struct sockaddr_in sin; struct sockaddr_in6 sin6; } u;
 
 	u.sin.sin_family	= af;
+#ifdef  HAVE_STRUCT_SOCKADDR_SA_LEN
+	u.sin.sin_len       = dns_af_len(af);
+#endif
 
 	if (0 != WSAStringToAddressA((void *)src, af, (void *)0, (struct sockaddr *)&u, &(int){ sizeof u }))
 		return -1;
@@ -832,6 +843,9 @@ static const char *dns_inet_ntop(int af, const void *src, void *dst, unsigned lo
 	memset(&u, 0, sizeof u);
 
 	u.sin.sin_family	= af;
+#ifdef  HAVE_STRUCT_SOCKADDR_SA_LEN
+	u.sin.sin_len       = dns_af_len(af);
+#endif
 
 	switch (af) {
 	case AF_INET6:
@@ -3877,8 +3891,8 @@ struct dns_resolv_conf *dns_resconf_open(int *error) {
 	sin->sin_family      = AF_INET;
 	sin->sin_addr.s_addr = INADDR_ANY;
 	sin->sin_port        = htons(53);
-#if defined(SA_LEN)
-	sin->sin_len         = sizeof *sin;
+#ifdef  HAVE_STRUCT_SOCKADDR_SA_LEN
+	sin->sin_len         = dns_af_len(sin->sin_family);
 #endif
 
 	if (0 != gethostname(resconf->search[0], sizeof resconf->search[0]))
@@ -6871,6 +6885,9 @@ exec:
 		}
 
 		sin.sin_family	= AF_INET;
+#ifdef  HAVE_STRUCT_SOCKADDR_SA_LEN
+		sin.sin_len     = dns_af_len(sin.sin_family);
+#endif
 
 		if ((error = dns_a_parse((struct dns_a *)&sin.sin_addr, &rr, F->hints)))
 			goto error;
@@ -7429,6 +7446,9 @@ static int dns_ai_setent(struct addrinfo **ent, union dns_any *any, enum dns_typ
 
 		sin.sin_family	= AF_INET;
 		sin.sin_port	= htons(ai->port);
+#ifdef  HAVE_STRUCT_SOCKADDR_SA_LEN
+		sin.sin_len     = dns_af_len(sin.sin_family);
+#endif
 
 		memcpy(&sin.sin_addr, any, sizeof sin.sin_addr);
 
@@ -7438,6 +7458,9 @@ static int dns_ai_setent(struct addrinfo **ent, union dns_any *any, enum dns_typ
 
 		sin6.sin6_family	= AF_INET6;
 		sin6.sin6_port		= htons(ai->port);
+#ifdef  HAVE_STRUCT_SOCKADDR_SA_LEN
+		sin6.sin6_len        = dns_af_len(sin6.sin6_family);
+#endif
 
 		memcpy(&sin6.sin6_addr, any, sizeof sin6.sin6_addr);
 
@@ -8785,6 +8808,9 @@ static int echo_port(int argc DNS_NOTUSED, char *argv[] DNS_NOTUSED) {
 	port.sin.sin_family = AF_INET;
 	port.sin.sin_port = htons(5354);
 	port.sin.sin_addr.s_addr = inet_addr("127.0.0.1");
+#ifdef  HAVE_STRUCT_SOCKADDR_SA_LEN
+	port.sin.sin_len  = dns_af_len(port.sin.sin_family);
+#endif
 
 	if (-1 == (fd = socket(PF_INET, SOCK_DGRAM, 0)))
 		panic("socket: %s", strerror(errno));
