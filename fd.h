@@ -62,7 +62,7 @@ int fd_recv(
     struct iolist *first,
     struct iolist *last,
     int64_t deadline);
-int fd_close(
+void fd_close(
     int s);
 
 #endif

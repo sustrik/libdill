@@ -87,8 +87,7 @@ int tcp_connect(const struct ipaddr *addr, int64_t deadline) {
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    rc = fd_close(s);
-    dill_assert(rc == 0);
+    fd_close(s);
 error1:
     errno = err;
     return -1;
@@ -158,8 +157,7 @@ error:
 
 static void tcp_hclose(struct hvfs *hvfs) {
     struct tcp_conn *self = (struct tcp_conn*)hvfs;
-    int rc = fd_close(self->fd);
-    dill_assert(rc == 0);
+    fd_close(self->fd);
     free(self);
 }
 
@@ -244,8 +242,7 @@ int tcp_accept(int s, struct ipaddr *addr, int64_t deadline) {
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    rc = fd_close(as);
-    dill_assert(rc == 0);
+    fd_close(as);
 error1:
     errno = err;
     return -1;
@@ -261,8 +258,7 @@ int tcp_fd(int s) {
 
 static void tcp_listener_hclose(struct hvfs *hvfs) {
     struct tcp_listener *self = (struct tcp_listener*)hvfs;
-    int rc = fd_close(self->fd);
-    dill_assert(rc == 0);
+    fd_close(self->fd);
     free(self);
 }
 

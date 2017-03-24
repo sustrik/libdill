@@ -88,8 +88,7 @@ int ipc_connect(const char *addr, int64_t deadline) {
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    rc = fd_close(s);
-    dill_assert(rc == 0);
+    fd_close(s);
 error1:
     errno = err;
     return -1;
@@ -160,8 +159,7 @@ error:
 
 static void ipc_hclose(struct hvfs *hvfs) {
     struct ipc_conn *self = (struct ipc_conn*)hvfs;
-    int rc = fd_close(self->fd);
-    dill_assert(rc == 0);
+    fd_close(self->fd);
     free(self);
 }
 
@@ -239,8 +237,7 @@ int ipc_accept(int s, int64_t deadline) {
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    rc = fd_close(as);
-    dill_assert(rc == 0);
+    fd_close(as);
 error1:
     errno = err;
     return -1;
@@ -248,8 +245,7 @@ error1:
 
 static void ipc_listener_hclose(struct hvfs *hvfs) {
     struct ipc_listener *self = (struct ipc_listener*)hvfs;
-    int rc = fd_close(self->fd);
-    dill_assert(rc == 0);
+    fd_close(self->fd);
     free(self);
 }
 
@@ -278,11 +274,9 @@ error4:
     rc = hclose(s[0]);
     goto error2;
 error3:
-    rc = fd_close(fds[0]);
-    dill_assert(rc == 0);
+    fd_close(fds[0]);
 error2:
-    rc = fd_close(fds[1]);
-    dill_assert(rc == 0);
+    fd_close(fds[1]);
 error1:
     errno = err;
     return -1;

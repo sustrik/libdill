@@ -279,7 +279,7 @@ int fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
     }
 }
 
-int fd_close(int s) {
+void fd_close(int s) {
     fdclean(s);
     /* Discard any pending outbound data. If SO_LINGER option cannot
        be set, never mind and continue anyway. */
@@ -287,6 +287,9 @@ int fd_close(int s) {
     lng.l_onoff=1;
     lng.l_linger=0;
     setsockopt(s, SOL_SOCKET, SO_LINGER, (void*)&lng, sizeof(lng));
-    return close(s);
+    /* We are not checking the error here. close() has inconsistent behaviour
+       and leaking a file descriptor is better than crashing the entire
+       program. */
+    close(s);
 }
 
