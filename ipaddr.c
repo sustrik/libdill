@@ -252,6 +252,10 @@ int ipaddr_local(struct ipaddr *addr, const char *name, int port, int mode) {
 #endif
 }
 
+static void dns_freeaddrinfo(struct addrinfo *ent) {
+    free(ent);
+}
+
 int ipaddr_remote(struct ipaddr *addr, const char *name, int port, int mode,
       int64_t deadline) {
     int rc = ipaddr_literal(addr, name, port, mode);
@@ -296,33 +300,47 @@ int ipaddr_remote(struct ipaddr *addr, const char *name, int port, int mode,
             int err = errno;
             fdclean(fd);
             errno = err;
-            if(dill_slow(rc < 0)) return -1;
+            if(dill_slow(rc < 0)) {
+                dns_ai_close(ai);
+                return -1;
+            }
             continue;
         }
         if(rc == ENOENT || (rc >= DNS_EBASE && rc <= DNS_ELAST))
             break;
-        if(!ipv4 && it && it->ai_family == AF_INET)
+        if(!ipv4 && it && it->ai_family == AF_INET) {
             ipv4 = it;
-        if(!ipv6 && it && it->ai_family == AF_INET6)
+            it = NULL;
+        }
+        if(!ipv6 && it && it->ai_family == AF_INET6) {
             ipv6 = it;
+            it = NULL;
+        }
+        dns_freeaddrinfo(it); /* Ended up useless */
         if(ipv4 && ipv6)
             break;
     }
     switch(mode) {
     case IPADDR_IPV4:
+        dns_freeaddrinfo(ipv6);
         ipv6 = NULL;
         break;
     case IPADDR_IPV6:
+        dns_freeaddrinfo(ipv4);
         ipv4 = NULL;
         break;
     case 0:
     case IPADDR_PREF_IPV4:
-        if(ipv4)
-           ipv6 = NULL;
+        if(ipv4) {
+            dns_freeaddrinfo(ipv6);
+            ipv6 = NULL;
+        }
         break;
     case IPADDR_PREF_IPV6:
-        if(ipv6)
-           ipv4 = NULL;
+        if(ipv6) {
+            dns_freeaddrinfo(ipv4);
+            ipv4 = NULL;
+        }
         break;
     default:
         dill_assert(0);
@@ -331,6 +349,8 @@ int ipaddr_remote(struct ipaddr *addr, const char *name, int port, int mode,
         struct sockaddr_in *inaddr = (struct sockaddr_in*)addr;
         memcpy(inaddr, ipv4->ai_addr, sizeof (struct sockaddr_in));
         inaddr->sin_port = htons(port);
+        dns_freeaddrinfo(ipv4);
+        dns_freeaddrinfo(ipv6);
         dns_ai_close(ai);
         return 0;
     }
@@ -338,6 +358,8 @@ int ipaddr_remote(struct ipaddr *addr, const char *name, int port, int mode,
         struct sockaddr_in6 *inaddr = (struct sockaddr_in6*)addr;
         memcpy(inaddr, ipv6->ai_addr, sizeof (struct sockaddr_in6));
         inaddr->sin6_port = htons(port);
+        dns_freeaddrinfo(ipv4);
+        dns_freeaddrinfo(ipv6);
         dns_ai_close(ai);
         return 0;
     }
