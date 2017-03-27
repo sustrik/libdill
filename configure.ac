@@ -166,6 +166,12 @@ AC_CHECK_LIB([socket], [socket])
 AC_CHECK_FUNCS([epoll_create], [AC_DEFINE([HAVE_EPOLL])])
 AC_CHECK_FUNCS([kqueue], [AC_DEFINE([HAVE_KQUEUE])])
 
+dnl Check if struct sockaddr contains sa_len member
+AC_CHECK_MEMBERS([struct sockaddr.sa_len], [], [], [
+# include <sys/types.h>
+# include <sys/socket.h>
+])
+
 ################################################################################
 #  Libtool                                                                     #
 ################################################################################

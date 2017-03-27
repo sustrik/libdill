@@ -62,6 +62,9 @@ static int ipaddr_ipany(struct ipaddr *addr, int port, int mode)
         ipv4->sin_family = AF_INET;
         ipv4->sin_addr.s_addr = htonl(INADDR_ANY);
         ipv4->sin_port = htons((uint16_t)port);
+#ifdef  HAVE_STRUCT_SOCKADDR_SA_LEN
+        ipv4->sin_len = sizeof(struct sockaddr_in);
+#endif
         return 0;
     }
     else {
@@ -69,6 +72,9 @@ static int ipaddr_ipany(struct ipaddr *addr, int port, int mode)
         ipv6->sin6_family = AF_INET6;
         memcpy(&ipv6->sin6_addr, &in6addr_any, sizeof(in6addr_any));
         ipv6->sin6_port = htons((uint16_t)port);
+#ifdef  HAVE_STRUCT_SOCKADDR_SA_LEN
+        ipv6->sin6_len = sizeof(struct sockaddr_in6);
+#endif
         return 0;
     }
 }
@@ -82,6 +88,9 @@ static int ipaddr_ipv4_literal(struct ipaddr *addr, const char *name,
     if(dill_slow(rc != 1)) {errno = EINVAL; return -1;}
     ipv4->sin_family = AF_INET;
     ipv4->sin_port = htons((uint16_t)port);
+#ifdef  HAVE_STRUCT_SOCKADDR_SA_LEN
+    ipv4->sin_len = sizeof(struct sockaddr_in);
+#endif
     return 0;
 }
 
@@ -94,6 +103,9 @@ static int ipaddr_ipv6_literal(struct ipaddr *addr, const char *name,
     if(dill_slow(rc != 1)) {errno = EINVAL; return -1;}
     ipv6->sin6_family = AF_INET6;
     ipv6->sin6_port = htons((uint16_t)port);
+#ifdef  HAVE_STRUCT_SOCKADDR_SA_LEN
+    ipv6->sin6_len = sizeof(struct sockaddr_in6);
+#endif
     return 0;
 }
 
