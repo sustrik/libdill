@@ -202,6 +202,19 @@ static int fd_recv_(int s, struct iolist *first, struct iolist *last,
     }
 }
 
+/* Skip len bytes. If len is negative skip until error occurs. */
+static int fd_skip(int s, ssize_t len, int64_t deadline) {
+    uint8_t buf[512];
+    while(len) {
+        size_t to_recv = len < 0 || len > sizeof(buf) ? sizeof(buf) : len;
+        struct iolist iol = {buf, to_recv, NULL, 0};
+        int rc = fd_recv_(s, &iol, &iol, deadline);
+        if(dill_slow(rc < 0)) return -1;
+        if(len >= 0) len -= to_recv;
+    }
+    return 0;
+}
+
 /* Copy data from rxbuf to one iolist structure.
    Returns number of bytes copied. */
 static size_t fd_copy(struct fd_rxbuf *rxbuf, struct iolist *iol) {
@@ -223,6 +236,8 @@ static size_t fd_copy(struct fd_rxbuf *rxbuf, struct iolist *iol) {
 
 int fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
       struct iolist *last, int64_t deadline) {
+    /* Skip all data until error occurs. */
+    if(dill_slow(!first && !last)) return fd_skip(s, -1, deadline);
     /* Fill in data from the rxbuf. */
     size_t sz;
     while(1) {

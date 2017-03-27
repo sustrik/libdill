@@ -55,7 +55,7 @@ int bsendl(int s, struct iolist *first, struct iolist *last, int64_t deadline) {
 int brecvl(int s, struct iolist *first, struct iolist *last, int64_t deadline) {
     struct bsock_vfs *b = hquery(s, bsock_type);
     if(dill_slow(!b)) return -1;
-    if(dill_slow(!first || !last || last->iol_next)) {
+    if(dill_slow((first && !last) || (!first && last) || last->iol_next)) {
         errno = EINVAL; return -1;}
     return b->brecvl(b, first, last, deadline);
 }
