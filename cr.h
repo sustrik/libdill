@@ -62,6 +62,8 @@ struct dill_cr {
     unsigned int done : 1;
     /* If true, the coroutine was launched with go_mem. */
     unsigned int mem : 1;
+    /* If true, the coroutine shall be destroyed when it finishes. */
+    unsigned int detached: 1;
     /* When the coroutine handle is being closed, this points to the
        coroutine that is doing the hclose() call. */
     struct dill_cr *closer;
@@ -85,6 +87,8 @@ struct dill_cr {
 struct dill_ctx_cr {
     /* Currently running coroutine. */
     struct dill_cr *r;
+    /* The latest detached coroutine that has finished. */
+    struct dill_cr *detached_cr;
     /* List of coroutines ready for execution. */
     struct dill_qlist ready;
     /* All active timers. */
