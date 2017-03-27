@@ -19,7 +19,7 @@ not guarantee that the handle's work will have been fully finished. E.g., outbou
 
 # RETURN VALUE
 
-Returns a coroutine handle. In the case of an error, it returns -1 and sets _errno_ to one of the values.
+In the case of an error, it returns -1 and sets _errno_ to one of the values. In case of success, returns 0.
 
 # ERRORS
 
