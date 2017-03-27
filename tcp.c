@@ -141,13 +141,9 @@ int tcp_close(int s, int64_t deadline) {
     /* Now we are going to read all the inbound data until we reach end of the
        stream. That way we can be sure that the peer either received all our
        data or consciously closed the connection without reading all of it. */
-    while(1) {
-        char buf[128];
-        struct iolist iol = {buf, sizeof(buf), NULL, 0};
-        int rc = tcp_brecvl(&self->bvfs, &iol, &iol, deadline);
-        if(rc < 0 && errno == EPIPE) break;
-        if(dill_slow(rc < 0)) {err = errno; goto error;}
-    }
+    int rc = tcp_brecvl(&self->bvfs, NULL, NULL, deadline);
+    dill_assert(rc < 0);
+    if(dill_slow(errno != EPIPE)) {err = errno; goto error;}
     return 0;
 error:
     tcp_hclose(&self->hvfs);
