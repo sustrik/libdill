@@ -86,6 +86,8 @@ coroutine void client4(int port) {
     errno_assert(rc == -1 && errno == ETIMEDOUT);
 }
 
+static void move_lots_of_data(size_t nbytes, size_t buffer_size);
+
 int main(void) {
     char buf[16];
 
@@ -193,6 +195,110 @@ int main(void) {
     rc = hclose(ls);
     errno_assert(rc == 0);
 
+    /* Test whether moving lots of data through a socket pair works */
+    move_lots_of_data(5000, 1);
+    move_lots_of_data(5000, 1000);
+    move_lots_of_data(5000, 2000);    /* This and above will succeed */
+    move_lots_of_data(5000, 2001);    /* This and below will fail */
+    move_lots_of_data(5000, 3000);
+
     return 0;
 }
-  
+
+static coroutine void async_accept_routine(int listen_fd, int ch) {
+    int fd = tcp_accept(listen_fd, NULL, -1);
+    assert(fd != -1);
+    int rc = chsend(ch, &fd, sizeof(fd), -1);
+    assert(rc != -1);
+}
+
+static int async_accept(int listen_fd) {
+    int ch = chmake(sizeof(int));
+    assert(ch != -1);
+    int h = go(async_accept_routine(listen_fd, ch));
+    assert(h != -1);
+    return ch;
+}
+
+static int tcp_socketpair(int fd[2]) {
+    struct ipaddr server_addr;
+
+    int rc = ipaddr_local(&server_addr, "127.0.0.1", 0, 0);
+    errno_assert(rc == 0);
+    int listen_fd = tcp_listen(&server_addr, 1);
+    assert(listen_fd != -1);
+    int port = ipaddr_port(&server_addr);
+    assert(port > 0);
+
+    int accept_done_ch = async_accept(listen_fd);
+    assert(accept_done_ch != -1);
+
+    int client_fd = tcp_connect(&server_addr, now() + 1000);
+    assert(client_fd != -1);
+
+    int server_fd;
+    rc = chrecv(accept_done_ch, &server_fd, sizeof(server_fd), -1);
+    assert(rc == 0);
+    assert(server_fd != -1);
+    hclose(listen_fd);
+    hclose(accept_done_ch);
+
+    fd[0] = client_fd;
+    fd[1] = server_fd;
+    return 0;
+}
+
+static void receiver(int fd, size_t nbytes, size_t buf_size, int done_ch) {
+    /*
+     * - static is to avoid affecting the stack.
+     * - bigger than sizeof(fd_rxbuf->data) is to expose a problem.
+     */
+    char buf[buf_size];
+
+    while(nbytes > 0) {
+        size_t len = nbytes < sizeof(buf) ? nbytes : sizeof(buf);
+        int rc = brecv(fd, buf, len, now() + 10000);
+        if(rc != 0) {
+            printf("While trying to receive with buffer size %zu: rc=%d, "
+                   "errno=%s\n",
+                   buf_size, rc, strerror(errno));
+            assert(rc == 0);
+        }
+        nbytes -= len;
+    }
+
+    int r = chsend(done_ch, "", 1, -1);
+    assert(r == 0);
+}
+
+static void move_lots_of_data(size_t nbytes, size_t buf_size) {
+    int pp[2];
+    int rc = tcp_socketpair(pp);
+    assert(rc == 0);
+    int done_ch = chmake(1);
+    assert(done_ch != -1);
+    int rcv_hdl = go(receiver(pp[0], nbytes, buf_size, done_ch));
+    assert(rcv_hdl);
+
+    for(size_t left = nbytes; left > 0;) {
+        char buf[512];
+        memset(buf, 0, sizeof(buf));
+        size_t len = left < sizeof(buf) ? left : sizeof(buf);
+        rc = bsend(pp[1], buf, len, now() + 1000);
+        if(rc != 0) {
+            printf("After moving %zu bytes rc=%d, errno=%s\n", nbytes - left,
+                   rc, strerror(errno));
+            assert(rc == 0);
+        }
+        left -= len;
+    }
+
+    char tmp;
+    int r = chrecv(done_ch, &tmp, sizeof(tmp), -1);
+    assert(r == 0);
+    hclose(done_ch);
+
+    hclose(rcv_hdl);
+    hclose(pp[0]);
+    hclose(pp[1]);
+}
