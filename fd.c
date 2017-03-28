@@ -262,7 +262,8 @@ int fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
     }
     /* If requested amount of data is larger than rx buffer avoid the copy
        and read it directly into user's buffer. */
-    if(miss > sizeof(rxbuf->data)) return fd_recv_(s, &curr, last, deadline);
+    if(miss > sizeof(rxbuf->data))
+        return fd_recv_(s, &curr, curr.iol_next ? last : &curr, deadline);
     /* If small amount of data is requested use rx buffer. */
     while(1) {
         /* Read as much data as possible to the buffer to avoid extra
