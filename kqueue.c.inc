@@ -82,10 +82,10 @@ void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
        survive a fork. However, implementations seem to disagree.
        On FreeBSD the following function succeeds. On OSX it returns
        EACCESS. Therefore we ignore the return value. */
-    int kfd = ctx->kfd;
+    close(ctx->kfd);
     ctx->kfd = -1;
-    close(kfd);
     free(ctx->fdinfos);
+    ctx->fdinfos = NULL;
 }
 
 static void dill_fdcancelin(struct dill_clause *cl) {
@@ -174,6 +174,10 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
 
 int dill_pollset_clean(int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
+    if(ctx->kfd == -1) {
+        errno = EBADF;
+        return -1;
+    }
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(!fdi->cached) return 0;
     /* We cannot clean an fd that someone is waiting for. */
