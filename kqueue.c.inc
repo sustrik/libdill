@@ -112,7 +112,7 @@ static void dill_fdcancelout(struct dill_clause *cl) {
 
 int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
-    if(dill_slow(fd < 0 || fd >= ctx->nfdinfos)) {errno = EBADF; return -1;}
+    if(dill_slow(fd < 0 || fd >= ctx->nfdinfos || !ctx->fdinfos)) {errno = EBADF; return -1;}
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     /* If not yet cached, check whether fd exists and if so add it
        to pollset. */
