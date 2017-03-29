@@ -10,7 +10,7 @@ fdin - waits on a filedescriptor to become readable
 
 # DESCRIPTION
 
-Waits on a file descriptor to either become readable or get into an error state.  Either case leads to a successful return from the function.  To distinguish the two outcomes, follow up with a read operation on the file descriptor.
+Waits on a file descriptor (true OS file descriptor, not libdill socket handle) to either become readable or get into an error state.  Either case leads to a successful return from the function.  To distinguish the two outcomes, follow up with a read operation on the file descriptor.
 
 _deadline_ is a point in time when the operation should time out. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e.,  perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if need be.
 
