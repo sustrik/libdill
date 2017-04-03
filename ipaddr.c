@@ -266,7 +266,7 @@ int ipaddr_remote(struct ipaddr *addr, const char *name, int port, int mode,
         /* TODO: Maybe re-read the configuration once in a while? */
         dill_dns_conf = dns_resconf_local(&rc);
         if(!dill_dns_conf) {
-            errno = EADDRNOTAVAIL;
+            errno = ENOENT;
             return -1;
         }
         dill_dns_hosts = dns_hosts_local(&rc);
