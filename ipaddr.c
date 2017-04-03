@@ -277,7 +277,12 @@ int ipaddr_remote(struct ipaddr *addr, const char *name, int port, int mode,
     /* Let's do asynchronous DNS query here. */
     struct dns_resolver *resolver = dns_res_open(dill_dns_conf,
         dill_dns_hosts, dill_dns_hints, NULL, dns_opts(), &rc);
-    dill_assert(resolver);
+    if(!resolver) {
+        if(errno == ENFILE || errno == EMFILE) {
+            return -1;
+        }
+        dill_assert(resolver);
+    }
     dill_assert(port >= 0 && port <= 0xffff);
     char portstr[8];
     snprintf(portstr, sizeof(portstr), "%d", port);
