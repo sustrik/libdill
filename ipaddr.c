@@ -299,14 +299,15 @@ int ipaddr_remote(struct ipaddr *addr, const char *name, int port, int mode,
     while(1) {
         rc = dns_ai_nextent(&it, ai);
         if(rc == EAGAIN) {
-            int fd = dns_ai_pollfd(ai);
-            dill_assert(fd >= 0);
-            int rc = fdin(fd, deadline);
+            dns_pollfd_result pollfd = dns_ai_pollfd(ai);
+            dill_assert(pollfd.fd >= 0);
+            int rc = (pollfd.want_events &= DNS_POLLOUT)
+                    ? fdout(pollfd.fd, deadline) : fdin(pollfd.fd, deadline);
             /* There's no guarantee that the file descriptor will be reused
                in next iteration. We have to clean the fdwait cache here
                to be on the safe side. */
             int err = errno;
-            fdclean(fd);
+            fdclean(pollfd.fd);
             errno = err;
             if(dill_slow(rc < 0)) {
                 dns_ai_close(ai);
