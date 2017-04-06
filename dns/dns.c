@@ -5440,10 +5440,11 @@ static struct dns_packet *dns_cache_fetch(struct dns_cache *cache, int *error) {
 } /* dns_cache_fetch() */
 
 
-static int dns_cache_pollfd(struct dns_cache *cache) {
+dns_pollfd_result dns_cache_pollfd(struct dns_cache *cache) {
 	(void)cache;
 
-	return -1;
+	dns_pollfd_result result = { -1, 0 };
+	return result;
 } /* dns_cache_pollfd() */
 
 
@@ -6162,24 +6163,28 @@ int dns_so_events(struct dns_socket *so) {
 } /* dns_so_events() */
 
 
-int dns_so_pollfd(struct dns_socket *so) {
+dns_pollfd_result dns_so_pollfd(struct dns_socket *so) {
+    dns_pollfd_result result = { -1, dns_so_events2(so, DNS_SYSPOLL) };
 	switch (so->state) {
 	case DNS_SO_UDP_CONN:
 	case DNS_SO_UDP_SEND:
 	case DNS_SO_UDP_RECV:
-		return so->udp;
+		result.fd = so->udp;
+		return result;
 	case DNS_SO_TCP_CONN:
 	case DNS_SO_TCP_SEND:
 	case DNS_SO_TCP_RECV:
-		return so->tcp;
+		result.fd = so->tcp;
+		return result;
 	} /* switch() */
 
-	return -1;
+	return result;
 } /* dns_so_pollfd() */
 
 
 int dns_so_poll(struct dns_socket *so, int timeout) {
-	return dns_poll(dns_so_pollfd(so), dns_so_events2(so, DNS_SYSPOLL), timeout);
+	dns_pollfd_result result = dns_so_pollfd(so);
+	return dns_poll(result.fd, result.want_events, timeout);
 } /* dns_so_poll() */
 
 
@@ -7178,7 +7183,7 @@ int dns_res_events(struct dns_resolver *R) {
 } /* dns_res_events() */
 
 
-int dns_res_pollfd(struct dns_resolver *R) {
+dns_pollfd_result dns_res_pollfd(struct dns_resolver *R) {
 	switch (R->stack[R->sp].state) {
 	case DNS_R_CHECK:
 		return R->cache->pollfd(R->cache);
@@ -7221,7 +7226,8 @@ time_t dns_res_elapsed(struct dns_resolver *R) {
 
 
 int dns_res_poll(struct dns_resolver *R, int timeout) {
-	return dns_poll(dns_res_pollfd(R), dns_res_events2(R, DNS_SYSPOLL), timeout);
+	dns_pollfd_result result = dns_res_pollfd(R);
+	return dns_poll(result.fd, result.want_events, timeout);
 } /* dns_res_poll() */
 
 
@@ -7714,8 +7720,13 @@ int dns_ai_events(struct dns_addrinfo *ai) {
 } /* dns_ai_events() */
 
 
-int dns_ai_pollfd(struct dns_addrinfo *ai) {
-	return (ai->res)? dns_res_pollfd(ai->res) : -1;
+dns_pollfd_result dns_ai_pollfd(struct dns_addrinfo *ai) {
+    if(ai->res) {
+        return dns_res_pollfd(ai->res);
+    } else {
+        dns_pollfd_result result = { -1, 0 };
+        return result;
+    }
 } /* dns_ai_pollfd() */
 
 

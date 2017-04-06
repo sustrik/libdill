@@ -956,6 +956,10 @@ struct dns_hints_i {
 
 unsigned dns_hints_grep(struct sockaddr **, socklen_t *, unsigned, struct dns_hints_i *, struct dns_hints *);
 
+typedef struct {
+    int fd;
+    int want_events; /* DNS_POLLIN or DNS_POLLOUT, or combination */
+} dns_pollfd_result;
 
 /*
  * C A C H E  I N T E R F A C E
@@ -974,7 +978,7 @@ struct dns_cache {
 	int (*check)(struct dns_cache *);
 	struct dns_packet *(*fetch)(struct dns_cache *, int *);
 
-	int (*pollfd)(struct dns_cache *);
+	dns_pollfd_result (*pollfd)(struct dns_cache *);
 	short (*events)(struct dns_cache *);
 	void (*clear)(struct dns_cache *);
 
@@ -1073,7 +1077,7 @@ void dns_so_clear(struct dns_socket *);
 
 int dns_so_events(struct dns_socket *);
 
-int dns_so_pollfd(struct dns_socket *);
+dns_pollfd_result dns_so_pollfd(struct dns_socket *);
 
 int dns_so_poll(struct dns_socket *, int);
 
@@ -1115,7 +1119,7 @@ void dns_res_clear(struct dns_resolver *);
 
 int dns_res_events(struct dns_resolver *);
 
-int dns_res_pollfd(struct dns_resolver *);
+dns_pollfd_result dns_res_pollfd(struct dns_resolver *);
 
 time_t dns_res_timeout(struct dns_resolver *);
 
@@ -1149,7 +1153,7 @@ void dns_ai_clear(struct dns_addrinfo *);
 
 int dns_ai_events(struct dns_addrinfo *);
 
-int dns_ai_pollfd(struct dns_addrinfo *);
+dns_pollfd_result dns_ai_pollfd(struct dns_addrinfo *);
 
 time_t dns_ai_timeout(struct dns_addrinfo *);
 
