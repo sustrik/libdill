@@ -300,8 +300,10 @@ int ipaddr_remote(struct ipaddr *addr, const char *name, int port, int mode,
         rc = dns_ai_nextent(&it, ai);
         if(rc == EAGAIN) {
             int fd = dns_ai_pollfd(ai);
+            int events = dns_ai_events(ai);
             dill_assert(fd >= 0);
-            int rc = fdin(fd, deadline);
+            int rc = (events & DNS_POLLOUT)
+                        ? fdout(fd, deadline) : fdin(fd, deadline);
             /* There's no guarantee that the file descriptor will be reused
                in next iteration. We have to clean the fdwait cache here
                to be on the safe side. */

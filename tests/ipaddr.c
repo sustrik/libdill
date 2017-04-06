@@ -62,5 +62,19 @@ int main(void) {
     ipaddr_str(&addr, buf);
     assert(strcmp(buf, "::1") == 0);
 
+    for(int hindex = 0; hindex < 4; hindex++) {
+        static char *hostnames[] = {
+            "large-dns-response-1k.lionet.info",
+            "large-dns-response-2k.lionet.info",
+            "large-dns-response-4k.lionet.info",
+            "large-dns-response-8k.lionet.info"
+        };
+
+        rc = ipaddr_remote(&addr, hostnames[hindex], 80, 0, now() + 5000);
+        assert(rc == 0);
+        ipaddr_str(&addr, buf);
+        assert(strncmp("127.0.", buf, 6) == 0);
+    }
+
     return 0;
 }
