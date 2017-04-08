@@ -1,6 +1,10 @@
 
 # Past versions
 
+**Apr 8th, 2017 <http://libdill.org/libdill-1.6.tar.gz>**
+
+* Bug fix release.
+
 **Mar 17th, 2017 <http://libdill.org/libdill-1.5.tar.gz>**
 
 * Two simple framing protocols added (CRLF and PFX).

@@ -32,14 +32,13 @@ struct iolist *iol_next; /* Next buffer. */
 int iol_rsvd;            /* Reserved. Must be set to zero. */</code></pre>
 <p><strong>mrecvl()</strong> returns <strong>EINVAL</strong> error in case the list is malformed:</p>
 <ul>
-<li>If <em>first</em> is <strong>NULL</strong>.<br /></li>
-<li>If <em>last</em> is <strong>NULL</strong>.<br /></li>
 <li>If <em>last</em>-&gt;<em>iol_next</em> is not <strong>NULL</strong>.<br /></li>
 <li>If <em>first</em> and <em>last</em> don't belong to the same list.<br /></li>
 <li>If there's a loop in the list.<br /></li>
 <li>If <em>iol_rsvd</em> of any item is non-zero.</li>
 </ul>
 <p>The list can be temporarily modified while the function is in progress. However, once the function returns the list is guaranteed to be the same as before the call.</p>
+<p>If both <em>first</em> and <em>last</em> arguments to <strong>mrecvl()</strong> are set to <strong>NULL</strong> the message is received and silently dropped. The function will still return the size of the message.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>The function returns size of the message on success. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
