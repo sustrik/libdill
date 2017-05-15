@@ -106,9 +106,12 @@ int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
     if(dill_slow(fd < 0 || fd >= ctx->nfdinfos)) {errno = EBADF; return -1;}
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     /* If not yet cached, check whether the fd exists and if it does,
-       add it to the pollset. */    
+       add it to the pollset. */
     if(dill_slow(!fdi->cached)) {
         struct epoll_event ev;
+#ifdef DILL_VALGRIND
+        ev.data.u64 = 0; //Keep Valgrind happy
+#endif
         ev.data.fd = fd;
         ev.events = EPOLLIN;
         int rc = epoll_ctl(ctx->efd, EPOLL_CTL_ADD, fd, &ev);
@@ -139,9 +142,12 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
     if(dill_slow(fd < 0 || fd >= ctx->nfdinfos)) {errno = EBADF; return -1;}
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     /* If not yet cached, check whether the fd exists and if it does,
-       add it to pollset. */    
+       add it to pollset. */
     if(dill_slow(!fdi->cached)) {
         struct epoll_event ev;
+#ifdef DILL_VALGRIND
+        ev.data.u64 = 0; //Keep Valgrind happy
+#endif
         ev.data.fd = fd;
         ev.events = EPOLLOUT;
         int rc = epoll_ctl(ctx->efd, EPOLL_CTL_ADD, fd, &ev);
@@ -174,8 +180,11 @@ int dill_pollset_clean(int fd) {
     /* We cannot clean an fd that someone is waiting for. */
     if(dill_slow(fdi->in || fdi->out)) {errno = EBUSY; return -1;}
     /* Remove the file descriptor from the pollset if it is still there. */
-    if(fdi->currevs) {   
+    if(fdi->currevs) {
         struct epoll_event ev;
+#ifdef DILL_VALGRIND
+        ev.data.u64 = 0; //Keep Valgrind happy
+#endif
         ev.data.fd = fd;
         ev.events = 0;
         int rc = epoll_ctl(ctx->efd, EPOLL_CTL_DEL, fd, &ev);
@@ -206,6 +215,7 @@ int dill_pollset_poll(int timeout) {
         int fd = ctx->changelist - 1;
         struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
         struct epoll_event ev;
+        ev.data.u64 = 0; //Keep Valgrind happy
         ev.data.fd = fd;
         ev.events = 0;
         if(fdi->in)
@@ -258,4 +268,3 @@ int dill_pollset_poll(int timeout) {
     /* Return 0 on timeout or 1 if at least one coroutine was resumed. */
     return numevs > 0 ? 1 : 0;
 }
-
