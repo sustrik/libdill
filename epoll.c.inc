@@ -110,7 +110,7 @@ int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
     if(dill_slow(!fdi->cached)) {
         struct epoll_event ev;
 #ifdef DILL_VALGRIND
-        ev.data.u64 = 0; //Keep Valgrind happy
+        memset(&ev.data, 0, sizeof(ev.data)); //Keep Valgrind happy
 #endif
         ev.data.fd = fd;
         ev.events = EPOLLIN;
@@ -146,7 +146,7 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
     if(dill_slow(!fdi->cached)) {
         struct epoll_event ev;
 #ifdef DILL_VALGRIND
-        ev.data.u64 = 0; //Keep Valgrind happy
+        memset(&ev.data, 0, sizeof(ev.data)); //Keep Valgrind happy
 #endif
         ev.data.fd = fd;
         ev.events = EPOLLOUT;
@@ -183,7 +183,7 @@ int dill_pollset_clean(int fd) {
     if(fdi->currevs) {
         struct epoll_event ev;
 #ifdef DILL_VALGRIND
-        ev.data.u64 = 0; //Keep Valgrind happy
+        memset(&ev.data, 0, sizeof(ev.data)); //Keep Valgrind happy
 #endif
         ev.data.fd = fd;
         ev.events = 0;
