@@ -83,7 +83,9 @@ void dill_ctx_pollset_term(struct dill_ctx_pollset *ctx) {
        On FreeBSD the following function succeeds. On OSX it returns
        EACCESS. Therefore we ignore the return value. */
     close(ctx->kfd);
+    ctx->kfd = -1;
     free(ctx->fdinfos);
+    ctx->fdinfos = NULL;
 }
 
 static void dill_fdcancelin(struct dill_clause *cl) {
@@ -110,7 +112,7 @@ static void dill_fdcancelout(struct dill_clause *cl) {
 
 int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
-    if(dill_slow(fd < 0 || fd >= ctx->nfdinfos)) {errno = EBADF; return -1;}
+    if(dill_slow(fd < 0 || fd >= ctx->nfdinfos || !ctx->fdinfos)) {errno = EBADF; return -1;}
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     /* If not yet cached, check whether fd exists and if so add it
        to pollset. */
@@ -172,6 +174,10 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
 
 int dill_pollset_clean(int fd) {
     struct dill_ctx_pollset *ctx = &dill_getctx->pollset;
+    if(ctx->kfd == -1) {
+        errno = EBADF;
+        return -1;
+    }
     struct dill_fdinfo *fdi = &ctx->fdinfos[fd];
     if(!fdi->cached) return 0;
     /* We cannot clean an fd that someone is waiting for. */
@@ -187,11 +193,17 @@ int dill_pollset_clean(int fd) {
         EV_SET(&evs[nevs], fd, EVFILT_WRITE, EV_DELETE, 0, 0, 0);
         ++nevs;
     }
+    fdi->currevs = 0;
     if(nevs) {
         int rc = kevent(ctx->kfd, evs, nevs, NULL, 0, NULL);
-        dill_assert(rc != -1);
+        if(rc == -1) {
+            if(errno == EBADF && ctx->kfd == -1) {
+                /* Exiting the program. Ignore. */
+                return -1;
+            }
+            dill_assert(rc != -1);
+        }
     }
-    fdi->currevs = 0;
     /* If needed, remove the fd from the changelist. */
     if(fdi->next) {
         uint32_t *pidx = &ctx->changelist;
