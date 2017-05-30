@@ -53,7 +53,7 @@ int main(void) {
     assert(status == 1);
     int rc = hclose(h);
     errno_assert(rc == 0);
-    assert(status == 2);
+    assert(status == 42);
 
     int ch = chmake(sizeof(int));
     errno_assert(ch >= 0);
