@@ -223,6 +223,9 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 
 #define go(fn) go_mem(fn, NULL, 0)
 
+DILL_EXPORT int co(void **ptr, size_t len,
+    void *fn, const char *file, int line,
+    void (*routine)(void *));
 DILL_EXPORT int yield(void);
 DILL_EXPORT int msleep(int64_t deadline);
 DILL_EXPORT int fdclean(int fd);
@@ -282,7 +285,7 @@ DILL_EXPORT int bsend(
     const void *buf,
     size_t len,
     int64_t deadline);
-DILL_EXPORT int brecv(
+DILL_EXPORT ssize_t brecv(
     int s,
     void *buf,
     size_t len,
@@ -292,7 +295,7 @@ DILL_EXPORT int bsendl(
     struct iolist *first,
     struct iolist *last,
     int64_t deadline);
-DILL_EXPORT int brecvl(
+DILL_EXPORT ssize_t brecvl(
     int s,
     struct iolist *first,
     struct iolist *last,

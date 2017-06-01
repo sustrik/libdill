@@ -46,7 +46,7 @@ static void ipc_hclose(struct hvfs *hvfs);
 static int ipc_hdone(struct hvfs *hvfs, int64_t deadline);
 static int ipc_bsendl(struct bsock_vfs *bvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
-static int ipc_brecvl(struct bsock_vfs *bvfs,
+static ssize_t ipc_brecvl(struct bsock_vfs *bvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 
 struct ipc_conn {
@@ -105,13 +105,13 @@ static int ipc_bsendl(struct bsock_vfs *bvfs,
     return -1;
 }
 
-static int ipc_brecvl(struct bsock_vfs *bvfs,
+static ssize_t ipc_brecvl(struct bsock_vfs *bvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct ipc_conn *self = dill_cont(bvfs, struct ipc_conn, bvfs);
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
-    int rc = fd_recv(self->fd, &self->rxbuf, first, last, deadline);
-    if(dill_fast(rc == 0)) return 0;
+    int sz = fd_recv(self->fd, &self->rxbuf, first, last, deadline);
+    if(dill_fast(sz > 0)) return sz;
     if(errno == EPIPE) self->indone = 1;
     else self->inerr = 1;
     return -1;
