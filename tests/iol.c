@@ -69,8 +69,8 @@ int main() {
     struct iolist *it;
     int counter = 0;
     ssize_t sz = 0;
-    ssize_t total_len = 0;
     while(1) {
+        ssize_t total_len = 0;
         for(i = 0; i != 5; ++i) {
            if(random() % 10 == 0)
                iol[i].iol_base = NULL;
