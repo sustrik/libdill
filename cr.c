@@ -83,14 +83,19 @@ void darwin_prepare() {
         objc_autoreleasePoolPush_fptr = dlsym(handle, "objc_autoreleasePoolPush");
         objc_autoreleasePoolPop_fptr = dlsym(handle, "objc_autoreleasePoolPop");
         
-        /* This is a really elogated way to determine if we're running inside of XCTest.
-         Because some users may accidentally import XCTest into their binary we don't
-         just want to do class detection.
-         
-         This grabs [[[[NSProcessInfo processInfo] arguments] description] UTF8String]
-         and searches it for /Xcode/Agents/xctest OR /usr/bin/xctest OR PackageTests.xctest
-         in the future these searches may not be valid and need to be tweaked. */
-        Class processInfoClass = objc_getClass_fptr("NSProcessInfo");
+        darwinPrepared = 1;
+    }
+    
+    /* This is a really elogated way to determine if we're running inside of XCTest.
+     Because some users may accidentally import XCTest into their binary we don't
+     just want to do class detection.
+     
+     This grabs [[[[NSProcessInfo processInfo] arguments] description] UTF8String]
+     and searches it for /Xcode/Agents/xctest OR /usr/bin/xctest OR PackageTests.xctest
+     in the future these searches may not be valid and need to be tweaked. */
+    Class processInfoClass = objc_getClass_fptr("NSProcessInfo");
+        
+    if (processInfoClass) {
         id processInfo = objc_msgSend_fptr((id)processInfoClass, sel_getUid_fptr("processInfo"));
         id arguments = objc_msgSend_fptr(processInfo, sel_getUid_fptr("arguments"));
         id description = objc_msgSend_fptr(arguments, sel_getUid_fptr("description"));
@@ -99,8 +104,6 @@ void darwin_prepare() {
         runningTests = (strstr(chars, "/Xcode/Agents/xctest") ||
                         strstr(chars, "/usr/bin/xctest") ||
                         strstr(chars, "PackageTests.xctest"));
-        
-        darwinPrepared = 1;
     }
     
     if (!darwinPrepared) {

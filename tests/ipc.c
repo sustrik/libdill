@@ -41,10 +41,10 @@ coroutine void client(void) {
 
 coroutine void client2(int s) {
     char buf[3];
-    int rc = brecv(s, buf, sizeof(buf), -1);
-    errno_assert(rc == 0);
+    ssize_t sz = brecv(s, buf, sizeof(buf), -1);
+    errno_assert(sz == 3);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    rc = bsend(s, "DEF", 3, -1);
+    int rc = bsend(s, "DEF", 3, -1);
     errno_assert(rc == 0);
     rc = ipc_close(s, -1);
     /* Main coroutine closes this coroutine before it manages to read
@@ -54,12 +54,12 @@ coroutine void client2(int s) {
 
 coroutine void client3(int s) {
     char buf[3];
-    int rc = brecv(s, buf, sizeof(buf), -1);
-    errno_assert(rc == 0);
+    ssize_t sz = brecv(s, buf, sizeof(buf), -1);
+    errno_assert(sz == 3);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    rc = brecv(s, buf, sizeof(buf), -1);
-    errno_assert(rc == -1 && errno == EPIPE);
-    rc = bsend(s, "DEF", 3, -1);
+    sz = brecv(s, buf, sizeof(buf), -1);
+    errno_assert(sz == -1 && errno == EPIPE);
+    int rc = bsend(s, "DEF", 3, -1);
     errno_assert(rc == 0);
     rc = ipc_close(s, -1);
     errno_assert(rc == 0);
@@ -88,12 +88,12 @@ int main() {
     errno_assert(as >= 0);
     int64_t deadline = now() + 30;
     ssize_t sz = sizeof(buf);
-    rc = brecv(as, buf, sizeof(buf), deadline);
-    errno_assert(rc == -1 && errno == ETIMEDOUT);
+    sz = brecv(as, buf, sizeof(buf), deadline);
+    errno_assert(sz == -1 && errno == ETIMEDOUT);
     int64_t diff = now() - deadline;
     assert(diff > -20 && diff < 20);
-    rc = brecv(as, buf, sizeof(buf), deadline);
-    errno_assert(rc == -1 && errno == ECONNRESET);
+    sz = brecv(as, buf, sizeof(buf), deadline);
+    errno_assert(sz == -1 && errno == ECONNRESET);
     rc = hclose(as);
     errno_assert(rc == 0);
     rc = hclose(ls);
@@ -109,11 +109,11 @@ int main() {
     errno_assert(cr >= 0);
     rc = bsend(s[0], "ABC", 3, -1);
     errno_assert(rc == 0);
-    rc = brecv(s[0], buf, 3, -1);
-    errno_assert(rc == 0);
+    sz = brecv(s[0], buf, 3, -1);
+    errno_assert(sz == 3);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    rc = brecv(s[0], buf, sizeof(buf), -1);
-    errno_assert(rc == -1 && errno == EPIPE);
+    sz = brecv(s[0], buf, sizeof(buf), -1);
+    errno_assert(sz == -1 && errno == EPIPE);
     rc = ipc_close(s[0], -1);
     errno_assert(rc == 0);
     rc = hclose(cr);
@@ -128,11 +128,11 @@ int main() {
     errno_assert(rc == 0);
     rc = hdone(s[0], -1);
     errno_assert(rc == 0);
-    rc = brecv(s[0], buf, 3, -1);
-    errno_assert(rc == 0);
+    sz = brecv(s[0], buf, 3, -1);
+    errno_assert(sz == 3);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    rc = brecv(s[0], buf, sizeof(buf), -1);
-    errno_assert(rc == -1 && errno == EPIPE);
+    sz = brecv(s[0], buf, sizeof(buf), -1);
+    errno_assert(sz == -1 && errno == EPIPE);
     rc = hclose(s[0]);
     errno_assert(rc == 0);
     rc = hclose(cr);
