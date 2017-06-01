@@ -69,6 +69,7 @@ int main() {
     struct iolist *it;
     int counter = 0;
     ssize_t sz = 0;
+    ssize_t total_len = 0;
     while(1) {
         for(i = 0; i != 5; ++i) {
            if(random() % 10 == 0)
@@ -76,13 +77,17 @@ int main() {
            else
                iol[i].iol_base = bufs[i];
            iol[i].iol_len = random() % 32;
+           total_len += iol[i].iol_len;
            iol[i].iol_next = &iol[i + 1];
            iol[i].iol_rsvd = 0;
         }
         iol[4].iol_next = NULL;
         sz = brecvl(ss[0], &iol[0], &iol[4], -1);
         if(sz < 0 && errno == EPIPE) break;
-        errno_assert(sz > 0);
+        errno_assert(sz != -1);
+        errno_assert(sz <= total_len);
+        if(sz != total_len)
+            continue;
         for(it = &iol[0]; it; it = it->iol_next) {
             if(!it->iol_base) {counter += it->iol_len; continue;}
             for(i = 0; i != it->iol_len; ++i) {
