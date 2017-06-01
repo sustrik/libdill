@@ -53,7 +53,7 @@ DILL_EXPORT extern const void *bsock_type;
 struct bsock_vfs {
     int (*bsendl)(struct bsock_vfs *vfs,
         struct iolist *first, struct iolist *last, int64_t deadline);
-    int (*brecvl)(struct bsock_vfs *vfs,
+    ssize_t (*brecvl)(struct bsock_vfs *vfs,
         struct iolist *first, struct iolist *last, int64_t deadline);
 };
 

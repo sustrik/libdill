@@ -44,8 +44,8 @@ coroutine void client2(int port) {
     int cs = tcp_connect(&addr, -1);
     errno_assert(cs >= 0);
     char buf[3];
-    rc = brecv(cs, buf, sizeof(buf), -1);
-    errno_assert(rc == 0);
+    ssize_t sz = brecv(cs, buf, sizeof(buf), -1);
+    errno_assert(sz == 3);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
     rc = bsend(cs, "DEF", 3, -1);
     errno_assert(rc == 0);
@@ -62,8 +62,8 @@ coroutine void client3(int port) {
     int cs = tcp_connect(&addr, -1);
     errno_assert(cs >= 0);
     char buf[3];
-    rc = brecv(cs, buf, sizeof(buf), -1);
-    errno_assert(rc == 0);
+    ssize_t sz = brecv(cs, buf, sizeof(buf), -1);
+    errno_assert(sz == 3);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
     rc = brecv(cs, buf, sizeof(buf), -1);
     errno_assert(rc == -1 && errno == EPIPE);
@@ -130,8 +130,8 @@ int main(void) {
     errno_assert(as >= 0);
     rc = bsend(as, "ABC", 3, -1);
     errno_assert(rc == 0);
-    rc = brecv(as, buf, 3, -1);
-    errno_assert(rc == 0);
+    sz = brecv(as, buf, 3, -1);
+    errno_assert(sz == 3);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
     rc = brecv(as, buf, sizeof(buf), -1);
     errno_assert(rc == -1 && errno == EPIPE);
@@ -153,8 +153,8 @@ int main(void) {
     errno_assert(rc == 0);
     rc = hdone(as, -1);
     errno_assert(rc == 0);
-    rc = brecv(as, buf, 3, -1);
-    errno_assert(rc == 0);
+    sz = brecv(as, buf, 3, -1);
+    errno_assert(sz == 3);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
     rc = brecv(as, buf, sizeof(buf), -1);
     errno_assert(rc == -1 && errno == EPIPE);
@@ -257,14 +257,14 @@ static void receiver(int fd, size_t nbytes, size_t buf_size, int done_ch) {
 
     while(nbytes > 0) {
         size_t len = nbytes < sizeof(buf) ? nbytes : sizeof(buf);
-        int rc = brecv(fd, buf, len, now() + 10000);
-        if(rc != 0) {
-            printf("While trying to receive with buffer size %zu: rc=%d, "
+        ssize_t sz = brecv(fd, buf, len, now() + 10000);
+        if(sz == -1) {
+            printf("While trying to receive with buffer size %zu: sz=%li, "
                    "errno=%s\n",
-                   buf_size, rc, strerror(errno));
-            assert(rc == 0);
+                   buf_size, sz, strerror(errno));
+            assert(sz != -1);
         }
-        nbytes -= len;
+        nbytes -= sz;
     }
 
     int r = chsend(done_ch, "", 1, -1);

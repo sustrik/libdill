@@ -49,7 +49,7 @@ static void tcp_hclose(struct hvfs *hvfs);
 static int tcp_hdone(struct hvfs *hvfs, int64_t deadline);
 static int tcp_bsendl(struct bsock_vfs *bvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
-static int tcp_brecvl(struct bsock_vfs *bvfs,
+static ssize_t tcp_brecvl(struct bsock_vfs *bvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 
 struct tcp_conn {
@@ -104,13 +104,13 @@ static int tcp_bsendl(struct bsock_vfs *bvfs,
     return -1;
 }
 
-static int tcp_brecvl(struct bsock_vfs *bvfs,
+static ssize_t tcp_brecvl(struct bsock_vfs *bvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct tcp_conn *self = dill_cont(bvfs, struct tcp_conn, bvfs);
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
-    int rc = fd_recv(self->fd, &self->rxbuf, first, last, deadline);
-    if(dill_fast(rc == 0)) return 0;
+    int sz = fd_recv(self->fd, &self->rxbuf, first, last, deadline);
+    if(dill_fast(sz > 0)) return sz;
     if(errno == EPIPE) self->indone = 1;
     else self->inerr = 1;
     return -1;

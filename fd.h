@@ -56,7 +56,7 @@ int fd_send(
     struct iolist *first,
     struct iolist *last,
     int64_t deadline);
-int fd_recv(
+ssize_t fd_recv(
     int s,
     struct fd_rxbuf *rxbuf,
     struct iolist *first,

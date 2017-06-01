@@ -71,7 +71,8 @@ int main(void) {
         };
 
         rc = ipaddr_remote(&addr, hostnames[hindex], 80, 0, now() + 5000);
-        assert(rc == 0);
+        if(rc != 0)
+            assert(errno == ETIMEDOUT);
         ipaddr_str(&addr, buf);
         assert(strncmp("127.0.", buf, 6) == 0);
     }
