@@ -86,8 +86,7 @@ int main() {
         if(sz < 0 && errno == EPIPE) break;
         errno_assert(sz != -1);
         errno_assert(sz <= total_len);
-        if(sz != total_len)
-            continue;
+        continue;
         for(it = &iol[0]; it; it = it->iol_next) {
             if(!it->iol_base) {counter += it->iol_len; continue;}
             for(i = 0; i != it->iol_len; ++i) {
