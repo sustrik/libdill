@@ -59,4 +59,3 @@ ssize_t brecvl(int s, struct iolist *first, struct iolist *last, int64_t deadlin
         errno = EINVAL; return -1;}
     return b->brecvl(b, first, last, deadline);
 }
-
