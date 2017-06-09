@@ -42,12 +42,6 @@ matrix:
           - clang
   - os: osx
     compiler: clang
-    env: 
-  - os: osx
-    compiler: clang
-    env: STATIC=1
-  - os: osx
-    compiler: clang
     env: NOTHREADS=1
   - os: osx
     compiler: clang
@@ -171,9 +165,6 @@ matrix:
           - ubuntu-toolchain-r-test
         packages:
           - gcc-4.9
-  - os: osx
-    compiler: clang
-    env: THREAD_FALLBACK=1
 
 
 branches:
