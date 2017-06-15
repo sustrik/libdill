@@ -49,17 +49,17 @@ int fd_unblock(int s) {
     if (opt == -1)
         opt = 0;
     int rc = fcntl(s, F_SETFL, opt | O_NONBLOCK);
-    dill_assert(rc == 0);
+    if(dill_slow(rc < 0)) return -1;
     /*  Allow re-using the same local address rapidly. */
     opt = 1;
     rc = setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof (opt));
-    dill_assert(rc == 0);
+    if(dill_slow(rc < 0)) return -1;
     /* If possible, prevent SIGPIPE signal when writing to the connection
         already closed by the peer. */
 #ifdef SO_NOSIGPIPE
     opt = 1;
     rc = setsockopt (s, SOL_SOCKET, SO_NOSIGPIPE, &opt, sizeof (opt));
-    dill_assert (rc == 0 || errno == EINVAL);
+    if(dill_slow(rc < 0 && errno != EINVAL)) return -1;
 #endif
     return 0;
 }
@@ -99,7 +99,7 @@ int fd_accept(int s, struct sockaddr *addr, socklen_t *addrlen,
         if(dill_slow(rc < 0)) return -1;
     }
     int rc = fd_unblock(as);
-    dill_assert(rc == 0);
+    if(dill_slow(rc < 0)) return -1;
     return as;
 }
 
@@ -157,7 +157,7 @@ int fd_send(int s, struct iolist *first, struct iolist *last,
 }
 
 /* Same as fd_recv() but with no rx buffering. */
-static int fd_recv_(int s, struct iolist *first, struct iolist *last,
+static ssize_t fd_recv_(int s, struct iolist *first, struct iolist *last,
       int64_t deadline) {
     /* Make a local iovec array. */
     /* TODO: This is dangerous, it may cause stack overflow.
@@ -180,37 +180,24 @@ static int fd_recv_(int s, struct iolist *first, struct iolist *last,
                 if(errno == EPIPE) errno = ECONNRESET;
                 return -1;
             }
-            sz = 0;
+            /* Wait for more data. */
+            int rc = fdin(s, deadline);
+            if(dill_slow(rc < 0)) return -1;
+            continue;
         }
-        /* Adjust the iovec array so that it doesn't contain buffers
-           that ware already filled in. */
-        while(sz) {
-            struct iovec *head = &hdr.msg_iov[0];
-            if(head->iov_len > sz) {
-                head->iov_base += sz;
-                head->iov_len -= sz;
-                break;
-            }
-            sz -= head->iov_len;
-            hdr.msg_iov++;
-            hdr.msg_iovlen--;
-            if(!hdr.msg_iovlen) return 0;
-        }
-        /* Wait for more data. */
-        int rc = fdin(s, deadline);
-        if(dill_slow(rc < 0)) return -1;
+        return sz;
     }
 }
 
 /* Skip len bytes. If len is negative skip until error occurs. */
-static int fd_skip(int s, ssize_t len, int64_t deadline) {
+static ssize_t fd_skip(int s, ssize_t len, int64_t deadline) {
     uint8_t buf[512];
     while(len) {
         size_t to_recv = len < 0 || len > sizeof(buf) ? sizeof(buf) : len;
         struct iolist iol = {buf, to_recv, NULL, 0};
-        int rc = fd_recv_(s, &iol, &iol, deadline);
-        if(dill_slow(rc < 0)) return -1;
-        if(len >= 0) len -= to_recv;
+        ssize_t sz = fd_recv_(s, &iol, &iol, deadline);
+        if(dill_slow(sz < 0)) return -1;
+        if(len >= 0) len -= sz;
     }
     return 0;
 }
@@ -234,17 +221,19 @@ static size_t fd_copy(struct fd_rxbuf *rxbuf, struct iolist *iol) {
     }
 }
 
-int fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
+ssize_t fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
       struct iolist *last, int64_t deadline) {
     /* Skip all data until error occurs. */
     if(dill_slow(!first && !last)) return fd_skip(s, -1, deadline);
     /* Fill in data from the rxbuf. */
     size_t sz;
+    ssize_t read = 0;
     while(1) {
         sz = fd_copy(rxbuf, first);
+        read += sz;
         if(sz < first->iol_len) break;
         first = first->iol_next;
-        if(!first) return 0;
+        if(!first) return read;
     }
     /* Copy the current iolist element so that we can modify it without
        changing the original list. */
@@ -263,7 +252,7 @@ int fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
     /* If requested amount of data is larger than rx buffer avoid the copy
        and read it directly into user's buffer. */
     if(miss > sizeof(rxbuf->data))
-        return fd_recv_(s, &curr, curr.iol_next ? last : &curr, deadline);
+        return read + fd_recv_(s, &curr, curr.iol_next ? last : &curr, deadline);
     /* If small amount of data is requested use rx buffer. */
     while(1) {
         /* Read as much data as possible to the buffer to avoid extra
@@ -276,22 +265,21 @@ int fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
                 if(errno == EPIPE) errno = ECONNRESET;
                 return -1;
             }
-            sz = 0;
+            /* Wait for more data. */
+            int rc = fdin(s, deadline);
+            if(dill_slow(rc < 0)) return -1;
+            continue;
         }
         rxbuf->len = sz;
         rxbuf->pos = 0;
         /* Copy the data from rxbuffer to the iolist. */
         while(1) {
             sz = fd_copy(rxbuf, &curr);
-            if(sz < curr.iol_len) break;
-            if(!curr.iol_next) return 0;
+            read += sz;
+            if(sz < curr.iol_len) return read;
+            if(!curr.iol_next) return read;
             curr = *curr.iol_next;
         }
-        if(curr.iol_base) curr.iol_base += sz;
-        curr.iol_len -= sz;
-        /* Wait for more data. */
-        int rc = fdin(s, deadline);
-        if(dill_slow(rc < 0)) return -1;
     }
 }
 

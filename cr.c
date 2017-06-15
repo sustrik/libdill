@@ -35,6 +35,125 @@
 #include "utils.h"
 #include "ctx.h"
 
+/******************************************************************************/
+/*  Autorelease pool fix.                                                     */
+/******************************************************************************/
+
+/* On darwin most foundation reference types leak memory due to a lack of a autorelease
+ pool. Because of this we need to push and pop the pool frequently during libmill's
+ context switches. This dynamically finds the objc runtime functions and inserts
+ the push/pop calls appropriately. If any part of the rest of the application adds its own
+ autorelease pool it must do so that it does not span across a libmill context switch
+ otherwise the objc runtime will throw a fatal error. */
+#ifdef __APPLE__
+#include <dlfcn.h>
+#include <objc/runtime.h>
+#include <objc/message.h>
+#include <string.h>
+
+static void *autoreleasePool = NULL;
+static int runningTests = 0;
+static int darwinPrepared = 0;
+
+static Class (*objc_getClass_fptr)(const char *name);
+static id (*objc_msgSend_fptr)(id self, SEL, ...);
+static SEL (*sel_getUid_fptr)(const char *str);
+
+static void *(*objc_autoreleasePoolPush_fptr)(void);
+static void (*objc_autoreleasePoolPop_fptr)(void *ctx);
+
+/* Prepare the darwin environment, this mainly looks up Objective-C runtime
+ functions and also determines whether or not the process is running from
+ XCTest. The autorelease pools will only be added if not running in XCTest
+ because XCTest runs it's own autorelease pool around each test and if we
+ insert our own we corrupt the runtime. It's hard to fix because of how
+ libmill switches contexts. */
+void darwin_prepare() {
+    if (darwinPrepared) {
+        return;
+    }
+    
+    void *handle = dlopen(NULL, RTLD_LAZY | RTLD_GLOBAL);
+    
+    if (handle) {
+        /* Using the dlsym find the objc runtime functions we need */
+        objc_getClass_fptr = dlsym(handle, "objc_getClass");
+        objc_msgSend_fptr = dlsym(handle, "objc_msgSend");
+        sel_getUid_fptr = dlsym(handle, "sel_getUid");
+        objc_autoreleasePoolPush_fptr = dlsym(handle, "objc_autoreleasePoolPush");
+        objc_autoreleasePoolPop_fptr = dlsym(handle, "objc_autoreleasePoolPop");
+        
+        darwinPrepared = 1;
+    }
+    
+    /* This is a really elogated way to determine if we're running inside of XCTest.
+     Because some users may accidentally import XCTest into their binary we don't
+     just want to do class detection.
+     
+     This grabs [[[[NSProcessInfo processInfo] arguments] description] UTF8String]
+     and searches it for /Xcode/Agents/xctest OR /usr/bin/xctest OR PackageTests.xctest
+     in the future these searches may not be valid and need to be tweaked. */
+    Class processInfoClass = objc_getClass_fptr("NSProcessInfo");
+        
+    if (processInfoClass) {
+        id processInfo = objc_msgSend_fptr((id)processInfoClass, sel_getUid_fptr("processInfo"));
+        id arguments = objc_msgSend_fptr(processInfo, sel_getUid_fptr("arguments"));
+        id description = objc_msgSend_fptr(arguments, sel_getUid_fptr("description"));
+        const char *chars = (const char *)objc_msgSend_fptr(description, sel_getUid_fptr("UTF8String"));
+        
+        runningTests = (strstr(chars, "/Xcode/Agents/xctest") ||
+                        strstr(chars, "/usr/bin/xctest") ||
+                        strstr(chars, "PackageTests.xctest"));
+    }
+    
+    if (!darwinPrepared) {
+        printf("libmill failed to prepare for Darwin platform.");
+        dill_assert(0);
+    }
+}
+
+static inline void darwin_pool_push() {
+    darwin_prepare();
+    
+    if (runningTests) {
+        return;
+    }
+    
+    dill_assert(!autoreleasePool);
+    autoreleasePool = objc_autoreleasePoolPush_fptr();
+}
+
+static inline void darwin_pool_pop() {
+    darwin_prepare();
+    
+    if (runningTests) {
+        return;
+    }
+    
+    if (autoreleasePool) {
+        objc_autoreleasePoolPop_fptr(autoreleasePool);
+        autoreleasePool = NULL;
+    }
+}
+
+static inline void darwin_pool_pop_push() {
+    darwin_prepare();
+    
+    if (runningTests) {
+        return;
+    }
+    
+    if (autoreleasePool) {
+        objc_autoreleasePoolPop_fptr(autoreleasePool);
+        autoreleasePool = NULL;
+    }
+    
+    dill_assert(!autoreleasePool);
+    autoreleasePool = objc_autoreleasePoolPush_fptr();
+}
+#endif
+
+
 #if defined DILL_CENSUS
 
 /* When taking the stack size census, we will keep the maximum stack size in a list
@@ -56,6 +175,10 @@ volatile void *dill_unoptimisable = NULL;
 /******************************************************************************/
 
 static void dill_resume(struct dill_cr *cr, int id, int err) {
+#ifdef __APPLE__
+    darwin_pool_pop_push();
+#endif
+    
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     cr->id = id;
     cr->err = err;
@@ -152,6 +275,10 @@ static void dill_cancel(struct dill_cr *cr, int err);
 /* The initial part of go(). Allocates a new stack and handle. */
 int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
       const char *file, int line) {
+#ifdef __APPLE__
+    darwin_pool_pop_push();
+#endif
+    
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
@@ -232,6 +359,10 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
 
 /* The final part of go(). Gets called when the coroutine is finished. */
 void dill_epilogue(void) {
+#ifdef __APPLE__
+    darwin_pool_pop_push();
+#endif
+    
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     /* Mark the coroutine as finished. */
     ctx->r->done = 1;
@@ -308,6 +439,10 @@ void dill_waitfor(struct dill_clause *cl, int id,
 }
 
 int dill_wait(void)  {
+#ifdef __APPLE__
+    darwin_pool_pop_push();
+#endif
+    
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     /* Store the context of the current coroutine, if any. */
     if(dill_setjmp(ctx->r->ctx)) {
@@ -373,6 +508,11 @@ int dill_wait(void)  {
        unwinding information will be trimmed if a crash occurs in this
        function. */
     dill_longjmp(ctx->r->ctx);
+    
+#ifdef __APPLE__
+    darwin_pool_pop_push();
+#endif
+    
     return 0;
 }
 
@@ -407,4 +547,19 @@ int yield(void) {
     /* Suspend. */
     return dill_wait();
 }
-  
+
+int co(void **ptr, size_t len, void *fn, const char *file, int line, void (*routine)(void *)) {
+    sigjmp_buf *ctx;
+    void *stk = (ptr);
+    int h = dill_prologue(&ctx, &stk, len, file, line);
+    
+    if(h >= 0) {
+        if(!dill_setjmp(*ctx)) {
+            DILL_SETSP(stk);
+            routine(fn);
+            dill_epilogue();
+        }
+    }
+    
+    return h;
+}
