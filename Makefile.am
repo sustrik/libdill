@@ -137,27 +137,29 @@ TESTS = $(check_PROGRAMS)
 noinst_PROGRAMS =
 
 if DILL_SOCKETS
+if DILL_TUTORIAL
 noinst_PROGRAMS += \
-    tutorial/basics/step1 \
-    tutorial/basics/step2 \
-    tutorial/basics/step3 \
-    tutorial/basics/step4 \
-    tutorial/basics/step5 \
-    tutorial/protocol/step1 \
-    tutorial/protocol/step2 \
-    tutorial/protocol/step3 \
-    tutorial/protocol/step4 \
-    tutorial/protocol/step5 \
-    tutorial/protocol/step6 \
-    tutorial/protocol/step7 \
-    tutorial/protocol/step8 \
-    tutorial/protocol/step9
+tutorial/basics/step1 \
+tutorial/basics/step2 \
+tutorial/basics/step3 \
+tutorial/basics/step4 \
+tutorial/basics/step5 \
+tutorial/protocol/step1 \
+tutorial/protocol/step2 \
+tutorial/protocol/step3 \
+tutorial/protocol/step4 \
+tutorial/protocol/step5 \
+tutorial/protocol/step6 \
+tutorial/protocol/step7 \
+tutorial/protocol/step8 \
+tutorial/protocol/step9
+endif
 endif
 
 ################################################################################
 #  performance tests                                                           #
 ################################################################################
-
+if DILL_PERF_TEST
 noinst_PROGRAMS += \
     perf/go \
     perf/ctxswitch \
@@ -166,7 +168,7 @@ noinst_PROGRAMS += \
     perf/hdone \
     perf/whispers \
     perf/timer
-
+endif
 ################################################################################
 #  manpage documentation generation                                            #
 ################################################################################
