@@ -1,0 +1,414 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D1E611611F4E3C00004BE0E3 /* crlf.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E611261F4E3C00004BE0E3 /* crlf.c */; };
+		D1E611621F4E3C00004BE0E3 /* bsock.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E611271F4E3C00004BE0E3 /* bsock.c */; };
+		D1E611631F4E3C00004BE0E3 /* chan.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E611281F4E3C00004BE0E3 /* chan.c */; };
+		D1E611681F4E3C00004BE0E3 /* cr.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E6112D1F4E3C00004BE0E3 /* cr.c */; };
+		D1E6116A1F4E3C00004BE0E3 /* ctx.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E6112F1F4E3C00004BE0E3 /* ctx.c */; };
+		D1E6116C1F4E3C00004BE0E3 /* dns.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E611311F4E3C00004BE0E3 /* dns.c */; };
+		D1E6116E1F4E3C00004BE0E3 /* fd.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E611331F4E3C00004BE0E3 /* fd.c */; };
+		D1E611731F4E3C00004BE0E3 /* handle.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E611381F4E3C00004BE0E3 /* handle.c */; };
+		D1E611751F4E3C00004BE0E3 /* iol.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E6113A1F4E3C00004BE0E3 /* iol.c */; };
+		D1E611771F4E3C00004BE0E3 /* ipaddr.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E6113C1F4E3C00004BE0E3 /* ipaddr.c */; };
+		D1E611791F4E3C00004BE0E3 /* ipc.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E6113E1F4E3C00004BE0E3 /* ipc.c */; };
+		D1E6117B1F4E3C00004BE0E3 /* libdill.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E611401F4E3C00004BE0E3 /* libdill.c */; };
+		D1E6117C1F4E3C00004BE0E3 /* msock.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E611411F4E3C00004BE0E3 /* msock.c */; };
+		D1E6117D1F4E3C00004BE0E3 /* now.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E611421F4E3C00004BE0E3 /* now.c */; };
+		D1E611801F4E3C00004BE0E3 /* pfx.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E611451F4E3C00004BE0E3 /* pfx.c */; };
+		D1E611811F4E3C00004BE0E3 /* pollset.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E611461F4E3C00004BE0E3 /* pollset.c */; };
+		D1E611831F4E3C00004BE0E3 /* rbtree.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E611481F4E3C00004BE0E3 /* rbtree.c */; };
+		D1E611861F4E3C00004BE0E3 /* stack.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E6114B1F4E3C00004BE0E3 /* stack.c */; };
+		D1E611951F4E3C00004BE0E3 /* tcp.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E6115A1F4E3C00004BE0E3 /* tcp.c */; };
+		D1E6119A1F4E3C00004BE0E3 /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = D1E6115F1F4E3C00004BE0E3 /* utils.c */; };
+		D1E611A81F4E3DD2004BE0E3 /* cr.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E6119C1F4E3DD2004BE0E3 /* cr.h */; };
+		D1E611A91F4E3DD2004BE0E3 /* ctx.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E6119D1F4E3DD2004BE0E3 /* ctx.h */; };
+		D1E611AA1F4E3DD2004BE0E3 /* fd.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E6119E1F4E3DD2004BE0E3 /* fd.h */; };
+		D1E611AB1F4E3DD2004BE0E3 /* iol.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E6119F1F4E3DD2004BE0E3 /* iol.h */; };
+		D1E611AC1F4E3DD2004BE0E3 /* libdill.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E611A01F4E3DD2004BE0E3 /* libdill.h */; };
+		D1E611AD1F4E3DD2004BE0E3 /* list.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E611A11F4E3DD2004BE0E3 /* list.h */; };
+		D1E611AE1F4E3DD2004BE0E3 /* now.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E611A21F4E3DD2004BE0E3 /* now.h */; };
+		D1E611AF1F4E3DD2004BE0E3 /* pollset.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E611A31F4E3DD2004BE0E3 /* pollset.h */; };
+		D1E611B01F4E3DD2004BE0E3 /* qlist.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E611A41F4E3DD2004BE0E3 /* qlist.h */; };
+		D1E611B11F4E3DD2004BE0E3 /* slist.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E611A51F4E3DD2004BE0E3 /* slist.h */; };
+		D1E611B21F4E3DD2004BE0E3 /* stack.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E611A61F4E3DD2004BE0E3 /* stack.h */; };
+		D1E611B31F4E3DD2004BE0E3 /* utils.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E611A71F4E3DD2004BE0E3 /* utils.h */; };
+		D1E611B51F4E3DFC004BE0E3 /* libdillimpl.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E611B41F4E3DFC004BE0E3 /* libdillimpl.h */; };
+		D1E611BD1F4E3F16004BE0E3 /* rbtree.h in Headers */ = {isa = PBXBuildFile; fileRef = D1E611BC1F4E3F16004BE0E3 /* rbtree.h */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		D1E6111E1F4E389F004BE0E3 /* liblibdill.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = liblibdill.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		D1E611251F4E3B22004BE0E3 /* libdill.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = libdill.xcconfig; sourceTree = "<group>"; };
+		D1E611261F4E3C00004BE0E3 /* crlf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = crlf.c; sourceTree = "<group>"; };
+		D1E611271F4E3C00004BE0E3 /* bsock.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bsock.c; sourceTree = "<group>"; };
+		D1E611281F4E3C00004BE0E3 /* chan.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = chan.c; sourceTree = "<group>"; };
+		D1E6112D1F4E3C00004BE0E3 /* cr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cr.c; sourceTree = "<group>"; };
+		D1E6112F1F4E3C00004BE0E3 /* ctx.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ctx.c; sourceTree = "<group>"; };
+		D1E611311F4E3C00004BE0E3 /* dns.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dns.c; path = dns/dns.c; sourceTree = "<group>"; };
+		D1E611331F4E3C00004BE0E3 /* fd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fd.c; sourceTree = "<group>"; };
+		D1E611381F4E3C00004BE0E3 /* handle.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = handle.c; sourceTree = "<group>"; };
+		D1E6113A1F4E3C00004BE0E3 /* iol.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = iol.c; sourceTree = "<group>"; };
+		D1E6113C1F4E3C00004BE0E3 /* ipaddr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ipaddr.c; sourceTree = "<group>"; };
+		D1E6113E1F4E3C00004BE0E3 /* ipc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ipc.c; sourceTree = "<group>"; };
+		D1E611401F4E3C00004BE0E3 /* libdill.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = libdill.c; sourceTree = "<group>"; };
+		D1E611411F4E3C00004BE0E3 /* msock.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = msock.c; sourceTree = "<group>"; };
+		D1E611421F4E3C00004BE0E3 /* now.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = now.c; sourceTree = "<group>"; };
+		D1E611451F4E3C00004BE0E3 /* pfx.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pfx.c; sourceTree = "<group>"; };
+		D1E611461F4E3C00004BE0E3 /* pollset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pollset.c; sourceTree = "<group>"; };
+		D1E611481F4E3C00004BE0E3 /* rbtree.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rbtree.c; sourceTree = "<group>"; };
+		D1E6114B1F4E3C00004BE0E3 /* stack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stack.c; sourceTree = "<group>"; };
+		D1E6115A1F4E3C00004BE0E3 /* tcp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tcp.c; sourceTree = "<group>"; };
+		D1E6115F1F4E3C00004BE0E3 /* utils.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
+		D1E6119C1F4E3DD2004BE0E3 /* cr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cr.h; sourceTree = "<group>"; };
+		D1E6119D1F4E3DD2004BE0E3 /* ctx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ctx.h; sourceTree = "<group>"; };
+		D1E6119E1F4E3DD2004BE0E3 /* fd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fd.h; sourceTree = "<group>"; };
+		D1E6119F1F4E3DD2004BE0E3 /* iol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iol.h; sourceTree = "<group>"; };
+		D1E611A01F4E3DD2004BE0E3 /* libdill.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libdill.h; sourceTree = "<group>"; };
+		D1E611A11F4E3DD2004BE0E3 /* list.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = list.h; sourceTree = "<group>"; };
+		D1E611A21F4E3DD2004BE0E3 /* now.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = now.h; sourceTree = "<group>"; };
+		D1E611A31F4E3DD2004BE0E3 /* pollset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pollset.h; sourceTree = "<group>"; };
+		D1E611A41F4E3DD2004BE0E3 /* qlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = qlist.h; sourceTree = "<group>"; };
+		D1E611A51F4E3DD2004BE0E3 /* slist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = slist.h; sourceTree = "<group>"; };
+		D1E611A61F4E3DD2004BE0E3 /* stack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stack.h; sourceTree = "<group>"; };
+		D1E611A71F4E3DD2004BE0E3 /* utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utils.h; sourceTree = "<group>"; };
+		D1E611B41F4E3DFC004BE0E3 /* libdillimpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = libdillimpl.h; sourceTree = "<group>"; };
+		D1E611B61F4E3EEB004BE0E3 /* epoll.h.inc */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = epoll.h.inc; sourceTree = "<group>"; };
+		D1E611B71F4E3EEB004BE0E3 /* kqueue.h.inc */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = kqueue.h.inc; sourceTree = "<group>"; };
+		D1E611B81F4E3EEB004BE0E3 /* poll.h.inc */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = poll.h.inc; sourceTree = "<group>"; };
+		D1E611BC1F4E3F16004BE0E3 /* rbtree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rbtree.h; sourceTree = "<group>"; };
+		D1E611BE1F4E3F39004BE0E3 /* epoll.c.inc */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = epoll.c.inc; sourceTree = "<group>"; };
+		D1E611BF1F4E3F39004BE0E3 /* kqueue.c.inc */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = kqueue.c.inc; sourceTree = "<group>"; };
+		D1E611C11F4E3F39004BE0E3 /* poll.c.inc */ = {isa = PBXFileReference; explicitFileType = sourcecode.c; fileEncoding = 4; path = poll.c.inc; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D1E6111B1F4E389F004BE0E3 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D1E611131F4E3831004BE0E3 = {
+			isa = PBXGroup;
+			children = (
+				D1E611251F4E3B22004BE0E3 /* libdill.xcconfig */,
+				D1E611241F4E38BE004BE0E3 /* include */,
+				D1E611231F4E38B6004BE0E3 /* src */,
+				D1E6111F1F4E389F004BE0E3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D1E6111F1F4E389F004BE0E3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D1E6111E1F4E389F004BE0E3 /* liblibdill.dylib */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D1E611231F4E38B6004BE0E3 /* src */ = {
+			isa = PBXGroup;
+			children = (
+				D1E611BE1F4E3F39004BE0E3 /* epoll.c.inc */,
+				D1E611BF1F4E3F39004BE0E3 /* kqueue.c.inc */,
+				D1E611C11F4E3F39004BE0E3 /* poll.c.inc */,
+				D1E611261F4E3C00004BE0E3 /* crlf.c */,
+				D1E611271F4E3C00004BE0E3 /* bsock.c */,
+				D1E611281F4E3C00004BE0E3 /* chan.c */,
+				D1E6112D1F4E3C00004BE0E3 /* cr.c */,
+				D1E6112F1F4E3C00004BE0E3 /* ctx.c */,
+				D1E611311F4E3C00004BE0E3 /* dns.c */,
+				D1E611331F4E3C00004BE0E3 /* fd.c */,
+				D1E611381F4E3C00004BE0E3 /* handle.c */,
+				D1E6113A1F4E3C00004BE0E3 /* iol.c */,
+				D1E6113C1F4E3C00004BE0E3 /* ipaddr.c */,
+				D1E6113E1F4E3C00004BE0E3 /* ipc.c */,
+				D1E611401F4E3C00004BE0E3 /* libdill.c */,
+				D1E611411F4E3C00004BE0E3 /* msock.c */,
+				D1E611421F4E3C00004BE0E3 /* now.c */,
+				D1E611451F4E3C00004BE0E3 /* pfx.c */,
+				D1E611461F4E3C00004BE0E3 /* pollset.c */,
+				D1E611481F4E3C00004BE0E3 /* rbtree.c */,
+				D1E6114B1F4E3C00004BE0E3 /* stack.c */,
+				D1E6115A1F4E3C00004BE0E3 /* tcp.c */,
+				D1E6115F1F4E3C00004BE0E3 /* utils.c */,
+			);
+			name = src;
+			sourceTree = "<group>";
+		};
+		D1E611241F4E38BE004BE0E3 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				D1E611BC1F4E3F16004BE0E3 /* rbtree.h */,
+				D1E611B61F4E3EEB004BE0E3 /* epoll.h.inc */,
+				D1E611B71F4E3EEB004BE0E3 /* kqueue.h.inc */,
+				D1E611B81F4E3EEB004BE0E3 /* poll.h.inc */,
+				D1E611B41F4E3DFC004BE0E3 /* libdillimpl.h */,
+				D1E6119C1F4E3DD2004BE0E3 /* cr.h */,
+				D1E6119D1F4E3DD2004BE0E3 /* ctx.h */,
+				D1E6119E1F4E3DD2004BE0E3 /* fd.h */,
+				D1E6119F1F4E3DD2004BE0E3 /* iol.h */,
+				D1E611A01F4E3DD2004BE0E3 /* libdill.h */,
+				D1E611A11F4E3DD2004BE0E3 /* list.h */,
+				D1E611A21F4E3DD2004BE0E3 /* now.h */,
+				D1E611A31F4E3DD2004BE0E3 /* pollset.h */,
+				D1E611A41F4E3DD2004BE0E3 /* qlist.h */,
+				D1E611A51F4E3DD2004BE0E3 /* slist.h */,
+				D1E611A61F4E3DD2004BE0E3 /* stack.h */,
+				D1E611A71F4E3DD2004BE0E3 /* utils.h */,
+			);
+			name = include;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D1E6111C1F4E389F004BE0E3 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D1E611A91F4E3DD2004BE0E3 /* ctx.h in Headers */,
+				D1E611AC1F4E3DD2004BE0E3 /* libdill.h in Headers */,
+				D1E611AF1F4E3DD2004BE0E3 /* pollset.h in Headers */,
+				D1E611B51F4E3DFC004BE0E3 /* libdillimpl.h in Headers */,
+				D1E611B21F4E3DD2004BE0E3 /* stack.h in Headers */,
+				D1E611B01F4E3DD2004BE0E3 /* qlist.h in Headers */,
+				D1E611B11F4E3DD2004BE0E3 /* slist.h in Headers */,
+				D1E611B31F4E3DD2004BE0E3 /* utils.h in Headers */,
+				D1E611AA1F4E3DD2004BE0E3 /* fd.h in Headers */,
+				D1E611A81F4E3DD2004BE0E3 /* cr.h in Headers */,
+				D1E611AD1F4E3DD2004BE0E3 /* list.h in Headers */,
+				D1E611AE1F4E3DD2004BE0E3 /* now.h in Headers */,
+				D1E611BD1F4E3F16004BE0E3 /* rbtree.h in Headers */,
+				D1E611AB1F4E3DD2004BE0E3 /* iol.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D1E6111D1F4E389F004BE0E3 /* libdill */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D1E611221F4E389F004BE0E3 /* Build configuration list for PBXNativeTarget "libdill" */;
+			buildPhases = (
+				D1E6111A1F4E389F004BE0E3 /* Sources */,
+				D1E6111B1F4E389F004BE0E3 /* Frameworks */,
+				D1E6111C1F4E389F004BE0E3 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = libdill;
+			productName = libdill;
+			productReference = D1E6111E1F4E389F004BE0E3 /* liblibdill.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D1E611141F4E3831004BE0E3 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0830;
+				TargetAttributes = {
+					D1E6111D1F4E389F004BE0E3 = {
+						CreatedOnToolsVersion = 8.3.3;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = D1E611171F4E3831004BE0E3 /* Build configuration list for PBXProject "libdill" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = D1E611131F4E3831004BE0E3;
+			productRefGroup = D1E6111F1F4E389F004BE0E3 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D1E6111D1F4E389F004BE0E3 /* libdill */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D1E6111A1F4E389F004BE0E3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D1E611951F4E3C00004BE0E3 /* tcp.c in Sources */,
+				D1E6117D1F4E3C00004BE0E3 /* now.c in Sources */,
+				D1E611801F4E3C00004BE0E3 /* pfx.c in Sources */,
+				D1E6117C1F4E3C00004BE0E3 /* msock.c in Sources */,
+				D1E611621F4E3C00004BE0E3 /* bsock.c in Sources */,
+				D1E6116C1F4E3C00004BE0E3 /* dns.c in Sources */,
+				D1E611731F4E3C00004BE0E3 /* handle.c in Sources */,
+				D1E611681F4E3C00004BE0E3 /* cr.c in Sources */,
+				D1E6117B1F4E3C00004BE0E3 /* libdill.c in Sources */,
+				D1E611631F4E3C00004BE0E3 /* chan.c in Sources */,
+				D1E6116E1F4E3C00004BE0E3 /* fd.c in Sources */,
+				D1E611771F4E3C00004BE0E3 /* ipaddr.c in Sources */,
+				D1E611791F4E3C00004BE0E3 /* ipc.c in Sources */,
+				D1E6119A1F4E3C00004BE0E3 /* utils.c in Sources */,
+				D1E611861F4E3C00004BE0E3 /* stack.c in Sources */,
+				D1E611611F4E3C00004BE0E3 /* crlf.c in Sources */,
+				D1E611751F4E3C00004BE0E3 /* iol.c in Sources */,
+				D1E611831F4E3C00004BE0E3 /* rbtree.c in Sources */,
+				D1E611811F4E3C00004BE0E3 /* pollset.c in Sources */,
+				D1E6116A1F4E3C00004BE0E3 /* ctx.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D1E611181F4E3831004BE0E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		D1E611191F4E3831004BE0E3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		D1E611201F4E389F004BE0E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D1E611251F4E3B22004BE0E3 /* libdill.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				EXECUTABLE_PREFIX = lib;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		D1E611211F4E389F004BE0E3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D1E611251F4E3B22004BE0E3 /* libdill.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				EXECUTABLE_PREFIX = lib;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D1E611171F4E3831004BE0E3 /* Build configuration list for PBXProject "libdill" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D1E611181F4E3831004BE0E3 /* Debug */,
+				D1E611191F4E3831004BE0E3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D1E611221F4E389F004BE0E3 /* Build configuration list for PBXNativeTarget "libdill" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D1E611201F4E389F004BE0E3 /* Debug */,
+				D1E611211F4E389F004BE0E3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D1E611141F4E3831004BE0E3 /* Project object */;
+}
