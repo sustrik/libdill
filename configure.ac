@@ -142,6 +142,30 @@ else
 fi
 
 ################################################################################
+# --disable-tutorial                                                           #
+################################################################################
+
+AC_ARG_ENABLE([tutorial], [AS_HELP_STRING([--disable-tutorial],
+    [Disable tutorial compilation [default=no]])])
+if test "x$enable_tutorial" = "xno"; then
+   AM_CONDITIONAL([DILL_TUTORIAL], false)
+else
+   AM_CONDITIONAL([DILL_TUTORIAL], true)
+fi
+
+################################################################################
+# --disable-perf-tests                                                         #
+################################################################################
+
+AC_ARG_ENABLE([perf-tests], [AS_HELP_STRING([--disable-perf-tests],
+    [Disable performance test software compilation [default=no]])])
+if test "x$enable_perf_tests" = "xno"; then
+   AM_CONDITIONAL([DILL_PERF_TEST], false)
+else
+   AM_CONDITIONAL([DILL_PERF_TEST], true)
+fi
+
+################################################################################
 #  --disable-sockets                                                           #
 ################################################################################
 
