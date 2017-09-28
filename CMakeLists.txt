@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(libdill VERSION 1.18 LANGUAGES C)
+project(libdill VERSION 1.6 LANGUAGES C)
 
 include(CheckSymbolExists)
 include(CheckFunctionExists)
