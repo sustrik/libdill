@@ -4,7 +4,27 @@ project(libdill VERSION 1.6 LANGUAGES C)
 include(CheckSymbolExists)
 include(CheckFunctionExists)
 
-file(GLOB sources *.c dns/*.c)
+set(sources
+     bsock.c
+     chan.c
+     cr.c
+     crlf.c
+     ctx.c
+     fd.c
+     handle.c
+     iol.c
+     ipaddr.c
+     ipc.c
+     libdill.c
+     msock.c
+     now.c
+     pfx.c
+     pollset.c
+     rbtree.c
+     stack.c
+     tcp.c
+     utils.c
+     dns/dns.c)
 include_directories(${PROJECT_SOURCE_DIR} "${PROJECT_SOURCE_DIR}/dns")
 set_source_files_properties(dns/dns.c PROPERTIES COMPILE_FLAGS -std=c99)
 add_library(dill ${sources})
@@ -110,7 +130,25 @@ endif()
 include(CTest)
 if(BUILD_TESTING)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
-    file(GLOB test_files tests/*.c)
+    set(test_files
+        tests/chan.c
+        tests/choose.c
+        tests/crlf.c
+        tests/example.c
+        tests/fd.c
+        tests/go.c
+        tests/handle.c
+        tests/iol.c
+        tests/ipaddr.c
+        tests/ipc.c
+        tests/overload.c
+        tests/pfx.c
+        tests/rbtree.c
+        tests/signals.c
+        tests/sleep.c
+        tests/tcp.c
+        tests/threads.c
+        tests/threads2.c)
     foreach(test_file IN LISTS test_files)
       get_filename_component(test_name ${test_file} NAME_WE)
       add_executable(test_${test_name} ${test_file})
@@ -125,7 +163,14 @@ endif()
 # perf
 if(BUILD_PERF)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/perf)
-    file(GLOB perf_files perf/*.c)
+    set(perf_files
+        perf/chan.c
+        perf/choose.c
+        perf/ctxswitch.c
+        perf/go.c
+        perf/hdone.c
+        perf/timer.c
+        perf/whispers.c)
     foreach(perf_file IN LISTS perf_files)
       get_filename_component(perf_name ${perf_file} NAME_WE)
       add_executable(perf_${perf_name} ${perf_file})
