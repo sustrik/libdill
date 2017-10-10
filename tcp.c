@@ -133,6 +133,10 @@ static int tcp_hdone(struct hvfs *hvfs, int64_t deadline) {
 
 int tcp_close(int s, int64_t deadline) {
     int err;
+    /* Listener socket needs no special treatment. */
+    if(hquery(s, tcp_listener_type)) {
+        return hclose(s);
+    }
     struct tcp_conn *self = hquery(s, tcp_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}

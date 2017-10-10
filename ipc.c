@@ -35,11 +35,12 @@
 static int ipc_resolve(const char *addr, struct sockaddr_un *su);
 static int ipc_makeconn(int fd);
 
+dill_unique_id(ipc_listener_type);
+dill_unique_id(ipc_type);
+
 /******************************************************************************/
 /*  UNIX connection socket                                                    */
 /******************************************************************************/
-
-dill_unique_id(ipc_type);
 
 static void *ipc_hquery(struct hvfs *hvfs, const void *type);
 static void ipc_hclose(struct hvfs *hvfs);
@@ -135,6 +136,10 @@ static int ipc_hdone(struct hvfs *hvfs, int64_t deadline) {
 
 int ipc_close(int s, int64_t deadline) {
     int err;
+    /* Listener socket needs no special treatment. */
+    if(hquery(s, ipc_listener_type)) {
+        return hclose(s);
+    }
     struct ipc_conn *self = hquery(s, ipc_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
@@ -166,8 +171,6 @@ static void ipc_hclose(struct hvfs *hvfs) {
 /******************************************************************************/
 /*  UNIX listener socket                                                      */
 /******************************************************************************/
-
-dill_unique_id(ipc_listener_type);
 
 static void *ipc_listener_hquery(struct hvfs *hvfs, const void *type);
 static void ipc_listener_hclose(struct hvfs *hvfs);
