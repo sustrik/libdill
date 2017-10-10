@@ -296,7 +296,8 @@ int fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
 }
 
 void fd_close(int s) {
-    fdclean(s);
+    int rc = fdclean(s);
+    dill_assert(rc == 0);
     /* Discard any pending outbound data. If SO_LINGER option cannot
        be set, never mind and continue anyway. */
     struct linger lng;
