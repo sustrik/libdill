@@ -29,11 +29,14 @@ include_directories(${PROJECT_SOURCE_DIR} "${PROJECT_SOURCE_DIR}/dns")
 set_source_files_properties(dns/dns.c PROPERTIES COMPILE_FLAGS -std=c99)
 add_library(dill ${sources})
 
+find_package(Threads REQUIRED)
+target_link_libraries(dill PUBLIC Threads::Threads)
+
 # check and enable rt if available
 list(APPEND CMAKE_REQUIRED_LIBRARIES rt)
 check_symbol_exists(clock_gettime time.h HAVE_CLOCK_GETTIME)
 if(HAVE_CLOCK_GETTIME)
-  target_link_libraries(dill rt)
+  target_link_libraries(dill PUBLIC rt)
 endif()
 
 # Installation (https://github.com/forexample/package-example)
