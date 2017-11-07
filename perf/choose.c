@@ -67,8 +67,10 @@ int main(int argc, char *argv[]) {
     printf("done %ldM roundtrips in %f seconds\n",
         (long)(count / 1000000), ((float)duration) / 1000);
     printf("duration of passing a single message: %ld ns\n", ns);
-    printf("message passes per second: %fM\n",
+    if (ns > 0) {
+      printf("message passes per second: %fM\n",
         (float)(1000000000 / ns) / 1000000);
+    }
 
     return 0;
 }

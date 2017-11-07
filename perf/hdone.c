@@ -65,8 +65,10 @@ int main(int argc, char *argv[]) {
     printf("done %ldM coroutine/channel cancellations in %f seconds\n",
         (long)(count / 1000000), ((float)duration) / 1000);
     printf("duration of coroutine/channel cancellation: %ld ns\n", ns);
-    printf("coroutine/channel cancellations per second: %fM\n",
-        (float)(1000000000 / ns) / 1000000);
+    if (ns > 0) {
+      printf("coroutine/channel cancellations per second: %fM\n",
+          (float)(1000000000 / ns) / 1000000);
+    }
 
     return 0;
 }

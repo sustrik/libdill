@@ -121,12 +121,12 @@ set(CMAKE_REQUIRED_DEFINITIONS )
 
 check_function_exists(mprotect HAVE_MPROTECT)
 if(HAVE_MPROTECT)
-  add_definitions(-DHAVE_MPROTECT)
+  target_compile_definitions(dill PUBLIC HAVE_MPROTECT)
 endif()
 
 check_function_exists(posix_memalign HAVE_POSIX_MEMALIGN)
 if(HAVE_POSIX_MEMALIGN)
-  add_definitions(-DHAVE_POSIX_MEMALIGN)
+  target_compile_definitions(dill PUBLIC HAVE_POSIX_MEMALIGN)
 endif()
 
 # tests

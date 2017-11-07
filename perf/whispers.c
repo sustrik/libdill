@@ -68,8 +68,10 @@ int main(int argc, char *argv[]) {
     printf("took %f seconds\n", (float)duration / 1000);
     printf("performed %ld whispers in %f seconds\n", count, ((float)duration) / 1000);
     printf("duration of one whisper: %ld ns\n", ns);
-    printf("whispers per second: %fM\n",
+    if (ns > 0) {
+      printf("whispers per second: %fM\n",
         (float)(1000000000 / ns) / 1000000);
+    }
 
     return 0;
 }

@@ -57,8 +57,10 @@ int main(int argc, char *argv[]) {
     printf("performed %ldM context switches in %f seconds\n",
         (long)(count * 2 / 1000000), ((float)duration) / 1000);
     printf("duration of one context switch: %ld ns\n", ns);
-    printf("context switches per second: %fM\n",
+    if (ns > 0) {
+      printf("context switches per second: %fM\n",
         (float)(1000000000 / ns) / 1000000);
+    }
 
     return 0;
 }
