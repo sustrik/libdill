@@ -87,8 +87,7 @@
 <li>Coroutines can be canceled. This creates a foundation for &quot;structured concurrency&quot;.<br /></li>
 <li><code>chdone</code> causes blocked <code>recv</code> on the channel to return the <code>EPIPE</code> error rather than a value.<br /></li>
 <li><code>chdone</code> will signal both the senders and the receivers of a channel. This allows for scenarios such as multiple senders and a single receiver communicating via a single channel. The receiver can use <code>chdone</code> to let the senders know that it's terminating.<br /></li>
-<li>libmill's <code>fdwait</code> was replaced by <code>fdin</code> and <code>fdout</code>. The idea is that if we want data to flow through the connection in both directions in parallel, we should use two coroutines rather than one.<br /></li>
-<li>There's no networking library in libdill itself. A networking library (dsock) is provided separately.</li>
+<li>libmill's <code>fdwait</code> was replaced by <code>fdin</code> and <code>fdout</code>. The idea is that if we want data to flow through the connection in both directions in parallel, we should use two coroutines rather than one.</li>
 </ol>
 <h2 id="faq-how-can-i-access-the-source-code">FAQ: How can I access the source code?</h2>
 <p>To clone the repository, run:</p>

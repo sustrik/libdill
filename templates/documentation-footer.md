@@ -36,7 +36,6 @@ Technically, these are the differences:
 3. `chdone` causes blocked `recv` on the channel to return the `EPIPE` error rather than a value.
 4. `chdone` will signal both the senders and the receivers of a channel. This allows for scenarios such as multiple senders and a single receiver communicating via a single channel. The receiver can use `chdone` to let the senders know that it's terminating.
 5. libmill's `fdwait` was replaced by `fdin` and `fdout`. The idea is that if we want data to flow through the connection in both directions in parallel, we should use two coroutines rather than one.
-6. There's no networking library in libdill itself. A networking library (dsock) is provided separately.
 
 ## FAQ: How can I access the source code?
 
