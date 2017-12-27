@@ -145,7 +145,7 @@ To handle possible errors from `msend()` (such as when the client has closed the
 ```c
 char inbuf[256];
 ssize_t sz = mrecv(s, inbuf, sizeof(inbuf), -1);
-if(sz &lt; 0) goto cleanup;
+if(sz < 0) goto cleanup;
 ```
 
 The above piece of code simply reads the reply from the client. The reply is a single message, which in the case of the CRLF protocol translates to a single line of text. The `mrecv` function returns the number of bytes in the message.
