@@ -411,7 +411,7 @@ if(bufsz < sz) {errno = EMSGSIZE; return -1;}
 
 It the message fits into the buffer payload can be received:
 
-```
+```c
 size_t rmn = sz;
 for(it = first; it; it = it->iol_next) {
     size_t torecv = rmn < it->iol_len ? rmn : it->iol_len;

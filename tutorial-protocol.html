@@ -268,15 +268,15 @@ rc = bsendl(self-&gt;u, first, last, deadline);
     bufsz += it-&gt;iol_len;
 <span class="kw">if</span>(bufsz &lt; sz) {errno = EMSGSIZE; <span class="kw">return</span> -<span class="dv">1</span>;}</code></pre>
 <p>It the message fits into the buffer payload can be received:</p>
-<pre><code>size_t rmn = sz;
-for(it = first; it; it = it-&gt;iol_next) {
+<pre class="sourceCode c"><code class="sourceCode c">size_t rmn = sz;
+<span class="kw">for</span>(it = first; it; it = it-&gt;iol_next) {
     size_t torecv = rmn &lt; it-&gt;iol_len ? rmn : it-&gt;iol_len;
     rc = brecv(self-&gt;u, it-&gt;iol_base, torecv, deadline);
-    if(rc &lt; 0) return -1;
+    <span class="kw">if</span>(rc &lt; <span class="dv">0</span>) <span class="kw">return</span> -<span class="dv">1</span>;
     rmn -= torecv;
-    if(rmn == 0) break;
+    <span class="kw">if</span>(rmn == <span class="dv">0</span>) <span class="kw">break</span>;
 }
-return sz;</code></pre>
+<span class="kw">return</span> sz;</code></pre>
 <p>We are facing the same performance problem here as we did in the send function. Calling <code>brecv()</code> multiple times means extra network stack traversals and thus decreased performance. And we can apply a similar solution. We can modify the iolist in such a way that it can be simply forwarded to the underlying socket.</p>
 <p>The main problem in this case is that the size of the message may not match the size of the buffer supplied by the user. If message is larger than the buffer we will simply return an error. However, if message is smaller than the buffer there's a problem. Bytestream's <code>brecvl()</code> function has no size argument. It just receives data until the buffer is completely full. Therefore, we will have to shrink the buffer to match the message size.</p>
 <p>Let's say the iolist supplied by the user looks like this:</p>
