@@ -227,7 +227,7 @@ int rc = msend(s, "What's your name?", 17, deadline);
 if(rc != 0) goto cleanup;
 char inbuf[256];
 ssize_t sz = mrecv(s, inbuf, sizeof(inbuf), deadline);
-if(sz &lt; 0) goto cleanup;
+if(sz < 0) goto cleanup;
 ```
 
 Note that `errno` is set to `ETIMEDOUT` if the deadline is reached. Since we're treating all errors the same (by closing the connection), we don't make any specific provisions for deadline expiries.

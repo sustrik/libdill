@@ -95,7 +95,7 @@ assert(s &gt;= <span class="dv">0</span>);</code></pre>
 <p>To handle possible errors from <code>msend()</code> (such as when the client has closed the connection), add a <code>cleanup</code> label before the <code>hclose</code> line and jump to it whenever you want to close the connection and proceed without crashing the server.</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> inbuf[<span class="dv">256</span>];
 ssize_t sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), -<span class="dv">1</span>);
-<span class="kw">if</span>(sz &amp;lt; <span class="dv">0</span>) <span class="kw">goto</span> cleanup;</code></pre>
+<span class="kw">if</span>(sz &lt; <span class="dv">0</span>) <span class="kw">goto</span> cleanup;</code></pre>
 <p>The above piece of code simply reads the reply from the client. The reply is a single message, which in the case of the CRLF protocol translates to a single line of text. The <code>mrecv</code> function returns the number of bytes in the message.</p>
 <p>Having received a reply, we can now construct the greeting and send it to the client. The analysis of this code is left as an exercise to the reader:</p>
 <pre class="sourceCode c"><code class="sourceCode c">inbuf[sz] = <span class="dv">0</span>;
@@ -151,7 +151,7 @@ cleanup:
 <span class="kw">if</span>(rc != <span class="dv">0</span>) <span class="kw">goto</span> cleanup;
 <span class="dt">char</span> inbuf[<span class="dv">256</span>];
 ssize_t sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), deadline);
-<span class="kw">if</span>(sz &amp;lt; <span class="dv">0</span>) <span class="kw">goto</span> cleanup;</code></pre>
+<span class="kw">if</span>(sz &lt; <span class="dv">0</span>) <span class="kw">goto</span> cleanup;</code></pre>
 <p>Note that <code>errno</code> is set to <code>ETIMEDOUT</code> if the deadline is reached. Since we're treating all errors the same (by closing the connection), we don't make any specific provisions for deadline expiries.</p>
 <h2 id="step-5-communication-among-coroutines">Step 5: Communication among coroutines</h2>
 <p>Suppose we want the greetserver to keep statistics: The overall number of connections made, the number of those that are active at the moment and the number of those that have failed.</p>
