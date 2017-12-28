@@ -73,6 +73,7 @@ libdill_la_SOURCES += \
     msock.c \
     pfx.c \
     tcp.c \
+    udp.c \
     dns/dns.h \
     dns/dns.c
 endif
@@ -120,7 +121,8 @@ check_PROGRAMS += \
     tests/tcp \
     tests/ipc \
     tests/crlf \
-    tests/pfx
+    tests/pfx \
+    tests/udp
 endif
 
 check_HEADERS = \

@@ -426,6 +426,36 @@ DILL_EXPORT int crlf_detach(
     int s,
     int64_t deadline);
 
+/******************************************************************************/
+/*  UDP protocol.                                                             */
+/******************************************************************************/
+
+DILL_EXPORT int udp_open(
+    struct ipaddr *local,
+    const struct ipaddr *remote);
+DILL_EXPORT int udp_send(
+    int s,
+    const struct ipaddr *addr,
+    const void *buf,
+    size_t len);
+DILL_EXPORT ssize_t udp_recv(
+    int s,
+    struct ipaddr *addr,
+    void *buf,
+    size_t len,
+    int64_t deadline);
+DILL_EXPORT int udp_sendl(
+    int s,
+    const struct ipaddr *addr,
+    struct iolist *first,
+    struct iolist *last);
+DILL_EXPORT ssize_t udp_recvl(
+    int s,
+    struct ipaddr *addr,
+    struct iolist *first,
+    struct iolist *last,
+    int64_t deadline);
+
 #endif
 
 #endif
