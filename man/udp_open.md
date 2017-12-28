@@ -16,7 +16,7 @@ This function creates a UDP socket.
 
 IP address passed in _local_ argument will be used to set source IP address in outgoing packets. Also, the socket can be used to receive packets sent to this address. If port in the address is set to zero an ephemeral port will be chosen and filled into the _local_ address.
 
-IP address passed in _remote_ is the default destination for outbound packets. It is used by _msend_ and _mrecv_ functions which don't allow for specifying the destination address explicitly. It is also used by _udp_send_ and _udp_sendl_ functions if the address parameter of those functions is set to NULL.
+IP address passed in _remote_ is the default destination for outbound packets. It is used by **msend()** and **mrecv()** functions which don't allow for specifying the destination address explicitly. It is also used by **udp_send()** and **udp_sendl()** functions if the address parameter of those functions is set to NULL.
 
 # RETURN VALUE
 
