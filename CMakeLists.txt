@@ -130,6 +130,7 @@ endif()
 include(CTest)
 if(BUILD_TESTING)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
+    # no requirement on pthread
     set(test_files
         tests/chan.c
         tests/choose.c
@@ -146,9 +147,7 @@ if(BUILD_TESTING)
         tests/rbtree.c
         tests/signals.c
         tests/sleep.c
-        tests/tcp.c
-        tests/threads.c
-        tests/threads2.c)
+        tests/tcp.c)
     foreach(test_file IN LISTS test_files)
       get_filename_component(test_name ${test_file} NAME_WE)
       add_executable(test_${test_name} ${test_file})
@@ -158,6 +157,22 @@ if(BUILD_TESTING)
       target_link_libraries(test_${test_name} dill)
       add_test(test_${test_name} tests/${test_name})
     endforeach()
+    # requiring pthread
+    include(FindThreads)
+    if (CMAKE_USE_PTHREADS_INIT)
+        set(test_files
+            tests/threads.c
+            tests/threads2.c)
+        foreach(test_file IN LISTS test_files)
+          get_filename_component(test_name ${test_file} NAME_WE)
+          add_executable(test_${test_name} ${test_file})
+          set_target_properties(test_${test_name} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+            OUTPUT_NAME ${test_name})
+          target_link_libraries(test_${test_name} dill ${CMAKE_THREAD_LIBS_INIT})
+          add_test(test_${test_name} tests/${test_name})
+        endforeach()
+    endif()
 endif()
 
 # perf
