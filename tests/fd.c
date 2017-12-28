@@ -100,7 +100,7 @@ int main() {
     int64_t start = now();
     int hndl2 = go(trigger(fds[0], start + 50));
     errno_assert(hndl2 >= 0);
-    rc = fdin(fds[1], start + 90);
+    rc = fdin(fds[1], start + 1000);
     errno_assert(rc == 0);
     diff = now() - start;
     time_assert(diff, 50);
