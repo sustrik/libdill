@@ -1,6 +1,11 @@
 
 # Past versions
 
+**Dec 28th, 2017 <http://libdill.org/libdill-1.7.tar.gz>**
+
+* UDP sockets added
+* Minor bug fixes
+
 **Apr 8th, 2017 <http://libdill.org/libdill-1.6.tar.gz>**
 
 * Bug fix release.
