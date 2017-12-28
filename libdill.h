@@ -428,6 +428,7 @@ DILL_EXPORT int crlf_detach(
 
 /******************************************************************************/
 /*  UDP protocol.                                                             */
+/*  Each UDP packet is treated as a separate message.                         */
 /******************************************************************************/
 
 DILL_EXPORT int udp_open(
