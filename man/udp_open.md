@@ -12,7 +12,11 @@ udp_open - opens a UDP socket
 
 UDP is an unreliable message-based protocol. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.
 
-TODO
+This function creates a UDP socket.
+
+IP address passed in _local_ argument will be used to set source IP address in outgoing packets. Also, the socket can be used to receive packets sent to this address.
+
+IP address passed in _remote_ is the default destination for outbound packets. It is used by _msend_ and _mrecv_ functions which don't allow for specifying the destination address explicitly. It is also used by _udp_send_ and _udp_sendl_ functions if the address parameter of those functions is set to NULL.
 
 # RETURN VALUE
 
@@ -20,7 +24,13 @@ Newly created socket handle. On error, it returns -1 and sets _errno_ to one of 
 
 # ERRORS
 
-TODO
+* **EADDRINUSE**: The local address is already in use.
+* **EADDRNOTAVAIL**: The specified address is not available from the local machine.
+* **ECANCELED**: Current coroutine is being shut down.
+* **EINVAL**: Invalid arguments.
+* **EMFILE**: The maximum number of file descriptors in the process are already open.
+* **ENFILE**: The maximum number of file descriptors in the system are already open.
+* **ENOMEM**: Not enough memory.
 
 # EXAMPLE
 
