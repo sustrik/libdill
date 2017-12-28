@@ -641,7 +641,7 @@ error:
 }
 ```
 
-Note how the socket, including the underlying socket, when the function fails.
+Note how the socket, including the underlying socket, is closed when the function fails.
 
 Adjust the test, compile and run. You are done with the tutorial. Have fun writing your own network protocols!
 
