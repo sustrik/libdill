@@ -32,7 +32,7 @@ coroutine void worker(int count, const char *text) {
     for(i = 0; i != count; ++i) {
         printf("%s\n", text);
         int rc = msleep(now() + 10);
-        errno_assert(rc == 0);
+        errno_assert(rc == 0 || errno == ECANCELED);
     }
 }
 
