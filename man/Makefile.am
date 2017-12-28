@@ -67,9 +67,7 @@ man3_MANS = \
     tcp_listen.3 \
     udp_open.3 \
     udp_send.3 \
-    udp_recv.3 \
-    udp_sendl.3 \
-    udp_recvl.3
+    udp_recv.3
 
 SUFFIXES = .md .3
 

@@ -10,6 +10,8 @@ udp_open - opens a UDP socket
 
 # DESCRIPTION
 
+UDP is an unreliable message-based protocol. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.
+
 TODO
 
 # RETURN VALUE
@@ -22,4 +24,8 @@ TODO
 
 # EXAMPLE
 
-TODO
+```
+struct ipaddr addr;
+int rc = ipaddr_local(&addr, NULL, 5555, 0);
+int s = udp_open(&addr, NULL);
+```
