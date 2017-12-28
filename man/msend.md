@@ -50,6 +50,7 @@ The function returns 0 on success. On error, it returns -1 and sets _errno_ to o
 * **ECANCELED**: Current coroutine is in the process of shutting down.
 * **ECONNRESET**: Broken connection.
 * **EINVAL**: Invalid arguments.
+* **EMSGSIZE**: Invalid message size.
 * **ENOMEM**: Not enough memory.
 * **ENOTSUP**: The operation is not supported by the socket.
 * **EPIPE**: Closed connection.
