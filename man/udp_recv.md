@@ -14,7 +14,7 @@ udp_recv - receives a UDP packet
 
 UDP is an unreliable message-based protocol. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.
 
-TODO
+This function receives a single UDP packet. If _addr_ is not NULL, the argument will be filled in by the address of the sender of the packet.
 
 # RETURN VALUE
 
@@ -22,7 +22,13 @@ The function returns size of the message on success. On error, it returns -1 and
 
 # ERRORS
 
-TODO
+* **EBADF**: The socket handle in invalid.
+* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **EINVAL**: Invalid arguments.
+* **EMSGSIZE**: The message was larger than the supplied buffer.
+* **ENOMEM**: Not enough memory.
+* **ENOTSUP**: The operation is not supported by the socket.
+* **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE
 
