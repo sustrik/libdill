@@ -47,9 +47,16 @@
         }\
     } while(0)
 
+#if DILL_SLOW_TESTS
+#define DILL_TIME_PRECISION 1000
+#else
+#define DILL_TIME_PRECISION 20
+#endif
+
 #define time_assert(x, expected) \
     do {\
-        if((x) < ((expected) - 20) || (x) > ((expected) + 20)) {\
+        if((x) < ((expected) - DILL_TIME_PRECISION) || \
+              (x) > ((expected) + DILL_TIME_PRECISION)) {\
             fprintf(stderr, "Expected duration %d, actual duration %d "\
                 "(%s:%d)\n", (int)(expected), (int)(x), __FILE__, __LINE__);\
             fflush(stderr);\

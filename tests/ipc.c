@@ -91,7 +91,7 @@ int main() {
     rc = brecv(as, buf, sizeof(buf), deadline);
     errno_assert(rc == -1 && errno == ETIMEDOUT);
     int64_t diff = now() - deadline;
-    assert(diff > -20 && diff < 20);
+    time_assert(diff, 0);
     rc = brecv(as, buf, sizeof(buf), deadline);
     errno_assert(rc == -1 && errno == ECONNRESET);
     rc = hclose(as);
