@@ -46,11 +46,11 @@ int main(int argc, char *argv[]) {
     long count = atol(argv[1]);
     int64_t start = now();
 
-    int leftmost = chmake(sizeof(int));
+    int leftmost = chmake();
     int left = leftmost, right = leftmost;
     long i;
     for (i = 0; i < count; ++i) {
-        right = chmake(sizeof(int));
+        right = chmake();
         go(whisper(left, right));
         left = right;
     }

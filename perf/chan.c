@@ -45,8 +45,8 @@ int main(int argc, char *argv[]) {
     }
     long count = atol(argv[1]) * 1000000;
 
-    int out = chmake(sizeof(int));
-    int in = chmake(sizeof(int));
+    int out = chmake();
+    int in = chmake();
 
     int64_t start = now();
     go(worker(out, in));

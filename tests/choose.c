@@ -94,7 +94,7 @@ int main() {
     int val;
 
     /* Non-blocking receiver case. */
-    int ch1 = chmake(sizeof(int));
+    int ch1 = chmake();
     errno_assert(ch1 >= 0);
     int hndl1 = go(sender1(ch1, 555));
     errno_assert(hndl1 >= 0);
@@ -107,7 +107,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Blocking receiver case. */
-    int ch2 = chmake(sizeof(int));
+    int ch2 = chmake();
     errno_assert(ch2 >= 0);
     int hndl2 = go(sender2(ch2, 666));
     errno_assert(hndl2 >= 0);
@@ -120,7 +120,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Non-blocking sender case. */
-    int ch3 = chmake(sizeof(int));
+    int ch3 = chmake();
     errno_assert(ch3 >= 0);
     int hndl3 = go(receiver1(ch3, 777));
     errno_assert(hndl3 >= 0);
@@ -133,7 +133,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Blocking sender case. */
-    int ch4 = chmake(sizeof(int));
+    int ch4 = chmake();
     errno_assert(ch4 >= 0);
     int hndl4 = go(receiver2(ch4, 888));
     errno_assert(hndl4 >= 0);
@@ -147,9 +147,9 @@ int main() {
 
     /* Check with two channels. */
     int hndl5[2];
-    int ch5 = chmake(sizeof(int));
+    int ch5 = chmake();
     errno_assert(ch5 >= 0);
-    int ch6 = chmake(sizeof(int));
+    int ch6 = chmake();
     errno_assert(ch6 >= 0);
     hndl5[0] = go(sender1(ch6, 555));
     errno_assert(hndl5 >= 0);
@@ -173,9 +173,9 @@ int main() {
     errno_assert(rc == 0);
 
     /* Test whether selection of in channels is random. */
-    int ch7 = chmake(sizeof(int));
+    int ch7 = chmake();
     errno_assert(ch7 >= 0);
-    int ch8 = chmake(sizeof(int));
+    int ch8 = chmake();
     errno_assert(ch8 >= 0);
     int hndl6[2];
     hndl6[0] = go(feeder(ch7, 111));
@@ -211,7 +211,7 @@ int main() {
     hclose(ch8);
 
     /* Test 'otherwise' clause. */
-    int ch9 = chmake(sizeof(int));
+    int ch9 = chmake();
     errno_assert(ch9 >= 0);
     struct chclause cls7[] = {{CHRECV, ch9, &val, sizeof(val)}};
     rc = choose(cls7, 1, 0);
@@ -221,7 +221,7 @@ int main() {
     choose_assert(-1, ETIMEDOUT);
 
     /* Test two simultaneous senders vs. choose statement. */
-    int ch10 = chmake(sizeof(int));
+    int ch10 = chmake();
     errno_assert(ch10 >= 0);
     int hndl7[2];
     hndl7[0] = go(sender1(ch10, 888));
@@ -244,7 +244,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Test two simultaneous receivers vs. choose statement. */
-    int ch11 = chmake(sizeof(int));
+    int ch11 = chmake();
     errno_assert(ch11 >= 0);
     int hndl8[2];
     hndl8[0] = go(receiver1(ch11, 333));
@@ -265,7 +265,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Choose vs. choose. */
-    int ch12 = chmake(sizeof(int));
+    int ch12 = chmake();
     errno_assert(ch12 >= 0);
     int hndl9 = go(choosesender(ch12, 111));
     errno_assert(hndl9 >= 0);
@@ -278,7 +278,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Test transferring a large object. */
-    int ch17 = chmake(sizeof(struct large));
+    int ch17 = chmake();
     errno_assert(ch17 >= 0);
     int hndl10 = go(sender4(ch17));
     errno_assert(hndl9 >= 0);
@@ -289,7 +289,7 @@ int main() {
     hclose(ch17);
 
     /* Test that 'in' on done-with channel fires. */
-    int ch18 = chmake(sizeof(int));
+    int ch18 = chmake();
     errno_assert(ch18 >= 0);
     rc = chdone(ch18);
     errno_assert(rc == 0);
@@ -299,7 +299,7 @@ int main() {
     hclose(ch18);
 
     /* Test expiration of 'deadline' clause. */
-    int ch21 = chmake(sizeof(int));
+    int ch21 = chmake();
     errno_assert(ch21 >= 0);
     int64_t start = now();
     struct chclause cls17[] = {{CHRECV, ch21, &val, sizeof(val)}};
@@ -310,7 +310,7 @@ int main() {
     hclose(ch21);
 
     /* Test unexpired 'deadline' clause. */
-    int ch22 = chmake(sizeof(int));
+    int ch22 = chmake();
     errno_assert(ch22 >= 0);
     start = now();
     int hndl11 = go(sender3(ch22, 4444, start + 50));
@@ -326,9 +326,9 @@ int main() {
     errno_assert(rc == 0);
 
     /* Test that first channel in the array is prioritized. */
-    int ch23 = chmake(sizeof(int));
+    int ch23 = chmake();
     errno_assert(ch23 >= 0);
-    int ch24 = chmake(sizeof(int));
+    int ch24 = chmake();
     errno_assert(ch24 >= 0);
     int hndl12 = go(sender1(ch23, 0));
     errno_assert(hndl12 >= 0);
@@ -353,7 +353,7 @@ int main() {
 
     /* Try adding the same channel to choose twice. Doing so is pointless,
        but it shouldn't crash the application. */
-    int ch25 = chmake(sizeof(int));
+    int ch25 = chmake();
     errno_assert(ch25 >= 0);
     struct chclause cls20[] = {
         {CHRECV, ch25, &val, sizeof(val)},

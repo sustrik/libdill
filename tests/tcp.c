@@ -213,7 +213,7 @@ static coroutine void async_accept_routine(int listen_fd, int ch) {
 }
 
 static int async_accept(int listen_fd) {
-    int ch = chmake(sizeof(int));
+    int ch = chmake();
     assert(ch != -1);
     int h = go(async_accept_routine(listen_fd, ch));
     assert(h != -1);
@@ -275,7 +275,7 @@ static void move_lots_of_data(size_t nbytes, size_t buf_size) {
     int pp[2];
     int rc = tcp_socketpair(pp);
     assert(rc == 0);
-    int done_ch = chmake(1);
+    int done_ch = chmake();
     assert(done_ch != -1);
     int rcv_hdl = go(receiver(pp[0], nbytes, buf_size, done_ch));
     assert(rcv_hdl);

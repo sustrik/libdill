@@ -35,8 +35,6 @@
 struct dill_chan {
     /* Table of virtual functions. */
     struct hvfs vfs;
-    /* The size of one element stored in the channel, in bytes. */
-    size_t sz;
     /* List of clauses wanting to receive from the channel. */
     struct dill_list in;
     /* List of clauses wanting to send to the channel. */
@@ -52,7 +50,9 @@ struct dill_chclause {
     struct dill_clause cl;
     /* An item in either the dill_chan::in or dill_chan::out list. */
     struct dill_list item;
+    /* The object being passed via the channel. */
     void *val;
+    size_t len;
 };
 
 DILL_CT_ASSERT(sizeof(struct chmem) >= sizeof(struct dill_chan));
@@ -71,7 +71,7 @@ static int dill_chan_done(struct hvfs *vfs, int64_t deadline);
 /*  Channel creation and deallocation.                                        */
 /******************************************************************************/
 
-int chmake_mem(size_t itemsz, struct chmem *mem) {
+int chmake_mem(struct chmem *mem) {
     if(dill_slow(!mem)) {errno = EINVAL; return -1;}
     /* Returns ECANCELED if the coroutine is shutting down. */
     int rc = dill_canblock();
@@ -80,7 +80,6 @@ int chmake_mem(size_t itemsz, struct chmem *mem) {
     ch->vfs.query = dill_chan_query;
     ch->vfs.close = dill_chan_close;
     ch->vfs.done = dill_chan_done;
-    ch->sz = itemsz;
     dill_list_init(&ch->in);
     dill_list_init(&ch->out);
     ch->done = 0;
@@ -89,10 +88,10 @@ int chmake_mem(size_t itemsz, struct chmem *mem) {
     return hmake(&ch->vfs);
 }
 
-int chmake(size_t itemsz) {
+int chmake(void) {
     struct dill_chan *ch = malloc(sizeof(struct dill_chan));
     if(dill_slow(!ch)) {errno = ENOMEM; return -1;}
-    int h = chmake_mem(itemsz, (struct chmem*)ch);
+    int h = chmake_mem((struct chmem*)ch);
     if(dill_slow(h < 0)) {
         int err = errno;
         free(ch);
@@ -141,15 +140,18 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
     if(dill_slow(rc < 0)) return -1;
     /* Get the channel interface. */
     struct dill_chan *ch = hquery(h, dill_chan_type);
-    if(dill_slow(!ch)) return -1;
-    /* Check that the length provided matches the channel length */
-    if(dill_slow(len != ch->sz)) {errno = EINVAL; return -1;}
+    if(dill_slow(!ch)) return -1;    
     /* Check if the channel is done. */
     if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
-        /* Copy the message directly to the waiting receiver, if any. */
+    /* Copy the message directly to the waiting receiver, if any. */
     if(!dill_list_empty(&ch->in)) {
         struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->in),
             struct dill_chclause, item);
+        if(dill_slow(len != chcl->len)) {
+            dill_trigger(&chcl->cl, EMSGSIZE);
+            errno = EMSGSIZE;
+            return -1;
+        }
         memcpy(chcl->val, val, len);
         dill_trigger(&chcl->cl, 0);
         return 0;
@@ -160,6 +162,7 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
     struct dill_chclause chcl;
     dill_list_insert(&chcl.item, &ch->out);
     chcl.val = (void*)val;
+    chcl.len = len;
     dill_waitfor(&chcl.cl, 0, dill_chcancel);
     struct dill_tmclause tmcl;
     dill_timer(&tmcl, 1, deadline);
@@ -176,14 +179,17 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     /* Get the channel interface. */
     struct dill_chan *ch = hquery(h, dill_chan_type);
     if(dill_slow(!ch)) return -1;
-    /* Check that the length provided matches the channel length */
-    if(dill_slow(len != ch->sz)) {errno = EINVAL; return -1;}
     /* Check whether the channel is done. */
     if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
     /* If there's a sender waiting, copy the message directly from the sender. */
     if(!dill_list_empty(&ch->out)) {
         struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->out),
             struct dill_chclause, item);
+        if(dill_slow(len != chcl->len)) {
+            dill_trigger(&chcl->cl, EMSGSIZE);
+            errno = EMSGSIZE;
+            return -1;
+        }
         memcpy(val, chcl->val, len);
         dill_trigger(&chcl->cl, 0);
         return 0;
@@ -194,6 +200,7 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     struct dill_chclause chcl;
     dill_list_insert(&chcl.item, &ch->in);
     chcl.val = val;
+    chcl.len = len;
     dill_waitfor(&chcl.cl, 0, dill_chcancel);
     struct dill_tmclause tmcl;
     dill_timer(&tmcl, 1, deadline);
@@ -234,8 +241,7 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
         struct chclause *cl = &clauses[i];
         struct dill_chan *ch = hquery(cl->ch, dill_chan_type);
         if(dill_slow(!ch)) return i;
-        if(dill_slow(cl->len != ch->sz || (cl->len > 0 && !cl->val))) {
-            errno = EINVAL; return i;}
+        if(dill_slow(cl->len > 0 && !cl->val)) {errno = EINVAL; return i;}
         struct dill_chclause *chcl;
         switch(cl->op) {
         case CHSEND:
@@ -243,6 +249,11 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
             if(dill_list_empty(&ch->in)) break;
             chcl = dill_cont(dill_list_next(&ch->in),
                 struct dill_chclause, item);
+            if(dill_slow(cl->len != chcl->len)) {
+                dill_trigger(&chcl->cl, EMSGSIZE);
+                errno = EMSGSIZE;
+                return i;
+            }
             memcpy(chcl->val, cl->val, cl->len);
             dill_trigger(&chcl->cl, 0);
             errno = 0;
@@ -252,7 +263,12 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
             if(dill_list_empty(&ch->out)) break;
             chcl = dill_cont(dill_list_next(&ch->out),
                 struct dill_chclause, item);
-            memcpy(cl->val, chcl->val, ch->sz);
+            if(dill_slow(cl->len != chcl->len)) {
+                dill_trigger(&chcl->cl, EMSGSIZE);
+                errno = EMSGSIZE;
+                return i;
+            }
+            memcpy(cl->val, chcl->val, cl->len);
             dill_trigger(&chcl->cl, 0);
             errno = 0;
             return i;
@@ -271,6 +287,7 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
         dill_list_insert(&chcls[i].item,
             clauses[i].op == CHRECV ? &ch->in : &ch->out);
         chcls[i].val = clauses[i].val;
+        chcls[i].len = clauses[i].len;
         dill_waitfor(&chcls[i].cl, i, dill_chcancel);
     }
     struct dill_tmclause tmcl;

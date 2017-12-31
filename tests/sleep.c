@@ -45,7 +45,7 @@ int main() {
     time_assert(diff, 0);
 
     /* msleep-sort */
-    int ch = chmake(sizeof(int));
+    int ch = chmake();
     errno_assert(ch >= 0);
     int hndls[4];
     hndls[0] = go(delay(30, ch));

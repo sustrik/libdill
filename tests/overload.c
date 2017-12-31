@@ -40,9 +40,9 @@ coroutine void relay(int src, int dst) {
 }
 
 int main() {
-    int left = chmake(sizeof(int));
+    int left = chmake();
     errno_assert(left >= 0);
-    int right = chmake(sizeof(int));
+    int right = chmake();
     errno_assert(right >= 0);
     int hndls[2];
     hndls[0] = go(relay(left, right));

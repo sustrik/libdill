@@ -68,9 +68,9 @@ int main() {
 
     signal(SIGNAL, signal_intr);
 
-    int sendch = chmake(sizeof(char));
+    int sendch = chmake();
     errno_assert(sendch >= 0);
-    int recvch = chmake(sizeof(char));
+    int recvch = chmake();
     errno_assert(recvch >= 0);
 
     int i;

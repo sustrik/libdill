@@ -55,7 +55,7 @@ int main(void) {
     errno_assert(rc == 0);
     assert(status == 2);
 
-    int ch = chmake(sizeof(int));
+    int ch = chmake();
     errno_assert(ch >= 0);
     int i;
     int hndls[300];

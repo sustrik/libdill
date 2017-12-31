@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     int val = 0;
     long i;
     for(i = 0; i != count; ++i) {
-        int ch = chmake(sizeof(int));
+        int ch = chmake();
         int h = go(worker(ch));
         hdone(ch, -1);
         hclose(h);

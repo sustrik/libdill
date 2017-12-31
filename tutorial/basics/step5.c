@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    int ch = chmake(sizeof(int));
+    int ch = chmake();
     assert(ch >= 0);
     int cr = go(statistics(ch));
     assert(cr >= 0);
