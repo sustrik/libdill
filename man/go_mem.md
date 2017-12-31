@@ -19,7 +19,7 @@ Any function to be invoked with **go_mem()** must be declared with the **corouti
 *WARNING*: Coroutines will most likely work even without the **coroutine** specifier. However, they may fail in random non-deterministic ways, depending on the code in question and the particular combination of a compiler and optimization level. Additionally, arguments to a coroutine must not be function calls. If they are, the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine, do the computation first, and then pass the result as an argument. Instead of:
 
 ```c
-go_mem(bar(foo(a), stk, stklen));
+go_mem(bar(foo(a)), stk, stklen);
 ```
 
 Do this:
