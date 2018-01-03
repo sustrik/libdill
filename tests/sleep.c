@@ -36,6 +36,15 @@ coroutine static void delay(int n, int ch) {
     errno_assert(rc == 0);
 }
 
+static int canceled = 0;
+
+coroutine static void canceled_delay(int n) {
+    int rc = msleep(now() + n);
+    assert(rc < 0);
+    errno_assert(errno == ECANCELED);
+    canceled = 1;
+}
+
 int main() {
     /* Test 'msleep'. */
     int64_t deadline = now() + 100;
@@ -79,6 +88,15 @@ int main() {
     errno_assert(rc == 0);
     rc = hclose(ch);
     errno_assert(rc == 0);
+
+    /* Test cancelling msleep. */
+    int hndl = go(canceled_delay(1000));
+    errno_assert(hndl >= 0);
+    rc = msleep(now() + 100);
+    errno_assert(rc == 0);
+    rc = hclose(hndl);
+    errno_assert(rc == 0);
+    assert(canceled == 1);
 
     return 0;
 }
