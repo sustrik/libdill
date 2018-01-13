@@ -95,33 +95,42 @@ static void dill_chan_init(struct dill_chan *ch, int index) {
 }
 
 int chmake_mem(struct chmem *mem, int chv[2]) {
-    if(dill_slow(!mem)) {errno = EINVAL; return -1;}
+    int err;
+    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Returns ECANCELED if the coroutine is shutting down. */
     int rc = dill_canblock();
-    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc < 0)) {err = errno; goto error1;};
     struct dill_chan *ch = (struct dill_chan*)mem;
     dill_chan_init(&ch[0], 0);
     dill_chan_init(&ch[1], 1);
-    /* Allocate a handle to point to the channel. */
-    /* TODO: Make this atomic. */
     chv[0] = hmake(&ch[0].vfs);
+    if(dill_slow(chv[0] < 0)) {err = errno; goto error1;}
     chv[1] = hmake(&ch[1].vfs);
+    if(dill_slow(chv[1] < 0)) {err = errno; goto error2;}
     return 0;
+error2:
+    /* This closes the handle but leaves everything else alone given
+       that the second handle wasn't event created. */
+    hclose(chv[0]);
+error1:
+    errno = err;
+    return -1;
 }
 
 int chmake(int chv[2]) {
+    int err;
     struct chmem *ch = malloc(sizeof(struct chmem));
-    if(dill_slow(!ch)) {errno = ENOMEM; return -1;}
+    if(dill_slow(!ch)) {err = ENOMEM; goto error1;}
     int h = chmake_mem(ch, chv);
-    if(dill_slow(h < 0)) {
-        int err = errno;
-        free(ch);
-        errno = err;
-        return -1;
-    }
+    if(dill_slow(h < 0)) {err = errno; goto error2;}
     ((struct dill_chan*)ch)[0].mem = 0;
     ((struct dill_chan*)ch)[1].mem = 0;
     return h;
+error2:
+    free(ch);
+error1:
+    errno = err;
+    return -1;
 }
 
 static void *dill_chan_query(struct hvfs *vfs, const void *type) {
