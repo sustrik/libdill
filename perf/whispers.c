@@ -38,6 +38,7 @@ static coroutine void whisper(int left, int right) {
 }
 
 int main(int argc, char *argv[]) {
+#if 0
     if(argc != 2) {
         printf("usage: whispers <number-of-whispers>\n");
         return 1;
@@ -70,6 +71,6 @@ int main(int argc, char *argv[]) {
     printf("duration of one whisper: %ld ns\n", ns);
     printf("whispers per second: %fM\n",
         (float)(1000000000 / ns) / 1000000);
-
+#endif
     return 0;
 }

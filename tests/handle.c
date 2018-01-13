@@ -55,19 +55,22 @@ int main(void) {
     errno_assert(rc == 0);
     assert(status == 2);
 
-    int ch = chmake();
-    errno_assert(ch >= 0);
+    int ch[2];
+    rc = chmake(ch);
+    errno_assert(rc == 0);
     int i;
     int hndls[300];
     for(i = 0; i != 300; ++i) {
-        hndls[i] = hdup(ch);
+        hndls[i] = hdup(ch[0]);
         errno_assert(hndls[i] >= 0);
     }
     for(i = 0; i != 300; ++i) {
         rc = hclose(hndls[i]);
         errno_assert(rc == 0);
     }
-    rc = hclose(ch);
+    rc = hclose(ch[0]);
+    errno_assert(rc == 0);
+    rc = hclose(ch[1]);
     errno_assert(rc == 0);
 
     return 0;

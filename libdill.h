@@ -245,14 +245,14 @@ struct chclause {
 
 struct chmem {
 #if defined(__i386__)
-    char reserved[36];
-#else
     char reserved[72];
+#else
+    char reserved[144];
 #endif
 };
 
-DILL_EXPORT int chmake(void);
-DILL_EXPORT int chmake_mem(struct chmem *mem);
+DILL_EXPORT int chmake(int chv[2]);
+DILL_EXPORT int chmake_mem(struct chmem *mem, int chv[2]);
 DILL_EXPORT int chsend(int ch, const void *val, size_t len, int64_t deadline);
 DILL_EXPORT int chrecv(int ch, void *val, size_t len, int64_t deadline);
 DILL_EXPORT int choose(struct chclause *clauses, int nclauses,

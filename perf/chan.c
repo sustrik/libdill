@@ -30,11 +30,11 @@
 
 #include "../libdill.h"
 
-static coroutine void worker(int in, int out) {
+static coroutine void worker(int ch) {
     int val;
     while(1) {
-        chrecv(in, &val, sizeof(val), -1);
-        chsend(out, &val, sizeof(val), -1);
+        chrecv(ch, &val, sizeof(val), -1);
+        chsend(ch, &val, sizeof(val), -1);
     }
 }
 
@@ -45,17 +45,17 @@ int main(int argc, char *argv[]) {
     }
     long count = atol(argv[1]) * 1000000;
 
-    int out = chmake();
-    int in = chmake();
+    int ch[2];
+    chmake(ch);
 
     int64_t start = now();
-    go(worker(out, in));
+    go(worker(ch[0]));
 
     int val = 0;
     long i;
     for(i = 0; i != count; ++i) {
-        chsend(out, &val, sizeof(val), -1);
-        chrecv(in, &val, sizeof(val), -1);
+        chsend(ch[1], &val, sizeof(val), -1);
+        chrecv(ch[1], &val, sizeof(val), -1);
     }
 
     int64_t stop = now();

@@ -51,11 +51,13 @@ int main(int argc, char *argv[]) {
     int val = 0;
     long i;
     for(i = 0; i != count; ++i) {
-        int ch = chmake();
-        int h = go(worker(ch));
-        hdone(ch, -1);
+        int ch[2];
+        chmake(ch);
+        int h = go(worker(ch[0]));
+        hdone(ch[1], -1);
         hclose(h);
-        hclose(ch);
+        hclose(ch[1]);
+        hclose(ch[0]);
     }
 
     int64_t stop = now();

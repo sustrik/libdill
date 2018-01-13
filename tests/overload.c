@@ -40,24 +40,34 @@ coroutine void relay(int src, int dst) {
 }
 
 int main() {
-    int left = chmake();
-    errno_assert(left >= 0);
-    int right = chmake();
-    errno_assert(right >= 0);
+    int left[2];
+    int rc = chmake(left);
+    errno_assert(rc == 0);
+    int right[2];
+    rc = chmake(right);
+    errno_assert(rc == 0);
     int hndls[2];
-    hndls[0] = go(relay(left, right));
+    hndls[0] = go(relay(left[1], right[1]));
     errno_assert(hndls[0] >= 0);
-    hndls[1] = go(relay(right, left));
+    hndls[1] = go(relay(right[0], left[0]));
     errno_assert(hndls[1] >= 0);
     int val = 42;
-    int rc = chsend(left, &val, sizeof(val), -1);
+    rc = chsend(left[0], &val, sizeof(val), -1);
     errno_assert(rc == 0);
     /* Fail with exit code 128+SIGALRM if we deadlock */
     alarm(1);
-    hclose(hndls[0]);
-    hclose(hndls[1]);
-    hclose(left);
-    hclose(right);
+    rc = hclose(hndls[0]);
+    errno_assert(rc == 0);
+    rc = hclose(hndls[1]);
+    errno_assert(rc == 0);
+    rc = hclose(left[0]);
+    errno_assert(rc == 0);
+    rc = hclose(left[1]);
+    errno_assert(rc == 0);
+    rc = hclose(right[0]);
+    errno_assert(rc == 0);
+    rc = hclose(right[1]);
+    errno_assert(rc == 0);
 
     return 0;
 }
