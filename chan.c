@@ -32,7 +32,7 @@
 #include "list.h"
 #include "utils.h"
 
-struct dill_chan {
+struct dill_halfchan {
     /* Table of virtual functions. */
     struct hvfs vfs;
     /* List of clauses wanting to receive from the channel. */
@@ -59,7 +59,7 @@ struct dill_chclause {
     size_t len;
 };
 
-DILL_CT_ASSERT(sizeof(struct chmem) >= sizeof(struct dill_chan) * 2);
+DILL_CT_ASSERT(sizeof(struct chmem) >= sizeof(struct dill_halfchan) * 2);
 
 /******************************************************************************/
 /*  Handle implementation.                                                    */
@@ -82,7 +82,7 @@ static int dill_chan_done(struct hvfs *vfs, int64_t deadline);
 /*  Channel creation and deallocation.                                        */
 /******************************************************************************/
 
-static void dill_chan_init(struct dill_chan *ch, int index) {
+static void dill_chan_init(struct dill_halfchan *ch, int index) {
     ch->vfs.query = dill_chan_query;
     ch->vfs.close = dill_chan_close;
     ch->vfs.done = dill_chan_done;
@@ -100,7 +100,7 @@ int chmake_mem(struct chmem *mem, int chv[2]) {
     /* Returns ECANCELED if the coroutine is shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) {err = errno; goto error1;};
-    struct dill_chan *ch = (struct dill_chan*)mem;
+    struct dill_halfchan *ch = (struct dill_halfchan*)mem;
     dill_chan_init(&ch[0], 0);
     dill_chan_init(&ch[1], 1);
     chv[0] = hmake(&ch[0].vfs);
@@ -123,8 +123,8 @@ int chmake(int chv[2]) {
     if(dill_slow(!ch)) {err = ENOMEM; goto error1;}
     int h = chmake_mem(ch, chv);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
-    ((struct dill_chan*)ch)[0].mem = 0;
-    ((struct dill_chan*)ch)[1].mem = 0;
+    ((struct dill_halfchan*)ch)[0].mem = 0;
+    ((struct dill_halfchan*)ch)[1].mem = 0;
     return h;
 error2:
     free(ch);
@@ -139,7 +139,7 @@ static void *dill_chan_query(struct hvfs *vfs, const void *type) {
     return NULL;
 }
 
-static void dill_chan_term(struct dill_chan *ch) {
+static void dill_chan_term(struct dill_halfchan *ch) {
     /* Resume any remaining senders and receivers on the channel
        with the EPIPE error. */
     while(!dill_list_empty(&ch->in)) {
@@ -155,7 +155,7 @@ static void dill_chan_term(struct dill_chan *ch) {
 }
 
 static void dill_chan_close(struct hvfs *vfs) {
-    struct dill_chan *ch = (struct dill_chan*)vfs;
+    struct dill_halfchan *ch = (struct dill_halfchan*)vfs;
     dill_assert(ch);
     /* If the other half of the channel is still open do nothing. */
     if(!dill_chan_other(ch)->closed) {
@@ -181,7 +181,7 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Get the channel interface. */
-    struct dill_chan *ch = hquery(h, dill_chan_type);
+    struct dill_halfchan *ch = hquery(h, dill_chan_type);
     if(dill_slow(!ch)) return -1;
     /* Sending is always done to the opposite side of the channel. */
     ch = dill_chan_other(ch);   
@@ -221,11 +221,12 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Get the channel interface. */
-    struct dill_chan *ch = hquery(h, dill_chan_type);
+    struct dill_halfchan *ch = hquery(h, dill_chan_type);
     if(dill_slow(!ch)) return -1;
     /* Check whether the channel is done. */
     if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
-    /* If there's a sender waiting, copy the message directly from the sender. */
+    /* If there's a sender waiting, copy the message directly
+       from the sender. */
     if(!dill_list_empty(&ch->out)) {
         struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->out),
             struct dill_chclause, item);
@@ -256,7 +257,7 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
 }
 
 static int dill_chan_done(struct hvfs *vfs, int64_t deadline) {
-    struct dill_chan *ch = (struct dill_chan*)vfs;
+    struct dill_halfchan *ch = (struct dill_halfchan*)vfs;
     dill_assert(ch);
     /* Done is always done to the opposite side of the channel. */
     ch = dill_chan_other(ch);
@@ -285,7 +286,7 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
     int i;
     for(i = 0; i != nclauses; ++i) {
         struct chclause *cl = &clauses[i];
-        struct dill_chan *ch = hquery(cl->ch, dill_chan_type);
+        struct dill_halfchan *ch = hquery(cl->ch, dill_chan_type);
         if(dill_slow(!ch)) return i;
         if(dill_slow(cl->len > 0 && !cl->val)) {errno = EINVAL; return i;}
         struct dill_chclause *chcl;
@@ -329,7 +330,7 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
     /* Let's wait. */
     struct dill_chclause chcls[nclauses];
     for(i = 0; i != nclauses; ++i) {
-        struct dill_chan *ch = hquery(clauses[i].ch, dill_chan_type);
+        struct dill_halfchan *ch = hquery(clauses[i].ch, dill_chan_type);
         dill_assert(ch);
         dill_list_insert(&chcls[i].item,
             clauses[i].op == CHRECV ? &ch->in : &dill_chan_other(ch)->out);
