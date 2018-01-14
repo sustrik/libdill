@@ -35,9 +35,9 @@
 struct dill_halfchan {
     /* Table of virtual functions. */
     struct hvfs vfs;
-    /* List of clauses wanting to receive from the channel. */
+    /* List of clauses wanting to receive from the inbound halfchannel. */
     struct dill_list in;
-    /* List of clauses wanting to send to the channel. */
+    /* List of clauses wanting to send to the inbound halfchannel. */
     struct dill_list out;
     /* Whether this is the fist or the second half-channel of the channel. */
     unsigned int index : 1;
