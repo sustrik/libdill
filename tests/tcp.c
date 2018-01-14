@@ -213,11 +213,12 @@ static coroutine void async_accept_routine(int listen_fd, int ch) {
 }
 
 static int async_accept(int listen_fd) {
-    int ch = chmake();
-    assert(ch != -1);
-    int h = go(async_accept_routine(listen_fd, ch));
-    assert(h != -1);
-    return ch;
+    int ch[2];
+    int rc = chmake(ch);
+    errno_assert(rc == 0);
+    int h = go(async_accept_routine(listen_fd, ch[0]));
+    errno_assert(h >= 0);
+    return ch[1];
 }
 
 static int tcp_socketpair(int fd[2]) {
@@ -274,11 +275,12 @@ static void receiver(int fd, size_t nbytes, size_t buf_size, int done_ch) {
 static void move_lots_of_data(size_t nbytes, size_t buf_size) {
     int pp[2];
     int rc = tcp_socketpair(pp);
-    assert(rc == 0);
-    int done_ch = chmake();
-    assert(done_ch != -1);
-    int rcv_hdl = go(receiver(pp[0], nbytes, buf_size, done_ch));
-    assert(rcv_hdl);
+    errno_assert(rc == 0);
+    int done_ch[2];
+    rc = chmake(done_ch);
+    errno_assert(rc == 0);
+    int rcv_hdl = go(receiver(pp[0], nbytes, buf_size, done_ch[0]));
+    errno_assert(rcv_hdl);
 
     for(size_t left = nbytes; left > 0;) {
         char buf[512];
@@ -294,9 +296,12 @@ static void move_lots_of_data(size_t nbytes, size_t buf_size) {
     }
 
     char tmp;
-    int r = chrecv(done_ch, &tmp, sizeof(tmp), -1);
-    assert(r == 0);
-    hclose(done_ch);
+    rc = chrecv(done_ch[1], &tmp, sizeof(tmp), -1);
+    errno_assert(rc == 0);
+    rc = hclose(done_ch[0]);
+    errno_assert(rc == 0);
+    rc = hclose(done_ch[1]);
+    errno_assert(rc == 0);
 
     hclose(rcv_hdl);
     hclose(pp[0]);
