@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
     }
 
     int ch[2];
-    rc = chmake();
+    rc = chmake(ch);
     assert(rc == 0);
     int cr = go(statistics(ch[0]));
     assert(cr >= 0);
