@@ -157,8 +157,7 @@ static void dill_halfchan_term(struct dill_halfchan *ch) {
 static void dill_halfchan_close(struct hvfs *vfs) {
     struct dill_halfchan *ch = (struct dill_halfchan*)vfs;
     dill_assert(ch);
-    /* This shouldn't happen, but let's handle it decently. */
-    if(dill_slow(ch->closed)) return;
+    dill_assert(!ch->closed);
     /* If the other half of the channel is still open do nothing. */
     if(!dill_halfchan_other(ch)->closed) {
         ch->closed = 1;
