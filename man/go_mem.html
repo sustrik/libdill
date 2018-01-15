@@ -25,7 +25,7 @@
 <p>The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller. The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.</p>
 <p>Any function to be invoked with <strong>go_mem()</strong> must be declared with the <strong>coroutine</strong> specifier.</p>
 <p><em>WARNING</em>: Coroutines will most likely work even without the <strong>coroutine</strong> specifier. However, they may fail in random non-deterministic ways, depending on the code in question and the particular combination of a compiler and optimization level. Additionally, arguments to a coroutine must not be function calls. If they are, the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine, do the computation first, and then pass the result as an argument. Instead of:</p>
-<pre class="sourceCode c"><code class="sourceCode c">go_mem(bar(foo(a), stk, stklen));</code></pre>
+<pre class="sourceCode c"><code class="sourceCode c">go_mem(bar(foo(a)), stk, stklen);</code></pre>
 <p>Do this:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> a = foo();
 go_mem(bar(a), stk, stklen);</code></pre>

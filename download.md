@@ -3,12 +3,14 @@
 
 ##### libdill
 
-<http://libdill.org/libdill-1.7.tar.gz>
+<http://libdill.org/libdill-2.0.tar.gz>
+
+**Warning: Backward incompatible API changes were introduced in this version!** 
 
 ```
-$ wget http://libdill.org/libdill-1.7.tar.gz
-$ tar -xzf libdill-1.7.tar.gz 
-$ cd libdill-1.7
+$ wget http://libdill.org/libdill-2.0.tar.gz
+$ tar -xzf libdill-2.0.tar.gz 
+$ cd libdill-2.0
 $ ./configure
 $ make
 $ sudo make install

@@ -28,6 +28,7 @@
 <p>Do this:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> a = foo();
 go(bar(a));</code></pre>
+<p>Every coroutine comes with a built-in control channel accessible via <em>hctrl</em> handle.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>Returns a coroutine handle. In the case of an error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>

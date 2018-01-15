@@ -19,9 +19,9 @@
 <p>chmake - create a channel</p>
 <h1 id="synopsis">SYNOPSIS</h1>
 <p><strong>#include &lt;libdill.h&gt;</strong></p>
-<p><strong>int chmake(size_t </strong><em>itemsz</em><strong>);</strong></p>
+<p><strong>int chmake(int </strong><em>chv</em><strong>[2]);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
-<p>Creates a channel. <em>itemsz</em> is the byte size of the items to be sent through the channel.</p>
+<p>Creates a bidirectional channel. In case of success handles to the both sides of the channel will be returned in <em>chv</em> parameter.</p>
 <p>A channel is a synchronization primitive, not a container. It doesn't store any items.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>Returns a channel handle. In the case of an error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
@@ -31,8 +31,9 @@
 <li><strong>ENOMEM</strong>: Not enough memory to allocate a new channel.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> ch = chmake(<span class="kw">sizeof</span>(<span class="dt">int</span>));
-<span class="kw">if</span>(ch == -<span class="dv">1</span>) {
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> ch[<span class="dv">2</span>];
+<span class="dt">int</span> rc = chmake(ch);
+<span class="kw">if</span>(rc == -<span class="dv">1</span>) {
     perror(<span class="st">&quot;Cannot create channel&quot;</span>);
     exit(<span class="dv">1</span>);
 }</code></pre>

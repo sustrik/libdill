@@ -1,6 +1,12 @@
 
 # Past versions
 
+**Jan 15th, 2017 <http://libdill.org/libdill-2.0.tar.gz>**
+
+* Channels are untyped
+* Channels are bidirectional
+* A control channel is associated with each coroutine
+
 **Dec 28th, 2017 <http://libdill.org/libdill-1.7.tar.gz>**
 
 * UDP sockets added
