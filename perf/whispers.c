@@ -38,7 +38,6 @@ static coroutine void whisper(int left, int right) {
 }
 
 int main(int argc, char *argv[]) {
-#if 0
     if(argc != 2) {
         printf("usage: whispers <number-of-whispers>\n");
         return 1;
@@ -47,17 +46,22 @@ int main(int argc, char *argv[]) {
     long count = atol(argv[1]);
     int64_t start = now();
 
-    int leftmost = chmake();
-    int left = leftmost, right = leftmost;
+    int left[2];
+    int right[2];
+    chmake(left);
+    right[0] = left[0];
+    right[1] = left[1];
+    int leftmost = left[0];
     long i;
     for (i = 0; i < count; ++i) {
-        right = chmake();
-        go(whisper(left, right));
-        left = right;
+        chmake(right);
+        go(whisper(left[1], right[0]));
+        left[0] = right[0];
+        left[1] = right[1];
     }
 
     int val = 1;
-    chsend(right, &val, sizeof(val), -1);
+    chsend(right[1], &val, sizeof(val), -1);
     int res;
     chrecv(leftmost, &res, sizeof(res), -1);
     assert(res == count + 1);
@@ -71,6 +75,6 @@ int main(int argc, char *argv[]) {
     printf("duration of one whisper: %ld ns\n", ns);
     printf("whispers per second: %fM\n",
         (float)(1000000000 / ns) / 1000000);
-#endif
+
     return 0;
 }
