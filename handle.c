@@ -111,7 +111,8 @@ int hdup(int h) {
 void *hquery(int h, const void *type) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
     CHECKHANDLE(h, NULL);
-    /* Try and use the cached pointer first; otherwise do the expensive virtual call.*/
+    /* Try and use the cached pointer first; otherwise do the expensive virtual
+       call.*/
     if(dill_fast(hndl->ptr != NULL && hndl->type == type))
         return hndl->ptr;
     else {
@@ -127,7 +128,8 @@ void *hquery(int h, const void *type) {
 int hclose(int h) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
     CHECKHANDLE(h, -1);
-    /* If there are multiple duplicates of this handle, just remove one reference. */
+    /* If there are multiple duplicates of this handle, just remove one
+       reference. */
     if(hndl->vfs->refcount > 1) {
         --hndl->vfs->refcount;
         return 0;

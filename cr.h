@@ -51,7 +51,8 @@ struct dill_cr {
     /* When the coroutine is suspended 'ctx' holds the context
        (registers and such).*/
     sigjmp_buf ctx;
-    /* If the coroutine is blocked, here's the list of the clauses it's waiting on. */
+    /* If the coroutine is blocked, here's the list of the clauses it's
+       waiting for. */
     struct dill_slist clauses;
     /* There are two possible reasons to disable blocking calls.
        1. The coroutine is being closed by its owner.
@@ -97,8 +98,9 @@ struct dill_ctx_cr {
     struct dill_rbtree timers;
     /* Last time poll was performed. */
     int64_t last_poll;
-    /* The main coroutine. We don't control the creation of the main coroutine's stack,
-       so we have to store this info here instead of the top of the stack. */
+    /* The main coroutine. We don't control the creation of the main coroutine's
+       stack, so we have to store this info here instead of the top of
+       the stack. */
     struct dill_cr main;
 #if defined DILL_CENSUS
     struct dill_slist census;
@@ -139,14 +141,15 @@ void dill_waitfor(struct dill_clause *cl, int id,
 /* Suspend running coroutine. Move to executing different coroutines.
    The coroutine will be resumed once one of the clauses previously added by
    dill_waitfor() is triggered. When that happens, all the clauses, whether
-   triggered or not, will be canceled. The function returns the ID of the triggered
-   clause or -1 on error. In either case, it sets errno to 0 indicate
+   triggered or not, will be canceled. The function returns the ID of the
+   triggered clause or -1 on error. In either case, it sets errno to 0 indicate
    success or non-zero value to indicate error. */
 int dill_wait(void);
 
-/* Schedule a previously suspended coroutine for execution. Keep in mind that this
-   doesn't immediately run it, it just puts it into the coroutine ready queue.
-   It will cause dill_wait() to return the id supplied in dill_waitfor(). */
+/* Schedule a previously suspended coroutine for execution. Keep in mind that
+   this doesn't immediately run it, it just puts it into the coroutine ready
+   queue. It will cause dill_wait() to return the id supplied in
+   dill_waitfor(). */
 void dill_trigger(struct dill_clause *cl, int err);
 
 /* Add a timer to the list of active clauses. */
