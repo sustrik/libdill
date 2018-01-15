@@ -46,17 +46,22 @@ int main(int argc, char *argv[]) {
     long count = atol(argv[1]);
     int64_t start = now();
 
-    int leftmost = chmake(sizeof(int));
-    int left = leftmost, right = leftmost;
+    int left[2];
+    int right[2];
+    chmake(left);
+    right[0] = left[0];
+    right[1] = left[1];
+    int leftmost = left[0];
     long i;
     for (i = 0; i < count; ++i) {
-        right = chmake(sizeof(int));
-        go(whisper(left, right));
-        left = right;
+        chmake(right);
+        go(whisper(left[1], right[0]));
+        left[0] = right[0];
+        left[1] = right[1];
     }
 
     int val = 1;
-    chsend(right, &val, sizeof(val), -1);
+    chsend(right[1], &val, sizeof(val), -1);
     int res;
     chrecv(leftmost, &res, sizeof(res), -1);
     assert(res == count + 1);

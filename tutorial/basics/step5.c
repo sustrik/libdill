@@ -101,9 +101,10 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    int ch = chmake(sizeof(int));
-    assert(ch >= 0);
-    int cr = go(statistics(ch));
+    int ch[2];
+    rc = chmake(ch);
+    assert(rc == 0);
+    int cr = go(statistics(ch[0]));
     assert(cr >= 0);
 
     while(1) {
@@ -111,7 +112,7 @@ int main(int argc, char *argv[]) {
         assert(s >= 0);
         s = crlf_attach(s);
         assert(s >= 0);
-        cr = go(dialogue(s, ch));
+        cr = go(dialogue(s, ch[1]));
         assert(cr >= 0);
     }
 }

@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2015 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -22,51 +22,34 @@
 
 */
 
-#include <assert.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include <errno.h>
 #include <stdio.h>
-#include <sys/time.h>
+#include <stdlib.h>
 
+#include "assert.h"
 #include "../libdill.h"
 
-static coroutine void worker(int ch) {
+coroutine void worker(void) {
     int val;
-    while(1) {
-        chrecv(ch, &val, sizeof(val), -1);
-        chsend(ch, &val, sizeof(val), -1);
-    }
+    int rc = chrecv(hctrl, &val, sizeof(val), -1);
+    errno_assert(rc == 0);
+    assert(val == 333);
+    val = 444;
+    rc = chsend(hctrl, &val, sizeof(val), -1);
+    errno_assert(rc == 0);
 }
 
-int main(int argc, char *argv[]) {
-    if(argc != 2) {
-        printf("usage: chan <millions-of-roundtrips>\n");
-        return 1;
-    }
-    long count = atol(argv[1]) * 1000000;
-
-    int ch[2];
-    chmake(ch);
-
-    int64_t start = now();
-    go(worker(ch[0]));
-
-    int val = 0;
-    long i;
-    for(i = 0; i != count; ++i) {
-        chsend(ch[1], &val, sizeof(val), -1);
-        chrecv(ch[1], &val, sizeof(val), -1);
-    }
-
-    int64_t stop = now();
-    long duration = (long)(stop - start);
-    long ns = (duration * 1000000) / (count * 2);
-
-    printf("done %ldM roundtrips in %f seconds\n",
-        (long)(count / 1000000), ((float)duration) / 1000);
-    printf("duration of passing a single message: %ld ns\n", ns);
-    printf("message passes per second: %fM\n",
-        (float)(1000000000 / ns) / 1000000);
+int main(void) {
+    /* Do a handshake with the child coroutine. */
+    int h = go(worker());
+    int val = 333;
+    int rc = chsend(h, &val, sizeof(val), -1);
+    errno_assert(rc == 0);
+    rc = chrecv(h, &val, sizeof(val), -1);
+    errno_assert(rc == 0);
+    assert(val == 444);
+    rc = hclose(h);
+    errno_assert(rc == 0);
 
     return 0;
 }

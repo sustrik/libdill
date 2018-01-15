@@ -54,28 +54,29 @@ int main() {
     time_assert(diff, 0);
 
     /* msleep-sort */
-    int ch = chmake(sizeof(int));
-    errno_assert(ch >= 0);
+    int ch[2];
+    rc = chmake(ch);
+    errno_assert(rc == 0);
     int hndls[4];
-    hndls[0] = go(delay(30, ch));
+    hndls[0] = go(delay(30, ch[0]));
     errno_assert(hndls[0] >= 0);
-    hndls[1] = go(delay(40, ch));
+    hndls[1] = go(delay(40, ch[0]));
     errno_assert(hndls[1] >= 0);
-    hndls[2] = go(delay(10, ch));
+    hndls[2] = go(delay(10, ch[0]));
     errno_assert(hndls[2] >= 0);
-    hndls[3] = go(delay(20, ch));
+    hndls[3] = go(delay(20, ch[0]));
     errno_assert(hndls[3] >= 0);
     int val;
-    rc = chrecv(ch, &val, sizeof(val), -1);
+    rc = chrecv(ch[1], &val, sizeof(val), -1);
     errno_assert(rc == 0);
     assert(val == 10);
-    rc = chrecv(ch, &val, sizeof(val), -1);
+    rc = chrecv(ch[1], &val, sizeof(val), -1);
     errno_assert(rc == 0);
     assert(val == 20);
-    rc = chrecv(ch, &val, sizeof(val), -1);
+    rc = chrecv(ch[1], &val, sizeof(val), -1);
     errno_assert(rc == 0);
     assert(val == 30);
-    rc = chrecv(ch, &val, sizeof(val), -1);
+    rc = chrecv(ch[1], &val, sizeof(val), -1);
     errno_assert(rc == 0);
     assert(val == 40);
     rc = hclose(hndls[0]);
@@ -86,7 +87,9 @@ int main() {
     errno_assert(rc == 0);
     rc = hclose(hndls[3]);
     errno_assert(rc == 0);
-    rc = hclose(ch);
+    rc = hclose(ch[0]);
+    errno_assert(rc == 0);
+    rc = hclose(ch[1]);
     errno_assert(rc == 0);
 
     /* Test cancelling msleep. */

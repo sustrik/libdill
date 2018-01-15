@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2016 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -29,6 +29,7 @@
 #include <valgrind/valgrind.h>
 #endif
 
+#include "chan.h"
 #include "cr.h"
 #include "pollset.h"
 #include "stack.h"
@@ -185,6 +186,12 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     cr->vfs.query = dill_cr_query;
     cr->vfs.close = dill_cr_close;
     cr->vfs.done = NULL;
+    int ctrl[2];
+    rc = chmake_mem(&cr->ctrl_mem, ctrl);
+    if(dill_slow(rc < 0)) {
+        int err = errno; dill_freestack(cr + 1); errno = err; return -1;}
+    cr->ctrl_local = ctrl [1];
+    cr->ctrl_remote = ctrl[0];
     int hndl = hmake(&cr->vfs);
     if(dill_slow(hndl < 0)) {
         int err = errno; dill_freestack(cr + 1); errno = err; return -1;}
@@ -244,9 +251,11 @@ void dill_epilogue(void) {
 }
 
 static void *dill_cr_query(struct hvfs *vfs, const void *type) {
-    if(dill_slow(type != dill_cr_type)) {errno = ENOTSUP; return NULL;}
     struct dill_cr *cr = dill_cont(vfs, struct dill_cr, vfs);
-    return cr;
+    if(dill_fast(type == dill_halfchan_type)) return &cr->ctrl_mem; 
+    if(dill_fast(type == dill_cr_type)) return cr;
+    errno = ENOTSUP;
+    return NULL;
 }
 
 /* Gets called when coroutine handle is closed. */
@@ -289,6 +298,12 @@ static void dill_cr_close(struct hvfs *vfs) {
 #if defined DILL_VALGRIND
     VALGRIND_STACK_DEREGISTER(cr->sid);
 #endif
+    /* This will unblock any coroutines trying to communicate with this
+       coroutine via the control channel. */
+    int rc = hclose(cr->ctrl_local);
+    dill_assert(rc == 0);
+    rc = hclose(cr->ctrl_remote);
+    dill_assert(rc == 0);
     /* Now that the coroutine is finished, deallocate it. */
     if(!cr->mem) dill_freestack(cr + 1);
 }

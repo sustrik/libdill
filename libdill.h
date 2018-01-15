@@ -223,6 +223,10 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 
 #define go(fn) go_mem(fn, NULL, 0)
 
+DILL_EXPORT int dill_ctrl(void);
+
+#define hctrl dill_ctrl()
+
 DILL_EXPORT int yield(void);
 DILL_EXPORT int msleep(int64_t deadline);
 DILL_EXPORT int fdclean(int fd);
@@ -245,14 +249,14 @@ struct chclause {
 
 struct chmem {
 #if defined(__i386__)
-    char reserved[40];
+    char reserved[72];
 #else
-    char reserved[80];
+    char reserved[144];
 #endif
 };
 
-DILL_EXPORT int chmake(size_t itemsz);
-DILL_EXPORT int chmake_mem(size_t itemsz, struct chmem *mem);
+DILL_EXPORT int chmake(int chv[2]);
+DILL_EXPORT int chmake_mem(struct chmem *mem, int chv[2]);
 DILL_EXPORT int chsend(int ch, const void *val, size_t len, int64_t deadline);
 DILL_EXPORT int chrecv(int ch, void *val, size_t len, int64_t deadline);
 DILL_EXPORT int choose(struct chclause *clauses, int nclauses,

@@ -68,23 +68,25 @@ int main() {
 
     signal(SIGNAL, signal_intr);
 
-    int sendch = chmake(sizeof(char));
-    errno_assert(sendch >= 0);
-    int recvch = chmake(sizeof(char));
-    errno_assert(recvch >= 0);
+    int sendch[2];
+    int rc = chmake(sendch);
+    errno_assert(rc == 0);
+    int recvch[2];
+    rc = chmake(recvch);
+    errno_assert(rc == 0);
 
     int i;
     for(i = 0; i < COUNT; ++i) {
         int hndls[2];
-        hndls[0] = go(sender(sendch));
+        hndls[0] = go(sender(sendch[0]));
         errno_assert(hndls[0] >= 0);
-        hndls[1] = go(receiver(recvch));
+        hndls[1] = go(receiver(recvch[0]));
         errno_assert(hndls[1] >= 0);
         char c = SIGNAL;
-        int rc = chsend(sendch, &c, sizeof(c), -1);
+        int rc = chsend(sendch[1], &c, sizeof(c), -1);
         errno_assert(rc == 0);
         char signo;
-        rc = chrecv(recvch, &signo, sizeof(signo), -1);
+        rc = chrecv(recvch[1], &signo, sizeof(signo), -1);
         errno_assert(rc == 0);
         assert(signo == SIGNAL);
         rc = hclose(hndls[0]);
@@ -93,9 +95,13 @@ int main() {
         errno_assert(rc == 0);
     }
 
-    int rc = hclose(sendch);
+    rc = hclose(sendch[0]);
     errno_assert(rc == 0);
-    rc = hclose(recvch);
+    rc = hclose(sendch[1]);
+    errno_assert(rc == 0);
+    rc = hclose(recvch[0]);
+    errno_assert(rc == 0);
+    rc = hclose(recvch[1]);
     errno_assert(rc == 0);
 
     return 0;
