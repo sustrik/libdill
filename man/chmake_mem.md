@@ -1,3 +1,4 @@
+
 # NAME
 
 chmake_mem - create a channel in user-supplied memory
@@ -8,13 +9,11 @@ chmake_mem - create a channel in user-supplied memory
 
 **struct chmem;**
 
-**int chmake_mem(size_t **_itemsz_**, struct chmem **\*_mem_**);**
+**int chmake_mem(struct chmem **\*_mem_**, int **_chv_**[2]);**
 
 # DESCRIPTION
 
-Creates a channel in user-supplied memory.
-
-_itemsz_ is the byte size of the items to be sent through the channel.
+Creates a bidirectional channel in user-supplied memory.
 
 _mem_ is the memory to store channel data in. The memory must not be deallocated before all handles referring to the channel are closed with the **hclose** function, or the behavior is undefined.
 
@@ -35,22 +34,29 @@ Returns a channel handle. In the case of an error, it returns -1 and sets _errno
 
 ```c
 struct chitem {
-    int h;
+    int h1;
+    int h2;
     struct chmem mem;
 };
 
 struct chitem *alloc_channels(size_t n) {
     struct chitem *a = malloc(sizeof(struct chitem) * n);
     int i;
-    for(i = 0; i != n; ++i)
-        a[i].h = chmake_mem(0, &a[i].mem);
+    for(i = 0; i != n; ++i) {
+        int ch[2];
+        int rc = chmake_mem(&a[i].mem, ch);
+        a[i].h1 = ch[0];
+        a[i].h2 = ch[1];
+    }
     return a;
 }
 
 void free_channels(struct chitem *a, size_t n) {
     int i;
-    for(i = 0; i != n; ++i)
-        hclose(a[i].h);
+    for(i = 0; i != n; ++i) {
+        hclose(a[i].h1);
+        hclose(a[i].h2);
+    }
     free(a);
 }
 ```

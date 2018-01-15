@@ -28,6 +28,7 @@ The function returns 0 on success. On error, it returns -1 and sets _errno_ to o
 * **EBADF**: Invalid handle.
 * **ECANCELED**: Current coroutine is being shut down.
 * **EINVAL**: Invalid parameter.
+* **EMSGSIZE**: The peer sent a message with different size.
 * **ENOTSUP**: Operation not supported. Presumably, the handle isn't a channel.
 * **EPIPE**: Channel has been closed with **hdone**.
 * **ETIMEDOUT**: Deadline expired while waiting on a message.

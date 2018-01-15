@@ -6,11 +6,11 @@ chmake - create a channel
 
 **#include &lt;libdill.h>**
 
-**int chmake(size_t **_itemsz_**);**
+**int chmake(int **_chv_**[2]);**
 
 # DESCRIPTION
 
-Creates a channel. _itemsz_ is the byte size of the items to be sent through the channel.
+Creates a bidirectional channel. In case of success handles to the both sides of the channel will be returned in _chv_ parameter. 
 
 A channel is a synchronization primitive, not a container. It doesn't store any items.
 
@@ -26,8 +26,9 @@ Returns a channel handle. In the case of an error, it returns -1 and sets _errno
 # EXAMPLE
 
 ```c
-int ch = chmake(sizeof(int));
-if(ch == -1) {
+int ch[2];
+int rc = chmake(ch);
+if(rc == -1) {
     perror("Cannot create channel");
     exit(1);
 }
