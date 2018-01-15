@@ -112,10 +112,10 @@ rc = msend(s, outbuf, rc, -<span class="dv">1</span>);
 <li>At yet another terminal, open a new telnet session.<br /></li>
 <li>Observe that the second session hangs without even asking you for your name.</li>
 </ol>
-<p>The reason for this behavior is that the program doesn't even start accepting new connections until the entire dialog with the client has finished. What we want instead is to run any number of dialogs with clients in parallel. And that is where coroutines kick in.</p>
+<p>The reason for this behavior is that the program doesn't even start accepting new connections until the entire dialog with the client has finished. What we want instead is to run any number of dialogues with clients in parallel. And that is where coroutines kick in.</p>
 <p>Coroutines are defined using the <code>coroutine</code> keyword and launched with the <code>go()</code> construct.</p>
-<p>In our case, we can move the code performing the dialog with the client into a separate function and launch it as a coroutine:</p>
-<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> dialog(<span class="dt">int</span> s) {
+<p>In our case, we can move the code performing the dialogue with the client into a separate function and launch it as a coroutine:</p>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> dialogue(<span class="dt">int</span> s) {
     <span class="dt">int</span> rc = msend(s, <span class="st">&quot;What&#39;s your name?&quot;</span>, <span class="dv">17</span>, -<span class="dv">1</span>);
 
     ...
@@ -141,8 +141,8 @@ cleanup:
 <p>Let's compile it and try the initial experiment once again. As can be seen, one client now cannot block another one. Excellent. Let's move on.</p>
 <p>NOTE: Please note that for the sake of simplicity the program above doesn't track the running coroutines and close them when they are finished. This results in memory leaks. To understand how should this kind of thing be done properly check the article about <a href="structured-concurrency.html">structured concurrency</a>.</p>
 <h2 id="step-4-deadlines">Step 4: Deadlines</h2>
-<p>File descriptors can be a scarce resource. If a client connects to the greetserver and lets the dialog hang without entering a name, one file descriptor on the server side is, for all intents and purposes, wasted.</p>
-<p>To deal with the problem, we are going to timeout the whole client/server dialog. If it takes more than <em>10</em> seconds, the server will kill the connection at once.</p>
+<p>File descriptors can be a scarce resource. If a client connects to the greetserver and lets the dialogue hang without entering a name, one file descriptor on the server side is, for all intents and purposes, wasted.</p>
+<p>To deal with the problem, we are going to timeout the whole client/server dialogue. If it takes more than <em>10</em> seconds, the server will kill the connection at once.</p>
 <p>One thing to note is that libdill uses deadlines rather than the more conventional timeouts. In other words, you specify the time instant by which you want the operation to finish rather than the maximum time it should take to run it. To construct deadlines easily, libdill provides the <code>now()</code> function. The deadline is expressed in milliseconds, which means you can create a deadline <em>10</em> seconds in the future as follows:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int64_t</span> deadline = now() + <span class="dv">10000</span>;</code></pre>
 <p>Furthermore, you have to modify all potentially blocking function calls in the program to take the deadline parameter. In our case:</p>
@@ -157,14 +157,14 @@ ssize_t sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), deadline);
 <p>Suppose we want the greetserver to keep statistics: The overall number of connections made, the number of those that are active at the moment and the number of those that have failed.</p>
 <p>In a classic, thread-based application, we would keep the statistics in global variables and synchronize access to them using mutexes.</p>
 <p>With libdill, however, we aim at &quot;concurrency by message passing&quot;, and so we are going to implement the feature in a different way.</p>
-<p>We will create a new coroutine that will keep track of the statistics and a channel that will be used by the <code>dialog()</code> coroutines to communicate with it:</p>
+<p>We will create a new coroutine that will keep track of the statistics and a channel that will be used by the <code>dialogue()</code> coroutines to communicate with it:</p>
 <p><img src="tutorial1.png"/></p>
 <p>First, we define the values that will be passed through the channel:</p>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#define CONN_ESTABLISHED 1</span>
 <span class="ot">#define CONN_SUCCEEDED 2</span>
 <span class="ot">#define CONN_FAILED 3</span></code></pre>
-<p>Now we can create the channel and pass it to the <code>dialog()</code> coroutines:</p>
-<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> dialog(<span class="dt">int</span> s, <span class="dt">int</span> ch) {
+<p>Now we can create the channel and pass it to the <code>dialogue()</code> coroutines:</p>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> dialogue(<span class="dt">int</span> s, <span class="dt">int</span> ch) {
     ...
 }
 
@@ -172,22 +172,22 @@ ssize_t sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), deadline);
 
     ...
 
-    <span class="dt">int</span> ch = chmake(<span class="kw">sizeof</span>(<span class="dt">int</span>));
-    assert(ch &gt;= <span class="dv">0</span>);
+    <span class="dt">int</span> ch[<span class="dv">2</span>];
+    rc = chmake(ch);
+    assert(rc == <span class="dv">0</span>);
 
     <span class="kw">while</span>(<span class="dv">1</span>) {
         <span class="dt">int</span> s = tcp_accept(ls, NULL, -<span class="dv">1</span>);
         assert(s &gt;= <span class="dv">0</span>);
         s = crlf_attach(s);
         assert(s &gt;= <span class="dv">0</span>);
-        <span class="dt">int</span> cr = go(dialog(s, ch));
+        <span class="dt">int</span> cr = go(dialogue(s, ch[<span class="dv">1</span>]));
         assert(cr &gt;= <span class="dv">0</span>);
     }
 }</code></pre>
-<p>The argument to <code>chmake()</code> is the type of values that will be passed through the channel. In our case, the type is simply an integer.</p>
 <p>Libdill channels are &quot;unbuffered&quot;. In other words, the sending coroutine will block each time until the receiving coroutine can process the message.</p>
 <p>This kind of behavior could, in theory, become a bottleneck, however, in our case we assume that the <code>statistics()</code> coroutine will be extremely fast and not turn into one.</p>
-<p>At this point we can implement the <code>statistics()</code> coroutine, which will run forever in a busy loop and collect statistics from all the <code>dialog()</code> coroutines. Each time the statistics change, it will print them to <code>stdout</code>:</p>
+<p>At this point we can implement the <code>statistics()</code> coroutine, which will run forever in a busy loop and collect statistics from all the <code>dialogue()</code> coroutines. Each time the statistics change, it will print them to <code>stdout</code>:</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> statistics(<span class="dt">int</span> ch) {
     <span class="dt">int</span> active = <span class="dv">0</span>;
     <span class="dt">int</span> succeeded = <span class="dv">0</span>;
@@ -221,17 +221,18 @@ ssize_t sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), deadline);
 
     ...
 
-    <span class="dt">int</span> ch = chmake(<span class="kw">sizeof</span>(<span class="dt">int</span>));
-    assert(ch &gt;= <span class="dv">0</span>);
-    <span class="dt">int</span> cr = go(statistics(ch));
+    <span class="dt">int</span> ch[<span class="dv">2</span>];
+    rc = chmake(ch);
+    assert(rc == <span class="dv">0</span>);
+    <span class="dt">int</span> cr = go(statistics(ch[<span class="dv">0</span>]));
     assert(cr &gt;= <span class="dv">0</span>);
 
     ...
 
 }</code></pre>
 <p>The <code>chrecv()</code> function will retrieve one message from the channel or block if there is none available. At the moment we are not sending anything to it, so the coroutine will simply block forever.</p>
-<p>To fix that, let's modify the <code>dialog()</code> coroutine to send some messages to the channel. The <code>chsend()</code> function will be used to do that:</p>
-<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> dialog(<span class="dt">int</span> s, <span class="dt">int</span> ch) {
+<p>To fix that, let's modify the <code>dialogue()</code> coroutine to send some messages to the channel. The <code>chsend()</code> function will be used to do that:</p>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> dialogue(<span class="dt">int</span> s, <span class="dt">int</span> ch) {
     <span class="dt">int</span> op = CONN_ESTABLISHED;
     <span class="dt">int</span> rc = chsend(ch, &amp;op, <span class="kw">sizeof</span>(op), -<span class="dv">1</span>);
     assert(rc == <span class="dv">0</span>);

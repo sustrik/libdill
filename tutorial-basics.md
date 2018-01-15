@@ -171,14 +171,14 @@ At this point, the client cannot crash the server, but it can block it. Do the f
 3. At yet another terminal, open a new telnet session.
 4. Observe that the second session hangs without even asking you for your name.
 
-The reason for this behavior is that the program doesn't even start accepting new connections until the entire dialog with the client has finished. What we want instead is to run any number of dialogs with clients in parallel. And that is where coroutines kick in.
+The reason for this behavior is that the program doesn't even start accepting new connections until the entire dialog with the client has finished. What we want instead is to run any number of dialogues with clients in parallel. And that is where coroutines kick in.
 
 Coroutines are defined using the `coroutine` keyword and launched with the `go()` construct.
 
-In our case, we can move the code performing the dialog with the client into a separate function and launch it as a coroutine:
+In our case, we can move the code performing the dialogue with the client into a separate function and launch it as a coroutine:
 
 ```c
-coroutine void dialog(int s) {
+coroutine void dialogue(int s) {
     int rc = msend(s, "What's your name?", 17, -1);
 
     ...
@@ -209,9 +209,9 @@ NOTE: Please note that for the sake of simplicity the program above doesn't trac
 
 ## Step 4: Deadlines
 
-File descriptors can be a scarce resource. If a client connects to the greetserver and lets the dialog hang without entering a name, one file descriptor on the server side is, for all intents and purposes, wasted.
+File descriptors can be a scarce resource. If a client connects to the greetserver and lets the dialogue hang without entering a name, one file descriptor on the server side is, for all intents and purposes, wasted.
 
-To deal with the problem, we are going to timeout the whole client/server dialog. If it takes more than *10* seconds, the server will kill the connection at once.
+To deal with the problem, we are going to timeout the whole client/server dialogue. If it takes more than *10* seconds, the server will kill the connection at once.
 
 One thing to note is that libdill uses deadlines rather than the more conventional timeouts. In other words, you specify the time instant by which you want the operation to finish rather than the maximum time it should take to run it. To construct deadlines easily, libdill provides the `now()` function. The deadline is expressed in milliseconds, which means you can create a deadline *10* seconds in the future as follows:
 
@@ -240,7 +240,7 @@ In a classic, thread-based application, we would keep the statistics in global v
 
 With libdill, however, we aim at "concurrency by message passing", and so we are going to implement the feature in a different way.
 
-We will create a new coroutine that will keep track of the statistics and a channel that will be used by the `dialog()` coroutines to communicate with it:
+We will create a new coroutine that will keep track of the statistics and a channel that will be used by the `dialogue()` coroutines to communicate with it:
 
 <img src="tutorial1.png"/>
 
@@ -252,11 +252,11 @@ First, we define the values that will be passed through the channel:
 #define CONN_FAILED 3
 ```
 
-Now we can create the channel and pass it to the `dialog()` coroutines:
+Now we can create the channel and pass it to the `dialogue()` coroutines:
 
 
 ```c
-coroutine void dialog(int s, int ch) {
+coroutine void dialogue(int s, int ch) {
     ...
 }
 
@@ -264,27 +264,26 @@ int main(int argc, char *argv[]) {
 
     ...
 
-    int ch = chmake(sizeof(int));
-    assert(ch >= 0);
+    int ch[2];
+    rc = chmake(ch);
+    assert(rc == 0);
 
     while(1) {
         int s = tcp_accept(ls, NULL, -1);
         assert(s >= 0);
         s = crlf_attach(s);
         assert(s >= 0);
-        int cr = go(dialog(s, ch));
+        int cr = go(dialogue(s, ch[1]));
         assert(cr >= 0);
     }
 }
 ```
 
-The argument to `chmake()` is the type of values that will be passed through the channel. In our case, the type is simply an integer.
-
 Libdill channels are "unbuffered". In other words, the sending coroutine will block each time until the receiving coroutine can process the message.
 
 This kind of behavior could, in theory, become a bottleneck, however, in our case we assume that the `statistics()` coroutine will be extremely fast and not turn into one.
 
-At this point we can implement the `statistics()` coroutine, which will run forever in a busy loop and collect statistics from all the `dialog()` coroutines.  Each time the statistics change, it will print them to `stdout`:
+At this point we can implement the `statistics()` coroutine, which will run forever in a busy loop and collect statistics from all the `dialogue()` coroutines.  Each time the statistics change, it will print them to `stdout`:
 
 ```c
 coroutine void statistics(int ch) {
@@ -320,9 +319,10 @@ int main(int argc, char *argv[]) {
 
     ...
 
-    int ch = chmake(sizeof(int));
-    assert(ch >= 0);
-    int cr = go(statistics(ch));
+    int ch[2];
+    rc = chmake(ch);
+    assert(rc == 0);
+    int cr = go(statistics(ch[0]));
     assert(cr >= 0);
 
     ...
@@ -332,10 +332,10 @@ int main(int argc, char *argv[]) {
 
 The `chrecv()` function will retrieve one message from the channel or block if there is none available. At the moment we are not sending anything to it, so the coroutine will simply block forever.
 
-To fix that, let's modify the `dialog()` coroutine to send some messages to the channel. The `chsend()` function will be used to do that:
+To fix that, let's modify the `dialogue()` coroutine to send some messages to the channel. The `chsend()` function will be used to do that:
 
 ```c
-coroutine void dialog(int s, int ch) {
+coroutine void dialogue(int s, int ch) {
     int op = CONN_ESTABLISHED;
     int rc = chsend(ch, &op, sizeof(op), -1);
     assert(rc == 0);
