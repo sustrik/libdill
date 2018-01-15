@@ -32,6 +32,7 @@ dillinclude_HEADERS = libdill.h libdillimpl.h
 lib_LTLIBRARIES = libdill.la
 
 libdill_la_SOURCES = \
+    chan.h \
     chan.c \
     cr.h \
     cr.c \
@@ -106,7 +107,8 @@ check_PROGRAMS = \
     tests/sleep \
     tests/signals \
     tests/overload \
-    tests/rbtree
+    tests/rbtree \
+    tests/ctrl
 
 if DILL_THREADS
 check_PROGRAMS += \

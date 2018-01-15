@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2016 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -27,7 +27,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "chan.h"
 #include "cr.h"
+#include "ctx.h"
 #include "libdillimpl.h"
 #include "list.h"
 #include "utils.h"
@@ -66,7 +68,7 @@ DILL_CT_ASSERT(sizeof(struct chmem) >= sizeof(struct dill_halfchan) * 2);
 /******************************************************************************/
 
 static const int dill_halfchan_type_placeholder = 0;
-static const void *dill_halfchan_type = &dill_halfchan_type_placeholder;
+const void *dill_halfchan_type = &dill_halfchan_type_placeholder;
 static void *dill_halfchan_query(struct hvfs *vfs, const void *type);
 static void dill_halfchan_close(struct hvfs *vfs);
 static int dill_halfchan_done(struct hvfs *vfs, int64_t deadline);
@@ -344,5 +346,13 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
     if(dill_slow(id < 0)) return -1;
     if(dill_slow(id == nclauses)) {errno = ETIMEDOUT; return -1;}
     return id;
+}
+
+/******************************************************************************/
+/*  Control channel.                                                          */
+/******************************************************************************/
+
+int dill_ctrl(void) {
+  return dill_getctx->cr.r->ctrl_local;
 }
 
