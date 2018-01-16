@@ -111,8 +111,6 @@ int main() {
     assert(ch1[1] >= 0);
     int hndl1 = go(sender(ch1[0], 1, 333));
     errno_assert(hndl1 >= 0);
-    rc = hdone(hndl1, -1);
-    errno_assert(rc == -1 && errno == ENOTSUP);
     rc = chrecv(ch1[1], &val, sizeof(val), -1);
     errno_assert(rc == 0);
     assert(val == 333);

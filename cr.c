@@ -143,6 +143,7 @@ static const int dill_cr_type_placeholder = 0;
 static const void *dill_cr_type = &dill_cr_type_placeholder;
 static void *dill_cr_query(struct hvfs *vfs, const void *type);
 static void dill_cr_close(struct hvfs *vfs);
+static int dill_cr_done(struct hvfs *vfs, int64_t deadline);
 
 /******************************************************************************/
 /*  Coroutine creation and termination                                        */
@@ -185,7 +186,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     --cr;
     cr->vfs.query = dill_cr_query;
     cr->vfs.close = dill_cr_close;
-    cr->vfs.done = NULL;
+    cr->vfs.done = dill_cr_done;
     int ctrl[2];
     rc = chmake_mem(&cr->ctrl_mem, ctrl);
     if(dill_slow(rc < 0)) {
@@ -306,6 +307,11 @@ static void dill_cr_close(struct hvfs *vfs) {
     dill_assert(rc == 0);
     /* Now that the coroutine is finished, deallocate it. */
     if(!cr->mem) dill_freestack(cr + 1);
+}
+
+static int dill_cr_done(struct hvfs *vfs, int64_t deadline) {
+    struct dill_cr *cr = dill_cont(vfs, struct dill_cr, vfs);
+    return hdone(cr->ctrl_remote, deadline);
 }
 
 /******************************************************************************/

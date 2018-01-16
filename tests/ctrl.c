@@ -29,7 +29,7 @@
 #include "assert.h"
 #include "../libdill.h"
 
-coroutine void worker(void) {
+coroutine void worker1(void) {
     int val;
     int rc = chrecv(hctrl, &val, sizeof(val), -1);
     errno_assert(rc == 0);
@@ -39,16 +39,33 @@ coroutine void worker(void) {
     errno_assert(rc == 0);
 }
 
+coroutine void worker2(void) {
+    int val;
+    int rc = chrecv(hctrl, &val, sizeof(val), -1);
+    errno_assert(rc == -1 && errno == EPIPE);
+    rc = hdone(hctrl, -1);
+    errno_assert(rc == 0);
+}
+
 int main(void) {
     /* Do a handshake with the child coroutine. */
-    int h = go(worker());
+    int hndl1 = go(worker1());
     int val = 333;
-    int rc = chsend(h, &val, sizeof(val), -1);
+    int rc = chsend(hndl1, &val, sizeof(val), -1);
     errno_assert(rc == 0);
-    rc = chrecv(h, &val, sizeof(val), -1);
+    rc = chrecv(hndl1, &val, sizeof(val), -1);
     errno_assert(rc == 0);
     assert(val == 444);
-    rc = hclose(h);
+    rc = hclose(hndl1);
+    errno_assert(rc == 0);
+
+    /* Do a handshake doing hdone on the control channel. */
+    int hndl2 = go(worker2());
+    rc = hdone(hndl2, -1);
+    errno_assert(rc == 0);
+    rc = chrecv(hndl2, &val, sizeof(val), -1);
+    errno_assert(rc == -1 && errno == EPIPE);
+    rc = hclose(hndl2);
     errno_assert(rc == 0);
 
     return 0;
