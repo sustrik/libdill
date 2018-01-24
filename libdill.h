@@ -40,6 +40,7 @@
 
 #else
 
+#include <setjmp.h>
 #include <stdint.h>
 
 #endif
