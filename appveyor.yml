@@ -1,7 +1,7 @@
 version: 1.0.{build}
 
 before_build:
-  - cmake.exe
+  - cmake.exe %APPVEYOR_BUILD_FOLDER%
 
 build_script:
   - cmake --build .
