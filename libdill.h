@@ -71,7 +71,7 @@
 #if DILL_NO_EXPORTS
 #  define DILL_EXPORT
 #else
-#  if defined __MSC_VER
+#  if defined _MSC_VER
 #    define DILL_EXPORT __declspec(dllexport)
 #  else
 #    define DILL_EXPORT __attribute__ ((visibility("default")))
