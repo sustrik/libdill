@@ -1,0 +1,6 @@
+
+before_build:
+  - cmake.exe
+
+build_script:
+  - cmake --build .
