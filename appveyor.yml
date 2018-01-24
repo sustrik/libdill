@@ -1,3 +1,4 @@
+version: 1.0.{build}
 
 before_build:
   - cmake.exe
