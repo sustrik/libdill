@@ -65,13 +65,17 @@
 /******************************************************************************/
 
 #if !defined __GNUC__ && !defined __clang__ && !defined _MSC_VER
-#error "Unsupported compiler!"
+#  error "Unsupported compiler!"
 #endif
 
 #if DILL_NO_EXPORTS
-#define DILL_EXPORT
+#  define DILL_EXPORT
 #else
-#define DILL_EXPORT __attribute__ ((visibility("default")))
+#  if defined __MSC_VER
+#    define DILL_EXPORT __declspec(dllexport)
+#  else
+#    define DILL_EXPORT __attribute__ ((visibility("default")))
+#  endif
 #endif
 
 /* Old versions of GCC don't support visibility attribute. */
