@@ -25,6 +25,8 @@
 #ifndef LIBDILL_H_INCLUDED
 #define LIBDILL_H_INCLUDED
 
+#if !defined _MSC_VER
+
 #include <errno.h>
 #include <setjmp.h>
 #include <stddef.h>
@@ -34,6 +36,10 @@
 
 #if defined __linux__
 #include <alloca.h>
+#endif
+
+#else
+
 #endif
 
 /******************************************************************************/
