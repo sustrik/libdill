@@ -104,13 +104,19 @@ DILL_EXPORT int hdone(int h, int64_t deadline);
 /*  Coroutines                                                                */
 /******************************************************************************/
 
-#define coroutine __attribute__((noinline))
+#if defined _MSC_VER
+#  define DILL_NOINLINE __declspec(noinline)
+#else
+#  define DILL_NOINLINE __attribute__((noinline))
+#endif
+
+#define coroutine DILL_NOINLINE
 
 DILL_EXPORT extern volatile void *dill_unoptimisable;
 
-DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
+DILL_EXPORT DILL_NOINLINE int dill_prologue(sigjmp_buf **ctx,
     void **ptr, size_t len, const char *file, int line);
-DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
+DILL_EXPORT DILL_NOINLINE void dill_epilogue(void);
 
 /* The following macros use alloca(sizeof(size_t)) because clang
    doesn't support alloca with size zero. */
