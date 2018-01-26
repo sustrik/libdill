@@ -47,9 +47,15 @@ coroutine void worker2(void) {
     errno_assert(rc == 0);
 }
 
+coroutine void worker3(void) {
+    int rc = msleep(now() + 10);
+    errno_assert(rc == 0);
+}
+
 int main(void) {
     /* Do a handshake with the child coroutine. */
     int hndl1 = go(worker1());
+    errno_assert(hndl1 >= 0);
     int val = 333;
     int rc = chsend(hndl1, &val, sizeof(val), -1);
     errno_assert(rc == 0);
@@ -61,12 +67,28 @@ int main(void) {
 
     /* Do a handshake doing hdone on the control channel. */
     int hndl2 = go(worker2());
+    errno_assert(hndl2 >= 0);
     rc = hdone(hndl2, -1);
     errno_assert(rc == 0);
     rc = chrecv(hndl2, &val, sizeof(val), -1);
     errno_assert(rc == -1 && errno == EPIPE);
     rc = hclose(hndl2);
     errno_assert(rc == 0);
+
+    /* Check whether control channel is done after the coroutine finishes. */
+    int hndl3 = go(worker3());
+    errno_assert(hndl3 >= 0);
+    rc = chrecv(hndl3, &val, sizeof(val), -1);
+    assert(rc == -1 && errno == EPIPE);    
+    rc = hclose(hndl3);
+    errno_assert(rc == 0);
+    int hndl4 = go(worker3());
+    errno_assert(hndl4 >= 0);
+    rc = chsend(hndl4, &val, sizeof(val), -1);
+    assert(rc == -1 && errno == EPIPE);    
+    rc = hclose(hndl4);
+    errno_assert(rc == 0);
+
 
     return 0;
 }

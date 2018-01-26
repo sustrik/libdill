@@ -241,6 +241,11 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
 /* The final part of go(). Gets called when the coroutine is finished. */
 void dill_epilogue(void) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
+    /* Mark the control channel as done. */
+    int rc = hdone(ctx->r->ctrl_local, -1);
+    dill_assert(rc == 0 || errno == EPIPE);   
+    rc = hdone(ctx->r->ctrl_remote, -1);
+    dill_assert(rc == 0 || errno == EPIPE); 
     /* Mark the coroutine as finished. */
     ctx->r->done = 1;
     /* If there's a coroutine waiting for us to finish, unblock it now. */
