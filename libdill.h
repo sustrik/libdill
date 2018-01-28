@@ -113,6 +113,10 @@ DILL_EXPORT int hdone(int h, int64_t deadline);
 
 #define coroutine DILL_NOINLINE
 
+#if defined _MSC_VER
+#  define sigjmp_buf jmp_buf
+#endif
+
 DILL_EXPORT extern volatile void *dill_unoptimisable;
 
 DILL_EXPORT DILL_NOINLINE int dill_prologue(sigjmp_buf **ctx,
