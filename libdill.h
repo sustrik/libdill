@@ -43,6 +43,8 @@
 #include <setjmp.h>
 #include <stdint.h>
 
+#define ssize_t int
+
 #endif
 
 /******************************************************************************/
