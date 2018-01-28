@@ -32,7 +32,7 @@
 #elif defined DILL_POLL
 #include "poll.c.inc"
 /* Defaults. */
-#elif defined HAVE_EPOLL
+#elif defined HAVE_EPOLL || defined _MSC_VER
 #include "epoll.c.inc"
 #elif defined HAVE_KQUEUE
 #include "kqueue.c.inc"

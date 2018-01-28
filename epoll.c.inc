@@ -25,8 +25,13 @@
 #include <errno.h>
 #include <stdint.h>
 #include <string.h>
-#include <sys/epoll.h>
 #include <unistd.h>
+
+#if defined _MSC_VER
+#include "wepoll/wepoll.c"
+#else
+#include <sys/epoll.h>
+#endif
 
 #include "cr.h"
 #include "list.h"
