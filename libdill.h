@@ -214,7 +214,7 @@ DILL_EXPORT DILL_NOINLINE void dill_epilogue(void);
 
 /* MSVC compiler. */
 #elif defined(_MSC_VER)
-#define dill_setjmp(ctx) setjmp(ctx, 0)
+#define dill_setjmp(ctx) setjmp(ctx)
 #define dill_longjmp(ctx) longjmp(ctx, 1)
 #define DILL_SETSP(x) \
     dill_unoptimisable = _alloca((char*)_alloca(sizeof(size_t)) - (char*)(x));
