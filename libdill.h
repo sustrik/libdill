@@ -213,7 +213,7 @@ DILL_EXPORT DILL_NOINLINE void dill_epilogue(void);
     asm volatile("leal (%%eax), %%esp"::"eax"(x));
 
 /* MSVC compiler. */
-#else if defined(_MSC_VER)
+#elif defined(_MSC_VER)
 #define dill_setjmp(ctx) setjmp(ctx, 0)
 #define dill_longjmp(ctx) longjmp(ctx, 1)
 #define DILL_SETSP(x) \
