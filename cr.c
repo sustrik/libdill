@@ -25,6 +25,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#if defined _MSC_VER
+#define sigsetjmp setjmp
+#define siglongjmp longjmp
+#endif
+
 #if defined DILL_VALGRIND
 #include <valgrind/valgrind.h>
 #endif
