@@ -26,8 +26,13 @@
 #define DILL_FD_INCLUDED
 
 #include <stdint.h>
+
+#if defined(_MSC_VER)
+#include <Winsock2.h>
+#else
 #include <sys/socket.h>
 #include <sys/types.h>
+#endif
 
 #include "libdill.h"
 
