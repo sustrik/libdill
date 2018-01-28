@@ -25,7 +25,10 @@
 #include <fcntl.h>
 #include <libdill.h>
 #include <string.h>
+
+#if !defined(_MSC_VER)
 #include <unistd.h>
+#endif
 
 #include "fd.h"
 #include "iol.h"

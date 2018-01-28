@@ -25,11 +25,11 @@
 #include <errno.h>
 #include <stdint.h>
 #include <string.h>
-#include <unistd.h>
 
 #if defined _MSC_VER
 #include "wepoll/wepoll.c"
 #else
+#include <unistd.h>
 #include <sys/epoll.h>
 #endif
 

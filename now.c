@@ -21,8 +21,11 @@
 */
 
 #include <stdint.h>
-#include <sys/time.h>
 #include <time.h>
+
+#if !defined(_MSC_VER)
+#include <sys/time.h>
+#endif
 
 #if defined(__x86_64__) || defined(__i386__)
 #include <x86intrin.h>

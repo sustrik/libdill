@@ -25,7 +25,9 @@
 #ifndef DILL_IOL_INCLUDED
 #define DILL_IOL_INCLUDED
 
+#if !defined(_MSC_VER)
 #include <sys/uio.h>
+#endif
 
 #include "libdill.h"
 
