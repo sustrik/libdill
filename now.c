@@ -28,6 +28,10 @@
 #include <x86intrin.h>
 #endif
 
+#if defined(_M_IX86) || defined(_M_X64)
+#include <intrin.h>
+#endif
+
 #include "ctx.h"
 
 int64_t mnow(void) {
@@ -82,7 +86,8 @@ int64_t now_(void) {
 }
 
 int64_t now(void) {
-#if defined(__x86_64__) || defined(__i386__)
+#if defined(__x86_64__) || defined(__i386__) ||\
+      defined(_M_IX86) || defined(_M_X64)
     /* On x86 platforms, rdtsc instruction can be used to quickly check time
        in form of CPU cycles. If less than 1M cycles have elapsed since the
        last now_() call we assume it's still the same millisecond and return
