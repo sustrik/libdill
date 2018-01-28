@@ -89,8 +89,9 @@ struct dill_cr {
 /* Clang assumes that the client stack is aligned to 16-bytes on x86-64
    architectures. To achieve this, we align this structure (with the added
    benefit of a minor optimization). */
-__attribute__((aligned(16)));
+__attribute__((aligned(16)))
 #endif
+;
 
 struct dill_ctx_cr {
     /* Currently running coroutine. */
