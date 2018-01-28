@@ -108,7 +108,8 @@ check_PROGRAMS = \
     tests/signals \
     tests/overload \
     tests/rbtree \
-    tests/ctrl
+    tests/ctrl \
+    tests/hset
 
 if DILL_THREADS
 check_PROGRAMS += \

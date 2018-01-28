@@ -92,12 +92,14 @@ DILL_EXPORT int hdone(int h, int64_t deadline);
 /*  Coroutines                                                                */
 /******************************************************************************/
 
+DILL_EXPORT int hset(void);
+
 #define coroutine __attribute__((noinline))
 
 DILL_EXPORT extern volatile void *dill_unoptimisable;
 
 DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
-    void **ptr, size_t len, const char *file, int line);
+    void **ptr, size_t len, int set, const char *file, int line);
 DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 
 /* The following macros use alloca(sizeof(size_t)) because clang
@@ -205,12 +207,12 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
    outer scope and a local variable in this macro causes the variable to
    get weird values. To avoid that, we use fancy names (dill_*__). */ 
 
-#define go_mem(fn, ptr, len) \
+#define go_(fn, ptr, len, set) \
     ({\
         sigjmp_buf *dill_ctx__;\
         void *dill_stk__ = (ptr);\
         int dill_handle__ = dill_prologue(&dill_ctx__, &dill_stk__, (len),\
-            __FILE__, __LINE__);\
+            (set), __FILE__, __LINE__);\
         if(dill_handle__ >= 0) {\
             if(!dill_setjmp(*dill_ctx__)) {\
                 DILL_SETSP(dill_stk__);\
@@ -221,7 +223,9 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
         dill_handle__;\
     })
 
-#define go(fn) go_mem(fn, NULL, 0)
+#define go(fn) go_(fn, NULL, 0, -1)
+#define go_mem(fn, ptr, len) go_(fn, ptr, len, -1)
+#define go_set(set, fn) go_(fn, NULL, 0, set)
 
 DILL_EXPORT int dill_ctrl(void);
 

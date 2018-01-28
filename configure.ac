@@ -27,7 +27,7 @@
 AC_PREREQ([2.53])
 
 AC_INIT([libdill], [m4_esyscmd([./package_version.sh])],
-   [libmill@freelists.org], [libdill], [http://libdill.org/])
+   [sustrik@250bpm.com], [libdill], [http://libdill.org/])
 AC_CONFIG_SRCDIR([libdill.pc.in])
 AM_INIT_AUTOMAKE([1.6 foreign subdir-objects tar-ustar])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
