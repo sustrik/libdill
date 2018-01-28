@@ -330,7 +330,12 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
     /* There are no clauses immediately available. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
+#if defined _MSC_VER
+    struct dill_chclause *chcls = _alloca(nclauses *
+        sizeof(struct dill_chclause));
+#else
     struct dill_chclause chcls[nclauses];
+#endif
     for(i = 0; i != nclauses; ++i) {
         struct dill_halfchan *ch = hquery(clauses[i].ch, dill_halfchan_type);
         dill_assert(ch);
