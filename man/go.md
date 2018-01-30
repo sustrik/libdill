@@ -27,8 +27,6 @@ int a = foo();
 go(bar(a));
 ```
 
-Every coroutine comes with a built-in control channel accessible via _hctrl_ handle.
-
 # RETURN VALUE
 
 Returns a coroutine handle. In the case of an error, it returns -1 and sets _errno_ to one of the values below.

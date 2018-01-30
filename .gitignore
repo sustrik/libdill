@@ -50,7 +50,6 @@ tests/iol
 tests/crlf
 tests/pfx
 tests/udp
-tests/ctrl
 tests/bundle
 perf/.dirstamp
 perf/chan

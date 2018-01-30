@@ -71,12 +71,6 @@ struct dill_cr {
     /* When the coroutine handle is being closed, this points to the
        coroutine that is doing the hclose() call. */
     struct dill_cr *closer;
-    /* Control channel. Local handle is the one accessed via hctrl, remote
-       handle is used internally only to forward chsend/chrecv calls done on
-       the coroutine. */
-    int ctrl_local;
-    int ctrl_remote;
-    struct chmem ctrl_mem;
 #if defined DILL_VALGRIND
     /* Valgrind stack identifier. This way, valgrind knows which areas of
        memory are used as stacks, and so it doesn't produce spurious warnings.

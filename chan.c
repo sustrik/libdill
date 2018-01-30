@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "chan.h"
 #include "cr.h"
 #include "ctx.h"
 #include "libdillimpl.h"
@@ -346,13 +345,5 @@ int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
     if(dill_slow(id < 0)) return -1;
     if(dill_slow(id == nclauses)) {errno = ETIMEDOUT; return -1;}
     return id;
-}
-
-/******************************************************************************/
-/*  Control channel.                                                          */
-/******************************************************************************/
-
-int dill_ctrl(void) {
-  return dill_getctx->cr.r->ctrl_local;
 }
 

@@ -32,7 +32,6 @@ man3_MANS = \
     go.3 \
     go_mem.3 \
     hclose.3 \
-    hctrl.3 \
     hdone.3 \
     hdup.3 \
     hmake.3 \

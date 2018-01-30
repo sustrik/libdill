@@ -229,10 +229,6 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 #define bundle_go(bndl, fn) go_(fn, NULL, 0, bndl)
 #define bundle_go_mem(bndl, fn, ptr, len) go_(fn, ptr, len, bndl)
 
-DILL_EXPORT int dill_ctrl(void);
-
-#define hctrl dill_ctrl()
-
 DILL_EXPORT int yield(void);
 DILL_EXPORT int msleep(int64_t deadline);
 DILL_EXPORT int fdclean(int fd);
