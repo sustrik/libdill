@@ -38,8 +38,8 @@
 
 #if defined DILL_CENSUS
 
-/* When taking the stack size census, we will keep the maximum stack size in a list
-   indexed by the go() call, i.e., by file name and line number. */
+/* When taking the stack size census, we will keep the maximum stack size
+   in a list indexed by the go() call, i.e., by file name and line number. */
 struct dill_census_item {
     struct dill_slist crs;
     const char *file;
@@ -63,32 +63,32 @@ static void dill_cr_close(struct hvfs *vfs);
 static int dill_cr_done(struct hvfs *vfs, int64_t deadline);
 
 /******************************************************************************/
-/*  Hset.                                                                     */
+/*  Bundle.                                                                   */
 /******************************************************************************/
 
-static const int dill_hset_type_placeholder = 0;
-const void *dill_hset_type = &dill_hset_type_placeholder;
-static void *dill_hset_query(struct hvfs *vfs, const void *type);
-static void dill_hset_close(struct hvfs *vfs);
-static int dill_hset_done(struct hvfs *vfs, int64_t deadline);
+static const int dill_bundle_type_placeholder = 0;
+const void *dill_bundle_type = &dill_bundle_type_placeholder;
+static void *dill_bundle_query(struct hvfs *vfs, const void *type);
+static void dill_bundle_close(struct hvfs *vfs);
+static int dill_bundle_done(struct hvfs *vfs, int64_t deadline);
 
-struct dill_hset {
+struct dill_bundle {
     /* Table of virtual functions. */
     struct hvfs vfs;
-    /* List of coroutines in this set. */
+    /* List of coroutines in this bundle. */
     struct dill_list crs;
 };
 
-int hset(void) {
+int bundle(void) {
     int err;
     /* Returns ECANCELED if the coroutine is shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) {err = errno; goto error1;};
-    struct dill_hset *hs = malloc(sizeof(struct dill_hset));
+    struct dill_bundle *hs = malloc(sizeof(struct dill_bundle));
     if(dill_slow(!hs)) {err = ENOMEM; goto error1;}
-    hs->vfs.query = dill_hset_query;
-    hs->vfs.close = dill_hset_close;
-    hs->vfs.done = dill_hset_done;
+    hs->vfs.query = dill_bundle_query;
+    hs->vfs.close = dill_bundle_close;
+    hs->vfs.done = dill_bundle_done;
     dill_list_init(&hs->crs);
     int h = hmake(&hs->vfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
@@ -100,23 +100,23 @@ error1:
     return -1;
 }
 
-static void *dill_hset_query(struct hvfs *vfs, const void *type) {
-    if(dill_fast(type == dill_hset_type)) return vfs;
+static void *dill_bundle_query(struct hvfs *vfs, const void *type) {
+    if(dill_fast(type == dill_bundle_type)) return vfs;
     errno = ENOTSUP;
     return NULL;
 }
 
-static void dill_hset_close(struct hvfs *vfs) {
-    struct dill_hset *self = (struct dill_hset*)vfs;
+static void dill_bundle_close(struct hvfs *vfs) {
+    struct dill_bundle *self = (struct dill_bundle*)vfs;
     struct dill_list *it = &self->crs;
     for(it = self->crs.next; it != &self->crs; it = dill_list_next(it)) {
-        struct dill_cr *cr = dill_cont(it, struct dill_cr, hset);
+        struct dill_cr *cr = dill_cont(it, struct dill_cr, bundle);
         dill_cr_close(&cr->vfs);
     }
     free(self);
 }
 
-static int dill_hset_done(struct hvfs *vfs, int64_t deadline) {
+static int dill_bundle_done(struct hvfs *vfs, int64_t deadline) {
     dill_assert(0);
 }
 
@@ -210,16 +210,16 @@ void dill_timer(struct dill_tmclause *tmcl, int id, int64_t deadline) {
 static void dill_cancel(struct dill_cr *cr, int err);
 
 /* The initial part of go(). Allocates a new stack and handle. */
-int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int set,
+int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
       const char *file, int line) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) {errno = ECANCELED; return -1;}
-    struct dill_hset *hset = NULL;
-    if(set >= 0) {
-        hset = hquery(set, dill_hset_type);
-        if(dill_slow(!hset)) return -1;
+    struct dill_bundle *bundle = NULL;
+    if(bndl >= 0) {
+        bundle = hquery(bndl, dill_bundle_type);
+        if(dill_slow(!bundle)) return -1;
     }
     struct dill_cr *cr;
     size_t stacksz;
@@ -257,15 +257,15 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int set,
     cr->ctrl_local = ctrl [1];
     cr->ctrl_remote = ctrl[0];
     int result;
-    if(set >= 0) {
-        dill_list_insert(&cr->hset, &hset->crs);
-        cr->set = 1;
+    if(bndl >= 0) {
+        dill_list_insert(&cr->bundle, &bundle->crs);
+        cr->in_bundle = 1;
         result = 0;
     } else {
         result = hmake(&cr->vfs);
         if(dill_slow(result < 0)) {
             int err = errno; dill_freestack(cr + 1); errno = err; return -1;}
-        cr->set = 0;
+        cr->in_bundle = 0;
     }
     cr->ready.next = NULL;
     dill_slist_init(&cr->clauses);
@@ -322,10 +322,10 @@ void dill_epilogue(void) {
     /* If there's a coroutine waiting for us to finish, unblock it now. */
     if(ctx->r->closer)
         dill_cancel(ctx->r->closer, 0);
-    /* If part of a hset we can close the coroutine straight away. Unless,
+    /* If part of a bundle we can close the coroutine straight away. Unless,
        of course, it is already in the process of being closed. */
-    if(ctx->r->set && !ctx->r->no_blocking1) {
-        dill_list_erase(&ctx->r->hset);
+    if(ctx->r->in_bundle && !ctx->r->no_blocking1) {
+        dill_list_erase(&ctx->r->bundle);
         dill_cr_close(&ctx->r->vfs);
     }
     /* With no clauses added, this call will never return. */
@@ -353,10 +353,10 @@ static void dill_cr_close(struct hvfs *vfs) {
         if(!cr->ready.next)
             dill_cancel(cr, ECANCELED);
         /* Wait for the coroutine to stop executing. With no clauses added,
-           the only mechanism to resume is through dill_cancel(). This is not really
-           a blocking call, although it looks like one. Given that the coroutine
-           that is being shut down is not permitted to block, we should get
-           control back pretty quickly. */
+           the only mechanism to resume is through dill_cancel(). This is not
+           really a blocking call, although it looks like one. Given that the
+           coroutine that is being shut down is not permitted to block, we
+           should get control back pretty quickly. */
         cr->closer = ctx->r;
         int rc = dill_wait();
         dill_assert(rc == -1 && errno == 0);
@@ -368,9 +368,9 @@ static void dill_cr_close(struct hvfs *vfs) {
     int i;
     for(i = 0; i != cr->stacksz; ++i) {
         if(bottom[i] != 0xa0 + (i % 13)) {
-            /* dill_cr is located on the stack so we have to take that into account.
-               Also, it may be necessary to align the top of the stack to
-               a 16-byte boundary, so add 16 bytes to account for that. */
+            /* dill_cr is located on the stack so we have to take that into
+               account. Also, it may be necessary to align the top of the stack
+               to a 16-byte boundary, so add 16 bytes to account for that. */
             size_t used = cr->stacksz - i - sizeof(struct dill_cr) + 16;
             if(used > cr->census->max_stack)
                 cr->census->max_stack = used;
@@ -462,9 +462,9 @@ int dill_wait(void)  {
             /* Never retry the poll when in non-blocking mode. */
             if(!block || fired)
                 break;
-            /* If the timeout was hit but there were no expired timers, do the poll
-               again. It can happen if the timers were canceled in the
-               meantime. */
+            /* If the timeout was hit but there were no expired timers,
+               do the poll again. It can happen if the timers were canceled
+               in the meantime. */
         }
         ctx->last_poll = nw;
     }
@@ -510,4 +510,4 @@ int yield(void) {
     /* Suspend. */
     return dill_wait();
 }
-  
+

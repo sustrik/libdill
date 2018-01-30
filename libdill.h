@@ -92,14 +92,14 @@ DILL_EXPORT int hdone(int h, int64_t deadline);
 /*  Coroutines                                                                */
 /******************************************************************************/
 
-DILL_EXPORT int hset(void);
+DILL_EXPORT int bundle(void);
 
 #define coroutine __attribute__((noinline))
 
 DILL_EXPORT extern volatile void *dill_unoptimisable;
 
 DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
-    void **ptr, size_t len, int set, const char *file, int line);
+    void **ptr, size_t len, int bndl, const char *file, int line);
 DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 
 /* The following macros use alloca(sizeof(size_t)) because clang
@@ -225,7 +225,9 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 
 #define go(fn) go_(fn, NULL, 0, -1)
 #define go_mem(fn, ptr, len) go_(fn, ptr, len, -1)
-#define go_set(set, fn) go_(fn, NULL, 0, set)
+
+#define bundle_go(bndl, fn) go_(fn, NULL, 0, bndl)
+#define bundle_go_mem(bndl, fn, ptr, len) go_(fn, ptr, len, bndl)
 
 DILL_EXPORT int dill_ctrl(void);
 

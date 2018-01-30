@@ -39,56 +39,56 @@ coroutine void worker3(void) {
 }
 
 int main(void) {
-    int hs1 = hset();
-    errno_assert(hs1 >= 0);
-    int rc = hclose(hs1);
+    int hndl1 = bundle();
+    errno_assert(hndl1 >= 0);
+    int rc = hclose(hndl1);
     errno_assert(rc == 0);
 
-    int hs2 = hset();
-    errno_assert(hs2 >= 0);
-    rc = go_set(hs2, worker1());
+    int hndl2 = bundle();
+    errno_assert(hndl2 >= 0);
+    rc = bundle_go(hndl2, worker1());
     errno_assert(rc == 0);
-    rc = hclose(hs2);
+    rc = hclose(hndl2);
     errno_assert(rc == 0);
 
-    int hs3 = hset();
-    errno_assert(hs3 >= 0);
-    rc = go_set(hs3, worker1());
+    int hndl3 = bundle();
+    errno_assert(hndl3 >= 0);
+    rc = bundle_go(hndl3, worker1());
     errno_assert(rc == 0);
     rc = msleep(now() + 100);
     errno_assert(rc == 0);
-    rc = hclose(hs3);
+    rc = hclose(hndl3);
     errno_assert(rc == 0);
 
-    int hs4 = hset();
-    errno_assert(hs4 >= 0);
-    rc = go_set(hs4, worker2());
+    int hndl4 = bundle();
+    errno_assert(hndl4 >= 0);
+    rc = bundle_go(hndl4, worker2());
     errno_assert(rc == 0);
     rc = msleep(now() + 100);
     errno_assert(rc == 0);
-    rc = hclose(hs4);
+    rc = hclose(hndl4);
     errno_assert(rc == 0);
 
-    int hs5 = hset();
-    errno_assert(hs5 >= 0);
-    rc = go_set(hs5, worker3());
+    int hndl5 = bundle();
+    errno_assert(hndl5 >= 0);
+    rc = bundle_go(hndl5, worker3());
     errno_assert(rc == 0);
-    rc = go_set(hs5, worker3());
+    rc = bundle_go(hndl5, worker3());
     errno_assert(rc == 0);
     rc = msleep(now() + 100);
     errno_assert(rc == 0);
-    rc = hclose(hs5);
+    rc = hclose(hndl5);
     errno_assert(rc == 0);
 
-    int hs6 = hset();
-    errno_assert(hs6 >= 0);
-    rc = go_set(hs6, worker2());
+    int hndl6 = bundle();
+    errno_assert(hndl6 >= 0);
+    rc = bundle_go(hndl6, worker2());
     errno_assert(rc == 0);
-    rc = go_set(hs6, worker2());
+    rc = bundle_go(hndl6, worker2());
     errno_assert(rc == 0);
     rc = msleep(now() + 100);
     errno_assert(rc == 0);
-    rc = hclose(hs6);
+    rc = hclose(hndl6);
     errno_assert(rc == 0);
 
     return 0;

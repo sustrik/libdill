@@ -51,7 +51,7 @@ tests/crlf
 tests/pfx
 tests/udp
 tests/ctrl
-tests/hset
+tests/bundle
 perf/.dirstamp
 perf/chan
 perf/ctxswitch

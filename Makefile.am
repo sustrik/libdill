@@ -109,7 +109,7 @@ check_PROGRAMS = \
     tests/overload \
     tests/rbtree \
     tests/ctrl \
-    tests/hset
+    tests/bundle
 
 if DILL_THREADS
 check_PROGRAMS += \

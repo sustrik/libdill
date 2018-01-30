@@ -55,8 +55,8 @@ struct dill_cr {
     /* If the coroutine is blocked, here's the list of the clauses it's
        waiting for. */
     struct dill_slist clauses;
-    /* A list of coroutines belonging to a particular hset. */
-    struct dill_list hset;
+    /* A list of coroutines belonging to a particular bundle. */
+    struct dill_list bundle;
     /* There are two possible reasons to disable blocking calls.
        1. The coroutine is being closed by its owner.
        2. The execution is happening within the context of an hclose() call. */
@@ -66,8 +66,8 @@ struct dill_cr {
     unsigned int done : 1;
     /* If true, the coroutine was launched with go_mem. */
     unsigned int mem : 1;
-    /* If true, the coroutine was launched with go_set. */
-    unsigned int set : 1;
+    /* If true, the coroutine was launched with bundle_go. */
+    unsigned int in_bundle : 1;
     /* When the coroutine handle is being closed, this points to the
        coroutine that is doing the hclose() call. */
     struct dill_cr *closer;
