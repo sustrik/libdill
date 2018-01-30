@@ -99,6 +99,7 @@ DILL_EXPORT extern volatile void *dill_unoptimisable;
 DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
     void **ptr, size_t len, const char *file, int line);
 DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
+DILL_EXPORT void dill_detach(int h);
 
 /* The following macros use alloca(sizeof(size_t)) because clang
    doesn't support alloca with size zero. */
@@ -222,6 +223,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
     })
 
 #define go(fn) go_mem(fn, NULL, 0)
+#define go_detach(h) dill_detach(h)
 
 DILL_EXPORT int dill_ctrl(void);
 

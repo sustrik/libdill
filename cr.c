@@ -86,6 +86,7 @@ int dill_ctx_cr_init(struct dill_ctx_cr *ctx) {
        it's called only once and you can't even create a different coroutine
        without calling it. */
     ctx->r = &ctx->main;
+    ctx->detached_cr = NULL;
     dill_qlist_init(&ctx->ready);
     dill_rbtree_init(&ctx->timers);
     /* We can't use now() here as the context is still being intialized. */
@@ -203,6 +204,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     cr->no_blocking2 = 0;
     cr->done = 0;
     cr->mem = *ptr ? 1 : 0;
+    cr->detached = 0;
 #if defined DILL_VALGRIND
     cr->sid = VALGRIND_STACK_REGISTER((char*)(cr + 1) - stacksz, cr);
 #endif
@@ -248,12 +250,26 @@ void dill_epilogue(void) {
     dill_assert(rc == 0 || errno == EPIPE); 
     /* Mark the coroutine as finished. */
     ctx->r->done = 1;
+    if (ctx->r->detached) {
+        dill_assert(ctx->detached_cr == NULL);
+        ctx->detached_cr = ctx->r;
+    }
     /* If there's a coroutine waiting for us to finish, unblock it now. */
     if(ctx->r->closer)
         dill_cancel(ctx->r->closer, 0);
     /* With no clauses added, this call will never return. */
     dill_assert(dill_slist_empty(&ctx->r->clauses));
     dill_wait();
+}
+
+/* Mark the handle as detached (or destroy if it's done) */
+void dill_detach(int h) {
+    struct dill_cr *cr = hquery(h, dill_cr_type);
+    if (cr->done) {
+        dill_cr_close(&cr->vfs);
+    } else {
+        cr->detached = 1;
+    }
 }
 
 static void *dill_cr_query(struct hvfs *vfs, const void *type) {
@@ -337,9 +353,17 @@ int dill_wait(void)  {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     /* Store the context of the current coroutine, if any. */
     if(dill_setjmp(ctx->r->ctx)) {
-        /* We get here once the coroutine is resumed. */
         dill_slist_init(&ctx->r->clauses);
-        errno = ctx->r->err;
+        int r_err = ctx->r->err;
+        /* We get here once the coroutine is resumed. */
+        if (ctx->detached_cr) {
+            dill_assert(ctx->detached_cr != ctx->r);
+
+            struct dill_cr *to_detach = ctx->detached_cr;
+            ctx->detached_cr = NULL;
+            dill_cr_close(&to_detach->vfs);
+        }
+        errno = r_err;
         return ctx->r->id;
     }
     /* For performance reasons, we want to avoid excessive checking of current
