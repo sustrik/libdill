@@ -40,7 +40,7 @@
 
 /* Stack size in bytes. */
 static size_t dill_stack_size = 256 * 1024;
-/* Maximum number of unused cached stacks. Must be at least 1. */
+/* Maximum number of unused cached stacks. */
 static int dill_max_cached_stacks = 64;
 
 /* Returns the smallest value that's greater than val and is a multiple of unit. */
@@ -127,23 +127,21 @@ void *dill_allocstack(size_t *stack_size) {
 void dill_freestack(void *stack) {
     struct dill_ctx_stack *ctx = &dill_getctx->stack;
     struct dill_slist *item = ((struct dill_slist*)stack) - 1;
-    /* If the cache is full we will deallocate one stack from the cache.
-       We can't deallocate the stack passed to this function directly because
-       this very function can be still executing on that stack. */
-    if(ctx->count >= dill_max_cached_stacks) {
-        struct dill_slist *old = dill_slist_pop(&ctx->cache);
-#if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD
-        void *ptr = ((uint8_t*)(old + 1)) - dill_stack_size - dill_page_size();
-        int rc = mprotect(ptr, dill_page_size(), PROT_READ|PROT_WRITE);
-        dill_assert(rc == 0);
-        free(ptr);
-#else
-        void *ptr = ((uint8_t*)(old + 1)) - dill_stack_size;
-        free(ptr);
-#endif
+    /* If there are free slots in the cache, put the stack into the cache. */
+    if(ctx->count < dill_max_cached_stacks) {
+        dill_slist_push(&ctx->cache, item);
+        ++ctx->count;
+        return;
     }
-    /* Put the stack into the cache. */
-    dill_slist_push(&ctx->cache, item);
-    ++ctx->count;
+    /* If the stack cache is full, deallocate the stack. */
+#if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD
+    void *ptr = ((uint8_t*)(item + 1)) - dill_stack_size - dill_page_size();
+    int rc = mprotect(ptr, dill_page_size(), PROT_READ|PROT_WRITE);
+    dill_assert(rc == 0);
+    free(ptr);
+#else
+    void *ptr = ((uint8_t*)(item + 1)) - dill_stack_size;
+    free(ptr);
+#endif
 }
 
