@@ -262,8 +262,6 @@ DILL_EXPORT int chrecv(int ch, void *val, size_t len, int64_t deadline);
 DILL_EXPORT int choose(struct chclause *clauses, int nclauses,
     int64_t deadline);
 
-#define chdone(ch) hdone((ch), -1)
-
 #if !defined DILL_DISABLE_SOCKETS
 
 /******************************************************************************/
