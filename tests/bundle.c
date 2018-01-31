@@ -91,5 +91,13 @@ int main(void) {
     rc = hclose(hndl6);
     errno_assert(rc == 0);
 
+    int hndl7 = bundle();
+    errno_assert(hndl7 >= 0);
+    char stk[4096];
+    rc = bundle_go_mem(hndl7, worker1(), stk, sizeof(stk));
+    errno_assert(rc == 0);
+    rc = hclose(hndl7);
+    errno_assert(rc == 0);
+
     return 0;
 }
