@@ -80,7 +80,7 @@ struct dill_bundle {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(BUNDLE_SIZE == sizeof(struct dill_bundle));
+DILL_CT_ASSERT(BUNDLE_SIZE >= sizeof(struct dill_bundle));
 
 int bundle_mem(void *mem) {
     int err;
@@ -221,7 +221,7 @@ void dill_timer(struct dill_tmclause *tmcl, int id, int64_t deadline) {
 
 static void dill_cancel(struct dill_cr *cr, int err);
 
-/* The initial part of go(). Allocates a new stack and handle. */
+/* The initial part of go(). Allocates a new stack and bundle. */
 int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
       const char *file, int line) {
     int err;
@@ -232,7 +232,10 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
     /* If bundle is not supplied by the user create one. */
     int new_bundle = bndl < 0;
     if(new_bundle) {
-        bndl = bundle();
+        if(*ptr)
+            bndl = bundle_mem(*ptr);
+        else
+            bndl = bundle();
         if(dill_slow(bndl < 0)) {err = errno; goto error1;}
     }
     struct dill_bundle *bundle = hquery(bndl, dill_bundle_type);
