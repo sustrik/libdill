@@ -99,5 +99,15 @@ int main(void) {
     rc = hclose(hndl7);
     errno_assert(rc == 0);
 
+    /* Test creating bundle via go() function. */
+    int hndl8 = go(worker1());
+    errno_assert(hndl8 >= 0);
+    rc = bundle_go(hndl8, worker1());
+    errno_assert(rc == 0);
+    rc = msleep(now() + 100);
+    errno_assert(rc == 0);
+    rc = hclose(hndl8);
+    errno_assert(rc == 0);
+
     return 0;
 }
