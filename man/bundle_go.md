@@ -6,7 +6,7 @@ bundle_go - start a coroutine within a specified bundle
 
 **#include &lt;libdill.h>**
 
-**int bundle_go(int bndl, **_expression_**);**
+**int bundle_go(int **_bndl_**, **_expression_**);**
 
 # DESCRIPTION
 

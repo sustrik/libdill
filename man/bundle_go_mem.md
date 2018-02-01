@@ -6,7 +6,7 @@ bundle_go - start a coroutine within a specified bundle, on a user-supplied stac
 
 **#include &lt;libdill.h>**
 
-**int bundle_go_mem(int bndl, **_expression_**, void** \*_stk_, **size_t** _stklen_**);**
+**int bundle_go_mem(int **_bndl_**, **_expression_**, void** \*_stk_, **size_t** _stklen_**);**
 
 # DESCRIPTION
 
