@@ -71,6 +71,7 @@ tutorial/basics/step2
 tutorial/basics/step3
 tutorial/basics/step4
 tutorial/basics/step5
+tutorial/basics/step6
 tutorial/basics/*.o
 tutorial/basics/.dirstamp
 tutorial/protocol/step1

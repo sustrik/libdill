@@ -30,9 +30,46 @@
 
 #include "../../libdill.h"
 
-coroutine void dialogue(int s) {
+#define CONN_ESTABLISHED 1
+#define CONN_SUCCEEDED 2
+#define CONN_FAILED 3
+
+coroutine void statistics(int ch) {
+    int active = 0;
+    int succeeded = 0;
+    int failed = 0;
+    
+    while(1) {
+        int op;
+        int rc = chrecv(ch, &op, sizeof(op), -1);
+        if(rc < 0 && errno == ECANCELED) return;
+        assert(rc == 0);
+
+        switch(op) {
+        case CONN_ESTABLISHED:
+            ++active;
+            break;
+        case CONN_SUCCEEDED:
+            --active;
+            ++succeeded;
+            break;
+        case CONN_FAILED:
+            --active;
+            ++failed;
+            break;
+        }
+
+        printf("active: %-5d  succeeded: %-5d  failed: %-5d\n",
+            active, succeeded, failed);
+    }
+}
+
+coroutine void dialogue(int s, int ch) {
+    int op = CONN_ESTABLISHED;
+    int rc = chsend(ch, &op, sizeof(op), -1);
+    assert(rc == 0);
     int64_t deadline = now() + 10000;
-    int rc = msend(s, "What's your name?", 17, deadline);
+    rc = msend(s, "What's your name?", 17, deadline);
     if(rc != 0) goto cleanup;
     char inbuf[256];
     ssize_t sz = mrecv(s, inbuf, sizeof(inbuf), deadline);
@@ -43,6 +80,9 @@ coroutine void dialogue(int s) {
     rc = msend(s, outbuf, rc, deadline);
     if(rc != 0) goto cleanup;
 cleanup:
+    op = errno == 0 ? CONN_SUCCEEDED : CONN_FAILED;
+    rc = chsend(ch, &op, sizeof(op), -1);
+    assert(rc == 0 || errno == ECANCELED);
     rc = hclose(s);
     assert(rc == 0);
 }
@@ -62,6 +102,12 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    int ch[2];
+    rc = chmake(ch);
+    assert(rc == 0);
+    int cr = go(statistics(ch[0]));
+    assert(cr >= 0);
+
     int b = bundle();
     assert(b >= 0);
 
@@ -71,15 +117,21 @@ int main(int argc, char *argv[]) {
         assert(s >= 0);
         s = crlf_attach(s);
         assert(s >= 0);
-        rc = bundle_go(b, dialogue(s));
+        rc = bundle_go(b, dialogue(s, ch[1]));
         assert(rc == 0);
     }
 
     rc = hclose(b);
     assert(rc == 0);
+    rc = hclose(cr);
+    assert(rc == 0);
+    rc = hclose(ch[0]);
+    assert(rc == 0);
+    rc = hclose(ch[1]);
+    assert(rc == 0);
     rc = hclose(ls);
     assert(rc == 0);
 
-    return 0; 
+    return 0;
 }
 

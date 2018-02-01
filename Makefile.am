@@ -146,6 +146,7 @@ noinst_PROGRAMS += \
     tutorial/basics/step3 \
     tutorial/basics/step4 \
     tutorial/basics/step5 \
+    tutorial/basics/step6 \
     tutorial/protocol/step1 \
     tutorial/protocol/step2 \
     tutorial/protocol/step3 \
