@@ -10,7 +10,7 @@ go - start a coroutine
 
 # DESCRIPTION
 
-Launches a coroutine that executes the function invocation passed as argument.  The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller.  The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.
+Launches a coroutine that executes the function invocation passed as argument.  The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller coroutine. The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.
 
 Any function to be invoked with **go()** must be declared with the **coroutine** specifier.
 
@@ -29,7 +29,7 @@ go(bar(a));
 
 # RETURN VALUE
 
-Returns a coroutine handle. In the case of an error, it returns -1 and sets _errno_ to one of the values below.
+Returns a handle to a coroutine _bundle_ containing a single coroutine. In the case of an error, it returns -1 and sets _errno_ to one of the values below.
 
 # ERRORS
 

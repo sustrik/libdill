@@ -10,9 +10,9 @@ go_mem - start a coroutine on a user-supplied stack
 
 # DESCRIPTION
 
-Launches a coroutine that executes the function invocation passed as argument.  The buffer passed in the _stk_ argument will be used as the coroutine's stack.  The length of the buffer should be specified in the _stklen_ argument.
+Launches a coroutine that executes the function invocation passed as the first argument. The buffer passed in the _stk_ argument will be used as the coroutine's stack. The length of the buffer should be specified in the _stklen_ argument.
 
-The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller.  The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.
+The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller coroutine. The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.
 
 Any function to be invoked with **go_mem()** must be declared with the **coroutine** specifier.
 
@@ -31,7 +31,7 @@ go_mem(bar(a), stk, stklen);
 
 # RETURN VALUE
 
-Returns a coroutine handle. In the case of an error, it returns -1 and sets _errno_ to one of the values below.
+Returns a handle to a coroutine _bundle_ containing a single coroutine. In the case of an error, it returns -1 and sets _errno_ to one of the values below.
 
 # ERRORS
 
