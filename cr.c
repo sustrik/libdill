@@ -53,6 +53,74 @@ struct dill_census_item {
 volatile void *dill_unoptimisable = NULL;
 
 /******************************************************************************/
+/*  Handle implementation.                                                    */
+/******************************************************************************/
+
+static const int dill_cr_type_placeholder = 0;
+static const void *dill_cr_type = &dill_cr_type_placeholder;
+static void *dill_cr_query(struct hvfs *vfs, const void *type);
+static void dill_cr_close(struct hvfs *vfs);
+static int dill_cr_done(struct hvfs *vfs, int64_t deadline);
+
+/******************************************************************************/
+/*  Hset.                                                                     */
+/******************************************************************************/
+
+static const int dill_hset_type_placeholder = 0;
+const void *dill_hset_type = &dill_hset_type_placeholder;
+static void *dill_hset_query(struct hvfs *vfs, const void *type);
+static void dill_hset_close(struct hvfs *vfs);
+static int dill_hset_done(struct hvfs *vfs, int64_t deadline);
+
+struct dill_hset {
+    /* Table of virtual functions. */
+    struct hvfs vfs;
+    /* List of coroutines in this set. */
+    struct dill_list crs;
+};
+
+int hset(void) {
+    int err;
+    /* Returns ECANCELED if the coroutine is shutting down. */
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) {err = errno; goto error1;};
+    struct dill_hset *hs = malloc(sizeof(struct dill_hset));
+    if(dill_slow(!hs)) {err = ENOMEM; goto error1;}
+    hs->vfs.query = dill_hset_query;
+    hs->vfs.close = dill_hset_close;
+    hs->vfs.done = dill_hset_done;
+    dill_list_init(&hs->crs);
+    int h = hmake(&hs->vfs);
+    if(dill_slow(h < 0)) {err = errno; goto error2;}
+    return h;
+error2:
+    free(hs);
+error1:
+    errno = err;
+    return -1;
+}
+
+static void *dill_hset_query(struct hvfs *vfs, const void *type) {
+    if(dill_fast(type == dill_hset_type)) return vfs;
+    errno = ENOTSUP;
+    return NULL;
+}
+
+static void dill_hset_close(struct hvfs *vfs) {
+    struct dill_hset *self = (struct dill_hset*)vfs;
+    struct dill_list *it = &self->crs;
+    for(it = self->crs.next; it != &self->crs; it = dill_list_next(it)) {
+        struct dill_cr *cr = dill_cont(it, struct dill_cr, hset);
+        dill_cr_close(&cr->vfs);
+    }
+    free(self);
+}
+
+static int dill_hset_done(struct hvfs *vfs, int64_t deadline) {
+    dill_assert(0);
+}
+
+/******************************************************************************/
 /*  Helpers.                                                                  */
 /******************************************************************************/
 
@@ -136,28 +204,23 @@ void dill_timer(struct dill_tmclause *tmcl, int id, int64_t deadline) {
 }
 
 /******************************************************************************/
-/*  Handle implementation.                                                    */
-/******************************************************************************/
-
-static const int dill_cr_type_placeholder = 0;
-static const void *dill_cr_type = &dill_cr_type_placeholder;
-static void *dill_cr_query(struct hvfs *vfs, const void *type);
-static void dill_cr_close(struct hvfs *vfs);
-static int dill_cr_done(struct hvfs *vfs, int64_t deadline);
-
-/******************************************************************************/
 /*  Coroutine creation and termination                                        */
 /******************************************************************************/
 
 static void dill_cancel(struct dill_cr *cr, int err);
 
 /* The initial part of go(). Allocates a new stack and handle. */
-int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
+int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int set,
       const char *file, int line) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) {errno = ECANCELED; return -1;}
+    struct dill_hset *hset = NULL;
+    if(set >= 0) {
+        hset = hquery(set, dill_hset_type);
+        if(dill_slow(!hset)) return -1;
+    }
     struct dill_cr *cr;
     size_t stacksz;
     if(!*ptr) {
@@ -193,9 +256,17 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
         int err = errno; dill_freestack(cr + 1); errno = err; return -1;}
     cr->ctrl_local = ctrl [1];
     cr->ctrl_remote = ctrl[0];
-    int hndl = hmake(&cr->vfs);
-    if(dill_slow(hndl < 0)) {
-        int err = errno; dill_freestack(cr + 1); errno = err; return -1;}
+    int result;
+    if(set >= 0) {
+        dill_list_insert(&cr->hset, &hset->crs);
+        cr->set = 1;
+        result = 0;
+    } else {
+        result = hmake(&cr->vfs);
+        if(dill_slow(result < 0)) {
+            int err = errno; dill_freestack(cr + 1); errno = err; return -1;}
+        cr->set = 0;
+    }
     cr->ready.next = NULL;
     dill_slist_init(&cr->clauses);
     cr->closer = NULL;
@@ -235,7 +306,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len,
     dill_resume(ctx->r, 0, 0);
     /* Mark the new coroutine as running. */
     *ptr = ctx->r = cr;
-    return hndl;
+    return result;
 }
 
 /* The final part of go(). Gets called when the coroutine is finished. */
@@ -251,6 +322,12 @@ void dill_epilogue(void) {
     /* If there's a coroutine waiting for us to finish, unblock it now. */
     if(ctx->r->closer)
         dill_cancel(ctx->r->closer, 0);
+    /* If part of a hset we can close the coroutine straight away. Unless,
+       of course, it is already in the process of being closed. */
+    if(ctx->r->set && !ctx->r->no_blocking1) {
+        dill_list_erase(&ctx->r->hset);
+        dill_cr_close(&ctx->r->vfs);
+    }
     /* With no clauses added, this call will never return. */
     dill_assert(dill_slist_empty(&ctx->r->clauses));
     dill_wait();
