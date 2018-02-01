@@ -92,7 +92,14 @@ DILL_EXPORT int hdone(int h, int64_t deadline);
 /*  Coroutines                                                                */
 /******************************************************************************/
 
+#if defined(__i386__)
+#  define BUNDLE_SIZE 28
+#else
+#  define BUNDLE_SIZE 56
+#endif
+
 DILL_EXPORT int bundle(void);
+DILL_EXPORT int bundle_mem(void *mem);
 
 #define coroutine __attribute__((noinline))
 

@@ -76,21 +76,34 @@ struct dill_bundle {
     struct hvfs vfs;
     /* List of coroutines in this bundle. */
     struct dill_list crs;
+    /* If true, the bundle was created by bundle_mem. */
+    unsigned int mem : 1;
 };
 
-int bundle(void) {
+DILL_CT_ASSERT(BUNDLE_SIZE == sizeof(struct dill_bundle));
+
+int bundle_mem(void *mem) {
     int err;
+    if(dill_slow(!mem)) {err = EINVAL; return -1;}
     /* Returns ECANCELED if the coroutine is shutting down. */
     int rc = dill_canblock();
-    if(dill_slow(rc < 0)) {err = errno; goto error1;};
-    struct dill_bundle *b = malloc(sizeof(struct dill_bundle));
-    if(dill_slow(!b)) {err = ENOMEM; goto error1;}
+    if(dill_slow(rc < 0)) return -1;
+    struct dill_bundle *b = (struct dill_bundle*)mem;
     b->vfs.query = dill_bundle_query;
     b->vfs.close = dill_bundle_close;
     b->vfs.done = dill_bundle_done;
     dill_list_init(&b->crs);
-    int h = hmake(&b->vfs);
+    b->mem = 1;
+    return hmake(&b->vfs);
+}
+
+int bundle(void) {
+    int err;
+    struct dill_bundle *b = malloc(sizeof(struct dill_bundle));
+    if(dill_slow(!b)) {err = ENOMEM; goto error1;}
+    int h = bundle_mem(b);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
+    b->mem = 0;
     return h;
 error2:
     free(b);
@@ -112,7 +125,7 @@ static void dill_bundle_close(struct hvfs *vfs) {
         struct dill_cr *cr = dill_cont(it, struct dill_cr, bundle);
         dill_cr_close(&cr->vfs);
     }
-    free(self);
+    if(!self->mem) free(self);
 }
 
 static int dill_bundle_done(struct hvfs *vfs, int64_t deadline) {
