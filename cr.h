@@ -66,8 +66,6 @@ struct dill_cr {
     unsigned int done : 1;
     /* If true, the coroutine was launched with go_mem. */
     unsigned int mem : 1;
-    /* If true, the coroutine was launched with bundle_go. */
-    unsigned int in_bundle : 1;
     /* When the coroutine handle is being closed, this points to the
        coroutine that is doing the hclose() call. */
     struct dill_cr *closer;

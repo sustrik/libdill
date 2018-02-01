@@ -211,21 +211,25 @@ static void dill_cancel(struct dill_cr *cr, int err);
 /* The initial part of go(). Allocates a new stack and handle. */
 int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
       const char *file, int line) {
+    int err;
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
-    if(dill_slow(rc < 0)) {errno = ECANCELED; return -1;}
-    struct dill_bundle *bundle = NULL;
-    if(bndl >= 0) {
-        bundle = hquery(bndl, dill_bundle_type);
-        if(dill_slow(!bundle)) return -1;
+    if(dill_slow(rc < 0)) {err = ECANCELED; goto error1;}
+    /* If bundle is not supplied by the user create one. */
+    int new_bundle = bndl < 0;
+    if(new_bundle) {
+        bndl = bundle();
+        if(dill_slow(bndl < 0)) {err = errno; goto error1;}
     }
+    struct dill_bundle *bundle = hquery(bndl, dill_bundle_type);
+    if(dill_slow(!bundle)) {err = errno; goto error2;}
+    /* Allocate a stack. */
     struct dill_cr *cr;
     size_t stacksz;
     if(!*ptr) {
-        /* Allocate a new stack. */
         cr = (struct dill_cr*)dill_allocstack(&stacksz);
-        if(dill_slow(!cr)) return -1;
+        if(dill_slow(!cr)) {err = errno; goto error2;}
     }
     else {
         /* The stack is supplied by the user.
@@ -236,7 +240,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
         stacksz = top - (uintptr_t)*ptr;
         cr = (struct dill_cr*)top;
         if(dill_slow(stacksz < sizeof(struct dill_cr))) {
-            errno = ENOMEM; return -1;}
+            err = ENOMEM; goto error2;}
     }
 #if defined DILL_CENSUS
     /* Mark the bytes in the stack as unused. */
@@ -249,17 +253,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
     cr->vfs.query = dill_cr_query;
     cr->vfs.close = dill_cr_close;
     cr->vfs.done = dill_cr_done;
-    int result;
-    if(bndl >= 0) {
-        dill_list_insert(&cr->bundle, &bundle->crs);
-        cr->in_bundle = 1;
-        result = 0;
-    } else {
-        result = hmake(&cr->vfs);
-        if(dill_slow(result < 0)) {
-            int err = errno; dill_freestack(cr + 1); errno = err; return -1;}
-        cr->in_bundle = 0;
-    }
+    dill_list_insert(&cr->bundle, &bundle->crs);
     cr->ready.next = NULL;
     dill_slist_init(&cr->clauses);
     cr->closer = NULL;
@@ -299,7 +293,16 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
     dill_resume(ctx->r, 0, 0);
     /* Mark the new coroutine as running. */
     *ptr = ctx->r = cr;
-    return result;
+    /* In case of success go() returns the handle, bundle_go() returns 0. */
+    return new_bundle ? bndl : 0;
+error2:
+    if(new_bundle) {
+        rc = hclose(bndl);
+        dill_assert(rc == 0);
+    }
+error1:
+    errno = err;
+    return -1;
 }
 
 /* The final part of go(). Gets called when the coroutine is finished. */
@@ -310,9 +313,9 @@ void dill_epilogue(void) {
     /* If there's a coroutine waiting for us to finish, unblock it now. */
     if(ctx->r->closer)
         dill_cancel(ctx->r->closer, 0);
-    /* If part of a bundle we can close the coroutine straight away. Unless,
-       of course, it is already in the process of being closed. */
-    if(ctx->r->in_bundle && !ctx->r->no_blocking1) {
+    /* Deallocate the coroutine, unless, of course, it is already
+       in the process of being closed. */
+    if(!ctx->r->no_blocking1) {
         dill_list_erase(&ctx->r->bundle);
         dill_cr_close(&ctx->r->vfs);
     }

@@ -27,29 +27,17 @@
 #include "assert.h"
 #include "../libdill.h"
 
-coroutine void worker(int count, const char *text) {
-    int i;
-    for(i = 0; i != count; ++i) {
-        printf("%s\n", text);
-        int rc = msleep(now() + 10);
-        errno_assert(rc == 0 || errno == ECANCELED);
-    }
+coroutine void worker(void) {
 }
 
 int main() {
-    int cr1 = go(worker(4, "a "));
+    int cr1 = go(worker());
     errno_assert(cr1 >= 0);
-    int cr2 = go(worker(2, "b"));
+    int cr2 = go(worker());
     errno_assert(cr2 >= 0);
-    int cr3 = go(worker(3, "c"));
-    errno_assert(cr3 >= 0);
-    int rc = msleep(now() + 100);
-    errno_assert(rc == 0); 
-    rc = hclose(cr1);
+    int rc = hclose(cr1);
     errno_assert(rc == 0);
     rc = hclose(cr2);
-    errno_assert(rc == 0);
-    rc = hclose(cr3);
     errno_assert(rc == 0);
     return 0;
 }
