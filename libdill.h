@@ -207,12 +207,12 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
    outer scope and a local variable in this macro causes the variable to
    get weird values. To avoid that, we use fancy names (dill_*__). */ 
 
-#define go_(fn, ptr, len, set) \
+#define go_(fn, ptr, len, bndl) \
     ({\
         sigjmp_buf *dill_ctx__;\
         void *dill_stk__ = (ptr);\
         int dill_handle__ = dill_prologue(&dill_ctx__, &dill_stk__, (len),\
-            (set), __FILE__, __LINE__);\
+            (bndl), __FILE__, __LINE__);\
         if(dill_handle__ >= 0) {\
             if(!dill_setjmp(*dill_ctx__)) {\
                 DILL_SETSP(dill_stk__);\

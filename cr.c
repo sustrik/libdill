@@ -83,17 +83,17 @@ int bundle(void) {
     /* Returns ECANCELED if the coroutine is shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) {err = errno; goto error1;};
-    struct dill_bundle *hs = malloc(sizeof(struct dill_bundle));
-    if(dill_slow(!hs)) {err = ENOMEM; goto error1;}
-    hs->vfs.query = dill_bundle_query;
-    hs->vfs.close = dill_bundle_close;
-    hs->vfs.done = dill_bundle_done;
-    dill_list_init(&hs->crs);
-    int h = hmake(&hs->vfs);
+    struct dill_bundle *b = malloc(sizeof(struct dill_bundle));
+    if(dill_slow(!b)) {err = ENOMEM; goto error1;}
+    b->vfs.query = dill_bundle_query;
+    b->vfs.close = dill_bundle_close;
+    b->vfs.done = dill_bundle_done;
+    dill_list_init(&b->crs);
+    int h = hmake(&b->vfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    free(hs);
+    free(b);
 error1:
     errno = err;
     return -1;
