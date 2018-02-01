@@ -229,13 +229,18 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) {err = ECANCELED; goto error1;}
-    /* If bundle is not supplied by the user create one. */
+    /* If bundle is not supplied by the user create one. If user supplied a
+       memory to use put the bundle at the beginning of the block. */
     int new_bundle = bndl < 0;
     if(new_bundle) {
-        if(*ptr)
+        if(*ptr) {
             bndl = bundle_mem(*ptr);
-        else
+            *ptr = ((uint8_t*)*ptr) + BUNDLE_SIZE;
+            len -= BUNDLE_SIZE;
+        }
+        else {
             bndl = bundle();
+        }
         if(dill_slow(bndl < 0)) {err = errno; goto error1;}
     }
     struct dill_bundle *bundle = hquery(bndl, dill_bundle_type);
