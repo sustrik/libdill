@@ -252,7 +252,7 @@ One thing to remember about canceling coroutines is that once a coroutine is can
 
 Looking at our `dialogue` coroutine it turns out that it already does that. It responds to any error, including `ECANCELED` by closing the socket handle and exiting.
 
-Now try to compile this step and run it under valgrind. (Don't forget to compile libdill itself with `--with-valgrind` and `--disable-shared` options!) Here's what you'll get:
+Now try to compile this step and run it under valgrind. (Don't forget to compile libdill itself with `--enable-valgrind` and `--disable-shared` options!) Here's what you'll get:
 
 ```
 ==179895== HEAP SUMMARY:

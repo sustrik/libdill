@@ -173,7 +173,7 @@ cleanup:
 }</code></pre>
 <p>One thing to remember about canceling coroutines is that once a coroutine is canceled all the blocking operations withing the coroutine, such as reading from a socket or sleeping, will start returning <code>ECANCELED</code> error. The coroutine should then deallocate all its resources and exit.</p>
 <p>Looking at our <code>dialogue</code> coroutine it turns out that it already does that. It responds to any error, including <code>ECANCELED</code> by closing the socket handle and exiting.</p>
-<p>Now try to compile this step and run it under valgrind. (Don't forget to compile libdill itself with <code>--with-valgrind</code> and <code>--disable-shared</code> options!) Here's what you'll get:</p>
+<p>Now try to compile this step and run it under valgrind. (Don't forget to compile libdill itself with <code>--enable-valgrind</code> and <code>--disable-shared</code> options!) Here's what you'll get:</p>
 <pre><code>==179895== HEAP SUMMARY:
 ==179895==     in use at exit: 0 bytes in 0 blocks
 ==179895==   total heap usage: 11 allocs, 11 frees, 1,329,272 bytes allocated
