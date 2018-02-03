@@ -224,7 +224,11 @@ int main(void) {
 
 ```c
 coroutine void worker(void) {
-    msleep(now() + (random() % 1000));
+    int rc = msleep(now() + (random() % 1000));
+    if(rc < 0 && errno == ECANCELED) {
+        return; /* 4. */
+    }
+    /* 2. */
 }
 
 int main(void) {
@@ -233,7 +237,7 @@ int main(void) {
     for(i = 0; i != 3; i++)
         bundle_go(b, worker()); /* 1. */
     msleep(now() + 500);
-    hclose(b); /* 2. */
+    hclose(b); /* 3. */
     return 0;
 }
 ```
