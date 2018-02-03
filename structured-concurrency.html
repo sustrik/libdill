@@ -73,4 +73,78 @@ hclose(h);</code></pre>
     hclose(self-&gt;sender);
     hclose(self-&gt;receiver);
 }</code></pre>
+<h2 id="what-are-the-use-cases">What are the use cases?</h2>
+<p>WARNING: To keep examples in this section succint error handling was omitted.</p>
+<h4 id="child-finishes-before-parent">Child finishes before parent</h4>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">void</span>) {
+    msleep(now() + <span class="dv">500</span>);
+}
+
+<span class="dt">int</span> main(<span class="dt">void</span>) {
+    <span class="dt">int</span> cr = go(worker());
+    msleep(now() + <span class="dv">1000</span>);
+    hclose(cr);
+    <span class="kw">return</span> <span class="dv">0</span>;
+}</code></pre>
+<h4 id="parent-finished-before-child">Parent finished before child</h4>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">void</span>) {
+    <span class="dt">int</span> rc = msleep(now() + <span class="dv">1000</span>);
+    <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ECANCELED) <span class="kw">return</span>;
+    assert(<span class="dv">0</span>);
+}
+
+<span class="dt">int</span> main(<span class="dt">void</span>) {
+    <span class="dt">int</span> cr = go(worker());
+    msleep(now() + <span class="dv">500</span>);
+    hclose(cr);
+    <span class="kw">return</span> <span class="dv">0</span>;
+}</code></pre>
+<h4 id="parent-waits-for-child">Parent waits for child</h4>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">int</span> ch) {
+    <span class="dt">int</span> rc = msleep(now() + <span class="dv">1000</span>);
+    <span class="dt">int</span> val = <span class="dv">42</span>;
+    chsend(ch, &amp;val, <span class="kw">sizeof</span>(val), -<span class="dv">1</span>);
+}
+
+<span class="dt">int</span> main(<span class="dt">void</span>) {
+    <span class="dt">int</span> ch[<span class="dv">2</span>];
+    chmake(ch);
+    <span class="dt">int</span> cr = go(worker(ch[<span class="dv">1</span>]));
+    msleep(now() + <span class="dv">500</span>);
+    <span class="dt">int</span> val;
+    chrecv(ch[<span class="dv">0</span>], &amp;val, <span class="kw">sizeof</span>(val), -<span class="dv">1</span>);
+    hclose(cr);
+    <span class="kw">return</span> <span class="dv">0</span>;
+}</code></pre>
+<h4 id="parent-gives-child-a-grace-period-to-finish">Parent gives child a grace period to finish</h4>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">int</span> ch) {
+    <span class="dt">int</span> rc = msleep(now() + <span class="dv">1000</span>);
+    <span class="dt">int</span> val = <span class="dv">42</span>;
+    chsend(ch, &amp;val, <span class="kw">sizeof</span>(val), -<span class="dv">1</span>);
+}
+
+<span class="dt">int</span> main(<span class="dt">void</span>) {
+    <span class="dt">int</span> ch[<span class="dv">2</span>];
+    chmake(ch);
+    <span class="dt">int</span> cr = go(worker(ch[<span class="dv">1</span>]));
+    msleep(now() + <span class="dv">500</span>);
+    <span class="dt">int</span> val;
+    chrecv(ch[<span class="dv">0</span>], &amp;val, <span class="kw">sizeof</span>(val), now() + <span class="dv">1000</span>);
+    hclose(cr);
+    <span class="kw">return</span> <span class="dv">0</span>;
+}</code></pre>
+<h3 id="parent-launches-multiple-children">Parent launches multiple children</h3>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">void</span>) {
+    msleep(now() + (random() % <span class="dv">1000</span>));
+}
+
+<span class="dt">int</span> main(<span class="dt">void</span>) {
+    <span class="dt">int</span> b = bundle();
+    <span class="dt">int</span> i;
+    <span class="kw">for</span>(i = <span class="dv">0</span>; i != <span class="dv">3</span>; i++)
+        bundle_go(b, worker());
+    msleep(now() + <span class="dv">500</span>);
+    hclose(b);
+    <span class="kw">return</span> <span class="dv">0</span>;
+}</code></pre>
 </body>

@@ -100,3 +100,99 @@ void tcp_connection_close(struct tcp_connection *self) {
     hclose(self->receiver);
 }
 ```
+
+## What are the use cases?
+
+WARNING: To keep examples in this section succint error handling was omitted.
+
+#### Child finishes before parent
+
+```c
+coroutine void worker(void) {
+    msleep(now() + 500);
+}
+
+int main(void) {
+    int cr = go(worker());
+    msleep(now() + 1000);
+    hclose(cr);
+    return 0;
+}
+```
+
+#### Parent finished before child
+
+```c
+coroutine void worker(void) {
+    int rc = msleep(now() + 1000);
+    if(rc < 0 && errno == ECANCELED) return;
+    assert(0);
+}
+
+int main(void) {
+    int cr = go(worker());
+    msleep(now() + 500);
+    hclose(cr);
+    return 0;
+}
+```
+
+#### Parent waits for child
+
+```c
+coroutine void worker(int ch) {
+    int rc = msleep(now() + 1000);
+    int val = 42;
+    chsend(ch, &val, sizeof(val), -1);
+}
+
+int main(void) {
+    int ch[2];
+    chmake(ch);
+    int cr = go(worker(ch[1]));
+    msleep(now() + 500);
+    int val;
+    chrecv(ch[0], &val, sizeof(val), -1);
+    hclose(cr);
+    return 0;
+}
+```
+
+#### Parent gives child a grace period to finish
+
+```c
+coroutine void worker(int ch) {
+    int rc = msleep(now() + 1000);
+    int val = 42;
+    chsend(ch, &val, sizeof(val), -1);
+}
+
+int main(void) {
+    int ch[2];
+    chmake(ch);
+    int cr = go(worker(ch[1]));
+    msleep(now() + 500);
+    int val;
+    chrecv(ch[0], &val, sizeof(val), now() + 1000);
+    hclose(cr);
+    return 0;
+}
+```
+
+### Parent launches multiple children
+
+```c
+coroutine void worker(void) {
+    msleep(now() + (random() % 1000));
+}
+
+int main(void) {
+    int b = bundle();
+    int i;
+    for(i = 0; i != 3; i++)
+        bundle_go(b, worker());
+    msleep(now() + 500);
+    hclose(b);
+    return 0;
+}
+```
