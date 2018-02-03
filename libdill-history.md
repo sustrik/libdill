@@ -1,6 +1,12 @@
 
 # Past versions
 
+**Feb 1st, 2016 <http://libdill.org/libdill-2.1.tar.gz>**
+
+* Coroutine bundles added
+* struct chmem replaced by CHIZE macro
+* hctrl removed
+
 **Jan 15th, 2017 <http://libdill.org/libdill-2.0.tar.gz>**
 
 * Channels are untyped

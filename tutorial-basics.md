@@ -203,11 +203,68 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-Let's compile it and try the initial experiment once again. As can be seen, one client now cannot block another one. Excellent. Let's move on.
+Let's compile it and try the initial experiment once again. As can be seen, one client now cannot block another one. Excellent. Let's move on. 
 
-NOTE: Please note that for the sake of simplicity the program above doesn't track the running coroutines and close them when they are finished. This results in memory leaks. To understand how should this kind of thing be done properly check the article about [structured concurrency](structured-concurrency.html). 
+## Step 4: Shutdown
 
-## Step 4: Deadlines
+Now it's time to consider how to shut down the server cleanly. In the real-world you would have some kind of administrative user interface to ask the server to terminate. In our case we'll make it simple and just shut down the server after three clients have connected to it.
+
+Once we get out of the loop we have to deallocate all the allocated resources. For example, we have to close the listening socket.
+
+More importantly though, we are creating coroutines and never closing the coroutine handles. In fact, the previous step of this tutorial contains a memory leak: While individual `dialogue` coroutines finish and their stacks are automatically deallocated, the handles to those coroutines remain open and consume a little bit of memory. If the server was run for a very long time those handles would eventually accumulate and cause memory usage to go up.
+
+Closing them is not an easy feat though. The main function would have to keep a list of all open coroutine handles. The coroutines, before they exit, would have to notify the main function about the fact so that it can close the handle... The more you think about it the more complex it gets.
+
+Luckily, libdill has a concept of coroutine bundles. Bundle is a set of zero or more coroutines referred to by a single handle. In fact, there's no such a thing as direct coroutine handle. Even `go` which seems to return a coroutine handle really returns a handle to a bundle containing a single coroutine.
+
+We can use bundles to solve our cleanup problem. First, we will create an empty bundle. Then we will launch individual `dialogue` coroutines in the bundle. As the execution of any particular coroutine finishes its stack will be automatically deallocated and it will be removed from the bundle. There will be no memory leaks.
+
+Moreover, when shutting down the server we have only a single handle the close which will, in turn, cancel all the coroutines that are still running.
+
+```c
+int main(int argc, char *argv[]) {
+
+    ...
+
+    int b = bundle();
+    assert(b >= 0);
+
+    int i;
+    for(i = 0; i != 3; i++) {
+        int s = tcp_accept(ls, NULL, -1);
+        assert(s >= 0);
+        s = crlf_attach(s);
+        assert(s >= 0);
+        rc = bundle_go(b, dialogue(s));
+        assert(rc == 0);
+    }
+
+    rc = hclose(b);
+    assert(rc == 0);
+    rc = hclose(ls);
+    assert(rc == 0);
+
+    return 0; 
+}
+```
+
+One thing to remember about canceling coroutines is that once a coroutine is canceled all the blocking operations withing the coroutine, such as reading from a socket or sleeping, will start returning `ECANCELED` error. The coroutine should then deallocate all the resources it owns and exit.
+
+Looking at our `dialogue` coroutine it already does that. It responds to any error, including `ECANCELED` by closing the socket handle and exiting.
+
+Now try to compile this step and run it under valgrind (don't forget to compile libdill itself with `--with-valgrind` and `--disable-shared` options):
+
+```
+==179895== HEAP SUMMARY:
+==179895==     in use at exit: 0 bytes in 0 blocks
+==179895==   total heap usage: 11 allocs, 11 frees, 1,329,272 bytes allocated
+==179895== 
+==179895== All heap blocks were freed -- no leaks are possible
+```
+
+To get some background on how object lifetimes are supposed to be managed in libdill read the article about [structured concurrency](structured-concurrency.html).
+
+## Step 5: Deadlines
 
 File descriptors can be a scarce resource. If a client connects to the greetserver and lets the dialogue hang without entering a name, one file descriptor on the server side is, for all intents and purposes, wasted.
 
@@ -232,7 +289,7 @@ if(sz < 0) goto cleanup;
 
 Note that `errno` is set to `ETIMEDOUT` if the deadline is reached. Since we're treating all errors the same (by closing the connection), we don't make any specific provisions for deadline expiries.
 
-## Step 5: Communication among coroutines
+## Step 6: Communication among coroutines
 
 Suppose we want the greetserver to keep statistics: The overall number of connections made, the number of those that are active at the moment and the number of those that have failed.
 
@@ -294,7 +351,7 @@ coroutine void statistics(int ch) {
     while(1) {
         int op;
         int rc = chrecv(ch, &op, sizeof(op), -1);
-        assert(rc == 0);
+        if(rc < 0 && errno == ECANCELED) return;
 
         switch(op) {
         case CONN_ESTABLISHED:
@@ -345,7 +402,7 @@ coroutine void dialogue(int s, int ch) {
 cleanup:
     op = errno == 0 ? CONN_SUCCEEDED : CONN_FAILED;
     rc = chsend(ch, &op, sizeof(op), -1);
-    assert(rc == 0);
+    assert(rc == 0 || errno == ECANCELED);
     rc = hclose(s);
     assert(rc == 0);
 }
