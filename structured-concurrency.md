@@ -144,7 +144,7 @@ int main(void) {
 }
 ```
 
-When worker coroutine is closed at point 2. it is still running. From that point on, all the blocking calls in the coroutine start to return `ECANCELED` error (point 3.)
+When worker coroutine is closed at point 2. it is still running. From that point on, all the blocking calls in the coroutine start to return `ECANCELED` error (point 3.) The call to `hclose()` won't finish until the worker coroutine exits.
 
 #### Parent waits for child
 
