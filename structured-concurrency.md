@@ -123,6 +123,8 @@ int main(void) {
 }
 ```
 
+The worker coroutine finishes at the point 2. The stack of the coroutine is deallocated at that point. However, handle owned by the parent still points to a small "bundle" object. That object is deallocated later on at point 3.
+
 #### Parent finished before child
 
 ![](usecase2.png)
@@ -141,6 +143,8 @@ int main(void) {
     return 0;
 }
 ```
+
+When worker coroutine is closed at point 2. it is still running. From that point on, all the blocking calls in the coroutine start to return `ECANCELED` error (point 3.)
 
 #### Parent waits for child
 
@@ -166,6 +170,8 @@ int main(void) {
     return 0;
 }
 ```
+
+In this use case, child coroutine does a computation. At some point, parent coroutine needs the result of the computation. It waits till the child coroutine is finished (points 2-4.) and retrieves the result.
 
 #### Parent gives child a grace period to finish
 
