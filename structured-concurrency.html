@@ -142,7 +142,7 @@ hclose(h);</code></pre>
     hclose(cr); <span class="co">/* 5. */</span>
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
-<h4 id="parent-gives-child-a-grace-period-child-fails-to-finish">Parent gives child a grace period, child fails to finish</h4>
+<h4 id="parent-gives-child-a-grace-period-but-child-fails-to-finish">Parent gives child a grace period, but child fails to finish</h4>
 <p><img src="usecase5.png" /></p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">int</span> ch) {
     <span class="dt">int</span> rc = msleep(now() + <span class="dv">2000</span>);

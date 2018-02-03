@@ -192,7 +192,7 @@ int main(void) {
 }
 ```
 
-#### Parent gives child a grace period, child fails to finish
+#### Parent gives child a grace period, but child fails to finish
 
 ![](usecase5.png)
 
