@@ -166,7 +166,11 @@ hclose(h);</code></pre>
 <h3 id="parent-launches-multiple-children">Parent launches multiple children</h3>
 <p><img src="usecase6.png" /></p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">void</span>) {
-    msleep(now() + (random() % <span class="dv">1000</span>));
+    <span class="dt">int</span> rc = msleep(now() + (random() % <span class="dv">1000</span>));
+    <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ECANCELED) {
+        <span class="kw">return</span>; <span class="co">/* 4. */</span>
+    }
+    <span class="co">/* 2. */</span>
 }
 
 <span class="dt">int</span> main(<span class="dt">void</span>) {
@@ -175,7 +179,7 @@ hclose(h);</code></pre>
     <span class="kw">for</span>(i = <span class="dv">0</span>; i != <span class="dv">3</span>; i++)
         bundle_go(b, worker()); <span class="co">/* 1. */</span>
     msleep(now() + <span class="dv">500</span>);
-    hclose(b); <span class="co">/* 2. */</span>
+    hclose(b); <span class="co">/* 3. */</span>
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
 </body>
