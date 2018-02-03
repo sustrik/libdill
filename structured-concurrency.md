@@ -107,62 +107,99 @@ WARNING: To keep examples in this section succint error handling was omitted.
 
 #### Child finishes before parent
 
+![](usecase1.png)
+
 ```c
 coroutine void worker(void) {
     msleep(now() + 500);
+    /* 2. */
 }
 
 int main(void) {
-    int cr = go(worker());
+    int cr = go(worker()); /* 1. */
     msleep(now() + 1000);
-    hclose(cr);
+    hclose(cr); /* 3. */
     return 0;
 }
 ```
 
 #### Parent finished before child
 
+![](usecase2.png)
+
 ```c
 coroutine void worker(void) {
     int rc = msleep(now() + 1000);
-    if(rc < 0 && errno == ECANCELED) return;
+    if(rc < 0 && errno == ECANCELED) return; /* 3. */
     assert(0);
 }
 
 int main(void) {
-    int cr = go(worker());
+    int cr = go(worker()); /* 1. */
     msleep(now() + 500);
-    hclose(cr);
+    hclose(cr); /* 2. */
     return 0;
 }
 ```
 
 #### Parent waits for child
 
+![](usecase3.png)
+
 ```c
 coroutine void worker(int ch) {
-    int rc = msleep(now() + 1000);
+    msleep(now() + 1000);
     int val = 42;
-    chsend(ch, &val, sizeof(val), -1);
+    chsend(ch, &val, sizeof(val), -1); /* 3. */
 }
 
 int main(void) {
     int ch[2];
     chmake(ch);
-    int cr = go(worker(ch[1]));
+    int cr = go(worker(ch[1])); /* 1. */
     msleep(now() + 500);
+    /* 2. */
     int val;
     chrecv(ch[0], &val, sizeof(val), -1);
-    hclose(cr);
+    /* 4. */
+    hclose(cr); /* 5. */
     return 0;
 }
 ```
 
 #### Parent gives child a grace period to finish
 
+![](usecase4.png)
+
 ```c
 coroutine void worker(int ch) {
-    int rc = msleep(now() + 1000);
+    msleep(now() + 1000);
+    int val = 42;
+    chsend(ch, &val, sizeof(val), -1); /* 3. */
+}
+
+int main(void) {
+    int ch[2];
+    chmake(ch);
+    int cr = go(worker(ch[1])); /* 1. */
+    msleep(now() + 500);
+    /* 2. */
+    int val;
+    chrecv(ch[0], &val, sizeof(val), now() + 1000);
+    /* 4. */
+    hclose(cr); /* 5. */
+    return 0;
+}
+```
+
+#### Parent gives child a grace period, child fails to finish
+
+![](usecase5.png)
+
+```c
+coroutine void worker(int ch) {
+    int rc = msleep(now() + 2000);
+    if(rc < 0 && errno == ECANCELED) return; /* 5. */
     int val = 42;
     chsend(ch, &val, sizeof(val), -1);
 }
@@ -170,16 +207,20 @@ coroutine void worker(int ch) {
 int main(void) {
     int ch[2];
     chmake(ch);
-    int cr = go(worker(ch[1]));
+    int cr = go(worker(ch[1])); /* 1. */
     msleep(now() + 500);
     int val;
+    /* 2. */
     chrecv(ch[0], &val, sizeof(val), now() + 1000);
-    hclose(cr);
+    /* 3. */
+    hclose(cr); /* 4. */
     return 0;
 }
 ```
 
 ### Parent launches multiple children
+
+![](usecase6.png)
 
 ```c
 coroutine void worker(void) {
@@ -190,9 +231,9 @@ int main(void) {
     int b = bundle();
     int i;
     for(i = 0; i != 3; i++)
-        bundle_go(b, worker());
+        bundle_go(b, worker()); /* 1. */
     msleep(now() + 500);
-    hclose(b);
+    hclose(b); /* 2. */
     return 0;
 }
 ```
