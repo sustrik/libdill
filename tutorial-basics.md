@@ -248,7 +248,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-One thing to remember about canceling coroutines is that once a coroutine is canceled all the blocking operations withing the coroutine, such as reading from a socket or sleeping, will start returning `ECANCELED` error. The coroutine should then deallocate all its resources and exit.
+One thing to remember about canceling coroutines is that once a coroutine is canceled all the blocking operations within the coroutine, such as reading from a socket or sleeping, will start returning `ECANCELED` error. The coroutine should then deallocate all its resources and exit.
 
 Looking at our `dialogue` coroutine it turns out that it already does that. It responds to any error, including `ECANCELED` by closing the socket handle and exiting.
 
