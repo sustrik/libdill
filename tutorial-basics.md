@@ -215,7 +215,7 @@ More importantly though, we are creating coroutines and never closing the corout
 
 Closing them is not an easy feat though. The main function would have to keep a list of all open coroutine handles. The coroutines, before they exit, would have to notify the main function about the fact so that it can close the handle... The more you think about it the more complex it gets.
 
-Luckily, libdill has a concept of coroutine bundles. Bundle is a set of zero or more coroutines referred to by a single handle. In fact, there's no such a thing as direct coroutine handle. Even `go` which seems to return a coroutine handle really returns a handle to a bundle containing a single coroutine.
+Luckily though, libdill has a concept of coroutine bundles. Bundle is a set of zero or more coroutines referred to by a single handle. In fact, there's no such a thing as direct coroutine handle. Even `go` which seems to return a coroutine handle really returns a handle to a bundle containing a single coroutine.
 
 We can use bundles to solve our cleanup problem. First, we will create an empty bundle. Then we will launch individual `dialogue` coroutines in the bundle. As the execution of any particular coroutine finishes its stack will be automatically deallocated and it will be removed from the bundle. There will be no memory leaks.
 
@@ -248,11 +248,11 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-One thing to remember about canceling coroutines is that once a coroutine is canceled all the blocking operations withing the coroutine, such as reading from a socket or sleeping, will start returning `ECANCELED` error. The coroutine should then deallocate all the resources it owns and exit.
+One thing to remember about canceling coroutines is that once a coroutine is canceled all the blocking operations withing the coroutine, such as reading from a socket or sleeping, will start returning `ECANCELED` error. The coroutine should then deallocate all its resources and exit.
 
-Looking at our `dialogue` coroutine it already does that. It responds to any error, including `ECANCELED` by closing the socket handle and exiting.
+Looking at our `dialogue` coroutine it turns out that it already does that. It responds to any error, including `ECANCELED` by closing the socket handle and exiting.
 
-Now try to compile this step and run it under valgrind (don't forget to compile libdill itself with `--with-valgrind` and `--disable-shared` options):
+Now try to compile this step and run it under valgrind. (Don't forget to compile libdill itself with `--with-valgrind` and `--disable-shared` options!) Here's what you'll get:
 
 ```
 ==179895== HEAP SUMMARY:
