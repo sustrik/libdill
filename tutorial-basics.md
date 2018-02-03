@@ -217,7 +217,7 @@ Closing them is not an easy feat though. The main function would have to keep a 
 
 Luckily though, libdill has a concept of coroutine bundles. Bundle is a set of zero or more coroutines referred to by a single handle. In fact, there's no such a thing as direct coroutine handle. Even `go` which seems to return a coroutine handle really returns a handle to a bundle containing a single coroutine.
 
-We can use bundles to solve our cleanup problem. First, we will create an empty bundle. Then we will launch individual `dialogue` coroutines in the bundle. As the execution of any particular coroutine finishes its stack will be automatically deallocated and it will be removed from the bundle. There will be no memory leaks.
+We can use bundles to solve our cleanup problem. First, we will create an empty bundle. Then we will launch individual `dialogue` coroutines within the bundle. As the execution of any particular coroutine finishes its stack will be automatically deallocated and it will be removed from the bundle. There will be no memory leaks.
 
 Moreover, when shutting down the server we have only a single handle the close which will, in turn, cancel all the coroutines that are still running.
 
