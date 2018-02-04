@@ -14,10 +14,13 @@ Coroutines are always running in bundles. Even coroutine created by **go()** get
 
 This function creates an empty bundle. Coroutines can be added to the bundle using **bundle_go()** and **bundle_go_mem()** functions.
 
-_mem_ is the memory of at least _BUNDLE\_SIZE_ bytes to store the bundle in. The memory must not be deallocated before all handles referring to the bundle are closed with the **hclose** function, or the behavior is undefined.
+_mem_ is the memory of at least _BUNDLE\_SIZE_ bytes to store the bundle in. The memory must not be deallocated before all handles referring to the bundle are closed with the **hclose()** function, or the behavior is undefined.
 
-Do not use this function unless you are hyper-optimizing your code and you want to avoid a single memory allocation per bundle. Whenever possible, use **bundle** instead.
+Do not use this function unless you are hyper-optimizing your code and you want to avoid a single memory allocation per bundle. Whenever possible, use **bundle()** instead.
 
+If **hdone()** is called on the bundle it waits while all coroutines exit. After calling **hdone()**, irrespective of whether is succeeds or times out, no further coroutines can be launched using the bundle.
+
+When **hclose()** is called on the bundle all the coroutines contained in the bundle will be canceled. In other words, all the blocking functions within the coroutine start failing with _ECANCELED_ error. The **hclose()** function itself won't exit until all the coroutines in the bundle exit.
 
 # RETURN VALUE
 

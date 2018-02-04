@@ -183,16 +183,20 @@ cleanup:
 <h2 id="step-5-deadlines">Step 5: Deadlines</h2>
 <p>File descriptors can be a scarce resource. If a client connects to the greetserver and lets the dialogue hang without entering a name, one file descriptor on the server side is, for all intents and purposes, wasted.</p>
 <p>To deal with the problem, we are going to timeout the whole client/server dialogue. If it takes more than <em>10</em> seconds, the server will kill the connection at once.</p>
-<p>One thing to note is that libdill uses deadlines rather than the more conventional timeouts. In other words, you specify the time instant by which you want the operation to finish rather than the maximum time it should take to run it. To construct deadlines easily, libdill provides the <code>now()</code> function. The deadline is expressed in milliseconds, which means you can create a deadline <em>10</em> seconds in the future as follows:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int64_t</span> deadline = now() + <span class="dv">10000</span>;</code></pre>
+<p>One thing to note is that libdill uses deadlines rather than the more conventional timeouts. In other words, you specify the time instant by which you want the operation to finish rather than the maximum time it should take to run it. To construct deadlines easily, libdill provides the <code>now()</code> function. The deadline is expressed in milliseconds, which means you can create a deadline one minure in the future as follows:</p>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int64_t</span> deadline = now() + <span class="dv">60000</span>;</code></pre>
 <p>Furthermore, you have to modify all potentially blocking function calls in the program to take the deadline parameter. In our case:</p>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int64_t</span> deadline = now() + <span class="dv">10000</span>;
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int64_t</span> deadline = now() + <span class="dv">60000</span>;
 <span class="dt">int</span> rc = msend(s, <span class="st">&quot;What&#39;s your name?&quot;</span>, <span class="dv">17</span>, deadline);
 <span class="kw">if</span>(rc != <span class="dv">0</span>) <span class="kw">goto</span> cleanup;
 <span class="dt">char</span> inbuf[<span class="dv">256</span>];
 ssize_t sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), deadline);
 <span class="kw">if</span>(sz &lt; <span class="dv">0</span>) <span class="kw">goto</span> cleanup;</code></pre>
 <p>Note that <code>errno</code> is set to <code>ETIMEDOUT</code> if the deadline is reached. Since we're treating all errors the same (by closing the connection), we don't make any specific provisions for deadline expiries.</p>
+<p>Now note that the third connection to the greetserver is closed immediately without even given user a chance to enter their name. This is a common use case for network servers. When the server is being shut down we want it to stop accepting new connections, but we also want to give it some time to finish handling those connections that are still open.</p>
+<p>This can be achieved by calling <code>hdone()</code> on the <code>dialogue()</code> coroutine bundle. <code>hdone()</code> waits for all the coroutines in the bundle to finish. Also, it allows to specify a deadline. We can do so immediately after exiting the loop:</p>
+<pre class="sourceCode c"><code class="sourceCode c">rc = hdone(b, now() + <span class="dv">10000</span>);
+assert(rc == <span class="dv">0</span> || (rc &lt; <span class="dv">0</span> &amp;&amp; errno == ETIMEDOUT));</code></pre>
 <h2 id="step-6-communication-among-coroutines">Step 6: Communication among coroutines</h2>
 <p>Suppose we want the greetserver to keep statistics: The overall number of connections made, the number of those that are active at the moment and the number of those that have failed.</p>
 <p>In a classic, thread-based application, we would keep the statistics in global variables and synchronize access to them using mutexes.</p>

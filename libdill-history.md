@@ -1,7 +1,11 @@
 
 # Past versions
 
-**Feb 1st, 2016 <http://libdill.org/libdill-2.1.tar.gz>**
+**Feb 4th, 2018 <http://libdill.org/libdill-2.2.tar.gz>**
+
+* hdone() can be called on a bundle to wait for coroutines to finish
+
+**Feb 1st, 2018 <http://libdill.org/libdill-2.1.tar.gz>**
 
 * Coroutine bundles added
 * struct chmem replaced by CHSIZE macro

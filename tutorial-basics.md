@@ -270,16 +270,16 @@ File descriptors can be a scarce resource. If a client connects to the greetserv
 
 To deal with the problem, we are going to timeout the whole client/server dialogue. If it takes more than *10* seconds, the server will kill the connection at once.
 
-One thing to note is that libdill uses deadlines rather than the more conventional timeouts. In other words, you specify the time instant by which you want the operation to finish rather than the maximum time it should take to run it. To construct deadlines easily, libdill provides the `now()` function. The deadline is expressed in milliseconds, which means you can create a deadline *10* seconds in the future as follows:
+One thing to note is that libdill uses deadlines rather than the more conventional timeouts. In other words, you specify the time instant by which you want the operation to finish rather than the maximum time it should take to run it. To construct deadlines easily, libdill provides the `now()` function. The deadline is expressed in milliseconds, which means you can create a deadline one minure in the future as follows:
 
 ```c
-int64_t deadline = now() + 10000;
+int64_t deadline = now() + 60000;
 ```
 
 Furthermore, you have to modify all potentially blocking function calls in the program to take the deadline parameter. In our case:
 
 ```c
-int64_t deadline = now() + 10000;
+int64_t deadline = now() + 60000;
 int rc = msend(s, "What's your name?", 17, deadline);
 if(rc != 0) goto cleanup;
 char inbuf[256];
@@ -288,6 +288,15 @@ if(sz < 0) goto cleanup;
 ```
 
 Note that `errno` is set to `ETIMEDOUT` if the deadline is reached. Since we're treating all errors the same (by closing the connection), we don't make any specific provisions for deadline expiries.
+
+Now note that the third connection to the greetserver is closed immediately without even given user a chance to enter their name. This is a common use case for network servers. When the server is being shut down we want it to stop accepting new connections, but we also want to give it some time to finish handling those connections that are still open.
+
+This can be achieved by calling `hdone()` on the `dialogue()` coroutine bundle. `hdone()` waits for all the coroutines in the bundle to finish. Also, it allows to specify a deadline. We can do so immediately after exiting the loop:
+
+```c
+rc = hdone(b, now() + 10000);
+assert(rc == 0 || (rc < 0 && errno == ETIMEDOUT));
+``` 
 
 ## Step 6: Communication among coroutines
 
@@ -425,3 +434,4 @@ Now try pressing enter in telnet when asked for your name. The connection will b
 The reason for the behavior is that the CRLF protocol treats an empty line as a connection termination request. Thus, when you press enter in telnet, you send an empty line which causes `mrecv()` on the server side to return the `EPIPE` error, which represents "connection terminated by peer". The server will jump directly into to the cleanup code.
 
 And that's the end of the tutorial. Enjoy your time with the library!
+
