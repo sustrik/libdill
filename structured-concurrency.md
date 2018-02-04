@@ -139,36 +139,46 @@ From point 3. on, all the blocking calls in the child coroutine start to return 
 
 Note how in both scenarios the child gets an option to release any resources it may own (at points 2. and 4., respectively).
 
-#### Parent waits for child
+#### Parent coroutine waits for child coroutine
 
-![](usecase3.png)
+In this use case, child coroutine does a computation. At some point, parent coroutine needs the result of the computation. It waits until the child coroutine is finished and retrieves the result.
 
 ```c
 coroutine void worker(int ch) {
-    msleep(now() + 1000);
+    msleep(now() + (random() % 2000));
+    /* 2. */
     int val = 42;
     chsend(ch, &val, sizeof(val), -1); /* 3. */
+    /* 3. */
 }
 
 int main(void) {
     int ch[2];
     chmake(ch);
     int cr = go(worker(ch[1])); /* 1. */
-    msleep(now() + 500);
-    /* 2. */
+    msleep(now() + 1000);
+    /* 4. */
     int val;
     chrecv(ch[0], &val, sizeof(val), -1);
-    /* 4. */
-    hclose(cr); /* 5. */
+    /* 5. */
+    hclose(cr); /* 6. */
     return 0;
 }
 ```
 
-In this use case, child coroutine does a computation. At some point, parent coroutine needs the result of the computation. It waits till the child coroutine is finished (points 2-4.) and retrieves the result.
+Once again, there are two possible scenarios. First, the child may have finished quickly:
+
+![](usecase3.png)
+
+The child is done with the computation at point 2. It tries to send the result into the channel. However, nobody is yet reading from the channel and so the call is blocked until the parent coroutine reads from the channel at point 4.
+
+Alternatively, the child coroutine may still be running when the parent needs the result. Parent tries to read the result from the channel at point 4. and gets stuck. When the child finishes the computation at point 2. the parent gets unstuck and proceeds to closing the child at point 6. 
+
+![](usecase4.png)
 
 #### Parent gives child a grace period to finish
 
-![](usecase4.png)
+![](usecase5.png)
 
 ```c
 coroutine void worker(int ch) {
@@ -193,7 +203,7 @@ int main(void) {
 
 #### Parent gives child a grace period, but child fails to finish
 
-![](usecase5.png)
+![](usecase6.png)
 
 ```c
 coroutine void worker(int ch) {
@@ -219,7 +229,7 @@ int main(void) {
 
 ### Parent launches multiple children
 
-![](usecase6.png)
+![](usecase7.png)
 
 ```c
 coroutine void worker(void) {
