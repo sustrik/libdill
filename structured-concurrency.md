@@ -111,14 +111,14 @@ One coroutine launches another coroutine. At some point it decides to shut the c
 
 ```c
 coroutine void worker(void) {
-    int rc = msleep(now() + 1000);
+    int rc = msleep(now() + 2000);
     if(rc < 0 && errno == ECANCELED) return; /* 4. */
     /* 2. */
 }
 
 int main(void) {
     int cr = go(worker()); /* 1. */
-    msleep(now() + (random() % 2000));
+    msleep(now() + (random() % 1000));
     hclose(cr); /* 3. */
     return 0;
 }

@@ -78,14 +78,14 @@ hclose(h);</code></pre>
 <h4 id="parent-coroutine-closes-child-coroutine">Parent coroutine closes child coroutine</h4>
 <p>One coroutine launches another coroutine. At some point it decides to shut the child down irrespective of whether it have finished in the meantime or not.</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">void</span>) {
-    <span class="dt">int</span> rc = msleep(now() + <span class="dv">1000</span>);
+    <span class="dt">int</span> rc = msleep(now() + <span class="dv">2000</span>);
     <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ECANCELED) <span class="kw">return</span>; <span class="co">/* 4. */</span>
     <span class="co">/* 2. */</span>
 }
 
 <span class="dt">int</span> main(<span class="dt">void</span>) {
     <span class="dt">int</span> cr = go(worker()); <span class="co">/* 1. */</span>
-    msleep(now() + (random() % <span class="dv">2000</span>));
+    msleep(now() + (random() % <span class="dv">1000</span>));
     hclose(cr); <span class="co">/* 3. */</span>
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
@@ -94,7 +94,7 @@ hclose(h);</code></pre>
 <p>The worker coroutine finishes at the point 2. The stack of the coroutine is deallocated at that point. However, handle owned by the parent still points to a small &quot;bundle&quot; object. That object is deallocated later on at point 3.</p>
 <p>Second, if the call to <code>random</code> return a big number the child won't finish before the parent and it will be forcefully terminated:</p>
 <p><img src="usecase2.png" /></p>
-<p>From point 3. on, all the blocking calls in the child coroutine start to return <code>ECANCELED</code> error The call to <code>hclose()</code> won't finish until the worker coroutine exits. That should happen pretty fast given that it can't do any blocking calls anyway.</p>
+<p>From point 3. on, all the blocking calls in the child coroutine start to return <code>ECANCELED</code> error. The call to <code>hclose()</code> won't finish until the worker coroutine exits. That should happen pretty fast given that it can't do any blocking calls anyway.</p>
 <h4 id="parent-waits-for-child">Parent waits for child</h4>
 <p><img src="usecase3.png" /></p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">int</span> ch) {
