@@ -135,7 +135,7 @@ Second, if the call to `random` return a big number the child won't finish befor
 
 ![](usecase2.png)
 
-From point 3. on, all the blocking calls in the child coroutine start to return `ECANCELED` error The call to `hclose()` won't finish until the worker coroutine exits. That should happen pretty fast given that it can't do any blocking calls anyway.
+From point 3. on, all the blocking calls in the child coroutine start to return `ECANCELED` error. The call to `hclose()` won't finish until the worker coroutine exits. That should happen pretty fast given that it can't do any blocking calls anyway.
 
 #### Parent waits for child
 
