@@ -39,9 +39,14 @@ static inline void dill_list_init(struct dill_list *self) {
     self->prev = self;
 }
 
-/* True if the list has no items. */
+/* True if the list has no items except for the head. */
 static inline int dill_list_empty(struct dill_list *self) {
     return self->next == self;
+}
+
+/* True if the list has only one item in addition to the head. */
+static inline int dill_list_oneitem(struct dill_list *self) {
+    return self->next != self && self->next == self->prev;
 }
 
 /* Returns an iterator to one past the item pointed to by 'it'. If 'it' is the

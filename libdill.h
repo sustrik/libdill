@@ -93,9 +93,9 @@ DILL_EXPORT int hdone(int h, int64_t deadline);
 /******************************************************************************/
 
 #if defined(__i386__)
-#  define BUNDLE_SIZE 28
+#  define BUNDLE_SIZE 32
 #else
-#  define BUNDLE_SIZE 56
+#  define BUNDLE_SIZE 64
 #endif
 
 DILL_EXPORT int bundle(void);

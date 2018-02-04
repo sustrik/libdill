@@ -76,8 +76,13 @@ struct dill_bundle {
     struct hvfs vfs;
     /* List of coroutines in this bundle. */
     struct dill_list crs;
+    /* If somebody is doing hdone() on this bundle, here's the clause
+       to trigger when all coroutines are finished. */
+    struct dill_clause *waiter;
     /* If true, the bundle was created by bundle_mem. */
     unsigned int mem : 1;
+    /* If true, hdone() was already called on this bundle. */
+    unsigned int done : 1;
 };
 
 DILL_CT_ASSERT(BUNDLE_SIZE >= sizeof(struct dill_bundle));
@@ -93,7 +98,9 @@ int bundle_mem(void *mem) {
     b->vfs.close = dill_bundle_close;
     b->vfs.done = dill_bundle_done;
     dill_list_init(&b->crs);
+    b->waiter = NULL;
     b->mem = 1;
+    b->done = 0;
     return hmake(&b->vfs);
 }
 
@@ -129,7 +136,21 @@ static void dill_bundle_close(struct hvfs *vfs) {
 }
 
 static int dill_bundle_done(struct hvfs *vfs, int64_t deadline) {
-    dill_assert(0);
+    struct dill_bundle *self = (struct dill_bundle*)vfs;
+    if(self->done) {errno = EPIPE; return -1;}
+    self->done = 1;
+    if(!dill_list_empty(&self->crs)) {
+        struct dill_clause cl;
+        self->waiter = &cl;
+        dill_waitfor(&cl, 0, NULL);
+        struct dill_tmclause tmcl;
+        dill_timer(&tmcl, 1, deadline);
+        int id = dill_wait();
+        if(dill_slow(id < 0)) return -1;
+        if(dill_slow(id == 1)) {errno = ETIMEDOUT; return -1;}
+        dill_assert(id == 0);
+    }
+    return 0;
 }
 
 /******************************************************************************/
@@ -337,6 +358,13 @@ void dill_epilogue(void) {
     /* Deallocate the coroutine, unless, of course, it is already
        in the process of being closed. */
     if(!ctx->r->no_blocking1) {
+        /* If this is the last coroutine in the bundle and there's someone
+           waiting for hdone() on the bundle unblock them. */
+        if(dill_list_oneitem(&ctx->r->bundle)) {
+            struct dill_bundle *b = dill_cont(ctx->r->bundle.next,
+                struct dill_bundle, crs);
+            if(b->waiter) dill_trigger(b->waiter, 0);
+        }
         dill_list_erase(&ctx->r->bundle);
         dill_cr_close(&ctx->r->vfs);
     }
