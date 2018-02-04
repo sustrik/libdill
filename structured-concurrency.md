@@ -139,6 +139,36 @@ From point 3. on, all the blocking calls in the child coroutine start to return 
 
 Note how in both scenarios the child gets an option to release any resources it may own (at points 2. and 4., respectively).
 
+### Parent coroutine closes multiple child coroutines
+
+This is basically the same scenario as above except that mutliple child coroutines are launched instead of a single one.
+
+```c
+coroutine void worker(void) {
+    int rc = msleep(now() + (random() % 1000));
+    if(rc < 0 && errno == ECANCELED) {
+        return; /* 4. */
+    }
+    /* 2. */
+}
+
+int main(void) {
+    int b = bundle();
+    int i;
+    for(i = 0; i != 3; i++)
+        bundle_go(b, worker()); /* 1. */
+    msleep(now() + 500);
+    hclose(b); /* 3. */
+    return 0;
+}
+```
+
+Each child either finishes before the main coroutine or it is canceled by the main coroutine, just as above.
+
+![](usecase7.png)
+
+The only difference is that all the child coroutines are referred to using a single handle. Therefore there are no dangling leftover handles as individual children finish.
+
 #### Parent coroutine waits for child coroutine
 
 In this use case, child coroutine does a computation. At some point, parent coroutine needs the result of the computation. It waits until the child coroutine is finished and retrieves the result.
@@ -227,26 +257,3 @@ int main(void) {
 }
 ```
 
-### Parent launches multiple children
-
-![](usecase7.png)
-
-```c
-coroutine void worker(void) {
-    int rc = msleep(now() + (random() % 1000));
-    if(rc < 0 && errno == ECANCELED) {
-        return; /* 4. */
-    }
-    /* 2. */
-}
-
-int main(void) {
-    int b = bundle();
-    int i;
-    for(i = 0; i != 3; i++)
-        bundle_go(b, worker()); /* 1. */
-    msleep(now() + 500);
-    hclose(b); /* 3. */
-    return 0;
-}
-```

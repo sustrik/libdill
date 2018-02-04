@@ -96,6 +96,28 @@ hclose(h);</code></pre>
 <p><img src="usecase2.png" /></p>
 <p>From point 3. on, all the blocking calls in the child coroutine start to return <code>ECANCELED</code> error. The call to <code>hclose()</code> won't finish until the worker coroutine exits. That should happen pretty fast given that it can't do any blocking calls anyway.</p>
 <p>Note how in both scenarios the child gets an option to release any resources it may own (at points 2. and 4., respectively).</p>
+<h3 id="parent-coroutine-closes-multiple-child-coroutines">Parent coroutine closes multiple child coroutines</h3>
+<p>This is basically the same scenario as above except that mutliple child coroutines are launched instead of a single one.</p>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">void</span>) {
+    <span class="dt">int</span> rc = msleep(now() + (random() % <span class="dv">1000</span>));
+    <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ECANCELED) {
+        <span class="kw">return</span>; <span class="co">/* 4. */</span>
+    }
+    <span class="co">/* 2. */</span>
+}
+
+<span class="dt">int</span> main(<span class="dt">void</span>) {
+    <span class="dt">int</span> b = bundle();
+    <span class="dt">int</span> i;
+    <span class="kw">for</span>(i = <span class="dv">0</span>; i != <span class="dv">3</span>; i++)
+        bundle_go(b, worker()); <span class="co">/* 1. */</span>
+    msleep(now() + <span class="dv">500</span>);
+    hclose(b); <span class="co">/* 3. */</span>
+    <span class="kw">return</span> <span class="dv">0</span>;
+}</code></pre>
+<p>Each child either finishes before the main coroutine or it is canceled by the main coroutine, just as above.</p>
+<p><img src="usecase7.png" /></p>
+<p>The only difference is that all the child coroutines are referred to using a single handle. Therefore there are no dangling leftover handles as individual children finish.</p>
 <h4 id="parent-coroutine-waits-for-child-coroutine">Parent coroutine waits for child coroutine</h4>
 <p>In this use case, child coroutine does a computation. At some point, parent coroutine needs the result of the computation. It waits until the child coroutine is finished and retrieves the result.</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">int</span> ch) {
@@ -162,25 +184,6 @@ hclose(h);</code></pre>
     chrecv(ch[<span class="dv">0</span>], &amp;val, <span class="kw">sizeof</span>(val), now() + <span class="dv">1000</span>);
     <span class="co">/* 3. */</span>
     hclose(cr); <span class="co">/* 4. */</span>
-    <span class="kw">return</span> <span class="dv">0</span>;
-}</code></pre>
-<h3 id="parent-launches-multiple-children">Parent launches multiple children</h3>
-<p><img src="usecase7.png" /></p>
-<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">void</span>) {
-    <span class="dt">int</span> rc = msleep(now() + (random() % <span class="dv">1000</span>));
-    <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ECANCELED) {
-        <span class="kw">return</span>; <span class="co">/* 4. */</span>
-    }
-    <span class="co">/* 2. */</span>
-}
-
-<span class="dt">int</span> main(<span class="dt">void</span>) {
-    <span class="dt">int</span> b = bundle();
-    <span class="dt">int</span> i;
-    <span class="kw">for</span>(i = <span class="dv">0</span>; i != <span class="dv">3</span>; i++)
-        bundle_go(b, worker()); <span class="co">/* 1. */</span>
-    msleep(now() + <span class="dv">500</span>);
-    hclose(b); <span class="co">/* 3. */</span>
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
 </body>
