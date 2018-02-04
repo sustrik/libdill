@@ -146,8 +146,8 @@ hclose(h);</code></pre>
 <p>Alternatively, the child coroutine may still be running when the parent needs the result:</p>
 <p><img src="usecase4.png" /></p>
 <p>Parent tries to read the result from the channel at point 4. and gets stuck. When the child finishes the computation at point 2. the parent gets unstuck and proceeds to closing the child at point 6.</p>
-<h4 id="parent-coroutine-gives-child-coroutine-a-grace-period">Parent coroutine gives child coroutine a grace period</h4>
-<p>This is a common scenario in network servers. When shutting a server you want it to stop accepting new connections, but at the same time you want to give all the connections currently in-flight (each handled by its own coroutine) a minute to finish whatever it is they are doing.</p>
+<h4 id="parent-coroutine-waits-for-child-coroutine---with-a-grace-period">Parent coroutine waits for child coroutine - with a grace period</h4>
+<p>Same as above but the parent limit the time it is waiting for the result from the child. If result is not received when the deadline hits it will cancel the child.</p>
 <p>The code is exactly the same as in the previous scenario, except that <code>chrecv</code> now has a deadline:</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">int</span> ch) {
     <span class="dt">int</span> rc = msleep(now() + (random() % <span class="dv">2000</span>));
@@ -178,4 +178,29 @@ hclose(h);</code></pre>
 <p>The third one occurs when the child coroutine is not finished by the end of the grace period:</p>
 <p><img src="usecase5.png" /></p>
 <p>Parent start waiting for the child at point 4. <code>chrecv</code> times out at point 5a. The child coroutine is closed forcefully just after that, at point 6.</p>
+<h4 id="parent-coroutine-closes-multiple-child-coroutines---with-a-grace-period">Parent coroutine closes multiple child coroutines - with a grace period</h4>
+<p>This is a common scenario in network servers. Imagine that the main coroutine is accepting connections and launching one child coroutine per connection. When shutting down the server you want it to stop accepting new connections, but at the same time you want to give all the connections currently in-flight some time to finish whatever it is they are doing. However, you don't want to wait for too long. If some connections don't finish within reasonable time you want to cancel them.</p>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">void</span>) {
+    <span class="dt">int</span> rc = msleep(now() + (random() % <span class="dv">1000</span>));
+    <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ECANCELED) {
+        <span class="kw">return</span>; <span class="co">/* 6 . /</span>
+<span class="co">    }</span>
+<span class="co">    /* 2. */</span>
+}
+
+<span class="dt">int</span> main(<span class="dt">void</span>) {
+    <span class="dt">int</span> b = bundle();
+    <span class="dt">int</span> i;
+    <span class="kw">for</span>(i = <span class="dv">0</span>; i != <span class="dv">3</span>; i++)
+        bundle_go(b, worker()); <span class="co">/* 1. */</span>
+    <span class="co">/* 3. */</span>
+    hdone(b, now() + <span class="dv">500</span>);
+    <span class="co">/* 4. */</span>
+    hclose(b); <span class="co">/* 5. */</span>
+    <span class="kw">return</span> <span class="dv">0</span>;
+}</code></pre>
+<p>There are two scenarios worth considering. First, all the children can end before the deadline expires. In that case <code>hdone()</code> exits immediately after the last child is finished (point 4.):</p>
+<p><img src="usecase8.png" /></p>
+<p>In the second scenario, there are still some children running when deadline is reached. <code>hdone()</code> exits with <code>ETIMEDOUT</code> at point 4. The remaining coroutines are canceled at point 5.</p>
+<p><img src="usecase9.png" /></p>
 </body>

@@ -208,9 +208,9 @@ Alternatively, the child coroutine may still be running when the parent needs th
 
 Parent tries to read the result from the channel at point 4. and gets stuck. When the child finishes the computation at point 2. the parent gets unstuck and proceeds to closing the child at point 6.
 
-#### Parent coroutine gives child coroutine a grace period
+#### Parent coroutine waits for child coroutine - with a grace period
 
-This is a common scenario in network servers. When shutting a server you want it to stop accepting new connections, but at the same time you want to give all the connections currently in-flight (each handled by its own coroutine) a minute to finish whatever it is they are doing.
+Same as above but the parent limit the time it is waiting for the result from the child. If result is not received when the deadline hits it will cancel the child.
 
 The code is exactly the same as in the previous scenario, except that `chrecv` now has a deadline:
 
@@ -249,3 +249,38 @@ The third one occurs when the child coroutine is not finished by the end of the 
 ![](usecase5.png)
 
 Parent start waiting for the child at point 4. `chrecv` times out at point 5a. The child coroutine is closed forcefully just after that, at point 6.
+
+#### Parent coroutine closes multiple child coroutines - with a grace period
+
+This is a common scenario in network servers. Imagine that the main coroutine is accepting connections and launching one child coroutine per connection. When shutting down the server you want it to stop accepting new connections, but at the same time you want to give all the connections currently in-flight some time to finish whatever it is they are doing. However, you don't want to wait for too long. If some connections don't finish within reasonable time you want to cancel them.
+
+```c
+coroutine void worker(void) {
+    int rc = msleep(now() + (random() % 1000));
+    if(rc < 0 && errno == ECANCELED) {
+        return; /* 6 . /
+    }
+    /* 2. */
+}
+
+int main(void) {
+    int b = bundle();
+    int i;
+    for(i = 0; i != 3; i++)
+        bundle_go(b, worker()); /* 1. */
+    /* 3. */
+    hdone(b, now() + 500);
+    /* 4. */
+    hclose(b); /* 5. */
+    return 0;
+}
+```
+
+There are two scenarios worth considering. First, all the children can end before the deadline expires. In that case `hdone()` exits immediately after the last child is finished (point 4.):
+
+![](usecase8.png)
+
+In the second scenario, there are still some children running when deadline is reached. `hdone()` exits with `ETIMEDOUT` at point 4. The remaining coroutines are canceled at point 5. 
+
+![](usecase9.png)
+
