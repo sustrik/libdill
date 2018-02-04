@@ -107,7 +107,7 @@ WARNING: To keep examples in this section succint error handling was omitted.
 
 #### Parent coroutine closes child coroutine
 
-One coroutine launches another coroutine. At some point it decides to shut it down irrespective of whether the child have finished in the meantime or not. 
+One coroutine launches another coroutine. At some point it decides to shut the child down irrespective of whether it have finished in the meantime or not. 
 
 ```c
 coroutine void worker(void) {

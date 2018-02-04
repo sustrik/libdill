@@ -76,7 +76,7 @@ hclose(h);</code></pre>
 <h2 id="what-are-the-use-cases">What are the use cases?</h2>
 <p>WARNING: To keep examples in this section succint error handling was omitted.</p>
 <h4 id="parent-coroutine-closes-child-coroutine">Parent coroutine closes child coroutine</h4>
-<p>One coroutine launches another coroutine. At some point it decides to shut it down irrespective of whether the child have finished in the meantime or not.</p>
+<p>One coroutine launches another coroutine. At some point it decides to shut the child down irrespective of whether it have finished in the meantime or not.</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">void</span>) {
     <span class="dt">int</span> rc = msleep(now() + <span class="dv">1000</span>);
     <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ECANCELED) <span class="kw">return</span>; <span class="co">/* 4. */</span>
