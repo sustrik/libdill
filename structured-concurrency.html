@@ -143,47 +143,39 @@ hclose(h);</code></pre>
 <p>Once again, there are two possible scenarios. First, the child may have finished quickly:</p>
 <p><img src="usecase3.png" /></p>
 <p>The child is done with the computation at point 2. It tries to send the result into the channel. However, nobody is yet reading from the channel and so the call is blocked until the parent coroutine reads from the channel at point 4.</p>
-<p>Alternatively, the child coroutine may still be running when the parent needs the result. Parent tries to read the result from the channel at point 4. and gets stuck. When the child finishes the computation at point 2. the parent gets unstuck and proceeds to closing the child at point 6.</p>
+<p>Alternatively, the child coroutine may still be running when the parent needs the result:</p>
 <p><img src="usecase4.png" /></p>
-<h4 id="parent-gives-child-a-grace-period-to-finish">Parent gives child a grace period to finish</h4>
-<p><img src="usecase5.png" /></p>
+<p>Parent tries to read the result from the channel at point 4. and gets stuck. When the child finishes the computation at point 2. the parent gets unstuck and proceeds to closing the child at point 6.</p>
+<h4 id="parent-coroutine-gives-child-coroutine-a-grace-period">Parent coroutine gives child coroutine a grace period</h4>
+<p>This is a common scenario in network servers. When shutting a server you want it to stop accepting new connections, but at the same time you want to give all the connections currently in-flight (each handled by its own coroutine) a minute to finish whatever it is they are doing.</p>
+<p>The code is exactly the same as in the previous scenario, except that <code>chrecv</code> now has a deadline:</p>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">int</span> ch) {
-    msleep(now() + <span class="dv">1000</span>);
-    <span class="dt">int</span> val = <span class="dv">42</span>;
-    chsend(ch, &amp;val, <span class="kw">sizeof</span>(val), -<span class="dv">1</span>); <span class="co">/* 3. */</span>
-}
-
-<span class="dt">int</span> main(<span class="dt">void</span>) {
-    <span class="dt">int</span> ch[<span class="dv">2</span>];
-    chmake(ch);
-    <span class="dt">int</span> cr = go(worker(ch[<span class="dv">1</span>])); <span class="co">/* 1. */</span>
-    msleep(now() + <span class="dv">500</span>);
+    <span class="dt">int</span> rc = msleep(now() + (random() % <span class="dv">2000</span>));
+    <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ECANCELED) <span class="kw">return</span>; <span class="co">/* 7. */</span>
     <span class="co">/* 2. */</span>
-    <span class="dt">int</span> val;
-    chrecv(ch[<span class="dv">0</span>], &amp;val, <span class="kw">sizeof</span>(val), now() + <span class="dv">1000</span>);
-    <span class="co">/* 4. */</span>
-    hclose(cr); <span class="co">/* 5. */</span>
-    <span class="kw">return</span> <span class="dv">0</span>;
-}</code></pre>
-<h4 id="parent-gives-child-a-grace-period-but-child-fails-to-finish">Parent gives child a grace period, but child fails to finish</h4>
-<p><img src="usecase6.png" /></p>
-<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">int</span> ch) {
-    <span class="dt">int</span> rc = msleep(now() + <span class="dv">2000</span>);
-    <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ECANCELED) <span class="kw">return</span>; <span class="co">/* 5. */</span>
     <span class="dt">int</span> val = <span class="dv">42</span>;
     chsend(ch, &amp;val, <span class="kw">sizeof</span>(val), -<span class="dv">1</span>);
+    <span class="co">/* 3. */</span>
 }
 
 <span class="dt">int</span> main(<span class="dt">void</span>) {
     <span class="dt">int</span> ch[<span class="dv">2</span>];
     chmake(ch);
     <span class="dt">int</span> cr = go(worker(ch[<span class="dv">1</span>])); <span class="co">/* 1. */</span>
-    msleep(now() + <span class="dv">500</span>);
+    msleep(now() + <span class="dv">1000</span>);
+    <span class="co">/* 4. */</span>
     <span class="dt">int</span> val;
-    <span class="co">/* 2. */</span>
-    chrecv(ch[<span class="dv">0</span>], &amp;val, <span class="kw">sizeof</span>(val), now() + <span class="dv">1000</span>);
-    <span class="co">/* 3. */</span>
-    hclose(cr); <span class="co">/* 4. */</span>
+    <span class="dt">int</span> rc = chrecv(ch[<span class="dv">0</span>], &amp;val, <span class="kw">sizeof</span>(val), now() + <span class="dv">500</span>);
+    <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ETIMEDOUT) {
+        printf(<span class="st">&quot;Timed out</span><span class="ch">\n</span><span class="st">&quot;</span>); <span class="co">/* 5a. */</span>
+    } <span class="kw">else</span> {
+        printf(<span class="st">&quot;Success</span><span class="ch">\n</span><span class="st">&quot;</span>); <span class="co">/* 5. */</span>
+    }
+    hclose(cr); <span class="co">/* 6. */</span>
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
+<p>There are three possible scenarios in this use cases. The first two are identical to those in the previous use case.</p>
+<p>The third one occurs when the child coroutine is not finished by the end of the grace period:</p>
+<p><img src="usecase5.png" /></p>
+<p>Parent start waiting for the child at point 4. <code>chrecv</code> times out at point 5a. The child coroutine is closed forcefully just after that, at point 6.</p>
 </body>

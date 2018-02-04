@@ -202,58 +202,50 @@ Once again, there are two possible scenarios. First, the child may have finished
 
 The child is done with the computation at point 2. It tries to send the result into the channel. However, nobody is yet reading from the channel and so the call is blocked until the parent coroutine reads from the channel at point 4.
 
-Alternatively, the child coroutine may still be running when the parent needs the result. Parent tries to read the result from the channel at point 4. and gets stuck. When the child finishes the computation at point 2. the parent gets unstuck and proceeds to closing the child at point 6. 
+Alternatively, the child coroutine may still be running when the parent needs the result:
 
 ![](usecase4.png)
 
-#### Parent gives child a grace period to finish
+Parent tries to read the result from the channel at point 4. and gets stuck. When the child finishes the computation at point 2. the parent gets unstuck and proceeds to closing the child at point 6.
+
+#### Parent coroutine gives child coroutine a grace period
+
+This is a common scenario in network servers. When shutting a server you want it to stop accepting new connections, but at the same time you want to give all the connections currently in-flight (each handled by its own coroutine) a minute to finish whatever it is they are doing.
+
+The code is exactly the same as in the previous scenario, except that `chrecv` now has a deadline:
+
+```c
+coroutine void worker(int ch) {
+    int rc = msleep(now() + (random() % 2000));
+    if(rc < 0 && errno == ECANCELED) return; /* 7. */
+    /* 2. */
+    int val = 42;
+    chsend(ch, &val, sizeof(val), -1);
+    /* 3. */
+}
+
+int main(void) {
+    int ch[2];
+    chmake(ch);
+    int cr = go(worker(ch[1])); /* 1. */
+    msleep(now() + 1000);
+    /* 4. */
+    int val;
+    int rc = chrecv(ch[0], &val, sizeof(val), now() + 500);
+    if(rc < 0 && errno == ETIMEDOUT) {
+        printf("Timed out\n"); /* 5a. */
+    } else {
+        printf("Success\n"); /* 5. */
+    }
+    hclose(cr); /* 6. */
+    return 0;
+}
+```
+
+There are three possible scenarios in this use cases. The first two are identical to those in the previous use case.
+
+The third one occurs when the child coroutine is not finished by the end of the grace period:
 
 ![](usecase5.png)
 
-```c
-coroutine void worker(int ch) {
-    msleep(now() + 1000);
-    int val = 42;
-    chsend(ch, &val, sizeof(val), -1); /* 3. */
-}
-
-int main(void) {
-    int ch[2];
-    chmake(ch);
-    int cr = go(worker(ch[1])); /* 1. */
-    msleep(now() + 500);
-    /* 2. */
-    int val;
-    chrecv(ch[0], &val, sizeof(val), now() + 1000);
-    /* 4. */
-    hclose(cr); /* 5. */
-    return 0;
-}
-```
-
-#### Parent gives child a grace period, but child fails to finish
-
-![](usecase6.png)
-
-```c
-coroutine void worker(int ch) {
-    int rc = msleep(now() + 2000);
-    if(rc < 0 && errno == ECANCELED) return; /* 5. */
-    int val = 42;
-    chsend(ch, &val, sizeof(val), -1);
-}
-
-int main(void) {
-    int ch[2];
-    chmake(ch);
-    int cr = go(worker(ch[1])); /* 1. */
-    msleep(now() + 500);
-    int val;
-    /* 2. */
-    chrecv(ch[0], &val, sizeof(val), now() + 1000);
-    /* 3. */
-    hclose(cr); /* 4. */
-    return 0;
-}
-```
-
+Parent start waiting for the child at point 4. `chrecv` times out at point 5a. The child coroutine is closed forcefully just after that, at point 6.
