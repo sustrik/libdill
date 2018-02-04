@@ -31,7 +31,7 @@
 #include "../../libdill.h"
 
 coroutine void dialogue(int s) {
-    int64_t deadline = now() + 10000;
+    int64_t deadline = now() + 60000;
     int rc = msend(s, "What's your name?", 17, deadline);
     if(rc != 0) goto cleanup;
     char inbuf[256];
@@ -74,6 +74,9 @@ int main(int argc, char *argv[]) {
         rc = bundle_go(b, dialogue(s));
         assert(rc == 0);
     }
+
+    rc = hdone(b, now() + 10000);
+    assert(rc == 0);
 
     rc = hclose(b);
     assert(rc == 0);

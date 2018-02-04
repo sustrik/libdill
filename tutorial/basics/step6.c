@@ -68,7 +68,7 @@ coroutine void dialogue(int s, int ch) {
     int op = CONN_ESTABLISHED;
     int rc = chsend(ch, &op, sizeof(op), -1);
     assert(rc == 0);
-    int64_t deadline = now() + 10000;
+    int64_t deadline = now() + 60000;
     rc = msend(s, "What's your name?", 17, deadline);
     if(rc != 0) goto cleanup;
     char inbuf[256];
@@ -120,6 +120,9 @@ int main(int argc, char *argv[]) {
         rc = bundle_go(b, dialogue(s, ch[1]));
         assert(rc == 0);
     }
+
+    rc = hdone(b, now() + 10000);
+    assert(rc == 0 || (rc < 0 && errno == ETIMEDOUT));
 
     rc = hclose(b);
     assert(rc == 0);
