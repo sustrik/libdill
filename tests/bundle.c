@@ -114,6 +114,8 @@ int main(void) {
     errno_assert(hndl9 >= 0);
     rc = hdone(hndl9, -1);
     errno_assert(rc == 0);
+    rc = hdone(hndl9, -1);
+    errno_assert(rc == -1 && errno == EPIPE);
     rc = hclose(hndl9);
     errno_assert(rc == 0);
 
@@ -134,6 +136,8 @@ int main(void) {
     errno_assert(rc == 0);
     rc = hdone(hndl11, -1);
     errno_assert(rc == 0);
+    rc = bundle_go(hndl11, worker1());
+    assert(rc == -1 && errno == EPIPE);
     rc = hclose(hndl11);
     errno_assert(rc == 0);
 

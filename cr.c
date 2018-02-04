@@ -266,6 +266,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
     }
     struct dill_bundle *bundle = hquery(bndl, dill_bundle_type);
     if(dill_slow(!bundle)) {err = errno; goto error2;}
+    if(dill_slow(bundle->done)) {err = EPIPE; goto error2;}
     /* Allocate a stack. */
     struct dill_cr *cr;
     size_t stacksz;
