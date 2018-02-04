@@ -105,46 +105,37 @@ void tcp_connection_close(struct tcp_connection *self) {
 
 WARNING: To keep examples in this section succint error handling was omitted.
 
-#### Child finishes before parent
+#### Parent coroutine closes child coroutine
 
-![](usecase1.png)
+One coroutine launches another coroutine. At some point it decides to shut it down irrespective of whether the child have finished in the meantime or not. 
 
 ```c
 coroutine void worker(void) {
-    msleep(now() + 500);
+    int rc = msleep(now() + 1000);
+    if(rc < 0 && errno == ECANCELED) return; /* 4. */
     /* 2. */
 }
 
 int main(void) {
     int cr = go(worker()); /* 1. */
-    msleep(now() + 1000);
+    msleep(now() + (random() % 2000));
     hclose(cr); /* 3. */
     return 0;
 }
 ```
 
+There are two possible scenarios. First, if the call to `random` returns a small number the child may finish before the parent calls `hclose`:
+
+![](usecase1.png)
+
+
 The worker coroutine finishes at the point 2. The stack of the coroutine is deallocated at that point. However, handle owned by the parent still points to a small "bundle" object. That object is deallocated later on at point 3.
 
-#### Parent finished before child
+Second, if the call to `random` return a big number the child won't finish before the parent and it will be forcefully terminated:
 
 ![](usecase2.png)
 
-```c
-coroutine void worker(void) {
-    int rc = msleep(now() + 1000);
-    if(rc < 0 && errno == ECANCELED) return; /* 3. */
-    assert(0);
-}
-
-int main(void) {
-    int cr = go(worker()); /* 1. */
-    msleep(now() + 500);
-    hclose(cr); /* 2. */
-    return 0;
-}
-```
-
-When worker coroutine is closed at point 2. it is still running. From that point on, all the blocking calls in the coroutine start to return `ECANCELED` error (point 3.) The call to `hclose()` won't finish until the worker coroutine exits.
+From point 3. on, all the blocking calls in the child coroutine start to return `ECANCELED` error The call to `hclose()` won't finish until the worker coroutine exits. That should happen pretty fast given that it can't do any blocking calls anyway.
 
 #### Parent waits for child
 
