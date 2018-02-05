@@ -258,7 +258,7 @@ This is a common scenario in network servers. Imagine that the main coroutine is
 coroutine void worker(void) {
     int rc = msleep(now() + (random() % 1000));
     if(rc < 0 && errno == ECANCELED) {
-        return; /* 6 . /
+        return; /* 6 . */
     }
     /* 2. */
 }
@@ -283,4 +283,48 @@ There are two scenarios worth considering. First, all the children can end befor
 In the second scenario, there are still some children running when deadline is reached. `hdone()` exits with `ETIMEDOUT` at point 4. The remaining coroutines are canceled at point 5. 
 
 ![](usecase9.png)
+
+#### Parent coroutine broadcast a shutdown signal to children
+
+Consider the previous use case except that the child coroutines are doing work in an infinite loop. Giving them grace period to finish doesn't make sense. They are not going to finish on their own, ever.
+
+What we would like to do instead is to boradcast a "shutdown" signal to all of them. Once they receive the signal they'll finish whatever it is they are doing and exit the infinite loop. The parent will give them grace period to do so. After grace period is over it will forefully cancel all children that are still running.
+
+Generally speaking, libdill channels are not capable of broadcasting messages. However, they can broadcast a simple signal. If `hdone()` is called on one end of a channel, any subsequent attempt to read a message from the other end is going to fail with `EPIPE` error. If there are multiple coroutines receiving from the channel, they are all going to get `EPIPE` error. This is, for all practical purposes, equivalent to broadcasting a signal. 
+
+```c
+coroutine void worker(int ch) {
+    while(1) {
+        int rc = msleep(now() + (random() % 1000));
+        if(rc < 0 && errno == ECANCELED) {
+            return; /* 6. */
+        }
+        rc = chrecv(ch, NULL, 0, 0);
+        if(rc == -1 && errno == EPIPE) {
+            return; /* 3. */
+        }
+    }
+}
+
+int main(void) {
+    int ch[2];
+    chmake(ch);
+    int b = bundle();
+    int i;
+    for(i = 0; i != 3; i++)
+        bundle_go(b, worker(ch[0])); /* 1. */
+    msleep(now() + 5000);
+    hdone(ch[1], -1); /* 2. */
+    rc = hdone(b, now() + 1000);
+    if(rc < 0 && errno == ETIMEDOUT) {
+        /* 4. */
+    }
+    hclose(b); /* 5. */
+    hclose(ch[1]);
+    hclose(ch[0]);
+    return 0;
+}
+```
+
+![](usecase10.png)
 

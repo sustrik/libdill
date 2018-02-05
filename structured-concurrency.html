@@ -183,9 +183,9 @@ hclose(h);</code></pre>
 <pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">void</span>) {
     <span class="dt">int</span> rc = msleep(now() + (random() % <span class="dv">1000</span>));
     <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ECANCELED) {
-        <span class="kw">return</span>; <span class="co">/* 6 . /</span>
-<span class="co">    }</span>
-<span class="co">    /* 2. */</span>
+        <span class="kw">return</span>; <span class="co">/* 6 . */</span>
+    }
+    <span class="co">/* 2. */</span>
 }
 
 <span class="dt">int</span> main(<span class="dt">void</span>) {
@@ -203,4 +203,40 @@ hclose(h);</code></pre>
 <p><img src="usecase8.png" /></p>
 <p>In the second scenario, there are still some children running when deadline is reached. <code>hdone()</code> exits with <code>ETIMEDOUT</code> at point 4. The remaining coroutines are canceled at point 5.</p>
 <p><img src="usecase9.png" /></p>
+<h4 id="parent-coroutine-broadcast-a-shutdown-signal-to-children">Parent coroutine broadcast a shutdown signal to children</h4>
+<p>Consider the previous use case except that the child coroutines are doing work in an infinite loop. Giving them grace period to finish doesn't make sense. They are not going to finish on their own, ever.</p>
+<p>What we would like to do instead is to boradcast a &quot;shutdown&quot; signal to all of them. Once they receive the signal they'll finish whatever it is they are doing and exit the infinite loop. The parent will give them grace period to do so. After grace period is over it will forefully cancel all children that are still running.</p>
+<p>Generally speaking, libdill channels are not capable of broadcasting messages. However, they can broadcast a simple signal. If <code>hdone()</code> is called on one end of a channel, any subsequent attempt to read a message from the other end is going to fail with <code>EPIPE</code> error. If there are multiple coroutines receiving from the channel, they are all going to get <code>EPIPE</code> error. This is, for all practical purposes, equivalent to broadcasting a signal.</p>
+<pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> worker(<span class="dt">int</span> ch) {
+    <span class="kw">while</span>(<span class="dv">1</span>) {
+        <span class="dt">int</span> rc = msleep(now() + (random() % <span class="dv">1000</span>));
+        <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ECANCELED) {
+            <span class="kw">return</span>; <span class="co">/* 6. */</span>
+        }
+        rc = chrecv(ch, NULL, <span class="dv">0</span>, <span class="dv">0</span>);
+        <span class="kw">if</span>(rc == -<span class="dv">1</span> &amp;&amp; errno == EPIPE) {
+            <span class="kw">return</span>; <span class="co">/* 3. */</span>
+        }
+    }
+}
+
+<span class="dt">int</span> main(<span class="dt">void</span>) {
+    <span class="dt">int</span> ch[<span class="dv">2</span>];
+    chmake(ch);
+    <span class="dt">int</span> b = bundle();
+    <span class="dt">int</span> i;
+    <span class="kw">for</span>(i = <span class="dv">0</span>; i != <span class="dv">3</span>; i++)
+        bundle_go(b, worker(ch[<span class="dv">0</span>])); <span class="co">/* 1. */</span>
+    msleep(now() + <span class="dv">5000</span>);
+    hdone(ch[<span class="dv">1</span>], -<span class="dv">1</span>); <span class="co">/* 2. */</span>
+    rc = hdone(b, now() + <span class="dv">1000</span>);
+    <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ETIMEDOUT) {
+        <span class="co">/* 4. */</span>
+    }
+    hclose(b); <span class="co">/* 5. */</span>
+    hclose(ch[<span class="dv">1</span>]);
+    hclose(ch[<span class="dv">0</span>]);
+    <span class="kw">return</span> <span class="dv">0</span>;
+}</code></pre>
+<p><img src="usecase10.png" /></p>
 </body>
