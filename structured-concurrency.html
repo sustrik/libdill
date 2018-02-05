@@ -229,7 +229,7 @@ hclose(h);</code></pre>
         bundle_go(b, worker(ch[<span class="dv">0</span>])); <span class="co">/* 1. */</span>
     msleep(now() + <span class="dv">5000</span>);
     hdone(ch[<span class="dv">1</span>], -<span class="dv">1</span>); <span class="co">/* 2. */</span>
-    rc = hdone(b, now() + <span class="dv">1000</span>);
+    rc = hdone(b, now() + <span class="dv">500</span>);
     <span class="kw">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ETIMEDOUT) {
         <span class="co">/* 4. */</span>
     }

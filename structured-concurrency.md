@@ -315,7 +315,7 @@ int main(void) {
         bundle_go(b, worker(ch[0])); /* 1. */
     msleep(now() + 5000);
     hdone(ch[1], -1); /* 2. */
-    rc = hdone(b, now() + 1000);
+    rc = hdone(b, now() + 500);
     if(rc < 0 && errno == ETIMEDOUT) {
         /* 4. */
     }
