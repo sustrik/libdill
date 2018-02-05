@@ -328,4 +328,4 @@ int main(void) {
 
 ![](usecase10.png)
 
-At point 2. the main coroutine broadcasts the "shutdown" signal to worker coroutines. Then it starts waiting for coroutines to finish. The first and the third worker coroutine manage to finish in time. The second worker coroutine, on the other hand, carries on until the deadline in the main coroutine expires (point 4). The main cooutine then cancels is forcefully (point 5).
+At point 2. the main coroutine broadcasts the "shutdown" signal to worker coroutines. Then it starts waiting for coroutines to finish. The first and the third worker coroutine manage to finish in time. The second worker coroutine, on the other hand, carries on until the deadline in the main coroutine expires (point 4). The main coroutine then cancels is forcefully (point 5).
