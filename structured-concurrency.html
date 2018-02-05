@@ -239,5 +239,5 @@ hclose(h);</code></pre>
     <span class="kw">return</span> <span class="dv">0</span>;
 }</code></pre>
 <p><img src="usecase10.png" /></p>
-<p>At point 2. the main coroutine broadcasts the &quot;shutdown&quot; signal to worker coroutines. Then it starts waiting for coroutines to finish. The first and the third worker coroutine manage to finish in time. The second worker coroutine, on the other hand, carries on until the deadline in the main coroutine expires. The main cooutine then cancels is forcefully.</p>
+<p>At point 2. the main coroutine broadcasts the &quot;shutdown&quot; signal to worker coroutines. Then it starts waiting for coroutines to finish. The first and the third worker coroutine manage to finish in time. The second worker coroutine, on the other hand, carries on until the deadline in the main coroutine expires (point 4). The main cooutine then cancels is forcefully (point 5).</p>
 </body>
