@@ -50,7 +50,10 @@ struct crlf_sock {
     unsigned int outdone : 1;
     unsigned int inerr : 1;
     unsigned int outerr : 1;
+    unsigned int mem : 1;
 };
+
+DILL_CT_ASSERT(CRLF_SIZE >= sizeof(struct crlf_sock));
 
 static void *crlf_hquery(struct hvfs *hvfs, const void *type) {
     struct crlf_sock *self = (struct crlf_sock*)hvfs;
@@ -60,16 +63,16 @@ static void *crlf_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int crlf_attach(int s) {
+int crlf_attach_mem(int s, void *mem) {
     int err;
+    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Make a private copy of the underlying socket. */
     int u = hdup(s);
-    if(dill_slow(u < 0)) return -1;
+    if(dill_slow(u < 0)) {err = errno; goto error1;}
     int rc = hclose(s);
     dill_assert(rc == 0);
     /* Create the object. */
-    struct crlf_sock *self = malloc(sizeof(struct crlf_sock));
-    if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    struct crlf_sock *self = (struct crlf_sock*)mem;
     self->hvfs.query = crlf_hquery;
     self->hvfs.close = crlf_hclose;
     self->hvfs.done = crlf_hdone;
@@ -83,15 +86,30 @@ int crlf_attach(int s) {
     self->outdone = 0;
     self->inerr = 0;
     self->outerr = 0;
+    self->mem = 1;
     /* Create the handle. */
     int h = hmake(&self->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    free(self);
-error1:
     rc = hclose(u);
     dill_assert(rc == 0);
+error1:
+    errno = err;
+    return -1;
+}
+
+int crlf_attach(int s) {
+    int err;
+    struct crlf_sock *obj = malloc(UDP_SIZE);
+    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
+    int cs = crlf_attach_mem(s, obj);
+    if(dill_slow(cs < 0)) {err = errno; goto error2;}
+    obj->mem = 0;
+    return cs;
+error2:
+    free(obj);
+error1:
     errno = err;
     return -1;
 }
@@ -123,7 +141,7 @@ int crlf_detach(int s, int64_t deadline) {
         if(dill_slow(sz < 0)) {err = errno; goto error;}
     }
     int u = self->u;
-    free(self);
+    if(!self->mem) free(self);
     return u;
 error:
     crlf_hclose(&self->hvfs);

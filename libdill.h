@@ -429,8 +429,17 @@ DILL_EXPORT int pfx_detach(
 /*  The protocol is terminated by an empty line.                              */
 /******************************************************************************/
 
+#if defined(__i386__)
+#  define CRLF_SIZE 36
+#else
+#  define CRLF_SIZE 72
+#endif
+
 DILL_EXPORT int crlf_attach(
     int s);
+DILL_EXPORT int crlf_attach_mem(
+    int s,
+    void *mem);
 DILL_EXPORT int crlf_detach(
     int s,
     int64_t deadline);
