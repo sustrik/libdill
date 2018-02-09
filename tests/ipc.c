@@ -22,6 +22,7 @@
 
 */
 
+#include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -84,7 +85,8 @@ int main() {
     errno_assert(ls >= 0);
     int cr = go(client());
     errno_assert(cr >= 0);
-    int as = ipc_accept(ls, -1);
+    char mem[IPC_SIZE];
+    int as = ipc_accept_mem(ls, mem, -1);
     errno_assert(as >= 0);
     int64_t deadline = now() + 30;
     ssize_t sz = sizeof(buf);
@@ -144,6 +146,7 @@ int main() {
     cr = go(client4(s[1]));
     errno_assert(cr >= 0);
     char buffer[2048];
+    memset(buffer, 0, sizeof(buffer));
     while(1) {
         rc = bsend(s[0], buffer, 2048, -1);
         if(rc == -1 && errno == ECONNRESET)

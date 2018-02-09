@@ -396,19 +396,44 @@ DILL_EXPORT int tcp_close(
 /*  IPC protocol.                                                            */
 /******************************************************************************/
 
+#if defined(__i386__)
+#  define IPC_LISTENER_SIZE 20
+#  define IPC_SIZE 2040
+#  define IPC_PAIR_SIZE 4080
+#else
+#  define IPC_LISTENER_SIZE 40
+#  define IPC_SIZE 2080
+#  define IPC_PAIR_SIZE 4160
+#endif
+
 DILL_EXPORT int ipc_listen(
     const char *addr,
     int backlog);
+DILL_EXPORT int ipc_listen_mem(
+    const char *addr,
+    int backlog,
+    void *mem);
 DILL_EXPORT int ipc_accept(
     int s,
     int64_t deadline);
+DILL_EXPORT int ipc_accept_mem(
+    int s,
+    void *mem,
+    int64_t deadline);
 DILL_EXPORT int ipc_connect(
     const char *addr,
+    int64_t deadline);
+DILL_EXPORT int ipc_connect_mem(
+    const char *addr,
+    void *mem,
     int64_t deadline);
 DILL_EXPORT int ipc_close(
     int s,
     int64_t deadline);
 DILL_EXPORT int ipc_pair(
+    int s[2]);
+DILL_EXPORT int ipc_pair_mem(
+    void *mem,
     int s[2]);
 
 /******************************************************************************/
