@@ -1,19 +1,21 @@
 # NAME
 
-tcp_listen - start listening for incoming TCP connections
+tcp_listen_mem - start listening for incoming TCP connections
 
 # SYNOPSIS
 
 
 **#include &lt;libdill.h>**
 
-**int tcp_listen(const struct ipaddr **\*_addr_**, int** _backlog_**);**
+**int tcp_listen_mem(const struct ipaddr **\*_addr_**, int** _backlog_**, void **\*_mem_**);**
 
 # DESCRIPTION
 
 TCP protocol is a bytestream protocol (i.e. data can be sent via **bsend()** and received via **brecv()**) for transporting data among machines.
 
 This function starts listening for incoming connection on the address specified in _addr_ argument. _backlog_ is the maximum number of connections that can be held open without user accepting them.
+
+The socket is allocated in user-supplied memory. The memory is passed in _mem_ argument. It must be at least _TCP\_LISTENER\_SIZE_ bytes long and can be deallocated only after the socket is closed. Unless you are hyper-optimizing use **tcp_listen()** instead.
 
 The socket can be cleanly shut down using **tcp_close()** function.
 
@@ -36,5 +38,6 @@ The function returns the handle of the listening socket. On error, it returns -1
 ```c
 struct ipaddr addr;
 int rc = ipaddr_local(&addr, NULL, 5555, 0);
-int s = tcp_listen(&addr, 10);
+char mem[TCP_LISTENER_SIZE];
+int s = tcp_listen_mem(&addr, 10, mem);
 ```
