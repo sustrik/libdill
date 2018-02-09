@@ -378,15 +378,36 @@ DILL_EXPORT void ipaddr_setport(
 /*  TCP protocol.                                                             */
 /******************************************************************************/
 
+#if defined(__i386__)
+#  define TCP_LISTENER_SIZE 36
+#  define TCP_SIZE 2040
+#else
+#  define TCP_LISTENER_SIZE 72
+#  define TCP_SIZE 2080
+#endif
+
 DILL_EXPORT int tcp_listen(
     struct ipaddr *addr,
     int backlog);
+DILL_EXPORT int tcp_listen_mem(
+    struct ipaddr *addr,
+    int backlog,
+    void *mem);
 DILL_EXPORT int tcp_accept(
     int s,
     struct ipaddr *addr,
     int64_t deadline);
+DILL_EXPORT int tcp_accept_mem(
+    int s,
+    struct ipaddr *addr,
+    void *mem,
+    int64_t deadline);
 DILL_EXPORT int tcp_connect(
     const struct ipaddr *addr,
+    int64_t deadline);
+DILL_EXPORT int tcp_connect_mem(
+    const struct ipaddr *addr,
+    void *mem,
     int64_t deadline);
 DILL_EXPORT int tcp_close(
     int s,

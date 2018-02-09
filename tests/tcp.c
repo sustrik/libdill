@@ -22,6 +22,8 @@
 
 */
 
+#include <string.h>
+
 #include "assert.h"
 #include "../libdill.h"
 
@@ -96,7 +98,8 @@ int main(void) {
     errno_assert(rc == 0);
 
     /* Test deadline. */
-    int ls = tcp_listen(&addr, 10);
+    char mem[TCP_LISTENER_SIZE];
+    int ls = tcp_listen_mem(&addr, 10, mem);
     errno_assert(ls >= 0);
     int cr = go(client(5555));
     errno_assert(cr >= 0);
@@ -172,6 +175,7 @@ int main(void) {
     as = tcp_accept(ls, NULL, -1);
     errno_assert(as >= 0);
     char buffer[2048];
+    memset(buffer, 0, sizeof(buffer));
     while(1) {
         rc = bsend(as, buffer, 2048, -1);
         if(rc == -1 && errno == ECONNRESET)
@@ -210,6 +214,8 @@ static coroutine void async_accept_routine(int listen_fd, int ch) {
     assert(fd != -1);
     int rc = chsend(ch, &fd, sizeof(fd), -1);
     assert(rc != -1);
+    rc = hclose(ch);
+    errno_assert(rc == 0);
 }
 
 static int async_accept(int listen_fd) {

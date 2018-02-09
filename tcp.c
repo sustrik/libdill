@@ -36,7 +36,7 @@ DILL_EXPORT extern const void *tcp_type;
 DILL_EXPORT extern const void *tcp_listener_type;
 DILL_EXPORT int tcp_fd(int s);
 
-static int tcp_makeconn(int fd);
+static int tcp_makeconn(int fd, void *mem);
 
 /******************************************************************************/
 /*  TCP connection socket                                                     */
@@ -61,7 +61,10 @@ struct tcp_conn {
     unsigned int outdone: 1;
     unsigned int inerr : 1;
     unsigned int outerr : 1;
+    unsigned int mem : 1;
 };
+
+DILL_CT_ASSERT(TCP_SIZE >= sizeof(struct tcp_conn));
 
 static void *tcp_hquery(struct hvfs *hvfs, const void *type) {
     struct tcp_conn *self = (struct tcp_conn*)hvfs;
@@ -71,8 +74,9 @@ static void *tcp_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int tcp_connect(const struct ipaddr *addr, int64_t deadline) {
+int tcp_connect_mem(const struct ipaddr *addr, void *mem, int64_t deadline) {
     int err;
+    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Open a socket. */
     int s = socket(ipaddr_family(addr), SOCK_STREAM, 0);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
@@ -83,7 +87,7 @@ int tcp_connect(const struct ipaddr *addr, int64_t deadline) {
     rc = fd_connect(s, ipaddr_sockaddr(addr), ipaddr_len(addr), deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
-    int h = tcp_makeconn(s);
+    int h = tcp_makeconn(s, mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
@@ -91,6 +95,22 @@ error2:
 error1:
     errno = err;
     return -1;
+}
+
+int tcp_connect(const struct ipaddr *addr, int64_t deadline) {
+    int err;
+    struct tcp_conn *obj = malloc(TCP_SIZE);
+    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
+    int s = tcp_connect_mem(addr, obj, deadline);
+    if(dill_slow(s < 0)) {err = errno; goto error2;}
+    obj->mem = 0;
+    return s;
+error2:
+    free(obj);
+error1:
+    errno = err;
+    return -1;
+
 }
 
 static int tcp_bsendl(struct bsock_vfs *bvfs,
@@ -152,6 +172,7 @@ int tcp_close(int s, int64_t deadline) {
     int rc = tcp_brecvl(&self->bvfs, NULL, NULL, deadline);
     dill_assert(rc < 0);
     if(dill_slow(errno != EPIPE)) {err = errno; goto error;}
+    tcp_hclose(&self->hvfs);
     return 0;
 error:
     tcp_hclose(&self->hvfs);
@@ -162,7 +183,7 @@ error:
 static void tcp_hclose(struct hvfs *hvfs) {
     struct tcp_conn *self = (struct tcp_conn*)hvfs;
     fd_close(self->fd);
-    free(self);
+    if(!self->mem) free(self);
 }
 
 /******************************************************************************/
@@ -178,7 +199,10 @@ struct tcp_listener {
     struct hvfs hvfs;
     int fd;
     struct ipaddr addr;
+    unsigned int mem : 1;
 };
+
+DILL_CT_ASSERT(TCP_LISTENER_SIZE >= sizeof(struct tcp_listener));
 
 static void *tcp_listener_hquery(struct hvfs *hvfs, const void *type) {
     struct tcp_listener *self = (struct tcp_listener*)hvfs;
@@ -187,8 +211,9 @@ static void *tcp_listener_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int tcp_listen(struct ipaddr *addr, int backlog) {
+int tcp_listen_mem(struct ipaddr *addr, int backlog, void *mem) {
     int err;
+    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Open the listening socket. */
     int s = socket(ipaddr_family(addr), SOCK_STREAM, 0);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
@@ -210,18 +235,16 @@ int tcp_listen(struct ipaddr *addr, int backlog) {
         ipaddr_setport(addr, ipaddr_port(&baddr));
     }
     /* Create the object. */
-    struct tcp_listener *self = malloc(sizeof(struct tcp_listener));
-    if(dill_slow(!self)) {err = ENOMEM; goto error2;}
+    struct tcp_listener *self = (struct tcp_listener*)mem;
     self->hvfs.query = tcp_listener_hquery;
     self->hvfs.close = tcp_listener_hclose;
     self->hvfs.done = NULL;
     self->fd = s;
+    self->mem = 1;
     /* Create handle. */
     int h = hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error3;}
+    if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
-error3:
-    free(self);
 error2:
     close(s);
 error1:
@@ -229,8 +252,24 @@ error1:
     return -1;
 }
 
-int tcp_accept(int s, struct ipaddr *addr, int64_t deadline) {
+int tcp_listen(struct ipaddr *addr, int backlog) {
     int err;
+    struct tcp_listener *obj = malloc(TCP_LISTENER_SIZE);
+    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
+    int ls = tcp_listen_mem(addr, backlog, obj);
+    if(dill_slow(ls < 0)) {err = errno; goto error2;}
+    obj->mem = 0;
+    return ls;
+error2:
+    free(obj);
+error1:
+    errno = err;
+    return -1;
+}
+
+int tcp_accept_mem(int s, struct ipaddr *addr, void *mem, int64_t deadline) {
+    int err;
+    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Retrieve the listener object. */
     struct tcp_listener *lst = hquery(s, tcp_listener_type);
     if(dill_slow(!lst)) {err = errno; goto error1;}
@@ -242,11 +281,26 @@ int tcp_accept(int s, struct ipaddr *addr, int64_t deadline) {
     int rc = fd_unblock(as);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
-    int h = tcp_makeconn(as);
+    int h = tcp_makeconn(as, mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
     fd_close(as);
+error1:
+    errno = err;
+    return -1;
+}
+
+int tcp_accept(int s, struct ipaddr *addr, int64_t deadline) {
+    int err;
+    struct tcp_conn *obj = malloc(TCP_SIZE);
+    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
+    int as = tcp_accept_mem(s, addr, obj, deadline);
+    if(dill_slow(as < 0)) {err = errno; goto error2;}
+    obj->mem = 0;
+    return as;
+error2:
+    free(obj);
 error1:
     errno = err;
     return -1;
@@ -263,18 +317,17 @@ int tcp_fd(int s) {
 static void tcp_listener_hclose(struct hvfs *hvfs) {
     struct tcp_listener *self = (struct tcp_listener*)hvfs;
     fd_close(self->fd);
-    free(self);
+    if(!self->mem) free(self);
 }
 
 /******************************************************************************/
 /*  Helpers                                                                   */
 /******************************************************************************/
 
-static int tcp_makeconn(int fd) {
+static int tcp_makeconn(int fd, void *mem) {
     int err;
     /* Create the object. */
-    struct tcp_conn *self = malloc(sizeof(struct tcp_conn));
-    if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    struct tcp_conn *self = (struct tcp_conn*)mem;
     self->hvfs.query = tcp_hquery;
     self->hvfs.close = tcp_hclose;
     self->hvfs.done = tcp_hdone;
@@ -286,14 +339,8 @@ static int tcp_makeconn(int fd) {
     self->outdone = 0;
     self->inerr = 0;
     self->outerr = 0;
+    self->mem = 1;
     /* Create the handle. */
-    int h = hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error2;}
-    return h;
-error2:
-    free(self);
-error1:
-    errno = err;
-    return -1;
+    return hmake(&self->hvfs);
 }
 
