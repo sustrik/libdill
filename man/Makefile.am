@@ -47,6 +47,7 @@ man3_MANS = \
     brecv.3 \
     bsend.3 \
     crlf_attach.3 \
+    crlf_attach_mem.3 \
     crlf_detach.3 \
     ipaddr_family.3 \
     ipaddr_len.3 \
@@ -57,19 +58,28 @@ man3_MANS = \
     ipaddr_sockaddr.3 \
     ipaddr_str.3 \
     ipc_accept.3 \
+    ipc_accept_mem.3 \
     ipc_close.3 \
     ipc_connect.3 \
+    ipc_connect_mem.3 \
     ipc_listen.3 \
+    ipc_listen_mem.3 \
     ipc_pair.3 \
+    ipc_pair_mem.3 \
     mrecv.3 \
     msend.3 \
     pfx_attach.3 \
+    pfx_attach_mem.3 \
     pfx_detach.3 \
     tcp_accept.3 \
+    tcp_accept_mem.3 \
     tcp_close.3 \
     tcp_connect.3 \
+    tcp_connect_mem.3 \
     tcp_listen.3 \
+    tcp_listen_mem.3 \
     udp_open.3 \
+    udp_open_mem.3 \
     udp_send.3 \
     udp_recv.3
 
