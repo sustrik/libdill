@@ -440,9 +440,19 @@ DILL_EXPORT int crlf_detach(
 /*  Each UDP packet is treated as a separate message.                         */
 /******************************************************************************/
 
+#if defined(__i386__)
+#  define UDP_SIZE 44
+#else
+#  define UDP_SIZE 88
+#endif
+
 DILL_EXPORT int udp_open(
     struct ipaddr *local,
     const struct ipaddr *remote);
+DILL_EXPORT int udp_open_mem(
+    struct ipaddr *local,
+    const struct ipaddr *remote,
+    void *mem);
 DILL_EXPORT int udp_send(
     int s,
     const struct ipaddr *addr,

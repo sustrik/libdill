@@ -45,9 +45,12 @@ struct udp_sock {
     struct hvfs hvfs;
     struct msock_vfs mvfs;
     int fd;
-    int hasremote;
     struct ipaddr remote;
+    unsigned int hasremote : 1;
+    unsigned int mem : 1;
 };
+
+DILL_CT_ASSERT(UDP_SIZE >= sizeof(struct udp_sock));
 
 static void *udp_hquery(struct hvfs *hvfs, const void *type) {
     struct udp_sock *obj = (struct udp_sock*)hvfs;
@@ -57,9 +60,10 @@ static void *udp_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int udp_open(struct ipaddr *local, const struct ipaddr *remote) {
+int udp_open_mem(struct ipaddr *local, const struct ipaddr *remote, void *mem) {
     int err;
     /* Sanity checking. */
+    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     if(dill_slow(local && remote &&
           ipaddr_family(local) != ipaddr_family(remote))) {
         err = EINVAL; goto error1;}
@@ -86,8 +90,7 @@ int udp_open(struct ipaddr *local, const struct ipaddr *remote) {
         }
     }
     /* Create the object. */
-    struct udp_sock *obj = malloc(sizeof(struct udp_sock));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error2;}
+    struct udp_sock *obj = (struct udp_sock*)mem;
     obj->hvfs.query = udp_hquery;
     obj->hvfs.close = udp_hclose;
     obj->hvfs.done = NULL; /* hdone() is not supported for UDP sockets. */
@@ -95,15 +98,29 @@ int udp_open(struct ipaddr *local, const struct ipaddr *remote) {
     obj->mvfs.mrecvl = udp_mrecvl;
     obj->fd = s;
     obj->hasremote = remote ? 1 : 0;
+    obj->mem = 1;
     if(remote) obj->remote = *remote;
     /* Create the handle. */
     int h = hmake(&obj->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error3;}
+    if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
-error3:
-    free(obj);
 error2:
     fd_close(s);
+error1:
+    errno = err;
+    return -1;
+}
+
+int udp_open(struct ipaddr *local, const struct ipaddr *remote) {
+    int err;
+    struct udp_sock *obj = malloc(UDP_SIZE);
+    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
+    int s = udp_open_mem(local, remote, obj);
+    if(dill_slow(s < 0)) {err = errno; goto error2;}
+    obj->mem = 0;
+    return s;
+error2:
+    free(obj);
 error1:
     errno = err;
     return -1;
@@ -212,6 +229,6 @@ static void udp_hclose(struct hvfs *hvfs) {
        outgoing packets rather than flushing them. The effect is balanced
        out by lingering when closing the socket. */
     fd_close(obj->fd);
-    free(obj);
+    if(!obj->mem) free(obj);
 }
 

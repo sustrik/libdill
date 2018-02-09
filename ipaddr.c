@@ -177,6 +177,7 @@ const char *ipaddr_str(const struct ipaddr *addr, char *ipstr) {
 }
 
 int ipaddr_local(struct ipaddr *addr, const char *name, int port, int mode) {
+    memset(addr, 0, sizeof(struct ipaddr));
     if(!name) 
         return ipaddr_ipany(addr, port, mode);
     int rc = ipaddr_literal(addr, name, port, mode);
@@ -258,6 +259,7 @@ static void dns_freeaddrinfo(struct addrinfo *ent) {
 
 int ipaddr_remote(struct ipaddr *addr, const char *name, int port, int mode,
       int64_t deadline) {
+    memset(addr, 0, sizeof(struct ipaddr));
     int rc = ipaddr_literal(addr, name, port, mode);
     if(rc == 0)
        return 0;

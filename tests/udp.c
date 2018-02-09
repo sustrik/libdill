@@ -35,7 +35,8 @@ int main(void) {
     struct ipaddr addr2;
     rc = ipaddr_local(&addr2, NULL, 5556, 0);
     assert(rc == 0);
-    int s2 = udp_open(&addr2, &addr1);
+    char mem[UDP_SIZE];
+    int s2 = udp_open_mem(&addr2, &addr1, mem);
     assert(s2 >= 0);
 
     while(1) {
