@@ -218,15 +218,6 @@ static coroutine void async_accept_routine(int listen_fd, int ch) {
     errno_assert(rc == 0);
 }
 
-static int async_accept(int listen_fd) {
-    int ch[2];
-    int rc = chmake(ch);
-    errno_assert(rc == 0);
-    int h = go(async_accept_routine(listen_fd, ch[0]));
-    errno_assert(h >= 0);
-    return ch[1];
-}
-
 static int tcp_socketpair(int fd[2]) {
     struct ipaddr server_addr;
 
@@ -237,19 +228,26 @@ static int tcp_socketpair(int fd[2]) {
     int port = ipaddr_port(&server_addr);
     assert(port > 0);
 
-    int accept_done_ch = async_accept(listen_fd);
-    assert(accept_done_ch != -1);
+    int ch[2];
+    rc = chmake(ch);
+    errno_assert(rc == 0);
+    int h = go(async_accept_routine(listen_fd, ch[0]));
+    errno_assert(h >= 0);
 
     int client_fd = tcp_connect(&server_addr, now() + 1000);
-    assert(client_fd != -1);
+    errno_assert(client_fd >= 0);
 
     int server_fd;
-    rc = chrecv(accept_done_ch, &server_fd, sizeof(server_fd), -1);
-    assert(rc == 0);
+    rc = chrecv(ch[1], &server_fd, sizeof(server_fd), -1);
+    errno_assert(rc == 0);
     assert(server_fd != -1);
-    hclose(listen_fd);
-    hclose(accept_done_ch);
-
+    rc = hclose(h);
+    errno_assert(rc == 0);
+    rc = hclose(ch[1]);
+    errno_assert(rc == 0);
+    rc = hclose(listen_fd);
+    errno_assert(rc == 0);
+    
     fd[0] = client_fd;
     fd[1] = server_fd;
     return 0;
