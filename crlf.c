@@ -101,7 +101,7 @@ error1:
 
 int crlf_attach(int s) {
     int err;
-    struct crlf_sock *obj = malloc(UDP_SIZE);
+    struct crlf_sock *obj = malloc(CRLF_SIZE);
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
     int cs = crlf_attach_mem(s, obj);
     if(dill_slow(cs < 0)) {err = errno; goto error2;}

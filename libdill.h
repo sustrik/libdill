@@ -417,8 +417,17 @@ DILL_EXPORT int ipc_pair(
 /*  The protocol is terminated by 0xffffffffffffffff.                         */
 /******************************************************************************/
 
+#if defined(__i386__)
+#  define PFX_SIZE 28
+#else
+#  define PFX_SIZE 56
+#endif
+
 DILL_EXPORT int pfx_attach(
     int s);
+DILL_EXPORT int pfx_attach_mem(
+    int s,
+    void *mem);
 DILL_EXPORT int pfx_detach(
     int s,
     int64_t deadline);

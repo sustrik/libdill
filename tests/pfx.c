@@ -56,7 +56,7 @@ int main(void) {
     errno_assert(rc == 0);
     int ls = tcp_listen(&addr, 10);
     errno_assert(ls >= 0);
-    go(client());
+    int clh = go(client());
     int as = tcp_accept(ls, NULL, -1);
     errno_assert(as >= 0);
 
@@ -81,7 +81,8 @@ int main(void) {
     errno_assert(rc == 0);
     int s0 = pfx_attach(h[0]);
     errno_assert(s0 >= 0);
-    int s1 = pfx_attach(h[1]);
+    char mem[PFX_SIZE];
+    int s1 = pfx_attach_mem(h[1], mem);
     errno_assert(s1 >= 0);
     rc = msend(s0, "First", 5, -1);
     errno_assert(rc == 0);
@@ -118,6 +119,12 @@ int main(void) {
     rc = hclose(ts1);
     errno_assert(rc == 0);
     rc = hclose(ts0);
+    errno_assert(rc == 0);
+    rc = hdone(clh, -1);
+    errno_assert(rc == 0);
+    rc = hclose(clh);
+    errno_assert(rc == 0);
+    rc = hclose(ls);
     errno_assert(rc == 0);
 
     return 0;
