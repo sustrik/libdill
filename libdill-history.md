@@ -1,6 +1,19 @@
 
 # Past versions
 
+**Feb 10th, 2018 <http://libdill.org/libdill-2.3.tar.gz>**
+
+* tcp_listen_mem
+* tcp_accept_mem
+* tcp_connect_mem
+* ipc_listen_mem
+* ipc_accept_mem
+* ipc_connect_mem
+* ipc_pair_mem
+* crlf_attach_mem
+* pfx_attach_mem
+* udp_open_mem
+
 **Feb 4th, 2018 <http://libdill.org/libdill-2.2.tar.gz>**
 
 * hdone() can be called on a bundle to wait for coroutines to finish

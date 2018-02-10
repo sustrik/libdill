@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="http://libdill.org/main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="http://libdill.org/index.html">Home</a></li>
+<li><a href="http://libdill.org/download.html">Download</a></li>
+<li><a href="http://libdill.org/documentation.html">Documentation</a></li>
+<li><a href="http://libdill.org/tutorial.html">Tutorials</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>ipc_accept_mem - accepts an incoming IPC connection</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p><strong>#include &lt;libdill.h&gt;</strong></p>
+<p><strong>int ipc_accept_mem(int </strong><em>s</em><strong>, void </strong>*<em>mem</em><strong>, int64_t</strong> <em>deadline</em><strong>);</strong></p>
+<h1 id="description">DESCRIPTION</h1>
+<p>IPC protocol is a bytestream protocol (i.e. data can be sent via <strong>bsend()</strong> and received via <strong>brecv()</strong>) for transporting data among processes on the same machine. It is an equivalent to POSIX <strong>AF_LOCAL</strong> sockets.</p>
+<p>This function accepts an incoming IPC connection from the listening socket <em>s</em>, in user-supplied memory. The memory is passed in <em>mem</em> argument. It must be at least <em>IPC_SIZE</em> bytes long and can be deallocated only after the socket is closed. Unless you are hyper-optimizing use <strong>ipc_accept()</strong> instead.</p>
+<p><em>deadline</em> is a point in time when the operation should time out. Use the <strong>now()</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
+<p>The socket can be cleanly shut down using <strong>ipc_close()</strong> function.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>Newly created socket handle. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EBADF</strong>: Invalid socket handle.<br /></li>
+<li><strong>ECANCELED</strong>: Current coroutine is being shut down.<br /></li>
+<li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.<br /></li>
+<li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.<br /></li>
+<li><strong>ENOMEM</strong>: Not enough memory.<br /></li>
+<li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> listener = ipc_listen(<span class="st">&quot;/tmp/test.ipc&quot;</span>, <span class="dv">10</span>);
+<span class="dt">char</span> mem[IPC_SIZE];
+<span class="dt">int</span> s = ipc_accept_mem(listener, mem, -<span class="dv">1</span>);</code></pre>
+</body>

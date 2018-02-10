@@ -30,6 +30,7 @@
 <li><a href="http://libdill.org/man/chrecv.html">chrecv</a><br /></li>
 <li><a href="http://libdill.org/man/chsend.html">chsend</a><br /></li>
 <li><a href="http://libdill.org/man/crlf_attach.html">crlf_attach</a><br /></li>
+<li><a href="http://libdill.org/man/crlf_attach_mem.html">crlf_attach_mem</a><br /></li>
 <li><a href="http://libdill.org/man/crlf_detach.html">crlf_detach</a><br /></li>
 <li><a href="http://libdill.org/man/fdclean.html">fdclean</a><br /></li>
 <li><a href="http://libdill.org/man/fdin.html">fdin</a><br /></li>
@@ -50,21 +51,30 @@
 <li><a href="http://libdill.org/man/ipaddr_sockaddr.html">ipaddr_sockaddr</a><br /></li>
 <li><a href="http://libdill.org/man/ipaddr_str.html">ipaddr_str</a><br /></li>
 <li><a href="http://libdill.org/man/ipc_accept.html">ipc_accept</a><br /></li>
+<li><a href="http://libdill.org/man/ipc_accept_mem.html">ipc_accept_mem</a><br /></li>
 <li><a href="http://libdill.org/man/ipc_close.html">ipc_close</a><br /></li>
 <li><a href="http://libdill.org/man/ipc_connect.html">ipc_connect</a><br /></li>
+<li><a href="http://libdill.org/man/ipc_connect_mem.html">ipc_connect_mem</a><br /></li>
 <li><a href="http://libdill.org/man/ipc_listen.html">ipc_listen</a><br /></li>
+<li><a href="http://libdill.org/man/ipc_listen_mem.html">ipc_listen_mem</a><br /></li>
 <li><a href="http://libdill.org/man/ipc_pair.html">ipc_pair</a><br /></li>
+<li><a href="http://libdill.org/man/ipc_pair_mem.html">ipc_pair_mem</a><br /></li>
 <li><a href="http://libdill.org/man/mrecv.html">mrecv</a><br /></li>
 <li><a href="http://libdill.org/man/msend.html">msend</a><br /></li>
 <li><a href="http://libdill.org/man/msleep.html">msleep</a><br /></li>
 <li><a href="http://libdill.org/man/now.html">now</a><br /></li>
 <li><a href="http://libdill.org/man/pfx_attach.html">pfx_attach</a><br /></li>
+<li><a href="http://libdill.org/man/pfx_attach_mem.html">pfx_attach_mem</a><br /></li>
 <li><a href="http://libdill.org/man/pfx_detach.html">pfx_detach</a><br /></li>
 <li><a href="http://libdill.org/man/tcp_accept.html">tcp_accept</a><br /></li>
+<li><a href="http://libdill.org/man/tcp_accept_mem.html">tcp_accept_mem</a><br /></li>
 <li><a href="http://libdill.org/man/tcp_close.html">tcp_close</a><br /></li>
 <li><a href="http://libdill.org/man/tcp_connect.html">tcp_connect</a><br /></li>
+<li><a href="http://libdill.org/man/tcp_connect_mem.html">tcp_connect_mem</a><br /></li>
 <li><a href="http://libdill.org/man/tcp_listen.html">tcp_listen</a><br /></li>
+<li><a href="http://libdill.org/man/tcp_listen_mem.html">tcp_listen_mem</a><br /></li>
 <li><a href="http://libdill.org/man/udp_open.html">udp_open</a><br /></li>
+<li><a href="http://libdill.org/man/udp_open_mem.html">udp_open_mem</a><br /></li>
 <li><a href="http://libdill.org/man/udp_recv.html">udp_recv</a><br /></li>
 <li><a href="http://libdill.org/man/udp_send.html">udp_send</a><br /></li>
 <li><a href="http://libdill.org/man/yield.html">yield</a></li>
@@ -135,7 +145,7 @@ $ genhtml -o lcov libdill.info</code></pre>
 <li>Clone a clean repo from GitHub.<br /></li>
 <li>Build the package (<code>./autogen.sh; ./configure; make distcheck</code>).<br /></li>
 <li>Add the package to the <code>gh-pages</code> branch.<br /></li>
-<li>Adjust <code>download.md</code> in <code>gh-pages</code> branch.<br /></li>
+<li>Adjust <code>download.md</code> and <code>libdill-history.md</code> in <code>gh-pages</code> branch.<br /></li>
 <li>Regenerate the documentation using <code>./gendocs.sh &lt;version-number&gt;</code>.<br /></li>
 <li>Commit and push to <code>gh-pages</code>.<br /></li>
 <li>Announce the release on twitter, etc.</li>

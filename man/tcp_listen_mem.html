@@ -16,13 +16,14 @@
 <li><a href="http://libdill.org/tutorial.html">Tutorials</a></li>
 </ul>
 <h1 id="name">NAME</h1>
-<p>tcp_listen - start listening for incoming TCP connections</p>
+<p>tcp_listen_mem - start listening for incoming TCP connections</p>
 <h1 id="synopsis">SYNOPSIS</h1>
 <p><strong>#include &lt;libdill.h&gt;</strong></p>
-<p><strong>int tcp_listen(const struct ipaddr </strong>*<em>addr</em><strong>, int</strong> <em>backlog</em><strong>);</strong></p>
+<p><strong>int tcp_listen_mem(const struct ipaddr </strong>*<em>addr</em><strong>, int</strong> <em>backlog</em><strong>, void </strong>*<em>mem</em><strong>);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
 <p>TCP protocol is a bytestream protocol (i.e. data can be sent via <strong>bsend()</strong> and received via <strong>brecv()</strong>) for transporting data among machines.</p>
 <p>This function starts listening for incoming connection on the address specified in <em>addr</em> argument. <em>backlog</em> is the maximum number of connections that can be held open without user accepting them.</p>
+<p>The socket is allocated in user-supplied memory. The memory is passed in <em>mem</em> argument. It must be at least <em>TCP_LISTENER_SIZE</em> bytes long and can be deallocated only after the socket is closed. Unless you are hyper-optimizing use <strong>tcp_listen()</strong> instead.</p>
 <p>The socket can be cleanly shut down using <strong>tcp_close()</strong> function.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>The function returns the handle of the listening socket. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
@@ -39,5 +40,6 @@
 <h1 id="example">EXAMPLE</h1>
 <pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> ipaddr addr;
 <span class="dt">int</span> rc = ipaddr_local(&amp;addr, NULL, <span class="dv">5555</span>, <span class="dv">0</span>);
-<span class="dt">int</span> s = tcp_listen(&amp;addr, <span class="dv">10</span>);</code></pre>
+<span class="dt">char</span> mem[TCP_LISTENER_SIZE];
+<span class="dt">int</span> s = tcp_listen_mem(&amp;addr, <span class="dv">10</span>, mem);</code></pre>
 </body>
