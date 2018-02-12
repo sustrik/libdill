@@ -78,6 +78,13 @@ libdill_la_SOURCES += \
     dns/dns.c
 endif
 
+if DILL_SOCKETS
+if HAVE_TLS
+libdill_la_SOURCES += \
+    tls.c
+endif
+endif
+
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libdill.pc
 
@@ -124,6 +131,13 @@ check_PROGRAMS += \
     tests/crlf \
     tests/pfx \
     tests/udp
+endif
+
+if DILL_SOCKETS
+if HAVE_TLS
+check_PROGRAMS += \
+    tests/tls
+endif
 endif
 
 check_HEADERS = \

@@ -155,6 +155,23 @@ else
 fi
 
 ################################################################################
+#  --enable-tls
+################################################################################
+
+AC_ARG_ENABLE([tls], [AS_HELP_STRING([--enable-tls],
+    [Enable TLS sockets [default=no]])])
+
+AM_CONDITIONAL([HAVE_TLS], [test "x$enable_tls" = xyes])
+
+if test "x$enable_tls" = "xyes"; then
+    AC_DEFINE(HAVE_TLS)
+    AC_CHECK_LIB([ssl], [SSL_ctrl ], [],
+        AC_MSG_ERROR([libssl not found; install OpenSSL]))
+    AC_CHECK_LIB([crypto], [BIO_read], [],
+        AC_MSG_ERROR([libcrypto not found; install OpenSSL]))
+fi
+
+################################################################################
 #  Feature checks.                                                             #
 ################################################################################
 

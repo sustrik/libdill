@@ -540,6 +540,53 @@ DILL_EXPORT ssize_t udp_recvl(
     struct iolist *last,
     int64_t deadline);
 
+/******************************************************************************/
+/*  TLS protocol.                                                             */
+/******************************************************************************/
+
+#if !defined DILL_DISABLE_TLS
+
+#if defined(__i386__)
+#  define TLS_LISTENER_SIZE 44
+#  define TLS_SIZE 44
+#else
+#  define TLS_LISTENER_SIZE 88
+#  define TLS_SIZE 88
+#endif
+
+DILL_EXPORT int tls_listen(
+    struct ipaddr *addr,
+    const char *cert,
+    const char *pkey,
+    int backlog);
+DILL_EXPORT int tls_listen_mem(
+    struct ipaddr *addr,
+    const char *cert,
+    const char *pkey,
+    int backlog,
+    void *mem);
+DILL_EXPORT int tls_accept(
+    int s,
+    struct ipaddr *addr,
+    int64_t deadline);
+DILL_EXPORT int tls_accept_mem(
+    int s,
+    struct ipaddr *addr,
+    void *mem,
+    int64_t deadline);
+DILL_EXPORT int tls_connect(
+    const struct ipaddr *addr,
+    int64_t deadline);
+DILL_EXPORT int tls_connect_mem(
+    const struct ipaddr *addr,
+    void *mem,
+    int64_t deadline);
+DILL_EXPORT int tls_close(
+    int s,
+    int64_t deadline);
+
+#endif
+
 #endif
 
 #endif
