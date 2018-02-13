@@ -30,19 +30,14 @@
 #include "fd.h"
 #include "utils.h"
 
-/* Secretly export the symbols. More thinking should be done about how
-   to do this cleanly without breaking encapsulation. */
-DILL_EXPORT extern const void *tcp_type;
-DILL_EXPORT extern const void *tcp_listener_type;
-DILL_EXPORT int tcp_fd(int s);
+dill_unique_id(tcp_type);
+dill_unique_id(tcp_listener_type);
 
 static int tcp_makeconn(int fd, void *mem);
 
 /******************************************************************************/
 /*  TCP connection socket                                                     */
 /******************************************************************************/
-
-dill_unique_id(tcp_type);
 
 static void *tcp_hquery(struct hvfs *hvfs, const void *type);
 static void tcp_hclose(struct hvfs *hvfs);
@@ -189,8 +184,6 @@ static void tcp_hclose(struct hvfs *hvfs) {
 /******************************************************************************/
 /*  TCP listener socket                                                       */
 /******************************************************************************/
-
-dill_unique_id(tcp_listener_type);
 
 static void *tcp_listener_hquery(struct hvfs *hvfs, const void *type);
 static void tcp_listener_hclose(struct hvfs *hvfs);
