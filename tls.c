@@ -34,6 +34,7 @@
 
 static void tls_init(void);
 static int tls_makeconn(int fd, SSL *ssl, void *mem);
+static int tls_finish(int fd, SSL *ssl, int rc, int64_t deadline);
 
 dill_unique_id(tls_type);
 dill_unique_id(tls_listener_type);
@@ -96,25 +97,12 @@ int tls_connect_mem(const struct ipaddr *addr, void *mem, int64_t deadline) {
     rc = SSL_set_fd(ssl, s);
     if(dill_slow(rc != 1)) {err = EFAULT; goto error3;}
     /* Do the TLS protocol initialization. */
-    while(1) {
-        rc = SSL_connect(ssl);
-        if(rc == -1 &&  SSL_get_error(ssl, rc) == SSL_ERROR_WANT_READ) {
-            rc = fdin(s, deadline);
-            if(dill_slow(rc < 0)) {err = errno; goto error3;}
-            continue;
-        }
-        if(rc == -1 &&  SSL_get_error(ssl, rc) == SSL_ERROR_WANT_WRITE) {
-            rc = fdout(s, deadline);
-            if(dill_slow(rc < 0)) {err = errno; goto error3;}
-            continue;
-        }
-        break;
-    }
-    if(dill_slow(rc != 1)) {err = EFAULT; goto error3;}
+    while(tls_finish(s, ssl, SSL_connect(ssl), deadline));
+    if(dill_slow(errno != 0)) {err = errno; goto error3;}
     /* Create the handle. */
     int h = tls_makeconn(s, ssl, mem);
-    if(dill_slow(h < 0)) {err = errno; goto error2;}
-    SSL_CTX_free(ctx);
+    if(dill_slow(h < 0)) {err = errno; goto error3;}
+    SSL_CTX_free(ctx);  
     return h;
 error3:
     SSL_CTX_free(ctx);
@@ -151,22 +139,8 @@ static int tls_bsendl(struct bsock_vfs *bvfs,
     while(1) {
         uint8_t *base = it->iol_base;
         size_t len = it->iol_len;
-        while(1) {
-            rc = SSL_write(self->ssl, base, len);
-            if(rc == -1 &&
-                  SSL_get_error(self->ssl, rc) == SSL_ERROR_WANT_READ) {
-                rc = fdin(self->fd, deadline);
-                if(dill_slow(rc < 0)) break; 
-                continue;
-            }
-            if(rc == -1 &&
-                  SSL_get_error(self->ssl, rc) == SSL_ERROR_WANT_WRITE) {
-                rc = fdout(self->fd, deadline);
-                if(dill_slow(rc < 0)) break;
-                continue;
-            }
-            break;
-        }
+        while(tls_finish(self->fd, self->ssl,
+            SSL_write(self->ssl, base, len), deadline));
         if(it == last) break;
         it = it->iol_next;
     }
@@ -184,22 +158,8 @@ static int tls_brecvl(struct bsock_vfs *bvfs,
     while(1) {
         uint8_t *base = it->iol_base;
         size_t len = it->iol_len;
-        while(1) {
-            rc = SSL_read(self->ssl, base, len);
-            if(rc == -1 &&
-                  SSL_get_error(self->ssl, rc) == SSL_ERROR_WANT_READ) {
-                rc = fdin(self->fd, deadline);
-                if(dill_slow(rc < 0)) break;
-                continue;
-            }
-            if(rc == -1 &&
-                  SSL_get_error(self->ssl, rc) == SSL_ERROR_WANT_WRITE) {
-                rc = fdout(self->fd, deadline);
-                if(dill_slow(rc < 0)) break;
-                continue;
-            }
-            break;
-        }
+        while(tls_finish(self->fd, self->ssl,
+            SSL_read(self->ssl, base, len), deadline));
         if(it == last) break;
         it = it->iol_next;
     }
@@ -216,25 +176,7 @@ int tls_close(int s, int64_t deadline) {
     struct tls_conn *self = hquery(s, tls_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
-    while(1) {
-        int rc = SSL_shutdown(self->ssl);
-        if(rc == 1) break;
-        if(dill_slow(rc < 0)) {
-            if(SSL_get_error(self->ssl, rc) == SSL_ERROR_WANT_READ) {
-                rc = fdin(self->fd, deadline);
-                if(dill_slow(rc < 0)) {err = errno; goto error;}
-                continue;
-            }
-            if(SSL_get_error(self->ssl, rc) == SSL_ERROR_WANT_WRITE) {
-                rc = fdout(self->fd, deadline);
-                if(dill_slow(rc < 0)) {err = errno; goto error;}
-                continue;
-            }
-            err = EFAULT;
-            goto error;
-        }
-        dill_assert(rc == 0);
-    }
+    while(tls_finish(self->fd, self->ssl, SSL_shutdown(self->ssl), deadline));
     /* No need to do TCP handshake here. TLS handshake is sufficient to make
        sure that the peer have received all the data. */
     tls_hclose(&self->hvfs);
@@ -369,21 +311,7 @@ int tls_accept_mem(int s, struct ipaddr *addr, void *mem, int64_t deadline) {
     rc = SSL_set_fd(ssl, as);
     if(dill_slow(rc != 1)) {err = EFAULT; goto error3;}
     /* Do the TLS protocol initialization. */
-    while(1) {
-        rc = SSL_accept(ssl);
-        if(rc == -1 &&  SSL_get_error(ssl, rc) == SSL_ERROR_WANT_READ) {
-            rc = fdin(as, deadline);
-            if(dill_slow(rc < 0)) {err = errno; goto error3;}
-            continue;
-        }
-        if(rc == -1 &&  SSL_get_error(ssl, rc) == SSL_ERROR_WANT_WRITE) {
-            rc = fdout(as, deadline);
-            if(dill_slow(rc < 0)) {err = errno; goto error3;}
-            continue;
-        }
-        break;
-    }
-    if(dill_slow(rc != 1)) {err = EFAULT; goto error3;}
+    while(tls_finish(as, ssl, SSL_accept(ssl), deadline));
     /* Create the handle. */
     int h = tls_makeconn(as, ssl, mem);
     if(dill_slow(h < 0)) {err = errno; goto error3;}
@@ -451,5 +379,21 @@ static int tls_makeconn(int fd, SSL *ssl, void *mem) {
     self->mem = 1;
     /* Create the handle. */
     return hmake(&self->hvfs);
+}
+
+static int tls_finish(int s, SSL *ssl, int rc, int64_t deadline) {
+    if(rc == -1 &&  SSL_get_error(ssl, rc) == SSL_ERROR_WANT_READ) {
+        rc = fdin(s, deadline);
+        if(dill_slow(rc < 0)) return 0;
+        return 1;
+    }
+    if(rc == -1 &&  SSL_get_error(ssl, rc) == SSL_ERROR_WANT_WRITE) {
+        rc = fdout(s, deadline);
+        if(dill_slow(rc < 0)) return 0;
+        return 1;
+    }
+    if(dill_slow(rc == 0)) {errno = EFAULT; return 0;} /* TODO */
+    errno = 0;
+    return 0;
 }
 
