@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -34,7 +35,7 @@
 
 static void tls_init(void);
 static int tls_makeconn(int fd, SSL *ssl, void *mem);
-static int tls_finish(int fd, SSL *ssl, int rc, int64_t deadline);
+static int tls_followup(int fd, SSL *ssl, int rc, int64_t deadline);
 
 dill_unique_id(tls_type);
 dill_unique_id(tls_listener_type);
@@ -97,7 +98,11 @@ int tls_connect_mem(const struct ipaddr *addr, void *mem, int64_t deadline) {
     rc = SSL_set_fd(ssl, s);
     if(dill_slow(rc != 1)) {err = EFAULT; goto error3;}
     /* Do the TLS protocol initialization. */
-    while(tls_finish(s, ssl, SSL_connect(ssl), deadline));
+    while(1) {
+        ERR_clear_error();
+        rc = SSL_connect(ssl);
+        if(tls_followup(s, ssl, rc, deadline)) break;
+    }
     if(dill_slow(errno != 0)) {err = errno; goto error3;}
     /* Create the handle. */
     int h = tls_makeconn(s, ssl, mem);
@@ -126,7 +131,6 @@ error2:
 error1:
     errno = err;
     return -1;
-
 }
 
 static int tls_bsendl(struct bsock_vfs *bvfs,
@@ -134,17 +138,19 @@ static int tls_bsendl(struct bsock_vfs *bvfs,
     struct tls_conn *self = dill_cont(bvfs, struct tls_conn, bvfs);
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
-    int rc;
     struct iolist *it = first;
     while(1) {
         uint8_t *base = it->iol_base;
         size_t len = it->iol_len;
-        while(tls_finish(self->fd, self->ssl,
-            SSL_write(self->ssl, base, len), deadline));
+        while(1) {
+            ERR_clear_error();
+            int rc = SSL_write(self->ssl, base, len);
+            if(tls_followup(self->fd, self->ssl, rc, deadline)) break;
+        }
+        if(dill_slow(errno != 0)) {self->outerr = 1; return -1;}
         if(it == last) break;
         it = it->iol_next;
     }
-    if(dill_slow(rc <= 0)) {self->outerr = 1; errno = EFAULT; return -1;}
     return 0;
 }
 
@@ -153,17 +159,19 @@ static int tls_brecvl(struct bsock_vfs *bvfs,
     struct tls_conn *self = dill_cont(bvfs, struct tls_conn, bvfs);
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
-    int rc;
     struct iolist *it = first;
     while(1) {
         uint8_t *base = it->iol_base;
         size_t len = it->iol_len;
-        while(tls_finish(self->fd, self->ssl,
-            SSL_read(self->ssl, base, len), deadline));
+        while(1) {
+            ERR_clear_error();
+            int rc = SSL_read(self->ssl, base, len);
+            if(tls_followup(self->fd, self->ssl, rc, deadline)) break;
+        }
+        if(dill_slow(errno != 0)) {self->inerr = 1; return -1;}
         if(it == last) break;
         it = it->iol_next;
     }
-    if(dill_slow(rc <= 0)) {self->outerr = 1; errno = EFAULT; return -1;}
     return 0;
 }
 
@@ -176,9 +184,15 @@ int tls_close(int s, int64_t deadline) {
     struct tls_conn *self = hquery(s, tls_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
-    while(tls_finish(self->fd, self->ssl, SSL_shutdown(self->ssl), deadline));
+    while(1) {
+        ERR_clear_error();
+        int rc = SSL_shutdown(self->ssl);
+        if(rc == 0) continue;
+        if(tls_followup(self->fd, self->ssl, rc, deadline)) break;
+    }
     /* No need to do TCP handshake here. TLS handshake is sufficient to make
        sure that the peer have received all the data. */
+    if(dill_slow(errno != 0)) {err = errno; goto error;}
     tls_hclose(&self->hvfs);
     return 0;
 error:
@@ -311,7 +325,11 @@ int tls_accept_mem(int s, struct ipaddr *addr, void *mem, int64_t deadline) {
     rc = SSL_set_fd(ssl, as);
     if(dill_slow(rc != 1)) {err = EFAULT; goto error3;}
     /* Do the TLS protocol initialization. */
-    while(tls_finish(as, ssl, SSL_accept(ssl), deadline));
+    while(1) {
+        ERR_clear_error();
+        rc = SSL_accept(ssl);
+        if(tls_followup(as, ssl, rc, deadline)) break;
+    }
     /* Create the handle. */
     int h = tls_makeconn(as, ssl, mem);
     if(dill_slow(h < 0)) {err = errno; goto error3;}
@@ -381,19 +399,50 @@ static int tls_makeconn(int fd, SSL *ssl, void *mem) {
     return hmake(&self->hvfs);
 }
 
-static int tls_finish(int s, SSL *ssl, int rc, int64_t deadline) {
-    if(rc == -1 &&  SSL_get_error(ssl, rc) == SSL_ERROR_WANT_READ) {
+/* Do the follow up work after calling a SSL function.
+   Returns 0 if the SSL function has to be restarted, 1 is we are done.
+   In the latter case, error code in in errno. In case of success errno is
+   set to zero. */
+static int tls_followup(int s, SSL *ssl, int rc, int64_t deadline) {
+    int err;
+    char errstr[120];
+    int code = SSL_get_error(ssl, rc);
+	  switch(code) {
+	  case SSL_ERROR_NONE:
+	  case SSL_ERROR_ZERO_RETURN:
+        errno = 0;
+        return 1;
+	  case SSL_ERROR_WANT_READ:
         rc = fdin(s, deadline);
-        if(dill_slow(rc < 0)) return 0;
-        return 1;
-    }
-    if(rc == -1 &&  SSL_get_error(ssl, rc) == SSL_ERROR_WANT_WRITE) {
+        if(dill_slow(rc < 0)) return 1;
+        return 0;
+    case SSL_ERROR_WANT_WRITE:
         rc = fdout(s, deadline);
-        if(dill_slow(rc < 0)) return 0;
+        if(dill_slow(rc < 0)) return 1;
+        return 0;
+    case SSL_ERROR_SYSCALL:
+        err = ERR_get_error();
+        if(err != 0) {
+            ERR_error_string(err, errstr);
+            fprintf(stderr, "%s\n", errstr);
+            errno = EFAULT;
+            return 1;
+        }
+        /* For SSL_shutdown this can be 0, but that's handled by the caller. */
+        dill_assert(rc == -1);
+        /* In this case, error is reported via errno. */
+        dill_assert(errno != 0);
+        return 0;
+	  case SSL_ERROR_SSL:
+        err = ERR_get_error();
+        ERR_error_string(err, errstr);
+        fprintf(stderr, "%s\n", errstr);
+        errno = EFAULT;
+        return 1;
+    default:
+        fprintf(stderr, "SSL error %d\n", code);
+        errno = EFAULT;
         return 1;
     }
-    if(dill_slow(rc == 0)) {errno = EFAULT; return 0;} /* TODO */
-    errno = 0;
-    return 0;
 }
 
