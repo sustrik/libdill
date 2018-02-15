@@ -60,6 +60,24 @@ coroutine void client2(void) {
     errno_assert(rc == 0);
 }
 
+coroutine void client3(void) {
+    int s = client_connect();
+    uint8_t c = 0;
+    uint8_t b[2777];
+    int i;
+    for(i = 0; i != 257; ++i) {
+        int j;
+        for(j = 0; j != sizeof(b); j++) {
+            b[j] = c;
+            c++;
+        }
+        int rc = bsend(s, b, sizeof(b), -1);
+        errno_assert(rc == 0);
+    }
+    int rc = tls_close(s, -1);
+    errno_assert(rc == 0);
+}
+
 int main(void) {
     char buf[16];
 
@@ -84,11 +102,11 @@ int main(void) {
     errno_assert(rc == 0);
     rc = hdone(s, -1);
     errno_assert(rc == 0);
-    rc = hclose(s);
-    errno_assert(rc == 0);
     rc = hdone(cr, -1);
     errno_assert(rc == 0);
     rc = hclose(cr);
+    errno_assert(rc == 0);
+    rc = hclose(s);
     errno_assert(rc == 0);
 
     /* Test simple data transfer, terminated by tls_close(). */
@@ -99,6 +117,30 @@ int main(void) {
     rc = brecv(s, buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
+    rc = tls_close(s, -1);
+    errno_assert(rc == 0);
+    rc = hdone(cr, -1);
+    errno_assert(rc == 0);
+    rc = hclose(cr);
+    errno_assert(rc == 0);
+
+    /* Transfer large amount of data. */
+    cr = go(client3());
+    errno_assert(cr >= 0);
+    s = tls_accept(ls, NULL, -1);
+    errno_assert(s >= 0);
+    uint8_t c = 0;
+    int i;
+    for(i = 0; i != 257; ++i) {
+        uint8_t b[2777];
+        rc = brecv(s, b, sizeof(b), -1);
+        errno_assert(rc == 0);
+        int j;
+        for(j = 0; j != sizeof(b); ++j) {
+            assert(b[j] == c);
+            c++;
+        }
+    }
     rc = tls_close(s, -1);
     errno_assert(rc == 0);
     rc = hdone(cr, -1);

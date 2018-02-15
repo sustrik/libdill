@@ -100,6 +100,7 @@ int tls_connect_mem(const struct ipaddr *addr, void *mem, int64_t deadline) {
     if(dill_slow(rc != 1)) {err = EFAULT; goto error3;}
     /* Do the TLS protocol initialization. */
     while(1) {
+        errno = 0;
         ERR_clear_error();
         rc = SSL_connect(ssl);
         if(tls_followup(s, ssl, rc, deadline)) break;
@@ -144,6 +145,7 @@ static int tls_bsendl(struct bsock_vfs *bvfs,
         uint8_t *base = it->iol_base;
         size_t len = it->iol_len;
         while(1) {
+            errno = 0;
             ERR_clear_error();
             int rc = SSL_write(self->ssl, base, len);
             if(tls_followup(self->fd, self->ssl, rc, deadline)) break;
@@ -165,6 +167,7 @@ static int tls_brecvl(struct bsock_vfs *bvfs,
         uint8_t *base = it->iol_base;
         size_t len = it->iol_len;
         while(1) {
+            errno = 0;
             ERR_clear_error();
             int rc = SSL_read(self->ssl, base, len);
             if(tls_followup(self->fd, self->ssl, rc, deadline)) break;
@@ -197,13 +200,12 @@ int tls_close(int s, int64_t deadline) {
     /* Wait for the handshake acknowledgement from the peer. */
     if(!self->indone) {
         while(1) {
+            errno = 0;
             ERR_clear_error();
             int rc = SSL_shutdown(self->ssl);
             if(rc == 1) break;
             if(tls_followup(self->fd, self->ssl, rc, deadline)) {
-                err = errno == 0 ? EFAULT : errno;
-                goto error;
-            }
+                err = errno; goto error;}
         }
     }
     /* No need to do TCP handshake here. TLS handshake is sufficient to make
@@ -221,6 +223,7 @@ static int tls_hdone(struct hvfs *hvfs, int64_t deadline) {
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     while(1) {
+        errno = 0;
         ERR_clear_error();
         int rc = SSL_shutdown(self->ssl);
         if(rc == 0) {self->outdone = 1; return 0;}
@@ -357,6 +360,7 @@ int tls_accept_mem(int s, struct ipaddr *addr, void *mem, int64_t deadline) {
     if(dill_slow(rc != 1)) {err = EFAULT; goto error3;}
     /* Do the TLS protocol initialization. */
     while(1) {
+        errno = 0;
         ERR_clear_error();
         rc = SSL_accept(ssl);
         if(tls_followup(as, ssl, rc, deadline)) break;
@@ -454,6 +458,7 @@ static int tls_followup(int s, SSL *ssl, int rc, int64_t deadline) {
         if(dill_slow(rc < 0)) return 1;
         return 0;
     case SSL_ERROR_SYSCALL:
+        /* Let's have a look whether there's an error in the error queue. */
         err = ERR_get_error();
         if(err != 0) {
             ERR_error_string(err, errstr);
@@ -461,11 +466,15 @@ static int tls_followup(int s, SSL *ssl, int rc, int64_t deadline) {
             errno = EFAULT;
             return 1;
         }
+        /* This may be the case during SSL_shutdown. */
         if(rc == 0) {errno = EPIPE; return 1;}
-        dill_assert(rc == -1);
         /* In this case, error is reported via errno. */
-        dill_assert(errno != 0);
-        return 0;
+        dill_assert(rc == -1);
+        /* This is the weird case, but it looks like it happens after
+           the connection is closed by the peer. Retrying the operation
+           happens to fix the problem. */
+        if(errno == 0) return 0;
+        return 1;
 	  case SSL_ERROR_SSL:
         err = ERR_get_error();
         ERR_error_string(err, errstr);
