@@ -27,7 +27,7 @@
 #include "assert.h"
 #include "../libdill.h"
 
-int client_start(void) {
+int client_connect(void) {
     struct ipaddr addr;
     int rc = ipaddr_remote(&addr, "127.0.0.1", 5555, 0, -1);
     errno_assert(rc == 0);
@@ -36,31 +36,28 @@ int client_start(void) {
     return s;
 }
 
-void client_close(int s) {
-    int rc = tls_close(s, -1);
-    errno_assert(rc == 0);
-}
-
-int server_start(int ls) {
-    int s = tls_accept(ls, NULL, -1);
-    errno_assert(s >= 0);
-    return s;
-}
-
-void server_close(int s) {
-    int rc = tls_close(s, -1);
-    errno_assert(rc == 0);
-}
-
 coroutine void client1(void) {
-    int s = client_start();
+    int s = client_connect();
+    int rc = bsend(s, "ABC", 3, -1);
+    errno_assert(rc == 0);
+    rc = hdone(s, -1);
+    errno_assert(rc == 0);
     char buf[3];
-    int rc = brecv(s, buf, sizeof(buf), -1);
+    rc = brecv(s, buf, sizeof(buf), -1);
     errno_assert(rc == 0);
-    assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    rc = bsend(s, "DEF", 3, -1);
+    assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
+    rc = brecv(s, buf, sizeof(buf), -1);
+    errno_assert(rc == -1 && errno == EPIPE);
+    rc = hclose(s);
     errno_assert(rc == 0);
-    client_close(s);
+}
+
+coroutine void client2(void) {
+    int s = client_connect();
+    int rc = bsend(s, "ABC", 3, -1);
+    errno_assert(rc == 0);
+    rc = tls_close(s, -1);
+    errno_assert(rc == 0);
 }
 
 int main(void) {
@@ -73,16 +70,37 @@ int main(void) {
     int ls = tls_listen(&addr, "tests/cert.pem", "tests/key.pem", 10);
     errno_assert(ls >= 0);
 
-    /* Test simple data exchange. */
+    /* Test simple data exchange, terminated by explicit handshake. */
     int cr = go(client1());
     errno_assert(cr >= 0);
-    int s = server_start(ls);
-    rc = bsend(s, "ABC", 3, -1);
-    errno_assert(rc == 0);
+    int s = tls_accept(ls, NULL, -1);
+    errno_assert(s >= 0);
     rc = brecv(s, buf, 3, -1);
     errno_assert(rc == 0);
-    assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    server_close(s);
+    assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
+    rc = brecv(s, buf, 3, -1);
+    errno_assert(rc == -1 && errno == EPIPE);
+    rc = bsend(s, "DEF", 3, -1);
+    errno_assert(rc == 0);
+    rc = hdone(s, -1);
+    errno_assert(rc == 0);
+    rc = hclose(s);
+    errno_assert(rc == 0);
+    rc = hdone(cr, -1);
+    errno_assert(rc == 0);
+    rc = hclose(cr);
+    errno_assert(rc == 0);
+
+    /* Test simple data transfer, terminated by tls_close(). */
+    cr = go(client2());
+    errno_assert(cr >= 0);
+    s = tls_accept(ls, NULL, -1);
+    errno_assert(s >= 0);
+    rc = brecv(s, buf, 3, -1);
+    errno_assert(rc == 0);
+    assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
+    rc = tls_close(s, -1);
+    errno_assert(rc == 0);
     rc = hdone(cr, -1);
     errno_assert(rc == 0);
     rc = hclose(cr);

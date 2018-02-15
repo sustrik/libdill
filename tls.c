@@ -46,6 +46,7 @@ dill_unique_id(tls_listener_type);
 
 static void *tls_hquery(struct hvfs *hvfs, const void *type);
 static void tls_hclose(struct hvfs *hvfs);
+static int tls_hdone(struct hvfs *hvfs, int64_t deadline);
 static int tls_bsendl(struct bsock_vfs *bvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 static int tls_brecvl(struct bsock_vfs *bvfs,
@@ -168,7 +169,11 @@ static int tls_brecvl(struct bsock_vfs *bvfs,
             int rc = SSL_read(self->ssl, base, len);
             if(tls_followup(self->fd, self->ssl, rc, deadline)) break;
         }
-        if(dill_slow(errno != 0)) {self->inerr = 1; return -1;}
+        if(dill_slow(errno != 0)) {
+            if(errno == EPIPE) self->indone = 1;
+            else self->inerr = 1;
+            return -1;
+        }
         if(it == last) break;
         it = it->iol_next;
     }
@@ -184,20 +189,46 @@ int tls_close(int s, int64_t deadline) {
     struct tls_conn *self = hquery(s, tls_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
-    while(1) {
-        ERR_clear_error();
-        int rc = SSL_shutdown(self->ssl);
-        if(rc == 0) continue;
-        if(tls_followup(self->fd, self->ssl, rc, deadline)) break;
+    /* Start terminal TLS handshake. */
+    if(!self->outdone) {
+        int rc = tls_hdone(&self->hvfs, deadline);
+        if(dill_slow(rc < 0)) {err = errno; goto error;}
+    }
+    /* Wait for the handshake acknowledgement from the peer. */
+    if(!self->indone) {
+        while(1) {
+            ERR_clear_error();
+            int rc = SSL_shutdown(self->ssl);
+            if(rc == 1) break;
+            if(tls_followup(self->fd, self->ssl, rc, deadline)) {
+                err = errno == 0 ? EFAULT : errno;
+                goto error;
+            }
+        }
     }
     /* No need to do TCP handshake here. TLS handshake is sufficient to make
        sure that the peer have received all the data. */
-    if(dill_slow(errno != 0)) {err = errno; goto error;}
     tls_hclose(&self->hvfs);
     return 0;
 error:
     tls_hclose(&self->hvfs);
     errno = err;
+    return -1;
+}
+
+static int tls_hdone(struct hvfs *hvfs, int64_t deadline) {
+    struct tls_conn *self = (struct tls_conn*)hvfs;
+    if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
+    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    while(1) {
+        ERR_clear_error();
+        int rc = SSL_shutdown(self->ssl);
+        if(rc == 0) {self->outdone = 1; return 0;}
+        if(rc == 1) {self->outdone = 1; self->indone = 1; return 0;}
+        if(tls_followup(self->fd, self->ssl, rc, deadline)) break;
+    }
+    dill_assert(errno != 0);
+    self->outerr = 1;
     return -1;
 }
 
@@ -385,7 +416,7 @@ static int tls_makeconn(int fd, SSL *ssl, void *mem) {
     struct tls_conn *self = (struct tls_conn*)mem;
     self->hvfs.query = tls_hquery;
     self->hvfs.close = tls_hclose;
-    self->hvfs.done = NULL;
+    self->hvfs.done = tls_hdone;
     self->bvfs.bsendl = tls_bsendl;
     self->bvfs.brecvl = tls_brecvl;
     self->fd = fd;
@@ -409,8 +440,10 @@ static int tls_followup(int s, SSL *ssl, int rc, int64_t deadline) {
     int code = SSL_get_error(ssl, rc);
 	  switch(code) {
 	  case SSL_ERROR_NONE:
-	  case SSL_ERROR_ZERO_RETURN:
         errno = 0;
+        return 1;
+	  case SSL_ERROR_ZERO_RETURN:
+        errno = EPIPE;
         return 1;
 	  case SSL_ERROR_WANT_READ:
         rc = fdin(s, deadline);
@@ -428,7 +461,7 @@ static int tls_followup(int s, SSL *ssl, int rc, int64_t deadline) {
             errno = EFAULT;
             return 1;
         }
-        /* For SSL_shutdown this can be 0, but that's handled by the caller. */
+        if(rc == 0) {errno = EPIPE; return 1;}
         dill_assert(rc == -1);
         /* In this case, error is reported via errno. */
         dill_assert(errno != 0);
