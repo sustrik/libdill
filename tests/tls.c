@@ -27,48 +27,69 @@
 #include "assert.h"
 #include "../libdill.h"
 
-coroutine void client2(int port) {
+int client_start(void) {
     struct ipaddr addr;
-    int rc = ipaddr_remote(&addr, "127.0.0.1", port, 0, -1);
+    int rc = ipaddr_remote(&addr, "127.0.0.1", 5555, 0, -1);
     errno_assert(rc == 0);
-    int cs = tls_connect(&addr, -1);
-    errno_assert(cs >= 0);
+    int s = tls_connect(&addr, -1);
+    errno_assert(s >= 0);
+    return s;
+}
+
+void client_close(int s) {
+    int rc = tls_close(s, -1);
+    errno_assert(rc == 0);
+}
+
+int server_start(int ls) {
+    int s = tls_accept(ls, NULL, -1);
+    errno_assert(s >= 0);
+    return s;
+}
+
+void server_close(int s) {
+    int rc = tls_close(s, -1);
+    errno_assert(rc == 0);
+}
+
+coroutine void client1(void) {
+    int s = client_start();
     char buf[3];
-    rc = brecv(cs, buf, sizeof(buf), -1);
+    int rc = brecv(s, buf, sizeof(buf), -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    rc = bsend(cs, "DEF", 3, -1);
+    rc = bsend(s, "DEF", 3, -1);
     errno_assert(rc == 0);
-    rc = tls_close(cs, -1);
-    errno_assert(rc == 0);
+    client_close(s);
 }
 
 int main(void) {
     char buf[16];
 
+    /* Prologue. */
     struct ipaddr addr;
     int rc = ipaddr_local(&addr, NULL, 5555, 0);
     errno_assert(rc == 0);
-
-    /* Test simple data exchange. */
     int ls = tls_listen(&addr, "tests/cert.pem", "tests/key.pem", 10);
     errno_assert(ls >= 0);
-    int cr = go(client2(5555));
+
+    /* Test simple data exchange. */
+    int cr = go(client1());
     errno_assert(cr >= 0);
-    int as = tls_accept(ls, NULL, -1);
-    errno_assert(as >= 0);
-    rc = bsend(as, "ABC", 3, -1);
+    int s = server_start(ls);
+    rc = bsend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
-    rc = brecv(as, buf, 3, -1);
+    rc = brecv(s, buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    rc = tls_close(as, -1);
-    errno_assert(rc == 0);
-    rc = hclose(ls);
-    errno_assert(rc == 0);
+    server_close(s);
     rc = hdone(cr, -1);
     errno_assert(rc == 0);
     rc = hclose(cr);
+    errno_assert(rc == 0);
+
+    /* Epilogue. */
+    rc = hclose(ls);
     errno_assert(rc == 0);
 
     return 0;

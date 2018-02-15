@@ -401,8 +401,8 @@ static int tls_makeconn(int fd, SSL *ssl, void *mem) {
 
 /* Do the follow up work after calling a SSL function.
    Returns 0 if the SSL function has to be restarted, 1 is we are done.
-   In the latter case, error code in in errno. In case of success errno is
-   set to zero. */
+   In the latter case, error code is in errno.
+   In the case of success errno is set to zero. */
 static int tls_followup(int s, SSL *ssl, int rc, int64_t deadline) {
     int err;
     char errstr[120];
