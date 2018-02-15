@@ -131,8 +131,8 @@ int main(void) {
     errno_assert(s >= 0);
     uint8_t c = 0;
     int i;
-    for(i = 0; i != 257; ++i) {
-        uint8_t b[2777];
+    for(i = 0; i != 2777; ++i) {
+        uint8_t b[257];
         rc = brecv(s, b, sizeof(b), -1);
         errno_assert(rc == 0);
         int j;

@@ -148,9 +148,16 @@ static int tls_bsendl(struct bsock_vfs *bvfs,
             errno = 0;
             ERR_clear_error();
             int rc = SSL_write(self->ssl, base, len);
-            if(tls_followup(self->fd, self->ssl, rc, deadline)) break;
+            if(tls_followup(self->fd, self->ssl, rc, deadline)) {
+                if(dill_slow(errno != 0)) {
+                    self->outerr = 1;
+                    return -1;
+                }
+                if(rc == len) break;
+                base += rc;
+                len -= rc;
+            }
         }
-        if(dill_slow(errno != 0)) {self->outerr = 1; return -1;}
         if(it == last) break;
         it = it->iol_next;
     }
@@ -170,12 +177,16 @@ static int tls_brecvl(struct bsock_vfs *bvfs,
             errno = 0;
             ERR_clear_error();
             int rc = SSL_read(self->ssl, base, len);
-            if(tls_followup(self->fd, self->ssl, rc, deadline)) break;
-        }
-        if(dill_slow(errno != 0)) {
-            if(errno == EPIPE) self->indone = 1;
-            else self->inerr = 1;
-            return -1;
+            if(tls_followup(self->fd, self->ssl, rc, deadline)) {
+                if(dill_slow(errno != 0)) {
+                    if(errno == EPIPE) self->indone = 1;
+                    else self->inerr = 1;
+                    return -1;
+                }
+                if(rc == len) break;
+                base += rc;
+                len -= rc;
+            }
         }
         if(it == last) break;
         it = it->iol_next;
