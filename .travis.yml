@@ -174,7 +174,18 @@ matrix:
   - os: osx
     compiler: clang
     env: THREAD_FALLBACK=1
-
+  - os: linux
+    compiler: gcc
+    env: TLS=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-4.9
+  - os: osx
+    compiler: clang
+    env: TLS=1
 
 branches:
   except:
@@ -182,7 +193,7 @@ branches:
 
 install:
   - ./autogen.sh
-  - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census} ${NOTHREADS+--disable-threads} CFLAGS="-O3 ${POLL+-DDILL_POLL} ${ARCH_FALLBACK+-DDILL_ARCH_FALLBACK} ${THREAD_FALLBACK+-DDILL_THREAD_FALLBACK} -DDILL_SLOW_TESTS"
+  - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census} ${TLS+--enable-tls} ${NOTHREADS+--disable-threads} CFLAGS="-O3 ${POLL+-DDILL_POLL} ${ARCH_FALLBACK+-DDILL_ARCH_FALLBACK} ${THREAD_FALLBACK+-DDILL_THREAD_FALLBACK} -DDILL_SLOW_TESTS"
   - make V=1 ${DIST+dist}
 
 script:
