@@ -43,6 +43,7 @@ struct http_sock {
     /* Underlying CRLF socket. */
     int s;
     int rxerr;
+    char crlf_mem[CRLF_SIZE];
     char rxbuf[1024];
 };
 
@@ -72,7 +73,7 @@ int http_attach(int s) {
     int tmp = hdup(s);
     if(dill_slow(tmp < 0)) {err = errno; goto error3;}
     /* Wrap the underlying socket into CRLF protocol. */
-    obj->s = crlf_attach(tmp);
+    obj->s = crlf_attach_mem(tmp, obj->crlf_mem);
     if(dill_slow(obj->s < 0)) {err = errno; goto error4;}
     /* Function succeeded. We can now close original undelying handle. */
     int rc = hclose(s);
