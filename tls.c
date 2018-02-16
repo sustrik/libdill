@@ -457,7 +457,6 @@ static void tls_term(void) {
 
 static void tls_init(void)
 {
-    /* TODO: atexit handler to free all this stuff. */
     static int init = 0;
     if(dill_slow(!init)) {
         SSL_library_init();
