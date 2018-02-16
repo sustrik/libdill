@@ -547,41 +547,30 @@ DILL_EXPORT ssize_t udp_recvl(
 #if !defined DILL_DISABLE_TLS
 
 #if defined(__i386__)
-#  define TLS_LISTENER_SIZE 44
 #  define TLS_SIZE 44
 #else
-#  define TLS_LISTENER_SIZE 88
 #  define TLS_SIZE 88
 #endif
 
-DILL_EXPORT int tls_listen(
-    struct ipaddr *addr,
+DILL_EXPORT int tls_attach_server(
+    int s,
     const char *cert,
     const char *pkey,
-    int backlog);
-DILL_EXPORT int tls_listen_mem(
-    struct ipaddr *addr,
+    int64_t deadline);
+DILL_EXPORT int tls_attach_server_mem(
+    int s,
     const char *cert,
     const char *pkey,
-    int backlog,
-    void *mem);
-DILL_EXPORT int tls_accept(
-    int s,
-    struct ipaddr *addr,
-    int64_t deadline);
-DILL_EXPORT int tls_accept_mem(
-    int s,
-    struct ipaddr *addr,
     void *mem,
     int64_t deadline);
-DILL_EXPORT int tls_connect(
-    const struct ipaddr *addr,
+DILL_EXPORT int tls_attach_client(
+    int s,
     int64_t deadline);
-DILL_EXPORT int tls_connect_mem(
-    const struct ipaddr *addr,
+DILL_EXPORT int tls_attach_client_mem(
+    int s,
     void *mem,
     int64_t deadline);
-DILL_EXPORT int tls_close(
+DILL_EXPORT int tls_detach(
     int s,
     int64_t deadline);
 

@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2017 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -27,17 +27,9 @@
 #include "assert.h"
 #include "../libdill.h"
 
-int client_connect(void) {
-    struct ipaddr addr;
-    int rc = ipaddr_remote(&addr, "127.0.0.1", 5555, 0, -1);
-    errno_assert(rc == 0);
-    int s = tls_connect(&addr, -1);
+coroutine void client1(int u) {
+    int s = tls_attach_client(u, -1);
     errno_assert(s >= 0);
-    return s;
-}
-
-coroutine void client1(void) {
-    int s = client_connect();
     int rc = bsend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
     rc = hdone(s, -1);
@@ -46,22 +38,28 @@ coroutine void client1(void) {
     rc = brecv(s, buf, sizeof(buf), -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    rc = brecv(s, buf, sizeof(buf), -1);
-    errno_assert(rc == -1 && errno == EPIPE);
-    rc = hclose(s);
+    u = tls_detach(s, -1);
+    errno_assert(u >= 0);
+    rc = hclose(u);
     errno_assert(rc == 0);
 }
 
-coroutine void client2(void) {
-    int s = client_connect();
+coroutine void client2(int u) {
+    int s = tls_attach_client(u, -1);
+    errno_assert(s >= 0);
     int rc = bsend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
-    rc = tls_close(s, -1);
+    u = tls_detach(s, -1);
+    errno_assert(u >= 0);
+    rc = bsend(u, "DEF", 3, -1);
+    errno_assert(rc == 0);
+    rc = ipc_close(u, -1);
     errno_assert(rc == 0);
 }
 
-coroutine void client3(void) {
-    int s = client_connect();
+coroutine void client3(int u) {
+    int s = tls_attach_client(u, -1);
+    errno_assert(s >= 0);
     uint8_t c = 0;
     uint8_t b[2777];
     int i;
@@ -74,24 +72,22 @@ coroutine void client3(void) {
         int rc = bsend(s, b, sizeof(b), -1);
         errno_assert(rc == 0);
     }
-    int rc = tls_close(s, -1);
+    u = tls_detach(s, -1);
+    errno_assert(u >= 0);
+    int rc = hclose(u);
     errno_assert(rc == 0);
 }
 
 int main(void) {
     char buf[16];
 
-    /* Prologue. */
-    struct ipaddr addr;
-    int rc = ipaddr_local(&addr, NULL, 5555, 0);
+    /* Test simple data exchange, with explicit handshake. */
+    int u[2];
+    int rc = ipc_pair(u);
     errno_assert(rc == 0);
-    int ls = tls_listen(&addr, "tests/cert.pem", "tests/key.pem", 10);
-    errno_assert(ls >= 0);
-
-    /* Test simple data exchange, terminated by explicit handshake. */
-    int cr = go(client1());
+    int cr = go(client1(u[1]));
     errno_assert(cr >= 0);
-    int s = tls_accept(ls, NULL, -1);
+    int s = tls_attach_server(u[0], "tests/cert.pem", "tests/key.pem", -1);
     errno_assert(s >= 0);
     rc = brecv(s, buf, 3, -1);
     errno_assert(rc == 0);
@@ -102,22 +98,32 @@ int main(void) {
     errno_assert(rc == 0);
     rc = hdone(s, -1);
     errno_assert(rc == 0);
+    u[0] = tls_detach(s, -1);
+    errno_assert(u[0] >= 0);
+    rc = hclose(u[0]);
+    errno_assert(rc == 0);
     rc = hdone(cr, -1);
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
-    rc = hclose(s);
-    errno_assert(rc == 0);
 
-    /* Test simple data transfer, terminated by tls_close(). */
-    cr = go(client2());
+    /* Test simple data transfer, terminated by tls_detach().
+       Then send some data over undelying IPC connection. */
+    rc = ipc_pair(u);
+    errno_assert(rc == 0);
+    cr = go(client2(u[1]));
     errno_assert(cr >= 0);
-    s = tls_accept(ls, NULL, -1);
+    s = tls_attach_server(u[0], "tests/cert.pem", "tests/key.pem", -1);
     errno_assert(s >= 0);
     rc = brecv(s, buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    rc = tls_close(s, -1);
+    u[0] = tls_detach(s, -1);
+    errno_assert(u[0] >= 0);
+    rc = brecv(u[0], buf, 3, -1);
+    errno_assert(rc == 0);
+    assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
+    rc = ipc_close(u[0], -1);
     errno_assert(rc == 0);
     rc = hdone(cr, -1);
     errno_assert(rc == 0);
@@ -125,9 +131,11 @@ int main(void) {
     errno_assert(rc == 0);
 
     /* Transfer large amount of data. */
-    cr = go(client3());
+    rc = ipc_pair(u);
+    errno_assert(rc == 0);
+    cr = go(client3(u[1]));
     errno_assert(cr >= 0);
-    s = tls_accept(ls, NULL, -1);
+    s = tls_attach_server(u[0], "tests/cert.pem", "tests/key.pem", -1);
     errno_assert(s >= 0);
     uint8_t c = 0;
     int i;
@@ -141,17 +149,15 @@ int main(void) {
             c++;
         }
     }
-    rc = tls_close(s, -1);
-    errno_assert(rc == 0);
+    u[0] = tls_detach(s, -1);
+    errno_assert(u[0] >= 0);
     rc = hdone(cr, -1);
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
-
-    /* Epilogue. */
-    rc = hclose(ls);
+    rc = hclose(u[0]);
     errno_assert(rc == 0);
-
+    
     return 0;
 }
 
