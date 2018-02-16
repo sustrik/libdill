@@ -47,6 +47,8 @@ struct http_sock {
     char rxbuf[1024];
 };
 
+DILL_CT_ASSERT(HTTP_SIZE >= sizeof(struct http_sock));
+
 static void *http_hquery(struct hvfs *hvfs, const void *type) {
     struct http_sock *obj = (struct http_sock*)hvfs;
     if(type == http_type) return obj;
@@ -55,6 +57,7 @@ static void *http_hquery(struct hvfs *hvfs, const void *type) {
 }
 
 int http_attach(int s) {
+printf("%d\n", (int)sizeof(struct http_sock));
     int err;
     /* Check whether underlying socket is a bytestream. */
     if(dill_slow(!hquery(s, bsock_type))) {err = errno; goto error1;}

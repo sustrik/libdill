@@ -544,8 +544,17 @@ DILL_EXPORT ssize_t udp_recvl(
 /*  HTTP                                                                      */
 /******************************************************************************/
 
+#if defined(__i386__)
+#  define HTTP_SIZE 1080
+#else
+#  define HTTP_SIZE 1136
+#endif
+
 DILL_EXPORT int http_attach(
     int s);
+DILL_EXPORT int http_attach_mem(
+    int s,
+    void *mem);
 DILL_EXPORT int http_detach(
     int s,
     int64_t deadline);
