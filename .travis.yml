@@ -186,6 +186,7 @@ matrix:
   - os: osx
     compiler: clang
     env: TLS=1
+    before_install: brew install openssl
 
 branches:
   except:
