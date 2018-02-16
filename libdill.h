@@ -541,6 +541,50 @@ DILL_EXPORT ssize_t udp_recvl(
     int64_t deadline);
 
 /******************************************************************************/
+/*  HTTP                                                                      */
+/******************************************************************************/
+
+DILL_EXPORT int http_attach(
+    int s);
+DILL_EXPORT int http_detach(
+    int s,
+    int64_t deadline);
+DILL_EXPORT int http_sendrequest(
+    int s,
+    const char *command,
+    const char *resource,
+    int64_t deadline);
+DILL_EXPORT int http_recvrequest(
+    int s,
+    char *command,
+    size_t commandlen,
+    char *resource,
+    size_t resourcelen,
+    int64_t deadline);
+DILL_EXPORT int http_sendstatus(
+    int s,
+    int status,
+    const char *reason,
+    int64_t deadline);
+DILL_EXPORT int http_recvstatus(
+    int s,
+    char *reason,
+    size_t reasonlen,
+    int64_t deadline);
+DILL_EXPORT int http_sendfield(
+    int s,
+    const char *name,
+    const char *value,
+    int64_t deadline);
+DILL_EXPORT int http_recvfield(
+    int s,
+    char *name,
+    size_t namelen,
+    char *value,
+    size_t valuelen,
+    int64_t deadline);
+
+/******************************************************************************/
 /*  TLS protocol.                                                             */
 /******************************************************************************/
 

@@ -66,6 +66,7 @@ libdill_la_SOURCES += \
     crlf.c \
     fd.h \
     fd.c \
+    http.c \
     iol.h \
     iol.c \
     ipc.c \
@@ -130,7 +131,8 @@ check_PROGRAMS += \
     tests/ipc \
     tests/crlf \
     tests/pfx \
-    tests/udp
+    tests/udp \
+    tests/http
 endif
 
 if DILL_SOCKETS

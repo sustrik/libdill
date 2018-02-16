@@ -52,6 +52,7 @@ tests/pfx
 tests/udp
 tests/tls
 tests/bundle
+tests/http
 perf/.dirstamp
 perf/chan
 perf/ctxswitch

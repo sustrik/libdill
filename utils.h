@@ -105,5 +105,10 @@ void dill_putl(uint8_t *buf, uint32_t val);
 uint64_t dill_getll(const uint8_t *buf);
 void dill_putll(uint8_t *buf, uint64_t val);
 
+/* Returns a pointer to the first character in string that is not delim. */
+const char *dill_lstrip(const char *string, char delim);
+/* Returns a pointer after the last character in string that is not delim. */
+const char *dill_rstrip(const char *string, char delim);
+
 #endif
 

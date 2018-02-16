@@ -22,6 +22,7 @@
 
 */
 
+#include <string.h>
 #include <sys/param.h>
 #include <sys/resource.h>
 
@@ -85,5 +86,17 @@ void dill_putll(uint8_t *buf, uint64_t val) {
     buf[5] = (uint8_t)((val >> 16) & 0xff);
     buf[6] = (uint8_t)((val >> 8) & 0xff);
     buf[7] = (uint8_t)(val & 0xff);
+}
+
+const char *dill_lstrip(const char *string, char delim) {
+    const char *pos = string;
+    while(*pos && *pos == delim) ++pos;
+    return pos;
+}
+
+const char *dill_rstrip(const char *string, char delim) {
+    const char *end = string + strlen(string) - 1;
+    while(end > string && *end == delim) --end;
+    return ++end;
 }
 
