@@ -39,6 +39,7 @@ dill_unique_id(tls_type);
 struct tls_sock {
     struct hvfs hvfs;
     struct bsock_vfs bvfs;
+    SSL_CTX *ctx;
     SSL *ssl;
     int u;
     int64_t deadline;
@@ -87,7 +88,6 @@ int tls_attach_client_mem(int s, void *mem, int64_t deadline) {
     /* Create OpenSSL connection object. */
     SSL *ssl = SSL_new(ctx);
     if(dill_slow(!ssl)) {err = EFAULT; goto error2;}
-    ctx = NULL;
 	  SSL_set_connect_state(ssl);
     /* Create a BIO and attach it to the connection. */
     BIO *bio = tls_new_cbio(mem);
@@ -106,6 +106,7 @@ int tls_attach_client_mem(int s, void *mem, int64_t deadline) {
     self->hvfs.done = tls_hdone;
     self->bvfs.bsendl = tls_bsendl;
     self->bvfs.brecvl = tls_brecvl;
+    self->ctx = ctx;
     self->ssl = ssl;
     self->u = u;
     self->deadline = -1;
@@ -124,8 +125,6 @@ int tls_attach_client_mem(int s, void *mem, int64_t deadline) {
     /* Create the handle. */
     int h = hmake(&self->hvfs);
     if(dill_slow(h < 0)) {int err = errno; goto error4;}
-    BIO_vfree(bio);
-    SSL_CTX_free(ctx);
     return h;
 error4:
     BIO_vfree(bio);
@@ -178,7 +177,6 @@ int tls_attach_server_mem(int s, const char *cert, const char *pkey,
     /* Create OpenSSL connection object. */
     SSL *ssl = SSL_new(ctx);
     if(dill_slow(!ssl)) {err = EFAULT; goto error2;}
-    ctx = NULL;
 	  SSL_set_accept_state(ssl);
     /* Create a BIO and attach it to the connection. */
     BIO *bio = tls_new_cbio(mem);
@@ -197,6 +195,7 @@ int tls_attach_server_mem(int s, const char *cert, const char *pkey,
     self->hvfs.done = tls_hdone;
     self->bvfs.bsendl = tls_bsendl;
     self->bvfs.brecvl = tls_brecvl;
+    self->ctx = ctx;
     self->ssl = ssl;
     self->u = u;
     self->deadline = -1;
@@ -215,8 +214,6 @@ int tls_attach_server_mem(int s, const char *cert, const char *pkey,
     /* Create the handle. */
     int h = hmake(&self->hvfs);
     if(dill_slow(h < 0)) {int err = errno; goto error4;}
-    BIO_vfree(bio);
-    SSL_CTX_free(ctx);
     return h;
 error4:
     BIO_vfree(bio);
@@ -353,7 +350,8 @@ static int tls_brecvl(struct bsock_vfs *bvfs,
 
 static void tls_hclose(struct hvfs *hvfs) {
     struct tls_sock *self = (struct tls_sock*)hvfs;
-    if(dill_fast(self->ssl)) SSL_free(self->ssl);
+    SSL_free(self->ssl);
+    SSL_CTX_free(self->ctx);
     if(dill_fast(self->u >= 0)) {
         int rc = hclose(self->u);
         dill_assert(rc == 0);
@@ -418,17 +416,14 @@ static BIO *tls_new_cbio(void *mem) {
 }
 
 static int tls_cbio_create(BIO *bio) {
-    printf("create\n");
     return 1;
 }
 
 static int tls_cbio_destroy(BIO *bio) {
-    printf("destroy\n");
     return 1;
 }
 
 static int tls_cbio_write(BIO *bio, const char *buf, int len) {
-    printf("write %d\n", len);
     struct tls_sock *self = (struct tls_sock*)BIO_get_data(bio);
     int rc = bsend(self->u, buf, len, self->deadline);
     if(dill_slow(rc < 0)) return -1;
@@ -436,7 +431,6 @@ static int tls_cbio_write(BIO *bio, const char *buf, int len) {
 }
 
 static int tls_cbio_read(BIO *bio, char *buf, int len) {
-    printf("read %d\n", len);
     struct tls_sock *self = (struct tls_sock*)BIO_get_data(bio);
     int rc = brecv(self->u, buf, len, self->deadline);
     if(dill_slow(rc < 0)) return -1;
@@ -455,13 +449,19 @@ static long tls_cbio_ctrl(BIO *bio, int cmd, long larg, void *parg) {
     }
 }
 
+static void tls_term(void) {
+    BIO_meth_free(tls_cbio);
+    ERR_free_strings();
+    EVP_cleanup();
+}
+
 static void tls_init(void)
 {
     /* TODO: atexit handler to free all this stuff. */
     static int init = 0;
     if(dill_slow(!init)) {
-        SSL_load_error_strings();	
-        OpenSSL_add_ssl_algorithms();
+        SSL_library_init();
+        SSL_load_error_strings();
         /* Create our own custom BIO type. */
         int idx = BIO_get_new_index();
         tls_cbio = BIO_meth_new(idx, "bsock");
@@ -476,6 +476,9 @@ static void tls_init(void)
         dill_assert(rc == 1);
         rc = BIO_meth_set_ctrl(tls_cbio, tls_cbio_ctrl);
         dill_assert(rc == 1);
+        /* Deallocate the method once the process exits. */
+        rc = atexit(tls_term);
+        dill_assert(rc == 0);
         init = 1;
     }
 }
