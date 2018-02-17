@@ -172,6 +172,13 @@ noinst_PROGRAMS += \
     tutorial/protocol/step7 \
     tutorial/protocol/step8 \
     tutorial/protocol/step9
+if HAVE_TLS
+endif
+noinst_PROGRAMS += \
+    tutorial/sockets/step1 \
+    tutorial/sockets/step2 \
+    tutorial/sockets/step3 \
+    tutorial/sockets/step4
 endif
 
 ################################################################################

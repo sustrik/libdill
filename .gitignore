@@ -87,3 +87,8 @@ tutorial/protocol/step8
 tutorial/protocol/step9
 tutorial/protocol/*.o
 tutorial/protocol/.dirstamp
+tutorial/sockets/step1
+tutorial/sockets/step2
+tutorial/sockets/step3
+tutorial/sockets/step4
+tutorial/sockets/.dirstamp
