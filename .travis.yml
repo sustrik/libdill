@@ -174,19 +174,23 @@ matrix:
   - os: osx
     compiler: clang
     env: THREAD_FALLBACK=1
-  - os: linux
-    compiler: gcc
-    env: TLS=1
-    addons:
-      apt:
-        sources:
-          - ubuntu-toolchain-r-test
-        packages:
-          - gcc-4.9
-  - os: osx
-    compiler: clang
-    env: TLS=1
-    before_install: brew install openssl
+#
+# Travis has old version of OpenSSL. Find out how to install version 1.1.0.
+#
+# - os: linux
+#    compiler: gcc
+#    env: TLS=1
+#    addons:
+#      apt:
+#        sources:
+#          - ubuntu-toolchain-r-test
+#        packages:
+#          - gcc-4.9
+#  - os: osx
+#    compiler: clang
+#    env: TLS=1
+#    before_install: brew install openssl
+#
 
 branches:
   except:
