@@ -57,7 +57,6 @@ static void *http_hquery(struct hvfs *hvfs, const void *type) {
 }
 
 int http_attach(int s) {
-printf("%d\n", (int)sizeof(struct http_sock));
     int err;
     /* Check whether underlying socket is a bytestream. */
     if(dill_slow(!hquery(s, bsock_type))) {err = errno; goto error1;}
@@ -105,7 +104,7 @@ int http_detach(int s, int64_t deadline) {
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
     int u = crlf_detach(obj->s, deadline);
-    /* TODO: Handle errors. */
+    int err = errno;
     free(obj);
     return u;
 }
@@ -114,7 +113,10 @@ int http_sendrequest(int s, const char *command, const char *resource,
       int64_t deadline) {
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
-    /* TODO: command and resource should contain no spaces! */
+    if (strpbrk(command, " \t\n") != NULL) {
+        errno = EINVAL; return -1;}
+    if (strpbrk(resource, " \t\n") != NULL) {
+        errno = EINVAL; return -1;}
     struct iolist iol[4];
     iol[0].iol_base = (void*)command;
     iol[0].iol_len = strlen(command);
@@ -240,9 +242,9 @@ int http_sendfield(int s, const char *name, const char *value,
       int64_t deadline) {
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
-    /* TODO: Check whether name contains only valid characters! */
-    if (strpbrk(name, "(),/:;<=>?@[\\]{}\" \t") != NULL) {
-        errno = EPROTO; return -1;}
+    /* Check whether name contains only valid characters. */
+    if (strpbrk(name, "(),/:;<=>?@[\\]{}\" \t\n") != NULL) {
+        errno = EINVAL; return -1;}
     if (strlen(value) == 0) {errno = EPROTO; return -1;}
     struct iolist iol[3];
     iol[0].iol_base = (void*)name;

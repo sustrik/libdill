@@ -68,7 +68,7 @@ int main(void) {
     assert(strcmp(value, "Tue, 15 Nov 1994 08:12:31 GMT") == 0);
 
     rc = http_sendfield(s0, "invalid field name ", "bar", -1);
-    assert(rc == -1 && errno == EPROTO);
+    assert(rc == -1 && errno == EINVAL);
 
     rc = http_sendfield(s0, "valid-field-name", "  rpad", -1);
     assert(rc == 0);
