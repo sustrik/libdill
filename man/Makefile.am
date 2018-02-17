@@ -49,6 +49,15 @@ man3_MANS = \
     crlf_attach.3 \
     crlf_attach_mem.3 \
     crlf_detach.3 \
+    http_attach.3 \
+    http_attach_mem.3 \
+    http_detach.3 \
+    http_recvfield.3 \
+    http_recvrequest.3 \
+    http_recvstatus.3 \
+    http_sendfield.3 \
+    http_sendrequest.3 \
+    http_sendstatus.3 \
     ipaddr_family.3 \
     ipaddr_len.3 \
     ipaddr_local.3 \

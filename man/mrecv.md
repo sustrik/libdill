@@ -48,7 +48,7 @@ The function returns size of the message on success. On error, it returns -1 and
 * **EBADF**: The socket handle in invalid.
 * **ECANCELED**: Current coroutine is in the process of shutting down.
 * **ECONNRESET**: Broken connection.
-* **EINVAL**: Invalid arguments.
+* **EINVAL**: Invalid argument.
 * **EMSGSIZE**: The message was larger than the supplied buffer.
 * **ENOMEM**: Not enough memory.
 * **ENOTSUP**: The operation is not supported by the socket.
