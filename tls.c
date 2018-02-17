@@ -382,7 +382,8 @@ static int tls_followup(struct tls_sock *self, int rc, int64_t deadline) {
         return 1;
     case SSL_ERROR_SYSCALL:
         /* Error from our custom BIO. */
-        dill_assert(rc == -1 && errno != 0);
+        dill_assert(rc == -1);
+        if(errno == 0) return 0;
         return 1;
 	  case SSL_ERROR_SSL:
         /* SSL errors. Not clear how to convert them into errnos. */
