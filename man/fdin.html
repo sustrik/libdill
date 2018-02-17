@@ -27,18 +27,18 @@
 <p>The function returns 0 on success. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><strong>EBADF</strong>: Not a file descriptor.<br /></li>
-<li><strong>EBUSY</strong>: Another coroutine already blocked on <strong>fdin</strong> with this file descriptor.<br /></li>
-<li><strong>ECANCELED</strong>: Current coroutine is being shut down.<br /></li>
+<li><strong>EBADF</strong>: Not a file descriptor.</li>
+<li><strong>EBUSY</strong>: Another coroutine already blocked on <strong>fdin</strong> with this file descriptor.</li>
+<li><strong>ECANCELED</strong>: Current coroutine is being shut down.</li>
 <li><strong>ETIMEDOUT</strong>: Deadline expired while waiting on the file descriptor.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> result = fcntl(fd, F_SETFL, O_NONBLOCK); assert(result == <span class="dv">0</span>);
-<span class="kw">while</span>(<span class="dv">1</span>) {
-    result = fdin(fd, -<span class="dv">1</span>); assert(result == <span class="dv">0</span>);
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> result = fcntl(fd, F_SETFL, O_NONBLOCK); assert(result == <span class="dv">0</span>);
+<span class="cf">while</span>(<span class="dv">1</span>) {
+    result = fdin(fd, <span class="dv">-1</span>); assert(result == <span class="dv">0</span>);
     <span class="dt">char</span> buf[<span class="dv">1024</span>];
-    ssize_t len = recv(fd, buf, <span class="kw">sizeof</span>(buf), <span class="dv">0</span>);
+    <span class="dt">ssize_t</span> len = recv(fd, buf, <span class="kw">sizeof</span>(buf), <span class="dv">0</span>);
     assert(len &gt; <span class="dv">0</span>);
     process_input(buf, len);
-}</code></pre>
+}</code></pre></div>
 </body>

@@ -32,9 +32,9 @@ struct iolist *iol_next; /* Next buffer. */
 int iol_rsvd;            /* Reserved. Must be set to zero. */</code></pre>
 <p><strong>mrecvl()</strong> returns <strong>EINVAL</strong> error in case the list is malformed:</p>
 <ul>
-<li>If <em>last</em>-&gt;<em>iol_next</em> is not <strong>NULL</strong>.<br /></li>
-<li>If <em>first</em> and <em>last</em> don't belong to the same list.<br /></li>
-<li>If there's a loop in the list.<br /></li>
+<li>If <em>last</em>-&gt;<em>iol_next</em> is not <strong>NULL</strong>.</li>
+<li>If <em>first</em> and <em>last</em> don't belong to the same list.</li>
+<li>If there's a loop in the list.</li>
 <li>If <em>iol_rsvd</em> of any item is non-zero.</li>
 </ul>
 <p>The list can be temporarily modified while the function is in progress. However, once the function returns the list is guaranteed to be the same as before the call.</p>
@@ -43,17 +43,17 @@ int iol_rsvd;            /* Reserved. Must be set to zero. */</code></pre>
 <p>The function returns size of the message on success. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><strong>EBADF</strong>: The socket handle in invalid.<br /></li>
-<li><strong>ECANCELED</strong>: Current coroutine is in the process of shutting down.<br /></li>
-<li><strong>ECONNRESET</strong>: Broken connection.<br /></li>
-<li><strong>EINVAL</strong>: Invalid arguments.<br /></li>
-<li><strong>EMSGSIZE</strong>: The message was larger than the supplied buffer.<br /></li>
-<li><strong>ENOMEM</strong>: Not enough memory.<br /></li>
-<li><strong>ENOTSUP</strong>: The operation is not supported by the socket.<br /></li>
-<li><strong>EPIPE</strong>: Closed connection.<br /></li>
+<li><strong>EBADF</strong>: The socket handle in invalid.</li>
+<li><strong>ECANCELED</strong>: Current coroutine is in the process of shutting down.</li>
+<li><strong>ECONNRESET</strong>: Broken connection.</li>
+<li><strong>EINVAL</strong>: Invalid argument.</li>
+<li><strong>EMSGSIZE</strong>: The message was larger than the supplied buffer.</li>
+<li><strong>ENOMEM</strong>: Not enough memory.</li>
+<li><strong>ENOTSUP</strong>: The operation is not supported by the socket.</li>
+<li><strong>EPIPE</strong>: Closed connection.</li>
 <li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> msg[<span class="dv">100</span>];
-ssize_t msgsz = mrecv(s, msg, <span class="kw">sizeof</span>(msg), -<span class="dv">1</span>);</code></pre>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> msg[<span class="dv">100</span>];
+<span class="dt">ssize_t</span> msgsz = mrecv(s, msg, <span class="kw">sizeof</span>(msg), <span class="dv">-1</span>);</code></pre></div>
 </body>

@@ -29,20 +29,20 @@
 <p>The function returns 0 on success. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><strong>EBADF</strong>: Invalid handle.<br /></li>
-<li><strong>ECANCELED</strong>: Current coroutine is being shut down.<br /></li>
-<li><strong>EINVAL</strong>: Invalid parameter.<br /></li>
-<li><strong>EMSGSIZE</strong>: The peer expected a different message size.<br /></li>
-<li><strong>ENOTSUP</strong>: Operation not supported. Presumably, the handle isn't a channel.<br /></li>
-<li><strong>EPIPE</strong>: Channel has been closed with <strong>hdone</strong>.<br /></li>
+<li><strong>EBADF</strong>: Invalid handle.</li>
+<li><strong>ECANCELED</strong>: Current coroutine is being shut down.</li>
+<li><strong>EINVAL</strong>: Invalid parameter.</li>
+<li><strong>EMSGSIZE</strong>: The peer expected a different message size.</li>
+<li><strong>ENOTSUP</strong>: Operation not supported. Presumably, the handle isn't a channel.</li>
+<li><strong>EPIPE</strong>: Channel has been closed with <strong>hdone</strong>.</li>
 <li><strong>ETIMEDOUT</strong>: Deadline expired while waiting on a message.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> val = <span class="dv">42</span>;
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> val = <span class="dv">42</span>;
 chsend(ch, &amp;val, <span class="kw">sizeof</span>(val), now() + <span class="dv">1000</span>);
-<span class="kw">if</span>(result != <span class="dv">0</span>) {
+<span class="cf">if</span>(result != <span class="dv">0</span>) {
     perror(<span class="st">&quot;Cannot send message&quot;</span>);
     exit(<span class="dv">1</span>);
 }
-printf(<span class="st">&quot;Value %d sent successfully.</span><span class="ch">\n</span><span class="st">&quot;</span>, val);</code></pre>
+printf(<span class="st">&quot;Value %d sent successfully.</span><span class="sc">\n</span><span class="st">&quot;</span>, val);</code></pre></div>
 </body>

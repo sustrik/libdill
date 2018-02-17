@@ -29,17 +29,17 @@
 <p>The function returns the handle of the listening socket. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><strong>EADDRINUSE</strong>: The specified address is already in use.<br /></li>
-<li><strong>EADDRNOTAVAIL</strong>: The specified address is not available from the local machine.<br /></li>
-<li><strong>ECANCELED</strong>: Current coroutine is being shut down.<br /></li>
-<li><strong>EINVAL</strong>: Invalid arguments.<br /></li>
-<li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.<br /></li>
-<li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.<br /></li>
+<li><strong>EADDRINUSE</strong>: The specified address is already in use.</li>
+<li><strong>EADDRNOTAVAIL</strong>: The specified address is not available from the local machine.</li>
+<li><strong>ECANCELED</strong>: Current coroutine is being shut down.</li>
+<li><strong>EINVAL</strong>: Invalid arguments.</li>
+<li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.</li>
+<li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.</li>
 <li><strong>ENOMEM</strong>: Not enough memory.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> ipaddr addr;
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> ipaddr addr;
 <span class="dt">int</span> rc = ipaddr_local(&amp;addr, NULL, <span class="dv">5555</span>, <span class="dv">0</span>);
 <span class="dt">char</span> mem[TCP_LISTENER_SIZE];
-<span class="dt">int</span> s = tcp_listen_mem(&amp;addr, <span class="dv">10</span>, mem);</code></pre>
+<span class="dt">int</span> s = tcp_listen_mem(&amp;addr, <span class="dv">10</span>, mem);</code></pre></div>
 </body>

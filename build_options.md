@@ -8,4 +8,5 @@ You can pass the following options to `./configure`:
 * `--enable-census`: When this option is set, the library keeps track of stack space used by individual coroutines. It prints statistics when the process exits.
 * `--enable-debug`: Add debug info to the library.
 * `--enable-gcov`: Generate coverage report using gcov.
+* `--enable-tls`: Build TLS protocol. To be able to build with this option you need OpenSSL 1.1.0. or later installed on your machine.
 * `--enable-valgrind`: Valgrind gets confused by libdill's coroutines. Setting this option helps valgrind make sense of what's going on. It's not 100% foolproof but it helps eliminate many false positives.

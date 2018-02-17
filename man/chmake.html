@@ -27,14 +27,14 @@
 <p>Returns a channel handle. In the case of an error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><strong>ECANCELED</strong>: Current coroutine is in the process of shutting down.<br /></li>
+<li><strong>ECANCELED</strong>: Current coroutine is in the process of shutting down.</li>
 <li><strong>ENOMEM</strong>: Not enough memory to allocate a new channel.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> ch[<span class="dv">2</span>];
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> ch[<span class="dv">2</span>];
 <span class="dt">int</span> rc = chmake(ch);
-<span class="kw">if</span>(rc == -<span class="dv">1</span>) {
+<span class="cf">if</span>(rc == <span class="dv">-1</span>) {
     perror(<span class="st">&quot;Cannot create channel&quot;</span>);
     exit(<span class="dv">1</span>);
-}</code></pre>
+}</code></pre></div>
 </body>

@@ -30,11 +30,11 @@
 <p>The function returns 0 on success. On error, it returns -1 and sets <em>errno</em> to one of the following values.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><strong>EBADF</strong>: Not a valid handle.<br /></li>
-<li><strong>ENOTSUP</strong>: Operation not supported.<br /></li>
-<li><strong>EPIPE</strong>: Pipe broken. Possibly, <strong>hdone</strong> has already been called for this channel.<br /></li>
+<li><strong>EBADF</strong>: Not a valid handle.</li>
+<li><strong>ENOTSUP</strong>: Operation not supported.</li>
+<li><strong>EPIPE</strong>: Pipe broken. Possibly, <strong>hdone</strong> has already been called for this channel.</li>
 <li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> rc = hdone(h);</code></pre>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> rc = hdone(h);</code></pre></div>
 </body>

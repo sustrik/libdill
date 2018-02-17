@@ -26,9 +26,9 @@ ipaddr_local(&amp;addr, &quot;::1&quot;, 443, 0);
 ipaddr_local(&amp;addr, &quot;eth0&quot;, 25, 0);</code></pre>
 <p><em>addr</em> is thr address strucure to hold the result. <em>name</em> is the string to convert. <em>port</em> is the port number to use. <em>mode</em> specifies which kind of addresses should be returned. Possible values are:</p>
 <ul>
-<li><strong>IPADDR_IPV4</strong>: Get IPv4 address.<br /></li>
-<li><strong>IPADDR_IPV6</strong>: Get IPv6 address.<br /></li>
-<li><strong>IPADDR_PREF_IPV4</strong>: Get IPv4 address if possible, IPv6 address otherwise.<br /></li>
+<li><strong>IPADDR_IPV4</strong>: Get IPv4 address.</li>
+<li><strong>IPADDR_IPV6</strong>: Get IPv6 address.</li>
+<li><strong>IPADDR_PREF_IPV4</strong>: Get IPv4 address if possible, IPv6 address otherwise.</li>
 <li><strong>IPADDR_PREF_IPV6</strong>: Get IPv6 address if possible, IPv4 address otherwise.</li>
 </ul>
 <p>Setting the argument to zero invokes default behaviour, which, at the present, is IPADDR_PREF_IPV4. However, in the future when IPv6 becomes more common it may be switched to IPADDR_PREF_IPV6.</p>
@@ -40,6 +40,6 @@ ipaddr_local(&amp;addr, &quot;eth0&quot;, 25, 0);</code></pre>
 <li><strong>ENODEV</strong>: Local network interface with the specified name does not exist.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> ipaddr addr;
-<span class="dt">int</span> rc = ipaddr_local(&amp;addr, <span class="st">&quot;eth0&quot;</span>, <span class="dv">5555</span>, <span class="dv">0</span>);</code></pre>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> ipaddr addr;
+<span class="dt">int</span> rc = ipaddr_local(&amp;addr, <span class="st">&quot;eth0&quot;</span>, <span class="dv">5555</span>, <span class="dv">0</span>);</code></pre></div>
 </body>

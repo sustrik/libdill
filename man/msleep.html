@@ -29,10 +29,10 @@
 <li><strong>ECANCELED</strong>: Current coroutine is being shut down.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> result = msleep(now() + <span class="dv">1000</span>);
-<span class="kw">if</span>(result != <span class="dv">0</span>) {
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> result = msleep(now() + <span class="dv">1000</span>);
+<span class="cf">if</span>(result != <span class="dv">0</span>) {
     perror(<span class="st">&quot;Cannot sleep&quot;</span>);
     exit(<span class="dv">1</span>);
 }
-printf(<span class="st">&quot;Slept succefully for 1 second.</span><span class="ch">\n</span><span class="st">&quot;</span>);</code></pre>
+printf(<span class="st">&quot;Slept succefully for 1 second.</span><span class="sc">\n</span><span class="st">&quot;</span>);</code></pre></div>
 </body>

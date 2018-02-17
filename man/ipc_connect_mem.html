@@ -29,21 +29,21 @@
 <p>Newly created socket handle. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><strong>EACCES</strong>: The process does not have appropriate privileges.<br /></li>
-<li><strong>ECANCELED</strong>: Current coroutine is being shut down.<br /></li>
-<li><strong>ECONNREFUSED</strong>:The target address was not listening for connections or refused the connection request.<br /></li>
-<li><strong>ECONNRESET</strong>: Remote host reset the connection request.<br /></li>
-<li><strong>EINVAL</strong>: Invalid arguments.<br /></li>
-<li><strong>ELOOP</strong>: A loop exists in symbolic links encountered during resolution of the pathname in address.<br /></li>
-<li><strong>ENAMETOOLONG</strong>: A component of a pathname exceeded NAME_MAX characters, or an entire pathname exceeded PATH_MAX characters.<br /></li>
-<li><strong>ENOENT</strong>: A component of the pathname does not name an existing file or the pathname is an empty string.<br /></li>
-<li><strong>ENOTDIR</strong>: A component of the path prefix of the pathname in address is not a directory.<br /></li>
-<li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.<br /></li>
-<li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.<br /></li>
-<li><strong>ENOMEM</strong>: Not enough memory.<br /></li>
+<li><strong>EACCES</strong>: The process does not have appropriate privileges.</li>
+<li><strong>ECANCELED</strong>: Current coroutine is being shut down.</li>
+<li><strong>ECONNREFUSED</strong>:The target address was not listening for connections or refused the connection request.</li>
+<li><strong>ECONNRESET</strong>: Remote host reset the connection request.</li>
+<li><strong>EINVAL</strong>: Invalid arguments.</li>
+<li><strong>ELOOP</strong>: A loop exists in symbolic links encountered during resolution of the pathname in address.</li>
+<li><strong>ENAMETOOLONG</strong>: A component of a pathname exceeded NAME_MAX characters, or an entire pathname exceeded PATH_MAX characters.</li>
+<li><strong>ENOENT</strong>: A component of the pathname does not name an existing file or the pathname is an empty string.</li>
+<li><strong>ENOTDIR</strong>: A component of the path prefix of the pathname in address is not a directory.</li>
+<li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.</li>
+<li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.</li>
+<li><strong>ENOMEM</strong>: Not enough memory.</li>
 <li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> mem[IPC_SIZE];
-<span class="dt">int</span> s = ipc_connect_mem(<span class="st">&quot;/tmp/test.ipc&quot;</span>, mem, -<span class="dv">1</span>);</code></pre>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> mem[IPC_SIZE];
+<span class="dt">int</span> s = ipc_connect_mem(<span class="st">&quot;/tmp/test.ipc&quot;</span>, mem, <span class="dv">-1</span>);</code></pre></div>
 </body>

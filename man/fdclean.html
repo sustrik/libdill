@@ -28,11 +28,11 @@
 <h1 id="errors">ERRORS</h1>
 <p>None.</p>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> fds[<span class="dv">2</span>];
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> fds[<span class="dv">2</span>];
 pipe(fds);
 use_the_pipe(fds);
 fdclean(fds[<span class="dv">0</span>]);
 close(fds[<span class="dv">0</span>]);
 fdclean(fds[<span class="dv">1</span>]);
-close(fds[<span class="dv">1</span>]);</code></pre>
+close(fds[<span class="dv">1</span>]);</code></pre></div>
 </body>

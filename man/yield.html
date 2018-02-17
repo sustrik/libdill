@@ -30,8 +30,8 @@
 <li><strong>ECANCELED</strong>: Current coroutine is being shut down.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="kw">for</span>(i = <span class="dv">0</span>; i != <span class="dv">1000000</span>; ++i) {
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="cf">for</span>(i = <span class="dv">0</span>; i != <span class="dv">1000000</span>; ++i) {
     expensive_computation();
     yield(); <span class="co">/* Give other coroutines a chance to run. */</span>
-}</code></pre>
+}</code></pre></div>
 </body>

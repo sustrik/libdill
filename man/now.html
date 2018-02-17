@@ -22,10 +22,11 @@
 <p><strong>int64_t now(void);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
 <p>Returns current time, in milliseconds.</p>
-<p>The function is meant for creating deadlines. For example, a point of time one<br />second from now can be expressed as <strong>now() + 1000</strong>.</p>
+<p>The function is meant for creating deadlines. For example, a point of time one<br />
+second from now can be expressed as <strong>now() + 1000</strong>.</p>
 <p>The following values have special meaning and cannot be returned by the function:</p>
 <ul>
-<li><em>0</em>: Immediate deadline.<br /></li>
+<li><em>0</em>: Immediate deadline.</li>
 <li><em>-1</em>: Infinite deadline.</li>
 </ul>
 <h1 id="return-value">RETURN VALUE</h1>
@@ -33,8 +34,8 @@
 <h1 id="errors">ERRORS</h1>
 <p>None.</p>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> result = chrecv(ch, &amp;val, <span class="kw">sizeof</span>(val), now() + <span class="dv">1000</span>);
-<span class="kw">if</span>(result == -<span class="dv">1</span> &amp;&amp; errno == ETIMEDOUT) {
-    printf(<span class="st">&quot;One second elapsed without receiving a message.</span><span class="ch">\n</span><span class="st">&quot;</span>);
-}</code></pre>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> result = chrecv(ch, &amp;val, <span class="kw">sizeof</span>(val), now() + <span class="dv">1000</span>);
+<span class="cf">if</span>(result == <span class="dv">-1</span> &amp;&amp; errno == ETIMEDOUT) {
+    printf(<span class="st">&quot;One second elapsed without receiving a message.</span><span class="sc">\n</span><span class="st">&quot;</span>);
+}</code></pre></div>
 </body>

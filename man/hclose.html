@@ -23,7 +23,8 @@
 <h1 id="description">DESCRIPTION</h1>
 <p>Closes a handle.</p>
 <p>Once all handles pointing to the same underlying object have been closed, the object is deallocated immediately.</p>
-<p>The function guarantees that all associated resources are deallocated. However, it does<br />not guarantee that the handle's work will have been fully finished. E.g., outbound network data may not be flushed.</p>
+<p>The function guarantees that all associated resources are deallocated. However, it does<br />
+not guarantee that the handle's work will have been fully finished. E.g., outbound network data may not be flushed.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>In the case of an error, it returns -1 and sets <em>errno</em> to one of the values. In case of success, returns 0.</p>
 <h1 id="errors">ERRORS</h1>
@@ -31,6 +32,6 @@
 <li><strong>EBADF</strong>: Invalid handle.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> ch = chmake(<span class="kw">sizeof</span>(<span class="dt">int</span>));
-hclose(ch);</code></pre>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> ch = chmake(<span class="kw">sizeof</span>(<span class="dt">int</span>));
+hclose(ch);</code></pre></div>
 </body>

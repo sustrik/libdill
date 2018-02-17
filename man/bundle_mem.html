@@ -31,16 +31,16 @@
 <p>Returns a handle to the bundle. In the case of an error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><strong>ECANCELED</strong>: Current coroutine is in the process of shutting down.<br /></li>
+<li><strong>ECANCELED</strong>: Current coroutine is in the process of shutting down.</li>
 <li><strong>ENOMEM</strong>: Not enough memory to allocate a new bundle.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> mem[BUNDLE_SIZE];
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> mem[BUNDLE_SIZE];
 <span class="dt">int</span> b = bundle_mem(mem);
 bundle_go(b, worker());
 bundle_go(b, worker());
 bundle_go(b, worker());
 msleep(now() + <span class="dv">1000</span>);
 <span class="co">/* Cancel any workers that are still running. */</span>
-hclose(b);</code></pre>
+hclose(b);</code></pre></div>
 </body>

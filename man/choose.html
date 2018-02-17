@@ -18,15 +18,15 @@
 <h1 id="name">NAME</h1>
 <p>choose - perform one of multiple channel operations</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="ot">#define CHSEND 1</span>
-<span class="ot">#define CHRECV 2</span>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#define CHSEND 1</span>
+<span class="pp">#define CHRECV 2</span>
 
 <span class="kw">struct</span> chclause {
     <span class="dt">int</span> op;
     <span class="dt">int</span> ch;
     <span class="dt">void</span> *val;
-    size_t len;
-};</code></pre>
+    <span class="dt">size_t</span> len;
+};</code></pre></div>
 <p><strong>#include &lt;libdill.h&gt;</strong></p>
 <p><strong>int choose(struct chclause </strong>*<em>clauses</em><strong>, int</strong> <em>nclauses</em><strong>, int64_t</strong> <em>deadline</em><strong>);</strong></p>
 <h1 id="description">DESCRIPTION</h1>
@@ -39,34 +39,34 @@
 <h1 id="errors">ERRORS</h1>
 <p>If the function returns -1, <em>errno</em> is set to one of the following values:</p>
 <ul>
-<li><strong>ECANCELED</strong>: Current coroutine is being shut down.<br /></li>
+<li><strong>ECANCELED</strong>: Current coroutine is being shut down.</li>
 <li><strong>ETIMEDOUT</strong>: Deadline has expired.</li>
 </ul>
 <p>If the function returns an index, it set <em>errno</em> to one of the following values:</p>
 <ul>
-<li>0: Operation completed successfully.<br /></li>
-<li><strong>EBADF</strong>: Invalid handle.<br /></li>
-<li><strong>EINVAL</strong>: Invalid parameter.<br /></li>
-<li><strong>EMSGSIZE</strong>: The peer expected a different message size.<br /></li>
-<li><strong>ENOTSUP</strong>: Operation not supported. Presumably, the handle isn't a channel.<br /></li>
+<li>0: Operation completed successfully.</li>
+<li><strong>EBADF</strong>: Invalid handle.</li>
+<li><strong>EINVAL</strong>: Invalid parameter.</li>
+<li><strong>EMSGSIZE</strong>: The peer expected a different message size.</li>
+<li><strong>ENOTSUP</strong>: Operation not supported. Presumably, the handle isn't a channel.</li>
 <li><strong>EPIPE</strong>: Channel has been closed with <strong>hdone</strong>.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> val1 = <span class="dv">0</span>;
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> val1 = <span class="dv">0</span>;
 <span class="dt">int</span> val2;
 <span class="kw">struct</span> chclause clauses[] = {
     {CHSEND, ch, &amp;val1, <span class="kw">sizeof</span>(val1)},
     {CHRECV, ch, &amp;val2, <span class="kw">sizeof</span>(val2)}
 };
 <span class="dt">int</span> result = choose(clauses, <span class="dv">2</span>, now() + <span class="dv">1000</span>);
-<span class="kw">if</span>(result == -<span class="dv">1</span>) {
+<span class="cf">if</span>(result == <span class="dv">-1</span>) {
     perror(<span class="st">&quot;Choose failed&quot;</span>);
     exit(<span class="dv">1</span>);
 }
-<span class="kw">if</span>(result == <span class="dv">0</span>) {
-    printf(<span class="st">&quot;Value %d sent.</span><span class="ch">\n</span><span class="st">&quot;</span>, val1);
+<span class="cf">if</span>(result == <span class="dv">0</span>) {
+    printf(<span class="st">&quot;Value %d sent.</span><span class="sc">\n</span><span class="st">&quot;</span>, val1);
 }
-<span class="kw">if</span>(result == <span class="dv">1</span>) {
-    printf(<span class="st">&quot;Value %d received.</span><span class="ch">\n</span><span class="st">&quot;</span>, val2);
-}</code></pre>
+<span class="cf">if</span>(result == <span class="dv">1</span>) {
+    printf(<span class="st">&quot;Value %d received.</span><span class="sc">\n</span><span class="st">&quot;</span>, val2);
+}</code></pre></div>
 </body>

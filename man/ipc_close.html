@@ -28,13 +28,13 @@
 <p>Zero in case of success. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><strong>EBADF</strong>: Invalid handle.<br /></li>
-<li><strong>ECANCELED</strong>: Current coroutine is being shut down.<br /></li>
-<li><strong>ECONNRESET</strong>: Broken connection.<br /></li>
-<li><strong>ENOTSUP</strong>: The operation is not supported.<br /></li>
+<li><strong>EBADF</strong>: Invalid handle.</li>
+<li><strong>ECANCELED</strong>: Current coroutine is being shut down.</li>
+<li><strong>ECONNRESET</strong>: Broken connection.</li>
+<li><strong>ENOTSUP</strong>: The operation is not supported.</li>
 <li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = ipc_connect(<span class="st">&quot;/tmp/test.ipc&quot;</span>, <span class="dv">10</span>);
-<span class="dt">int</span> rc = ipc_close(s, -<span class="dv">1</span>);</code></pre>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = ipc_connect(<span class="st">&quot;/tmp/test.ipc&quot;</span>, <span class="dv">10</span>);
+<span class="dt">int</span> rc = ipc_close(s, <span class="dv">-1</span>);</code></pre></div>
 </body>

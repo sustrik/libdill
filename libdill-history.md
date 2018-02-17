@@ -1,6 +1,11 @@
 
 # Past versions
 
+**Feb 17th, 2018 <http://libdill.org/libdill-2.4.tar.gz>**
+
+* Experimental TLS protocol
+* Experimental HTTP protocol
+
 **Feb 10th, 2018 <http://libdill.org/libdill-2.3.tar.gz>**
 
 * tcp_listen_mem

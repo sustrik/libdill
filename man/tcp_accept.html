@@ -30,14 +30,14 @@
 <p>Newly created socket handle. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><strong>EBADF</strong>: Invalid socket handle.<br /></li>
-<li><strong>ECANCELED</strong>: Current coroutine is being shut down.<br /></li>
-<li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.<br /></li>
-<li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.<br /></li>
-<li><strong>ENOMEM</strong>: Not enough memory.<br /></li>
+<li><strong>EBADF</strong>: Invalid socket handle.</li>
+<li><strong>ECANCELED</strong>: Current coroutine is being shut down.</li>
+<li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.</li>
+<li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.</li>
+<li><strong>ENOMEM</strong>: Not enough memory.</li>
 <li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> listener = tcp_listen(&amp;addr, <span class="dv">10</span>);
-<span class="dt">int</span> s = tcp_accept(listener, -<span class="dv">1</span>);</code></pre>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> listener = tcp_listen(&amp;addr, <span class="dv">10</span>);
+<span class="dt">int</span> s = tcp_accept(listener, <span class="dv">-1</span>);</code></pre></div>
 </body>

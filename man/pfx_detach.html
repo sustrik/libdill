@@ -28,10 +28,10 @@
 <p>Underlying socket handle. On error, it returns -1 and sets <em>errno</em> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><strong>EBADF</strong>: Invalid socket handle.<br /></li>
-<li><strong>ENOTSUP</strong>: The handle is not a PFX protocol handle.<br /></li>
+<li><strong>EBADF</strong>: Invalid socket handle.</li>
+<li><strong>ENOTSUP</strong>: The handle is not a PFX protocol handle.</li>
 <li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> u = pfx_detach(s);</code></pre>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> u = pfx_detach(s);</code></pre></div>
 </body>
