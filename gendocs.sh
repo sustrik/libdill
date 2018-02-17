@@ -44,7 +44,8 @@ other="\
     threads \
     tutorial \
     tutorial-basics \
-    tutorial-protocol"
+    tutorial-protocol\
+    tutorial-sockets"
 for f in $other
 do
     echo ">>> Building $f.md"
