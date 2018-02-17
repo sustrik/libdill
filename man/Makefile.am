@@ -87,6 +87,11 @@ man3_MANS = \
     tcp_connect_mem.3 \
     tcp_listen.3 \
     tcp_listen_mem.3 \
+    tls_attach_client.3 \
+    tls_attach_client_mem.3 \
+    tls_attach_server.3 \
+    tls_attach_server_mem.3 \
+    tls_detach.3 \
     udp_open.3 \
     udp_open_mem.3 \
     udp_send.3 \

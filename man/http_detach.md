@@ -14,7 +14,9 @@ http_detach - terminates HTTP protocol and returns the underlying socket
 
 HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.
 
-This function does the terminal handshake and returns underlying socket to the user. The socket is closed even in the case of error.
+This function does the terminal handshake and returns underlying socket to the user.
+
+In the case of error the socket, as well as the entire underlying network stack, is closed.
 
 _deadline_ is a point in time when the operation should time out. Use the **now()** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
 
