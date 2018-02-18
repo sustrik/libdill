@@ -38,5 +38,5 @@ Zero in the case of success. On error returns -1 and sets _errno_ to one of the 
 # EXAMPLE
 
 ```c
-int rc = http_sendfield(s, "Host", "www.example.org", -1);
+int rc = http_sendstatus(s, 404, "Not found", -1);
 ```
