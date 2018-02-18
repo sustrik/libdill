@@ -7,11 +7,25 @@ crlf_protocol = {
     info: "CRLF is a message-based protocol that delimits messages usign CR+LF byte sequence (0x0D 0x0A). In other words, it's a protocol to send text messages separated by newlines. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending an empty line.",
     example: `
 int s = tcp_connect(&addr, -1);
-s = crlf_attach(u);
+s = crlf_attach(s);
 msend(s, "ABC", 3, -1);
 char buf[256];
 ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
 s = crlf_detach(s, -1);
+tcp_close(s);
+`
+}
+
+pfx_protocol = {
+    name: "PFX",
+    info: "PFX  is a message-based protocol to send binary messages prefixed by 8-byte size in network byte order. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending eight 0xFF bytes.",
+    example: `
+int s = tcp_connect(&addr, -1);
+s = pfx_attach(s);
+msend(s, "ABC", 3, -1);
+char buf[256];
+ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
+s = pfx_detach(s, -1);
 tcp_close(s);
 `
 }
@@ -34,7 +48,7 @@ fxs = [
         ],
         protocol: crlf_protocol,
         prologue: "This function instantiates CRLF protocol on top of the underlying protocol.",
-        epilogue: "The socket can be cleanly shut down using **crlf_detach()** function.",
+        epilogue: "The socket can be cleanly shut down using **crlf_detach** function.",
 
         has_handle_argument: true,
         has_deadline: false,
@@ -74,7 +88,66 @@ fxs = [
         errors: {
             ENOTSUP: "The handle is not a CRLF protocol handle.",
         },
-    }
+    },
+    {
+        name: "pfx_attach",
+        info: "creates PFX protocol on top of underlying socket",
+        result: {
+            type: "int",
+            success: "newly created socket handle",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a bytestream protocol.",
+           },
+        ],
+        protocol: pfx_protocol,
+        prologue: "This function instantiates PFX protocol on top of the underlying protocol.",
+        epilogue: "The socket can be cleanly shut down using **pfx_detach** function.",
+
+        has_handle_argument: true,
+        has_deadline: false,
+        allocates_memory: true,
+        allocates_handle: true,
+        sendsrecvs: false,
+        mem: "PFX_SIZE",
+
+        errors: {
+            EPROTO: "Underlying socket is not a bytestream socket.",
+        },
+    },
+    {
+        name: "pfx_detach",
+        info: "terminates PFX protocol and returns the underlying socket",
+        result: {
+            type: "int",
+            success: "underlying socket handle",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the PFX socket.",
+           },
+        ],
+        protocol: pfx_protocol,
+        prologue: "This function does the terminal handshake and returns underlying socket to the user. The socket is closed even in the case of error.",
+
+        has_handle_argument: true,
+        has_deadline: true,
+        allocates_memory: false,
+        allocates_handle: false,
+        sendsrecvs: true,
+
+        errors: {
+            ENOTSUP: "The handle is not a PFX protocol handle.",
+        },
+    },
+
 ]
 
 function generate_man_page(fx, mem) {
@@ -127,7 +200,7 @@ function generate_man_page(fx, mem) {
         t += "**" + arg.name + "**: " + arg.info + "\n\n"
     }
 
-    if(fx.mem) {
+    if(mem) {
         t += "**mem**: The memory to store the newly created object. It must be at least **" + fx.mem + "** bytes long and must not be deallocated before the object is closed.\n\n"
     }
 

@@ -36,7 +36,7 @@ In case of success the function returns underlying socket handle. In case of err
 
 ```c
 int s = tcp_connect(&addr, -1);
-s = crlf_attach(u);
+s = crlf_attach(s);
 msend(s, "ABC", 3, -1);
 char buf[256];
 ssize_t sz = mrecv(s, buf, sizeof(buf), -1);

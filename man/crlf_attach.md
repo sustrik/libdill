@@ -18,10 +18,8 @@ This function allows to avoid one dynamic memory allocation by storing the objec
 
 **s**: Handle of the underlying socket. It must be a bytestream protocol.
 
-**mem**: The memory to store the newly created object. It must be at least **CRLF_SIZE** bytes long and must not be deallocated before the object is closed.
 
-
-The socket can be cleanly shut down using **crlf_detach()** function.
+The socket can be cleanly shut down using **crlf_detach** function.
 
 This function is not available if libdill is compiled with **--disable-sockets** option.
 
@@ -41,7 +39,7 @@ In case of success the function returns newly created socket handle. In case of 
 
 ```c
 int s = tcp_connect(&addr, -1);
-s = crlf_attach(u);
+s = crlf_attach(s);
 msend(s, "ABC", 3, -1);
 char buf[256];
 ssize_t sz = mrecv(s, buf, sizeof(buf), -1);

@@ -6,21 +6,28 @@ pfx_attach_mem - creates PFX protocol on top of underlying socket
 
 **#include &lt;libdill.h>**
 
-**int pfx_attach_mem(int **_s_**, void **\*_mem_**);**
+**int pfx_attach_mem(int **_s_**, void ***_mem_**);**
 
 # DESCRIPTION
 
-PFX is a message-based protocol to send binary messages prefixed by 8-byte size in network byte order. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending eight 0xFF bytes.
+PFX  is a message-based protocol to send binary messages prefixed by 8-byte size in network byte order. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending eight 0xFF bytes.
 
-This function instantiates PFX protocol on top of underlying bytestream protocol _s_, in a user-supplied memory. Unless you are hyper-optimizing use **pfx_attach()** instead.
+This function instantiates PFX protocol on top of the underlying protocol.
 
-The memory passed in _mem_ argument must be at least _PFX\_SIZE_ bytes long and can be deallocated only after the socket is closed.
+This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use **pfx_attach** instead.
 
-The socket can be cleanly shut down using **pfx_detach()** function.
+**s**: Handle of the underlying socket. It must be a bytestream protocol.
+
+**mem**: The memory to store the newly created object. It must be at least **PFX_SIZE** bytes long and must not be deallocated before the object is closed.
+
+
+The socket can be cleanly shut down using **pfx_detach** function.
+
+This function is not available if libdill is compiled with **--disable-sockets** option.
 
 # RETURN VALUE
 
-Newly created socket handle. On error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns newly created socket handle. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
@@ -28,12 +35,16 @@ Newly created socket handle. On error, it returns -1 and sets _errno_ to one of 
 * **EMFILE**: The maximum number of file descriptors in the process are already open.
 * **ENFILE**: The maximum number of file descriptors in the system are already open.
 * **ENOMEM**: Not enough memory.
-* **EPROTO**: Undrlying socket is not a bytestream socket.
+* **EPROTO**: Underlying socket is not a bytestream socket.
 
 # EXAMPLE
 
 ```c
-int u = tcp_connect(&addr, -1);
-char mem[PFX_SIZE];
-int s = pfx_attach_mem(u, mem);
+int s = tcp_connect(&addr, -1);
+s = pfx_attach(s);
+msend(s, "ABC", 3, -1);
+char buf[256];
+ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
+s = pfx_detach(s, -1);
+tcp_close(s);
 ```
