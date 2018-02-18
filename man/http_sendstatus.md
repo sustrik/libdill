@@ -46,19 +46,18 @@ In case of success the function returns 0. In case of error it returns -1 and se
 # EXAMPLE
 
 ```c
-int s = tcp_connect(&addr, -1);
-s = http_attach(s);
-http_sendrequest(s, "GET", "/", -1);
-http_sendfield(s, "Host", "www.example.org", -1);
-hdone(s, -1);
-char reason[256];
-http_recvstatus(s, reason, sizeof(reason), -1);
+int s = tcp_accept(listener, NULL, -1);
+s = http_attach(s, -1);
+char command[256];
+char resource[256];
+http_recvrequest(s, command, sizeof(command), resource, sizeof(resource), -1);
 while(1) {
     char name[256];
     char value[256];
     int rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
     if(rc == -1 && errno == EPIPE) break;
 }
-s = http_detach(s, -1);
+http_sendstatus(s, 200, "OK", -1);
+s = http_detach(s, -1); 
 tcp_close(s);
 ```

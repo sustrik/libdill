@@ -39,6 +39,23 @@ tcp_close(s);
     experimental: true,
 }
 
+http_server_example = `
+int s = tcp_accept(listener, NULL, -1);
+s = http_attach(s, -1);
+char command[256];
+char resource[256];
+http_recvrequest(s, command, sizeof(command), resource, sizeof(resource), -1);
+while(1) {
+    char name[256];
+    char value[256];
+    int rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
+    if(rc == -1 && errno == EPIPE) break;
+}
+http_sendstatus(s, 200, "OK", -1);
+s = http_detach(s, -1); 
+tcp_close(s);
+`
+
 pfx_protocol = {
     name: "PFX",
     info: "PFX  is a message-based protocol to send binary messages prefixed by 8-byte size in network byte order. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending eight 0xFF bytes.",
@@ -186,6 +203,53 @@ fxs = [
         },
     },
     {
+        name: "http_recvrequest",
+        info: "receives HTTP request from the peer",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "HTTP socket handle.",
+           },
+           {
+               name: "command",
+               type: "const char*",
+               info: "Buffer to store HTTP command in.",
+           },
+           {
+               name: "commandlen",
+               type: "size_t",
+               info: "Size of the **command** buffer.",
+           },
+           {
+               name: "resource",
+               type: "const char*",
+               info: "Buffer to store HTTP resource in.",
+           },
+           {
+               name: "resourcelen",
+               type: "size_t",
+               info: "Size of the **resource** buffer.",
+           },
+        ],
+        protocol: http_protocol,
+        prologue: "This function receives an HTTP request from the peer.",
+        has_handle_argument: true,
+        has_deadline: true,
+        has_einval: true,
+        has_emsgsize: true,
+        allocates_memory: false,
+        allocates_handle: false,
+        sendsrecvs: true,
+
+        example: http_server_example,
+    },
+    {
         name: "http_sendfield",
         info: "sends HTTP field to the peer",
         result: {
@@ -253,7 +317,7 @@ fxs = [
         allocates_handle: false,
         sendsrecvs: true,
     },
-   {
+    {
         name: "http_sendstatus",
         info: "sends HTTP status to the peer",
         result: {
@@ -286,6 +350,8 @@ fxs = [
         allocates_memory: false,
         allocates_handle: false,
         sendsrecvs: true,
+
+        example: http_server_example,
     },
     {
         name: "pfx_attach",
@@ -558,6 +624,9 @@ function generate_man_page(fx, mem) {
     }
     if(fx.has_einval) {
         errs['EINVAL'] = "Invalid argument."
+    }
+    if(fx.has_emsgsize) {
+        errs['EMSGSIZE'] = "The data won't fit into the supplied buffer."
     }
     if(fx.sendsrecvs) {
         errs['ECANCELED'] = "Current coroutine is in the process of shutting down."
