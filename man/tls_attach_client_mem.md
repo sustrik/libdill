@@ -22,7 +22,7 @@ This function allows to avoid one dynamic memory allocation by storing the objec
 
 **mem**: The memory to store the newly created object. It must be at least **TLS_SIZE** bytes long and must not be deallocated before the object is closed.
 
-**deadline**: A point in time when the operation should time out, in milliseconds. Use the now() function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
+**deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
 
 
 The socket can be cleanly shut down using **tls_detach** function.

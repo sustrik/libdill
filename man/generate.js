@@ -186,6 +186,40 @@ fxs = [
         },
     },
     {
+        name: "http_sendfield",
+        info: "sends HTTP field to the peer",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "HTTP socket handle.",
+           },
+           {
+               name: "name",
+               type: "const char*",
+               info: "Name of the field.",
+           },
+           {
+               name: "value",
+               type: "const char*",
+               info: "Value of the field.",
+           },
+        ],
+        protocol: http_protocol,
+        prologue: "This function sends an HTTP field, i.e. a name/value pair, to the peer. For example, if name is **Host** and resource is **www.example.org** the line sent will look like this:\n\n```\nHost: www.example.org\n```\n\nAfter sending the last field of HTTP request don't forget to call **hdone** on the socket. It will send an empty line to the server to let it know that the request is finished and it should start processing it.",
+        has_handle_argument: true,
+        has_deadline: true,
+        has_einval: true,
+        allocates_memory: false,
+        allocates_handle: false,
+        sendsrecvs: true,
+    },
+    {
         name: "http_sendrequest",
         info: "sends initial HTTP request",
         result: {
@@ -447,7 +481,7 @@ function generate_man_page(fx, mem) {
     }
 
     if(fx.has_deadline) {
-        t += "**deadline**: A point in time when the operation should time out, in milliseconds. Use the now() function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.\n\n"
+        t += "**deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.\n\n"
     }
 
     t += "\n"
