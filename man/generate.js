@@ -30,6 +30,22 @@ tcp_close(s);
 `
 }
 
+tls_protocol = {
+    name: "TLS",
+    info: "TLS is a cryptographic protocol to provide secure communication over the network. It is a bytestream protocol.",
+    example: `
+int s = tcp_connect(&addr, -1);
+s = tls_attach_client(s, -1);
+bsend(s, "ABC", 3, -1);
+char buf[3];
+ssize_t sz = brecv(s, buf, sizeof(buf), -1);
+s = tls_detach(s, -1);
+tcp_close(s);
+`,
+    experimental: true,
+}
+
+
 fxs = [
     {
         name: "crlf_attach",
@@ -147,7 +163,76 @@ fxs = [
             ENOTSUP: "The handle is not a PFX protocol handle.",
         },
     },
+    {
+        name: "tls_attach_client",
+        info: "creates TLS protocol on top of underlying socket",
+        result: {
+            type: "int",
+            success: "newly created socket handle",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a bytestream protocol.",
+           },
+        ],
+        protocol: tls_protocol,
+        prologue: "This function instantiates TLS protocol on top of the underlying protocol. TLS protocol being asymmetric, client and server sides are intialized in different ways. This particular function initializes the client side of the connection.",
+        epilogue: "The socket can be cleanly shut down using **tls_detach** function.",
 
+        has_handle_argument: true,
+        has_deadline: true,
+        allocates_memory: true,
+        allocates_handle: true,
+        sendsrecvs: true,
+        mem: "TLS_SIZE",
+
+        errors: {
+            EPROTO: "Underlying socket is not a bytestream socket.",
+        },
+    },
+    {
+        name: "tls_attach_server",
+        info: "creates TLS protocol on top of underlying socket",
+        result: {
+            type: "int",
+            success: "newly created socket handle",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a bytestream protocol.",
+           },
+           {
+               name: "cert",
+               type: "const char*",
+               info: "Filename of the file contianing the certificate.",
+           },
+           {
+               name: "cert",
+               type: "const char*",
+               info: "Filename of the file contianing the private key.",
+           },
+        ],
+        protocol: tls_protocol,
+        prologue: "This function instantiates TLS protocol on top of the underlying protocol. TLS protocol being asymmetric, client and server sides are intialized in different ways. This particular function initializes the server side of the connection.",
+        epilogue: "The socket can be cleanly shut down using **tls_detach** function.",
+
+        has_handle_argument: true,
+        has_deadline: true,
+        allocates_memory: true,
+        allocates_handle: true,
+        sendsrecvs: true,
+        mem: "TLS_SIZE",
+
+        errors: {
+            EPROTO: "Underlying socket is not a bytestream socket.",
+        },
+    },
 ]
 
 function generate_man_page(fx, mem) {
@@ -183,6 +268,10 @@ function generate_man_page(fx, mem) {
     /**************************************************************************/
     t += "# DESCRIPTION\n\n"
 
+    if(fx.experimental || (fx.protocol && fx.protocol.experimental)) {
+        t += "**WARNING: This is experimental functionality and the API may change in the future.**\n\n"
+    }
+
     if(fx.protocol != undefined) {
         t += fx.protocol.info + "\n\n"
     }
@@ -191,7 +280,7 @@ function generate_man_page(fx, mem) {
         t += fx.prologue + "\n\n"
     }
 
-    if(fx.mem) {
+    if(mem) {
         t += "This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use **" + fx.name + "** instead.\n\n"
     }
 
@@ -216,6 +305,9 @@ function generate_man_page(fx, mem) {
 
     if(fx.protocol != undefined) {
         t += "This function is not available if libdill is compiled with **--disable-sockets** option.\n\n"
+        if(fx.protocol.name == "TLS") {
+            t += "This function is not available if libdill is compiled without **--enable-tls** option.\n\n"
+        }
     }
 
     /**************************************************************************/
@@ -244,6 +336,7 @@ function generate_man_page(fx, mem) {
         errs['ENFILE'] = "The maximum number of file descriptors in the system are already open."
     }
     if(fx.sendsrecvs) {
+        errs['ECANCELED'] = "Current coroutine is in the process of shutting down."
         errs['ECONNRESET'] = "Broken connection."
     }
     if(fx.errors != undefined) {

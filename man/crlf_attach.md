@@ -14,8 +14,6 @@ CRLF is a message-based protocol that delimits messages usign CR+LF byte sequenc
 
 This function instantiates CRLF protocol on top of the underlying protocol.
 
-This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use **crlf_attach** instead.
-
 **s**: Handle of the underlying socket. It must be a bytestream protocol.
 
 

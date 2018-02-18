@@ -14,8 +14,6 @@ PFX  is a message-based protocol to send binary messages prefixed by 8-byte size
 
 This function instantiates PFX protocol on top of the underlying protocol.
 
-This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use **pfx_attach** instead.
-
 **s**: Handle of the underlying socket. It must be a bytestream protocol.
 
 
