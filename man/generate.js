@@ -90,7 +90,7 @@ tcp_close(s);
 
 udp_protocol = {
     name: "UDP",
-    info: "UDP is an unreliable message-based protocol. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.",
+    info: "UDP is an unreliable message-based protocol defined in RFC 768. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.",
     example: `
 struct ipaddr local;
 ipaddr_local(&local, NULL, 5555, 0);

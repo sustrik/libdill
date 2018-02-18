@@ -10,7 +10,7 @@ udp_open_mem - opens an UDP socket
 
 # DESCRIPTION
 
-UDP is an unreliable message-based protocol. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.
+UDP is an unreliable message-based protocol defined in RFC 768. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.
 
 This function creates an UDP socket.
 
