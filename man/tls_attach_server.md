@@ -49,8 +49,8 @@ In case of success the function returns newly created socket handle. In case of 
 # EXAMPLE
 
 ```c
-int s = tcp_connect(&addr, -1);
-s = tls_attach_client(s, -1);
+int s = tcp_accept(listener, NULL, -1);
+s = tls_attach_server(s, -1);
 bsend(s, "ABC", 3, -1);
 char buf[3];
 ssize_t sz = brecv(s, buf, sizeof(buf), -1);

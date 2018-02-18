@@ -232,6 +232,16 @@ fxs = [
         errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
         },
+
+        example: `
+int s = tcp_accept(listener, NULL, -1);
+s = tls_attach_server(s, -1);
+bsend(s, "ABC", 3, -1);
+char buf[3];
+ssize_t sz = brecv(s, buf, sizeof(buf), -1);
+s = tls_detach(s, -1);
+tcp_close(s);
+`,
     },
     {
         name: "tls_detach",
