@@ -1,5 +1,8 @@
 #!/usr/bin/env nodejs
 
+// This script generates markdown files for libdill documentation.
+// These are further processed to generate both UNIX and HTML man pages.
+
 var fs = require('fs');
 
 crlf_protocol = {
@@ -218,7 +221,7 @@ fxs = [
            },
            {
                name: "command",
-               type: "const char*",
+               type: "char*",
                info: "Buffer to store HTTP command in.",
            },
            {
@@ -228,7 +231,7 @@ fxs = [
            },
            {
                name: "resource",
-               type: "const char*",
+               type: "char*",
                info: "Buffer to store HTTP resource in.",
            },
            {
@@ -248,6 +251,41 @@ fxs = [
         sendsrecvs: true,
 
         example: http_server_example,
+    },
+    {
+        name: "http_recvstatus",
+        info: "receives HTTP status from the peer",
+        result: {
+            type: "int",
+            success: "HTTP status code, such as 200 or 404",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "HTTP socket handle.",
+           },
+           {
+               name: "reason",
+               type: "char*",
+               info: "Buffer to store reason string in.",
+           },
+           {
+               name: "reasonlen",
+               type: "size_t",
+               info: "Size of the **reason** buffer.",
+           },
+        ],
+        protocol: http_protocol,
+        prologue: "This function receives an HTTP status line from the peer.",
+        has_handle_argument: true,
+        has_deadline: true,
+        has_einval: true,
+        has_emsgsize: true,
+        allocates_memory: false,
+        allocates_handle: false,
+        sendsrecvs: true,
     },
     {
         name: "http_sendfield",
