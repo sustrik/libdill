@@ -1,41 +1,51 @@
 # NAME
 
-udp_open - opens a UDP socket
+udp_open - opens an UDP socket
 
 # SYNOPSIS
 
 **#include &lt;libdill.h>**
 
-**int udp_open(struct ipaddr **\*_local_**, const struct ipaddr **\*_remote_**);**
+**int udp_open(struct ipaddr* **_local_**, struct ipaddr* **_remote_**);**
 
 # DESCRIPTION
 
 UDP is an unreliable message-based protocol. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.
 
-This function creates a UDP socket.
+This function creates an UDP socket.
 
-IP address passed in _local_ argument will be used to set source IP address in outgoing packets. Also, the socket can be used to receive packets sent to this address. If port in the address is set to zero an ephemeral port will be chosen and filled into the _local_ address.
+**local**: IP  address to be used to set source IP address in outgoing packets. Also, the socket will receive packets sent to this address. If port in the address is set to zero an ephemeral port will be chosen and filled into the local address.
 
-IP address passed in _remote_ is the default destination for outbound packets. It is used by **msend()** and **mrecv()** functions which don't allow for specifying the destination address explicitly. It is also used by **udp_send()** and **udp_sendl()** functions if the address parameter of those functions is set to NULL.
+**remote**: IP address used as default destination for outbound packets. It is used when destination address in **udp_send** function is set to **NULL**. It is also used by **msend** and **mrecv** functions which don't allow to specify the destination address explicitly.
+
+
+To close this socket use **hclose** function.
+
+This function is not available if libdill is compiled with **--disable-sockets** option.
 
 # RETURN VALUE
 
-Newly created socket handle. On error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns newly created socket handle. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
 * **EADDRINUSE**: The local address is already in use.
 * **EADDRNOTAVAIL**: The specified address is not available from the local machine.
-* **ECANCELED**: Current coroutine is being shut down.
-* **EINVAL**: Invalid arguments.
+* **EINVAL**: Invalid argument.
 * **EMFILE**: The maximum number of file descriptors in the process are already open.
 * **ENFILE**: The maximum number of file descriptors in the system are already open.
 * **ENOMEM**: Not enough memory.
 
 # EXAMPLE
 
-```
-struct ipaddr addr;
-int rc = ipaddr_local(&addr, NULL, 5555, 0);
-int s = udp_open(&addr, NULL);
+```c
+struct ipaddr local;
+ipaddr_local(&local, NULL, 5555, 0);
+struct ipaddr remote;
+ipaddr_remote(&remote, "server.example.org", 5555, 0, -1);
+int s = udp_open(&local, &remote);
+udp_send(s1, NULL, "ABC", 3);
+char buf[2000];
+ssize_t sz = udp_recv(s, NULL, buf, sizeof(buf), -1);
+hclose(s);
 ```

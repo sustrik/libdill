@@ -88,6 +88,22 @@ tcp_close(s);
     experimental: true,
 }
 
+udp_protocol = {
+    name: "UDP",
+    info: "UDP is an unreliable message-based protocol. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.",
+    example: `
+struct ipaddr local;
+ipaddr_local(&local, NULL, 5555, 0);
+struct ipaddr remote;
+ipaddr_remote(&remote, "server.example.org", 5555, 0, -1);
+int s = udp_open(&local, &remote);
+udp_send(s1, NULL, "ABC", 3);
+char buf[2000];
+ssize_t sz = udp_recv(s, NULL, buf, sizeof(buf), -1);
+hclose(s);
+`,
+}
+
 fxs = [
     {
         name: "crlf_attach",
@@ -605,6 +621,43 @@ tcp_close(s);
 
         errors: {
             ENOTSUP: "The handle is not a TLS protocol handle.",
+        },
+    },
+    {
+        name: "udp_open",
+        info: "opens an UDP socket",
+        result: {
+            type: "int",
+            success: "newly created socket handle",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "local",
+               type: "struct ipaddr*",
+               info: "IP  address to be used to set source IP address in outgoing packets. Also, the socket will receive packets sent to this address. If port in the address is set to zero an ephemeral port will be chosen and filled into the local address.",
+           },
+           {
+               name: "remote",
+               type: "struct ipaddr*",
+               info: "IP address used as default destination for outbound packets. It is used when destination address in **udp_send** function is set to **NULL**. It is also used by **msend** and **mrecv** functions which don't allow to specify the destination address explicitly.",
+           },
+        ],
+        protocol: udp_protocol,
+        prologue: "This function creates an UDP socket.",
+        epilogue: "To close this socket use **hclose** function.",
+
+        has_handle_argument: false,
+        has_deadline: false,
+        has_einval: true,
+        allocates_memory: true,
+        allocates_handle: true,
+        sendsrecvs: false,
+        mem: "UDP_SIZE",
+
+        errors: {
+            EADDRINUSE: "The local address is already in use.",
+            EADDRNOTAVAIL: "The specified address is not available from the local machine.",
         },
     },
 ]
