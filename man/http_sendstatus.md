@@ -1,12 +1,12 @@
 # NAME
 
-http_sendstatus - sends HTTP status line to the peer
+http_sendstatus - sends HTTP status to the peer
 
 # SYNOPSIS
 
 **#include &lt;libdill.h>**
 
-**int http_sendstatus(int **_s_**, int **_status_**, const char **\*_reason_**, int64_t **_deadline_**);**
+**int http_sendstatus(int **_s_**, int **_status_**, const char* **_reason_**, int64_t **_deadline_**);**
 
 # DESCRIPTION
 
@@ -14,17 +14,26 @@ http_sendstatus - sends HTTP status line to the peer
 
 HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.
 
-This function sends an HTTP status line to the peer. This is meant to be done at the beginning of the HTTP response. For example, if _status_ is 404 and _reason_ is `Not found` the line sent will look like this:
+This function sends an HTTP status line to the peer. It is meant to be done at the beginning of the HTTP response. For example, if status is 404 and reason is 'Not found' the line sent will look like this:
 
 ```
 HTTP/1.1 404 Not found
 ```
 
-_deadline_ is a point in time when the operation should time out. Use the **now()** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
+**s**: HTTP socket handle.
+
+**status**: HTTP status such as 200 or 404.
+
+**reason**: Reason string such as 'OK' or 'Not found'.
+
+**deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
+
+
+This function is not available if libdill is compiled with **--disable-sockets** option.
 
 # RETURN VALUE
 
-Zero in the case of success. On error returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
@@ -32,11 +41,24 @@ Zero in the case of success. On error returns -1 and sets _errno_ to one of the 
 * **ECANCELED**: Current coroutine is in the process of shutting down.
 * **ECONNRESET**: Broken connection.
 * **EINVAL**: Invalid argument.
-* **ENOTSUP**: The handle is not an HTTP protocol handle.
 * **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE
 
 ```c
-int rc = http_sendstatus(s, 404, "Not found", -1);
+int s = tcp_connect(&addr, -1);
+s = http_attach(s);
+http_sendrequest(s, "GET", "/", -1);
+http_sendfield(s, "Host", "www.example.org", -1);
+hdone(s, -1);
+char reason[256];
+http_recvstatus(s, reason, sizeof(reason), -1);
+while(1) {
+    char name[256];
+    char value[256];
+    int rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
+    if(rc == -1 && errno == EPIPE) break;
+}
+s = http_detach(s, -1);
+tcp_close(s);
 ```
