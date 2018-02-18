@@ -6,7 +6,7 @@ http_recvfield - receives HTTP field from the peer
 
 **#include &lt;libdill.h>**
 
-**int http_recvfield(int **_s_**, char **\*_name_**, size_t **_namelen_**, char **\*_value_**, size_t **_valuelen_**, int64_t **_deadline_**);**
+**int http_recvfield(int **_s_**, char* **_name_**, size_t **_namelen_**, char* **_value_**, size_t **_valuelen_**, int64_t **_deadline_**);**
 
 # DESCRIPTION
 
@@ -14,13 +14,26 @@ http_recvfield - receives HTTP field from the peer
 
 HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.
 
-This function receives an HTTP field from the peer. If there are no more fields to receive the function will fail with `EPIPE` error.
+This function receives an HTTP field from the peer.
 
-_deadline_ is a point in time when the operation should time out. Use the **now()** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
+**s**: HTTP socket handle.
+
+**name**: Buffer to store name of the field.
+
+**namelen**: Size of the **name** buffer.
+
+**value**: Buffer to store value of the field.
+
+**valuelen**: Size of the **value** buffer.
+
+**deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
+
+
+This function is not available if libdill is compiled with **--disable-sockets** option.
 
 # RETURN VALUE
 
-Zero in the case of success. On error returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
@@ -28,16 +41,26 @@ Zero in the case of success. On error returns -1 and sets _errno_ to one of the 
 * **ECANCELED**: Current coroutine is in the process of shutting down.
 * **ECONNRESET**: Broken connection.
 * **EINVAL**: Invalid argument.
-* **ENOTSUP**: The handle is not an HTTP protocol handle.
-* **EPIPE**: HTTP protocol ends. There are no more fields to retrieve.
 * **EMSGSIZE**: The data won't fit into the supplied buffer.
-* **EPROTO**: Network protocol violated by the peer.
+* **EPIPE**: There are no more fields to receive.
 * **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE
 
 ```c
-char name[256];
-char value[256];
-int rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
+int s = tcp_connect(&addr, -1);
+s = http_attach(s);
+http_sendrequest(s, "GET", "/", -1);
+http_sendfield(s, "Host", "www.example.org", -1);
+hdone(s, -1);
+char reason[256];
+http_recvstatus(s, reason, sizeof(reason), -1);
+while(1) {
+    char name[256];
+    char value[256];
+    int rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
+    if(rc == -1 && errno == EPIPE) break;
+}
+s = http_detach(s, -1);
+tcp_close(s);
 ```
