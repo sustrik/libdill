@@ -40,10 +40,39 @@ fxs = [
         has_deadline: false,
         allocates_memory: true,
         allocates_handle: true,
+        sendsrecvs: false,
         mem: "CRLF_SIZE",
 
         errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
+        },
+    },
+    {
+        name: "crlf_detach",
+        info: "terminates CRLF protocol and returns the underlying socket",
+        result: {
+            type: "int",
+            success: "underlying socket handle",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the CRLF socket.",
+           },
+        ],
+        protocol: crlf_protocol,
+        prologue: "This function does the terminal handshake and returns underlying socket to the user. The socket is closed even in the case of error.",
+
+        has_handle_argument: true,
+        has_deadline: true,
+        allocates_memory: false,
+        allocates_handle: false,
+        sendsrecvs: true,
+
+        errors: {
+            ENOTSUP: "The handle is not a CRLF protocol handle.",
         },
     }
 ]
@@ -103,7 +132,7 @@ function generate_man_page(fx, mem) {
     }
 
     if(fx.has_deadline) {
-        t += "* **deadline**: A point in time when the operation should time out, in milliseconds. Use the now() function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.\n\n"
+        t += "**deadline**: A point in time when the operation should time out, in milliseconds. Use the now() function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.\n\n"
     }
 
     t += "\n"
@@ -132,7 +161,7 @@ function generate_man_page(fx, mem) {
         errs['EBADF'] = "Invalid socket handle."
     }
     if(fx.has_deadline) {
-        errs['ETIMEDOUT'] = "Deadline expired."
+        errs['ETIMEDOUT'] = "Deadline was reached."
     }
     if(fx.allocates_memory) {
         errs['ENOMEM'] = "Not enough memory."
@@ -140,6 +169,9 @@ function generate_man_page(fx, mem) {
     if(fx.allocates_memory) {
         errs['EMFILE'] = "The maximum number of file descriptors in the process are already open."
         errs['ENFILE'] = "The maximum number of file descriptors in the system are already open."
+    }
+    if(fx.sendsrecvs) {
+        errs['ECONNRESET'] = "Broken connection."
     }
     if(fx.errors != undefined) {
         Object.assign(errs, fx.errors)
