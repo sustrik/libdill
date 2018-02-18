@@ -158,6 +158,34 @@ fxs = [
         },
     },
     {
+        name: "http_detach",
+        info: "terminates HTTP protocol and returns the underlying socket",
+        result: {
+            type: "int",
+            success: "underlying socket handle",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the CRLF socket.",
+           },
+        ],
+        protocol: http_protocol,
+        prologue: "This function does the terminal handshake and returns underlying socket to the user. The socket is closed even in the case of error.",
+
+        has_handle_argument: true,
+        has_deadline: true,
+        allocates_memory: false,
+        allocates_handle: false,
+        sendsrecvs: true,
+
+        errors: {
+            ENOTSUP: "The handle is not an HTTP protocol handle.",
+        },
+    },
+    {
         name: "pfx_attach",
         info: "creates PFX protocol on top of underlying socket",
         result: {
