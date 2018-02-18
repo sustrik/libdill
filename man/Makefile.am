@@ -96,7 +96,8 @@ man3_MANS = \
     udp_open_mem.3 \
     udp_send.3 \
     udp_sendl.3 \
-    udp_recv.3
+    udp_recv.3 \
+    udp_recvl.3
 
 SUFFIXES = .md .3
 

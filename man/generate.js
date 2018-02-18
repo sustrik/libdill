@@ -661,6 +661,77 @@ tcp_close(s);
         },
     },
     {
+        name: "udp_recv",
+        info: "receives an UDP packet",
+        result: {
+            type: "ssize_t",
+            success: "size of the received message, in bytes",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the UDP socket.",
+           },
+           {
+               name: "addr",
+               type: "struct ipaddr*",
+               info: "Out parameter. IP address of the sender of the packet. Can be **NULL**.",
+           },
+           {
+               name: "buf",
+               type: "void*",
+               info: "Buffer to receive the data to.",
+           },
+           {
+               name: "len",
+               type: "size_t",
+               info: "Size of the buffer, in bytes.",
+           },
+        ],
+        protocol: udp_protocol,
+        prologue: "This function receives a single UDP packet.",
+
+        has_handle_argument: true,
+        has_deadline: true,
+        has_einval: true,
+        has_emsgsize: true,
+        allocates_memory: false,
+        allocates_handle: false,
+    },
+    {
+        name: "udp_recvl",
+        info: "receives an UDP packet",
+        result: {
+            type: "ssize_t",
+            success: "size of the received message, in bytes",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the UDP socket.",
+           },
+           {
+               name: "addr",
+               type: "struct ipaddr*",
+               info: "Out parameter. IP address of the sender of the packet. Can be **NULL**.",
+           },
+        ],
+        protocol: udp_protocol,
+        prologue: "This function receives a single UDP packet.",
+
+        has_handle_argument: true,
+        has_deadline: true,
+        has_einval: true,
+        has_emsgsize: true,
+        has_iol: true,
+        allocates_memory: false,
+        allocates_handle: false,
+    },
+    {
         name: "udp_send",
         info: "sends an UDP packet",
         result: {
@@ -670,8 +741,13 @@ tcp_close(s);
         },
         args: [
            {
+               name: "s",
+               type: "int",
+               info: "Handle of the UDP socket.",
+           },
+           {
                name: "addr",
-               type: "struct ipaddr*",
+               type: "const struct ipaddr*",
                info: "IP address to send the packet to. If set to **NULL** remote address specified in **udp_open** function will be used.",
            },
            {
@@ -708,8 +784,13 @@ tcp_close(s);
         },
         args: [
            {
+               name: "s",
+               type: "int",
+               info: "Handle of the UDP socket.",
+           },
+           {
                name: "addr",
-               type: "struct ipaddr*",
+               type: "const struct ipaddr*",
                info: "IP address to send the packet to. If set to **NULL** remote address specified in **udp_open** function will be used.",
            },
         ],

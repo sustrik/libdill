@@ -6,7 +6,7 @@ udp_send - sends an UDP packet
 
 **#include &lt;libdill.h>**
 
-**int udp_send(struct ipaddr* **_addr_**, const void* **_buf_**, size_t **_len_**);**
+**int udp_send(int **_s_**, const struct ipaddr* **_addr_**, const void* **_buf_**, size_t **_len_**);**
 
 # DESCRIPTION
 
@@ -15,6 +15,8 @@ UDP is an unreliable message-based protocol defined in RFC 768. The size of the 
 This function sends an UDP packet.
 
 Given that UDP protocol is unreliable the function has no deadline. If packet cannot be sent it will be silently dropped.
+
+**s**: Handle of the UDP socket.
 
 **addr**: IP address to send the packet to. If set to **NULL** remote address specified in **udp_open** function will be used.
 

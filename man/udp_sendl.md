@@ -6,7 +6,7 @@ udp_sendl - sends an UDP packet
 
 **#include &lt;libdill.h>**
 
-**int udp_sendl(struct ipaddr* **_addr_**, struct iolist* **_first_**, struct iolist* **_last_**);**
+**int udp_sendl(int **_s_**, const struct ipaddr* **_addr_**, struct iolist* **_first_**, struct iolist* **_last_**);**
 
 # DESCRIPTION
 
@@ -24,6 +24,8 @@ This function accepts a linked list of I/O buffers instead of a single buffer. A
               int iol_rsvd;            /* Reserved. Must be set to zero. */
 
 The function returns **EINVAL** error in case the list is malformed or if it contains loops.
+
+**s**: Handle of the UDP socket.
 
 **addr**: IP address to send the packet to. If set to **NULL** remote address specified in **udp_open** function will be used.
 
