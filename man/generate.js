@@ -186,6 +186,40 @@ fxs = [
         },
     },
     {
+        name: "http_sendrequest",
+        info: "sends initial HTTP request",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "HTTP socket handle.",
+           },
+           {
+               name: "command",
+               type: "const char*",
+               info: "HTTP command, such as **GET**.",
+           },
+           {
+               name: "resource",
+               type: "const char*",
+               info: "HTTP resource, such as **/index.html**.",
+           },
+        ],
+        protocol: http_protocol,
+        prologue: "This function sends an initial HTTP request with the specified command and resource.  For example, if command is **GET** and resource is **/index.html** the line sent will look like this:\n\n```\nGET /index.html HTTP/1.1\n```",
+        has_handle_argument: true,
+        has_deadline: true,
+        has_einval: true,
+        allocates_memory: false,
+        allocates_handle: false,
+        sendsrecvs: true,
+    },
+    {
         name: "pfx_attach",
         info: "creates PFX protocol on top of underlying socket",
         result: {
@@ -304,6 +338,7 @@ fxs = [
 
         has_handle_argument: true,
         has_deadline: true,
+        has_einval: true,
         allocates_memory: true,
         allocates_handle: true,
         sendsrecvs: true,
@@ -452,6 +487,9 @@ function generate_man_page(fx, mem) {
     if(fx.allocates_memory) {
         errs['EMFILE'] = "The maximum number of file descriptors in the process are already open."
         errs['ENFILE'] = "The maximum number of file descriptors in the system are already open."
+    }
+    if(fx.has_einval) {
+        errs['EINVAL'] = "Invalid argument."
     }
     if(fx.sendsrecvs) {
         errs['ECANCELED'] = "Current coroutine is in the process of shutting down."

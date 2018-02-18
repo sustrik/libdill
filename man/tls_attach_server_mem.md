@@ -44,6 +44,7 @@ In case of success the function returns newly created socket handle. In case of 
 * **EBADF**: Invalid socket handle.
 * **ECANCELED**: Current coroutine is in the process of shutting down.
 * **ECONNRESET**: Broken connection.
+* **EINVAL**: Invalid argument.
 * **EMFILE**: The maximum number of file descriptors in the process are already open.
 * **ENFILE**: The maximum number of file descriptors in the system are already open.
 * **ENOMEM**: Not enough memory.
