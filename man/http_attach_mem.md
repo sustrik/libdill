@@ -1,12 +1,12 @@
 # NAME
 
-http_attach_mem - creates HTTP protocol on top of an underlying socket
+http_attach_mem - creates HTTP protocol on top of underlying socket
 
 # SYNOPSIS
 
 **#include &lt;libdill.h>**
 
-**int http_attach_mem(int **_s_**, void **\*_mem_**);**
+**int http_attach_mem(int **_s_**, void ***_mem_**);**
 
 # DESCRIPTION
 
@@ -14,15 +14,22 @@ http_attach_mem - creates HTTP protocol on top of an underlying socket
 
 HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.
 
-This function instantiates HTTP protocol on top of underlying bytestream protocol _s_ in a user-supplied memory. Unless you are hyper-optimizing use **http_attach()** instead.
+This function instantiates HTTP protocol on top of the underlying protocol.
 
-The memory passed in _mem_ argument must be at least _HTTP\_SIZE_ bytes long and can be deallocated only after the socket is closed.
+This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use **http_attach** instead.
 
-The socket can be cleanly shut down using **http_detach()** function.
+**s**: Handle of the underlying socket. It must be a bytestream protocol.
+
+**mem**: The memory to store the newly created object. It must be at least **HTTP_SIZE** bytes long and must not be deallocated before the object is closed.
+
+
+The socket can be cleanly shut down using **http_detach** function.
+
+This function is not available if libdill is compiled with **--disable-sockets** option.
 
 # RETURN VALUE
 
-Newly created socket handle. On error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns newly created socket handle. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
@@ -36,6 +43,18 @@ Newly created socket handle. On error, it returns -1 and sets _errno_ to one of 
 
 ```c
 int s = tcp_connect(&addr, -1);
-char mem[HTTP_SIZE];
-int s = http_attach_mem(s, mem);
+s = http_attach(s);
+http_sendrequest(s, "GET", "/", -1);
+http_sendfield(s, "Host", "www.example.org", -1);
+hdone(s, -1);
+char reason[256];
+http_recvstatus(s, reason, sizeof(reason), -1);
+while(1) {
+    char name[256];
+    char value[256];
+    int rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
+    if(rc == -1 && errno == EPIPE) break;
+}
+s = http_detach(s, -1);
+tcp_close(s);
 ```

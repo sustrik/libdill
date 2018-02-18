@@ -16,6 +16,29 @@ tcp_close(s);
 `
 }
 
+http_protocol = {
+    name: "HTTP",
+    info: "HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.",
+    example: `
+int s = tcp_connect(&addr, -1);
+s = http_attach(s);
+http_sendrequest(s, "GET", "/", -1);
+http_sendfield(s, "Host", "www.example.org", -1);
+hdone(s, -1);
+char reason[256];
+http_recvstatus(s, reason, sizeof(reason), -1);
+while(1) {
+    char name[256];
+    char value[256];
+    int rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
+    if(rc == -1 && errno == EPIPE) break;
+}
+s = http_detach(s, -1);
+tcp_close(s);
+`,
+    experimental: true,
+}
+
 pfx_protocol = {
     name: "PFX",
     info: "PFX  is a message-based protocol to send binary messages prefixed by 8-byte size in network byte order. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending eight 0xFF bytes.",
@@ -44,7 +67,6 @@ tcp_close(s);
 `,
     experimental: true,
 }
-
 
 fxs = [
     {
@@ -103,6 +125,36 @@ fxs = [
 
         errors: {
             ENOTSUP: "The handle is not a CRLF protocol handle.",
+        },
+    },
+    {
+        name: "http_attach",
+        info: "creates HTTP protocol on top of underlying socket",
+        result: {
+            type: "int",
+            success: "newly created socket handle",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a bytestream protocol.",
+           },
+        ],
+        protocol: http_protocol,
+        prologue: "This function instantiates HTTP protocol on top of the underlying protocol.",
+        epilogue: "The socket can be cleanly shut down using **http_detach** function.",
+
+        has_handle_argument: true,
+        has_deadline: false,
+        allocates_memory: true,
+        allocates_handle: true,
+        sendsrecvs: false,
+        mem: "HTTP_SIZE",
+
+        errors: {
+            EPROTO: "Underlying socket is not a bytestream socket.",
         },
     },
     {
