@@ -42,7 +42,7 @@ In case of success the function returns 0. In case of error it returns -1 and se
 
 * **EBADF**: Invalid socket handle.
 * **EINVAL**: Invalid argument.
-* **EMSGSIZE**: The data won't fit into the supplied buffer.
+* **EMSGSIZE**: The message is too long to fit into an UDP packet.
 
 # EXAMPLE
 

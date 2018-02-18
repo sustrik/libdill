@@ -691,9 +691,12 @@ tcp_close(s);
         has_handle_argument: true,
         has_deadline: false,
         has_einval: true,
-        has_emsgsize: true,
         allocates_memory: false,
         allocates_handle: false,
+
+        errors: {
+            EMSGSIZE: "The message is too long to fit into an UDP packet.",
+        }
     },
     {
         name: "udp_sendl",
@@ -716,10 +719,13 @@ tcp_close(s);
         has_handle_argument: true,
         has_deadline: false,
         has_einval: true,
-        has_emsgsize: true,
         allocates_memory: false,
         allocates_handle: false,
         has_iol: true,
+
+        errors: {
+            EMSGSIZE: "The message is too long to fit into an UDP packet.",
+        }
     },
 ]
 
