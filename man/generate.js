@@ -128,7 +128,7 @@ fxs = [
         has_deadline: false,
         allocates_memory: true,
         allocates_handle: true,
-        sendsrecvs: false,
+        uses_connection: false,
         mem: "CRLF_SIZE",
 
         errors: {
@@ -157,7 +157,7 @@ fxs = [
         has_deadline: true,
         allocates_memory: false,
         allocates_handle: false,
-        sendsrecvs: true,
+        uses_connection: true,
 
         errors: {
             ENOTSUP: "The handle is not a CRLF protocol handle.",
@@ -186,7 +186,7 @@ fxs = [
         has_deadline: false,
         allocates_memory: true,
         allocates_handle: true,
-        sendsrecvs: false,
+        uses_connection: false,
         mem: "HTTP_SIZE",
 
         errors: {
@@ -215,7 +215,7 @@ fxs = [
         has_deadline: true,
         allocates_memory: false,
         allocates_handle: false,
-        sendsrecvs: true,
+        uses_connection: true,
 
         errors: {
             ENOTSUP: "The handle is not an HTTP protocol handle.",
@@ -264,7 +264,7 @@ fxs = [
         has_emsgsize: true,
         allocates_memory: false,
         allocates_handle: false,
-        sendsrecvs: true,
+        uses_connection: true,
 
         errors: {
             EPIPE: "There are no more fields to receive."
@@ -313,7 +313,7 @@ fxs = [
         has_emsgsize: true,
         allocates_memory: false,
         allocates_handle: false,
-        sendsrecvs: true,
+        uses_connection: true,
 
         example: http_server_example,
     },
@@ -350,7 +350,7 @@ fxs = [
         has_emsgsize: true,
         allocates_memory: false,
         allocates_handle: false,
-        sendsrecvs: true,
+        uses_connection: true,
     },
     {
         name: "http_sendfield",
@@ -384,7 +384,7 @@ fxs = [
         has_einval: true,
         allocates_memory: false,
         allocates_handle: false,
-        sendsrecvs: true,
+        uses_connection: true,
     },
     {
         name: "http_sendrequest",
@@ -418,7 +418,7 @@ fxs = [
         has_einval: true,
         allocates_memory: false,
         allocates_handle: false,
-        sendsrecvs: true,
+        uses_connection: true,
     },
     {
         name: "http_sendstatus",
@@ -452,7 +452,7 @@ fxs = [
         has_einval: true,
         allocates_memory: false,
         allocates_handle: false,
-        sendsrecvs: true,
+        uses_connection: true,
 
         example: http_server_example,
     },
@@ -479,7 +479,7 @@ fxs = [
         has_deadline: false,
         allocates_memory: true,
         allocates_handle: true,
-        sendsrecvs: false,
+        uses_connection: false,
         mem: "PFX_SIZE",
 
         errors: {
@@ -508,7 +508,7 @@ fxs = [
         has_deadline: true,
         allocates_memory: false,
         allocates_handle: false,
-        sendsrecvs: true,
+        uses_connection: true,
 
         errors: {
             ENOTSUP: "The handle is not a PFX protocol handle.",
@@ -537,7 +537,7 @@ fxs = [
         has_deadline: true,
         allocates_memory: true,
         allocates_handle: true,
-        sendsrecvs: true,
+        uses_connection: true,
         mem: "TLS_SIZE",
 
         errors: {
@@ -578,7 +578,7 @@ fxs = [
         has_einval: true,
         allocates_memory: true,
         allocates_handle: true,
-        sendsrecvs: true,
+        uses_connection: true,
         mem: "TLS_SIZE",
 
         errors: {
@@ -617,7 +617,7 @@ tcp_close(s);
         has_deadline: true,
         allocates_memory: false,
         allocates_handle: false,
-        sendsrecvs: true,
+        uses_connection: true,
 
         errors: {
             ENOTSUP: "The handle is not a TLS protocol handle.",
@@ -652,13 +652,74 @@ tcp_close(s);
         has_einval: true,
         allocates_memory: true,
         allocates_handle: true,
-        sendsrecvs: false,
+        uses_connection: false,
         mem: "UDP_SIZE",
 
         errors: {
             EADDRINUSE: "The local address is already in use.",
             EADDRNOTAVAIL: "The specified address is not available from the local machine.",
         },
+    },
+    {
+        name: "udp_send",
+        info: "sends an UDP packet",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "addr",
+               type: "struct ipaddr*",
+               info: "IP address to send the packet to. If set to **NULL** remote address specified in **udp_open** function will be used.",
+           },
+           {
+               name: "buf",
+               type: "const void*",
+               info: "Data to send.",
+           },
+           {
+               name: "len",
+               type: "size_t",
+               info: "Number of bytes to send.",
+           },
+        ],
+        protocol: udp_protocol,
+        prologue: "This function sends an UDP packet.\n\nGiven that UDP protocol is unreliable the function has no deadline. If packet cannot be sent it will be silently dropped.",
+
+        has_handle_argument: true,
+        has_deadline: false,
+        has_einval: true,
+        has_emsgsize: true,
+        allocates_memory: false,
+        allocates_handle: false,
+    },
+    {
+        name: "udp_sendl",
+        info: "sends an UDP packet",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "addr",
+               type: "struct ipaddr*",
+               info: "IP address to send the packet to. If set to **NULL** remote address specified in **udp_open** function will be used.",
+           },
+        ],
+        protocol: udp_protocol,
+        prologue: "This function sends an UDP packet.\n\nGiven that UDP protocol is unreliable the function has no deadline. If packet cannot be sent it will be silently dropped.",
+
+        has_handle_argument: true,
+        has_deadline: false,
+        has_einval: true,
+        has_emsgsize: true,
+        allocates_memory: false,
+        allocates_handle: false,
+        has_iol: true,
     },
 ]
 
@@ -686,6 +747,7 @@ function generate_man_page(fx, mem) {
         t += arg.type + " **_" + arg.name + "_**"
         if(j != fx.args.length - 1) t += ", "
     }
+    if(fx.has_iol) t += ", struct iolist* **_first_**, struct iolist* **_last_**"
     if(mem) t += ", void **\*_mem_**"
     if(fx.has_deadline) t += ", int64_t **_deadline_**"
     t += ");**\n\n"
@@ -707,6 +769,18 @@ function generate_man_page(fx, mem) {
         t += fx.prologue + "\n\n"
     }
 
+    if(fx.has_iol) {
+        t +=
+`This function accepts a linked list of I/O buffers instead of a single buffer. Argument **first** points to the first item in the list, **last** points to the last buffer in the list. The list represents a single, fragmented message, not a list of multiple messages. Structure **iolist** has the following members:
+
+              void *iol_base;          /* Pointer to the buffer. */
+              size_t iol_len;          /* Size of the buffer. */
+              struct iolist *iol_next; /* Next buffer in the list. */
+              int iol_rsvd;            /* Reserved. Must be set to zero. */
+
+The function returns **EINVAL** error in case the list is malformed or if it contains loops.` + "\n\n"
+    }
+
     if(mem) {
         t += "This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use **" + fx.name + "** instead.\n\n"
     }
@@ -714,6 +788,11 @@ function generate_man_page(fx, mem) {
     for(var j = 0; j < fx.args.length; j++) {
         arg = fx.args[j]
         t += "**" + arg.name + "**: " + arg.info + "\n\n"
+    }
+
+    if(fx.has_iol) {
+        t += "**first**: Pointer to the first item of a linked list of I/O buffers.\n\n"
+        t += "**last**: Pointer to the last item of a linked list of I/O buffers.\n\n"
     }
 
     if(mem) {
@@ -768,7 +847,7 @@ function generate_man_page(fx, mem) {
     if(fx.has_emsgsize) {
         errs['EMSGSIZE'] = "The data won't fit into the supplied buffer."
     }
-    if(fx.sendsrecvs) {
+    if(fx.uses_connection) {
         errs['ECANCELED'] = "Current coroutine is in the process of shutting down."
         errs['ECONNRESET'] = "Broken connection."
     }

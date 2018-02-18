@@ -1,12 +1,12 @@
 # NAME
 
-udp_send - sends an UDP packet
+udp_sendl - sends an UDP packet
 
 # SYNOPSIS
 
 **#include &lt;libdill.h>**
 
-**int udp_send(struct ipaddr* **_addr_**, const void* **_buf_**, size_t **_len_**);**
+**int udp_sendl(struct ipaddr* **_addr_**, struct iolist* **_first_**, struct iolist* **_last_**);**
 
 # DESCRIPTION
 
@@ -16,11 +16,20 @@ This function sends an UDP packet.
 
 Given that UDP protocol is unreliable the function has no deadline. If packet cannot be sent it will be silently dropped.
 
+This function accepts a linked list of I/O buffers instead of a single buffer. Argument **first** points to the first item in the list, **last** points to the last buffer in the list. The list represents a single, fragmented message, not a list of multiple messages. Structure **iolist** has the following members:
+
+              void *iol_base;          /* Pointer to the buffer. */
+              size_t iol_len;          /* Size of the buffer. */
+              struct iolist *iol_next; /* Next buffer in the list. */
+              int iol_rsvd;            /* Reserved. Must be set to zero. */
+
+The function returns **EINVAL** error in case the list is malformed or if it contains loops.
+
 **addr**: IP address to send the packet to. If set to **NULL** remote address specified in **udp_open** function will be used.
 
-**buf**: Data to send.
+**first**: Pointer to the first item of a linked list of I/O buffers.
 
-**len**: Number of bytes to send.
+**last**: Pointer to the last item of a linked list of I/O buffers.
 
 
 This function is not available if libdill is compiled with **--disable-sockets** option.
