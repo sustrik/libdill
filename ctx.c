@@ -65,7 +65,7 @@ static int dill_ismain() {
 }
 #elif defined __OpenBSD__ || defined __FreeBSD__ || \
     defined __APPLE__ || defined __DragonFly__
-#if defined __FreeBSD__
+#if defined __FreeBSD__ || defined __OpenBSD__
 #include <pthread_np.h>
 #endif
 static int dill_ismain() {
