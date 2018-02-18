@@ -928,7 +928,7 @@ The function returns **EINVAL** error in case the list is malformed or if it con
         errs['EMFILE'] = "The maximum number of file descriptors in the process are already open."
         errs['ENFILE'] = "The maximum number of file descriptors in the system are already open."
     }
-    if(fx.has_einval) {
+    if(fx.has_einval || fx.has_iol) {
         errs['EINVAL'] = "Invalid argument."
     }
     if(fx.has_emsgsize) {
