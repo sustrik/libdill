@@ -178,7 +178,7 @@ noinst_PROGRAMS += \
     tutorial/sockets/step2 \
     tutorial/sockets/step3 \
     tutorial/sockets/step4
-#endif
+endif
 endif
 
 ################################################################################
