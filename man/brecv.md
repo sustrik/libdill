@@ -4,22 +4,21 @@ brecv, brecvl - receive data from bytestream socket
 
 # SYNOPSIS
 
-
 **#include &lt;libdill.h>**
 
-**int brecv(int **_s_**, void **\*_buf_**, size_t** _len_**, int64_t** _deadline_**);**
+**int brecv(int **_s_**, void **\*_buf_**, size_t **_len_**, int64_t **_deadline_**);**
 
-**int brecvl(int **_s_**, struct iolist **\*_first_**, struct iolist **\*_last_**, int64_t** _deadline_**);**
+**int brecvl(int **_s_**, struct iolist **\*_first_**, struct iolist **\*_last_**, int64_t **_deadline_**);**
 
 # DESCRIPTION
 
-Function **brecv()** receives data from a bytestream socket. It is a blocking operation that unblocks only after the requested amount of data is received. There is no such thing as partial receive. If a problem, including timeout, occurs while receiving the data error is returned to the user and the socket cannot be used for receiving from that point on.
+Function **brecv()** receives data from a bytestream socket. It is a blocking operation that unblocks only after the requested amount of data is received. There is no such thing as partial receive. If a problem, including timeout, occurs while receiving the data, an error is returned to the user and the socket cannot be used for receiving from that point on.
 
-_buf_ points to the buffer _len_ bytes long to write the received data to. If _buf_ is **NULL** the _len_ bytes will be received but they will be dropped rather than returned to the user.
+_buf_ points to the buffer _len_ bytes long to write the received data into. If _buf_ is **NULL**, _len_ bytes will be received but they will be dropped rather than returned to the user.
 
 _deadline_ is a point in time when the operation should time out. Use the **now()** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
 
-Function **brecvl()** accepts a linked list of buffers instead of a single buffer. _first_ points to the first item in the list, _last_ points to the last buffer in the list. Structure **iolist** has following members:
+Function **brecvl()** accepts a linked list of buffers instead of a single buffer. _first_ points to the first item in the list, _last_ points to the last item in the list. Structure **iolist** has the following members:
 
 ```
 void *iol_base;          /* Pointer to the buffer. */
@@ -28,7 +27,7 @@ struct iolist *iol_next; /* Next buffer. */
 int iol_rsvd;            /* Reserved. Must be set to zero. */
 ```
 
-**brecvl()** returns **EINVAL** error in case the list is malformed:
+**brecvl()** returns **EINVAL** in case the list is malformed:
 
 * If _first_ is **NULL**.
 * If _last_ is **NULL**.

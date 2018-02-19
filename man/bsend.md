@@ -4,7 +4,6 @@ bsend, bsendl - send data to bytestream socket
 
 # SYNOPSIS
 
-
 **#include &lt;libdill.h>**
 
 **int bsend(int **_s_**, const void **\*_buf_**, size_t** _len_**, int64_t** _deadline_**);**
