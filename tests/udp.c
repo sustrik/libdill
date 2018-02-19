@@ -38,8 +38,12 @@ int main(void) {
     int s2 = udp_open_mem(&addr2, &addr1, mem);
     errno_assert(s2 >= 0);
 
+    struct ipaddr dst;
+    rc = ipaddr_remote(&dst, "127.0.0.1", 5556, 0, -1);
+    errno_assert(rc == 0);
+
     while(1) {
-        rc = udp_send(s1, &addr2, "ABC", 3);
+        rc = udp_send(s1, &dst, "ABC", 3);
         errno_assert(rc == 0);
         char buf[16];
         ssize_t sz = mrecv(s2, buf, sizeof(buf), now() + 100);
