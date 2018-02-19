@@ -808,6 +808,31 @@ tcp_close(s);
             EMSGSIZE: "The message is too long to fit into an UDP packet.",
         }
     },
+    {
+        name: "yield",
+        info: "yields CPU to other coroutines",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+        ],
+
+        prologue:
+`By calling this function, you give other coroutines a chance to run.
+
+You should consider using **yield** when doing lengthy computations which don't have natural coroutine switching points such as socket or channel operations or msleep.`,
+
+        has_ecanceled: true,
+
+        example: `
+for(i = 0; i != 1000000; ++i) {
+    expensive_computation();
+    yield(); /* Give other coroutines a chance to run. */
+}
+`,
+    },
 ]
 
 function generate_man_page(fx, mem) {
@@ -837,6 +862,7 @@ function generate_man_page(fx, mem) {
     if(fx.has_iol) t += ", struct iolist* **_first_**, struct iolist* **_last_**"
     if(mem) t += ", void **\*_mem_**"
     if(fx.has_deadline) t += ", int64_t **_deadline_**"
+    if(fx.args.length == 0 && !fx.has_iol && !mem && !fx.has_deadline) t += "void"
     t += ");**\n\n"
 
     /**************************************************************************/
@@ -935,8 +961,10 @@ The function returns **EINVAL** error in case the list is malformed or if it con
         errs['EMSGSIZE'] = "The data won't fit into the supplied buffer."
     }
     if(fx.uses_connection) {
-        errs['ECANCELED'] = "Current coroutine is in the process of shutting down."
         errs['ECONNRESET'] = "Broken connection."
+    }
+    if(fx.uses_connection || fx.has_ecanceled) {
+        errs['ECANCELED'] = "Current coroutine is in the process of shutting down."
     }
     if(fx.errors != undefined) {
         Object.assign(errs, fx.errors)

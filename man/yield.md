@@ -12,15 +12,16 @@ yield - yields CPU to other coroutines
 
 By calling this function, you give other coroutines a chance to run.
 
-You should consider using **yield()** when doing lengthy computations which don't have natural coroutine switching points such as **chsend**, **chrecv**, **fdin**, **fdout** or **msleep**.
+You should consider using **yield** when doing lengthy computations which don't have natural coroutine switching points such as socket or channel operations or msleep.
+
 
 # RETURN VALUE
 
-The function returns 0 on success and -1 on error. In the latter case, it sets _errno_ to one of the following values.
+In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
-* **ECANCELED**: Current coroutine is being shut down.
+* **ECANCELED**: Current coroutine is in the process of shutting down.
 
 # EXAMPLE
 
@@ -30,4 +31,3 @@ for(i = 0; i != 1000000; ++i) {
     yield(); /* Give other coroutines a chance to run. */
 }
 ```
-
