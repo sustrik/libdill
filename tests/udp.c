@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2017 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -22,50 +22,49 @@
 
 */
 
-#include <assert.h>
-
+#include "assert.h"
 #include "../libdill.h"
 
 int main(void) {
     struct ipaddr addr1;
     int rc = ipaddr_local(&addr1, NULL, 5555, 0);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     int s1 = udp_open(&addr1, NULL);
-    assert(s1 >= 0);
+    errno_assert(s1 >= 0);
     struct ipaddr addr2;
     rc = ipaddr_local(&addr2, NULL, 5556, 0);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     char mem[UDP_SIZE];
     int s2 = udp_open_mem(&addr2, &addr1, mem);
-    assert(s2 >= 0);
+    errno_assert(s2 >= 0);
 
     while(1) {
         rc = udp_send(s1, &addr2, "ABC", 3);
-        assert(rc == 0);
+        errno_assert(rc == 0);
         char buf[16];
         ssize_t sz = mrecv(s2, buf, sizeof(buf), now() + 100);
         if(sz < 0 && errno == ETIMEDOUT)
             continue;
-        assert(sz == 3);
+        errno_assert(sz == 3);
         break;
     }
 
     while(1) {
         rc = msend(s2, "DEF", 3, -1);
-        assert(rc == 0);
+        errno_assert(rc == 0);
         char buf[16];
         struct ipaddr addr;
         ssize_t sz = udp_recv(s1, &addr, buf, sizeof(buf), now() + 100);
         if(sz < 0 && errno == ETIMEDOUT)
             continue;
-        assert(sz == 3);
+        errno_assert(sz == 3);
         break;
     }
 
     rc = hclose(s2);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     rc = hclose(s1);
-    assert(rc == 0);
+    errno_assert(rc == 0);
 
     return 0;
 }
