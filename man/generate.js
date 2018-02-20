@@ -5,6 +5,18 @@
 
 var fs = require('fs');
 
+standard_errors = {
+    EBADF: "Invalid socket handle.",
+    ETIMEDOUT: "Deadline was reached.",
+    ENOMEM: "Not enough memory.",
+    EMFILE: "The maximum number of file descriptors in the process are already open.",
+    ENFILE: "The maximum number of file descriptors in the system are already open.",
+    EINVAL: "Invalid argument.",
+    EMSGSIZE: "The data won't fit into the supplied buffer.",
+    ECONNRESET: "Broken connection.",
+    ECANCELED: "Current coroutine is in the process of shutting down.",
+}
+
 crlf_protocol = {
     name: "CRLF",
     info: "CRLF is a message-based protocol that delimits messages usign CR+LF byte sequence (0x0D 0x0A). In other words, it's a protocol to send text messages separated by newlines. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending an empty line.",
@@ -131,7 +143,7 @@ fxs = [
         uses_connection: false,
         mem: "CRLF_SIZE",
 
-        errors: {
+        custom_errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
         },
     },
@@ -159,7 +171,7 @@ fxs = [
         allocates_handle: false,
         uses_connection: true,
 
-        errors: {
+        custom_errors: {
             ENOTSUP: "The handle is not a CRLF protocol handle.",
         },
     },
@@ -189,7 +201,7 @@ fxs = [
         uses_connection: false,
         mem: "HTTP_SIZE",
 
-        errors: {
+        custom_errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
         },
     },
@@ -217,7 +229,7 @@ fxs = [
         allocates_handle: false,
         uses_connection: true,
 
-        errors: {
+        custom_errors: {
             ENOTSUP: "The handle is not an HTTP protocol handle.",
         },
     },
@@ -266,7 +278,7 @@ fxs = [
         allocates_handle: false,
         uses_connection: true,
 
-        errors: {
+        custom_errors: {
             EPIPE: "There are no more fields to receive."
         }
     },
@@ -482,7 +494,7 @@ fxs = [
         uses_connection: false,
         mem: "PFX_SIZE",
 
-        errors: {
+        custom_errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
         },
     },
@@ -510,7 +522,7 @@ fxs = [
         allocates_handle: false,
         uses_connection: true,
 
-        errors: {
+        custom_errors: {
             ENOTSUP: "The handle is not a PFX protocol handle.",
         },
     },
@@ -540,7 +552,7 @@ fxs = [
         uses_connection: true,
         mem: "TLS_SIZE",
 
-        errors: {
+        custom_errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
         },
     },
@@ -581,7 +593,7 @@ fxs = [
         uses_connection: true,
         mem: "TLS_SIZE",
 
-        errors: {
+        custom_errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
         },
 
@@ -619,7 +631,7 @@ tcp_close(s);
         allocates_handle: false,
         uses_connection: true,
 
-        errors: {
+        custom_errors: {
             ENOTSUP: "The handle is not a TLS protocol handle.",
         },
     },
@@ -655,7 +667,7 @@ tcp_close(s);
         uses_connection: false,
         mem: "UDP_SIZE",
 
-        errors: {
+        custom_errors: {
             EADDRINUSE: "The local address is already in use.",
             EADDRNOTAVAIL: "The specified address is not available from the local machine.",
         },
@@ -770,7 +782,7 @@ tcp_close(s);
         allocates_memory: false,
         allocates_handle: false,
 
-        errors: {
+        custom_errors: {
             EMSGSIZE: "The message is too long to fit into an UDP packet.",
         }
     },
@@ -804,7 +816,7 @@ tcp_close(s);
         allocates_handle: false,
         has_iol: true,
 
-        errors: {
+        custom_errors: {
             EMSGSIZE: "The message is too long to fit into an UDP packet.",
         }
     },
@@ -940,35 +952,24 @@ The function returns **EINVAL** error in case the list is malformed or if it con
     /*  ERRORS                                                                */
     /**************************************************************************/
     t += "# ERRORS\n\n"
+    if(!fx.errors) fx.errors = ""
+
+    if(fx.has_handle_argument) fx.errors += "EBADF "
+    if(fx.has_deadline) fx.errors += "ETIMEDOUT "
+    if(fx.allocates_memory) fx.errors += "ENOMEM "
+    if(fx.allocates_handle) fx.errors += "EMFILE ENFILE "
+    if(fx.has_einval || fx.has_iol) fx.errors+= "EINVAL "
+    if(fx.has_emsgsize) fx.errors += "EMSGSIZE "
+    if(fx.uses_connection) fx.errors += "ECONNRESET "
+    if(fx.uses_connection || fx.has_ecanceled) fx.errors += "ECANCELED "
+
     var errs = {}
-    if(fx.has_handle_argument) {
-        errs['EBADF'] = "Invalid socket handle."
+    e = fx.errors.trim().split(" ")
+    for(var idx = 0; idx < e.length; idx++) {
+        errs[e[idx]] = standard_errors[e[idx]]
     }
-    if(fx.has_deadline) {
-        errs['ETIMEDOUT'] = "Deadline was reached."
-    }
-    if(fx.allocates_memory) {
-        errs['ENOMEM'] = "Not enough memory."
-    }
-    if(fx.allocates_memory) {
-        errs['EMFILE'] = "The maximum number of file descriptors in the process are already open."
-        errs['ENFILE'] = "The maximum number of file descriptors in the system are already open."
-    }
-    if(fx.has_einval || fx.has_iol) {
-        errs['EINVAL'] = "Invalid argument."
-    }
-    if(fx.has_emsgsize) {
-        errs['EMSGSIZE'] = "The data won't fit into the supplied buffer."
-    }
-    if(fx.uses_connection) {
-        errs['ECONNRESET'] = "Broken connection."
-    }
-    if(fx.uses_connection || fx.has_ecanceled) {
-        errs['ECANCELED'] = "Current coroutine is in the process of shutting down."
-    }
-    if(fx.errors != undefined) {
-        Object.assign(errs, fx.errors)
-    }
+
+    if(fx.custom_errors) Object.assign(errs, fx.custom_errors)
     var codes = Object.keys(errs).sort()
     for(var j = 0; j < codes.length; j++) {
         code = codes[j]
