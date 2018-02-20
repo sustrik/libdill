@@ -137,10 +137,8 @@ fxs = [
         epilogue: "The socket can be cleanly shut down using **crlf_detach** function.",
 
         has_handle_argument: true,
-        has_deadline: false,
         allocates_memory: true,
         allocates_handle: true,
-        uses_connection: false,
         mem: "CRLF_SIZE",
 
         custom_errors: {
@@ -167,8 +165,6 @@ fxs = [
 
         has_handle_argument: true,
         has_deadline: true,
-        allocates_memory: false,
-        allocates_handle: false,
         uses_connection: true,
 
         custom_errors: {
@@ -195,10 +191,8 @@ fxs = [
         epilogue: "The socket can be cleanly shut down using **http_detach** function.",
 
         has_handle_argument: true,
-        has_deadline: false,
         allocates_memory: true,
         allocates_handle: true,
-        uses_connection: false,
         mem: "HTTP_SIZE",
 
         custom_errors: {
@@ -225,8 +219,6 @@ fxs = [
 
         has_handle_argument: true,
         has_deadline: true,
-        allocates_memory: false,
-        allocates_handle: false,
         uses_connection: true,
 
         custom_errors: {
@@ -272,12 +264,9 @@ fxs = [
         prologue: "This function receives an HTTP field from the peer.",
         has_handle_argument: true,
         has_deadline: true,
-        has_einval: true,
-        has_emsgsize: true,
-        allocates_memory: false,
-        allocates_handle: false,
         uses_connection: true,
 
+        errors: "EINVAL EMSGSIZE ",
         custom_errors: {
             EPIPE: "There are no more fields to receive."
         }
@@ -321,11 +310,11 @@ fxs = [
         prologue: "This function receives an HTTP request from the peer.",
         has_handle_argument: true,
         has_deadline: true,
-        has_einval: true,
-        has_emsgsize: true,
         allocates_memory: false,
         allocates_handle: false,
         uses_connection: true,
+
+        errors: "EINVAL EMSGSIZE ",
 
         example: http_server_example,
     },
@@ -358,11 +347,9 @@ fxs = [
         prologue: "This function receives an HTTP status line from the peer.",
         has_handle_argument: true,
         has_deadline: true,
-        has_einval: true,
-        has_emsgsize: true,
-        allocates_memory: false,
-        allocates_handle: false,
         uses_connection: true,
+
+        errors: "EINVAL EMSGSIZE ",
     },
     {
         name: "http_sendfield",
@@ -393,10 +380,9 @@ fxs = [
         prologue: "This function sends an HTTP field, i.e. a name/value pair, to the peer. For example, if name is **Host** and resource is **www.example.org** the line sent will look like this:\n\n```\nHost: www.example.org\n```\n\nAfter sending the last field of HTTP request don't forget to call **hdone** on the socket. It will send an empty line to the server to let it know that the request is finished and it should start processing it.",
         has_handle_argument: true,
         has_deadline: true,
-        has_einval: true,
-        allocates_memory: false,
-        allocates_handle: false,
         uses_connection: true,
+
+        errors: "EINVAL ",
     },
     {
         name: "http_sendrequest",
@@ -427,10 +413,9 @@ fxs = [
         prologue: "This function sends an initial HTTP request with the specified command and resource.  For example, if command is **GET** and resource is **/index.html** the line sent will look like this:\n\n```\nGET /index.html HTTP/1.1\n```",
         has_handle_argument: true,
         has_deadline: true,
-        has_einval: true,
-        allocates_memory: false,
-        allocates_handle: false,
         uses_connection: true,
+
+        errors: "EINVAL ",
     },
     {
         name: "http_sendstatus",
@@ -461,10 +446,9 @@ fxs = [
         prologue: "This function sends an HTTP status line to the peer. It is meant to be done at the beginning of the HTTP response. For example, if status is 404 and reason is 'Not found' the line sent will look like this:\n\n```\nHTTP/1.1 404 Not found\n```",
         has_handle_argument: true,
         has_deadline: true,
-        has_einval: true,
-        allocates_memory: false,
-        allocates_handle: false,
         uses_connection: true,
+
+        errors: "EINVAL ",
 
         example: http_server_example,
     },
@@ -488,10 +472,9 @@ fxs = [
         epilogue: "The socket can be cleanly shut down using **pfx_detach** function.",
 
         has_handle_argument: true,
-        has_deadline: false,
         allocates_memory: true,
         allocates_handle: true,
-        uses_connection: false,
+
         mem: "PFX_SIZE",
 
         custom_errors: {
@@ -518,8 +501,6 @@ fxs = [
 
         has_handle_argument: true,
         has_deadline: true,
-        allocates_memory: false,
-        allocates_handle: false,
         uses_connection: true,
 
         custom_errors: {
@@ -550,6 +531,7 @@ fxs = [
         allocates_memory: true,
         allocates_handle: true,
         uses_connection: true,
+
         mem: "TLS_SIZE",
 
         custom_errors: {
@@ -587,11 +569,13 @@ fxs = [
 
         has_handle_argument: true,
         has_deadline: true,
-        has_einval: true,
         allocates_memory: true,
         allocates_handle: true,
         uses_connection: true,
+
         mem: "TLS_SIZE",
+
+        errors: "EINVAL ",
 
         custom_errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
@@ -627,8 +611,6 @@ tcp_close(s);
 
         has_handle_argument: true,
         has_deadline: true,
-        allocates_memory: false,
-        allocates_handle: false,
         uses_connection: true,
 
         custom_errors: {
@@ -659,14 +641,11 @@ tcp_close(s);
         prologue: "This function creates an UDP socket.",
         epilogue: "To close this socket use **hclose** function.",
 
-        has_handle_argument: false,
-        has_deadline: false,
-        has_einval: true,
         allocates_memory: true,
         allocates_handle: true,
-        uses_connection: false,
         mem: "UDP_SIZE",
 
+        errors: "EINVAL ",
         custom_errors: {
             EADDRINUSE: "The local address is already in use.",
             EADDRNOTAVAIL: "The specified address is not available from the local machine.",
@@ -707,10 +686,8 @@ tcp_close(s);
 
         has_handle_argument: true,
         has_deadline: true,
-        has_einval: true,
-        has_emsgsize: true,
-        allocates_memory: false,
-        allocates_handle: false,
+
+        errors: "EINVAL EMSGSIZE ",
     },
     {
         name: "udp_recvl",
@@ -737,11 +714,9 @@ tcp_close(s);
 
         has_handle_argument: true,
         has_deadline: true,
-        has_einval: true,
-        has_emsgsize: true,
         has_iol: true,
-        allocates_memory: false,
-        allocates_handle: false,
+
+        errors: "EINVAL EMSGSIZE ",
     },
     {
         name: "udp_send",
@@ -778,10 +753,8 @@ tcp_close(s);
 
         has_handle_argument: true,
         has_deadline: false,
-        has_einval: true,
-        allocates_memory: false,
-        allocates_handle: false,
 
+        errors: "EINVAL EMSGSIZE ",
         custom_errors: {
             EMSGSIZE: "The message is too long to fit into an UDP packet.",
         }
@@ -810,12 +783,9 @@ tcp_close(s);
         prologue: "This function sends an UDP packet.\n\nGiven that UDP protocol is unreliable the function has no deadline. If packet cannot be sent it will be silently dropped.",
 
         has_handle_argument: true,
-        has_deadline: false,
-        has_einval: true,
-        allocates_memory: false,
-        allocates_handle: false,
         has_iol: true,
 
+        errors: "EINVAL EMSGSIZE ",
         custom_errors: {
             EMSGSIZE: "The message is too long to fit into an UDP packet.",
         }
@@ -836,7 +806,7 @@ tcp_close(s);
 
 You should consider using **yield** when doing lengthy computations which don't have natural coroutine switching points such as socket or channel operations or msleep.`,
 
-        has_ecanceled: true,
+        errors: "ECANCELED ",
 
         example: `
 for(i = 0; i != 1000000; ++i) {
@@ -958,10 +928,7 @@ The function returns **EINVAL** error in case the list is malformed or if it con
     if(fx.has_deadline) fx.errors += "ETIMEDOUT "
     if(fx.allocates_memory) fx.errors += "ENOMEM "
     if(fx.allocates_handle) fx.errors += "EMFILE ENFILE "
-    if(fx.has_einval || fx.has_iol) fx.errors+= "EINVAL "
-    if(fx.has_emsgsize) fx.errors += "EMSGSIZE "
-    if(fx.uses_connection) fx.errors += "ECONNRESET "
-    if(fx.uses_connection || fx.has_ecanceled) fx.errors += "ECANCELED "
+    if(fx.uses_connection) fx.errors += "ECONNRESET ECANCELED "
 
     var errs = {}
     e = fx.errors.trim().split(" ")
