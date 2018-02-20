@@ -15,6 +15,7 @@ standard_errors = {
     EMSGSIZE: "The data won't fit into the supplied buffer.",
     ECONNRESET: "Broken connection.",
     ECANCELED: "Current coroutine is in the process of shutting down.",
+    ENOTSUP: "The handle does not support this operation.",
 }
 
 crlf_protocol = {
@@ -924,7 +925,7 @@ The function returns **EINVAL** error in case the list is malformed or if it con
     t += "# ERRORS\n\n"
     if(!fx.errors) fx.errors = ""
 
-    if(fx.has_handle_argument) fx.errors += "EBADF "
+    if(fx.has_handle_argument) fx.errors += "EBADF ENOTSUP "
     if(fx.has_deadline) fx.errors += "ETIMEDOUT "
     if(fx.allocates_memory) fx.errors += "ENOMEM "
     if(fx.allocates_handle) fx.errors += "EMFILE ENFILE "

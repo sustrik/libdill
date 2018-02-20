@@ -45,6 +45,7 @@ In case of success the function returns 0. In case of error it returns -1 and se
 * **EBADF**: Invalid socket handle.
 * **EINVAL**: Invalid argument.
 * **EMSGSIZE**: The message is too long to fit into an UDP packet.
+* **ENOTSUP**: The handle does not support this operation.
 
 # EXAMPLE
 

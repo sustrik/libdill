@@ -42,6 +42,7 @@ In case of success the function returns 0. In case of error it returns -1 and se
 * **ECONNRESET**: Broken connection.
 * **EINVAL**: Invalid argument.
 * **EMSGSIZE**: The data won't fit into the supplied buffer.
+* **ENOTSUP**: The handle does not support this operation.
 * **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE

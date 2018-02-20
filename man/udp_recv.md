@@ -36,6 +36,7 @@ In case of success the function returns size of the received message, in bytes. 
 * **EBADF**: Invalid socket handle.
 * **EINVAL**: Invalid argument.
 * **EMSGSIZE**: The data won't fit into the supplied buffer.
+* **ENOTSUP**: The handle does not support this operation.
 * **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE

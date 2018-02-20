@@ -41,6 +41,7 @@ In case of success the function returns 0. In case of error it returns -1 and se
 * **ECANCELED**: Current coroutine is in the process of shutting down.
 * **ECONNRESET**: Broken connection.
 * **EINVAL**: Invalid argument.
+* **ENOTSUP**: The handle does not support this operation.
 * **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE
