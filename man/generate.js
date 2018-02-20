@@ -454,6 +454,33 @@ fxs = [
         example: http_server_example,
     },
     {
+        name: "now",
+        info: "get current time",
+        result: {
+            type: "int64_t",
+            info: "Current time."
+        },
+        args: [
+        ],
+
+        prologue:
+`Returns current time, in milliseconds.
+
+The function is meant for creating deadlines. For example, a point of time one second from now can be expressed as **now() + 1000**.
+
+The following values have special meaning and cannot be returned by the function:
+
+* 0: Immediate deadline.
+* -1: Infinite deadline.`,
+
+        example: `
+int result = chrecv(ch, &val, sizeof(val), now() + 1000);
+if(result == -1 && errno == ETIMEDOUT) {
+    printf("One second elapsed without receiving a message.\\n");
+}
+`,
+    },
+    {
         name: "pfx_attach",
         info: "creates PFX protocol on top of underlying socket",
         result: {
@@ -916,8 +943,12 @@ The function returns **EINVAL** error in case the list is malformed or if it con
     /*  RETURN VALUE                                                          */
     /**************************************************************************/
     t += "# RETURN VALUE\n\n"
-    t += "In case of success the function returns " + fx.result.success + ". "
-    t += "In case of error it returns " + fx.result.error + " and sets **errno** to one of the values below.\n\n"
+    if(fx.result.info) {
+        t += fx.result.info + "\n\n"
+    } else {
+        t += "In case of success the function returns " + fx.result.success + ". "
+        t += "In case of error it returns " + fx.result.error + " and sets **errno** to one of the values below.\n\n"
+    }
 
     /**************************************************************************/
     /*  ERRORS                                                                */
@@ -933,16 +964,21 @@ The function returns **EINVAL** error in case the list is malformed or if it con
     if(fx.uses_connection) estr += "ECONNRESET ECANCELED "
 
     var errs = {}
-    e = estr.trim().split(" ")
-    for(var idx = 0; idx < e.length; idx++) {
-        errs[e[idx]] = standard_errors[e[idx]]
+    estr = estr.trim()
+    if(estr.length == 0) {
+        t += "None.\n"
     }
-
-    if(fx.custom_errors) Object.assign(errs, fx.custom_errors)
-    var codes = Object.keys(errs).sort()
-    for(var j = 0; j < codes.length; j++) {
-        code = codes[j]
-        t += "* **" + code + "**: " + errs[code] + "\n"
+    else {
+        e = estr.split(" ")
+        for(var idx = 0; idx < e.length; idx++) {
+            errs[e[idx]] = standard_errors[e[idx]]
+        }
+        if(fx.custom_errors) Object.assign(errs, fx.custom_errors)
+        var codes = Object.keys(errs).sort()
+        for(var j = 0; j < codes.length; j++) {
+            code = codes[j]
+            t += "* **" + code + "**: " + errs[code] + "\n"
+        }
     }
     t += "\n"
 
