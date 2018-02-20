@@ -42,7 +42,6 @@ In case of success the function returns newly created socket handle. In case of 
 * **ECONNRESET**: Broken connection.
 * **EMFILE**: The maximum number of file descriptors in the process are already open.
 * **ENFILE**: The maximum number of file descriptors in the system are already open.
-* **ENOMEM**: Not enough memory.
 * **ENOTSUP**: The handle does not support this operation.
 * **EPROTO**: Underlying socket is not a bytestream socket.
 * **ETIMEDOUT**: Deadline was reached.

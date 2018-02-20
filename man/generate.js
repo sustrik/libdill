@@ -923,16 +923,17 @@ The function returns **EINVAL** error in case the list is malformed or if it con
     /*  ERRORS                                                                */
     /**************************************************************************/
     t += "# ERRORS\n\n"
-    if(!fx.errors) fx.errors = ""
+    estr = fx.errors
+    if(estr == undefined) estr = ""
 
-    if(fx.has_handle_argument) fx.errors += "EBADF ENOTSUP "
-    if(fx.has_deadline) fx.errors += "ETIMEDOUT "
-    if(fx.allocates_memory) fx.errors += "ENOMEM "
-    if(fx.allocates_handle) fx.errors += "EMFILE ENFILE "
-    if(fx.uses_connection) fx.errors += "ECONNRESET ECANCELED "
+    if(fx.has_handle_argument) estr += "EBADF ENOTSUP "
+    if(fx.has_deadline) estr += "ETIMEDOUT "
+    if(fx.allocates_memory && !mem) estr += "ENOMEM "
+    if(fx.allocates_handle) estr += "EMFILE ENFILE "
+    if(fx.uses_connection) estr += "ECONNRESET ECANCELED "
 
     var errs = {}
-    e = fx.errors.trim().split(" ")
+    e = estr.trim().split(" ")
     for(var idx = 0; idx < e.length; idx++) {
         errs[e[idx]] = standard_errors[e[idx]]
     }
