@@ -198,7 +198,8 @@ fxs = [
            {
                name: "s",
                type: "int",
-               info: "Handle of the underlying socket. It must be a bytestream protocol.",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
            },
         ],
         protocol: crlf_protocol,
@@ -295,7 +296,8 @@ fxs = [
             {
                 name: "hvfs",
                 type: "struct hvfs*",
-                info: "virtual-function table of operations associated with the handle",
+                info: "virtual-function table of operations associated with " +
+                      "the handle",
             }
         ],
 
@@ -331,7 +333,8 @@ fxs = [
            {
                name: "s",
                type: "int",
-               info: "Handle of the underlying socket. It must be a bytestream protocol.",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
            },
         ],
         protocol: http_protocol,
@@ -676,7 +679,8 @@ fxs = [
            {
                name: "s",
                type: "int",
-               info: "Handle of the underlying socket. It must be a bytestream protocol.",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
            },
         ],
         protocol: pfx_protocol,
@@ -684,7 +688,8 @@ fxs = [
             This function instantiates PFX protocol on top of the underlying
             protocol.
         `,
-        epilogue: "The socket can be cleanly shut down using **pfx_detach** function.",
+        epilogue: "The socket can be cleanly shut down using **pfx_detach** " +
+                  "function.",
 
         has_handle_argument: true,
         allocates_handle: true,
@@ -736,7 +741,8 @@ fxs = [
            {
                name: "s",
                type: "int",
-               info: "Handle of the underlying socket. It must be a bytestream protocol.",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
            },
         ],
         protocol: tls_protocol,
@@ -772,7 +778,8 @@ fxs = [
            {
                name: "s",
                type: "int",
-               info: "Handle of the underlying socket. It must be a bytestream protocol.",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
            },
            {
                name: "cert",
@@ -859,12 +866,20 @@ fxs = [
            {
                name: "local",
                type: "struct ipaddr*",
-               info: "IP  address to be used to set source IP address in outgoing packets. Also, the socket will receive packets sent to this address. If port in the address is set to zero an ephemeral port will be chosen and filled into the local address.",
+               info: "IP  address to be used to set source IP address in " +
+                     "outgoing packets. Also, the socket will receive " +
+                     "packets sent to this address. If port in the address " +
+                     "is set to zero an ephemeral port will be chosen and " +
+                     "filled into the local address.",
            },
            {
                name: "remote",
                type: "struct ipaddr*",
-               info: "IP address used as default destination for outbound packets. It is used when destination address in **udp_send** function is set to **NULL**. It is also used by **msend** and **mrecv** functions which don't allow to specify the destination address explicitly.",
+               info: "IP address used as default destination for outbound " +
+                     "packets. It is used when destination address in " +
+                     "**udp_send** function is set to **NULL**. It is also " +
+                     "used by **msend** and **mrecv** functions which don't " +
+                     "allow to specify the destination address explicitly.",
            },
         ],
         protocol: udp_protocol,
@@ -877,7 +892,8 @@ fxs = [
         errors: ["EINVAL"],
         custom_errors: {
             EADDRINUSE: "The local address is already in use.",
-            EADDRNOTAVAIL: "The specified address is not available from the local machine.",
+            EADDRNOTAVAIL: "The specified address is not available from the " +
+                           "local machine.",
         },
     },
     {
@@ -897,7 +913,8 @@ fxs = [
            {
                name: "addr",
                type: "struct ipaddr*",
-               info: "Out parameter. IP address of the sender of the packet. Can be **NULL**.",
+               info: "Out parameter. IP address of the sender of the packet. " +
+                     "Can be **NULL**.",
            },
            {
                name: "buf",
@@ -935,7 +952,8 @@ fxs = [
            {
                name: "addr",
                type: "struct ipaddr*",
-               info: "Out parameter. IP address of the sender of the packet. Can be **NULL**.",
+               info: "Out parameter. IP address of the sender of the packet. " +
+                     "Can be **NULL**.",
            },
         ],
         protocol: udp_protocol,
@@ -964,7 +982,9 @@ fxs = [
            {
                name: "addr",
                type: "const struct ipaddr*",
-               info: "IP address to send the packet to. If set to **NULL** remote address specified in **udp_open** function will be used.",
+               info: "IP address to send the packet to. If set to **NULL** " +
+                     "remote address specified in **udp_open** function will " +
+                     "be used.",
            },
            {
                name: "buf",
@@ -1010,7 +1030,9 @@ fxs = [
            {
                name: "addr",
                type: "const struct ipaddr*",
-               info: "IP address to send the packet to. If set to **NULL** remote address specified in **udp_open** function will be used.",
+               info: "IP address to send the packet to. If set to **NULL** " +
+                     "remote address specified in **udp_open** function will " +
+                     "be used.",
            },
         ],
         protocol: udp_protocol,
@@ -1065,7 +1087,9 @@ function trimrect(t) {
     var lns = t.split("\n")
     var first = lns.findIndex(function(e) {return e.trim().length > 0})
     if(first < 0) first = 0
-    var last = lns.slice().reverse().findIndex(function(e) {return e.trim().length > 0})
+    var last = lns.slice().reverse().findIndex(function(e) {
+        return e.trim().length > 0
+    })
     if(last < 0) last = lns.length
     else last = lns.length - last
     var lines = lns.slice(first, last)
@@ -1130,14 +1154,21 @@ function generate_man_page(fx, mem) {
         a.push({
             name: "mem",
             type: "void*",
-            info: "The memory to store the newly created object. It must be at least **" + fx.mem + "** bytes long and must not be deallocated before the object is closed.",
+            info: "The memory to store the newly created object. It must be " +
+                  "at least **" + fx.mem + "** bytes long and must not be " +
+                  "deallocated before the object is closed.",
         })
     }
     if(fx.has_deadline) {
         a.push({
             name: "deadline",
             type: "int64_t",
-            info: "A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.",
+            info: "A point in time when the operation should time out, in " +
+                  "milliseconds. Use the **now** function to get your current" +
+                  " point in time. 0 means immediate timeout, i.e., perform " +
+                  "the operation if possible or return without blocking if " +
+                  "not. -1 means no deadline, i.e., the call will block " +
+                  "forever if the operation cannot be performed.",
         })
     }
 
