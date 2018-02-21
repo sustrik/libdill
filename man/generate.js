@@ -238,11 +238,11 @@ fxs = [
         info: "creates a handle",
         is_in_libdillimpl: true,
         add_to_synopsis: `
-struct hvfs {
-    void *(*query)(struct hvfs *vfs, const void *type);
-    void (*close)(int h);
-    int (*done)(struct hvfs *vfs, int64_t deadline);
-};
+            struct hvfs {
+                void *(*query)(struct hvfs *vfs, const void *type);
+                void (*close)(int h);
+                int (*done)(struct hvfs *vfs, int64_t deadline);
+            };
         `,
         result: {
             type: "int",
@@ -982,7 +982,7 @@ function generate_man_page(fx, mem) {
         t += "#include <libdill.h>\n\n"
     }
     if(fx.add_to_synopsis) {
-        t += fx.add_to_synopsis.trim() + "\n\n"
+        t += trimrect(fx.add_to_synopsis) + "\n\n"
     }
     t += fx.result.type + " " + fx.name
     if(mem) t += "_mem"
