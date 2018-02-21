@@ -138,7 +138,6 @@ fxs = [
         epilogue: "The socket can be cleanly shut down using **crlf_detach** function.",
 
         has_handle_argument: true,
-        allocates_memory: true,
         allocates_handle: true,
         mem: "CRLF_SIZE",
 
@@ -149,6 +148,7 @@ fxs = [
     {
         name: "crlf_detach",
         info: "terminates CRLF protocol and returns the underlying socket",
+
         result: {
             type: "int",
             success: "underlying socket handle",
@@ -255,7 +255,6 @@ To close a handle, use the **hclose** function.`,
         epilogue: "The socket can be cleanly shut down using **http_detach** function.",
 
         has_handle_argument: true,
-        allocates_memory: true,
         allocates_handle: true,
         mem: "HTTP_SIZE",
 
@@ -374,8 +373,6 @@ To close a handle, use the **hclose** function.`,
         prologue: "This function receives an HTTP request from the peer.",
         has_handle_argument: true,
         has_deadline: true,
-        allocates_memory: false,
-        allocates_handle: false,
         uses_connection: true,
 
         errors: ["EINVAL", "EMSGSIZE"],
@@ -563,7 +560,6 @@ if(result == -1 && errno == ETIMEDOUT) {
         epilogue: "The socket can be cleanly shut down using **pfx_detach** function.",
 
         has_handle_argument: true,
-        allocates_memory: true,
         allocates_handle: true,
 
         mem: "PFX_SIZE",
@@ -619,7 +615,6 @@ if(result == -1 && errno == ETIMEDOUT) {
 
         has_handle_argument: true,
         has_deadline: true,
-        allocates_memory: true,
         allocates_handle: true,
         uses_connection: true,
 
@@ -660,7 +655,6 @@ if(result == -1 && errno == ETIMEDOUT) {
 
         has_handle_argument: true,
         has_deadline: true,
-        allocates_memory: true,
         allocates_handle: true,
         uses_connection: true,
 
@@ -732,7 +726,6 @@ tcp_close(s);
         prologue: "This function creates an UDP socket.",
         epilogue: "To close this socket use **hclose** function.",
 
-        allocates_memory: true,
         allocates_handle: true,
         mem: "UDP_SIZE",
 
@@ -913,6 +906,12 @@ for(i = 0; i != 1000000; ++i) {
 
     name: name of the function
     info: short description of the function
+    is_in_libdillimpl: if true, the function is in libdillimpl.h
+    protocol : { // should be present only if the function is related to a network protocol
+        name: name of the protocol
+        info: description of the protocol
+        example: example of usage of the protocol, a piece of C code
+    }
     result: { // omit this field for void functions
         type: return type of the function
     }
@@ -923,13 +922,18 @@ for(i = 0; i != 1000000; ++i) {
             info: description of the argument
         }
     ]
+    add_to_synopsis: a piece of code to be added to synopsis, between the include and the function declaration
+    has_iol: if true, adds I/O list to the list of arguments
+    has_deadline: if true, adds deadline to the list of arguments
+    has_handle_argument: set to true if at least one of the arguments is a handle
+    allocates_handle: set to true is the function allocates at least one handle
     prologue: the part of the description of the function to go before the list of arguments
     epilogue: the part of the description of the function to go after the list of arguments
     errors: a list of possible errors, the descriptions will be pulled from standard_errors object
     custom_errors: [{ // custom errors take precedence over standard errors
         error name: error description
     }]
-    example: example of the usage of the function, a piece of C code
+    example: example of the usage of the function, a piece of C code; if present, overrides the protocol example
     mem: size // if set, _mem variant of the function will be generated; size if the size macro such as TCP_SIZE or UDP_SIZE
 */
 
@@ -1070,9 +1074,9 @@ The function returns **EINVAL** error in case the list is malformed or if it con
 
     if(fx.has_handle_argument) errs.push("EBADF", "ENOTSUP")
     if(fx.has_deadline) errs.push("ETIMEDOUT")
-    if(fx.allocates_memory && !mem) errs.push("ENOMEM")
     if(fx.allocates_handle) errs.push("EMFILE", "ENFILE", "ENOMEM")
     if(fx.uses_connection) errs.push("ECONNRESET", "ECANCELED")
+    if(fx.mem && !mem) errs.push("ENOMEM")
 
     // Expand error descriptions.
     var errdict = {}
