@@ -61,6 +61,6 @@ while(1) {
     if(rc == -1 && errno == EPIPE) break;
 }
 http_sendstatus(s, 200, "OK", -1);
-s = http_detach(s, -1); 
+s = http_detach(s, -1);
 tcp_close(s);
 ```

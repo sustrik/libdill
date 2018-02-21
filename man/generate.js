@@ -59,82 +59,82 @@ crlf_protocol = {
     name: "CRLF",
     info: "CRLF is a message-based protocol that delimits messages usign CR+LF byte sequence (0x0D 0x0A). In other words, it's a protocol to send text messages separated by newlines. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending an empty line.",
     example: `
-int s = tcp_connect(&addr, -1);
-s = crlf_attach(s);
-msend(s, "ABC", 3, -1);
-char buf[256];
-ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
-s = crlf_detach(s, -1);
-tcp_close(s);
-`
+        int s = tcp_connect(&addr, -1);
+        s = crlf_attach(s);
+        msend(s, "ABC", 3, -1);
+        char buf[256];
+        ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
+        s = crlf_detach(s, -1);
+        tcp_close(s);
+    `,
 }
 
 http_protocol = {
     name: "HTTP",
     info: "HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.",
     example: `
-int s = tcp_connect(&addr, -1);
-s = http_attach(s);
-http_sendrequest(s, "GET", "/", -1);
-http_sendfield(s, "Host", "www.example.org", -1);
-hdone(s, -1);
-char reason[256];
-http_recvstatus(s, reason, sizeof(reason), -1);
-while(1) {
-    char name[256];
-    char value[256];
-    int rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
-    if(rc == -1 && errno == EPIPE) break;
-}
-s = http_detach(s, -1);
-tcp_close(s);
-`,
+        int s = tcp_connect(&addr, -1);
+        s = http_attach(s);
+        http_sendrequest(s, "GET", "/", -1);
+        http_sendfield(s, "Host", "www.example.org", -1);
+        hdone(s, -1);
+        char reason[256];
+        http_recvstatus(s, reason, sizeof(reason), -1);
+        while(1) {
+            char name[256];
+            char value[256];
+            int rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
+            if(rc == -1 && errno == EPIPE) break;
+        }
+        s = http_detach(s, -1);
+        tcp_close(s);
+    `,
     experimental: true,
 }
 
 http_server_example = `
-int s = tcp_accept(listener, NULL, -1);
-s = http_attach(s, -1);
-char command[256];
-char resource[256];
-http_recvrequest(s, command, sizeof(command), resource, sizeof(resource), -1);
-while(1) {
-    char name[256];
-    char value[256];
-    int rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
-    if(rc == -1 && errno == EPIPE) break;
-}
-http_sendstatus(s, 200, "OK", -1);
-s = http_detach(s, -1); 
-tcp_close(s);
+    int s = tcp_accept(listener, NULL, -1);
+    s = http_attach(s, -1);
+    char command[256];
+    char resource[256];
+    http_recvrequest(s, command, sizeof(command), resource, sizeof(resource), -1);
+    while(1) {
+        char name[256];
+        char value[256];
+        int rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
+        if(rc == -1 && errno == EPIPE) break;
+    }
+    http_sendstatus(s, 200, "OK", -1);
+    s = http_detach(s, -1); 
+    tcp_close(s);
 `
 
 pfx_protocol = {
     name: "PFX",
     info: "PFX  is a message-based protocol to send binary messages prefixed by 8-byte size in network byte order. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending eight 0xFF bytes.",
     example: `
-int s = tcp_connect(&addr, -1);
-s = pfx_attach(s);
-msend(s, "ABC", 3, -1);
-char buf[256];
-ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
-s = pfx_detach(s, -1);
-tcp_close(s);
-`
+        int s = tcp_connect(&addr, -1);
+        s = pfx_attach(s);
+        msend(s, "ABC", 3, -1);
+        char buf[256];
+        ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
+        s = pfx_detach(s, -1);
+        tcp_close(s);
+    `
 }
 
 tls_protocol = {
     name: "TLS",
     info: "TLS is a cryptographic protocol to provide secure communication over the network. It is a bytestream protocol.",
     example: `
-int s = tcp_connect(&addr, -1);
-s = tls_attach_client(s, -1);
-bsend(s, "ABC", 3, -1);
-char buf[3];
-ssize_t sz = brecv(s, buf, sizeof(buf), -1);
-s = tls_detach(s, -1);
-tcp_close(s);
-`,
+        int s = tcp_connect(&addr, -1);
+        s = tls_attach_client(s, -1);
+        bsend(s, "ABC", 3, -1);
+        char buf[3];
+        ssize_t sz = brecv(s, buf, sizeof(buf), -1);
+        s = tls_detach(s, -1);
+        tcp_close(s);
+    `,
     experimental: true,
 }
 
@@ -142,16 +142,16 @@ udp_protocol = {
     name: "UDP",
     info: "UDP is an unreliable message-based protocol defined in RFC 768. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.",
     example: `
-struct ipaddr local;
-ipaddr_local(&local, NULL, 5555, 0);
-struct ipaddr remote;
-ipaddr_remote(&remote, "server.example.org", 5555, 0, -1);
-int s = udp_open(&local, &remote);
-udp_send(s1, NULL, "ABC", 3);
-char buf[2000];
-ssize_t sz = udp_recv(s, NULL, buf, sizeof(buf), -1);
-hclose(s);
-`,
+        struct ipaddr local;
+        ipaddr_local(&local, NULL, 5555, 0);
+        struct ipaddr remote;
+        ipaddr_remote(&remote, "server.example.org", 5555, 0, -1);
+        int s = udp_open(&local, &remote);
+        udp_send(s1, NULL, "ABC", 3);
+        char buf[2000];
+        ssize_t sz = udp_recv(s, NULL, buf, sizeof(buf), -1);
+        hclose(s);
+    `,
 }
 
 fxs = [
@@ -571,11 +571,11 @@ The following values have special meaning and cannot be returned by the function
 * -1: Infinite deadline.`,
 
         example: `
-int result = chrecv(ch, &val, sizeof(val), now() + 1000);
-if(result == -1 && errno == ETIMEDOUT) {
-    printf("One second elapsed without receiving a message.\\n");
-}
-`,
+            int result = chrecv(ch, &val, sizeof(val), now() + 1000);
+            if(result == -1 && errno == ETIMEDOUT) {
+                printf("One second elapsed without receiving a message.\\n");
+            }
+        `,
     },
     {
         name: "pfx_attach",
@@ -704,14 +704,14 @@ if(result == -1 && errno == ETIMEDOUT) {
         },
 
         example: `
-int s = tcp_accept(listener, NULL, -1);
-s = tls_attach_server(s, -1);
-bsend(s, "ABC", 3, -1);
-char buf[3];
-ssize_t sz = brecv(s, buf, sizeof(buf), -1);
-s = tls_detach(s, -1);
-tcp_close(s);
-`,
+            int s = tcp_accept(listener, NULL, -1);
+            s = tls_attach_server(s, -1);
+            bsend(s, "ABC", 3, -1);
+            char buf[3];
+            ssize_t sz = brecv(s, buf, sizeof(buf), -1);
+            s = tls_detach(s, -1);
+            tcp_close(s);
+        `,
     },
     {
         name: "tls_detach",
@@ -930,14 +930,37 @@ You should consider using **yield** when doing lengthy computations which don't 
         errors: ["ECANCELED"],
 
         example: `
-for(i = 0; i != 1000000; ++i) {
-    expensive_computation();
-    yield(); /* Give other coroutines a chance to run. */
-}
-`,
+            for(i = 0; i != 1000000; ++i) {
+                expensive_computation();
+                yield(); /* Give other coroutines a chance to run. */
+            }
+        `,
     },
 ]
 
+// Trims whitespeace around the rectangular area of text.
+function trimrect(t) {
+    // Trim empty lines at the top and the bottom.
+    var lns = t.split("\n")
+    var lines = []
+    for(var i = 0; i < lns.length; i++) {
+        if(lns[i].trim().length > 0) lines.push(lns[i])
+    }
+    // Determine minimal left indent.
+    var indent = -1
+    for(var i = 0; i < lines.length; i++) {
+        var n = lines[i].length - lines[i].trimLeft().length
+        if(n < indent || indent == -1) indent = n
+    }
+    // Trim the whitespace from the left and the right.
+    lns = []
+    for(var i = 0; i < lines.length; i++) {
+        lns.push(lines[i].substr(indent).trimRight())
+    }
+    return lns.join("\n")
+}
+
+// Generate man page for one function.
 function generate_man_page(fx, mem) {
     var t = "";
 
@@ -1107,7 +1130,7 @@ The function returns **EINVAL** error in case the list is malformed or if it con
         t += "# EXAMPLE\n\n"
         var example = fx.example
         if(example == undefined) example = fx.protocol.example
-        t += "```c" + example + "```\n"
+        t += "```c\n" + trimrect(example) + "\n```\n"
     }
 
     return t
