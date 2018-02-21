@@ -5,15 +5,16 @@ hmake - creates a handle
 # SYNOPSIS
 
 ```c
+#include <libdillimpl.h>
+
 struct hvfs {
     void *(*query)(struct hvfs *vfs, const void *type);
     void (*close)(int h);
+    int (*done)(struct hvfs *vfs, int64_t deadline);
 };
+
+int hmake(struct hvfs* hvfs);
 ```
-
-**#include **&lt;libdillimpl.h>**
-
-**int hmake(struct hvfs **\*_vfs_**);**
 
 # DESCRIPTION
 
@@ -29,13 +30,16 @@ a **close** operation will fail with an **ECANCELED** error.
 
 To close a handle, use the **hclose** function.
 
+**hvfs**: virtual-function table of operations associated with the handle
+
+
 # RETURN VALUE
 
-Returns the newly allocated handle on success. On error, -1 is returned and _errno_ is set to one of the following values below.
+In case of success the function returns newly created handle. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
-* **ECANCELED**: Current coroutine is being shut down.
+* **ECANCELED**: Current coroutine is in the process of shutting down.
 * **EINVAL**: Invalid argument.
-* **ENOMEM**: Not enough free memory to create a handle.
+* **ENOMEM**: Not enough memory.
 

@@ -173,6 +173,45 @@ fxs = [
         },
     },
     {
+        name: "hmake",
+        info: "creates a handle",
+        is_in_libdillimpl: true,
+        add_to_synopsis: `
+struct hvfs {
+    void *(*query)(struct hvfs *vfs, const void *type);
+    void (*close)(int h);
+    int (*done)(struct hvfs *vfs, int64_t deadline);
+};
+        `,
+        result: {
+            type: "int",
+            success: "newly created handle",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "hvfs",
+                type: "struct hvfs*",
+                info: "virtual-function table of operations associated with the handle",
+            }
+        ],
+
+        prologue:
+`A handle is the user-space equivalent of a file descriptor. Coroutines and channels are represented by handles.
+
+Unlike with file descriptors, however, you can use the **hmake** function to create your own type of handle.
+
+The argument of the function is a virtual-function table of operations associated with the handle.
+
+When implementing the **close** operation, keep in mind that invoking blocking
+operations is not allowed, as blocking operations invoked within the context of
+a **close** operation will fail with an **ECANCELED** error.
+
+To close a handle, use the **hclose** function.`,
+
+        errors: "ECANCELED EINVAL ENOMEM",
+    },
+    {
         name: "http_attach",
         info: "creates HTTP protocol on top of underlying socket",
         result: {
@@ -865,6 +904,9 @@ function generate_man_page(fx, mem) {
     } else {
         t += "#include <libdill.h>\n\n"
     }
+    if(fx.add_to_synopsis) {
+        t += fx.add_to_synopsis.trim() + "\n\n"
+    }
     t += fx.result.type + " " + fx.name
     if(mem) t += "_mem"
     t += "("
@@ -964,7 +1006,7 @@ The function returns **EINVAL** error in case the list is malformed or if it con
     if(fx.has_handle_argument) estr += "EBADF ENOTSUP "
     if(fx.has_deadline) estr += "ETIMEDOUT "
     if(fx.allocates_memory && !mem) estr += "ENOMEM "
-    if(fx.allocates_handle) estr += "EMFILE ENFILE "
+    if(fx.allocates_handle) estr += "EMFILE ENFILE ENOMEM "
     if(fx.uses_connection) estr += "ECONNRESET ECANCELED "
 
     var errs = {}
@@ -989,10 +1031,12 @@ The function returns **EINVAL** error in case the list is malformed or if it con
     /**************************************************************************/
     /*  EXAMPLE                                                               */
     /**************************************************************************/
-    t += "# EXAMPLE\n\n"
-    var example = fx.example
-    if(example == undefined) example = fx.protocol.example
-    t += "```c" + example + "```\n"
+    if(fx.example || (fx.protocol && fx.protocol.example)) {
+        t += "# EXAMPLE\n\n"
+        var example = fx.example
+        if(example == undefined) example = fx.protocol.example
+        t += "```c" + example + "```\n"
+    }
 
     return t
 }
