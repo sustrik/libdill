@@ -1063,12 +1063,6 @@ fxs = [
 function trimrect(t) {
     // Trim empty lines at the top and the bottom.
     var lns = t.split("\n")
-    //var lines = []
-    //for(var i = 0; i < lns.length; i++) {
-    //    if(lns[i].trim().length > 0) lines.push(lns[i])
-    //}
-
-
     var first = lns.findIndex(function(e) {return e.trim().length > 0})
     if(first < 0) first = 0
     var last = lns.slice().reverse().findIndex(function(e) {return e.trim().length > 0})
