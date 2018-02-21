@@ -4,9 +4,11 @@ udp_sendl - sends an UDP packet
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int udp_sendl(int **_s_**, const struct ipaddr* **_addr_**, struct iolist* **_first_**, struct iolist* **_last_**);**
+int udp_sendl(int s, const struct ipaddr* addr, struct iolist* first, struct iolist* last);
+```
 
 # DESCRIPTION
 

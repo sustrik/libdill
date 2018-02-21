@@ -4,9 +4,11 @@ crlf_attach_mem - creates CRLF protocol on top of underlying socket
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int crlf_attach_mem(int **_s_**, void ***_mem_**);**
+int crlf_attach_mem(int s, void* mem);
+```
 
 # DESCRIPTION
 

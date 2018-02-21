@@ -4,9 +4,11 @@ http_sendstatus - sends HTTP status to the peer
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int http_sendstatus(int **_s_**, int **_status_**, const char* **_reason_**, int64_t **_deadline_**);**
+int http_sendstatus(int s, int status, const char* reason, int64_t deadline);
+```
 
 # DESCRIPTION
 

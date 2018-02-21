@@ -4,9 +4,11 @@ pfx_attach - creates PFX protocol on top of underlying socket
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int pfx_attach(int **_s_**);**
+int pfx_attach(int s);
+```
 
 # DESCRIPTION
 

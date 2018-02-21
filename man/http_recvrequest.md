@@ -4,9 +4,11 @@ http_recvrequest - receives HTTP request from the peer
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int http_recvrequest(int **_s_**, char* **_command_**, size_t **_commandlen_**, char* **_resource_**, size_t **_resourcelen_**, int64_t **_deadline_**);**
+int http_recvrequest(int s, char* command, size_t commandlen, char* resource, size_t resourcelen, int64_t deadline);
+```
 
 # DESCRIPTION
 

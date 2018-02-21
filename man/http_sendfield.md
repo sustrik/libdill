@@ -4,9 +4,11 @@ http_sendfield - sends HTTP field to the peer
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int http_sendfield(int **_s_**, const char* **_name_**, const char* **_value_**, int64_t **_deadline_**);**
+int http_sendfield(int s, const char* name, const char* value, int64_t deadline);
+```
 
 # DESCRIPTION
 

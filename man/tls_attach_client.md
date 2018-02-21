@@ -4,9 +4,11 @@ tls_attach_client - creates TLS protocol on top of underlying socket
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int tls_attach_client(int **_s_**, int64_t **_deadline_**);**
+int tls_attach_client(int s, int64_t deadline);
+```
 
 # DESCRIPTION
 

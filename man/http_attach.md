@@ -4,9 +4,11 @@ http_attach - creates HTTP protocol on top of underlying socket
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int http_attach(int **_s_**);**
+int http_attach(int s);
+```
 
 # DESCRIPTION
 

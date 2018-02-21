@@ -4,9 +4,11 @@ udp_recv - receives an UDP packet
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**ssize_t udp_recv(int **_s_**, struct ipaddr* **_addr_**, void* **_buf_**, size_t **_len_**, int64_t **_deadline_**);**
+ssize_t udp_recv(int s, struct ipaddr* addr, void* buf, size_t len, int64_t deadline);
+```
 
 # DESCRIPTION
 

@@ -4,9 +4,11 @@ udp_send - sends an UDP packet
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int udp_send(int **_s_**, const struct ipaddr* **_addr_**, const void* **_buf_**, size_t **_len_**);**
+int udp_send(int s, const struct ipaddr* addr, const void* buf, size_t len);
+```
 
 # DESCRIPTION
 

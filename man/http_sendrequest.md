@@ -4,9 +4,11 @@ http_sendrequest - sends initial HTTP request
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int http_sendrequest(int **_s_**, const char* **_command_**, const char* **_resource_**, int64_t **_deadline_**);**
+int http_sendrequest(int s, const char* command, const char* resource, int64_t deadline);
+```
 
 # DESCRIPTION
 

@@ -4,9 +4,11 @@ http_recvstatus - receives HTTP status from the peer
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int http_recvstatus(int **_s_**, char* **_reason_**, size_t **_reasonlen_**, int64_t **_deadline_**);**
+int http_recvstatus(int s, char* reason, size_t reasonlen, int64_t deadline);
+```
 
 # DESCRIPTION
 

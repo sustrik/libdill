@@ -4,9 +4,11 @@ now - get current time
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int64_t now(void);**
+int64_t now(void);
+```
 
 # DESCRIPTION
 

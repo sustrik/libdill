@@ -4,9 +4,11 @@ udp_open - opens an UDP socket
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int udp_open(struct ipaddr* **_local_**, struct ipaddr* **_remote_**);**
+int udp_open(struct ipaddr* local, struct ipaddr* remote);
+```
 
 # DESCRIPTION
 

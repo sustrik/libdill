@@ -4,9 +4,11 @@ crlf_detach - terminates CRLF protocol and returns the underlying socket
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int crlf_detach(int **_s_**, int64_t **_deadline_**);**
+int crlf_detach(int s, int64_t deadline);
+```
 
 # DESCRIPTION
 

@@ -4,9 +4,11 @@ tls_attach_server_mem - creates TLS protocol on top of underlying socket
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int tls_attach_server_mem(int **_s_**, const char* **_cert_**, const char* **_cert_**, void ***_mem_**, int64_t **_deadline_**);**
+int tls_attach_server_mem(int s, const char* cert, const char* cert, void* mem, int64_t deadline);
+```
 
 # DESCRIPTION
 

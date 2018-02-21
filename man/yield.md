@@ -4,9 +4,11 @@ yield - yields CPU to other coroutines
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int yield(void);**
+int yield(void);
+```
 
 # DESCRIPTION
 

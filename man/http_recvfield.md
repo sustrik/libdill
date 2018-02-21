@@ -4,9 +4,11 @@ http_recvfield - receives HTTP field from the peer
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int http_recvfield(int **_s_**, char* **_name_**, size_t **_namelen_**, char* **_value_**, size_t **_valuelen_**, int64_t **_deadline_**);**
+int http_recvfield(int s, char* name, size_t namelen, char* value, size_t valuelen, int64_t deadline);
+```
 
 # DESCRIPTION
 

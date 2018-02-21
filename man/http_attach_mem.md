@@ -4,9 +4,11 @@ http_attach_mem - creates HTTP protocol on top of underlying socket
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int http_attach_mem(int **_s_**, void ***_mem_**);**
+int http_attach_mem(int s, void* mem);
+```
 
 # DESCRIPTION
 

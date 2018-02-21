@@ -4,9 +4,11 @@ pfx_attach_mem - creates PFX protocol on top of underlying socket
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int pfx_attach_mem(int **_s_**, void ***_mem_**);**
+int pfx_attach_mem(int s, void* mem);
+```
 
 # DESCRIPTION
 

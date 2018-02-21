@@ -4,9 +4,11 @@ crlf_attach - creates CRLF protocol on top of underlying socket
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int crlf_attach(int **_s_**);**
+int crlf_attach(int s);
+```
 
 # DESCRIPTION
 

@@ -4,9 +4,11 @@ udp_open_mem - opens an UDP socket
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int udp_open_mem(struct ipaddr* **_local_**, struct ipaddr* **_remote_**, void ***_mem_**);**
+int udp_open_mem(struct ipaddr* local, struct ipaddr* remote, void* mem);
+```
 
 # DESCRIPTION
 

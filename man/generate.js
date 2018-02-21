@@ -859,21 +859,25 @@ function generate_man_page(fx, mem) {
     /**************************************************************************/
     /*  SYNOPSIS                                                              */
     /**************************************************************************/
-    t += "# SYNOPSIS\n\n"
-    t += "**#include &lt;libdill.h>**\n\n"
-    t += "**" + fx.result.type + " " + fx.name
+    t += "# SYNOPSIS\n\n```c\n"
+    if(fx.is_in_libdillimpl) {
+        t += "#include <libdillimpl.h>\n\n"
+    } else {
+        t += "#include <libdill.h>\n\n"
+    }
+    t += fx.result.type + " " + fx.name
     if(mem) t += "_mem"
     t += "("
     for(var j = 0; j < fx.args.length; j++) {
         arg = fx.args[j]
-        t += arg.type + " **_" + arg.name + "_**"
+        t += arg.type + " " + arg.name
         if(j != fx.args.length - 1) t += ", "
     }
-    if(fx.has_iol) t += ", struct iolist* **_first_**, struct iolist* **_last_**"
-    if(mem) t += ", void **\*_mem_**"
-    if(fx.has_deadline) t += ", int64_t **_deadline_**"
+    if(fx.has_iol) t += ", struct iolist* first, struct iolist* last"
+    if(mem) t += ", void* mem"
+    if(fx.has_deadline) t += ", int64_t deadline"
     if(fx.args.length == 0 && !fx.has_iol && !mem && !fx.has_deadline) t += "void"
-    t += ");**\n\n"
+    t += ");\n```\n\n"
 
     /**************************************************************************/
     /*  DESCRIPTION                                                           */
