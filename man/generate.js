@@ -187,6 +187,48 @@ udp_protocol = {
 
 fxs = [
     {
+        name: "bundle",
+        info: "create an empty coroutine bundle",
+        result: {
+            type: "int",
+            success: "handle of the newly create coroutine bundle",
+            error: "-1",
+        },
+
+        prologue: `
+            Coroutines are always running in bundles. Even a single coroutine
+            created by **go** gets its own bundle. A bundle is a lifetime
+            control mechanism. When it is closed, all coroutines within the
+            bundle are canceled.
+
+            This function creates an empty bundle. Coroutines can be added to
+            the bundle using the **bundle_go** and **bundle_go_mem** functions.
+
+            If **hdone** is called on a bundle, it waits until all coroutines
+            exit. After calling **hdone**, irrespective of whether it succeeds
+            or times out, no further coroutines can be launched using the
+            bundle.
+
+            When **hclose()** is called on the bundle, all the coroutines
+            contained in the bundle will be canceled. In other words, all the
+            blocking functions within the coroutine will start failing with an
+            **ECANCELED** error. The **hclose()** function itself won't exit
+            until all the coroutines in the bundle exit.
+        `,
+
+        allocates_handle: true,
+
+        example: `
+            int b = bundle();
+            bundle_go(b, worker());
+            bundle_go(b, worker());
+            bundle_go(b, worker());
+            msleep(now() + 1000);
+            /* Cancel any workers that are still running. */
+            hclose(b);
+        `,
+    },
+    {
         name: "crlf_attach",
         info: "creates CRLF protocol on top of underlying socket",
         result: {
@@ -1136,7 +1178,8 @@ function generate_man_page(fx, mem) {
     t += fx.result.type + " " + fx.name
     if(mem) t += "_mem"
     t += "("
-    var a = fx.args.slice()
+    if(fx.args) var a = fx.args.slice()
+    else var a = []
 
     if(fx.has_iol) {
         a.push({
