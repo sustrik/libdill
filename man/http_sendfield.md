@@ -14,7 +14,9 @@ int http_sendfield(int s, const char* name, const char* value, int64_t deadline)
 
 **WARNING: This is experimental functionality and the API may change in the future.**
 
-HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.
+HTTP is an application-level protocol described in RFC 7230. This
+implementation handles only the request/response exchange. Whatever
+comes after that must be handled by a different protocol.
 
 This function sends an HTTP field, i.e. a name/value pair, to the
 peer. For example, if name is **Host** and resource is

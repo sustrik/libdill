@@ -12,7 +12,10 @@ int pfx_attach(int s);
 
 # DESCRIPTION
 
-PFX  is a message-based protocol to send binary messages prefixed by 8-byte size in network byte order. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending eight 0xFF bytes.
+PFX  is a message-based protocol to send binary messages prefixed by
+8-byte size in network byte order. The protocol has no initial
+handshake. Terminal handshake is accomplished by each peer sending eight
+0xFF bytes.
 
 This function instantiates PFX protocol on top of the underlying
 protocol.

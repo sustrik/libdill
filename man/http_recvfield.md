@@ -14,7 +14,9 @@ int http_recvfield(int s, char* name, size_t namelen, char* value, size_t valuel
 
 **WARNING: This is experimental functionality and the API may change in the future.**
 
-HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.
+HTTP is an application-level protocol described in RFC 7230. This
+implementation handles only the request/response exchange. Whatever
+comes after that must be handled by a different protocol.
 
 This function receives an HTTP field from the peer.
 

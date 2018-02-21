@@ -10,7 +10,8 @@ Schema:
     name: name of the function
     info: short description of the function
     is_in_libdillimpl: if true, the function is in libdillimpl.h
-    protocol : { // should be present only if the function is related to a network protocol
+    protocol : { // should be present only if the function is related
+                 // to a network protocol
         name: name of the protocol
         info: description of the protocol
         example: example of usage of the protocol, a piece of C code
@@ -25,19 +26,26 @@ Schema:
             info: description of the argument
         }
     ]
-    add_to_synopsis: a piece of code to be added to synopsis, between the include and the function declaration
+    add_to_synopsis: a piece of code to be added to synopsis, between the
+                     include and the function declaration
     has_iol: if true, adds I/O list to the list of arguments
     has_deadline: if true, adds deadline to the list of arguments
-    has_handle_argument: set to true if at least one of the arguments is a handle
+    has_handle_argument: set to true if at least one of the arguments is
+                         a handle
     allocates_handle: set to true is the function allocates at least one handle
-    prologue: the part of the description of the function to go before the list of arguments
-    epilogue: the part of the description of the function to go after the list of arguments
-    errors: a list of possible errors, the descriptions will be pulled from standard_errors object
+    prologue: the part of the description of the function to go before the list
+              of arguments
+    epilogue: the part of the description of the function to go after the list
+              of arguments
+    errors: a list of possible errors, the descriptions will be pulled from
+            standard_errors object
     custom_errors: [{ // custom errors take precedence over standard errors
         error name: error description
     }]
-    example: example of the usage of the function, a piece of C code; if present, overrides the protocol example
-    mem: size // if set, _mem variant of the function will be generated; size if the size macro such as TCP_SIZE or UDP_SIZE
+    example: example of the usage of the function, a piece of C code;
+             if present, overrides the protocol example
+    mem: size // if set, _mem variant of the function will be generated;
+              // size if the size macro such as TCP_SIZE or UDP_SIZE
 */
 
 var fs = require('fs');
@@ -46,8 +54,10 @@ standard_errors = {
     EBADF: "Invalid socket handle.",
     ETIMEDOUT: "Deadline was reached.",
     ENOMEM: "Not enough memory.",
-    EMFILE: "The maximum number of file descriptors in the process are already open.",
-    ENFILE: "The maximum number of file descriptors in the system are already open.",
+    EMFILE: "The maximum number of file descriptors in the process are " +
+            "already open.",
+    ENFILE: "The maximum number of file descriptors in the system are " +
+            "already open.",
     EINVAL: "Invalid argument.",
     EMSGSIZE: "The data won't fit into the supplied buffer.",
     ECONNRESET: "Broken connection.",
@@ -57,7 +67,12 @@ standard_errors = {
 
 crlf_protocol = {
     name: "CRLF",
-    info: "CRLF is a message-based protocol that delimits messages usign CR+LF byte sequence (0x0D 0x0A). In other words, it's a protocol to send text messages separated by newlines. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending an empty line.",
+    info: `
+        CRLF is a message-based protocol that delimits messages usign CR+LF byte
+        sequence (0x0D 0x0A). In other words, it's a protocol to send text
+        messages separated by newlines. The protocol has no initial handshake.
+        Terminal handshake is accomplished by each peer sending an empty line.
+    `,
     example: `
         int s = tcp_connect(&addr, -1);
         s = crlf_attach(s);
@@ -71,7 +86,11 @@ crlf_protocol = {
 
 http_protocol = {
     name: "HTTP",
-    info: "HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.",
+    info: `
+        HTTP is an application-level protocol described in RFC 7230. This
+        implementation handles only the request/response exchange. Whatever
+        comes after that must be handled by a different protocol.
+    `,
     example: `
         int s = tcp_connect(&addr, -1);
         s = http_attach(s);
@@ -111,7 +130,12 @@ http_server_example = `
 
 pfx_protocol = {
     name: "PFX",
-    info: "PFX  is a message-based protocol to send binary messages prefixed by 8-byte size in network byte order. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending eight 0xFF bytes.",
+    info: `
+        PFX  is a message-based protocol to send binary messages prefixed by
+        8-byte size in network byte order. The protocol has no initial
+        handshake. Terminal handshake is accomplished by each peer sending eight
+        0xFF bytes.
+    `,
     example: `
         int s = tcp_connect(&addr, -1);
         s = pfx_attach(s);
@@ -125,7 +149,10 @@ pfx_protocol = {
 
 tls_protocol = {
     name: "TLS",
-    info: "TLS is a cryptographic protocol to provide secure communication over the network. It is a bytestream protocol.",
+    info: `
+        TLS is a cryptographic protocol to provide secure communication over
+        the network. It is a bytestream protocol.
+    `,
     example: `
         int s = tcp_connect(&addr, -1);
         s = tls_attach_client(s, -1);
@@ -140,7 +167,11 @@ tls_protocol = {
 
 udp_protocol = {
     name: "UDP",
-    info: "UDP is an unreliable message-based protocol defined in RFC 768. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.",
+    info: `
+        UDP is an unreliable message-based protocol defined in RFC 768. The size
+        of the message is limited. The protocol has no initial or terminal
+        handshake. A single socket can be used to different destinations.
+    `,
     example: `
         struct ipaddr local;
         ipaddr_local(&local, NULL, 5555, 0);
@@ -1134,7 +1165,7 @@ function generate_man_page(fx, mem) {
     }
 
     if(fx.protocol) {
-        t += fx.protocol.info + "\n\n"
+        t += trimrect(fx.protocol.info) + "\n\n"
     }
 
     if(fx.prologue) {

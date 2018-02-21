@@ -12,7 +12,10 @@ int crlf_attach_mem(int s, void* mem);
 
 # DESCRIPTION
 
-CRLF is a message-based protocol that delimits messages usign CR+LF byte sequence (0x0D 0x0A). In other words, it's a protocol to send text messages separated by newlines. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending an empty line.
+CRLF is a message-based protocol that delimits messages usign CR+LF byte
+sequence (0x0D 0x0A). In other words, it's a protocol to send text
+messages separated by newlines. The protocol has no initial handshake.
+Terminal handshake is accomplished by each peer sending an empty line.
 
 This function instantiates CRLF protocol on top of the underlying
 protocol.

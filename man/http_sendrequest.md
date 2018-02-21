@@ -14,7 +14,9 @@ int http_sendrequest(int s, const char* command, const char* resource, int64_t d
 
 **WARNING: This is experimental functionality and the API may change in the future.**
 
-HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.
+HTTP is an application-level protocol described in RFC 7230. This
+implementation handles only the request/response exchange. Whatever
+comes after that must be handled by a different protocol.
 
 This function sends an initial HTTP request with the specified
 command and resource.  For example, if command is **GET** and

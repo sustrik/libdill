@@ -14,7 +14,9 @@ int http_recvstatus(int s, char* reason, size_t reasonlen, int64_t deadline);
 
 **WARNING: This is experimental functionality and the API may change in the future.**
 
-HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.
+HTTP is an application-level protocol described in RFC 7230. This
+implementation handles only the request/response exchange. Whatever
+comes after that must be handled by a different protocol.
 
 This function receives an HTTP status line from the peer.
 

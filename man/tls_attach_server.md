@@ -14,7 +14,8 @@ int tls_attach_server(int s, const char* cert, const char* cert, int64_t deadlin
 
 **WARNING: This is experimental functionality and the API may change in the future.**
 
-TLS is a cryptographic protocol to provide secure communication over the network. It is a bytestream protocol.
+TLS is a cryptographic protocol to provide secure communication over
+the network. It is a bytestream protocol.
 
 This function instantiates TLS protocol on top of the underlying
 protocol. TLS protocol being asymmetric, client and server sides are

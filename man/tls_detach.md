@@ -14,7 +14,8 @@ int tls_detach(int s, int64_t deadline);
 
 **WARNING: This is experimental functionality and the API may change in the future.**
 
-TLS is a cryptographic protocol to provide secure communication over the network. It is a bytestream protocol.
+TLS is a cryptographic protocol to provide secure communication over
+the network. It is a bytestream protocol.
 
 This function does the terminal handshake and returns underlying
 socket to the user. The socket is closed even in the case of error.
