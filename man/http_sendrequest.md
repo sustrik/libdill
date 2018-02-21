@@ -16,7 +16,9 @@ int http_sendrequest(int s, const char* command, const char* resource, int64_t d
 
 HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.
 
-This function sends an initial HTTP request with the specified command and resource.  For example, if command is **GET** and resource is **/index.html** the line sent will look like this:
+This function sends an initial HTTP request with the specified
+command and resource.  For example, if command is **GET** and
+resource is **/index.html** the line sent will look like this:
 
 ```
 GET /index.html HTTP/1.1
@@ -29,7 +31,6 @@ GET /index.html HTTP/1.1
 **resource**: HTTP resource, such as **/index.html**.
 
 **deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
-
 
 This function is not available if libdill is compiled with **--disable-sockets** option.
 

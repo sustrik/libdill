@@ -16,12 +16,14 @@ int tls_attach_client(int s, int64_t deadline);
 
 TLS is a cryptographic protocol to provide secure communication over the network. It is a bytestream protocol.
 
-This function instantiates TLS protocol on top of the underlying protocol. TLS protocol being asymmetric, client and server sides are intialized in different ways. This particular function initializes the client side of the connection.
+This function instantiates TLS protocol on top of the underlying
+protocol. TLS protocol being asymmetric, client and server sides are
+intialized in different ways. This particular function initializes
+the client side of the connection.
 
 **s**: Handle of the underlying socket. It must be a bytestream protocol.
 
 **deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
-
 
 The socket can be cleanly shut down using **tls_detach** function.
 

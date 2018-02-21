@@ -12,12 +12,14 @@ int hdup(int h);
 
 # DESCRIPTION
 
-Duplicates a handle. The new handle will refer to the same underlying object.
+Duplicates a handle. The new handle will refer to the same
+underlying object.
 
 **h**: Handle to duplicate.
 
-
-Each duplicate of a handle requires its own call to **hclose**. The underlying object is deallocated when all handles pointing to it have been closed.
+Each duplicate of a handle requires its own call to **hclose**.
+The underlying object is deallocated when all handles pointing to it
+have been closed.
 
 # RETURN VALUE
 

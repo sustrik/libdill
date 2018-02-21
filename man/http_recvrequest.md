@@ -30,7 +30,6 @@ This function receives an HTTP request from the peer.
 
 **deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
 
-
 This function is not available if libdill is compiled with **--disable-sockets** option.
 
 # RETURN VALUE

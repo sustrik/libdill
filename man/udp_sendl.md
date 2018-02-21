@@ -16,16 +16,22 @@ UDP is an unreliable message-based protocol defined in RFC 768. The size of the 
 
 This function sends an UDP packet.
 
-Given that UDP protocol is unreliable the function has no deadline. If packet cannot be sent it will be silently dropped.
+Given that UDP protocol is unreliable the function has no deadline.
+If packet cannot be sent it will be silently dropped.
 
-This function accepts a linked list of I/O buffers instead of a single buffer. Argument **first** points to the first item in the list, **last** points to the last buffer in the list. The list represents a single, fragmented message, not a list of multiple messages. Structure **iolist** has the following members:
+This function accepts a linked list of I/O buffers instead of a
+single buffer. Argument **first** points to the first item in the
+list, **last** points to the last buffer in the list. The list
+represents a single, fragmented message, not a list of multiple
+messages. Structure **iolist** has the following members:
 
-              void *iol_base;          /* Pointer to the buffer. */
-              size_t iol_len;          /* Size of the buffer. */
-              struct iolist *iol_next; /* Next buffer in the list. */
-              int iol_rsvd;            /* Reserved. Must be set to zero. */
+    void *iol_base;          /* Pointer to the buffer. */
+    size_t iol_len;          /* Size of the buffer. */
+    struct iolist *iol_next; /* Next buffer in the list. */
+    int iol_rsvd;            /* Reserved. Must be set to zero. */
 
-The function returns **EINVAL** error in case the list is malformed or if it contains loops.
+The function returns **EINVAL** error in case the list is malformed
+or if it contains loops.
 
 **s**: Handle of the UDP socket.
 
@@ -34,7 +40,6 @@ The function returns **EINVAL** error in case the list is malformed or if it con
 **first**: Pointer to the first item of a linked list of I/O buffers.
 
 **last**: Pointer to the last item of a linked list of I/O buffers.
-
 
 This function is not available if libdill is compiled with **--disable-sockets** option.
 

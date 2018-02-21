@@ -14,14 +14,17 @@ int pfx_attach_mem(int s, void* mem);
 
 PFX  is a message-based protocol to send binary messages prefixed by 8-byte size in network byte order. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending eight 0xFF bytes.
 
-This function instantiates PFX protocol on top of the underlying protocol.
+This function instantiates PFX protocol on top of the underlying
+protocol.
 
-This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use **pfx_attach** instead.
+    This function allows to avoid one dynamic memory allocation by
+    storing the object in user-supplied memory. Unless you are
+    hyper-optimizing use **
+pfx_attach** instead.
 
 **s**: Handle of the underlying socket. It must be a bytestream protocol.
 
 **mem**: The memory to store the newly created object. It must be at least **PFX_SIZE** bytes long and must not be deallocated before the object is closed.
-
 
 The socket can be cleanly shut down using **pfx_detach** function.
 

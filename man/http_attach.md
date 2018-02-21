@@ -16,10 +16,10 @@ int http_attach(int s);
 
 HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.
 
-This function instantiates HTTP protocol on top of the underlying protocol.
+This function instantiates HTTP protocol on top of the underlying
+protocol.
 
 **s**: Handle of the underlying socket. It must be a bytestream protocol.
-
 
 The socket can be cleanly shut down using **http_detach** function.
 

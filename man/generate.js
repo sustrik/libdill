@@ -171,13 +171,16 @@ fxs = [
            },
         ],
         protocol: crlf_protocol,
-        prologue: "This function instantiates CRLF protocol on top of the underlying protocol.",
-        epilogue: "The socket can be cleanly shut down using **crlf_detach** function.",
-
+        prologue: `
+            This function instantiates CRLF protocol on top of the underlying
+            protocol.
+        `,
+        epilogue: `
+            The socket can be cleanly shut down using **crlf_detach** function.
+        `,
         has_handle_argument: true,
         allocates_handle: true,
         mem: "CRLF_SIZE",
-
         custom_errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
         },
@@ -199,8 +202,10 @@ fxs = [
            },
         ],
         protocol: crlf_protocol,
-        prologue: "This function does the terminal handshake and returns underlying socket to the user. The socket is closed even in the case of error.",
-
+        prologue: `
+            This function does the terminal handshake and returns underlying
+            socket to the user. The socket is closed even in the case of error.
+        `,
         has_handle_argument: true,
         has_deadline: true,
         uses_connection: true,
@@ -228,9 +233,15 @@ fxs = [
 
         allocates_handle: true,
 
-        prologue: "Duplicates a handle. The new handle will refer to the same underlying object.",
-        epilogue: "Each duplicate of a handle requires its own call to **hclose**. The underlying object is deallocated when all handles pointing to it have been closed.",
-
+        prologue: `
+            Duplicates a handle. The new handle will refer to the same
+            underlying object.
+        `,
+        epilogue: `
+            Each duplicate of a handle requires its own call to **hclose**.
+            The underlying object is deallocated when all handles pointing to it
+            have been closed.
+        `,
         errors: ["EBADF"],
     },
     {
@@ -257,18 +268,23 @@ fxs = [
             }
         ],
 
-        prologue:
-`A handle is the user-space equivalent of a file descriptor. Coroutines and channels are represented by handles.
+        prologue: `
+            A handle is the user-space equivalent of a file descriptor.
+            Coroutines and channels are represented by handles.
 
-Unlike with file descriptors, however, you can use the **hmake** function to create your own type of handle.
+            Unlike with file descriptors, however, you can use the **hmake**
+            function to create your own type of handle.
 
-The argument of the function is a virtual-function table of operations associated with the handle.
+            The argument of the function is a virtual-function table of
+            operations associated with the handle.
 
-When implementing the **close** operation, keep in mind that invoking blocking
-operations is not allowed, as blocking operations invoked within the context of
-a **close** operation will fail with an **ECANCELED** error.
+            When implementing the **close** operation, keep in mind that
+            invoking blocking operations is not allowed, as blocking operations
+            invoked within the context of a **close** operation will fail with
+            an **ECANCELED** error.
 
-To close a handle, use the **hclose** function.`,
+            To close a handle, use the **hclose** function.
+        `,
 
         errors: ["ECANCELED", "EINVAL", "ENOMEM"],
     },
@@ -288,9 +304,13 @@ To close a handle, use the **hclose** function.`,
            },
         ],
         protocol: http_protocol,
-        prologue: "This function instantiates HTTP protocol on top of the underlying protocol.",
-        epilogue: "The socket can be cleanly shut down using **http_detach** function.",
-
+        prologue: `
+            This function instantiates HTTP protocol on top of the underlying
+            protocol.
+        `,
+        epilogue: `
+            The socket can be cleanly shut down using **http_detach** function.
+        `,
         has_handle_argument: true,
         allocates_handle: true,
         mem: "HTTP_SIZE",
@@ -315,7 +335,10 @@ To close a handle, use the **hclose** function.`,
            },
         ],
         protocol: http_protocol,
-        prologue: "This function does the terminal handshake and returns underlying socket to the user. The socket is closed even in the case of error.",
+        prologue: `
+            This function does the terminal handshake and returns underlying
+            socket to the user. The socket is closed even in the case of error.
+        `,
 
         has_handle_argument: true,
         has_deadline: true,
@@ -475,7 +498,20 @@ To close a handle, use the **hclose** function.`,
            },
         ],
         protocol: http_protocol,
-        prologue: "This function sends an HTTP field, i.e. a name/value pair, to the peer. For example, if name is **Host** and resource is **www.example.org** the line sent will look like this:\n\n```\nHost: www.example.org\n```\n\nAfter sending the last field of HTTP request don't forget to call **hdone** on the socket. It will send an empty line to the server to let it know that the request is finished and it should start processing it.",
+        prologue: `
+            This function sends an HTTP field, i.e. a name/value pair, to the
+            peer. For example, if name is **Host** and resource is
+            **www.example.org** the line sent will look like this:
+
+            \`\`\`
+            Host: www.example.org
+            \`\`\`
+
+            After sending the last field of HTTP request don't forget to call
+            **hdone** on the socket. It will send an empty line to the server to
+            let it know that the request is finished and it should start
+            processing it.
+        `,
         has_handle_argument: true,
         has_deadline: true,
         uses_connection: true,
@@ -508,7 +544,15 @@ To close a handle, use the **hclose** function.`,
            },
         ],
         protocol: http_protocol,
-        prologue: "This function sends an initial HTTP request with the specified command and resource.  For example, if command is **GET** and resource is **/index.html** the line sent will look like this:\n\n```\nGET /index.html HTTP/1.1\n```",
+        prologue: `
+            This function sends an initial HTTP request with the specified
+            command and resource.  For example, if command is **GET** and
+            resource is **/index.html** the line sent will look like this:
+
+            \`\`\`
+            GET /index.html HTTP/1.1
+            \`\`\`
+        `,
         has_handle_argument: true,
         has_deadline: true,
         uses_connection: true,
@@ -541,7 +585,16 @@ To close a handle, use the **hclose** function.`,
            },
         ],
         protocol: http_protocol,
-        prologue: "This function sends an HTTP status line to the peer. It is meant to be done at the beginning of the HTTP response. For example, if status is 404 and reason is 'Not found' the line sent will look like this:\n\n```\nHTTP/1.1 404 Not found\n```",
+        prologue: `
+            This function sends an HTTP status line to the peer. It is meant to
+            be done at the beginning of the HTTP response. For example, if
+            status is 404 and reason is 'Not found' the line sent will look like
+            this:
+
+            \`\`\`
+            HTTP/1.1 404 Not found
+            \`\`\`
+        `,
         has_handle_argument: true,
         has_deadline: true,
         uses_connection: true,
@@ -560,15 +613,18 @@ To close a handle, use the **hclose** function.`,
         args: [
         ],
 
-        prologue:
-`Returns current time, in milliseconds.
+        prologue: `
+            Returns current time, in milliseconds.
 
-The function is meant for creating deadlines. For example, a point of time one second from now can be expressed as **now() + 1000**.
+            The function is meant for creating deadlines. For example, a point
+            of time one second from now can be expressed as **now() + 1000**.
 
-The following values have special meaning and cannot be returned by the function:
+            The following values have special meaning and cannot be returned by
+            the function:
 
-* 0: Immediate deadline.
-* -1: Infinite deadline.`,
+            * 0: Immediate deadline.
+            * -1: Infinite deadline.
+        `,
 
         example: `
             int result = chrecv(ch, &val, sizeof(val), now() + 1000);
@@ -593,7 +649,10 @@ The following values have special meaning and cannot be returned by the function
            },
         ],
         protocol: pfx_protocol,
-        prologue: "This function instantiates PFX protocol on top of the underlying protocol.",
+        prologue: `
+            This function instantiates PFX protocol on top of the underlying
+            protocol.
+        `,
         epilogue: "The socket can be cleanly shut down using **pfx_detach** function.",
 
         has_handle_argument: true,
@@ -621,7 +680,10 @@ The following values have special meaning and cannot be returned by the function
            },
         ],
         protocol: pfx_protocol,
-        prologue: "This function does the terminal handshake and returns underlying socket to the user. The socket is closed even in the case of error.",
+        prologue: `
+            This function does the terminal handshake and returns underlying
+            socket to the user. The socket is closed even in the case of error.
+        `,
 
         has_handle_argument: true,
         has_deadline: true,
@@ -647,9 +709,15 @@ The following values have special meaning and cannot be returned by the function
            },
         ],
         protocol: tls_protocol,
-        prologue: "This function instantiates TLS protocol on top of the underlying protocol. TLS protocol being asymmetric, client and server sides are intialized in different ways. This particular function initializes the client side of the connection.",
-        epilogue: "The socket can be cleanly shut down using **tls_detach** function.",
-
+        prologue: `
+            This function instantiates TLS protocol on top of the underlying
+            protocol. TLS protocol being asymmetric, client and server sides are
+            intialized in different ways. This particular function initializes
+            the client side of the connection.
+        `,
+        epilogue: `
+            The socket can be cleanly shut down using **tls_detach** function.
+        `,
         has_handle_argument: true,
         has_deadline: true,
         allocates_handle: true,
@@ -687,9 +755,15 @@ The following values have special meaning and cannot be returned by the function
            },
         ],
         protocol: tls_protocol,
-        prologue: "This function instantiates TLS protocol on top of the underlying protocol. TLS protocol being asymmetric, client and server sides are intialized in different ways. This particular function initializes the server side of the connection.",
-        epilogue: "The socket can be cleanly shut down using **tls_detach** function.",
-
+        prologue: `
+            This function instantiates TLS protocol on top of the underlying
+            protocol. TLS protocol being asymmetric, client and server sides are
+            intialized in different ways. This particular function initializes
+            the server side of the connection.
+        `,
+        epilogue: `
+            The socket can be cleanly shut down using **tls_detach** function.
+        `,
         has_handle_argument: true,
         has_deadline: true,
         allocates_handle: true,
@@ -729,7 +803,10 @@ The following values have special meaning and cannot be returned by the function
            },
         ],
         protocol: tls_protocol,
-        prologue: "This function does the terminal handshake and returns underlying socket to the user. The socket is closed even in the case of error.",
+        prologue: `
+            This function does the terminal handshake and returns underlying
+            socket to the user. The socket is closed even in the case of error.
+        `,
 
         has_handle_argument: true,
         has_deadline: true,
@@ -870,7 +947,12 @@ The following values have special meaning and cannot be returned by the function
            },
         ],
         protocol: udp_protocol,
-        prologue: "This function sends an UDP packet.\n\nGiven that UDP protocol is unreliable the function has no deadline. If packet cannot be sent it will be silently dropped.",
+        prologue: `
+            This function sends an UDP packet.
+
+            Given that UDP protocol is unreliable the function has no deadline.
+            If packet cannot be sent it will be silently dropped.
+        `,
 
         has_handle_argument: true,
         has_deadline: false,
@@ -901,7 +983,12 @@ The following values have special meaning and cannot be returned by the function
            },
         ],
         protocol: udp_protocol,
-        prologue: "This function sends an UDP packet.\n\nGiven that UDP protocol is unreliable the function has no deadline. If packet cannot be sent it will be silently dropped.",
+        prologue: `
+            This function sends an UDP packet.
+
+            Given that UDP protocol is unreliable the function has no deadline.
+            If packet cannot be sent it will be silently dropped.
+        `,
 
         has_handle_argument: true,
         has_iol: true,
@@ -922,10 +1009,13 @@ The following values have special meaning and cannot be returned by the function
         args: [
         ],
 
-        prologue:
-`By calling this function, you give other coroutines a chance to run.
+        prologue: `
+            By calling this function, you give other coroutines a chance to run.
 
-You should consider using **yield** when doing lengthy computations which don't have natural coroutine switching points such as socket or channel operations or msleep.`,
+            You should consider using **yield** when doing lengthy computations
+            which don't have natural coroutine switching points such as socket
+            or channel operations or msleep.
+        `,
 
         errors: ["ECANCELED"],
 
@@ -942,13 +1032,23 @@ You should consider using **yield** when doing lengthy computations which don't 
 function trimrect(t) {
     // Trim empty lines at the top and the bottom.
     var lns = t.split("\n")
-    var lines = []
-    for(var i = 0; i < lns.length; i++) {
-        if(lns[i].trim().length > 0) lines.push(lns[i])
-    }
+    //var lines = []
+    //for(var i = 0; i < lns.length; i++) {
+    //    if(lns[i].trim().length > 0) lines.push(lns[i])
+    //}
+
+
+    var first = lns.findIndex(function(e) {return e.trim().length > 0})
+    if(first < 0) first = 0
+    var last = lns.slice().reverse().findIndex(function(e) {return e.trim().length > 0})
+    if(last < 0) last = lns.length
+    else last = lns.length - last
+    var lines = lns.slice(first, last)
+
     // Determine minimal left indent.
     var indent = -1
     for(var i = 0; i < lines.length; i++) {
+        if(lines[i].trim().length == 0) continue
         var n = lines[i].length - lines[i].trimLeft().length
         if(n < indent || indent == -1) indent = n
     }
@@ -1029,31 +1129,42 @@ function generate_man_page(fx, mem) {
     t += "# DESCRIPTION\n\n"
 
     if(fx.experimental || (fx.protocol && fx.protocol.experimental)) {
-        t += "**WARNING: This is experimental functionality and the API may change in the future.**\n\n"
+        t += "**WARNING: This is experimental functionality and the API may " +
+             "change in the future.**\n\n"
     }
 
-    if(fx.protocol != undefined) {
+    if(fx.protocol) {
         t += fx.protocol.info + "\n\n"
     }
 
-    if(fx.prologue != undefined) {
-        t += fx.prologue + "\n\n"
+    if(fx.prologue) {
+        t += trimrect(fx.prologue) + "\n\n"
     }
 
     if(fx.has_iol) {
-        t +=
-`This function accepts a linked list of I/O buffers instead of a single buffer. Argument **first** points to the first item in the list, **last** points to the last buffer in the list. The list represents a single, fragmented message, not a list of multiple messages. Structure **iolist** has the following members:
+        t += trimrect(`
+            This function accepts a linked list of I/O buffers instead of a
+            single buffer. Argument **first** points to the first item in the
+            list, **last** points to the last buffer in the list. The list
+            represents a single, fragmented message, not a list of multiple
+            messages. Structure **iolist** has the following members:
 
-              void *iol_base;          /* Pointer to the buffer. */
-              size_t iol_len;          /* Size of the buffer. */
-              struct iolist *iol_next; /* Next buffer in the list. */
-              int iol_rsvd;            /* Reserved. Must be set to zero. */
+                void *iol_base;          /* Pointer to the buffer. */
+                size_t iol_len;          /* Size of the buffer. */
+                struct iolist *iol_next; /* Next buffer in the list. */
+                int iol_rsvd;            /* Reserved. Must be set to zero. */
 
-The function returns **EINVAL** error in case the list is malformed or if it contains loops.` + "\n\n"
+            The function returns **EINVAL** error in case the list is malformed
+            or if it contains loops.
+        ` )+ "\n\n"
     }
 
     if(mem) {
-        t += "This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use **" + fx.name + "** instead.\n\n"
+        t += trimrect(`
+            This function allows to avoid one dynamic memory allocation by
+            storing the object in user-supplied memory. Unless you are
+            hyper-optimizing use **
+        ` + fx.name + "** instead.") + "\n\n"
     }
 
     for(var j = 0; j < a.length; j++) {
@@ -1061,16 +1172,16 @@ The function returns **EINVAL** error in case the list is malformed or if it con
         t += "**" + arg.name + "**: " + arg.info + "\n\n"
     }
 
-    t += "\n"
-
     if(fx.epilogue) {
-        t += fx.epilogue + "\n\n"
+        t += trimrect(fx.epilogue) + "\n\n"
     }
 
     if(fx.protocol) {
-        t += "This function is not available if libdill is compiled with **--disable-sockets** option.\n\n"
+        t += "This function is not available if libdill is compiled with " +
+             "**--disable-sockets** option.\n\n"
         if(fx.protocol.name == "TLS") {
-            t += "This function is not available if libdill is compiled without **--enable-tls** option.\n\n"
+            t += "This function is not available if libdill is compiled " +
+                 "without **--enable-tls** option.\n\n"
         }
     }
 
@@ -1081,8 +1192,10 @@ The function returns **EINVAL** error in case the list is malformed or if it con
     if(fx.result.info) {
         t += fx.result.info + "\n\n"
     } else {
-        t += "In case of success the function returns " + fx.result.success + ". "
-        t += "In case of error it returns " + fx.result.error + " and sets **errno** to one of the values below.\n\n"
+        t += "In case of success the function returns " + fx.result.success +
+            ". "
+        t += "In case of error it returns " + fx.result.error +
+            " and sets **errno** to one of the values below.\n\n"
     }
 
     /**************************************************************************/

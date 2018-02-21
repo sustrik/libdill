@@ -16,7 +16,8 @@ UDP is an unreliable message-based protocol defined in RFC 768. The size of the 
 
 This function sends an UDP packet.
 
-Given that UDP protocol is unreliable the function has no deadline. If packet cannot be sent it will be silently dropped.
+Given that UDP protocol is unreliable the function has no deadline.
+If packet cannot be sent it will be silently dropped.
 
 **s**: Handle of the UDP socket.
 
@@ -25,7 +26,6 @@ Given that UDP protocol is unreliable the function has no deadline. If packet ca
 **buf**: Data to send.
 
 **len**: Number of bytes to send.
-
 
 This function is not available if libdill is compiled with **--disable-sockets** option.
 

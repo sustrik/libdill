@@ -14,8 +14,9 @@ int yield(void);
 
 By calling this function, you give other coroutines a chance to run.
 
-You should consider using **yield** when doing lengthy computations which don't have natural coroutine switching points such as socket or channel operations or msleep.
-
+You should consider using **yield** when doing lengthy computations
+which don't have natural coroutine switching points such as socket
+or channel operations or msleep.
 
 # RETURN VALUE
 

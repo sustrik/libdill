@@ -20,7 +20,6 @@ This function creates an UDP socket.
 
 **remote**: IP address used as default destination for outbound packets. It is used when destination address in **udp_send** function is set to **NULL**. It is also used by **msend** and **mrecv** functions which don't allow to specify the destination address explicitly.
 
-
 To close this socket use **hclose** function.
 
 This function is not available if libdill is compiled with **--disable-sockets** option.

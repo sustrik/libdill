@@ -14,10 +14,10 @@ int crlf_attach(int s);
 
 CRLF is a message-based protocol that delimits messages usign CR+LF byte sequence (0x0D 0x0A). In other words, it's a protocol to send text messages separated by newlines. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending an empty line.
 
-This function instantiates CRLF protocol on top of the underlying protocol.
+This function instantiates CRLF protocol on top of the underlying
+protocol.
 
 **s**: Handle of the underlying socket. It must be a bytestream protocol.
-
 
 The socket can be cleanly shut down using **crlf_detach** function.
 

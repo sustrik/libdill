@@ -16,14 +16,16 @@ UDP is an unreliable message-based protocol defined in RFC 768. The size of the 
 
 This function creates an UDP socket.
 
-This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use **udp_open** instead.
+    This function allows to avoid one dynamic memory allocation by
+    storing the object in user-supplied memory. Unless you are
+    hyper-optimizing use **
+udp_open** instead.
 
 **local**: IP  address to be used to set source IP address in outgoing packets. Also, the socket will receive packets sent to this address. If port in the address is set to zero an ephemeral port will be chosen and filled into the local address.
 
 **remote**: IP address used as default destination for outbound packets. It is used when destination address in **udp_send** function is set to **NULL**. It is also used by **msend** and **mrecv** functions which don't allow to specify the destination address explicitly.
 
 **mem**: The memory to store the newly created object. It must be at least **UDP_SIZE** bytes long and must not be deallocated before the object is closed.
-
 
 To close this socket use **hclose** function.
 

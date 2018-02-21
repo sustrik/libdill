@@ -16,7 +16,10 @@ int http_sendstatus(int s, int status, const char* reason, int64_t deadline);
 
 HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.
 
-This function sends an HTTP status line to the peer. It is meant to be done at the beginning of the HTTP response. For example, if status is 404 and reason is 'Not found' the line sent will look like this:
+This function sends an HTTP status line to the peer. It is meant to
+be done at the beginning of the HTTP response. For example, if
+status is 404 and reason is 'Not found' the line sent will look like
+this:
 
 ```
 HTTP/1.1 404 Not found
@@ -29,7 +32,6 @@ HTTP/1.1 404 Not found
 **reason**: Reason string such as 'OK' or 'Not found'.
 
 **deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
-
 
 This function is not available if libdill is compiled with **--disable-sockets** option.
 
