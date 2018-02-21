@@ -173,6 +173,30 @@ fxs = [
         },
     },
     {
+        name: "hdup",
+        info: "duplicates a handle",
+
+        result: {
+            type: "int",
+            success: "newly duplicated handle",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "h",
+                type: "int",
+                info: "Handle to duplicate.",
+            }
+        ],
+
+        allocates_handle: true,
+
+        prologue: "Duplicates a handle. The new handle will refer to the same underlying object.",
+        epilogue: "Each duplicate of a handle requires its own call to **hclose**. The underlying object is deallocated when all handles pointing to it have been closed.",
+
+        errors: "EBADF ",
+    },
+    {
         name: "hmake",
         info: "creates a handle",
         is_in_libdillimpl: true,

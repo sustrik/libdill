@@ -4,30 +4,29 @@ hdup - duplicates a handle
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int hdup(int** _h_**);**
+int hdup(int h);
+```
 
 # DESCRIPTION
 
 Duplicates a handle. The new handle will refer to the same underlying object.
 
+**h**: Handle to duplicate.
+
+
 Each duplicate of a handle requires its own call to **hclose**. The underlying object is deallocated when all handles pointing to it have been closed.
 
 # RETURN VALUE
 
-Returns the new handle duplicate on success. On error, -1 is returned and _errno_ is set to one of the following values.
+In case of success the function returns newly duplicated handle. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
-* **EBADF**: Invalid handle.
-
-# EXAMPLE
-
-```c
-int ch1 = chmake(sizeof(int));
-int ch2 = hdup(ch1);
-hclose(ch2);
-hclose(ch1);
-```
+* **EBADF**: Invalid socket handle.
+* **EMFILE**: The maximum number of file descriptors in the process are already open.
+* **ENFILE**: The maximum number of file descriptors in the system are already open.
+* **ENOMEM**: Not enough memory.
 
