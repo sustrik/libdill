@@ -227,6 +227,8 @@ fxs = [
             /* Cancel any workers that are still running. */
             hclose(b);
         `,
+
+        mem: "BUNDLE_SIZE",
     },
     {
         name: "crlf_attach",
