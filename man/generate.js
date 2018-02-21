@@ -908,6 +908,26 @@ for(i = 0; i != 1000000; ++i) {
     },
 ]
 
+/*
+    Schema:
+
+    name: name of the function
+    info: short description of the function
+    result: { // omit this field for void functions
+        type: return type of the function
+    }
+    args: [ // may be ommited for functions with no arguments
+        {
+            name: name of the argument
+            type: type of the argument
+            info: description of the argument
+        }
+    ]
+    prologue: the part of the description of the function to go before the list of arguments
+    epilogue: the part of the description of the function to go after the list of arguments
+    example: example of the usage of the function, a piece of C code
+*/
+
 function generate_man_page(fx, mem) {
     var t = "";
 
