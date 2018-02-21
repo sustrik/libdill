@@ -934,15 +934,40 @@ function generate_man_page(fx, mem) {
     t += fx.result.type + " " + fx.name
     if(mem) t += "_mem"
     t += "("
-    for(var j = 0; j < fx.args.length; j++) {
-        arg = fx.args[j]
-        t += arg.type + " " + arg.name
-        if(j != fx.args.length - 1) t += ", "
+    var a = fx.args.slice()
+
+    if(fx.has_iol) {
+        a.push({
+            name: "first",
+            type: "struct iolist*",
+            info: "Pointer to the first item of a linked list of I/O buffers.",
+        })
+        a.push({
+            name: "last",
+            type: "struct iolist*",
+            info: "Pointer to the last item of a linked list of I/O buffers.",
+        })
     }
-    if(fx.has_iol) t += ", struct iolist* first, struct iolist* last"
-    if(mem) t += ", void* mem"
-    if(fx.has_deadline) t += ", int64_t deadline"
-    if(fx.args.length == 0 && !fx.has_iol && !mem && !fx.has_deadline) t += "void"
+    if(mem) {
+        a.push({
+            name: "mem",
+            type: "void*",
+            info: "The memory to store the newly created object. It must be at least **" + fx.mem + "** bytes long and must not be deallocated before the object is closed.",
+        })
+    }
+    if(fx.has_deadline) {
+        a.push({
+            name: "deadline",
+            type: "int64_t",
+            info: "A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.",
+        })
+    }
+
+    for(var j = 0; j < a.length; j++) {
+        t += a[j].type + " " + a[j].name
+        if(j != a.length - 1) t += ", "
+    }
+    if(a.length == 0 && !fx.has_iol && !mem && !fx.has_deadline) t += "void"
     t += ");\n```\n\n"
 
     /**************************************************************************/
@@ -978,31 +1003,18 @@ The function returns **EINVAL** error in case the list is malformed or if it con
         t += "This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use **" + fx.name + "** instead.\n\n"
     }
 
-    for(var j = 0; j < fx.args.length; j++) {
-        arg = fx.args[j]
+    for(var j = 0; j < a.length; j++) {
+        arg = a[j]
         t += "**" + arg.name + "**: " + arg.info + "\n\n"
-    }
-
-    if(fx.has_iol) {
-        t += "**first**: Pointer to the first item of a linked list of I/O buffers.\n\n"
-        t += "**last**: Pointer to the last item of a linked list of I/O buffers.\n\n"
-    }
-
-    if(mem) {
-        t += "**mem**: The memory to store the newly created object. It must be at least **" + fx.mem + "** bytes long and must not be deallocated before the object is closed.\n\n"
-    }
-
-    if(fx.has_deadline) {
-        t += "**deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.\n\n"
     }
 
     t += "\n"
 
-    if(fx.epilogue != undefined) {
+    if(fx.epilogue) {
         t += fx.epilogue + "\n\n"
     }
 
-    if(fx.protocol != undefined) {
+    if(fx.protocol) {
         t += "This function is not available if libdill is compiled with **--disable-sockets** option.\n\n"
         if(fx.protocol.name == "TLS") {
             t += "This function is not available if libdill is compiled without **--enable-tls** option.\n\n"
