@@ -194,7 +194,7 @@ fxs = [
         prologue: "Duplicates a handle. The new handle will refer to the same underlying object.",
         epilogue: "Each duplicate of a handle requires its own call to **hclose**. The underlying object is deallocated when all handles pointing to it have been closed.",
 
-        errors: "EBADF ",
+        errors: ["EBADF"],
     },
     {
         name: "hmake",
@@ -233,7 +233,7 @@ a **close** operation will fail with an **ECANCELED** error.
 
 To close a handle, use the **hclose** function.`,
 
-        errors: "ECANCELED EINVAL ENOMEM",
+        errors: ["ECANCELED", "EINVAL", "ENOMEM"],
     },
     {
         name: "http_attach",
@@ -330,7 +330,7 @@ To close a handle, use the **hclose** function.`,
         has_deadline: true,
         uses_connection: true,
 
-        errors: "EINVAL EMSGSIZE ",
+        errors: ["EINVAL", "EMSGSIZE"],
         custom_errors: {
             EPIPE: "There are no more fields to receive."
         }
@@ -378,7 +378,7 @@ To close a handle, use the **hclose** function.`,
         allocates_handle: false,
         uses_connection: true,
 
-        errors: "EINVAL EMSGSIZE ",
+        errors: ["EINVAL", "EMSGSIZE"],
 
         example: http_server_example,
     },
@@ -413,7 +413,7 @@ To close a handle, use the **hclose** function.`,
         has_deadline: true,
         uses_connection: true,
 
-        errors: "EINVAL EMSGSIZE ",
+        errors: ["EINVAL", "EMSGSIZE"],
     },
     {
         name: "http_sendfield",
@@ -446,7 +446,7 @@ To close a handle, use the **hclose** function.`,
         has_deadline: true,
         uses_connection: true,
 
-        errors: "EINVAL ",
+        errors: ["EINVAL"],
     },
     {
         name: "http_sendrequest",
@@ -479,7 +479,7 @@ To close a handle, use the **hclose** function.`,
         has_deadline: true,
         uses_connection: true,
 
-        errors: "EINVAL ",
+        errors: ["EINVAL"],
     },
     {
         name: "http_sendstatus",
@@ -512,7 +512,7 @@ To close a handle, use the **hclose** function.`,
         has_deadline: true,
         uses_connection: true,
 
-        errors: "EINVAL ",
+        errors: ["EINVAL"],
 
         example: http_server_example,
     },
@@ -666,7 +666,7 @@ if(result == -1 && errno == ETIMEDOUT) {
 
         mem: "TLS_SIZE",
 
-        errors: "EINVAL ",
+        errors: ["EINVAL"],
 
         custom_errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
@@ -736,7 +736,7 @@ tcp_close(s);
         allocates_handle: true,
         mem: "UDP_SIZE",
 
-        errors: "EINVAL ",
+        errors: ["EINVAL"],
         custom_errors: {
             EADDRINUSE: "The local address is already in use.",
             EADDRNOTAVAIL: "The specified address is not available from the local machine.",
@@ -778,7 +778,7 @@ tcp_close(s);
         has_handle_argument: true,
         has_deadline: true,
 
-        errors: "EINVAL EMSGSIZE ",
+        errors: ["EINVAL", "EMSGSIZE"],
     },
     {
         name: "udp_recvl",
@@ -807,7 +807,7 @@ tcp_close(s);
         has_deadline: true,
         has_iol: true,
 
-        errors: "EINVAL EMSGSIZE ",
+        errors: ["EINVAL", "EMSGSIZE"],
     },
     {
         name: "udp_send",
@@ -845,7 +845,7 @@ tcp_close(s);
         has_handle_argument: true,
         has_deadline: false,
 
-        errors: "EINVAL EMSGSIZE ",
+        errors: ["EINVAL", "EMSGSIZE"],
         custom_errors: {
             EMSGSIZE: "The message is too long to fit into an UDP packet.",
         }
@@ -876,7 +876,7 @@ tcp_close(s);
         has_handle_argument: true,
         has_iol: true,
 
-        errors: "EINVAL EMSGSIZE ",
+        errors: ["EINVAL", "EMSGSIZE"],
         custom_errors: {
             EMSGSIZE: "The message is too long to fit into an UDP packet.",
         }
@@ -897,7 +897,7 @@ tcp_close(s);
 
 You should consider using **yield** when doing lengthy computations which don't have natural coroutine switching points such as socket or channel operations or msleep.`,
 
-        errors: "ECANCELED ",
+        errors: ["ECANCELED"],
 
         example: `
 for(i = 0; i != 1000000; ++i) {
@@ -925,7 +925,12 @@ for(i = 0; i != 1000000; ++i) {
     ]
     prologue: the part of the description of the function to go before the list of arguments
     epilogue: the part of the description of the function to go after the list of arguments
+    errors: a list of possible errors, the descriptions will be pulled from standard_errors object
+    custom_errors: [{ // custom errors take precedence over standard errors
+        error name: error description
+    }]
     example: example of the usage of the function, a piece of C code
+    mem: size // if set, _mem variant of the function will be generated; size if the size macro such as TCP_SIZE or UDP_SIZE
 */
 
 function generate_man_page(fx, mem) {
@@ -1056,30 +1061,36 @@ The function returns **EINVAL** error in case the list is malformed or if it con
     /*  ERRORS                                                                */
     /**************************************************************************/
     t += "# ERRORS\n\n"
-    estr = fx.errors
-    if(estr == undefined) estr = ""
+    if(fx.errors) {
+        var errs = fx.errors.slice()
+    }
+    else {
+        var errs = []
+    }
 
-    if(fx.has_handle_argument) estr += "EBADF ENOTSUP "
-    if(fx.has_deadline) estr += "ETIMEDOUT "
-    if(fx.allocates_memory && !mem) estr += "ENOMEM "
-    if(fx.allocates_handle) estr += "EMFILE ENFILE ENOMEM "
-    if(fx.uses_connection) estr += "ECONNRESET ECANCELED "
+    if(fx.has_handle_argument) errs.push("EBADF", "ENOTSUP")
+    if(fx.has_deadline) errs.push("ETIMEDOUT")
+    if(fx.allocates_memory && !mem) errs.push("ENOMEM")
+    if(fx.allocates_handle) errs.push("EMFILE", "ENFILE", "ENOMEM")
+    if(fx.uses_connection) errs.push("ECONNRESET", "ECANCELED")
 
-    var errs = {}
-    estr = estr.trim()
-    if(estr.length == 0) {
+    // Expand error descriptions.
+    var errdict = {}
+    for(var idx = 0; idx < errs.length; idx++) {
+        errdict[errs[idx]] = standard_errors[errs[idx]]
+    }
+
+    // Add custom errors.
+    if(fx.custom_errors) Object.assign(errdict, fx.custom_errors)
+
+    // Print errors in alphabetic order.
+    var codes = Object.keys(errdict).sort()
+    if(codes.length == 0) {
         t += "None.\n"
     }
     else {
-        e = estr.split(" ")
-        for(var idx = 0; idx < e.length; idx++) {
-            errs[e[idx]] = standard_errors[e[idx]]
-        }
-        if(fx.custom_errors) Object.assign(errs, fx.custom_errors)
-        var codes = Object.keys(errs).sort()
         for(var j = 0; j < codes.length; j++) {
-            code = codes[j]
-            t += "* **" + code + "**: " + errs[code] + "\n"
+            t += "* **" + codes[j] + "**: " + errdict[codes[j]] + "\n"
         }
     }
     t += "\n"
