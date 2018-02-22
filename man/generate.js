@@ -291,6 +291,40 @@ fxs = [
         },
     },
     {
+        name: "fdclean",
+        info: "erases cached info about a file descriptor",
+      
+        args: [
+            {
+                name: "fd",
+                type: "int",
+                info: "file descriptor (OS-level one, not a libdill handle)"
+            },
+        ],
+
+        prologue: `
+            This function drops any state that libdill associates with a file
+            descriptor. It has to be called before the file descriptor is
+            closed. If it is not, the behavior is undefined.
+
+            It should also be used whenever you are losing control of the file
+            descriptor. For example, when passing it to a third-party library.
+            Also, if you are handed the file descriptor by third party code
+            you should call this function just before returning it back to the
+            original owner.
+        `,
+
+        example: `
+            int fds[2];
+            pipe(fds);
+            use_the_pipe(fds);
+            fdclean(fds[0]);
+            close(fds[0]);
+            fdclean(fds[1]);
+            close(fds[1]);
+        `,
+    },
+    {
         name: "hdup",
         info: "duplicates a handle",
 
@@ -1177,7 +1211,11 @@ function generate_man_page(fx, mem) {
     if(fx.add_to_synopsis) {
         t += trimrect(fx.add_to_synopsis) + "\n\n"
     }
-    t += fx.result.type + " " + fx.name
+    if(fx.result)
+        var rtype = fx.result.type
+    else
+        var rtype = "void"
+    t += rtype + " " + fx.name
     if(mem) t += "_mem"
     t += "("
     if(fx.args) var a = fx.args.slice()
@@ -1290,13 +1328,17 @@ function generate_man_page(fx, mem) {
     /*  RETURN VALUE                                                          */
     /**************************************************************************/
     t += "# RETURN VALUE\n\n"
-    if(fx.result.info) {
-        t += fx.result.info + "\n\n"
+    if(fx.result) {
+        if(fx.result.info) {
+            t += fx.result.info + "\n\n"
+        } else {
+            t += "In case of success the function returns " + fx.result.success +
+                ". "
+            t += "In case of error it returns " + fx.result.error +
+                " and sets **errno** to one of the values below.\n\n"
+        }
     } else {
-        t += "In case of success the function returns " + fx.result.success +
-            ". "
-        t += "In case of error it returns " + fx.result.error +
-            " and sets **errno** to one of the values below.\n\n"
+        t += "None.\n\n"
     }
 
     /**************************************************************************/
