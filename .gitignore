@@ -1,7 +1,7 @@
 /.idea
 .deps/
 .libs/
-cmake-build-*
+/.cmake-build-*
 Makefile
 Makefile.in
 aclocal.m4
