@@ -26,10 +26,15 @@
 #include "../libdill.h"
 
 coroutine void client(int s) {
-    s = ws_attach_client(s, "/", "www.example.org", WS_TYPE_TEXT, -1);
+    s = wsraw_attach_client(s, WS_TYPE_BINARY, -1);
     errno_assert(s >= 0);
     int rc = msend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
+    char buf[3];
+    ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
+    errno_assert(sz >= 0);
+    assert(sz == 3);
+    assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
 }
 
 int main(void) {
@@ -38,13 +43,19 @@ int main(void) {
     errno_assert(rc == 0);
     int cr = go(client(p[1]));
     errno_assert(cr >= 0);
-    int s = ws_attach_server(p[0], WS_TYPE_TEXT, -1);
+    int s = wsraw_attach_server(p[0], WS_TYPE_BINARY, -1);
     errno_assert(s >= 0);
     char buf[3];
     ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
     errno_assert(sz >= 0);
     assert(sz == 3);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
+    rc = msend(s, "DEF", 3, -1);
+    errno_assert(rc == 0);
+    rc = hdone(cr, -1);
+    errno_assert(rc == 0);
+    rc = hclose(cr);
+    errno_assert(rc == 0);
     
     return 0;
 }

@@ -135,7 +135,8 @@ check_PROGRAMS += \
     tests/pfx \
     tests/udp \
     tests/http \
-    tests/ws
+    tests/ws \
+    tests/wsraw
 endif
 
 if DILL_SOCKETS
