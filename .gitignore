@@ -53,6 +53,7 @@ tests/udp
 tests/tls
 tests/bundle
 tests/http
+tests/ws
 perf/.dirstamp
 perf/chan
 perf/ctxswitch

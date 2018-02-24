@@ -92,7 +92,11 @@ error2:
 error1:
     errno = err;
     return -1;
+}
 
+int http_attach_mem(int s, void *mem) {
+    /* TODO */
+    return http_attach(s);
 }
 
 static int http_hdone(struct hvfs *hvfs, int64_t deadline) {

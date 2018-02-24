@@ -630,6 +630,135 @@ DILL_EXPORT int tls_detach(
 
 #endif
 
+/******************************************************************************/
+/*  Raw WebSockets protocol (only what goes after initial HTTP handshake).    */
+/******************************************************************************/
+
+#if defined(__i386__)
+#  define WSRAW_SIZE 44
+#else
+#  define WSRAW_SIZE 88
+#endif
+
+#define WSRAW_TYPE_BINARY 0
+#define WSRAW_TYPE_TEXT 1
+
+#define WSRAW_KEY_SIZE 32
+
+DILL_EXPORT int wsraw_request_key(
+    char *request_key);
+DILL_EXPORT int wsraw_response_key(
+    const char *request_key,
+    char *response_key);
+DILL_EXPORT int wsraw_attach_client(
+    int s,
+    int type,
+    int64_t deadline);
+DILL_EXPORT int wsraw_attach_client_mem(
+    int s,
+    int type,
+    void *mem,
+    int64_t deadline);
+DILL_EXPORT int wsraw_attach_server(
+    int s,
+    int type,
+    int64_t deadline);
+DILL_EXPORT int wsraw_attach_server_mem(
+    int s,
+    int type,
+    void *mem,
+    int64_t deadline);
+DILL_EXPORT int wsraw_send(
+    int s,
+    int type,
+    const void *buf,
+    size_t len,
+    int64_t deadline);
+DILL_EXPORT ssize_t wsraw_recv(
+    int s,
+    int *type,
+    void *buf,
+    size_t len,
+    int64_t deadline);
+DILL_EXPORT int wsraw_sendl(
+    int s,
+    int type,
+    struct iolist *first,
+    struct iolist *last,
+    int64_t deadline);
+DILL_EXPORT ssize_t wsraw_recvl(
+    int s,
+    int *type,
+    struct iolist *first,
+    struct iolist *last,
+    int64_t deadline);
+DILL_EXPORT int wsraw_detach(
+    int s,
+    int64_t deadline);
+
+/******************************************************************************/
+/*  WebSockets protocol.                                                      */
+/******************************************************************************/
+
+#if defined(__i386__)
+#  define WS_SIZE 128
+#else
+#  define WS_SIZE 256
+#endif
+
+#define WS_TYPE_BINARY WSRAW_TYPE_BINARY
+#define WS_TYPE_TEXT WSRAW_TYPE_TEXT
+
+DILL_EXPORT int ws_attach_client(
+    int s,
+    const char *resource,
+    const char *host,
+    int type,
+    int64_t deadline);
+DILL_EXPORT int ws_attach_client_mem(
+    int s,
+    const char *resource,
+    const char *host,
+    int type,
+    void *mem,
+    int64_t deadline);
+DILL_EXPORT int ws_attach_server(
+    int s,
+    int type,
+    int64_t deadline);
+DILL_EXPORT int ws_attach_server_mem(
+    int s,
+    int type,
+    void *mem,
+    int64_t deadline);
+DILL_EXPORT int ws_send(
+    int s,
+    int type,
+    const void *buf,
+    size_t len,
+    int64_t deadline);
+DILL_EXPORT ssize_t ws_recv(
+    int s,
+    int *type,
+    void *buf,
+    size_t len,
+    int64_t deadline);
+DILL_EXPORT int ws_sendl(
+    int s,
+    int type,
+    struct iolist *first,
+    struct iolist *last,
+    int64_t deadline);
+DILL_EXPORT ssize_t ws_recvl(
+    int s,
+    int *type,
+    struct iolist *first,
+    struct iolist *last,
+    int64_t deadline);
+DILL_EXPORT int ws_detach(
+    int s,
+    int64_t deadline);
+
 #endif
 
 #endif
