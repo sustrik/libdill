@@ -1007,7 +1007,7 @@ fxs = [
         info: "returns length of the address",
         result: {
             type: "int",
-            info: "length of the IP address",
+            info: "Length of the IP address.",
         },
         args: [
             {

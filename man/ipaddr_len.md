@@ -20,7 +20,7 @@ length to POSIX socket APIs.
 
 # RETURN VALUE
 
-length of the IP address
+Length of the IP address.
 
 # ERRORS
 
