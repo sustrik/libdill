@@ -542,6 +542,11 @@ fxs = [
         },
 
         example: `
+            http_sendrequest(s, "GET", "/" -1);
+            http_sendfield(s, "Host", "www.example.org", -1);
+            hdone(s, -1);
+            char reason[256];
+            int status = http_recvstatus(s, reason, sizeof(reason), -1);
         `
     },
     {

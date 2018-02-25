@@ -44,6 +44,9 @@ In case of success the function returns 0. In case of error it returns -1 and se
 # EXAMPLE
 
 ```c
-
-
+http_sendrequest(s, "GET", "/" -1);
+http_sendfield(s, "Host", "www.example.org", -1);
+hdone(s, -1);
+char reason[256];
+int status = http_recvstatus(s, reason, sizeof(reason), -1);
 ```
