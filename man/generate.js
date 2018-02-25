@@ -467,13 +467,16 @@ fxs = [
             success: "0",
             error: "-1",
         },
+
         args: [
             {
                 name: "h",
                 type: "int",
-                info: "Handle to close.",
-            }
+                info: "The handle.",
+            },
         ],
+    
+        has_handle_argument: true,
 
         prologue: `
             This function closes a handle. Once all handles pointing to the same
@@ -490,13 +493,55 @@ fxs = [
             beneath it.
         `,
 
-        errors: ["EBADF"],
-
         example: `
             int ch[2];
             chmake(ch);
             hclose(ch[0]);
             hclose(ch[1]);
+        `
+    },
+    {
+        name: "hdone",
+        info: "announce end of input to a handle",
+
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+
+        args: [
+            {
+                name: "h",
+                type: "int",
+                info: "The handle.",
+            },
+        ],
+
+        has_handle_argument: true,
+        has_deadline: true,
+
+        prologue: `
+            This function is used to inform the handle that there will be no
+            more input. This gives it time to finish it's work and possibly
+            inform the user when it is safe to close the handle.
+
+            For example, in case of TCP protocol handle, hdone would send out
+            a FIN packet. However, it does not wait until it is acknowledged
+            by the peer.
+ 
+            After hdone is called on a handle, any attempts to send more data
+            to the handle will result in EPIPE error.
+
+           Handle implementation may also decide to prevent any further
+           receiving of data and return EPIPE error instead.
+        `,
+
+        custom_errors: {
+            "EPIPE": "Pipe broken. **hdone** was already called either on this or the other side of the connection."
+        },
+
+        example: `
         `
     },
     {

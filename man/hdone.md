@@ -4,36 +4,46 @@ hdone - announce end of input to a handle
 
 # SYNOPSIS
 
-**#include** **&lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int hdone(int** _h_**, int64_t** _deadline_**);**
+int hdone(int h, int64_t deadline);
+```
 
 # DESCRIPTION
 
-This function is used to inform the handle that there will be no more input. This gives it time to finish it's work and possibly inform the user when it is safe to close the handle.
+ This function is used to inform the handle that there will be no
+ more input. This gives it time to finish it's work and possibly
+ inform the user when it is safe to close the handle.
 
-For example, in case of TCP protocol handle, **hdone** sends out a FIN packet. However, it does not wait until it is acknowledged by the peer.
+ For example, in case of TCP protocol handle, hdone would send out
+ a FIN packet. However, it does not wait until it is acknowledged
+ by the peer.
 
-_deadline_ is a point in time when the operation should time out. Use the **now()** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
+ After hdone is called on a handle, any attempts to send more data
+ to the handle will result in EPIPE error.
 
-After **hdone** is called on a handle, any attempts to send more data to the handle will result in **EPIPE** error.
+Handle implementation may also decide to prevent any further
+receiving of data and return EPIPE error instead.
 
-Handle implementation may also decide to prevent any further receiving of data and return **EPIPE** error instead. 
+**h**: The handle.
+
+**deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
 
 # RETURN VALUE
 
-The function returns 0 on success. On error, it returns -1 and sets _errno_ to one of the following values.
+In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
-* **EBADF**: Not a valid handle.
-* **ENOTSUP**: Operation not supported.
-* **EPIPE**:  Pipe broken. Possibly, **hdone** has already been called for this channel.
+* **EBADF**: Invalid socket handle.
+* **ENOTSUP**: The handle does not support this operation.
+* **EPIPE**: Pipe broken. **hdone** was already called either on this or the other side of the connection.
 * **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE
 
 ```c
-int rc = hdone(h);
-```
 
+
+```

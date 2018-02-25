@@ -25,7 +25,7 @@ In the case of network protocol sockets the entire protocol stack
 is closed, the topmost protocol as well as all the protocols
 beneath it.
 
-**h**: Handle to close.
+**h**: The handle.
 
 # RETURN VALUE
 
@@ -34,6 +34,7 @@ In case of success the function returns 0. In case of error it returns -1 and se
 # ERRORS
 
 * **EBADF**: Invalid socket handle.
+* **ENOTSUP**: The handle does not support this operation.
 
 # EXAMPLE
 
