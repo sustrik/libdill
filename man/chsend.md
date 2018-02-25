@@ -7,7 +7,7 @@ chsend - sends a message to a channel
 ```c
 #include <libdill.h>
 
-int chsend(int ch, void* val, size_t len, int64_t deadline);
+int chsend(int ch, const void* val, size_t len, int64_t deadline);
 ```
 
 # DESCRIPTION
@@ -18,8 +18,8 @@ The size of the message sent to the channel must match the size of
 the message requested from the channel. Otherwise, both peers fail
 with **EMSGSIZE** error.
 
-If there's no receiver for the message, the function block until one
-shows up or until the deadline expires.
+If there's no receiver for the message, the function blocks until
+one shows up or until the deadline expires.
 
 **ch**: The channel.
 

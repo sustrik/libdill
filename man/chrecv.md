@@ -1,47 +1,56 @@
 # NAME
 
-chrecv - receive a message from a channel
+chrecv - receives a message from a channel
 
 # SYNOPSIS
 
+```c
+#include <libdill.h>
 
-**#include &lt;libdill.h>**
-
-**int chrecv(int **_ch_**, void **\*_val_**, size_t** _len_**, int64_t** _deadline_**);**
+int chrecv(int ch, void* val, size_t len, int64_t deadline);
+```
 
 # DESCRIPTION
 
-Retrieves a message from a channel. The _ch_ parameter is the channel handle. _val_ points to a buffer to receive the message to. _len_ is the size of the buffer.
+Receives a message from a channel.
 
-The size of the buffer must match the size of the elements stored in the channel as supplied to the **chmake** function.
+The size of the message requested from the channel must match the
+size of the message sent to the channel. Otherwise, both peers fail
+with **EMSGSIZE** error.
 
-If no sender is available, the function waits until one arrives or until the deadline expires.
+If there's no one sending a message at the moment, the function
+blocks until someone shows up or until the deadline expires.
 
-_deadline_ is a point in time when the operation should time out. Use the **now()** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
+**ch**: The channel.
+
+**val**: The buffer to receive the message to.
+
+**len**: Size of the buffer, in bytes.
+
+**deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
 
 # RETURN VALUE
 
-The function returns 0 on success. On error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
 * **EBADF**: Invalid handle.
-* **ECANCELED**: Current coroutine is being shut down.
-* **EINVAL**: Invalid parameter.
-* **EMSGSIZE**: The peer sent a message with different size.
-* **ENOTSUP**: Operation not supported. Presumably, the handle isn't a channel.
-* **EPIPE**: Channel has been closed with **hdone**.
-* **ETIMEDOUT**: Deadline expired while waiting on a message.
+* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **EINVAL**: Invalid argument.
+* **EMSGSIZE**: The peer sent a message of different size.
+* **ENOTSUP**: The handle does not support this operation.
+* **EPIPE**: Channel has been closed with hdone.
+* **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE
 
 ```c
 int val;
-int result = chrecv(ch, &val, sizeof(val), now() + 1000);
-if(result != 0) {
+int rc = chrecv(ch, &val, sizeof(val), now() + 1000);
+if(rc != 0) {
     perror("Cannot receive message");
     exit(1);
 }
 printf("Value %d received.\n", val);
 ```
-
