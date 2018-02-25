@@ -72,6 +72,20 @@ ipaddr_example = `
     connect(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
 `
 
+ipaddr_mode = `
+    Mode specifies which kind of addresses should be returned. Possible
+    values are:
+
+    * **IPADDR_IPV4**: Get IPv4 address.
+    * **IPADDR_IPV6**: Get IPv6 address.
+    * **IPADDR_PREF_IPV4**: Get IPv4 address if possible, IPv6 address otherwise.
+    * **IPADDR_PREF_IPV6**: Get IPv6 address if possible, IPv4 address otherwise.
+
+    Setting the argument to zero invokes default behaviour, which, at the
+    present, is **IPADDR_PREF_IPV4**. However, in the future when IPv6 becomes
+    more common it may be switched to **IPADDR_PREF_IPV6**.
+`
+
 crlf_protocol = {
     name: "CRLF",
     info: `
@@ -1026,6 +1040,53 @@ fxs = [
         example: ipaddr_example,
     },
     {
+        name: "ipaddr_local",
+        info: "resolve the address of a local network interface",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "addr",
+                type: "struct ipaddr*",
+                info: "Out parameter, The IP address object.",
+            },
+            {
+                name: "name",
+                type: "const char*",
+                info: "Name of the local network interface, such as \"eth0\", \"192.168.0.111\" or \"::1\".",
+            },
+            {
+                name: "port",
+                type: "int",
+                info: "Port number. Valid values are 1-65535.",
+            },
+            {
+                name: "mode",
+                type: "int",
+                info: "What kind of address to return. See above.",
+            },
+        ],
+
+        prologue: trimrect(`
+            Converts an IP address in human-readable format, or a name of a
+            local network interface into an **ipaddr** structure.
+        `) + "\n\n" + trimrect(ipaddr_mode),
+
+        custom_errors: {
+            ENODEV: "Local network interface with the specified name does not exist."
+        },
+
+        example: `
+            struct ipaddr addr;
+            ipaddr_local(&addr, "eth0", 5555, 0);
+            int s = socket(ipaddr_family(addr), SOCK_STREAM, 0);
+            bind(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
+        `,
+    },
+    {
         name: "ipaddr_port",
         info: "returns the port part of the address",
         result: {
@@ -1047,6 +1108,50 @@ fxs = [
         example: `
             int port = ipaddr_port(&addr);
         `,
+    },
+    {
+        name: "ipaddr_remote",
+        info: "resolve the address of a remote IP endpoint",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "addr",
+                type: "struct ipaddr*",
+                info: "Out parameter, The IP address object.",
+            },
+            {
+                name: "name",
+                type: "const char*",
+                info: "Name of the remote IP endpoint, such as \"www.example.org\" or \"192.168.0.111\".",
+            },
+            {
+                name: "port",
+                type: "int",
+                info: "Port number. Valid values are 1-65535.",
+            },
+            {
+                name: "mode",
+                type: "int",
+                info: "What kind of address to return. See above.",
+            },
+        ],
+
+        has_deadline: true,
+
+        prologue: trimrect(`
+            Converts an IP address in human-readable format, or a name of a
+            remote host into an **ipaddr** structure.
+        `) + "\n\n" + trimrect(ipaddr_mode),
+
+        custom_errors: {
+            "EADDRNOTAVAIL": "The name of the remote host cannot be resolved to an address of the specified type.",
+        },
+
+        example: ipaddr_example,
     },
     {
         name: "ipaddr_setport",

@@ -1,43 +1,56 @@
 # NAME
 
-ipaddr_local - resolve a name of a local network interface
+ipaddr_remote - resolve the address of a remote IP endpoint
 
 # SYNOPSIS
 
-**int ipaddr_remote(struct ipaddr **\*_addr_**, const char **\*_name_**, int** _port_**, int** _mode_**, int64_t** _deadline_**);**
+```c
+#include <libdill.h>
+
+int ipaddr_remote(struct ipaddr* addr, const char* name, int port, int mode, int64_t deadline);
+```
 
 # DESCRIPTION
 
-Converts an IP address in human-readable format, or a name of a remote host into an ipaddr structure:
+Converts an IP address in human-readable format, or a name of a
+remote host into an **ipaddr** structure.
 
-```
-ipaddr_remote(&addr, "192.168.0.111", 80, 0, -1);
-ipaddr_remote(&addr, "www.expamle.org", 443, 0, -1);
-```
-
-_addr_ is thr address strucure to hold the result. _name_ is the string to convert. _port_ is the port number to use. _mode_ specifies which kind of addresses should be returned. Possible values are:
+Mode specifies which kind of addresses should be returned. Possible
+values are:
 
 * **IPADDR_IPV4**: Get IPv4 address.
 * **IPADDR_IPV6**: Get IPv6 address.
 * **IPADDR_PREF_IPV4**: Get IPv4 address if possible, IPv6 address otherwise.
 * **IPADDR_PREF_IPV6**: Get IPv6 address if possible, IPv4 address otherwise.
 
-Setting the argument to zero invokes default behaviour, which, at the present, is IPADDR_PREF_IPV4. However, in the future when IPv6 becomes more common it may be switched to IPADDR_PREF_IPV6.
+Setting the argument to zero invokes default behaviour, which, at the
+present, is **IPADDR_PREF_IPV4**. However, in the future when IPv6 becomes
+more common it may be switched to **IPADDR_PREF_IPV6**.
 
-Finally, the last argument is the deadline. It allows to deal with situations where resolving a remote host name requires a DNS query and the query is taking substantial amount of time to complete.
+**addr**: Out parameter, The IP address object.
+
+**name**: Name of the remote IP endpoint, such as "www.example.org" or "192.168.0.111".
+
+**port**: Port number. Valid values are 1-65535.
+
+**mode**: What kind of address to return. See above.
+
+**deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
 
 # RETURN VALUE
 
-The function returns 0 on success. On error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
 * **EADDRNOTAVAIL**: The name of the remote host cannot be resolved to an address of the specified type.
+* **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE
 
 ```c
-struct ipaddr addr;
-int rc = ipaddr_remote(&addr, "www.example.org", 80, 0, -1);
+ipaddr addr;
+ipaddr_remote(&addr, "www.example.org", 80, 0, -1);
+int s = socket(ipaddr_family(addr), SOCK_STREAM, 0);
+connect(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
 ```
-
