@@ -1,46 +1,56 @@
 # NAME
 
-chsend - send a message to a channel
+chsend - sends a message to a channel
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int chsend(int ***ch*, **const void** \*_val_**, size_t **_len_**, int64_t **_deadline_**);**
+int chsend(int ch, void* val, size_t len, int64_t deadline);
+```
 
 # DESCRIPTION
 
-Sends a message to a channel. The first parameter is a channel handle. The second one points to a buffer that contains the message to send. The third parameter is the size of the buffer.
+Sends a message to a channel.
 
-The size of the buffer must match the size of the elements stored in the channel as supplied to the **chmake** function.
+The size of the message sent to the channel must match the size of
+the message requested from the channel. Otherwise, both peers fail
+with **EMSGSIZE** error.
 
-If there's no receiver for the message, the function waits until one becomes available or until the deadline expires.
+If there's no receiver for the message, the function block until one
+shows up or until the deadline expires.
 
-_deadline_ is a point in time when the operation should time out. Use the **now()** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
+**ch**: The channel.
+
+**val**: Pointer to the value to send to the channel.
+
+**len**: Size of the value to send to the channel, in bytes.
+
+**deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
 
 # RETURN VALUE
 
-The function returns 0 on success. On error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
 * **EBADF**: Invalid handle.
-* **ECANCELED**: Current coroutine is being shut down.
-* **EINVAL**: Invalid parameter.
+* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **EINVAL**: Invalid argument.
 * **EMSGSIZE**: The peer expected a different message size.
-* **ENOTSUP**: Operation not supported. Presumably, the handle isn't a channel.
-* **EPIPE**: Channel has been closed with **hdone**.
-* **ETIMEDOUT**: Deadline expired while waiting on a message.
+* **ENOTSUP**: The handle does not support this operation.
+* **EPIPE**: Channel has been closed with hdone.
+* **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE
 
 ```c
 int val = 42;
-chsend(ch, &val, sizeof(val), now() + 1000);
-if(result != 0) {
+int rc = chsend(ch, &val, sizeof(val), now() + 1000);
+if(rc != 0) {
     perror("Cannot send message");
     exit(1);
 }
 printf("Value %d sent successfully.\n", val);
 ```
-
