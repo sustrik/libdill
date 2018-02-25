@@ -27,7 +27,7 @@ In case of success the function returns newly duplicated handle. In case of erro
 
 # ERRORS
 
-* **EBADF**: Invalid socket handle.
+* **EBADF**: Invalid handle.
 * **EMFILE**: The maximum number of file descriptors in the process are already open.
 * **ENFILE**: The maximum number of file descriptors in the system are already open.
 * **ENOMEM**: Not enough memory.

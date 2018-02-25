@@ -42,7 +42,7 @@ In case of success the function returns newly created socket handle. In case of 
 
 # ERRORS
 
-* **EBADF**: Invalid socket handle.
+* **EBADF**: Invalid handle.
 * **ECANCELED**: Current coroutine is in the process of shutting down.
 * **ECONNRESET**: Broken connection.
 * **EINVAL**: Invalid argument.

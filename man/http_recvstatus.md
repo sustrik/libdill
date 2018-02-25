@@ -36,7 +36,7 @@ In case of success the function returns HTTP status code, such as 200 or 404. In
 
 # ERRORS
 
-* **EBADF**: Invalid socket handle.
+* **EBADF**: Invalid handle.
 * **ECANCELED**: Current coroutine is in the process of shutting down.
 * **ECONNRESET**: Broken connection.
 * **EINVAL**: Invalid argument.

@@ -33,7 +33,7 @@ In case of success the function returns 0. In case of error it returns -1 and se
 
 # ERRORS
 
-* **EBADF**: Invalid socket handle.
+* **EBADF**: Invalid handle.
 * **ENOTSUP**: The handle does not support this operation.
 
 # EXAMPLE

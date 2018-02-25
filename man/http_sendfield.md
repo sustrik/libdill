@@ -47,7 +47,7 @@ In case of success the function returns 0. In case of error it returns -1 and se
 
 # ERRORS
 
-* **EBADF**: Invalid socket handle.
+* **EBADF**: Invalid handle.
 * **ECANCELED**: Current coroutine is in the process of shutting down.
 * **ECONNRESET**: Broken connection.
 * **EINVAL**: Invalid argument.
