@@ -1026,6 +1026,48 @@ fxs = [
         example: ipaddr_example,
     },
     {
+        name: "ipaddr_port",
+        info: "returns the port part of the address",
+        result: {
+            type: "int",
+            info: "The port number.",
+        },
+        args: [
+            {
+                name: "addr",
+                type: "const struct ipaddr*",
+                info: "IP address object.",
+            },
+        ],
+
+        prologue: `
+            Returns the port part of the address.
+        `,
+
+        example: `
+            int port = ipaddr_port(&addr);
+        `,
+    },
+    {
+        name: "ipaddr_setport",
+        info: "changes port number of the address",
+        args: [
+            {
+                name: "addr",
+                type: "const struct ipaddr*",
+                info: "IP address object.",
+            },
+        ],
+
+        prologue: `
+            Changes port number of the address.
+        `,
+
+        example: `
+            ipaddr_setport(&addr, 80);
+        `,
+    },
+    {
         name: "ipaddr_sockaddr",
         info: "returns sockaddr structure corresponding to the IP address",
         result: {
@@ -1047,6 +1089,33 @@ fxs = [
         `,
 
         example: ipaddr_example,
+    },
+    {
+        name: "ipaddr_str",
+        info: "convert address to a human-readable string",
+        result: {
+            type: "const char*",
+            info: "The function returns **ipstr** argument, i.e.  pointer to the formatted string.",
+        },
+        args: [
+            {
+                name: "addr",
+                type: "const struct ipaddr*",
+                info: "IP address object.",
+            },
+            {
+                name: "buf",
+                type: "char*",
+                info: "Buffer to store the result in. It must be at least **IPADDR_MAXSTRLEN** bytes long.",
+            },
+        ],
+
+        prologue: "Formats address as a human-readable string.",
+
+        example: `
+              char buf[IPADDR_MAXSTRLEN];
+              ipaddr_str(&addr, buf);
+        `,
     },
     {
         name: "now",

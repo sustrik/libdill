@@ -4,11 +4,17 @@ ipaddr_setport - changes port number of the address
 
 # SYNOPSIS
 
-**void ipaddr_setport(struct ipaddr **\*_addr_**, int** _port_**);**
+```c
+#include <libdill.h>
+
+void ipaddr_setport(const struct ipaddr* addr);
+```
 
 # DESCRIPTION
 
 Changes port number of the address.
+
+**addr**: IP address object.
 
 # RETURN VALUE
 
@@ -16,11 +22,10 @@ None.
 
 # ERRORS
 
-No errors.
+None.
 
 # EXAMPLE
 
 ```c
 ipaddr_setport(&addr, 80);
 ```
-

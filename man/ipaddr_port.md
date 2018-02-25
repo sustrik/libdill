@@ -1,14 +1,20 @@
 # NAME
 
-ipaddr_port - returns port part of the address
+ipaddr_port - returns the port part of the address
 
 # SYNOPSIS
 
-**int ipaddr_port(const struct ipaddr **\*_addr_**);**
+```c
+#include <libdill.h>
+
+int ipaddr_port(const struct ipaddr* addr);
+```
 
 # DESCRIPTION
 
-Returns port part of the address.
+Returns the port part of the address.
+
+**addr**: IP address object.
 
 # RETURN VALUE
 
@@ -16,11 +22,10 @@ The port number.
 
 # ERRORS
 
-No errors.
+None.
 
 # EXAMPLE
 
 ```c
 int port = ipaddr_port(&addr);
 ```
-
