@@ -4,23 +4,33 @@ ipaddr_sockaddr - returns sockaddr structure corresponding to the IP address
 
 # SYNOPSIS
 
-**const struct sockaddr *ipaddr_sockaddr(const struct ipaddr **\*_addr_**);**
+```c
+#include <libdill.h>
+
+const struct sockaddr* ipaddr_sockaddr(const struct ipaddr* addr);
+```
 
 # DESCRIPTION
 
-Returns sockaddr structure corresponding to the IP address. This function is typically used in combination with ipaddr_len to pass address and its length to POSIX socket APIs.
+Returns **sockaddr** structure corresponding to the IP address.
+This function is typically used in combination with ipaddr_len to
+pass address and its length to POSIX socket APIs.
+
+**addr**: IP address object.
 
 # RETURN VALUE
 
-Pointer to sockaddr structure correspoding the address in _addr_.
+Pointer to **sockaddr** structure correspoding to the address object.
 
 # ERRORS
 
-No errors.
+None.
 
 # EXAMPLE
 
 ```c
-int rc = connect(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
+ipaddr addr;
+ipaddr_remote(&addr, "www.example.org", 80, 0, -1);
+int s = socket(ipaddr_family(addr), SOCK_STREAM, 0);
+connect(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
 ```
-
