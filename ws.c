@@ -209,13 +209,9 @@ int ws_attach_server_mem(int s, int type, void *mem, int64_t deadline) {
         }
         if(strcasecmp(name, "Sec-WebSocket-Key") == 0) {
             if(has_key) {err = EPROTO; goto error1;}
-            /* Decode the key and check whether it's 16 byte nonce. */
-            uint8_t nonce[16];
-            rc = dill_base64_decode(value, strlen(value), nonce, sizeof(nonce));
-            if(dill_slow(rc < 0)) {err = EPROTO; goto error1;}
             /* Generate the key to be sent back to the client. */
             rc = wsraw_response_key(value, response_key);
-            if(dill_slow(rc < 0)) {err = EFAULT; goto error1;}
+            if(dill_slow(rc < 0)) {err = errno; goto error1;}
             has_key = 1;
             continue;
         }

@@ -44,6 +44,12 @@ int wsraw_request_key(char *request_key) {
 int wsraw_response_key(const char *request_key, char *response_key) {
     if(dill_slow(!request_key)) {errno = EINVAL; return -1;}
     if(dill_slow(!response_key)) {errno = EINVAL; return -1;}
+    /* Decode the request key and check whether it's 16 byte nonce. */
+    uint8_t nonce[16];
+    int rc = dill_base64_decode(request_key, strlen(request_key),
+        nonce, sizeof(nonce));
+    if(dill_slow(rc != sizeof(nonce))) {errno = EPROTO; return -1;}
+    /* Create the response key. */
     struct dill_sha1 sha1;
     dill_sha1_init(&sha1);
     int i;
@@ -54,7 +60,7 @@ int wsraw_response_key(const char *request_key, char *response_key) {
     const char *uuid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
     for(i = 0; uuid[i] != 0; ++i) dill_sha1_hashbyte(&sha1, uuid[i]);
     /* Convert the SHA1 to Base64. */
-    int rc = dill_base64_encode(dill_sha1_result(&sha1), DILL_SHA1_HASH_LEN,
+    rc = dill_base64_encode(dill_sha1_result(&sha1), DILL_SHA1_HASH_LEN,
         response_key, WSRAW_KEY_SIZE);
     if(dill_slow(rc < 0)) {errno = EFAULT; return -1;}
     return 0;
