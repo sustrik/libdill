@@ -4,23 +4,29 @@ ipaddr_family - returns family of the IP address
 
 # SYNOPSIS
 
-**int ipaddr_family(const struct ipaddr **\*_addr_**);**
+```c
+#include <libdill.h>
+
+int ipaddr_family(const struct ipaddr* addr);
+```
 
 # DESCRIPTION
 
-Returns family of the address, i.e. either AF_INET (IPv4) or AF_INET6 (IPv6).
+Returns family of the address, i.e.  either AF_INET for IPv4
+addresses or AF_INET6 for IPv6 addresses.
+
+**addr**: IP address object.
 
 # RETURN VALUE
 
-Family of _addr_.
+IP family.
 
 # ERRORS
 
-No errors.
+None.
 
 # EXAMPLE
 
 ```c
 int family = ipaddr_family(&addr);
 ```
-
