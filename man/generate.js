@@ -65,6 +65,13 @@ standard_errors = {
     ENOTSUP: "The handle does not support this operation.",
 }
 
+ipaddr_example = `
+    ipaddr addr;
+    ipaddr_remote(&addr, "www.example.org", 80, 0, -1);
+    int s = socket(ipaddr_family(addr), SOCK_STREAM, 0);
+    connect(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
+`
+
 crlf_protocol = {
     name: "CRLF",
     info: `
@@ -993,9 +1000,30 @@ fxs = [
             addresses or AF_INET6 for IPv6 addresses.
         `,
 
-        example: `
-            int family = ipaddr_family(&addr);
+        example: ipaddr_example,
+    },
+    {
+        name: "ipaddr_len",
+        info: "returns length of the address",
+        result: {
+            type: "int",
+            info: "length of the IP address",
+        },
+        args: [
+            {
+                name: "addr",
+                type: "const struct ipaddr*",
+                info: "IP address object.",
+            },
+        ],
+
+        prologue: `
+            Returns lenght of the address, in bytes. This function is typically
+            used in combination with **ipaddr_sockaddr** to pass address and its
+            length to POSIX socket APIs.
         `,
+
+        example: ipaddr_example,
     },
     {
         name: "now",

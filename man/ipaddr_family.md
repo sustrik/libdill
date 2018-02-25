@@ -28,5 +28,8 @@ None.
 # EXAMPLE
 
 ```c
-int family = ipaddr_family(&addr);
+ipaddr addr;
+ipaddr_remote(&addr, "www.example.org", 80, 0, -1);
+int s = socket(ipaddr_family(addr), SOCK_STREAM, 0);
+connect(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
 ```

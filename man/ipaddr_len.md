@@ -4,23 +4,33 @@ ipaddr_len - returns length of the address
 
 # SYNOPSIS
 
-**int ipaddr_len(const struct ipaddr **\*_addr_**);**
+```c
+#include <libdill.h>
+
+int ipaddr_len(const struct ipaddr* addr);
+```
 
 # DESCRIPTION
 
-Returns lenght of the address, in bytes. This function is typically used in combination with ipaddr_sockaddr to pass address and its length to POSIX socket APIs.
+Returns lenght of the address, in bytes. This function is typically
+used in combination with **ipaddr_sockaddr** to pass address and its
+length to POSIX socket APIs.
+
+**addr**: IP address object.
 
 # RETURN VALUE
 
-Length of the address in _addr_.
+length of the IP address
 
 # ERRORS
 
-No errors.
+None.
 
 # EXAMPLE
 
 ```c
-int rc = connect(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
+ipaddr addr;
+ipaddr_remote(&addr, "www.example.org", 80, 0, -1);
+int s = socket(ipaddr_family(addr), SOCK_STREAM, 0);
+connect(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
 ```
-
