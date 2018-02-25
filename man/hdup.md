@@ -32,3 +32,11 @@ In case of success the function returns newly duplicated handle. In case of erro
 * **ENFILE**: The maximum number of file descriptors in the system are already open.
 * **ENOMEM**: Not enough memory.
 
+# EXAMPLE
+
+```c
+int h1 = tcp_connect(&addr, deadline);
+h2 = hdup(h1);
+hclose(h1);
+hclose(h2); /* The socket gets deallocated here. */
+```

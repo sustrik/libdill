@@ -448,7 +448,56 @@ fxs = [
             The underlying object is deallocated when all handles pointing to it
             have been closed.
         `,
+
         errors: ["EBADF"],
+
+        example: `
+            int h1 = tcp_connect(&addr, deadline);
+            h2 = hdup(h1);
+            hclose(h1);
+            hclose(h2); /* The socket gets deallocated here. */
+        `
+    },
+    {
+        name: "hclose",
+        info: "hard-closes a handle",
+
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "h",
+                type: "int",
+                info: "Handle to close.",
+            }
+        ],
+
+        prologue: `
+            This function closes a handle. Once all handles pointing to the same
+            underlying object have been closed, the object is deallocated
+            immediately, without blocking.
+
+            The  function  guarantees that all associated resources are
+            deallocated. However, it does not guarantee that the handle's work
+            will have been fully finished. E.g., outbound network data may not
+            be flushed.
+
+            In the case of network protocol sockets the entire protocol stack
+            is closed, the topmost protocol as well as all the protocols
+            beneath it.
+        `,
+
+        errors: ["EBADF"],
+
+        example: `
+            int ch[2];
+            chmake(ch);
+            hclose(ch[0]);
+            hclose(ch[1]);
+        `
     },
     {
         name: "hmake",

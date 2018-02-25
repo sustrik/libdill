@@ -1,34 +1,45 @@
 # NAME
 
-hclose - hard-cancels a handle
+hclose - hard-closes a handle
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int hclose(int** _h_**);**
+int hclose(int h);
+```
 
 # DESCRIPTION
 
-Closes a handle.
+This function closes a handle. Once all handles pointing to the same
+underlying object have been closed, the object is deallocated
+immediately, without blocking.
 
-Once all handles pointing to the same underlying object have been closed, the object is deallocated immediately.
+The  function  guarantees that all associated resources are
+deallocated. However, it does not guarantee that the handle's work
+will have been fully finished. E.g., outbound network data may not
+be flushed.
 
-The function guarantees that all associated resources are deallocated. However, it does
-not guarantee that the handle's work will have been fully finished. E.g., outbound network data may not be flushed.
+In the case of network protocol sockets the entire protocol stack
+is closed, the topmost protocol as well as all the protocols
+beneath it.
+
+**h**: Handle to close.
 
 # RETURN VALUE
 
-In the case of an error, it returns -1 and sets _errno_ to one of the values. In case of success, returns 0.
+In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
-* **EBADF**: Invalid handle.
+* **EBADF**: Invalid socket handle.
 
 # EXAMPLE
 
 ```c
-int ch = chmake(sizeof(int));
-hclose(ch);
+int ch[2];
+chmake(ch);
+hclose(ch[0]);
+hclose(ch[1]);
 ```
-
