@@ -31,10 +31,9 @@ blocking functions within the coroutine will start failing with an
 **ECANCELED** error. The **hclose()** function itself won't exit
 until all the coroutines in the bundle exit.
 
-    This function allows to avoid one dynamic memory allocation by
-    storing the object in user-supplied memory. Unless you are
-    hyper-optimizing use **
-bundle** instead.
+This function allows to avoid one dynamic memory allocation by
+storing the object in user-supplied memory. Unless you are
+hyper-optimizing use **bundle** instead.
 
 **mem**: The memory to store the newly created object. It must be at least **BUNDLE_SIZE** bytes long and must not be deallocated before the object is closed.
 

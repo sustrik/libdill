@@ -22,10 +22,9 @@ protocol. TLS protocol being asymmetric, client and server sides are
 intialized in different ways. This particular function initializes
 the client side of the connection.
 
-    This function allows to avoid one dynamic memory allocation by
-    storing the object in user-supplied memory. Unless you are
-    hyper-optimizing use **
-tls_attach_client** instead.
+This function allows to avoid one dynamic memory allocation by
+storing the object in user-supplied memory. Unless you are
+hyper-optimizing use **tls_attach_client** instead.
 
 **s**: Handle of the underlying socket. It must be a bytestream protocol.
 

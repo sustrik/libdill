@@ -1,27 +1,33 @@
 # NAME
 
-chmake - create a channel
+chmake - creates a channel
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int chmake(int **_chv_**[2]);**
+int chmake(int chv[2]);
+```
 
 # DESCRIPTION
 
-Creates a bidirectional channel. In case of success handles to the both sides of the channel will be returned in _chv_ parameter. 
+Creates a bidirectional channel. In case of success handles to the
+both sides of the channel will be returned in **chv** parameter.
 
-A channel is a synchronization primitive, not a container. It doesn't store any items.
+A channel is a synchronization primitive, not a container.
+It doesn't store any items.
+
+**chv**: Out parameter. Two handles to the opposite ends of the channel.
 
 # RETURN VALUE
 
-Returns a channel handle. In the case of an error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
 * **ECANCELED**: Current coroutine is in the process of shutting down.
-* **ENOMEM**: Not enough memory to allocate a new channel.
+* **ENOMEM**: Not enough memory.
 
 # EXAMPLE
 
@@ -33,4 +39,3 @@ if(rc == -1) {
     exit(1);
 }
 ```
-

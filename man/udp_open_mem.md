@@ -18,10 +18,9 @@ handshake. A single socket can be used to different destinations.
 
 This function creates an UDP socket.
 
-    This function allows to avoid one dynamic memory allocation by
-    storing the object in user-supplied memory. Unless you are
-    hyper-optimizing use **
-udp_open** instead.
+This function allows to avoid one dynamic memory allocation by
+storing the object in user-supplied memory. Unless you are
+hyper-optimizing use **udp_open** instead.
 
 **local**: IP  address to be used to set source IP address in outgoing packets. Also, the socket will receive packets sent to this address. If port in the address is set to zero an ephemeral port will be chosen and filled into the local address.
 

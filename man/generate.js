@@ -252,6 +252,46 @@ fxs = [
         mem: "BUNDLE_SIZE",
     },
     {
+        name: "chmake",
+        info: "creates a channel",
+
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+
+        args: [
+            {
+                name: "chv",
+                type: "int",
+                postfix: "[2]",
+                info: "Out parameter. Two handles to the opposite ends of the channel."
+            },
+        ],
+
+        prologue: `
+            Creates a bidirectional channel. In case of success handles to the
+            both sides of the channel will be returned in **chv** parameter.
+
+            A channel is a synchronization primitive, not a container.
+            It doesn't store any items.
+        `,
+
+        errors: ['ECANCELED', 'ENOMEM'],
+
+        example: `
+            int ch[2];
+            int rc = chmake(ch);
+            if(rc == -1) {
+                perror("Cannot create channel");
+                exit(1);
+            }
+        `,
+
+        mem: "CHSIZE",
+    },
+    {
         name: "crlf_attach",
         info: "creates CRLF protocol on top of underlying socket",
         result: {
@@ -1741,13 +1781,15 @@ function generate_man_page(fx, mem) {
         })
     }
     if(mem) {
-        a.push({
+        memarg = {
             name: "mem",
             type: "void*",
             info: "The memory to store the newly created object. It must be " +
                   "at least **" + fx.mem + "** bytes long and must not be " +
                   "deallocated before the object is closed.",
-        })
+        }
+        if(fx.name === "chmake") a.unshift(memarg)
+        else a.push(memarg)
     }
     if(fx.has_deadline) {
         a.push({
@@ -1764,6 +1806,7 @@ function generate_man_page(fx, mem) {
 
     for(var j = 0; j < a.length; j++) {
         t += a[j].type + " " + a[j].name
+        if(a[j].postfix) t += a[j].postfix
         if(j != a.length - 1) t += ", "
     }
     if(a.length == 0 && !fx.has_iol && !mem && !fx.has_deadline) t += "void"
@@ -1809,8 +1852,7 @@ function generate_man_page(fx, mem) {
         t += trimrect(`
             This function allows to avoid one dynamic memory allocation by
             storing the object in user-supplied memory. Unless you are
-            hyper-optimizing use **
-        ` + fx.name + "** instead.") + "\n\n"
+            hyper-optimizing use **` + fx.name + "** instead.") + "\n\n"
     }
 
     for(var j = 0; j < a.length; j++) {

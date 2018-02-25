@@ -20,10 +20,9 @@ handshake. Terminal handshake is accomplished by each peer sending eight
 This function instantiates PFX protocol on top of the underlying
 protocol.
 
-    This function allows to avoid one dynamic memory allocation by
-    storing the object in user-supplied memory. Unless you are
-    hyper-optimizing use **
-pfx_attach** instead.
+This function allows to avoid one dynamic memory allocation by
+storing the object in user-supplied memory. Unless you are
+hyper-optimizing use **pfx_attach** instead.
 
 **s**: Handle of the underlying socket. It must be a bytestream protocol.
 
