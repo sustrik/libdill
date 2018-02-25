@@ -291,6 +291,94 @@ fxs = [
 
         mem: "CHSIZE",
     },
+{
+        name: "choose",
+        info: "performs one of multiple channel operations",
+
+        add_to_synopsis: `
+            struct chclause {
+                int op;
+                int ch;
+                void *val;
+                size_t len;
+            };
+        `,
+
+        result: {
+            type: "int",
+            success: "index of the clause that caused the function to exit",
+            error: "-1",
+            info: `
+                Even if an index is returned, **errno** may still be set to
+                an error value. The operation was successfull only if **errno**
+                is set to zero.
+            `,
+        },
+
+        args: [
+            {
+                name: "clauses",
+                type: "struct chclause*",
+                info: "Operations to choose from. See below."
+            },
+            {
+                name: "nclauses",
+                type: "int",
+                info: "Number of clauses."
+            },
+        ],
+
+        has_deadline: true,
+
+        prologue: `
+            Accepts a list of channel operations. Performs one that can be done
+            first. If multiple operations can be done immediately, the one that
+            comes earlier in the array is executed.
+        `,
+
+        epilogue: `
+            The fields in **chclause** structure are as follows:
+
+            * **op**: Operation to perform. Either **CHSEND** or **CHRECV**.
+            * **ch**: The channel to perform the operation on.
+            * **val**: Buffer containing the value to send or receive.
+            * **len**: Size of the buffer.
+        `,
+
+        errors: ['EINVAL', 'ECANCELED'],
+
+        add_to_errors: `
+            Additionally, if the function returns an index it can set **errno**
+            to one of the following values:
+
+            * **0**: Operation was completed successfully.
+            * **EBADF**: Invalid handle.
+            * **EINVAL**: Invalid parameter.
+            * **EMSGSIZE**: The peer expected a message with different size.
+            * **ENOTSUP**: Operation not supported. Presumably, the handle isn't a channel.
+            * **EPIPE**: Channel has been closed with **hdone**.
+        `,
+
+        example: `
+            int val1 = 0;
+            int val2;
+            struct chclause clauses[] = {
+                {CHSEND, ch, &val1, sizeof(val1)},
+                {CHRECV, ch, &val2, sizeof(val2)}
+            };
+            int rc = choose(clauses, 2, now() + 1000);
+            if(rc == -1) {
+                perror("Choose failed");
+                exit(1);
+            }
+            if(rc == 0) {
+                printf("Value %d sent.\\n", val1);
+            }
+            if(rc == 1) {
+                printf("Value %d received.\\n", val2);
+            }
+        `,
+    },
     {
         name: "chrecv",
         info: "receives a message from a channel",
@@ -1998,13 +2086,15 @@ function generate_man_page(fx, mem) {
     /**************************************************************************/
     t += "# RETURN VALUE\n\n"
     if(fx.result) {
-        if(fx.result.info) {
-            t += fx.result.info + "\n\n"
-        } else {
-            t += "In case of success the function returns " + fx.result.success +
-                ". "
+        
+        if(fx.result.success && fx.result.error) {
+            t += "In case of success the function returns " +
+                fx.result.success + ". "
             t += "In case of error it returns " + fx.result.error +
                 " and sets **errno** to one of the values below.\n\n"
+        }
+        if(fx.result.info) {
+            t += trimrect(fx.result.info) + "\n\n"
         }
     } else {
         t += "None.\n\n"
@@ -2047,6 +2137,8 @@ function generate_man_page(fx, mem) {
         }
     }
     t += "\n"
+
+    if(fx.add_to_errors) t += trimrect(fx.add_to_errors) + "\n\n"
 
     /**************************************************************************/
     /*  EXAMPLE                                                               */
