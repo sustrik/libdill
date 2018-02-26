@@ -1583,6 +1583,80 @@ fxs = [
         },
     },
     {
+        name: "tcp_accept",
+        info: "accepts an incoming TCP connection",
+
+        result: {
+            type: "int",
+            success: "handle of the new connection",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "s",
+                type: "int",
+                info: "Socket created by **tcp_listen**.",
+            },
+            {
+                name: "addr",
+                type: "struct ipaddr*",
+                info: "Out parameter. IP address of the connecting endpoint. Can be **NULL**.",
+            },
+        ],
+
+        has_deadline: true,
+
+        protocol: tcp_protocol,
+
+        prologue: `
+            This function accepts an incoming TCP connection.
+        `,
+        epilogue: `
+            The socket can be cleanly shut down using **tcp_close** function.
+        `,
+
+        has_handle_argument: true,
+        allocates_handle: true,
+        mem: "TCP_SIZE",
+
+        errors: ["ECANCELED"],
+    },
+    {
+        name: "tcp_close",
+        info: "closes TCP connection in an orderly manner",
+
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "s",
+                type: "int",
+                info: "The TCP socket.",
+            },
+        ],
+
+        has_deadline: true,
+
+        protocol: tcp_protocol,
+
+        prologue: `
+            This function closes a TCP socket cleanly. Unlike **hclose** it lets
+            the peer know that it is shutting down and waits till the peer
+            acknowledged the shutdown. If this terminal handshake cannot be
+            done it returns error. The socket is closed even in the case of
+            error.
+        `,
+
+        has_handle_argument: true,
+        errors: ["ECANCELED"],
+        custom_errors: {
+            ECONNRESET: "Broken connection.",
+        },
+    },
+    {
         name: "tcp_connect",
         info: "creates a connection to remote TCP endpoint ",
 

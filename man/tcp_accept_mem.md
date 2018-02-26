@@ -4,40 +4,59 @@ tcp_accept_mem - accepts an incoming TCP connection
 
 # SYNOPSIS
 
+```c
+#include <libdill.h>
 
-**#include &lt;libdill.h>**
-
-**int tcp_accept_mem(int **_s_**, struct ipaddr **\*_addr_**, void **\*_mem_**, int64_t** _deadline_**);**
+int tcp_accept_mem(int s, struct ipaddr* addr, void* mem, int64_t deadline);
+```
 
 # DESCRIPTION
 
-TCP protocol is a bytestream protocol (i.e. data can be sent via **bsend()** and received via **brecv()**) for transporting data among machines.
+TCP protocol is a reliable bytestream protocol for transporting data
+over network. It is defined in RFC 793.
 
-This function accepts an incoming TCP connection from the listening socket _s_, in user-supplied memory. The memory is passed in _mem_ argument. It must be at least _TCP\_SIZE_ bytes long and can be deallocated only after the socket is closed. Unless you are hyper-optimizing use **tcp_accept()** instead.
+This function accepts an incoming TCP connection.
 
-If _addr_ paramerer is not **NULL** the IP address of the connecting peer will be stored inside it.
+This function allows to avoid one dynamic memory allocation by
+storing the object in user-supplied memory. Unless you are
+hyper-optimizing use **tcp_accept** instead.
 
-_deadline_ is a point in time when the operation should time out. Use the **now()** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
+**s**: Socket created by **tcp_listen**.
 
-The socket can be cleanly shut down using **tcp_close()** function.
+**addr**: Out parameter. IP address of the connecting endpoint. Can be **NULL**.
+
+**mem**: The memory to store the newly created object. It must be at least **TCP_SIZE** bytes long and must not be deallocated before the object is closed.
+
+**deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
+
+The socket can be cleanly shut down using **tcp_close** function.
+
+This function is not available if libdill is compiled with **--disable-sockets** option.
 
 # RETURN VALUE
 
-Newly created socket handle. On error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns handle of the new connection. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
-* **EBADF**: Invalid socket handle.
-* **ECANCELED**: Current coroutine is being shut down.
+* **EBADF**: Invalid handle.
+* **ECANCELED**: Current coroutine is in the process of shutting down.
 * **EMFILE**: The maximum number of file descriptors in the process are already open.
 * **ENFILE**: The maximum number of file descriptors in the system are already open.
 * **ENOMEM**: Not enough memory.
+* **ENOTSUP**: The handle does not support this operation.
 * **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE
 
 ```c
-int listener = tcp_listen(&addr, 10);
-char mem[TCP_SIZE];
-int s = tcp_accept_mem(listener, mem, -1);
+struct ipaddr addr;
+ipaddr_local(&addr, NULL, 5555, 0);
+int ls = tcp_listen(&addr, 10);
+int s = tcp_accept(ls, NULL, -1);
+bsend(s, "ABC", 3, -1);
+char buf[3];
+brecv(s, buf, sizeof(buf), -1);
+tcp_close(s);
+tcp_close(ls);
 ```
