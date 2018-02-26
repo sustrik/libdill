@@ -1,32 +1,41 @@
 # NAME
 
-tcp_listen - start listening for incoming TCP connections
+tcp_listen - starts listening for incoming TCP connections
 
 # SYNOPSIS
 
+```c
+#include <libdill.h>
 
-**#include &lt;libdill.h>**
-
-**int tcp_listen(const struct ipaddr **\*_addr_**, int** _backlog_**);**
+int tcp_listen(const struct ipaddr* addr, int backlog);
+```
 
 # DESCRIPTION
 
-TCP protocol is a bytestream protocol (i.e. data can be sent via **bsend()** and received via **brecv()**) for transporting data among machines.
+TCP protocol is a reliable bytestream protocol for transporting data
+over network. It is defined in RFC 793.
 
-This function starts listening for incoming connection on the address specified in _addr_ argument. _backlog_ is the maximum number of connections that can be held open without user accepting them.
+This function starts listening for incoming connections.
+The connections can be accepted using **tcp_accept** function.
 
-The socket can be cleanly shut down using **tcp_close()** function.
+**addr**: IP address to listen on.
+
+**backlog**: Maximum number of connections that can be kept open without accepting them.
+
+The socket can be closed either by **hclose** or **tcp_close**.
+Both ways are equivalent.
+
+This function is not available if libdill is compiled with **--disable-sockets** option.
 
 # RETURN VALUE
 
-The function returns the handle of the listening socket. On error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
 * **EADDRINUSE**: The specified address is already in use.
 * **EADDRNOTAVAIL**: The specified address is not available from the local machine.
-* **ECANCELED**: Current coroutine is being shut down.
-* **EINVAL**: Invalid arguments.
+* **EINVAL**: Invalid argument.
 * **EMFILE**: The maximum number of file descriptors in the process are already open.
 * **ENFILE**: The maximum number of file descriptors in the system are already open.
 * **ENOMEM**: Not enough memory.
@@ -35,6 +44,12 @@ The function returns the handle of the listening socket. On error, it returns -1
 
 ```c
 struct ipaddr addr;
-int rc = ipaddr_local(&addr, NULL, 5555, 0);
-int s = tcp_listen(&addr, 10);
+ipaddr_local(&addr, NULL, 5555, 0);
+int ls = tcp_listen(&addr, 10);
+int s = tcp_accept(ls, NULL, -1);
+bsend(s, "ABC", 3, -1);
+char buf[3];
+brecv(s, buf, sizeof(buf), -1);
+tcp_close(s);
+tcp_close(ls);
 ```

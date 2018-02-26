@@ -177,12 +177,14 @@ tcp_protocol = {
     `,
     example: `
         struct ipaddr addr;
-        ipaddr_remote(&addr, "www.example.org", 80, 0, -1);
-        int s = tcp_connect(&addr, -1);
+        ipaddr_local(&addr, NULL, 5555, 0);
+        int ls = tcp_listen(&addr, 10);
+        int s = tcp_accept(ls, NULL, -1);
         bsend(s, "ABC", 3, -1);
         char buf[3];
         brecv(s, buf, sizeof(buf), -1);
         tcp_close(s);
+        tcp_close(ls);
     `
 }
 
@@ -1619,8 +1621,59 @@ fxs = [
             ENETDOWN: "The local network interface used to reach the destination is down.",
             ENETUNREACH: "No route to the network is present.",
         },
-    },
 
+        example: `
+            struct ipaddr addr;
+            ipaddr_remote(&addr, "www.example.org", 80, 0, -1);
+            int s = tcp_connect(&addr, -1);
+            bsend(s, "ABC", 3, -1);
+            char buf[3];
+            brecv(s, buf, sizeof(buf), -1);
+            tcp_close(s);
+        `
+    },
+    {
+        name: "tcp_listen",
+        info: "starts listening for incoming TCP connections",
+
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "addr",
+                type: "const struct ipaddr*",
+                info: "IP address to listen on.",
+            },
+            {
+                name: "backlog",
+                type: "int",
+                info: "Maximum number of connections that can be kept open without accepting them.",
+            },
+        ],
+
+        protocol: tcp_protocol,
+
+        prologue: `
+            This function starts listening for incoming connections.
+            The connections can be accepted using **tcp_accept** function.
+        `,
+        epilogue: `
+            The socket can be closed either by **hclose** or **tcp_close**.
+            Both ways are equivalent.
+        `,
+
+        allocates_handle: true,
+        mem: "TCP_LISTENER_SIZE",
+
+        errors: ["EINVAL"],
+        custom_errors: {
+            EADDRINUSE: "The specified address is already in use.",
+            EADDRNOTAVAIL: "The specified address is not available from the local machine.",
+        },
+    },
     {
         name: "tls_attach_client",
         info: "creates TLS protocol on top of underlying socket",
