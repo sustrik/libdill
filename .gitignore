@@ -62,6 +62,7 @@ perf/hdone
 perf/choose
 perf/timer
 man/*.3
+man/*.html
 *.gcno
 *.gcda
 tests/*.gcno
