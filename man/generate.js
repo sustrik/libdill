@@ -23,6 +23,7 @@ Schema:
         {
             name: name of the argument
             type: type of the argument
+            postfix: part of the type to go after the name (e.g. "[]")
             info: description of the argument
         }
     ]
