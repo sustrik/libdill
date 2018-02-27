@@ -1670,6 +1670,30 @@ fxs = [
         },
     },
     {
+        name: "msleep",
+        info: "waits until deadline expires",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+
+        has_deadline: true,
+
+        prologue: `
+            This function blocks until the deadline expires or an error occurs.
+        `,
+
+        example: `
+            int rc = msleep(now() + 1000);
+            if(rc != 0) {
+                perror("Cannot sleep");
+                exit(1);
+            }
+            printf("Slept succefully for 1 second.\n");
+        `,
+    },
+    {
         name: "now",
         info: "get current time",
         result: {
@@ -2479,7 +2503,10 @@ function generate_man_page(fx, mem) {
     }
 
     if(fx.has_handle_argument) errs.push("EBADF", "ENOTSUP")
-    if(fx.has_deadline) errs.push("ETIMEDOUT", "ECANCELED")
+    if(fx.has_deadline) {
+        errs.push("ECANCELED")
+        if(fx.name != "msleep") errs.push("ETIMEDOUT")
+    }
     if(fx.allocates_handle) errs.push("EMFILE", "ENFILE", "ENOMEM")
     if(fx.uses_connection) errs.push("ECONNRESET", "ECANCELED")
     if(fx.mem && !mem) errs.push("ENOMEM")
