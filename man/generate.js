@@ -383,7 +383,7 @@ fxs = [
             * **len**: Size of the buffer.
         `,
 
-        errors: ['EINVAL', 'ECANCELED'],
+        errors: ['EINVAL'],
 
         add_to_errors: `
             Additionally, if the function returns an index it can set **errno**
@@ -460,7 +460,7 @@ fxs = [
 
         has_handle_argument: true,
 
-        errors: ['EINVAL', 'ECANCELED'],
+        errors: ['EINVAL'],
 
         custom_errors: {
             EMSGSIZE: "The peer sent a message of different size.",
@@ -520,7 +520,7 @@ fxs = [
 
         has_handle_argument: true,
 
-        errors: ['EINVAL', 'ECANCELED'],
+        errors: ['EINVAL'],
 
         custom_errors: {
             EMSGSIZE: "The peer expected a different message size.",
@@ -659,8 +659,6 @@ fxs = [
 
         has_deadline: true,
 
-        errors: ['ECANCELED'],
-
         custom_errors: {
             "EBADF": "Not a file descriptor.",
             "EBUSY": "Another coroutine already blocked on **fdin** with this file descriptor.",
@@ -706,8 +704,6 @@ fxs = [
         `,
 
         has_deadline: true,
-
-        errors: ['ECANCELED'],
 
         custom_errors: {
             "EBADF": "Not a file descriptor.",
@@ -1539,8 +1535,6 @@ fxs = [
         has_handle_argument: true,
         allocates_handle: true,
         mem: "IPC_SIZE",
-
-        errors: ["ECANCELED"],
     },
     {
         name: "ipc_connect",
@@ -1573,7 +1567,7 @@ fxs = [
         allocates_handle: true,
         mem: "IPC_SIZE",
 
-        errors: ["EINVAL", "ECANCELED"],
+        errors: ["EINVAL"],
         custom_errors: {
             EACCES: "The process does not have appropriate privileges.",
             ECONNREFUSED: "The target address was not listening for connections or refused the connection request.",
@@ -1799,7 +1793,6 @@ fxs = [
         `,
 
         has_handle_argument: true,
-        errors: ["ECANCELED"],
         custom_errors: {
             ECONNRESET: "Broken connection.",
         },
@@ -1835,7 +1828,7 @@ fxs = [
         allocates_handle: true,
         mem: "TCP_SIZE",
 
-        errors: ["EINVAL", "ECANCELED"],
+        errors: ["EINVAL"],
         custom_errors: {
             ECONNREFUSED: "The target address was not listening for connections or refused the connection request.",
             ECONNRESET: "Remote host reset the connection request.",
@@ -2446,7 +2439,7 @@ function generate_man_page(fx, mem) {
     }
 
     if(fx.has_handle_argument) errs.push("EBADF", "ENOTSUP")
-    if(fx.has_deadline) errs.push("ETIMEDOUT")
+    if(fx.has_deadline) errs.push("ETIMEDOUT", "ECANCELED")
     if(fx.allocates_handle) errs.push("EMFILE", "ENFILE", "ENOMEM")
     if(fx.uses_connection) errs.push("ECONNRESET", "ECANCELED")
     if(fx.mem && !mem) errs.push("ENOMEM")
