@@ -87,6 +87,34 @@ ipaddr_mode = `
     more common it may be switched to **IPADDR_PREF_IPV6**.
 `
 
+go_info = `
+    The coroutine is executed concurrently, and its lifetime may exceed the
+    lifetime of the caller coroutine. The return value of the coroutine, if any,
+    is discarded and cannot be retrieved by the caller.
+
+    Any function to be invoked as a coroutine must be declared with the
+    **coroutine** specifier.
+
+    _WARNING_: Coroutines will most likely work even without the coroutine
+    specifier. However, they may fail in random non-deterministic ways,
+    depending on the code in question and the particular combination of compiler
+    and optimization level. Additionally, arguments to a coroutine must not be
+    function calls. If they are, the program may fail non-deterministically.
+    If you need to pass a result of a computation to a coroutine, do the
+    computation first, and then pass the result as an argument.  Instead of:
+
+    \`\`\`
+    go(bar(foo(a)));
+    \`\`\`
+
+    Do this:
+
+    \`\`\`
+    int a = foo();
+    go(bar(a));
+    \`\`\`
+`
+
 crlf_protocol = {
     name: "CRLF",
     info: `
@@ -722,6 +750,35 @@ fxs = [
                 len -= sent;
             }
         `,
+    },
+    {
+        name: "go",
+        info: "launches a coroutine",
+
+        result: {
+            type: "int",
+            success: "handle of a bundle containing the new coroutine",
+            error: "-1",
+        },
+
+        args: [
+            {
+                name: "expression",
+                info: "Expression to evaluate as a coroutine.",
+            }
+        ],
+
+        allocates_handle: true,
+
+        prologue: `
+            This construct launches a coroutine. The coroutine gets a 1MB stack.
+            The stack is guarded by a non-writeable memory page. Therefore,
+            stack overflow will result in a **SEGFAULT** rather than overwriting
+            memory that doesn't belong to it.
+        `,
+        epilogue: go_info,
+
+        errors: ["ECANCELED"],
     },
     {
         name: "hdup",
@@ -2404,7 +2461,8 @@ function generate_man_page(fx, mem) {
     }
 
     for(var j = 0; j < a.length; j++) {
-        t += a[j].type + " " + a[j].name
+        if(a[j].type) t += a[j].type + " "
+        t += a[j].name
         if(a[j].postfix) t += a[j].postfix
         if(j != a.length - 1) t += ", "
     }

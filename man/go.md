@@ -1,50 +1,58 @@
 # NAME
 
-go - start a coroutine
+go - launches a coroutine
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int go(**_expression_**);**
+int go(expression);
+```
 
 # DESCRIPTION
 
-Launches a coroutine that executes the function invocation passed as argument.  The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller coroutine. The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.
+This construct launches a coroutine. The coroutine gets a 1MB stack.
+The stack is guarded by a non-writeable memory page. Therefore,
+stack overflow will result in a **SEGFAULT** rather than overwriting
+memory that doesn't belong to it.
 
-Any function to be invoked with **go()** must be declared with the **coroutine** specifier.
+**expression**: Expression to evaluate as a coroutine.
 
-*WARNING*: Coroutines will most likely work even without the **coroutine** specifier. However, they may fail in random non-deterministic ways, depending on the code in question and the particular combination of a compiler and optimization level. Additionally, arguments to a coroutine must not be function calls. If they are, the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine, do the computation first, and then pass the result as an argument. Instead of:
+The coroutine is executed concurrently, and its lifetime may exceed the
+lifetime of the caller coroutine. The return value of the coroutine, if any,
+is discarded and cannot be retrieved by the caller.
 
-```c
+Any function to be invoked as a coroutine must be declared with the
+**coroutine** specifier.
+
+_WARNING_: Coroutines will most likely work even without the coroutine
+specifier. However, they may fail in random non-deterministic ways,
+depending on the code in question and the particular combination of compiler
+and optimization level. Additionally, arguments to a coroutine must not be
+function calls. If they are, the program may fail non-deterministically.
+If you need to pass a result of a computation to a coroutine, do the
+computation first, and then pass the result as an argument.  Instead of:
+
+```
 go(bar(foo(a)));
 ```
 
 Do this:
 
-```c
+```
 int a = foo();
 go(bar(a));
 ```
 
 # RETURN VALUE
 
-Returns a handle to a coroutine _bundle_ containing a single coroutine. In the case of an error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns handle of a bundle containing the new coroutine. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
 * **ECANCELED**: Current coroutine is in the process of shutting down.
-* **ENOMEM**: Not enough memory to allocate the coroutine stack.
-
-# EXAMPLE
-
-```c
-coroutine void add(int a, int b) {
-    printf("%d+%d=%d\n", a, b, a + b);
-}
-
-...
-
-int h = go(add(1, 2));
-```
+* **EMFILE**: The maximum number of file descriptors in the process are already open.
+* **ENFILE**: The maximum number of file descriptors in the system are already open.
+* **ENOMEM**: Not enough memory.
 
