@@ -29,7 +29,7 @@ This function is not available if libdill is compiled with **--disable-sockets**
 
 # RETURN VALUE
 
-In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
+In case of success the function returns newly created socket. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 

@@ -1510,7 +1510,7 @@ fxs = [
     },
     {
         name: "ipc_connect",
-        info: "creates a connection to remote IPC endpoint ",
+        info: "creates a connection to remote IPC endpoint",
 
         result: {
             type: "int",
@@ -1780,7 +1780,7 @@ fxs = [
 
         result: {
             type: "int",
-            success: "0",
+            success: "newly created socket",
             error: "-1",
         },
         args: [

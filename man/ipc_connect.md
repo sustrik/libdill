@@ -1,6 +1,6 @@
 # NAME
 
-ipc_connect - creates a connection to remote IPC endpoint 
+ipc_connect - creates a connection to remote IPC endpoint
 
 # SYNOPSIS
 
