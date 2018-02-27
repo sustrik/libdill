@@ -4,33 +4,53 @@ ipc_close - closes IPC connection in an orderly manner
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int ipc_close(int **_s_**, int64_t** _deadline_**);**
+int ipc_close(int s, int64_t deadline);
+```
 
 # DESCRIPTION
 
-IPC protocol is a bytestream protocol (i.e. data can be sent via **bsend()** and received via **brecv()**) for transporting data among processes on the same machine. It is an equivalent to POSIX **AF_LOCAL** sockets.
+IPC  protocol is a bytestream protocol for transporting data among
+processes on the same machine.  It is an equivalent to POSIX
+**AF_LOCAL** sockets.
 
-This function closes an IPC socket cleanly. Unlike **hclose()** it lets the peer know that it is shutting down and waits till the peer acknowledged the shutdown. If this terminal handshake cannot be done it returns error. The socket is closed even in the case of error.
+This function closes a IPC socket cleanly. Unlike **hclose** it lets
+the peer know that it is shutting down and waits till the peer
+acknowledged the shutdown. If this terminal handshake cannot be
+done it returns error. The socket is closed even in the case of
+error.
 
-_deadline_ is a point in time when the operation should time out. Use the **now()** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
+It can also be used to close IPC listener socket in which case it's
+equivalent to calling **hclose**.
+
+**s**: The IPC socket.
+
+**deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
+
+This function is not available if libdill is compiled with **--disable-sockets** option.
 
 # RETURN VALUE
 
-Zero in case of success. On error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
 * **EBADF**: Invalid handle.
-* **ECANCELED**: Current coroutine is being shut down.
+* **ECANCELED**: Current coroutine is in the process of shutting down.
 * **ECONNRESET**: Broken connection.
-* **ENOTSUP**: The operation is not supported.
+* **ENOTSUP**: The handle does not support this operation.
 * **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE
 
 ```c
-int s = ipc_connect("/tmp/test.ipc", 10);
-int rc = ipc_close(s, -1);
+int ls = ipc_listen("/tmp/test.ipc", 10);
+int s = ipc_accept(ls, -1);
+bsend(s, "ABC", 3, -1);
+char buf[3];
+brecv(s, buf, sizeof(buf), -1);
+ipc_close(s);
+ipc_close(ls);
 ```
