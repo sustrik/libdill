@@ -763,6 +763,7 @@ fxs = [
             type: "int",
             success: "handle of a bundle containing the new coroutine",
             error: "-1",
+            info: "For details on coroutine bundles see **bundle** function.",
         },
 
         args: [

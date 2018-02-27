@@ -53,6 +53,8 @@ go(bar(a));
 
 In case of success the function returns handle of a bundle containing the new coroutine. In case of error it returns -1 and sets **errno** to one of the values below.
 
+For details on coroutine bundles see **bundle** function.
+
 # ERRORS
 
 * **ECANCELED**: Current coroutine was canceled.
