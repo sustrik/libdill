@@ -1,42 +1,69 @@
 # NAME
 
-go_mem - start a coroutine on a user-supplied stack
+go_mem - launches a coroutine
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int go_mem(**_expression_**, void** \*_stk_, **size_t** _stklen_**);**
+int go_mem(expression, void* mem, size_t memlen);
+```
 
 # DESCRIPTION
 
-Launches a coroutine that executes the function invocation passed as the first argument. The buffer passed in the _stk_ argument will be used as the coroutine's stack. The length of the buffer should be specified in the _stklen_ argument.
+This construct launches a coroutine on a user-supplied stack.
+The stack has no guard page and stack overflow will result in
+overwriting memory.
 
-The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller coroutine. The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.
+**expression**: Expression to evaluate as a coroutine.
 
-Any function to be invoked with **go_mem()** must be declared with the **coroutine** specifier.
+**mem**: Buffer to hold the coroutine's stack.
 
-*WARNING*: Coroutines will most likely work even without the **coroutine** specifier. However, they may fail in random non-deterministic ways, depending on the code in question and the particular combination of a compiler and optimization level. Additionally, arguments to a coroutine must not be function calls. If they are, the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine, do the computation first, and then pass the result as an argument. Instead of:
+**memlen**: Size of the **mem** buffer.
 
-```c
-go_mem(bar(foo(a)), stk, stklen);
+The coroutine is executed concurrently, and its lifetime may exceed the
+lifetime of the caller coroutine. The return value of the coroutine, if any,
+is discarded and cannot be retrieved by the caller.
+
+Any function to be invoked as a coroutine must be declared with the
+**coroutine** specifier.
+
+Use **hclose** to cancel the coroutine. When the coroutine is canceled
+all the blocking calls within the coroutine will start failing with
+**ECANCELED** error.
+
+_WARNING_: Coroutines will most likely work even without the coroutine
+specifier. However, they may fail in random non-deterministic ways,
+depending on the code in question and the particular combination of compiler
+and optimization level. Additionally, arguments to a coroutine must not be
+function calls. If they are, the program may fail non-deterministically.
+If you need to pass a result of a computation to a coroutine, do the
+computation first, and then pass the result as an argument.  Instead of:
+
+```
+go(bar(foo(a)));
 ```
 
 Do this:
 
-```c
+```
 int a = foo();
-go_mem(bar(a), stk, stklen);
+go(bar(a));
 ```
 
 # RETURN VALUE
 
-Returns a handle to a coroutine _bundle_ containing a single coroutine. In the case of an error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns handle of a bundle containing the new coroutine. In case of error it returns -1 and sets **errno** to one of the values below.
+
+For details on coroutine bundles see **bundle** function.
 
 # ERRORS
 
-* **ECANCELED**: Current coroutine is in the process of shutting down.
-* **ENOMEM**: Not enough memory to allocate the coroutine stack.
+* **ECANCELED**: Current coroutine was canceled.
+* **EMFILE**: The maximum number of file descriptors in the process are already open.
+* **ENFILE**: The maximum number of file descriptors in the system are already open.
+* **ENOMEM**: Not enough memory.
 
 # EXAMPLE
 
@@ -46,7 +73,6 @@ coroutine void add(int a, int b) {
 }
 
 ...
-char stk[16384];
-int h = go_mem(add(1, 2), stk, sizeof(stk));
+char mem[16384];
+int h = go_mem(add(1, 2), mem, sizeof(mem));
 ```
-
