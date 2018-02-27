@@ -29,7 +29,7 @@
 * struct chmem replaced by CHSIZE macro
 * hctrl removed
 
-**Jan 15th, 2017 <http://libdill.org/libdill-2.0.tar.gz>**
+**Jan 15th, 2018 <http://libdill.org/libdill-2.0.tar.gz>**
 
 * Channels are untyped
 * Channels are bidirectional
