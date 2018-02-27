@@ -1,42 +1,68 @@
 # NAME
 
-bundle_go - start a coroutine within a specified bundle
+bundle_go - launches a coroutine within a bundle
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int bundle_go(int **_bndl_**, **_expression_**);**
+int bundle_go(int bndl, expression);
+```
 
 # DESCRIPTION
 
-Launches a coroutine that executes the function invocation passed as the _expression_ argument. The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller coroutine. The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.
+This construct launches a coroutine within the specified bundle.
+For more information about bundles see **bundle**.
 
-The coroutine will run inside of bundle specified by _bndl_ argument and it will be canceled when the bundle is closed.
+The coroutine gets a 1MB stack.
+The stack is guarded by a non-writeable memory page. Therefore,
+stack overflow will result in a **SEGFAULT** rather than overwriting
+memory that doesn't belong to it.
 
-Any function to be invoked with **bundle_go()** must be declared with the **coroutine** specifier.
+**bndl**: Bundle to launch the coroutine in.
 
-*WARNING*: Coroutines will most likely work even without the **coroutine** specifier. However, they may fail in random non-deterministic ways, depending on the code in question and the particular combination of a compiler and optimization level. Additionally, arguments to a coroutine must not be function calls. If they are, the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine, do the computation first, and then pass the result as an argument. Instead of:
+**expression**: Expression to evaluate as a coroutine.
 
-```c
-bundle_go(bndl, bar(foo(a)));
+The coroutine is executed concurrently, and its lifetime may exceed the
+lifetime of the caller coroutine. The return value of the coroutine, if any,
+is discarded and cannot be retrieved by the caller.
+
+Any function to be invoked as a coroutine must be declared with the
+**coroutine** specifier.
+
+Use **hclose** to cancel the coroutine. When the coroutine is canceled
+all the blocking calls within the coroutine will start failing with
+**ECANCELED** error.
+
+_WARNING_: Coroutines will most likely work even without the coroutine
+specifier. However, they may fail in random non-deterministic ways,
+depending on the code in question and the particular combination of compiler
+and optimization level. Additionally, arguments to a coroutine must not be
+function calls. If they are, the program may fail non-deterministically.
+If you need to pass a result of a computation to a coroutine, do the
+computation first, and then pass the result as an argument.  Instead of:
+
+```
+go(bar(foo(a)));
 ```
 
 Do this:
 
-```c
+```
 int a = foo();
-bundle_go(bndl, bar(a));
+go(bar(a));
 ```
 
 # RETURN VALUE
 
-Returns zero in the case of success. In the case of an error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
-* **ECANCELED**: Current coroutine is in the process of shutting down.
-* **ENOMEM**: Not enough memory to allocate the coroutine stack.
+* **EBADF**: Invalid handle.
+* **ECANCELED**: Current coroutine was canceled.
+* **ENOTSUP**: The handle does not support this operation.
 
 # EXAMPLE
 
@@ -49,4 +75,3 @@ msleep(now() + 1000);
 /* Cancel any workers that are still running. */
 hclose(b);
 ```
-
