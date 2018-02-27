@@ -358,7 +358,7 @@ fxs = [
 
         has_handle_argument: true,
 
-        errors: ["ECANCELED"],
+        errors: ["ECANCELED", "ENOMEM"],
 
         example: bundle_example,
     },
@@ -824,7 +824,7 @@ fxs = [
         `,
         epilogue: go_info,
 
-        errors: ["ECANCELED"],
+        errors: ["ECANCELED", "ENOMEM"],
 
         example: `
             coroutine void add(int a, int b) {
