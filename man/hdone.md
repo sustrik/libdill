@@ -37,7 +37,7 @@ In case of success the function returns 0. In case of error it returns -1 and se
 # ERRORS
 
 * **EBADF**: Invalid handle.
-* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ECANCELED**: Current coroutine was canceled.
 * **ENOTSUP**: The handle does not support this operation.
 * **EPIPE**: Pipe broken. **hdone** was already called either on this or the other side of the connection.
 * **ETIMEDOUT**: Deadline was reached.

@@ -26,6 +26,10 @@ is discarded and cannot be retrieved by the caller.
 Any function to be invoked as a coroutine must be declared with the
 **coroutine** specifier.
 
+Use **hclose** to cancel the coroutine. When the coroutine is canceled
+all the blocking calls within the coroutine will start failing with
+**ECANCELED** error.
+
 _WARNING_: Coroutines will most likely work even without the coroutine
 specifier. However, they may fail in random non-deterministic ways,
 depending on the code in question and the particular combination of compiler
@@ -51,8 +55,19 @@ In case of success the function returns handle of a bundle containing the new co
 
 # ERRORS
 
-* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ECANCELED**: Current coroutine was canceled.
 * **EMFILE**: The maximum number of file descriptors in the process are already open.
 * **ENFILE**: The maximum number of file descriptors in the system are already open.
 * **ENOMEM**: Not enough memory.
 
+# EXAMPLE
+
+```c
+coroutine void add(int a, int b) {
+    printf("%d+%d=%d\n", a, b, a + b);
+}
+
+...
+
+int h = go(add(1, 2));
+```

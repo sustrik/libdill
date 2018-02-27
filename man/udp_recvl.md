@@ -51,7 +51,7 @@ In case of success the function returns size of the received message, in bytes. 
 # ERRORS
 
 * **EBADF**: Invalid handle.
-* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ECANCELED**: Current coroutine was canceled.
 * **EINVAL**: Invalid argument.
 * **EMSGSIZE**: The data won't fit into the supplied buffer.
 * **ENOTSUP**: The handle does not support this operation.

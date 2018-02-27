@@ -46,7 +46,7 @@ is set to zero.
 
 # ERRORS
 
-* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ECANCELED**: Current coroutine was canceled.
 * **EINVAL**: Invalid argument.
 * **ETIMEDOUT**: Deadline was reached.
 

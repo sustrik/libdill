@@ -41,7 +41,7 @@ In case of success the function returns 0. In case of error it returns -1 and se
 # ERRORS
 
 * **EBADF**: Invalid handle.
-* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ECANCELED**: Current coroutine was canceled.
 * **ECONNRESET**: Broken connection.
 * **EINVAL**: Invalid argument.
 * **EMSGSIZE**: The data won't fit into the supplied buffer.

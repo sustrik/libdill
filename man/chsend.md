@@ -36,7 +36,7 @@ In case of success the function returns 0. In case of error it returns -1 and se
 # ERRORS
 
 * **EBADF**: Invalid handle.
-* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ECANCELED**: Current coroutine was canceled.
 * **EINVAL**: Invalid argument.
 * **EMSGSIZE**: The peer expected a different message size.
 * **ENOTSUP**: The handle does not support this operation.

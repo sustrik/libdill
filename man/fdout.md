@@ -30,7 +30,7 @@ In case of success the function returns 0. In case of error it returns -1 and se
 
 * **EBADF**: Not a file descriptor.
 * **EBUSY**: Another coroutine already blocked on **fdout** with this file descriptor.
-* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ECANCELED**: Current coroutine was canceled.
 * **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE

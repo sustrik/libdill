@@ -33,7 +33,7 @@ In case of success the function returns newly created socket handle. In case of 
 # ERRORS
 
 * **EACCES**: The process does not have appropriate privileges.
-* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ECANCELED**: Current coroutine was canceled.
 * **ECONNREFUSED**: The target address was not listening for connections or refused the connection request.
 * **ECONNRESET**: Remote host reset the connection request.
 * **EINVAL**: Invalid argument.

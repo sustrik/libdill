@@ -42,7 +42,7 @@ In case of success the function returns newly created handle. In case of error i
 
 # ERRORS
 
-* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ECANCELED**: Current coroutine was canceled.
 * **EINVAL**: Invalid argument.
 * **ENOMEM**: Not enough memory.
 

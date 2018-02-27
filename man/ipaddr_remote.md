@@ -44,7 +44,7 @@ In case of success the function returns 0. In case of error it returns -1 and se
 # ERRORS
 
 * **EADDRNOTAVAIL**: The name of the remote host cannot be resolved to an address of the specified type.
-* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ECANCELED**: Current coroutine was canceled.
 * **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE

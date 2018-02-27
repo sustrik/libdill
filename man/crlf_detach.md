@@ -33,7 +33,7 @@ In case of success the function returns underlying socket handle. In case of err
 # ERRORS
 
 * **EBADF**: Invalid handle.
-* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ECANCELED**: Current coroutine was canceled.
 * **ECONNRESET**: Broken connection.
 * **ENOTSUP**: The handle is not a CRLF protocol handle.
 * **ETIMEDOUT**: Deadline was reached.

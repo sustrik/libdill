@@ -31,7 +31,7 @@ In case of success the function returns newly created socket handle. In case of 
 
 # ERRORS
 
-* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ECANCELED**: Current coroutine was canceled.
 * **ECONNREFUSED**: The target address was not listening for connections or refused the connection request.
 * **ECONNRESET**: Remote host reset the connection request.
 * **EHOSTUNREACH**: The destination host cannot be reached.

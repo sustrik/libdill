@@ -43,7 +43,7 @@ In case of success the function returns newly created socket handle. In case of 
 # ERRORS
 
 * **EBADF**: Invalid handle.
-* **ECANCELED**: Current coroutine is in the process of shutting down.
+* **ECANCELED**: Current coroutine was canceled.
 * **ECONNRESET**: Broken connection.
 * **EINVAL**: Invalid argument.
 * **EMFILE**: The maximum number of file descriptors in the process are already open.

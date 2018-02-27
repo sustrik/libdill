@@ -62,7 +62,7 @@ standard_errors = {
     EINVAL: "Invalid argument.",
     EMSGSIZE: "The data won't fit into the supplied buffer.",
     ECONNRESET: "Broken connection.",
-    ECANCELED: "Current coroutine is in the process of shutting down.",
+    ECANCELED: "Current coroutine was canceled.",
     ENOTSUP: "The handle does not support this operation.",
 }
 
@@ -94,6 +94,10 @@ go_info = `
 
     Any function to be invoked as a coroutine must be declared with the
     **coroutine** specifier.
+
+    Use **hclose** to cancel the coroutine. When the coroutine is canceled
+    all the blocking calls within the coroutine will start failing with
+    **ECANCELED** error.
 
     _WARNING_: Coroutines will most likely work even without the coroutine
     specifier. However, they may fail in random non-deterministic ways,
@@ -779,6 +783,16 @@ fxs = [
         epilogue: go_info,
 
         errors: ["ECANCELED"],
+
+        example: `
+            coroutine void add(int a, int b) {
+                printf("%d+%d=%d\\n", a, b, a + b);
+            }
+
+            ...
+
+            int h = go(add(1, 2));
+        `,
     },
     {
         name: "hdup",
