@@ -80,4 +80,4 @@ hclose(b);
 ```
 # SEE ALSO
 
-bundle(3) bundle_go(3) bundle_go_mem(3) bundle_mem(3) go(3) go_mem(3) yield(3) 
+bundle(3) bundle_go(3) bundle_mem(3) go(3) go_mem(3) yield(3) 

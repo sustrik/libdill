@@ -45,4 +45,4 @@ close(fds[1]);
 ```
 # SEE ALSO
 
-fdclean(3) fdin(3) fdout(3) 
+fdin(3) fdout(3) 

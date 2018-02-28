@@ -2579,9 +2579,10 @@ function generate_man_page(fx, sections, mem) {
     /**************************************************************************/
     /*  NAME                                                                  */
     /**************************************************************************/
+    var fxname = fx.name
+    if(mem) fxname += "_mem"
     t += "# NAME\n\n"
-    t += fx.name
-    if(mem) t += "_mem"
+    t += fxname
     t += " - " + fx.info + "\n\n"
 
     /**************************************************************************/
@@ -2792,6 +2793,10 @@ function generate_man_page(fx, sections, mem) {
     else if(fx.protocol) var section = fx.protocol.section
     else section = "Unclassified"
     seealso = sections[section].slice()
+    /* No need to have reference to itself. */
+    var i = seealso.indexOf(fxname);
+    seealso.splice(i, 1);
+    /* Custom see also items. */
     if(fx.has_deadline) seealso.push("now")
     if(fx.allocates_handle) seealso.push("hclose")
     seealso.sort()

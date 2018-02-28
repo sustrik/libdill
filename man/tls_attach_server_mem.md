@@ -72,4 +72,4 @@ tcp_close(s);
 ```
 # SEE ALSO
 
-hclose(3) now(3) tls_attach_client(3) tls_attach_client_mem(3) tls_attach_server(3) tls_attach_server_mem(3) tls_detach(3) 
+hclose(3) now(3) tls_attach_client(3) tls_attach_client_mem(3) tls_attach_server(3) tls_detach(3) 

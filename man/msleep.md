@@ -37,4 +37,4 @@ In case of success the function returns 0. In case of error it returns -1 and se
 ```
 # SEE ALSO
 
-msleep(3) now(3) now(3) 
+now(3) now(3) 

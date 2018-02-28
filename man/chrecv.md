@@ -56,4 +56,4 @@ printf("Value %d received.\n", val);
 ```
 # SEE ALSO
 
-chmake(3) chmake_mem(3) choose(3) chrecv(3) chsend(3) now(3) 
+chmake(3) chmake_mem(3) choose(3) chsend(3) now(3) 

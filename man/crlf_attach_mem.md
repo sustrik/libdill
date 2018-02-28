@@ -58,4 +58,4 @@ tcp_close(s);
 ```
 # SEE ALSO
 
-crlf_attach(3) crlf_attach_mem(3) crlf_detach(3) hclose(3) 
+crlf_attach(3) crlf_detach(3) hclose(3) 

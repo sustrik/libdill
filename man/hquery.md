@@ -66,4 +66,4 @@ void quux_bar(int h, char *c) {
 ```
 # SEE ALSO
 
-hclose(3) hdone(3) hdup(3) hmake(3) hquery(3) 
+hclose(3) hdone(3) hdup(3) hmake(3) 

@@ -36,4 +36,4 @@ connect(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
 ```
 # SEE ALSO
 
-ipaddr_family(3) ipaddr_len(3) ipaddr_local(3) ipaddr_port(3) ipaddr_remote(3) ipaddr_setport(3) ipaddr_sockaddr(3) ipaddr_str(3) 
+ipaddr_family(3) ipaddr_local(3) ipaddr_port(3) ipaddr_remote(3) ipaddr_setport(3) ipaddr_sockaddr(3) ipaddr_str(3) 

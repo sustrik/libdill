@@ -52,4 +52,4 @@ tcp_close(s);
 ```
 # SEE ALSO
 
-hclose(3) pfx_attach(3) pfx_attach_mem(3) pfx_detach(3) 
+hclose(3) pfx_attach_mem(3) pfx_detach(3) 
