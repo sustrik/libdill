@@ -48,4 +48,4 @@ ssize_t msgsz = mrecv(s, msg, sizeof(msg), -1);
 ```
 # SEE ALSO
 
-**mrecvl**(3) **msend**(3) **msendl**(3) **now**(3) 
+**brecv**(3) **brecvl**(3) **mrecvl**(3) **msend**(3) **msendl**(3) **now**(3) 

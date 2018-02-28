@@ -67,4 +67,4 @@ In case of success the function returns 0. In case of error it returns -1 and se
 
 # SEE ALSO
 
-**mrecv**(3) **mrecvl**(3) **msend**(3) **now**(3) 
+**brecv**(3) **brecvl**(3) **mrecv**(3) **mrecvl**(3) **msend**(3) **now**(3) 

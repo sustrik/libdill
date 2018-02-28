@@ -68,6 +68,8 @@ man3_MANS = \
     \
     brecv.3 \
     brecv.html \
+    brecvl.3 \
+    brecvl.html \
     bsend.3 \
     bsend.html \
     bsendl.3 \
