@@ -47,4 +47,4 @@ int rc = bsend(s, "ABC", 3, -1);
 ```
 # SEE ALSO
 
-**now**(3) 
+**bsendl**(3) **now**(3) 

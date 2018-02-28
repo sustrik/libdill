@@ -38,6 +38,7 @@
 #### Bytestream sockets
 
 * [bsend(3)](bsend.html)
+* [bsendl(3)](bsendl.html)
 
 #### Message sockets
 
