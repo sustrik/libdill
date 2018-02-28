@@ -70,6 +70,8 @@ man3_MANS = \
     brecv.html \
     bsend.3 \
     bsend.html \
+    bsendl.3 \
+    bsendl.html \
     crlf_attach.3 \
     crlf_attach.html \
     crlf_attach_mem.3 \
@@ -130,8 +132,12 @@ man3_MANS = \
     ipc_pair_mem.html \
     mrecv.3 \
     mrecv.html \
+    mrecvl.3 \
+    mrecvl.html \
     msend.3 \
     msend.html \
+    msendl.3 \
+    msendl.html \
     pfx_attach.3 \
     pfx_attach.html \
     pfx_attach_mem.3 \
