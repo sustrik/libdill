@@ -173,7 +173,9 @@ man3_MANS = \
     udp_recv.3 \
     udp_recv.html \
     udp_recvl.3 \
-    udp_recvl.html
+    udp_recvl.html \
+    \
+    toc.html
 
 SUFFIXES = .md .3 .html
 

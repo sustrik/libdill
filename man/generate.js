@@ -8,6 +8,7 @@ These are further processed to generate both UNIX and HTML man pages.
 Schema:
 
     name: name of the function
+    section: the name of the section the function belongs to
     info: short description of the function
     is_in_libdillimpl: if true, the function is in libdillimpl.h
     protocol : { // should be present only if the function is related
@@ -130,7 +131,7 @@ go_info = `
 `
 
 crlf_protocol = {
-    name: "CRLF",
+    section: "CRLF protocol",
     info: `
         CRLF is a message-based protocol that delimits messages usign CR+LF byte
         sequence (0x0D 0x0A). In other words, it's a protocol to send text
@@ -149,7 +150,7 @@ crlf_protocol = {
 }
 
 http_protocol = {
-    name: "HTTP",
+    section: "HTTP protocol",
     info: `
         HTTP is an application-level protocol described in RFC 7230. This
         implementation handles only the request/response exchange. Whatever
@@ -193,7 +194,7 @@ http_server_example = `
 `
 
 ipc_protocol = {
-    name: "IPC",
+    section: "IPC protocol",
     info: `
        IPC  protocol is a bytestream protocol for transporting data among
        processes on the same machine.  It is an equivalent to POSIX
@@ -211,7 +212,7 @@ ipc_protocol = {
 }
 
 pfx_protocol = {
-    name: "PFX",
+    section: "PFX protocol",
     info: `
         PFX  is a message-based protocol to send binary messages prefixed by
         8-byte size in network byte order. The protocol has no initial
@@ -230,7 +231,7 @@ pfx_protocol = {
 }
 
 tcp_protocol = {
-    name: "TCP",
+    section: "TCP protocol",
     info: `
        TCP protocol is a reliable bytestream protocol for transporting data
        over network. It is defined in RFC 793.
@@ -249,7 +250,7 @@ tcp_protocol = {
 }
 
 tls_protocol = {
-    name: "TLS",
+    section: "TLS protocol",
     info: `
         TLS is a cryptographic protocol to provide secure communication over
         the network. It is a bytestream protocol.
@@ -267,7 +268,7 @@ tls_protocol = {
 }
 
 udp_protocol = {
-    name: "UDP",
+    section: "UDP protocol",
     info: `
         UDP is an unreliable message-based protocol defined in RFC 768. The size
         of the message is limited. The protocol has no initial or terminal
@@ -289,6 +290,7 @@ udp_protocol = {
 fxs = [
     {
         name: "bundle",
+        section: "Coroutines",
         info: "create an empty coroutine bundle",
         result: {
             type: "int",
@@ -325,6 +327,7 @@ fxs = [
     },
     {
         name: "bundle_go",
+        section: "Coroutines",
         info: "launches a coroutine within a bundle",
 
         result: {
@@ -364,6 +367,7 @@ fxs = [
     },
     {
         name: "bundle_go_mem",
+        section: "Coroutines",
         info: "launches a coroutine within a bundle",
 
         result: {
@@ -412,6 +416,7 @@ fxs = [
     },
     {
         name: "chmake",
+        section: "Channels",
         info: "creates a channel",
 
         result: {
@@ -452,6 +457,7 @@ fxs = [
     },
     {
         name: "choose",
+        section: "Channels",
         info: "performs one of multiple channel operations",
 
         add_to_synopsis: `
@@ -540,6 +546,7 @@ fxs = [
     },
     {
         name: "chrecv",
+        section: "Channels",
         info: "receives a message from a channel",
 
         result: {
@@ -600,6 +607,7 @@ fxs = [
     },
     {
         name: "chsend",
+        section: "Channels",
         info: "sends a message to a channel",
 
         result: {
@@ -720,6 +728,7 @@ fxs = [
     },
     {
         name: "fdclean",
+        section: "File descriptors",
         info: "erases cached info about a file descriptor",
       
         args: [
@@ -754,6 +763,7 @@ fxs = [
     },
     {
         name: "fdin",
+        section: "File descriptors",
         info: "waits on a file descriptor to become readable",
 
         result: {
@@ -800,6 +810,7 @@ fxs = [
     },
     {
         name: "fdout",
+        section: "File descriptors",
         info: "wait on file descriptor to become writable",
 
         result: {
@@ -846,6 +857,7 @@ fxs = [
     },
     {
         name: "go",
+        section: "Coroutines",
         info: "launches a coroutine",
 
         result: {
@@ -886,6 +898,7 @@ fxs = [
     },
     {
         name: "go_mem",
+        section: "Coroutines",
         info: "launches a coroutine",
 
         result: {
@@ -934,45 +947,8 @@ fxs = [
         `,
     },
     {
-        name: "hdup",
-        info: "duplicates a handle",
-
-        result: {
-            type: "int",
-            success: "newly duplicated handle",
-            error: "-1",
-        },
-        args: [
-            {
-                name: "h",
-                type: "int",
-                info: "Handle to duplicate.",
-            }
-        ],
-
-        allocates_handle: true,
-
-        prologue: `
-            Duplicates a handle. The new handle will refer to the same
-            underlying object.
-        `,
-        epilogue: `
-            Each duplicate of a handle requires its own call to **hclose**.
-            The underlying object is deallocated when all handles pointing to it
-            have been closed.
-        `,
-
-        errors: ["EBADF"],
-
-        example: `
-            int h1 = tcp_connect(&addr, deadline);
-            h2 = hdup(h1);
-            hclose(h1);
-            hclose(h2); /* The socket gets deallocated here. */
-        `
-    },
-    {
         name: "hclose",
+        section: "Handles",
         info: "hard-closes a handle",
 
         result: {
@@ -1015,6 +991,7 @@ fxs = [
     },
     {
         name: "hdone",
+        section: "Handles",
         info: "announce end of input to a handle",
 
         result: {
@@ -1063,7 +1040,47 @@ fxs = [
         `
     },
     {
+        name: "hdup",
+        section: "Handles",
+        info: "duplicates a handle",
+
+        result: {
+            type: "int",
+            success: "newly duplicated handle",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "h",
+                type: "int",
+                info: "Handle to duplicate.",
+            }
+        ],
+
+        allocates_handle: true,
+
+        prologue: `
+            Duplicates a handle. The new handle will refer to the same
+            underlying object.
+        `,
+        epilogue: `
+            Each duplicate of a handle requires its own call to **hclose**.
+            The underlying object is deallocated when all handles pointing to it
+            have been closed.
+        `,
+
+        errors: ["EBADF"],
+
+        example: `
+            int h1 = tcp_connect(&addr, deadline);
+            h2 = hdup(h1);
+            hclose(h1);
+            hclose(h2); /* The socket gets deallocated here. */
+        `
+    },
+    {
         name: "hmake",
+        section: "Handles",
         info: "creates a handle",
         is_in_libdillimpl: true,
         add_to_synopsis: `
@@ -1109,6 +1126,7 @@ fxs = [
     },
     {
         name: "hquery",
+        section: "Handles",
         info: "gets an opaque pointer associated with a handle and a type",
         is_in_libdillimpl: true,
 
@@ -1488,6 +1506,7 @@ fxs = [
     },
     {
         name: "ipaddr_family",
+        section: "IP addresses",
         info: "returns family of the IP address",
         result: {
             type: "int",
@@ -1510,6 +1529,7 @@ fxs = [
     },
     {
         name: "ipaddr_len",
+        section: "IP addresses",
         info: "returns length of the address",
         result: {
             type: "int",
@@ -1533,6 +1553,7 @@ fxs = [
     },
     {
         name: "ipaddr_local",
+        section: "IP addresses",
         info: "resolve the address of a local network interface",
         result: {
             type: "int",
@@ -1580,6 +1601,7 @@ fxs = [
     },
     {
         name: "ipaddr_port",
+        section: "IP addresses",
         info: "returns the port part of the address",
         result: {
             type: "int",
@@ -1603,6 +1625,7 @@ fxs = [
     },
     {
         name: "ipaddr_remote",
+        section: "IP addresses",
         info: "resolve the address of a remote IP endpoint",
         result: {
             type: "int",
@@ -1647,6 +1670,7 @@ fxs = [
     },
     {
         name: "ipaddr_setport",
+        section: "IP addresses",
         info: "changes port number of the address",
         args: [
             {
@@ -1666,6 +1690,7 @@ fxs = [
     },
     {
         name: "ipaddr_sockaddr",
+        section: "IP addresses",
         info: "returns sockaddr structure corresponding to the IP address",
         result: {
             type: "const struct sockaddr*",
@@ -1689,6 +1714,7 @@ fxs = [
     },
     {
         name: "ipaddr_str",
+        section: "IP addresses",
         info: "convert address to a human-readable string",
         result: {
             type: "const char*",
@@ -1881,6 +1907,7 @@ fxs = [
     },
     {
         name: "msleep",
+        section: "Deadlines",
         info: "waits until deadline expires",
         result: {
             type: "int",
@@ -1905,6 +1932,7 @@ fxs = [
     },
     {
         name: "now",
+        section: "Deadlines",
         info: "get current time",
         result: {
             type: "int64_t",
@@ -2487,6 +2515,7 @@ fxs = [
     },
     {
         name: "yield",
+        section: "Coroutines",
         info: "yields CPU to other coroutines",
         result: {
             type: "int",
@@ -2677,7 +2706,7 @@ function generate_man_page(fx, mem) {
     if(fx.protocol) {
         t += "This function is not available if libdill is compiled with " +
              "**--disable-sockets** option.\n\n"
-        if(fx.protocol.name == "TLS") {
+        if(fx.protocol.section === "TLS protocol") {
             t += "This function is not available if libdill is compiled " +
                  "without **--enable-tls** option.\n\n"
         }
@@ -2758,6 +2787,18 @@ function generate_man_page(fx, mem) {
     return t
 }
 
+function generate_section(name, sections) {
+    var t = "#### " + name + "\n\n"
+    section = sections[name]
+    section.sort()
+    for(var i = 0; i < section.length; i++) {
+        t += "* [" + section[i] + "(3)](" + section[i] +".html)\n"
+    }
+    t += "\n"
+    return t
+}
+
+var sections = {}
 for(var i = 0; i < fxs.length; i++) {
     fx = fxs[i];
     t = generate_man_page(fx, false)
@@ -2768,5 +2809,32 @@ for(var i = 0; i < fxs.length; i++) {
         t = generate_man_page(fx, true)
         fs.writeFile(fx.name + "_mem.md", t)
     }
+    if(fx.section) var section = fx.section
+    else if(fx.protocol) var section = fx.protocol.section
+    else section = "Unclassified"
+    if(!sections[section]) sections[section] = []
+    sections[section].push(fx.name)
+    if(fx.mem) sections[section].push(fx.name + "_mem")
 }
+
+// Generate index
+t = ""
+t += generate_section("Coroutines", sections)
+t += generate_section("Deadlines", sections)
+t += generate_section("Channels", sections)
+t += generate_section("Handles", sections)
+t += generate_section("File descriptors", sections)
+//t += generate_section("Sockets", sections)
+t += generate_section("IP addresses", sections)
+t += generate_section("TCP protocol", sections)
+t += generate_section("IPC protocol", sections)
+t += generate_section("UDP protocol", sections)
+t += generate_section("TLS protocol", sections)
+t += generate_section("CRLF protocol", sections)
+t += generate_section("PFX protocol", sections)
+t += generate_section("HTTP protocol", sections)
+fs.writeFile("toc.md", t)
+
+
+
 
