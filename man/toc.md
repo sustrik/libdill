@@ -37,6 +37,8 @@
 
 #### Message sockets
 
+* [mrecv(3)](mrecv.html)
+* [mrecvl(3)](mrecvl.html)
 * [msend(3)](msend.html)
 * [msendl(3)](msendl.html)
 
