@@ -2791,9 +2791,12 @@ function generate_man_page(fx, sections, mem) {
     if(fx.section) var section = fx.section
     else if(fx.protocol) var section = fx.protocol.section
     else section = "Unclassified"
-    section = sections[section]
-    for(var i = 0; i < section.length; i++) {
-        t += section[i] + "(3) "
+    seealso = sections[section].slice()
+    if(fx.has_deadline) seealso.push("now")
+    if(fx.allocates_handle) seealso.push("hclose")
+    seealso.sort()
+    for(var i = 0; i < seealso.length; i++) {
+        t += seealso[i] + "(3) "
     }
     t += "\n"
 

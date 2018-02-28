@@ -63,4 +63,4 @@ ipc_close(s);
 ```
 # SEE ALSO
 
-ipc_accept(3) ipc_accept_mem(3) ipc_close(3) ipc_connect(3) ipc_connect_mem(3) ipc_listen(3) ipc_listen_mem(3) 
+hclose(3) ipc_accept(3) ipc_accept_mem(3) ipc_close(3) ipc_connect(3) ipc_connect_mem(3) ipc_listen(3) ipc_listen_mem(3) now(3) 

@@ -51,4 +51,4 @@ tcp_close(s);
 ```
 # SEE ALSO
 
-pfx_attach(3) pfx_attach_mem(3) pfx_detach(3) 
+now(3) pfx_attach(3) pfx_attach_mem(3) pfx_detach(3) 
