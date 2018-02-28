@@ -35,6 +35,8 @@ more common it may be switched to **IPADDR_PREF_IPV6**.
 
 **mode**: What kind of address to return. See above.
 
+This function is not available if libdill is compiled with **--disable-sockets** option.
+
 # RETURN VALUE
 
 In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
@@ -53,4 +55,4 @@ bind(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
 ```
 # SEE ALSO
 
-ipaddr_family(3) ipaddr_len(3) ipaddr_port(3) ipaddr_remote(3) ipaddr_setport(3) ipaddr_sockaddr(3) ipaddr_str(3) 
+**ipaddr_family**(3) **ipaddr_len**(3) **ipaddr_port**(3) **ipaddr_remote**(3) **ipaddr_setport**(3) **ipaddr_sockaddr**(3) **ipaddr_str**(3) 

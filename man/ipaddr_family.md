@@ -17,6 +17,8 @@ addresses or AF_INET6 for IPv6 addresses.
 
 **addr**: IP address object.
 
+This function is not available if libdill is compiled with **--disable-sockets** option.
+
 # RETURN VALUE
 
 IP family.
@@ -35,4 +37,4 @@ connect(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
 ```
 # SEE ALSO
 
-ipaddr_len(3) ipaddr_local(3) ipaddr_port(3) ipaddr_remote(3) ipaddr_setport(3) ipaddr_sockaddr(3) ipaddr_str(3) 
+**ipaddr_len**(3) **ipaddr_local**(3) **ipaddr_port**(3) **ipaddr_remote**(3) **ipaddr_setport**(3) **ipaddr_sockaddr**(3) **ipaddr_str**(3) 

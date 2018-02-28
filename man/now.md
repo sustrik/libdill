@@ -41,4 +41,4 @@ if(result == -1 && errno == ETIMEDOUT) {
 ```
 # SEE ALSO
 
-msleep(3) 
+**msleep**(3) 

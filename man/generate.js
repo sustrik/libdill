@@ -2711,13 +2711,14 @@ function generate_man_page(fx, sections, mem) {
         t += trimrect(fx.epilogue) + "\n\n"
     }
 
-    if(fx.protocol) {
+    if(fx.protocol || fx.section === "IP addresses") {
         t += "This function is not available if libdill is compiled with " +
              "**--disable-sockets** option.\n\n"
-        if(fx.protocol.section === "TLS protocol") {
-            t += "This function is not available if libdill is compiled " +
-                 "without **--enable-tls** option.\n\n"
-        }
+    }
+
+    if(fx.protocol && fx.protocol.section === "TLS protocol") {
+        t += "This function is not available if libdill is compiled " +
+             "without **--enable-tls** option.\n\n"
     }
 
     /**************************************************************************/
@@ -2820,7 +2821,7 @@ function generate_man_page(fx, sections, mem) {
     }
     seealso.sort()
     for(var i = 0; i < seealso.length; i++) {
-        t += seealso[i] + "(3) "
+        t += "**" + seealso[i] + "**(3) "
     }
     t += "\n"
 

@@ -49,4 +49,4 @@ while(len) {
 ```
 # SEE ALSO
 
-fdclean(3) fdin(3) now(3) 
+**fdclean**(3) **fdin**(3) **now**(3) 

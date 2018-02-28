@@ -16,6 +16,8 @@ Returns the port part of the address.
 
 **addr**: IP address object.
 
+This function is not available if libdill is compiled with **--disable-sockets** option.
+
 # RETURN VALUE
 
 The port number.
@@ -31,4 +33,4 @@ int port = ipaddr_port(&addr);
 ```
 # SEE ALSO
 
-ipaddr_family(3) ipaddr_len(3) ipaddr_local(3) ipaddr_remote(3) ipaddr_setport(3) ipaddr_sockaddr(3) ipaddr_str(3) 
+**ipaddr_family**(3) **ipaddr_len**(3) **ipaddr_local**(3) **ipaddr_remote**(3) **ipaddr_setport**(3) **ipaddr_sockaddr**(3) **ipaddr_str**(3) 

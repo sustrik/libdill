@@ -51,4 +51,4 @@ tcp_close(s);
 ```
 # SEE ALSO
 
-crlf_attach(3) crlf_attach_mem(3) mrecv(3) mrecvl(3) msend(3) msendl(3) now(3) 
+**crlf_attach**(3) **crlf_attach_mem**(3) **mrecv**(3) **mrecvl**(3) **msend**(3) **msendl**(3) **now**(3) 

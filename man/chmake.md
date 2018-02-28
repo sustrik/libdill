@@ -41,4 +41,4 @@ if(rc == -1) {
 ```
 # SEE ALSO
 
-chmake_mem(3) choose(3) chrecv(3) chsend(3) 
+**chmake_mem**(3) **choose**(3) **chrecv**(3) **chsend**(3) 

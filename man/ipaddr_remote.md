@@ -37,6 +37,8 @@ more common it may be switched to **IPADDR_PREF_IPV6**.
 
 **deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
 
+This function is not available if libdill is compiled with **--disable-sockets** option.
+
 # RETURN VALUE
 
 In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
@@ -57,4 +59,4 @@ connect(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
 ```
 # SEE ALSO
 
-ipaddr_family(3) ipaddr_len(3) ipaddr_local(3) ipaddr_port(3) ipaddr_setport(3) ipaddr_sockaddr(3) ipaddr_str(3) now(3) 
+**ipaddr_family**(3) **ipaddr_len**(3) **ipaddr_local**(3) **ipaddr_port**(3) **ipaddr_setport**(3) **ipaddr_sockaddr**(3) **ipaddr_str**(3) **now**(3) 

@@ -18,6 +18,8 @@ pass address and its length to POSIX socket APIs.
 
 **addr**: IP address object.
 
+This function is not available if libdill is compiled with **--disable-sockets** option.
+
 # RETURN VALUE
 
 Pointer to **sockaddr** structure correspoding to the address object.
@@ -36,4 +38,4 @@ connect(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
 ```
 # SEE ALSO
 
-ipaddr_family(3) ipaddr_len(3) ipaddr_local(3) ipaddr_port(3) ipaddr_remote(3) ipaddr_setport(3) ipaddr_str(3) 
+**ipaddr_family**(3) **ipaddr_len**(3) **ipaddr_local**(3) **ipaddr_port**(3) **ipaddr_remote**(3) **ipaddr_setport**(3) **ipaddr_str**(3) 
