@@ -58,4 +58,4 @@ ipc_close(ls);
 ```
 # SEE ALSO
 
-hclose(3) ipc_accept(3) ipc_accept_mem(3) ipc_close(3) ipc_connect(3) ipc_connect_mem(3) ipc_listen_mem(3) 
+brecv(3) brecvl(3) bsend(3) bsendl(3) hclose(3) ipc_accept(3) ipc_accept_mem(3) ipc_close(3) ipc_connect(3) ipc_connect_mem(3) ipc_listen_mem(3) 

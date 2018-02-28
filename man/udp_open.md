@@ -54,4 +54,4 @@ hclose(s);
 ```
 # SEE ALSO
 
-hclose(3) udp_open_mem(3) udp_recv(3) udp_recvl(3) udp_send(3) udp_sendl(3) 
+hclose(3) mrecv(3) mrecvl(3) msend(3) msendl(3) udp_open_mem(3) udp_recv(3) udp_recvl(3) udp_send(3) udp_sendl(3) 

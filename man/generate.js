@@ -132,6 +132,7 @@ go_info = `
 
 crlf_protocol = {
     section: "CRLF protocol",
+    type: "message",
     info: `
         CRLF is a message-based protocol that delimits messages usign CR+LF byte
         sequence (0x0D 0x0A). In other words, it's a protocol to send text
@@ -151,6 +152,7 @@ crlf_protocol = {
 
 http_protocol = {
     section: "HTTP protocol",
+    type: "application",
     info: `
         HTTP is an application-level protocol described in RFC 7230. This
         implementation handles only the request/response exchange. Whatever
@@ -195,6 +197,7 @@ http_server_example = `
 
 ipc_protocol = {
     section: "IPC protocol",
+    type: "bytestream",
     info: `
        IPC  protocol is a bytestream protocol for transporting data among
        processes on the same machine.  It is an equivalent to POSIX
@@ -213,6 +216,7 @@ ipc_protocol = {
 
 pfx_protocol = {
     section: "PFX protocol",
+    type: "message",
     info: `
         PFX  is a message-based protocol to send binary messages prefixed by
         8-byte size in network byte order. The protocol has no initial
@@ -232,6 +236,7 @@ pfx_protocol = {
 
 tcp_protocol = {
     section: "TCP protocol",
+    type: "bytestream",
     info: `
        TCP protocol is a reliable bytestream protocol for transporting data
        over network. It is defined in RFC 793.
@@ -251,6 +256,7 @@ tcp_protocol = {
 
 tls_protocol = {
     section: "TLS protocol",
+    type: "bytestream",
     info: `
         TLS is a cryptographic protocol to provide secure communication over
         the network. It is a bytestream protocol.
@@ -269,6 +275,7 @@ tls_protocol = {
 
 udp_protocol = {
     section: "UDP protocol",
+    type: "message",
     info: `
         UDP is an unreliable message-based protocol defined in RFC 768. The size
         of the message is limited. The protocol has no initial or terminal
@@ -2799,6 +2806,18 @@ function generate_man_page(fx, sections, mem) {
     /* Custom see also items. */
     if(fx.has_deadline) seealso.push("now")
     if(fx.allocates_handle) seealso.push("hclose")
+    if(fx.protocol && fx.protocol.type === "bytestream") {
+        seealso.push("brecv")
+        seealso.push("brecvl")
+        seealso.push("bsend")
+        seealso.push("bsendl")
+    }
+    if(fx.protocol && fx.protocol.type === "message") {
+        seealso.push("mrecv")
+        seealso.push("mrecvl")
+        seealso.push("msend")
+        seealso.push("msendl")
+    }
     seealso.sort()
     for(var i = 0; i < seealso.length; i++) {
         t += seealso[i] + "(3) "

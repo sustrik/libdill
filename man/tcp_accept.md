@@ -56,4 +56,4 @@ tcp_close(ls);
 ```
 # SEE ALSO
 
-hclose(3) now(3) tcp_accept_mem(3) tcp_close(3) tcp_connect(3) tcp_connect_mem(3) tcp_listen(3) tcp_listen_mem(3) 
+brecv(3) brecvl(3) bsend(3) bsendl(3) hclose(3) now(3) tcp_accept_mem(3) tcp_close(3) tcp_connect(3) tcp_connect_mem(3) tcp_listen(3) tcp_listen_mem(3) 
