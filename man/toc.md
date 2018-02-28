@@ -35,6 +35,11 @@
 * [fdin(3)](fdin.html)
 * [fdout(3)](fdout.html)
 
+#### Message sockets
+
+* [msend(3)](msend.html)
+* [msendl(3)](msendl.html)
+
 #### IP addresses
 
 * [ipaddr_family(3)](ipaddr_family.html)
