@@ -35,6 +35,10 @@
 * [fdin(3)](fdin.html)
 * [fdout(3)](fdout.html)
 
+#### Bytestream sockets
+
+* [bsend(3)](bsend.html)
+
 #### Message sockets
 
 * [mrecv(3)](mrecv.html)

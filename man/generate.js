@@ -296,6 +296,54 @@ udp_protocol = {
 
 fxs = [
     {
+        name: "bsend",
+        section: "Bytestream sockets",
+        info: "sends data to a socket",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "The socket to send the data to.",
+           },
+           {
+               name: "buf",
+               type: "const void*",
+               info: "Buffer to send.",
+           },
+           {
+               name: "len",
+               type: "size_t",
+               info: "Size of the buffer, in bytes.",
+           },
+        ],
+
+        prologue: `
+            This function sends data to a bytestream socket. It is a blocking
+            operation that unblocks only after all the data are sent. There is
+            no such thing as partial send. If a problem, including timeout,
+            occurs while sending the data error is returned to the user and the
+            socket cannot be used for sending from that point on.
+        `,
+
+        has_handle_argument: true,
+        has_deadline: true,
+        uses_connection: true,
+
+        errors: ["EINVAL"],
+        custom_errors: {
+            EPIPE: "Closed connection.",
+        },
+
+        example: `
+            int rc = bsend(s, "ABC", 3, -1);
+        `,
+    },
+    {
         name: "bundle",
         section: "Coroutines",
         info: "create an empty coroutine bundle",
@@ -1947,6 +1995,7 @@ fxs = [
 
         has_handle_argument: true,
         has_deadline: true,
+        uses_connection: true,
 
         errors: ["EINVAL", "EMSGSIZE"],
         custom_errors: {
@@ -1990,6 +2039,7 @@ fxs = [
         has_handle_argument: true,
         has_deadline: true,
         has_iol: true,
+        uses_connection: true,
 
         errors: ["EINVAL", "EMSGSIZE"],
         custom_errors: {
@@ -2033,8 +2083,9 @@ fxs = [
 
         has_handle_argument: true,
         has_deadline: true,
+        uses_connection: true,
 
-        errors: ["EINVAL", "EMSGSIZE"],
+        errors: ["EINVAL"],
         custom_errors: {
             EMSGSIZE: "The message is too long.",
             EPIPE: "Closed connection.",
@@ -2072,8 +2123,9 @@ fxs = [
         has_handle_argument: true,
         has_deadline: true,
         has_iol: true,
+        uses_connection: true,
 
-        errors: ["EINVAL", "EMSGSIZE"],
+        errors: ["EINVAL"],
         custom_errors: {
             EMSGSIZE: "The message is too long.",
             EPIPE: "Closed connection.",
@@ -3033,6 +3085,7 @@ t += generate_section("Deadlines", sections)
 t += generate_section("Channels", sections)
 t += generate_section("Handles", sections)
 t += generate_section("File descriptors", sections)
+t += generate_section("Bytestream sockets", sections)
 t += generate_section("Message sockets", sections)
 t += generate_section("IP addresses", sections)
 t += generate_section("TCP protocol", sections)

@@ -58,6 +58,7 @@ In case of success the function returns 0. In case of error it returns -1 and se
 
 * **EBADF**: Invalid handle.
 * **ECANCELED**: Current coroutine was canceled.
+* **ECONNRESET**: Broken connection.
 * **EINVAL**: Invalid argument.
 * **EMSGSIZE**: The message is too long.
 * **ENOTSUP**: The handle does not support this operation.
