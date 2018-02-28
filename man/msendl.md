@@ -32,7 +32,7 @@ messages. Structure **iolist** has the following members:
 The function returns **EINVAL** error in the case the list is
 malformed:
 
-* If **last->iol_next** is not NULL.
+* If **last->iol_next** is not **NULL**.
 * If **first** and **last** don't belong to the same list.
 * If there's a loop in the list.
 * If **iol_rsvd** of any item is non-zero.
