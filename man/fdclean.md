@@ -43,3 +43,6 @@ close(fds[0]);
 fdclean(fds[1]);
 close(fds[1]);
 ```
+# SEE ALSO
+
+fdclean(3) fdin(3) fdout(3) 

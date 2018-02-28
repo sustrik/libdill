@@ -50,3 +50,6 @@ ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
 s = pfx_detach(s, -1);
 tcp_close(s);
 ```
+# SEE ALSO
+
+pfx_attach(3) pfx_attach_mem(3) pfx_detach(3) 

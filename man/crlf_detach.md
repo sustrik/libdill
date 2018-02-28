@@ -49,3 +49,6 @@ ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
 s = crlf_detach(s, -1);
 tcp_close(s);
 ```
+# SEE ALSO
+
+crlf_attach(3) crlf_attach_mem(3) crlf_detach(3) 

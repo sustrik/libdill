@@ -81,3 +81,6 @@ if(rc == 1) {
     printf("Value %d received.\n", val2);
 }
 ```
+# SEE ALSO
+
+chmake(3) chmake_mem(3) choose(3) chrecv(3) chsend(3) 

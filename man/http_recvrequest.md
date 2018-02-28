@@ -66,3 +66,6 @@ http_sendstatus(s, 200, "OK", -1);
 s = http_detach(s, -1);
 tcp_close(s);
 ```
+# SEE ALSO
+
+http_attach(3) http_attach_mem(3) http_detach(3) http_recvfield(3) http_recvrequest(3) http_recvstatus(3) http_sendfield(3) http_sendrequest(3) http_sendstatus(3) 

@@ -2573,7 +2573,7 @@ function trimrect(t) {
 }
 
 // Generate man page for one function.
-function generate_man_page(fx, mem) {
+function generate_man_page(fx, sections, mem) {
     var t = "";
 
     /**************************************************************************/
@@ -2784,6 +2784,19 @@ function generate_man_page(fx, mem) {
         t += "```c\n" + trimrect(example) + "\n```\n"
     }
 
+    /**************************************************************************/
+    /*  SEE ALSO                                                              */
+    /**************************************************************************/
+    t += "# SEE ALSO\n\n"
+    if(fx.section) var section = fx.section
+    else if(fx.protocol) var section = fx.protocol.section
+    else section = "Unclassified"
+    section = sections[section]
+    for(var i = 0; i < section.length; i++) {
+        t += section[i] + "(3) "
+    }
+    t += "\n"
+
     return t
 }
 
@@ -2798,17 +2811,10 @@ function generate_section(name, sections) {
     return t
 }
 
+// Generate ToC.
 var sections = {}
 for(var i = 0; i < fxs.length; i++) {
-    fx = fxs[i];
-    t = generate_man_page(fx, false)
-    fs.writeFile(fx.name + ".md", t)
-    // Mem functions have no definitions of their own. The docs are generated
-    // from the related non-mem function.
-    if(fx.mem != undefined) {
-        t = generate_man_page(fx, true)
-        fs.writeFile(fx.name + "_mem.md", t)
-    }
+      fx = fxs[i];
     if(fx.section) var section = fx.section
     else if(fx.protocol) var section = fx.protocol.section
     else section = "Unclassified"
@@ -2816,8 +2822,6 @@ for(var i = 0; i < fxs.length; i++) {
     sections[section].push(fx.name)
     if(fx.mem) sections[section].push(fx.name + "_mem")
 }
-
-// Generate index
 t = ""
 t += generate_section("Coroutines", sections)
 t += generate_section("Deadlines", sections)
@@ -2835,6 +2839,16 @@ t += generate_section("PFX protocol", sections)
 t += generate_section("HTTP protocol", sections)
 fs.writeFile("toc.md", t)
 
-
-
+// Generate individual man pages.
+for(var i = 0; i < fxs.length; i++) {
+    fx = fxs[i];
+    t = generate_man_page(fx, sections, false)
+    fs.writeFile(fx.name + ".md", t)
+    // Mem functions have no definitions of their own. The docs are generated
+    // from the related non-mem function.
+    if(fx.mem != undefined) {
+        t = generate_man_page(fx, sections, true)
+        fs.writeFile(fx.name + "_mem.md", t)
+    }
+ }
 

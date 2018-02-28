@@ -51,3 +51,6 @@ hdone(s, -1);
 char reason[256];
 int status = http_recvstatus(s, reason, sizeof(reason), -1);
 ```
+# SEE ALSO
+
+hclose(3) hdone(3) hdup(3) hmake(3) hquery(3) 

@@ -58,3 +58,6 @@ char buf[2000];
 ssize_t sz = udp_recv(s, NULL, buf, sizeof(buf), -1);
 hclose(s);
 ```
+# SEE ALSO
+
+udp_open(3) udp_open_mem(3) udp_recv(3) udp_recvl(3) udp_send(3) udp_sendl(3) 

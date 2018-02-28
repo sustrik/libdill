@@ -65,3 +65,6 @@ ssize_t sz = brecv(s, buf, sizeof(buf), -1);
 s = tls_detach(s, -1);
 tcp_close(s);
 ```
+# SEE ALSO
+
+tls_attach_client(3) tls_attach_client_mem(3) tls_attach_server(3) tls_attach_server_mem(3) tls_detach(3) 

@@ -47,3 +47,6 @@ while(len) {
     len -= sent;
 }
 ```
+# SEE ALSO
+
+fdclean(3) fdin(3) fdout(3) 

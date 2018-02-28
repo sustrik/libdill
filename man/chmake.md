@@ -39,3 +39,6 @@ if(rc == -1) {
     exit(1);
 }
 ```
+# SEE ALSO
+
+chmake(3) chmake_mem(3) choose(3) chrecv(3) chsend(3) 

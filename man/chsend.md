@@ -54,3 +54,6 @@ if(rc != 0) {
 }
 printf("Value %d sent successfully.\n", val);
 ```
+# SEE ALSO
+
+chmake(3) chmake_mem(3) choose(3) chrecv(3) chsend(3) 

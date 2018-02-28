@@ -55,3 +55,6 @@ ipaddr_remote(&addr, "www.example.org", 80, 0, -1);
 int s = socket(ipaddr_family(addr), SOCK_STREAM, 0);
 connect(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
 ```
+# SEE ALSO
+
+ipaddr_family(3) ipaddr_len(3) ipaddr_local(3) ipaddr_port(3) ipaddr_remote(3) ipaddr_setport(3) ipaddr_sockaddr(3) ipaddr_str(3) 

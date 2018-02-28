@@ -54,3 +54,6 @@ brecv(s, buf, sizeof(buf), -1);
 tcp_close(s);
 tcp_close(ls);
 ```
+# SEE ALSO
+
+tcp_accept(3) tcp_accept_mem(3) tcp_close(3) tcp_connect(3) tcp_connect_mem(3) tcp_listen(3) tcp_listen_mem(3) 

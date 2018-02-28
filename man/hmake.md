@@ -46,3 +46,6 @@ In case of success the function returns newly created handle. In case of error i
 * **EINVAL**: Invalid argument.
 * **ENOMEM**: Not enough memory.
 
+# SEE ALSO
+
+hclose(3) hdone(3) hdup(3) hmake(3) hquery(3) 

@@ -47,3 +47,6 @@ while(1) {
     process_input(buf, len);
 }
 ```
+# SEE ALSO
+
+fdclean(3) fdin(3) fdout(3) 

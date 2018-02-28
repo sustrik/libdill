@@ -57,3 +57,6 @@ brecv(s, buf, sizeof(buf), -1);
 ipc_close(s);
 ipc_close(ls);
 ```
+# SEE ALSO
+
+ipc_accept(3) ipc_accept_mem(3) ipc_close(3) ipc_connect(3) ipc_connect_mem(3) ipc_listen(3) ipc_listen_mem(3) 

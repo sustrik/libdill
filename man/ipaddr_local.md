@@ -51,3 +51,6 @@ ipaddr_local(&addr, "eth0", 5555, 0);
 int s = socket(ipaddr_family(addr), SOCK_STREAM, 0);
 bind(s, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
 ```
+# SEE ALSO
+
+ipaddr_family(3) ipaddr_len(3) ipaddr_local(3) ipaddr_port(3) ipaddr_remote(3) ipaddr_setport(3) ipaddr_sockaddr(3) ipaddr_str(3) 
