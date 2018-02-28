@@ -28,8 +28,18 @@ messages. Structure **iolist** has the following members:
     struct iolist *iol_next; /* Next buffer in the list. */
     int iol_rsvd;            /* Reserved. Must be set to zero. */
 
-The function returns **EINVAL** error in case the list is malformed
-or if it contains loops.
+The function returns **EINVAL** error in the case the list is
+malformed:
+
+* If **last->iol_next** is not NULL.
+* If **first** and **last** don't belong to the same list.
+* If there's a loop in the list.
+* If **iol_rsvd** of any item is non-zero.
+
+The list (but not the buffers themselves) can be temporarily
+modified while the function is in progress. However, once the
+function returns the list is guaranteed to be the same as before
+the call.
 
 **s**: The socket.
 
@@ -38,6 +48,10 @@ or if it contains loops.
 **last**: Pointer to the last item of a linked list of I/O buffers.
 
 **deadline**: A point in time when the operation should time out, in milliseconds. Use the **now** function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.
+
+If both **first** and **last** arguments are set to **NULL**
+the message is received and silently dropped. The function will
+still return the size of the message.
 
 # RETURN VALUE
 

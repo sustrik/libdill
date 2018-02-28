@@ -1981,6 +1981,12 @@ fxs = [
             is received or no message at all.
         `,
 
+        epilogue: `
+            If both **first** and **last** arguments are set to **NULL**
+            the message is received and silently dropped. The function will
+            still return the size of the message.
+        `,
+
         has_handle_argument: true,
         has_deadline: true,
         has_iol: true,
@@ -2851,8 +2857,18 @@ function generate_man_page(fx, sections, mem) {
                 struct iolist *iol_next; /* Next buffer in the list. */
                 int iol_rsvd;            /* Reserved. Must be set to zero. */
 
-            The function returns **EINVAL** error in case the list is malformed
-            or if it contains loops.
+            The function returns **EINVAL** error in the case the list is
+            malformed:
+
+            * If **last->iol_next** is not NULL.
+            * If **first** and **last** don't belong to the same list.
+            * If there's a loop in the list.
+            * If **iol_rsvd** of any item is non-zero.
+
+            The list (but not the buffers themselves) can be temporarily
+            modified while the function is in progress. However, once the
+            function returns the list is guaranteed to be the same as before
+            the call.
         ` )+ "\n\n"
     }
 
