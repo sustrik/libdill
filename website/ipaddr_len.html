@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="http://libdill.org/main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>ipaddr_len - returns length of the address</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int</span> ipaddr_len(<span class="dt">const</span> <span class="kw">struct</span> ipaddr* addr);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>Returns lenght of the address, in bytes. This function is typicallyused in combination with <strong>ipaddr_sockaddr</strong> to pass address and itslength to POSIX socket APIs.</p>
+<p><strong>addr</strong>: IP address object.</p>
+<p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>Length of the IP address.</p>
+<h1 id="errors">ERRORS</h1>
+<p>None.</p>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">ipaddr addr;
+ipaddr_remote(&amp;addr, <span class="st">&quot;www.example.org&quot;</span>, <span class="dv">80</span>, <span class="dv">0</span>, <span class="dv">-1</span>);
+<span class="dt">int</span> s = socket(ipaddr_family(addr), SOCK_STREAM, <span class="dv">0</span>);
+connect(s, ipaddr_sockaddr(&amp;addr), ipaddr_len(&amp;addr));</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>ipaddr_family</strong>(3) <strong>ipaddr_local</strong>(3) <strong>ipaddr_port</strong>(3) <strong>ipaddr_remote</strong>(3) <strong>ipaddr_setport</strong>(3) <strong>ipaddr_sockaddr</strong>(3) <strong>ipaddr_str</strong>(3)</p>
+</body>

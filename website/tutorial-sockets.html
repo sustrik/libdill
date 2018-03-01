@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="http://libdill.org/main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+</ul>
+<h1 id="tutorial-using-libdill-sockets">Tutorial: Using libdill sockets</h1>
+<p>This tutorial is meant as an introduction to libdill socket library. We are going to develop a simple version of <code>wget</code> utility, that can be used to download webpages from the net.</p>
+<p>To avoid parsing the URLs our program will accept 3 parameters: A protocol (either <code>http</code> or <code>https</code>), the server name and the resource to download from the server:</p>
+<pre><code>$ wget http www.example.org /index.html</code></pre>
+<p>The program will, in turn, write the downloaded webpage to <code>stdout</code>.</p>
+<h2 id="step-1-creating-a-tcp-connection">Step 1: Creating a TCP connection</h2>
+<p>Let's start with some basic argument checks (there's nothing libdill-specific about that):</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;assert.h&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;errno.h&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;string.h&gt;</span>
+
+<span class="dt">int</span> main(<span class="dt">int</span> argc, <span class="dt">char</span> *argv[]) {
+    <span class="cf">if</span>(argc != <span class="dv">4</span>) {
+        fprintf(stderr, <span class="st">&quot;Usage: wget [protocol] [server] [resource]</span><span class="sc">\n</span><span class="st">&quot;</span>);
+        <span class="cf">return</span> <span class="dv">1</span>;
+    }
+    <span class="dt">int</span> port;
+    <span class="cf">if</span>(strcmp(argv[<span class="dv">1</span>], <span class="st">&quot;http&quot;</span>) == <span class="dv">0</span>) port = <span class="dv">80</span>;
+    <span class="cf">else</span> <span class="cf">if</span>(strcmp(argv[<span class="dv">1</span>], <span class="st">&quot;https&quot;</span>) == <span class="dv">0</span>) port = <span class="dv">443</span>;
+    <span class="cf">else</span> {
+        fprintf(stderr, <span class="st">&quot;Unsupported protocol.</span><span class="sc">\n</span><span class="st">&quot;</span>);
+        <span class="cf">return</span> <span class="dv">1</span>;
+    }
+
+    <span class="cf">return</span> <span class="dv">0</span>;
+}</code></pre></div>
+<p>The first thing we have to is to convert the name of the server to its IP address. In other words, we have to do a DNS query. To that end, libdill provides <code>ipaddr_remote</code> function:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> ipaddr addr;
+<span class="dt">int</span> rc = ipaddr_remote(&amp;addr, argv[<span class="dv">2</span>], port, <span class="dv">0</span>, <span class="dv">-1</span>);
+<span class="cf">if</span>(rc != <span class="dv">0</span>) {
+    perror(<span class="st">&quot;Cannot resolve server addres&quot;</span>);
+    <span class="cf">return</span> <span class="dv">1</span>;
+}</code></pre></div>
+<p>Note that errors from all libdill functions are reported in standard POSIX way: Each function may indicate an error in a different way. It case of <code>ipaddr_remote</code> it happens to be by returning -1. However, the actual error code is always passed in <code>errno</code>. Adhering to this standard system allows us to use standard POSIX error handling functions such as <code>perror</code>.</p>
+<p>Once the IP address of the web server is known, we can create a TCP connection to the server:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = tcp_connect(&amp;addr, <span class="dv">-1</span>);
+<span class="cf">if</span>(s &lt; <span class="dv">0</span>) {
+    perror(<span class="st">&quot;Cannot connect to the remote server&quot;</span>);
+    <span class="cf">return</span> <span class="dv">1</span>;
+}</code></pre></div>
+<p>Once again, the error is handled in a POSIX-y way. From now on, to keep the tutorial succint, we are going to ommit error handling code. However, if you want to add it, all you have to do is to follow the above pattern.</p>
+<p>At the end of the program we want to close the TCP socket. There are two ways to do that. First, you can use <code>hclose</code>, the generic function for closing handles. This function does close the socket and deallocates all the allocated resources, however, it doesn't negotiate an orderly shutdown with the remote peer. If you use <code>hclose</code> to close a socket, there's no guarantee that the peer will even notice, let alone shutting down in an orderly manner. While this may sound like a bad idea there are legitimate cases where you should do exactly that. If you are under DoS attach, for example, it makes sense to close offending connections as soon as possible rather than trying to play nice with the attacker:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">rc = hclose(s);
+assert(rc == <span class="dv">0</span>);</code></pre></div>
+<p>The other way to close a socket is to execute a protocol-specific shutdown procedure:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">rc = tcp_close(s, <span class="dv">-1</span>);
+assert(rc == <span class="dv">0</span>);</code></pre></div>
+<p>Here's what this function does under the hood: First, it closes the outbound half of the connection. Then it reads and discards the data from the peer. Finally, when the inbound half of the connection is closed by the peer it exits. That behaviour, of course, can be exploited by a malicious peer. The peer can ignore the shutdown request and swamp us with unwanted data. Therefore, the function has a deadline parameter. In a real-world application you should give peer only a limited amount of time to shut down the connection:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">rc = tcp_close(s, now() + <span class="dv">1000</span>);
+assert(rc == <span class="dv">0</span>);</code></pre></div>
+<p>Now let's compile what we've written so far.</p>
+<p>We will be using TLS sockets which are not part of the vanilla libdill build, so we'll have to rebuild it with <code>--enable-tls</code> option. To do that we will need OpenSSL version 1.1.0. or later. To check currently installed version of OpenSSL run <code>openssl version</code> from the command prompt. Once you've installed proper version of OpenSSL rebuild libdill like this:</p>
+<pre><code>$ ./configure --enable-tls
+$ make
+$ sudo make install</code></pre>
+<p>Then build the test program:</p>
+<pre><code>cc -o wget wget.c -ldill</code></pre>
+<p>Test it by connecting to <code>example.org</code> remote server:</p>
+<pre><code>$ ./wget http www.example.org /index.html</code></pre>
+<p>The program won't do anything visible but if it didn't fail, it means that it have successfully connected to the remote server.</p>
+<h2 id="step-2-building-the-protocol-stack">Step 2: Building the protocol stack</h2>
+<p>To understand what we are going to do next, one has to understand that, instead of full-blown shrinkwrapped protocols, libdill provides a repository of network microprotocols that can be assembled in different ways to create more complex protocols.</p>
+<p>In essence there are two ways to combine protocols. One of them is to stack one protocol on top of another. For example, typical network stack is composed of TCP living on top of IP living on top of Ethernet:</p>
+<p><img src="composite1.png" /></p>
+<p>Another way to combine two protocols is to shutdown one of them and start another one. For example, websockets start with HTTP negotiation then switch to a different, binary, protocol:</p>
+<p><img src="composite2.png" /></p>
+<p>In our case we are going to stack HTTP on top of TLS on top of TCP. Once HTTP negotiation is finished we'll shut down the HTTP protocol and we will continue with raw TCP/TLS:</p>
+<p><img src="composite3.png" /></p>
+<p>Technically, the way to stack one protocol on top of another is to use one of the <code>attach</code> functions. In our case we want to stack TLS on top of our existing TCP connection:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">s = tls_attach_client(s, <span class="dv">-1</span>);
+assert(s &gt;= <span class="dv">0</span>);</code></pre></div>
+<p>When you stack one protocol on top of another the handle to the underlying protocol will not be available any more. It's a safety measure. You don't want user of a TLS socket to be able to write random data to the underlying TCP connection and thus confuse the TLS implementation. That being the case, there's no need to preserve the original TCP protocol handle. We can reuse the existing variable <code>s</code> to keep the handle of TLS protocol.</p>
+<p>Another thing to keep in mind is that if <code>attach</code> function fails, the protocol stack may be in some broken intermediary state. To prevent user from trying to use it and experiencing undefined behaviour, the entire protocol stack is automatically deallocated.</p>
+<p>If you want to do a similar trick yourself <code>hclose</code> on the socket does exactly that: It deallocates the entire protocol stack.</p>
+<p>Anyway, there's one more problem with our implementation. User is able to specify either <code>http</code> protocol or <code>https</code> protocol. Therefore, TLS protocol layer must be made optional:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="cf">if</span>(port == <span class="dv">443</span>) {
+   s = tls_attach_client(s, <span class="dv">-1</span>);
+   assert(s &gt;= <span class="dv">0</span>);
+}</code></pre></div>
+<p>At the end of the program we want to use <code>detach</code> function to safely tear down the topmost protocol layer (TLS in our case) and retrieve the underlying TCP socket:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="cf">if</span>(port == <span class="dv">443</span>) {
+    s = tls_detach(s, <span class="dv">-1</span>);
+    assert(s &gt;= <span class="dv">0</span>);
+}</code></pre></div>
+<p>Once again, if <code>detach</code> function fails it deallocates the entire protocol stack.</p>
+<p>Now we can compile the program and test whether we can open an HTTPS connection to <code>www.example.org</code>.</p>
+<h2 id="step3-exchanging-http-headers">Step3: Exchanging HTTP headers</h2>
+<p>HTTP protocol is used to initiate the conversation with the web server, to let it know what page we are looking for or any other options we may like to convey.</p>
+<p>We are going to layer HTTP protocol on top of the underlying protocol stack the same way as we did with TLS:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">s = http_attach(s);
+assert(s &gt;= <span class="dv">0</span>);
+
+s = http_detach(s, <span class="dv">-1</span>);
+assert(s &gt;= <span class="dv">0</span>);</code></pre></div>
+<p>After attaching the HTTP socket, we can send the request to the webserver:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">rc = http_sendrequest(s, <span class="st">&quot;GET&quot;</span>, argv[<span class="dv">3</span>], <span class="dv">-1</span>);
+assert(rc == <span class="dv">0</span>);</code></pre></div>
+<p>Complemented by a list of options:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">rc = http_sendfield(s, <span class="st">&quot;Host&quot;</span>, argv[<span class="dv">2</span>], <span class="dv">-1</span>);
+assert(rc == <span class="dv">0</span>);
+rc = http_sendfield(s, <span class="st">&quot;Connection&quot;</span>, <span class="st">&quot;close&quot;</span>, <span class="dv">-1</span>);
+assert(rc == <span class="dv">0</span>);</code></pre></div>
+<p><code>Host</code> option is mandatory in HTTP/1.1 and we will simply fill in the server name. By setting <code>Connection</code> option to <code>close</code> we are asking the web server to close the connection after it sends us the web page. If we did not set that option it would leave the connection open just in case we wanted to send more HTTP requests.</p>
+<p>Finally, we have to inform the server that we are done with the request and that it can process it now. On the protocol level this means that the socket will send an empty line to the server:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">rc = hdone(s, <span class="dv">-1</span>);
+assert(rc == <span class="dv">0</span>);</code></pre></div>
+<p>Now we can receive the response from the server:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> reason[<span class="dv">256</span>];
+rc = http_recvstatus(s, reason, <span class="kw">sizeof</span>(reason), <span class="dv">-1</span>);
+assert(rc &gt;= <span class="dv">0</span>);
+fprintf(stderr, <span class="st">&quot;%d: %s</span><span class="sc">\n</span><span class="st">&quot;</span>, rc, reason);</code></pre></div>
+<p>After the call <code>rc</code> will contain the status code returned by the server, such as 200 for &quot;OK&quot; or 404 for &quot;Page not found&quot;. Also, reason will contain textual description of the error. Having nothing better to do with these values we'll just print them to <code>stderr</code>.</p>
+<p>Afterwards, the server sends us a list of options. Each option is a name-value pair. Once again, we have no use for them, so we'll just print them to <code>stderr</code>:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="cf">while</span>(<span class="dv">1</span>) {
+    <span class="dt">char</span> name[<span class="dv">256</span>];
+    <span class="dt">char</span> value[<span class="dv">256</span>];
+    rc = http_recvfield(s, name, <span class="kw">sizeof</span>(name), value, <span class="kw">sizeof</span>(value), <span class="dv">-1</span>);
+    <span class="cf">if</span>(rc == <span class="dv">-1</span> &amp;&amp; errno == EPIPE) <span class="cf">break</span>;
+    assert(rc == <span class="dv">0</span>);
+    fprintf(stderr, <span class="st">&quot;%s: %s</span><span class="sc">\n</span><span class="st">&quot;</span>, name, value);
+}
+fprintf(stderr, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>);</code></pre></div>
+<p>Note that error code <code>EPIPE</code> signals an orderly shutdown of the HTTP protocol. Specifically, it means that the server sent a blank line. At that point we are ready to detach the HTTP protocol and retrieve the underlying TCP socket.</p>
+<p>Compile and run your program. Check which HTTP options we are getting from <code>www.example.org</code>.</p>
+<h2 id="step-4-reading-the-html.">Step 4: Reading the HTML.</h2>
+<p>Now the server is about to send us the HTML page. The only thing we want to do with it is to write it to <code>stdout</code> so there's no need for any fancy protocols. The TCP socket we have will be fully sufficient for the job.</p>
+<p>To understand send/recv functions one has to understand that there are two diffent kinds of sockets. There are bytestream sockets that can be used via <code>bsend</code>/<code>brecv</code> functions. And then there are message-based sockets usable via <code>msend</code>/<code>mrecv</code> functions.</p>
+<p>The difference between the two is that the former does not preserve message boundaries. The latter does. TCP and TLS are examples of bytestream protocols. UDP and Websockets are examples of message-based protocols.</p>
+<p>Further, when layering protocols, it's not just that each protocol is either bytestream- or message-based. It's also that it requires either a bytestream-based or message-based protocol to live on top of. For example, TLS protocol requires a bytestream-based underlying protocol. So it's all right to layer it on top of TCP. However, trying to attach to an message-based UDP socket would fail.</p>
+<p>In any case, we are dealing with TCP protocol now, which is a byteastream protocol. Therefore, we will use <code>brecv</code> function to read data from the socket. We will read one byte at a time:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="cf">while</span>(<span class="dv">1</span>) {
+    <span class="dt">unsigned</span> <span class="dt">char</span> c;
+    rc = brecv(s, &amp;c, <span class="dv">1</span>, <span class="dv">-1</span>);
+    <span class="cf">if</span>(rc == <span class="dv">-1</span> &amp;&amp; errno == EPIPE) <span class="cf">break</span>;
+    fprintf(stdout, <span class="st">&quot;%c&quot;</span>, c);
+}
+fprintf(stderr, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>);</code></pre></div>
+<p>Once again, notice how the <code>EPIPE</code> error code is used to indicate that the protocol was terminated by the peer. In this particular case, the TCP connection was closed by the server.</p>
+<p>Compile the program and try to use it to download webpages from different sites!</p>
+</body>

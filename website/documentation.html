@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="http://libdill.org/main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+</ul>
+<h1 id="documentation">Documentation</h1>
+<p><a href="build_options.html">Build options</a><br />
+<a href="compatibility.html">Compatibility</a><br />
+<a href="threads.html">Threads</a></p>
+<h4 id="coroutines">Coroutines</h4>
+<ul>
+<li><a href="bundle.html">bundle(3)</a></li>
+<li><a href="bundle_go.html">bundle_go(3)</a></li>
+<li><a href="bundle_go_mem.html">bundle_go_mem(3)</a></li>
+<li><a href="bundle_mem.html">bundle_mem(3)</a></li>
+<li><a href="go.html">go(3)</a></li>
+<li><a href="go_mem.html">go_mem(3)</a></li>
+<li><a href="yield.html">yield(3)</a></li>
+</ul>
+<h4 id="deadlines">Deadlines</h4>
+<ul>
+<li><a href="msleep.html">msleep(3)</a></li>
+<li><a href="now.html">now(3)</a></li>
+</ul>
+<h4 id="channels">Channels</h4>
+<ul>
+<li><a href="chmake.html">chmake(3)</a></li>
+<li><a href="chmake_mem.html">chmake_mem(3)</a></li>
+<li><a href="choose.html">choose(3)</a></li>
+<li><a href="chrecv.html">chrecv(3)</a></li>
+<li><a href="chsend.html">chsend(3)</a></li>
+</ul>
+<h4 id="handles">Handles</h4>
+<ul>
+<li><a href="hclose.html">hclose(3)</a></li>
+<li><a href="hdone.html">hdone(3)</a></li>
+<li><a href="hdup.html">hdup(3)</a></li>
+<li><a href="hmake.html">hmake(3)</a></li>
+<li><a href="hquery.html">hquery(3)</a></li>
+</ul>
+<h4 id="file-descriptors">File descriptors</h4>
+<ul>
+<li><a href="fdclean.html">fdclean(3)</a></li>
+<li><a href="fdin.html">fdin(3)</a></li>
+<li><a href="fdout.html">fdout(3)</a></li>
+</ul>
+<h4 id="bytestream-sockets">Bytestream sockets</h4>
+<ul>
+<li><a href="brecv.html">brecv(3)</a></li>
+<li><a href="brecvl.html">brecvl(3)</a></li>
+<li><a href="bsend.html">bsend(3)</a></li>
+<li><a href="bsendl.html">bsendl(3)</a></li>
+</ul>
+<h4 id="message-sockets">Message sockets</h4>
+<ul>
+<li><a href="mrecv.html">mrecv(3)</a></li>
+<li><a href="mrecvl.html">mrecvl(3)</a></li>
+<li><a href="msend.html">msend(3)</a></li>
+<li><a href="msendl.html">msendl(3)</a></li>
+</ul>
+<h4 id="ip-addresses">IP addresses</h4>
+<ul>
+<li><a href="ipaddr_family.html">ipaddr_family(3)</a></li>
+<li><a href="ipaddr_len.html">ipaddr_len(3)</a></li>
+<li><a href="ipaddr_local.html">ipaddr_local(3)</a></li>
+<li><a href="ipaddr_port.html">ipaddr_port(3)</a></li>
+<li><a href="ipaddr_remote.html">ipaddr_remote(3)</a></li>
+<li><a href="ipaddr_setport.html">ipaddr_setport(3)</a></li>
+<li><a href="ipaddr_sockaddr.html">ipaddr_sockaddr(3)</a></li>
+<li><a href="ipaddr_str.html">ipaddr_str(3)</a></li>
+</ul>
+<h4 id="tcp-protocol">TCP protocol</h4>
+<ul>
+<li><a href="tcp_accept.html">tcp_accept(3)</a></li>
+<li><a href="tcp_accept_mem.html">tcp_accept_mem(3)</a></li>
+<li><a href="tcp_close.html">tcp_close(3)</a></li>
+<li><a href="tcp_connect.html">tcp_connect(3)</a></li>
+<li><a href="tcp_connect_mem.html">tcp_connect_mem(3)</a></li>
+<li><a href="tcp_listen.html">tcp_listen(3)</a></li>
+<li><a href="tcp_listen_mem.html">tcp_listen_mem(3)</a></li>
+</ul>
+<h4 id="ipc-protocol">IPC protocol</h4>
+<ul>
+<li><a href="ipc_accept.html">ipc_accept(3)</a></li>
+<li><a href="ipc_accept_mem.html">ipc_accept_mem(3)</a></li>
+<li><a href="ipc_close.html">ipc_close(3)</a></li>
+<li><a href="ipc_connect.html">ipc_connect(3)</a></li>
+<li><a href="ipc_connect_mem.html">ipc_connect_mem(3)</a></li>
+<li><a href="ipc_listen.html">ipc_listen(3)</a></li>
+<li><a href="ipc_listen_mem.html">ipc_listen_mem(3)</a></li>
+<li><a href="ipc_pair.html">ipc_pair(3)</a></li>
+<li><a href="ipc_pair_mem.html">ipc_pair_mem(3)</a></li>
+</ul>
+<h4 id="udp-protocol">UDP protocol</h4>
+<ul>
+<li><a href="udp_open.html">udp_open(3)</a></li>
+<li><a href="udp_open_mem.html">udp_open_mem(3)</a></li>
+<li><a href="udp_recv.html">udp_recv(3)</a></li>
+<li><a href="udp_recvl.html">udp_recvl(3)</a></li>
+<li><a href="udp_send.html">udp_send(3)</a></li>
+<li><a href="udp_sendl.html">udp_sendl(3)</a></li>
+</ul>
+<h4 id="tls-protocol">TLS protocol</h4>
+<ul>
+<li><a href="tls_attach_client.html">tls_attach_client(3)</a></li>
+<li><a href="tls_attach_client_mem.html">tls_attach_client_mem(3)</a></li>
+<li><a href="tls_attach_server.html">tls_attach_server(3)</a></li>
+<li><a href="tls_attach_server_mem.html">tls_attach_server_mem(3)</a></li>
+<li><a href="tls_detach.html">tls_detach(3)</a></li>
+</ul>
+<h4 id="crlf-protocol">CRLF protocol</h4>
+<ul>
+<li><a href="crlf_attach.html">crlf_attach(3)</a></li>
+<li><a href="crlf_attach_mem.html">crlf_attach_mem(3)</a></li>
+<li><a href="crlf_detach.html">crlf_detach(3)</a></li>
+</ul>
+<h4 id="pfx-protocol">PFX protocol</h4>
+<ul>
+<li><a href="pfx_attach.html">pfx_attach(3)</a></li>
+<li><a href="pfx_attach_mem.html">pfx_attach_mem(3)</a></li>
+<li><a href="pfx_detach.html">pfx_detach(3)</a></li>
+</ul>
+<h4 id="http-protocol">HTTP protocol</h4>
+<ul>
+<li><a href="http_attach.html">http_attach(3)</a></li>
+<li><a href="http_attach_mem.html">http_attach_mem(3)</a></li>
+<li><a href="http_detach.html">http_detach(3)</a></li>
+<li><a href="http_recvfield.html">http_recvfield(3)</a></li>
+<li><a href="http_recvrequest.html">http_recvrequest(3)</a></li>
+<li><a href="http_recvstatus.html">http_recvstatus(3)</a></li>
+<li><a href="http_sendfield.html">http_sendfield(3)</a></li>
+<li><a href="http_sendrequest.html">http_sendrequest(3)</a></li>
+<li><a href="http_sendstatus.html">http_sendstatus(3)</a></li>
+</ul>
+<h2 id="faq-how-can-i-report-a-bug">FAQ: How can I report a bug?</h2>
+<p>Report a bug here:</p>
+<p><a href="https://github.com/sustrik/libdill/issues" class="uri">https://github.com/sustrik/libdill/issues</a></p>
+<h2 id="faq-whats-structured-concurrency">FAQ: What's structured concurrency?</h2>
+<p>Check this short introductory <a href="structured-concurrency.html">article</a> about structured concurrency.</p>
+<h2 id="faq-whats-libdills-performance">FAQ: What's libdill's performance?</h2>
+<p>The best way to find out is to check for yourself. You will find some small performance benchmarks in the <code>perf</code> subdirectory.</p>
+<p>Generally speaking, though, libdill's concurrency primitives are only a bit slower than basic C flow control statements. A context switch has been seen to execute in as little as 6 ns, with coroutine creation taking 26 ns. Passing a message through a channel takes about 40 ns.</p>
+<h2 id="faq-how-does-libdills-concurrency-differ-from-gos-concurrency">FAQ: How does libdill's concurrency differ from Go's concurrency?</h2>
+<ol>
+<li>No interaction between threads. Each thread is treated as a separate process.</li>
+<li>Channels are always unbuffered.</li>
+<li><code>choose</code>, unlike <code>select</code>, is deterministic. If multiple clauses can be executed, the clause closest to the beginning of the pollset wins.</li>
+<li><code>chdone</code> signals the closing of a channel to both senders and receivers.</li>
+<li>Coroutines can be canceled.</li>
+</ol>
+<h2 id="faq-how-does-libdill-differ-from-libmill">FAQ: How does libdill differ from libmill?</h2>
+<p><code>libmill</code> was a project that aimed to copy Go's concurrency model to C 1:1 without introducing any innovations or experiments. The project is finished now. It will be maintained but won't change in the future.</p>
+<p><code>libdill</code> is a follow-up project that experiments with structured concurrency and diverges from the Go model.</p>
+<p>Technically, these are the differences:</p>
+<ol>
+<li>Libdill is idiomatic C. Whereas libmill takes Go's concurrency API and implements it in an almost identical manner in C, libdill tries to provide the same functionality via a more C-like and POSIX-like API. For example, <code>choose</code> is a function in libdill rather than a language construct, or Go's panic is replaced with error returns.</li>
+<li>Coroutines can be canceled. This creates a foundation for &quot;structured concurrency&quot;.</li>
+<li><code>chdone</code> causes blocked <code>recv</code> on the channel to return the <code>EPIPE</code> error rather than a value.</li>
+<li><code>chdone</code> will signal both the senders and the receivers of a channel. This allows for scenarios such as multiple senders and a single receiver communicating via a single channel. The receiver can use <code>chdone</code> to let the senders know that it's terminating.</li>
+<li>libmill's <code>fdwait</code> was replaced by <code>fdin</code> and <code>fdout</code>. The idea is that if we want data to flow through the connection in both directions in parallel, we should use two coroutines rather than one.</li>
+</ol>
+<h2 id="faq-how-can-i-access-the-source-code">FAQ: How can I access the source code?</h2>
+<p>To clone the repository, run:</p>
+<pre><code>$ git clone https://github.com/sustrik/libdill.git</code></pre>
+<p>To build from the source (you'll need automake and libtool), run:</p>
+<pre><code>$ ./autogen.sh
+$ ./configure
+$ make
+$ make check
+$ sudo make install</code></pre>
+<p>For easy debugging, use the following configure options:</p>
+<pre><code>$ ./configure --disable-shared --enable-debug --enable-valgrind</code></pre>
+<p>The above will turn optimization off, generate debug symbols, and link all the tests with the static version of the library. The second option will cause executables in the <code>tests</code> subdirectory to be actual debuggable binaries rather that wrapper shell scripts. The last option instructs valgrind about where the coroutine stacks are located, thereby preventing valgrind from generating spurious warnings.</p>
+<h2 id="faq-is-continuous-integration-available-for-libdill">FAQ: Is continuous integration available for libdill?</h2>
+<iframe width="100%" height="20" frameBorder="0"
+src="https://api.travis-ci.org/sustrik/libdill.svg?branch=master">
+</iframe>
+<p>Travis: <a href="https://travis-ci.org/sustrik/libdill" class="uri">https://travis-ci.org/sustrik/libdill</a></p>
+<h2 id="faq-how-can-i-contribute">FAQ: How can I contribute?</h2>
+<p>To contribute to libdill, create a GitHub pull request. You have to state that your patch is submitted under the MIT/X11 license, so that it can be incorporated into the mainline codebase without licensing issues.</p>
+<p>If you make a substantial contribution to a file, add your copyright to the file header. Irrespective of whether you do so or not, your name will be added to the AUTHORS file to indicate you own copyright to part of the codebase.</p>
+<h2 id="faq-how-can-i-see-coverage-report-for-the-tests">FAQ: How can I see coverage report for the tests?</h2>
+<pre><code>$ ./configure --enable-gcov
+$ make clean
+$ make check
+$ lcov -t &quot;libdill&quot; -o libdill.info -c -d .
+$ genhtml -o lcov libdill.info</code></pre>
+<p>After doing the steps above open <code>lcov/index.html</code> in your browser.</p>
+<h2 id="faq-what-is-the-documentation-toolchain">FAQ: What is the documentation toolchain?</h2>
+<p>Man pages, as well as the table to contents, are generated as markdown (.md) files by <code>man/generate.js</code> script. This script is meant to be run only by the documentation maintainers and the resulting markdown files are checked into the git repository.</p>
+<p><code>make</code> uses Pandoc to convert the markdown files into both UNIX man pages (troff) and HTML. These files are not checked into git, however, they are packaged along the code when doing <code>make distcheck</code>. <code>make install</code> installs the man pages on your system. It doesn't do anything with the HTML files, however, those are still conveniently present in <code>man</code> subdirectory.</p>
+<h2 id="faq-what-is-the-release-process">FAQ: What is the release process?</h2>
+<p>These instructions are intended for project maintainers:</p>
+<ul>
+<li>Run <code>make distcheck</code> to check whether the packaging process still works.</li>
+<li>Bump the ABI version appropriately (see here: <a href="http://250bpm.com/blog:41" class="uri">http://250bpm.com/blog:41</a>).</li>
+<li>Commit and push your commits back to the master branch on GitHub.</li>
+<li>Tag the new version and push the tag to GitHub (e.g. <code>git tag -a 0.3-beta; git push origin 0.3-beta</code>).</li>
+<li>Clone a clean repo from GitHub.</li>
+<li>Build the package (<code>./autogen.sh; ./configure; make distcheck</code>).</li>
+<li>Add the package to the <code>gh-pages</code> branch.</li>
+<li>Adjust <code>download.md</code> and <code>libdill-history.md</code> in <code>gh-pages</code> branch.</li>
+<li>Regenerate the documentation using <code>./gendocs.sh &lt;version-number&gt;</code>.</li>
+<li>Commit and push to <code>gh-pages</code>.</li>
+<li>Announce the release on twitter, etc.</li>
+</ul>
+</body>
