@@ -59,12 +59,6 @@ AC_MSG_NOTICE([libdill ABI version: $DILL_ABI_VERSION])
 AC_PROG_CC_C99
 AM_PROG_CC_C_O
 
-AC_PATH_PROG(PANDOC,pandoc,no)
-if test "x$PANDOC" = "xno"; then
-    AC_MSG_WARN([pandoc not found. The manual page will not be built.])
-fi
-AM_CONDITIONAL([DILL_MANPAGES], [test "x$PANDOC" != "xno"])
-
 ################################################################################
 #  --enable-debug                                                              #
 ################################################################################

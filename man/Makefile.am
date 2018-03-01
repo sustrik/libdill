@@ -103,16 +103,9 @@ man3_MANS = \
     udp_recv.3 \
     udp_recvl.3
 
-SUFFIXES = .md .3
+SUFFIXES = .3
 
 man-local: $(man3_MANS)
-
-clean-local: clean-local-check
-
-.PHONY: clean-local-check
-
-clean-local-check:
-	-rm $(man3_MANS)
 
 EXTRA_DIST = $(man3_MANS)
 

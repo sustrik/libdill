@@ -198,9 +198,7 @@ noinst_PROGRAMS += \
 #  manpage documentation generation                                            #
 ################################################################################
 
-if DILL_MANPAGES
 SUBDIRS=man
-endif
 
 ################################################################################
 #  additional packaging-related stuff                                          #
