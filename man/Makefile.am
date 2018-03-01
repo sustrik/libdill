@@ -192,7 +192,6 @@ man-local: $(man3_MANS)
 # Compile the man page document
 .md.3:
 	$(AM_V_GEN) @PANDOC@ -s -f markdown_github -t man $< -o $@ \
-		-M author="Martin Sustrik" \
 		-M header="libdill Library Functions" \
 		-M footer="libdill" \
 		-M title="`echo "$(patsubst %.md,%,$<)(3)" | tr 'a-z' 'A-Z'`"
