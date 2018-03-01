@@ -4,35 +4,43 @@ ipc_pair_mem - creates a pair of mutually connected IPC sockets
 
 # SYNOPSIS
 
-**#include &lt;libdill.h>**
+```c
+#include <libdill.h>
 
-**int ipc_pair_mem(void **\*_mem_**, int **_s_**[2]);**
+int ipc_pair_mem(void* mem, int s[2]);
+```
 
 # DESCRIPTION
 
-IPC protocol is a bytestream protocol (i.e. data can be sent via **bsend()** and received via **brecv()**) for transporting data among processes on the same machine. It is an equivalent to POSIX **AF_LOCAL** sockets.
+This function creates a pair of mutually connected IPC sockets.
 
-This function creates a pair of mutually connected IPC sockets, in user-supplied memory. The memory is passed in _mem_ argument. It must be at least _IPC\_PAIR\_SIZE_ bytes long and can be deallocated only after both sockets are closed. Unless you are hyper-optimizing use **ipc_pair()** instead.
+This function allows to avoid one dynamic memory allocation by
+storing the object in user-supplied memory. Unless you are
+hyper-optimizing use **ipc_pair** instead.
 
-The sockets can be cleanly shut down using **ipc_close()** function.
+**mem**: The memory to store the newly created object. It must be at least **IPC_PAIR_SIZE** bytes long and must not be deallocated before the object is closed.
+
+**s**: Out parameter. Two handles to the opposite ends of the connection.
+
+The sockets can be cleanly shut down using **ipc_close** function.
 
 # RETURN VALUE
 
-Zero in case of success. On error, it returns -1 and sets _errno_ to one of the values below.
+In case of success the function returns 0. In case of error it returns -1 and sets **errno** to one of the values below.
 
 # ERRORS
 
-* **EACCES**: The process does not have appropriate privileges.
-* **ECANCELED**: Current coroutine is being shut down.
+* **ECANCELED**: Current coroutine was canceled.
 * **EMFILE**: The maximum number of file descriptors in the process are already open.
 * **ENFILE**: The maximum number of file descriptors in the system are already open.
 * **ENOMEM**: Not enough memory.
-* **ETIMEDOUT**: Deadline was reached.
 
 # EXAMPLE
 
 ```c
 int s[2];
-char mem[IPC_PAIR_SIZE];
-int rc = ipc_pair_mem(mem, s);
+int rc = ipc_pair(s);
 ```
+# SEE ALSO
+
+**hclose**(3) **ipc_accept**(3) **ipc_accept_mem**(3) **ipc_close**(3) **ipc_connect**(3) **ipc_connect_mem**(3) **ipc_listen**(3) **ipc_listen_mem**(3) **ipc_pair**(3) 

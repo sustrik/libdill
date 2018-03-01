@@ -79,6 +79,8 @@
 * [ipc_connect_mem(3)](ipc_connect_mem.html)
 * [ipc_listen(3)](ipc_listen.html)
 * [ipc_listen_mem(3)](ipc_listen_mem.html)
+* [ipc_pair(3)](ipc_pair.html)
+* [ipc_pair_mem(3)](ipc_pair_mem.html)
 
 #### UDP protocol
 

@@ -27,6 +27,8 @@ In case of success the function returns 0. In case of error it returns -1 and se
 # ERRORS
 
 * **ECANCELED**: Current coroutine was canceled.
+* **EMFILE**: The maximum number of file descriptors in the process are already open.
+* **ENFILE**: The maximum number of file descriptors in the system are already open.
 * **ENOMEM**: Not enough memory.
 
 # EXAMPLE
@@ -41,4 +43,4 @@ if(rc == -1) {
 ```
 # SEE ALSO
 
-**chmake_mem**(3) **choose**(3) **chrecv**(3) **chsend**(3) 
+**chmake_mem**(3) **choose**(3) **chrecv**(3) **chsend**(3) **hclose**(3) 

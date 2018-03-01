@@ -620,6 +620,8 @@ fxs = [
             It doesn't store any items.
         `,
 
+        allocates_handle: true,
+
         errors: ['ECANCELED', 'ENOMEM'],
 
         example: `
@@ -2084,6 +2086,44 @@ fxs = [
         },
     },
     {
+        name: "ipc_pair",
+        section: "IPC protocol",
+        info: "creates a pair of mutually connected IPC sockets",
+
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+
+        args: [
+            {
+                name: "s",
+                type: "int",
+                postfix: "[2]",
+                info: "Out parameter. Two handles to the opposite ends of the connection."
+            },
+        ],
+
+        prologue: `
+            This function creates a pair of mutually connected IPC sockets.
+        `,
+        epilogue: `
+            The sockets can be cleanly shut down using **ipc_close** function.
+        `,
+
+        allocates_handle: true,
+
+        errors: ['ECANCELED'],
+
+        example: `
+              int s[2];
+              int rc = ipc_pair(s);
+        `,
+
+        mem: "IPC_PAIR_SIZE",
+    },
+    {
         name: "mrecv",
         section: "Message sockets",
         info: "receives a message",
@@ -2976,7 +3016,7 @@ function generate_man_page(fx, sections, mem) {
                   "at least **" + fx.mem + "** bytes long and must not be " +
                   "deallocated before the object is closed.",
         }
-        if(fx.name === "chmake") a.unshift(memarg)
+        if(fx.name === "chmake" || fx.name === "ipc_pair") a.unshift(memarg)
         else a.push(memarg)
     }
     if(fx.has_deadline) {
