@@ -88,6 +88,12 @@ $ genhtml -o lcov libdill.info
 
 After doing the steps above open `lcov/index.html` in your browser.
 
+## FAQ: What is the documentation toolchain?
+
+Man pages, as well as the table to contents, are generated as markdown (.md) files by `man/generate.js` script. This script is meant to be run only by the documentation maintainers and the resulting markdown files are checked into the git repository.
+
+`make` uses Pandoc to convert the markdown files into both UNIX man pages (troff) and HTML. These files are not checked into git, however, they are packaged along the code when doing `make distcheck`. `make install` installs the man pages on your system. It doesn't do anything with the HTML files, however, those are still conveniently present in `man` subdirectory.
+
 ## FAQ: What is the release process?
 
 These instructions are intended for project maintainers:
