@@ -14,16 +14,11 @@ int http_attach_mem(int s, void* mem);
 
 **WARNING: This is experimental functionality and the API may change in the future.**
 
-HTTP is an application-level protocol described in RFC 7230. This
-implementation handles only the request/response exchange. Whatever
-comes after that must be handled by a different protocol.
+HTTP is an application-level protocol described in RFC 7230. Thisimplementation handles only the request/response exchange. Whatevercomes after that must be handled by a different protocol.
 
-This function instantiates HTTP protocol on top of the underlying
-protocol.
+This function instantiates HTTP protocol on top of the underlyingprotocol.
 
-This function allows to avoid one dynamic memory allocation by
-storing the object in user-supplied memory. Unless you are
-hyper-optimizing use **http_attach** instead.
+This function allows to avoid one dynamic memory allocation bystoring the object in user-supplied memory. Unless you arehyper-optimizing use **http_attach** instead.
 
 **s**: Handle of the underlying socket. It must be a bytestream protocol.
 
@@ -65,6 +60,8 @@ while(1) {
 s = http_detach(s, -1);
 tcp_close(s);
 ```
+
 # SEE ALSO
 
 **hclose**(3) **http_attach**(3) **http_detach**(3) **http_recvfield**(3) **http_recvrequest**(3) **http_recvstatus**(3) **http_sendfield**(3) **http_sendrequest**(3) **http_sendstatus**(3) 
+

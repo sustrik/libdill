@@ -14,13 +14,9 @@ int tls_attach_server(int s, const char* cert, const char* cert, int64_t deadlin
 
 **WARNING: This is experimental functionality and the API may change in the future.**
 
-TLS is a cryptographic protocol to provide secure communication over
-the network. It is a bytestream protocol.
+TLS is a cryptographic protocol to provide secure communication overthe network. It is a bytestream protocol.
 
-This function instantiates TLS protocol on top of the underlying
-protocol. TLS protocol being asymmetric, client and server sides are
-intialized in different ways. This particular function initializes
-the server side of the connection.
+This function instantiates TLS protocol on top of the underlyingprotocol. TLS protocol being asymmetric, client and server sides areintialized in different ways. This particular function initializesthe server side of the connection.
 
 **s**: Handle of the underlying socket. It must be a bytestream protocol.
 
@@ -64,6 +60,8 @@ ssize_t sz = brecv(s, buf, sizeof(buf), -1);
 s = tls_detach(s, -1);
 tcp_close(s);
 ```
+
 # SEE ALSO
 
 **brecv**(3) **brecvl**(3) **bsend**(3) **bsendl**(3) **hclose**(3) **now**(3) **tls_attach_client**(3) **tls_attach_client_mem**(3) **tls_attach_server_mem**(3) **tls_detach**(3) 
+

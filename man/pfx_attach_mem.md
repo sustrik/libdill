@@ -12,17 +12,11 @@ int pfx_attach_mem(int s, void* mem);
 
 # DESCRIPTION
 
-PFX  is a message-based protocol to send binary messages prefixed by
-8-byte size in network byte order. The protocol has no initial
-handshake. Terminal handshake is accomplished by each peer sending eight
-0xFF bytes.
+PFX  is a message-based protocol to send binary messages prefixed by8-byte size in network byte order. The protocol has no initialhandshake. Terminal handshake is accomplished by each peer sending eight0xFF bytes.
 
-This function instantiates PFX protocol on top of the underlying
-protocol.
+This function instantiates PFX protocol on top of the underlyingprotocol.
 
-This function allows to avoid one dynamic memory allocation by
-storing the object in user-supplied memory. Unless you are
-hyper-optimizing use **pfx_attach** instead.
+This function allows to avoid one dynamic memory allocation bystoring the object in user-supplied memory. Unless you arehyper-optimizing use **pfx_attach** instead.
 
 **s**: Handle of the underlying socket. It must be a bytestream protocol.
 
@@ -56,6 +50,8 @@ ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
 s = pfx_detach(s, -1);
 tcp_close(s);
 ```
+
 # SEE ALSO
 
 **hclose**(3) **mrecv**(3) **mrecvl**(3) **msend**(3) **msendl**(3) **pfx_attach**(3) **pfx_detach**(3) 
+

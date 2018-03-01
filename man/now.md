@@ -14,11 +14,9 @@ int64_t now(void);
 
 Returns current time, in milliseconds.
 
-The function is meant for creating deadlines. For example, a point
-of time one second from now can be expressed as **now() + 1000**.
+The function is meant for creating deadlines. For example, a pointof time one second from now can be expressed as **now() + 1000**.
 
-The following values have special meaning and cannot be returned by
-the function:
+The following values have special meaning and cannot be returned bythe function:
 
 * 0: Immediate deadline.
 * -1: Infinite deadline.
@@ -39,6 +37,8 @@ if(result == -1 && errno == ETIMEDOUT) {
     printf("One second elapsed without receiving a message.\n");
 }
 ```
+
 # SEE ALSO
 
 **msleep**(3) 
+

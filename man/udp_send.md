@@ -12,14 +12,11 @@ int udp_send(int s, const struct ipaddr* addr, const void* buf, size_t len);
 
 # DESCRIPTION
 
-UDP is an unreliable message-based protocol defined in RFC 768. The size
-of the message is limited. The protocol has no initial or terminal
-handshake. A single socket can be used to different destinations.
+UDP is an unreliable message-based protocol defined in RFC 768. The sizeof the message is limited. The protocol has no initial or terminalhandshake. A single socket can be used to different destinations.
 
 This function sends an UDP packet.
 
-Given that UDP protocol is unreliable the function has no deadline.
-If packet cannot be sent it will be silently dropped.
+Given that UDP protocol is unreliable the function has no deadline.If packet cannot be sent it will be silently dropped.
 
 **s**: Handle of the UDP socket.
 
@@ -55,6 +52,8 @@ char buf[2000];
 ssize_t sz = udp_recv(s, NULL, buf, sizeof(buf), -1);
 hclose(s);
 ```
+
 # SEE ALSO
 
 **mrecv**(3) **mrecvl**(3) **msend**(3) **msendl**(3) **udp_open**(3) **udp_open_mem**(3) **udp_recv**(3) **udp_recvl**(3) **udp_sendl**(3) 
+

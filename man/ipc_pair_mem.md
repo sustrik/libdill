@@ -14,9 +14,7 @@ int ipc_pair_mem(void* mem, int s[2]);
 
 This function creates a pair of mutually connected IPC sockets.
 
-This function allows to avoid one dynamic memory allocation by
-storing the object in user-supplied memory. Unless you are
-hyper-optimizing use **ipc_pair** instead.
+This function allows to avoid one dynamic memory allocation bystoring the object in user-supplied memory. Unless you arehyper-optimizing use **ipc_pair** instead.
 
 **mem**: The memory to store the newly created object. It must be at least **IPC_PAIR_SIZE** bytes long and must not be deallocated before the object is closed.
 
@@ -41,6 +39,8 @@ In case of success the function returns 0. In case of error it returns -1 and se
 int s[2];
 int rc = ipc_pair(s);
 ```
+
 # SEE ALSO
 
 **hclose**(3) **ipc_accept**(3) **ipc_accept_mem**(3) **ipc_close**(3) **ipc_connect**(3) **ipc_connect_mem**(3) **ipc_listen**(3) **ipc_listen_mem**(3) **ipc_pair**(3) 
+

@@ -12,9 +12,7 @@ int udp_open(struct ipaddr* local, struct ipaddr* remote);
 
 # DESCRIPTION
 
-UDP is an unreliable message-based protocol defined in RFC 768. The size
-of the message is limited. The protocol has no initial or terminal
-handshake. A single socket can be used to different destinations.
+UDP is an unreliable message-based protocol defined in RFC 768. The sizeof the message is limited. The protocol has no initial or terminalhandshake. A single socket can be used to different destinations.
 
 This function creates an UDP socket.
 
@@ -52,6 +50,8 @@ char buf[2000];
 ssize_t sz = udp_recv(s, NULL, buf, sizeof(buf), -1);
 hclose(s);
 ```
+
 # SEE ALSO
 
 **hclose**(3) **mrecv**(3) **mrecvl**(3) **msend**(3) **msendl**(3) **udp_open_mem**(3) **udp_recv**(3) **udp_recvl**(3) **udp_send**(3) **udp_sendl**(3) 
+

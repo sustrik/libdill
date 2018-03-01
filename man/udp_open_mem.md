@@ -12,15 +12,11 @@ int udp_open_mem(struct ipaddr* local, struct ipaddr* remote, void* mem);
 
 # DESCRIPTION
 
-UDP is an unreliable message-based protocol defined in RFC 768. The size
-of the message is limited. The protocol has no initial or terminal
-handshake. A single socket can be used to different destinations.
+UDP is an unreliable message-based protocol defined in RFC 768. The sizeof the message is limited. The protocol has no initial or terminalhandshake. A single socket can be used to different destinations.
 
 This function creates an UDP socket.
 
-This function allows to avoid one dynamic memory allocation by
-storing the object in user-supplied memory. Unless you are
-hyper-optimizing use **udp_open** instead.
+This function allows to avoid one dynamic memory allocation bystoring the object in user-supplied memory. Unless you arehyper-optimizing use **udp_open** instead.
 
 **local**: IP  address to be used to set source IP address in outgoing packets. Also, the socket will receive packets sent to this address. If port in the address is set to zero an ephemeral port will be chosen and filled into the local address.
 
@@ -58,6 +54,8 @@ char buf[2000];
 ssize_t sz = udp_recv(s, NULL, buf, sizeof(buf), -1);
 hclose(s);
 ```
+
 # SEE ALSO
 
 **hclose**(3) **mrecv**(3) **mrecvl**(3) **msend**(3) **msendl**(3) **udp_open**(3) **udp_recv**(3) **udp_recvl**(3) **udp_send**(3) **udp_sendl**(3) 
+

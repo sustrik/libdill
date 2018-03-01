@@ -12,11 +12,7 @@ int fdout(int fd, int64_t deadline);
 
 # DESCRIPTION
 
-Waits on a file descriptor (true OS file descriptor, not libdill
-socket handle) to either become writeable or get into an error
-state. Either case leads to a successful return from the function.
-To distinguish the two outcomes, follow up with a write operation on
-the file descriptor.
+Waits on a file descriptor (true OS file descriptor, not libdillsocket handle) to either become writeable or get into an errorstate. Either case leads to a successful return from the function.To distinguish the two outcomes, follow up with a write operation onthe file descriptor.
 
 **fd**: file descriptor (OS-level one, not a libdill handle)
 
@@ -47,6 +43,8 @@ while(len) {
     len -= sent;
 }
 ```
+
 # SEE ALSO
 
 **fdclean**(3) **fdin**(3) **now**(3) 
+

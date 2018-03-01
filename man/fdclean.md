@@ -12,15 +12,9 @@ void fdclean(int fd);
 
 # DESCRIPTION
 
-This function drops any state that libdill associates with a file
-descriptor. It has to be called before the file descriptor is
-closed. If it is not, the behavior is undefined.
+This function drops any state that libdill associates with a filedescriptor. It has to be called before the file descriptor isclosed. If it is not, the behavior is undefined.
 
-It should also be used whenever you are losing control of the file
-descriptor. For example, when passing it to a third-party library.
-Also, if you are handed the file descriptor by third party code
-you should call this function just before returning it back to the
-original owner.
+It should also be used whenever you are losing control of the filedescriptor. For example, when passing it to a third-party library.Also, if you are handed the file descriptor by third party codeyou should call this function just before returning it back to theoriginal owner.
 
 **fd**: file descriptor (OS-level one, not a libdill handle)
 
@@ -43,6 +37,8 @@ close(fds[0]);
 fdclean(fds[1]);
 close(fds[1]);
 ```
+
 # SEE ALSO
 
 **fdin**(3) **fdout**(3) 
+

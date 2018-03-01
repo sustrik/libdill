@@ -12,27 +12,18 @@ void* hquery(int h);
 
 # DESCRIPTION
 
-Returns an opaque pointer associated with the passed handle and
-type.  This function is a fundamental construct for building APIs
-on top of handles.
+Returns an opaque pointer associated with the passed handle andtype.  This function is a fundamental construct for building APIson top of handles.
 
-The type argument is not interpreted in any way. It is used only
-as an unique ID.  A unique ID can be created, for instance, like
-this:
+The type argument is not interpreted in any way. It is used onlyas an unique ID.  A unique ID can be created, for instance, likethis:
 
 ```c
 int foobar_placeholder = 0;
 const void *foobar_type = &foobar_placeholder;
 ```
 
-The  return value has no specified semantics. It is an opaque
-pointer.  One typical use case for it is to return a pointer to a
-table of function pointers.  These function pointers can then be
-used to access the handle's functionality (see the example).
+The  return value has no specified semantics. It is an opaquepointer.  One typical use case for it is to return a pointer to atable of function pointers.  These function pointers can then beused to access the handle's functionality (see the example).
 
-Pointers returned by **hquery** are meant to be cachable. In other
-words, if you call hquery on the same handle with the same type
-multiple times, the result should be the same.
+Pointers returned by **hquery** are meant to be cachable. In otherwords, if you call hquery on the same handle with the same typemultiple times, the result should be the same.
 
 **h**: The handle.
 
@@ -64,6 +55,8 @@ void quux_bar(int h, char *c) {
     vfs->bar(vfs, c);
 }
 ```
+
 # SEE ALSO
 
 **hclose**(3) **hdone**(3) **hdup**(3) **hmake**(3) 
+

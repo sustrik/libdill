@@ -34,6 +34,8 @@ None.
 char buf[IPADDR_MAXSTRLEN];
 ipaddr_str(&addr, buf);
 ```
+
 # SEE ALSO
 
 **ipaddr_family**(3) **ipaddr_len**(3) **ipaddr_local**(3) **ipaddr_port**(3) **ipaddr_remote**(3) **ipaddr_setport**(3) **ipaddr_sockaddr**(3) 
+

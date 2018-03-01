@@ -12,18 +12,11 @@ int ipc_close(int s, int64_t deadline);
 
 # DESCRIPTION
 
-IPC  protocol is a bytestream protocol for transporting data among
-processes on the same machine.  It is an equivalent to POSIX
-**AF_LOCAL** sockets.
+IPC  protocol is a bytestream protocol for transporting data amongprocesses on the same machine.  It is an equivalent to POSIX**AF_LOCAL** sockets.
 
-This function closes a IPC socket cleanly. Unlike **hclose** it lets
-the peer know that it is shutting down and waits till the peer
-acknowledged the shutdown. If this terminal handshake cannot be
-done it returns error. The socket is closed even in the case of
-error.
+This function closes a IPC socket cleanly. Unlike **hclose** it letsthe peer know that it is shutting down and waits till the peeracknowledged the shutdown. If this terminal handshake cannot bedone it returns error. The socket is closed even in the case oferror.
 
-It can also be used to close IPC listener socket in which case it's
-equivalent to calling **hclose**.
+It can also be used to close IPC listener socket in which case it'sequivalent to calling **hclose**.
 
 **s**: The IPC socket.
 
@@ -54,6 +47,8 @@ brecv(s, buf, sizeof(buf), -1);
 ipc_close(s);
 ipc_close(ls);
 ```
+
 # SEE ALSO
 
 **brecv**(3) **brecvl**(3) **bsend**(3) **bsendl**(3) **ipc_accept**(3) **ipc_accept_mem**(3) **ipc_connect**(3) **ipc_connect_mem**(3) **ipc_listen**(3) **ipc_listen_mem**(3) **ipc_pair**(3) **ipc_pair_mem**(3) **now**(3) 
+

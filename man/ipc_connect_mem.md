@@ -12,15 +12,11 @@ int ipc_connect_mem(const char* addr, void* mem, int64_t deadline);
 
 # DESCRIPTION
 
-IPC  protocol is a bytestream protocol for transporting data among
-processes on the same machine.  It is an equivalent to POSIX
-**AF_LOCAL** sockets.
+IPC  protocol is a bytestream protocol for transporting data amongprocesses on the same machine.  It is an equivalent to POSIX**AF_LOCAL** sockets.
 
 This function creates a connection to a remote IPC endpoint.
 
-This function allows to avoid one dynamic memory allocation by
-storing the object in user-supplied memory. Unless you are
-hyper-optimizing use **ipc_connect** instead.
+This function allows to avoid one dynamic memory allocation bystoring the object in user-supplied memory. Unless you arehyper-optimizing use **ipc_connect** instead.
 
 **addr**: Filename to connect to.
 
@@ -61,6 +57,8 @@ char buf[3];
 brecv(s, buf, sizeof(buf), -1);
 ipc_close(s);
 ```
+
 # SEE ALSO
 
 **brecv**(3) **brecvl**(3) **bsend**(3) **bsendl**(3) **hclose**(3) **ipc_accept**(3) **ipc_accept_mem**(3) **ipc_close**(3) **ipc_connect**(3) **ipc_listen**(3) **ipc_listen_mem**(3) **ipc_pair**(3) **ipc_pair_mem**(3) **now**(3) 
+

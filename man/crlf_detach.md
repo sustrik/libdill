@@ -12,13 +12,9 @@ int crlf_detach(int s, int64_t deadline);
 
 # DESCRIPTION
 
-CRLF is a message-based protocol that delimits messages usign CR+LF byte
-sequence (0x0D 0x0A). In other words, it's a protocol to send text
-messages separated by newlines. The protocol has no initial handshake.
-Terminal handshake is accomplished by each peer sending an empty line.
+CRLF is a message-based protocol that delimits messages usign CR+LF bytesequence (0x0D 0x0A). In other words, it's a protocol to send textmessages separated by newlines. The protocol has no initial handshake.Terminal handshake is accomplished by each peer sending an empty line.
 
-This function does the terminal handshake and returns underlying
-socket to the user. The socket is closed even in the case of error.
+This function does the terminal handshake and returns underlyingsocket to the user. The socket is closed even in the case of error.
 
 **s**: Handle of the CRLF socket.
 
@@ -49,6 +45,8 @@ ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
 s = crlf_detach(s, -1);
 tcp_close(s);
 ```
+
 # SEE ALSO
 
 **crlf_attach**(3) **crlf_attach_mem**(3) **mrecv**(3) **mrecvl**(3) **msend**(3) **msendl**(3) **now**(3) 
+

@@ -12,35 +12,20 @@ int msendl(int s, struct iolist* first, struct iolist* last, int64_t deadline);
 
 # DESCRIPTION
 
-This function sends a message to a socket. It is a blocking
-operation that unblocks only after entire message is sent.
-There is no such thing as partial send. If a problem, including
-timeout, occurs while sending the message error is returned to the
-user and the socket cannot be used for sending from that point on.
+This function sends a message to a socket. It is a blockingoperation that unblocks only after entire message is sent.There is no such thing as partial send. If a problem, includingtimeout, occurs while sending the message error is returned to theuser and the socket cannot be used for sending from that point on.
 
-This function accepts a linked list of I/O buffers instead of a
-single buffer. Argument **first** points to the first item in the
-list, **last** points to the last buffer in the list. The list
-represents a single, fragmented message, not a list of multiple
-messages. Structure **iolist** has the following members:
+This function accepts a linked list of I/O buffers instead of asingle buffer. Argument **first** points to the first item in thelist, **last** points to the last buffer in the list. The listrepresents a single, fragmented message, not a list of multiplemessages. Structure **iolist** has the following members:
 
-    void *iol_base;          /* Pointer to the buffer. */
-    size_t iol_len;          /* Size of the buffer. */
-    struct iolist *iol_next; /* Next buffer in the list. */
-    int iol_rsvd;            /* Reserved. Must be set to zero. */
+    void *iol_base;          /* Pointer to the buffer. */    size_t iol_len;          /* Size of the buffer. */    struct iolist *iol_next; /* Next buffer in the list. */    int iol_rsvd;            /* Reserved. Must be set to zero. */
 
-The function returns **EINVAL** error in the case the list is
-malformed:
+The function returns **EINVAL** error in the case the list ismalformed:
 
 * If **last->iol_next** is not **NULL**.
 * If **first** and **last** don't belong to the same list.
 * If there's a loop in the list.
 * If **iol_rsvd** of any item is non-zero.
 
-The list (but not the buffers themselves) can be temporarily
-modified while the function is in progress. However, once the
-function returns the list is guaranteed to be the same as before
-the call.
+The list (but not the buffers themselves) can be temporarilymodified while the function is in progress. However, once thefunction returns the list is guaranteed to be the same as beforethe call.
 
 **s**: The socket to send the message to.
 
@@ -68,3 +53,4 @@ In case of success the function returns 0. In case of error it returns -1 and se
 # SEE ALSO
 
 **brecv**(3) **brecvl**(3) **mrecv**(3) **mrecvl**(3) **msend**(3) **now**(3) 
+

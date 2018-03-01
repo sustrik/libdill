@@ -19,9 +19,7 @@ int choose(struct chclause* clauses, int nclauses, int64_t deadline);
 
 # DESCRIPTION
 
-Accepts a list of channel operations. Performs one that can be done
-first. If multiple operations can be done immediately, the one that
-comes earlier in the array is executed.
+Accepts a list of channel operations. Performs one that can be donefirst. If multiple operations can be done immediately, the one thatcomes earlier in the array is executed.
 
 **clauses**: Operations to choose from. See below.
 
@@ -40,9 +38,7 @@ The fields in **chclause** structure are as follows:
 
 In case of success the function returns index of the clause that caused the function to exit. In case of error it returns -1 and sets **errno** to one of the values below.
 
-Even if an index is returned, **errno** may still be set to
-an error value. The operation was successfull only if **errno**
-is set to zero.
+Even if an index is returned, **errno** may still be set toan error value. The operation was successfull only if **errno**is set to zero.
 
 # ERRORS
 
@@ -50,8 +46,7 @@ is set to zero.
 * **EINVAL**: Invalid argument.
 * **ETIMEDOUT**: Deadline was reached.
 
-Additionally, if the function returns an index it can set **errno**
-to one of the following values:
+Additionally, if the function returns an index it can set **errno**to one of the following values:
 
 * **0**: Operation was completed successfully.
 * **EBADF**: Invalid handle.
@@ -81,6 +76,8 @@ if(rc == 1) {
     printf("Value %d received.\n", val2);
 }
 ```
+
 # SEE ALSO
 
 **chmake**(3) **chmake_mem**(3) **chrecv**(3) **chsend**(3) **now**(3) 
+

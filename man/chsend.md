@@ -14,12 +14,9 @@ int chsend(int ch, const void* val, size_t len, int64_t deadline);
 
 Sends a message to a channel.
 
-The size of the message sent to the channel must match the size of
-the message requested from the channel. Otherwise, both peers fail
-with **EMSGSIZE** error.
+The size of the message sent to the channel must match the size ofthe message requested from the channel. Otherwise, both peers failwith **EMSGSIZE** error.
 
-If there's no receiver for the message, the function blocks until
-one shows up or until the deadline expires.
+If there's no receiver for the message, the function blocks untilone shows up or until the deadline expires.
 
 **ch**: The channel.
 
@@ -54,6 +51,8 @@ if(rc != 0) {
 }
 printf("Value %d sent successfully.\n", val);
 ```
+
 # SEE ALSO
 
 **chmake**(3) **chmake_mem**(3) **choose**(3) **chrecv**(3) **now**(3) 
+

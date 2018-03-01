@@ -35,6 +35,8 @@ In case of success the function returns 0. In case of error it returns -1 and se
 int s[2];
 int rc = ipc_pair(s);
 ```
+
 # SEE ALSO
 
 **hclose**(3) **ipc_accept**(3) **ipc_accept_mem**(3) **ipc_close**(3) **ipc_connect**(3) **ipc_connect_mem**(3) **ipc_listen**(3) **ipc_listen_mem**(3) **ipc_pair_mem**(3) 
+

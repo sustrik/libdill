@@ -14,11 +14,9 @@ int tls_detach(int s, int64_t deadline);
 
 **WARNING: This is experimental functionality and the API may change in the future.**
 
-TLS is a cryptographic protocol to provide secure communication over
-the network. It is a bytestream protocol.
+TLS is a cryptographic protocol to provide secure communication overthe network. It is a bytestream protocol.
 
-This function does the terminal handshake and returns underlying
-socket to the user. The socket is closed even in the case of error.
+This function does the terminal handshake and returns underlyingsocket to the user. The socket is closed even in the case of error.
 
 **s**: Handle of the TLS socket.
 
@@ -51,6 +49,8 @@ ssize_t sz = brecv(s, buf, sizeof(buf), -1);
 s = tls_detach(s, -1);
 tcp_close(s);
 ```
+
 # SEE ALSO
 
 **brecv**(3) **brecvl**(3) **bsend**(3) **bsendl**(3) **now**(3) **tls_attach_client**(3) **tls_attach_client_mem**(3) **tls_attach_server**(3) **tls_attach_server_mem**(3) 
+

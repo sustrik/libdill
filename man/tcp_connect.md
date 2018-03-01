@@ -12,8 +12,7 @@ int tcp_connect(const struct ipaddr* addr, int64_t deadline);
 
 # DESCRIPTION
 
-TCP protocol is a reliable bytestream protocol for transporting data
-over network. It is defined in RFC 793.
+TCP protocol is a reliable bytestream protocol for transporting dataover network. It is defined in RFC 793.
 
 This function creates a connection to a remote TCP endpoint.
 
@@ -54,6 +53,8 @@ char buf[3];
 brecv(s, buf, sizeof(buf), -1);
 tcp_close(s);
 ```
+
 # SEE ALSO
 
 **brecv**(3) **brecvl**(3) **bsend**(3) **bsendl**(3) **hclose**(3) **now**(3) **tcp_accept**(3) **tcp_accept_mem**(3) **tcp_close**(3) **tcp_connect_mem**(3) **tcp_listen**(3) **tcp_listen_mem**(3) 
+

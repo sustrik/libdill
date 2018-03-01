@@ -14,22 +14,15 @@ int http_sendfield(int s, const char* name, const char* value, int64_t deadline)
 
 **WARNING: This is experimental functionality and the API may change in the future.**
 
-HTTP is an application-level protocol described in RFC 7230. This
-implementation handles only the request/response exchange. Whatever
-comes after that must be handled by a different protocol.
+HTTP is an application-level protocol described in RFC 7230. Thisimplementation handles only the request/response exchange. Whatevercomes after that must be handled by a different protocol.
 
-This function sends an HTTP field, i.e. a name/value pair, to the
-peer. For example, if name is **Host** and resource is
-**www.example.org** the line sent will look like this:
+This function sends an HTTP field, i.e. a name/value pair, to thepeer. For example, if name is **Host** and resource is**www.example.org** the line sent will look like this:
 
 ```
 Host: www.example.org
 ```
 
-After sending the last field of HTTP request don't forget to call
-**hdone** on the socket. It will send an empty line to the server to
-let it know that the request is finished and it should start
-processing it.
+After sending the last field of HTTP request don't forget to call**hdone** on the socket. It will send an empty line to the server tolet it know that the request is finished and it should startprocessing it.
 
 **s**: HTTP socket handle.
 
@@ -73,6 +66,8 @@ while(1) {
 s = http_detach(s, -1);
 tcp_close(s);
 ```
+
 # SEE ALSO
 
 **http_attach**(3) **http_attach_mem**(3) **http_detach**(3) **http_recvfield**(3) **http_recvrequest**(3) **http_recvstatus**(3) **http_sendrequest**(3) **http_sendstatus**(3) **now**(3) 
+

@@ -2958,6 +2958,7 @@ function trimrect(t) {
     for(var i = 0; i < lines.length; i++) {
         lns.push(lines[i].substr(indent).trimRight())
     }
+
     return lns.join("\n")
 }
 
@@ -3260,15 +3261,64 @@ t += generate_section("PFX protocol", sections)
 t += generate_section("HTTP protocol", sections)
 fs.writeFile("toc.md", t)
 
+// Subsequent lines without an empty line between them should be joined
+// to form a single paragraph.
+function make_paragraphs(t) {
+    var lns = t.split("\n")
+    var res = ""
+    var prev = "empty"
+    for(var i = 0; i < lns.length; i++) {
+        var ln = lns[i]
+        if(prev === "quotes") {
+            if(ln === "```") {
+                res += "```\n\n"
+                prev = "empty"
+                continue
+            }
+            res += ln + "\n"
+            continue
+        }
+        if(ln.length == 0) {
+            if(prev === "empty") continue
+            if(prev === "list") res += "\n"
+            else res += "\n\n"
+            prev = "empty"
+            continue
+        }
+        if(ln.startsWith("#")) {
+            if(prev !== "empty") res += "\n\n"
+            res += ln + "\n\n"
+            prev = "empty"
+            continue
+        }
+        if(ln.startsWith("* ")) {
+            res += ln + "\n"
+            prev = "list"
+            continue
+        }
+        if(ln.startsWith("```")) {
+            if(prev !== "empty") res += "\n\n"
+            res += ln + "\n"
+            prev = "quotes"
+            continue
+        }
+        res += ln
+        prev = "text"
+    }
+    return res
+}
+
 // Generate individual man pages.
 for(var i = 0; i < fxs.length; i++) {
     fx = fxs[i];
     t = generate_man_page(fx, sections, false)
+    t = make_paragraphs(t)
     fs.writeFile(fx.name + ".md", t)
     // Mem functions have no definitions of their own. The docs are generated
     // from the related non-mem function.
     if(fx.mem != undefined) {
         t = generate_man_page(fx, sections, true)
+        t = make_paragraphs(t)
         fs.writeFile(fx.name + "_mem.md", t)
     }
  }

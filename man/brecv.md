@@ -12,15 +12,9 @@ int brecv(int s, void* buf, size_t len, int64_t deadline);
 
 # DESCRIPTION
 
-This function receives data from a bytestream socket. It is a
-blocking operation that unblocks only after the requested amount of
-data is received.  There is no such thing as partial receive.
-If a problem, including timeout, occurs while receiving the data,
-an error is returned to the user and the socket cannot be used for
-receiving from that point on.
+This function receives data from a bytestream socket. It is ablocking operation that unblocks only after the requested amount ofdata is received.  There is no such thing as partial receive.If a problem, including timeout, occurs while receiving the data,an error is returned to the user and the socket cannot be used forreceiving from that point on.
 
-If **buf** is **NULL**, **len** bytes will be received but they will
-be dropped rather than returned to the user.
+If **buf** is **NULL**, **len** bytes will be received but they willbe dropped rather than returned to the user.
 
 **s**: The socket.
 
@@ -50,6 +44,8 @@ In case of success the function returns 0. In case of error it returns -1 and se
 char msg[100];
 int rc = brecv(s, msg, sizeof(msg), -1);
 ```
+
 # SEE ALSO
 
 **brecvl**(3) **mrecv**(3) **mrecvl**(3) **msend**(3) **msendl**(3) **now**(3) 
+

@@ -14,12 +14,9 @@ int http_detach(int s, int64_t deadline);
 
 **WARNING: This is experimental functionality and the API may change in the future.**
 
-HTTP is an application-level protocol described in RFC 7230. This
-implementation handles only the request/response exchange. Whatever
-comes after that must be handled by a different protocol.
+HTTP is an application-level protocol described in RFC 7230. Thisimplementation handles only the request/response exchange. Whatevercomes after that must be handled by a different protocol.
 
-This function does the terminal handshake and returns underlying
-socket to the user. The socket is closed even in the case of error.
+This function does the terminal handshake and returns underlyingsocket to the user. The socket is closed even in the case of error.
 
 **s**: Handle of the CRLF socket.
 
@@ -58,6 +55,8 @@ while(1) {
 s = http_detach(s, -1);
 tcp_close(s);
 ```
+
 # SEE ALSO
 
 **http_attach**(3) **http_attach_mem**(3) **http_recvfield**(3) **http_recvrequest**(3) **http_recvstatus**(3) **http_sendfield**(3) **http_sendrequest**(3) **http_sendstatus**(3) **now**(3) 
+

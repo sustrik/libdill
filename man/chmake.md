@@ -12,11 +12,9 @@ int chmake(int chv[2]);
 
 # DESCRIPTION
 
-Creates a bidirectional channel. In case of success handles to the
-both sides of the channel will be returned in **chv** parameter.
+Creates a bidirectional channel. In case of success handles to theboth sides of the channel will be returned in **chv** parameter.
 
-A channel is a synchronization primitive, not a container.
-It doesn't store any items.
+A channel is a synchronization primitive, not a container.It doesn't store any items.
 
 **chv**: Out parameter. Two handles to the opposite ends of the channel.
 
@@ -41,6 +39,8 @@ if(rc == -1) {
     exit(1);
 }
 ```
+
 # SEE ALSO
 
 **chmake_mem**(3) **choose**(3) **chrecv**(3) **chsend**(3) **hclose**(3) 
+

@@ -12,11 +12,7 @@ int fdin(int fd, int64_t deadline);
 
 # DESCRIPTION
 
-Waits on a file descriptor (true OS file descriptor, not libdill
-socket handle) to either become readable or get into an error state.
-Either case leads to a successful return from the function. To
-distinguish the two outcomes, follow up with a read operation on
-the file descriptor.
+Waits on a file descriptor (true OS file descriptor, not libdillsocket handle) to either become readable or get into an error state.Either case leads to a successful return from the function. Todistinguish the two outcomes, follow up with a read operation onthe file descriptor.
 
 **fd**: file descriptor (OS-level one, not a libdill handle)
 
@@ -47,6 +43,8 @@ while(1) {
     process_input(buf, len);
 }
 ```
+
 # SEE ALSO
 
 **fdclean**(3) **fdout**(3) **now**(3) 
+

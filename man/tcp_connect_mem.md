@@ -12,14 +12,11 @@ int tcp_connect_mem(const struct ipaddr* addr, void* mem, int64_t deadline);
 
 # DESCRIPTION
 
-TCP protocol is a reliable bytestream protocol for transporting data
-over network. It is defined in RFC 793.
+TCP protocol is a reliable bytestream protocol for transporting dataover network. It is defined in RFC 793.
 
 This function creates a connection to a remote TCP endpoint.
 
-This function allows to avoid one dynamic memory allocation by
-storing the object in user-supplied memory. Unless you are
-hyper-optimizing use **tcp_connect** instead.
+This function allows to avoid one dynamic memory allocation bystoring the object in user-supplied memory. Unless you arehyper-optimizing use **tcp_connect** instead.
 
 **addr**: IP address to connect to.
 
@@ -60,6 +57,8 @@ char buf[3];
 brecv(s, buf, sizeof(buf), -1);
 tcp_close(s);
 ```
+
 # SEE ALSO
 
 **brecv**(3) **brecvl**(3) **bsend**(3) **bsendl**(3) **hclose**(3) **now**(3) **tcp_accept**(3) **tcp_accept_mem**(3) **tcp_close**(3) **tcp_connect**(3) **tcp_listen**(3) **tcp_listen_mem**(3) 
+

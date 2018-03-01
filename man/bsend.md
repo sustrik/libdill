@@ -12,11 +12,7 @@ int bsend(int s, const void* buf, size_t len, int64_t deadline);
 
 # DESCRIPTION
 
-This function sends data to a bytestream socket. It is a blocking
-operation that unblocks only after all the data are sent. There is
-no such thing as partial send. If a problem, including timeout,
-occurs while sending the data error is returned to the user and the
-socket cannot be used for sending from that point on.
+This function sends data to a bytestream socket. It is a blockingoperation that unblocks only after all the data are sent. There isno such thing as partial send. If a problem, including timeout,occurs while sending the data error is returned to the user and thesocket cannot be used for sending from that point on.
 
 **s**: The socket to send the data to.
 
@@ -45,6 +41,8 @@ In case of success the function returns 0. In case of error it returns -1 and se
 ```c
 int rc = bsend(s, "ABC", 3, -1);
 ```
+
 # SEE ALSO
 
 **bsendl**(3) **now**(3) 
+

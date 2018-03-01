@@ -12,35 +12,22 @@ ssize_t udp_recvl(int s, struct ipaddr* addr, struct iolist* first, struct iolis
 
 # DESCRIPTION
 
-UDP is an unreliable message-based protocol defined in RFC 768. The size
-of the message is limited. The protocol has no initial or terminal
-handshake. A single socket can be used to different destinations.
+UDP is an unreliable message-based protocol defined in RFC 768. The sizeof the message is limited. The protocol has no initial or terminalhandshake. A single socket can be used to different destinations.
 
 This function receives a single UDP packet.
 
-This function accepts a linked list of I/O buffers instead of a
-single buffer. Argument **first** points to the first item in the
-list, **last** points to the last buffer in the list. The list
-represents a single, fragmented message, not a list of multiple
-messages. Structure **iolist** has the following members:
+This function accepts a linked list of I/O buffers instead of asingle buffer. Argument **first** points to the first item in thelist, **last** points to the last buffer in the list. The listrepresents a single, fragmented message, not a list of multiplemessages. Structure **iolist** has the following members:
 
-    void *iol_base;          /* Pointer to the buffer. */
-    size_t iol_len;          /* Size of the buffer. */
-    struct iolist *iol_next; /* Next buffer in the list. */
-    int iol_rsvd;            /* Reserved. Must be set to zero. */
+    void *iol_base;          /* Pointer to the buffer. */    size_t iol_len;          /* Size of the buffer. */    struct iolist *iol_next; /* Next buffer in the list. */    int iol_rsvd;            /* Reserved. Must be set to zero. */
 
-The function returns **EINVAL** error in the case the list is
-malformed:
+The function returns **EINVAL** error in the case the list ismalformed:
 
 * If **last->iol_next** is not **NULL**.
 * If **first** and **last** don't belong to the same list.
 * If there's a loop in the list.
 * If **iol_rsvd** of any item is non-zero.
 
-The list (but not the buffers themselves) can be temporarily
-modified while the function is in progress. However, once the
-function returns the list is guaranteed to be the same as before
-the call.
+The list (but not the buffers themselves) can be temporarilymodified while the function is in progress. However, once thefunction returns the list is guaranteed to be the same as beforethe call.
 
 **s**: Handle of the UDP socket.
 
@@ -80,6 +67,8 @@ char buf[2000];
 ssize_t sz = udp_recv(s, NULL, buf, sizeof(buf), -1);
 hclose(s);
 ```
+
 # SEE ALSO
 
 **mrecv**(3) **mrecvl**(3) **msend**(3) **msendl**(3) **now**(3) **udp_open**(3) **udp_open_mem**(3) **udp_recv**(3) **udp_send**(3) **udp_sendl**(3) 
+

@@ -12,13 +12,9 @@ int pfx_detach(int s, int64_t deadline);
 
 # DESCRIPTION
 
-PFX  is a message-based protocol to send binary messages prefixed by
-8-byte size in network byte order. The protocol has no initial
-handshake. Terminal handshake is accomplished by each peer sending eight
-0xFF bytes.
+PFX  is a message-based protocol to send binary messages prefixed by8-byte size in network byte order. The protocol has no initialhandshake. Terminal handshake is accomplished by each peer sending eight0xFF bytes.
 
-This function does the terminal handshake and returns underlying
-socket to the user. The socket is closed even in the case of error.
+This function does the terminal handshake and returns underlyingsocket to the user. The socket is closed even in the case of error.
 
 **s**: Handle of the PFX socket.
 
@@ -49,6 +45,8 @@ ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
 s = pfx_detach(s, -1);
 tcp_close(s);
 ```
+
 # SEE ALSO
 
 **mrecv**(3) **mrecvl**(3) **msend**(3) **msendl**(3) **now**(3) **pfx_attach**(3) **pfx_attach_mem**(3) 
+

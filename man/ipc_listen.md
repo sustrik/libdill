@@ -12,19 +12,15 @@ int ipc_listen(const char* addr, int backlog);
 
 # DESCRIPTION
 
-IPC  protocol is a bytestream protocol for transporting data among
-processes on the same machine.  It is an equivalent to POSIX
-**AF_LOCAL** sockets.
+IPC  protocol is a bytestream protocol for transporting data amongprocesses on the same machine.  It is an equivalent to POSIX**AF_LOCAL** sockets.
 
-This function starts listening for incoming IPC connections.
-The connections can be accepted using **ipc_accept** function.
+This function starts listening for incoming IPC connections.The connections can be accepted using **ipc_accept** function.
 
 **addr**: The filename to listen on.
 
 **backlog**: Maximum number of connections that can be kept open without accepting them.
 
-The socket can be closed either by **hclose** or **ipc_close**.
-Both ways are equivalent.
+The socket can be closed either by **hclose** or **ipc_close**.Both ways are equivalent.
 
 This function is not available if libdill is compiled with **--disable-sockets** option.
 
@@ -56,6 +52,8 @@ brecv(s, buf, sizeof(buf), -1);
 ipc_close(s);
 ipc_close(ls);
 ```
+
 # SEE ALSO
 
 **brecv**(3) **brecvl**(3) **bsend**(3) **bsendl**(3) **hclose**(3) **ipc_accept**(3) **ipc_accept_mem**(3) **ipc_close**(3) **ipc_connect**(3) **ipc_connect_mem**(3) **ipc_listen_mem**(3) **ipc_pair**(3) **ipc_pair_mem**(3) 
+

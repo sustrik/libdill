@@ -14,9 +14,7 @@ int yield(void);
 
 By calling this function, you give other coroutines a chance to run.
 
-You should consider using **yield** when doing lengthy computations
-which don't have natural coroutine switching points such as socket
-or channel operations or msleep.
+You should consider using **yield** when doing lengthy computationswhich don't have natural coroutine switching points such as socketor channel operations or msleep.
 
 # RETURN VALUE
 
@@ -34,6 +32,8 @@ for(i = 0; i != 1000000; ++i) {
     yield(); /* Give other coroutines a chance to run. */
 }
 ```
+
 # SEE ALSO
 
 **bundle**(3) **bundle_go**(3) **bundle_go_mem**(3) **bundle_mem**(3) **go**(3) **go_mem**(3) 
+

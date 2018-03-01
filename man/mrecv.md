@@ -12,10 +12,7 @@ ssize_t mrecv(int s, void* buf, size_t len, int64_t deadline);
 
 # DESCRIPTION
 
-This function receives message from a socket. It is a blocking
-operation that unblocks only after entire message is received.
-There is no such thing as partial receive. Either entire message
-is received or no message at all.
+This function receives message from a socket. It is a blockingoperation that unblocks only after entire message is received.There is no such thing as partial receive. Either entire messageis received or no message at all.
 
 **s**: The socket.
 
@@ -46,6 +43,8 @@ In case of success the function returns size of the received message, in bytes. 
 char msg[100];
 ssize_t msgsz = mrecv(s, msg, sizeof(msg), -1);
 ```
+
 # SEE ALSO
 
 **brecv**(3) **brecvl**(3) **mrecvl**(3) **msend**(3) **msendl**(3) **now**(3) 
+

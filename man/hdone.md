@@ -12,19 +12,13 @@ int hdone(int h, int64_t deadline);
 
 # DESCRIPTION
 
- This function is used to inform the handle that there will be no
- more input. This gives it time to finish it's work and possibly
- inform the user when it is safe to close the handle.
+ This function is used to inform the handle that there will be no more input. This gives it time to finish it's work and possibly inform the user when it is safe to close the handle.
 
- For example, in case of TCP protocol handle, hdone would send out
- a FIN packet. However, it does not wait until it is acknowledged
- by the peer.
+ For example, in case of TCP protocol handle, hdone would send out a FIN packet. However, it does not wait until it is acknowledged by the peer.
 
- After hdone is called on a handle, any attempts to send more data
- to the handle will result in EPIPE error.
+ After hdone is called on a handle, any attempts to send more data to the handle will result in EPIPE error.
 
-Handle implementation may also decide to prevent any further
-receiving of data and return EPIPE error instead.
+Handle implementation may also decide to prevent any furtherreceiving of data and return EPIPE error instead.
 
 **h**: The handle.
 
@@ -51,6 +45,8 @@ hdone(s, -1);
 char reason[256];
 int status = http_recvstatus(s, reason, sizeof(reason), -1);
 ```
+
 # SEE ALSO
 
 **hclose**(3) **hdup**(3) **hmake**(3) **hquery**(3) **now**(3) 
+

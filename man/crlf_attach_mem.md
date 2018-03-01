@@ -12,17 +12,11 @@ int crlf_attach_mem(int s, void* mem);
 
 # DESCRIPTION
 
-CRLF is a message-based protocol that delimits messages usign CR+LF byte
-sequence (0x0D 0x0A). In other words, it's a protocol to send text
-messages separated by newlines. The protocol has no initial handshake.
-Terminal handshake is accomplished by each peer sending an empty line.
+CRLF is a message-based protocol that delimits messages usign CR+LF bytesequence (0x0D 0x0A). In other words, it's a protocol to send textmessages separated by newlines. The protocol has no initial handshake.Terminal handshake is accomplished by each peer sending an empty line.
 
-This function instantiates CRLF protocol on top of the underlying
-protocol.
+This function instantiates CRLF protocol on top of the underlyingprotocol.
 
-This function allows to avoid one dynamic memory allocation by
-storing the object in user-supplied memory. Unless you are
-hyper-optimizing use **crlf_attach** instead.
+This function allows to avoid one dynamic memory allocation bystoring the object in user-supplied memory. Unless you arehyper-optimizing use **crlf_attach** instead.
 
 **s**: Handle of the underlying socket. It must be a bytestream protocol.
 
@@ -56,6 +50,8 @@ ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
 s = crlf_detach(s, -1);
 tcp_close(s);
 ```
+
 # SEE ALSO
 
 **crlf_attach**(3) **crlf_detach**(3) **hclose**(3) **mrecv**(3) **mrecvl**(3) **msend**(3) **msendl**(3) 
+

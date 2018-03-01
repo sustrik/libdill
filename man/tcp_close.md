@@ -12,17 +12,11 @@ int tcp_close(int s, int64_t deadline);
 
 # DESCRIPTION
 
-TCP protocol is a reliable bytestream protocol for transporting data
-over network. It is defined in RFC 793.
+TCP protocol is a reliable bytestream protocol for transporting dataover network. It is defined in RFC 793.
 
-This function closes a TCP socket cleanly. Unlike **hclose** it lets
-the peer know that it is shutting down and waits till the peer
-acknowledged the shutdown. If this terminal handshake cannot be
-done it returns error. The socket is closed even in the case of
-error.
+This function closes a TCP socket cleanly. Unlike **hclose** it letsthe peer know that it is shutting down and waits till the peeracknowledged the shutdown. If this terminal handshake cannot bedone it returns error. The socket is closed even in the case oferror.
 
-It can also be used to close TCP listener socket in which case it's
-equivalent to calling **hclose**.
+It can also be used to close TCP listener socket in which case it'sequivalent to calling **hclose**.
 
 **s**: The TCP socket.
 
@@ -55,6 +49,8 @@ brecv(s, buf, sizeof(buf), -1);
 tcp_close(s);
 tcp_close(ls);
 ```
+
 # SEE ALSO
 
 **brecv**(3) **brecvl**(3) **bsend**(3) **bsendl**(3) **now**(3) **tcp_accept**(3) **tcp_accept_mem**(3) **tcp_connect**(3) **tcp_connect_mem**(3) **tcp_listen**(3) **tcp_listen_mem**(3) 
+

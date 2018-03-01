@@ -14,12 +14,9 @@ int chrecv(int ch, void* val, size_t len, int64_t deadline);
 
 Receives a message from a channel.
 
-The size of the message requested from the channel must match the
-size of the message sent to the channel. Otherwise, both peers fail
-with **EMSGSIZE** error.
+The size of the message requested from the channel must match thesize of the message sent to the channel. Otherwise, both peers failwith **EMSGSIZE** error.
 
-If there's no one sending a message at the moment, the function
-blocks until someone shows up or until the deadline expires.
+If there's no one sending a message at the moment, the functionblocks until someone shows up or until the deadline expires.
 
 **ch**: The channel.
 
@@ -54,6 +51,8 @@ if(rc != 0) {
 }
 printf("Value %d received.\n", val);
 ```
+
 # SEE ALSO
 
 **chmake**(3) **chmake_mem**(3) **choose**(3) **chsend**(3) **now**(3) 
+

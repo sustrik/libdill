@@ -12,11 +12,7 @@ int msend(int s, const void* buf, size_t len, int64_t deadline);
 
 # DESCRIPTION
 
-This function sends a message to a socket. It is a blocking
-operation that unblocks only after entire message is sent.
-There is no such thing as partial send. If a problem, including
-timeout, occurs while sending the message error is returned to the
-user and the socket cannot be used for sending from that point on.
+This function sends a message to a socket. It is a blockingoperation that unblocks only after entire message is sent.There is no such thing as partial send. If a problem, includingtimeout, occurs while sending the message error is returned to theuser and the socket cannot be used for sending from that point on.
 
 **s**: The socket to send the message to.
 
@@ -46,6 +42,8 @@ In case of success the function returns 0. In case of error it returns -1 and se
 ```c
 int rc = msend(s, "ABC", 3, -1);
 ```
+
 # SEE ALSO
 
 **brecv**(3) **brecvl**(3) **mrecv**(3) **mrecvl**(3) **msendl**(3) **now**(3) 
+

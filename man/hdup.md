@@ -12,14 +12,11 @@ int hdup(int h);
 
 # DESCRIPTION
 
-Duplicates a handle. The new handle will refer to the same
-underlying object.
+Duplicates a handle. The new handle will refer to the sameunderlying object.
 
 **h**: Handle to duplicate.
 
-Each duplicate of a handle requires its own call to **hclose**.
-The underlying object is deallocated when all handles pointing to it
-have been closed.
+Each duplicate of a handle requires its own call to **hclose**.The underlying object is deallocated when all handles pointing to ithave been closed.
 
 # RETURN VALUE
 
@@ -40,6 +37,8 @@ h2 = hdup(h1);
 hclose(h1);
 hclose(h2); /* The socket gets deallocated here. */
 ```
+
 # SEE ALSO
 
 **hclose**(3) **hclose**(3) **hdone**(3) **hmake**(3) **hquery**(3) 
+

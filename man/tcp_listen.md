@@ -12,18 +12,15 @@ int tcp_listen(const struct ipaddr* addr, int backlog);
 
 # DESCRIPTION
 
-TCP protocol is a reliable bytestream protocol for transporting data
-over network. It is defined in RFC 793.
+TCP protocol is a reliable bytestream protocol for transporting dataover network. It is defined in RFC 793.
 
-This function starts listening for incoming connections.
-The connections can be accepted using **tcp_accept** function.
+This function starts listening for incoming connections.The connections can be accepted using **tcp_accept** function.
 
 **addr**: IP address to listen on.
 
 **backlog**: Maximum number of connections that can be kept open without accepting them.
 
-The socket can be closed either by **hclose** or **tcp_close**.
-Both ways are equivalent.
+The socket can be closed either by **hclose** or **tcp_close**.Both ways are equivalent.
 
 This function is not available if libdill is compiled with **--disable-sockets** option.
 
@@ -53,6 +50,8 @@ brecv(s, buf, sizeof(buf), -1);
 tcp_close(s);
 tcp_close(ls);
 ```
+
 # SEE ALSO
 
 **brecv**(3) **brecvl**(3) **bsend**(3) **bsendl**(3) **hclose**(3) **tcp_accept**(3) **tcp_accept_mem**(3) **tcp_close**(3) **tcp_connect**(3) **tcp_connect_mem**(3) **tcp_listen_mem**(3) 
+

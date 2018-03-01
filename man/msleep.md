@@ -35,6 +35,8 @@ In case of success the function returns 0. In case of error it returns -1 and se
             printf("Slept succefully for 1 second.
 ");
 ```
+
 # SEE ALSO
 
 **now**(3) **now**(3) 
+
