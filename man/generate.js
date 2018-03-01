@@ -118,13 +118,13 @@ go_info = `
     If you need to pass a result of a computation to a coroutine, do the
     computation first, and then pass the result as an argument.  Instead of:
 
-    \`\`\`
+    \`\`\`c
     go(bar(foo(a)));
     \`\`\`
 
     Do this:
 
-    \`\`\`
+    \`\`\`c
     int a = foo();
     go(bar(a));
     \`\`\`
@@ -1332,7 +1332,7 @@ fxs = [
             as an unique ID.  A unique ID can be created, for instance, like
             this:
 
-            \`\`\`
+            \`\`\`c
             int foobar_placeholder = 0;
             const void *foobar_type = &foobar_placeholder;
             \`\`\`

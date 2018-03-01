@@ -20,7 +20,7 @@ The type argument is not interpreted in any way. It is used only
 as an unique ID.  A unique ID can be created, for instance, like
 this:
 
-```
+```c
 int foobar_placeholder = 0;
 const void *foobar_type = &foobar_placeholder;
 ```
