@@ -3,7 +3,7 @@
 # Use this script to regenerate the website.
 
 rm -f *.html
-../man/generatemd.js
+../man/manpages.src
 
 # Build the man pages.
 for f in *.md

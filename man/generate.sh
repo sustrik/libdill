@@ -4,7 +4,7 @@
 
 rm -f *.3
 rm -f *.md
-./generatemd.js
+./manpages.src
 for f in *.md
 do
     echo "Processing $f"
