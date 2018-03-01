@@ -54,5 +54,5 @@ In case of success the function returns size of the received message, in bytes. 
 
 # SEE ALSO
 
-**brecv**(3) **brecvl**(3) **mrecv**(3) **msend**(3) **msendl**(3) **now**(3) 
+**mrecv**(3) **msend**(3) **msendl**(3) **now**(3) 
 

@@ -51,5 +51,5 @@ In case of success the function returns 0. In case of error it returns -1 and se
 
 # SEE ALSO
 
-**brecv**(3) **mrecv**(3) **mrecvl**(3) **msend**(3) **msendl**(3) **now**(3) 
+**brecv**(3) **bsend**(3) **bsendl**(3) **now**(3) 
 

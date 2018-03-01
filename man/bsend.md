@@ -44,5 +44,5 @@ int rc = bsend(s, "ABC", 3, -1);
 
 # SEE ALSO
 
-**bsendl**(3) **now**(3) 
+**brecv**(3) **brecvl**(3) **bsendl**(3) **now**(3) 
 

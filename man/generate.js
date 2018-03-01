@@ -297,7 +297,7 @@ udp_protocol = {
 fxs = [
     {
         name: "brecv",
-        section: "Message sockets",
+        section: "Bytestream sockets",
         info: "receives data from a bytestream socket",
         result: {
             type: "int",
@@ -349,7 +349,7 @@ fxs = [
     },
     {
         name: "brecvl",
-        section: "Message sockets",
+        section: "Bytestream sockets",
         info: "receives data from a bytestream socket",
         result: {
             type: "int",
