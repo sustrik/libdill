@@ -92,7 +92,7 @@ After doing the steps above open `lcov/index.html` in your browser.
 
 The source for all the man pages is `man/manpages.src`. If you want to fix the man pages edit that file.
 
-To generate actual man pages from the source do the following:
+To generate actual man pages from the source you'll need `nodejs` and `pandoc`. Do the following:
 
 ```
 $ cd man
@@ -105,7 +105,7 @@ Generated man pages are added to the git repository so that they are available e
 
 The source for the website is in `website/src` directory. The source for man pages is in `man/manpages.src`.
 
-To generate the acutal website do the following:
+To generate the acutal website you'll need `nodejs` and `pandoc`. Do the following:
 
 ```
 $ cd website
