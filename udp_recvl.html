@@ -22,21 +22,21 @@
 
 <span class="dt">ssize_t</span> udp_recvl(<span class="dt">int</span> s, <span class="kw">struct</span> ipaddr* addr, <span class="kw">struct</span> iolist* first, <span class="kw">struct</span> iolist* last, <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>UDP is an unreliable message-based protocol defined in RFC 768. The sizeof the message is limited. The protocol has no initial or terminalhandshake. A single socket can be used to different destinations.</p>
+<p>UDP is an unreliable message-based protocol defined in RFC 768. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.</p>
 <p>This function receives a single UDP packet.</p>
-<p>This function accepts a linked list of I/O buffers instead of asingle buffer. Argument <strong>first</strong> points to the first item in thelist, <strong>last</strong> points to the last buffer in the list. The listrepresents a single, fragmented message, not a list of multiplemessages. Structure <strong>iolist</strong> has the following members:</p>
+<p>This function accepts a linked list of I/O buffers instead of a single buffer. Argument <strong>first</strong> points to the first item in the list, <strong>last</strong> points to the last buffer in the list. The list represents a single, fragmented message, not a list of multiple messages. Structure <strong>iolist</strong> has the following members:</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">void</span> *iol_base;          <span class="co">/* Pointer to the buffer. */</span>
 <span class="dt">size_t</span> iol_len;          <span class="co">/* Size of the buffer. */</span>
 <span class="kw">struct</span> iolist *iol_next; <span class="co">/* Next buffer in the list. */</span>
 <span class="dt">int</span> iol_rsvd;            <span class="co">/* Reserved. Must be set to zero. */</span></code></pre></div>
-<p>The function returns <strong>EINVAL</strong> error in the case the list ismalformed:</p>
+<p>The function returns <strong>EINVAL</strong> error in the case the list is malformed:</p>
 <ul>
 <li>If <strong>last-&gt;iol_next</strong> is not <strong>NULL</strong>.</li>
 <li>If <strong>first</strong> and <strong>last</strong> don't belong to the same list.</li>
 <li>If there's a loop in the list.</li>
 <li>If <strong>iol_rsvd</strong> of any item is non-zero.</li>
 </ul>
-<p>The list (but not the buffers themselves) can be temporarilymodified while the function is in progress. However, once thefunction returns the list is guaranteed to be the same as beforethe call.</p>
+<p>The list (but not the buffers themselves) can be temporarily modified while the function is in progress. However, once the function returns the list is guaranteed to be the same as before the call.</p>
 <p><strong>s</strong>: Handle of the UDP socket.</p>
 <p><strong>addr</strong>: Out parameter. IP address of the sender of the packet. Can be <strong>NULL</strong>.</p>
 <p><strong>first</strong>: Pointer to the first item of a linked list of I/O buffers.</p>

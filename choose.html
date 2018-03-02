@@ -29,7 +29,7 @@
 
 <span class="dt">int</span> choose(<span class="kw">struct</span> chclause* clauses, <span class="dt">int</span> nclauses, <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>Accepts a list of channel operations. Performs one that can be donefirst. If multiple operations can be done immediately, the one thatcomes earlier in the array is executed.</p>
+<p>Accepts a list of channel operations. Performs one that can be done first. If multiple operations can be done immediately, the one that comes earlier in the array is executed.</p>
 <p><strong>clauses</strong>: Operations to choose from. See below.</p>
 <p><strong>nclauses</strong>: Number of clauses.</p>
 <p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
@@ -42,14 +42,14 @@
 </ul>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>In case of success the function returns index of the clause that caused the function to exit. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
-<p>Even if an index is returned, <strong>errno</strong> may still be set toan error value. The operation was successfull only if <strong>errno</strong>is set to zero.</p>
+<p>Even if an index is returned, <strong>errno</strong> may still be set to an error value. The operation was successfull only if <strong>errno</strong> is set to zero.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
 <li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
 <li><strong>EINVAL</strong>: Invalid argument.</li>
 <li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
 </ul>
-<p>Additionally, if the function returns an index it can set <strong>errno</strong>to one of the following values:</p>
+<p>Additionally, if the function returns an index it can set <strong>errno</strong> to one of the following values:</p>
 <ul>
 <li><strong>0</strong>: Operation was completed successfully.</li>
 <li><strong>EBADF</strong>: Invalid handle.</li>

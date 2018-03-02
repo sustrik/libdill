@@ -22,9 +22,9 @@
 
 <span class="dt">int</span> tcp_accept_mem(<span class="dt">int</span> s, <span class="kw">struct</span> ipaddr* addr, <span class="dt">void</span>* mem, <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>TCP protocol is a reliable bytestream protocol for transporting dataover network. It is defined in RFC 793.</p>
+<p>TCP protocol is a reliable bytestream protocol for transporting data over network. It is defined in RFC 793.</p>
 <p>This function accepts an incoming TCP connection.</p>
-<p>This function allows to avoid one dynamic memory allocation bystoring the object in user-supplied memory. Unless you arehyper-optimizing use <strong>tcp_accept</strong> instead.</p>
+<p>This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use <strong>tcp_accept</strong> instead.</p>
 <p><strong>s</strong>: Socket created by <strong>tcp_listen</strong>.</p>
 <p><strong>addr</strong>: Out parameter. IP address of the connecting endpoint. Can be <strong>NULL</strong>.</p>
 <p><strong>mem</strong>: The memory to store the newly created object. It must be at least <strong>TCP_SIZE</strong> bytes long and must not be deallocated before the object is closed.</p>

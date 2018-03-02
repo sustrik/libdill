@@ -23,8 +23,8 @@
 <span class="dt">int</span> chsend(<span class="dt">int</span> ch, <span class="dt">const</span> <span class="dt">void</span>* val, <span class="dt">size_t</span> len, <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>Sends a message to a channel.</p>
-<p>The size of the message sent to the channel must match the size ofthe message requested from the channel. Otherwise, both peers failwith <strong>EMSGSIZE</strong> error.</p>
-<p>If there's no receiver for the message, the function blocks untilone shows up or until the deadline expires.</p>
+<p>The size of the message sent to the channel must match the size of the message requested from the channel. Otherwise, both peers fail with <strong>EMSGSIZE</strong> error.</p>
+<p>If there's no receiver for the message, the function blocks until one shows up or until the deadline expires.</p>
 <p><strong>ch</strong>: The channel.</p>
 <p><strong>val</strong>: Pointer to the value to send to the channel.</p>
 <p><strong>len</strong>: Size of the value to send to the channel, in bytes.</p>

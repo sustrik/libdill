@@ -22,14 +22,14 @@
 
 <span class="dt">int</span> go_mem(expression, <span class="dt">void</span>* mem, <span class="dt">size_t</span> memlen);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>This construct launches a coroutine on a user-supplied stack.The stack has no guard page and stack overflow will result inoverwriting memory.</p>
+<p>This construct launches a coroutine on a user-supplied stack. The stack has no guard page and stack overflow will result in overwriting memory.</p>
 <p><strong>expression</strong>: Expression to evaluate as a coroutine.</p>
 <p><strong>mem</strong>: Buffer to hold the coroutine's stack.</p>
 <p><strong>memlen</strong>: Size of the <strong>mem</strong> buffer.</p>
-<p>The coroutine is executed concurrently, and its lifetime may exceed thelifetime of the caller coroutine. The return value of the coroutine, if any,is discarded and cannot be retrieved by the caller.</p>
-<p>Any function to be invoked as a coroutine must be declared with the<strong>coroutine</strong> specifier.</p>
-<p>Use <strong>hclose</strong> to cancel the coroutine. When the coroutine is canceledall the blocking calls within the coroutine will start failing with<strong>ECANCELED</strong> error.</p>
-<p><em>WARNING</em>: Coroutines will most likely work even without the coroutinespecifier. However, they may fail in random non-deterministic ways,depending on the code in question and the particular combination of compilerand optimization level. Additionally, arguments to a coroutine must not befunction calls. If they are, the program may fail non-deterministically.If you need to pass a result of a computation to a coroutine, do thecomputation first, and then pass the result as an argument. Instead of:</p>
+<p>The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller coroutine. The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.</p>
+<p>Any function to be invoked as a coroutine must be declared with the <strong>coroutine</strong> specifier.</p>
+<p>Use <strong>hclose</strong> to cancel the coroutine. When the coroutine is canceled all the blocking calls within the coroutine will start failing with <strong>ECANCELED</strong> error.</p>
+<p><em>WARNING</em>: Coroutines will most likely work even without the coroutine specifier. However, they may fail in random non-deterministic ways, depending on the code in question and the particular combination of compiler and optimization level. Additionally, arguments to a coroutine must not be function calls. If they are, the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine, do the computation first, and then pass the result as an argument. Instead of:</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">go(bar(foo(a)));</code></pre></div>
 <p>Do this:</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> a = foo();

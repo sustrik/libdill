@@ -23,7 +23,7 @@
 <span class="dt">int</span> yield(<span class="dt">void</span>);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>By calling this function, you give other coroutines a chance to run.</p>
-<p>You should consider using <strong>yield</strong> when doing lengthy computationswhich don't have natural coroutine switching points such as socketor channel operations or msleep.</p>
+<p>You should consider using <strong>yield</strong> when doing lengthy computations which don't have natural coroutine switching points such as socket or channel operations or msleep.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>In case of success the function returns 0. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>

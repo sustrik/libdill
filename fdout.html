@@ -22,7 +22,7 @@
 
 <span class="dt">int</span> fdout(<span class="dt">int</span> fd, <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>Waits on a file descriptor (true OS file descriptor, not libdillsocket handle) to either become writeable or get into an errorstate. Either case leads to a successful return from the function.To distinguish the two outcomes, follow up with a write operation onthe file descriptor.</p>
+<p>Waits on a file descriptor (true OS file descriptor, not libdill socket handle) to either become writeable or get into an error state. Either case leads to a successful return from the function. To distinguish the two outcomes, follow up with a write operation on the file descriptor.</p>
 <p><strong>fd</strong>: file descriptor (OS-level one, not a libdill handle)</p>
 <p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
 <h1 id="return-value">RETURN VALUE</h1>

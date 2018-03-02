@@ -23,8 +23,8 @@
 <span class="dt">int</span> http_sendrequest(<span class="dt">int</span> s, <span class="dt">const</span> <span class="dt">char</span>* command, <span class="dt">const</span> <span class="dt">char</span>* resource, <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p><strong>WARNING: This is experimental functionality and the API may change in the future.</strong></p>
-<p>HTTP is an application-level protocol described in RFC 7230. Thisimplementation handles only the request/response exchange. Whatevercomes after that must be handled by a different protocol.</p>
-<p>This function sends an initial HTTP request with the specifiedcommand and resource. For example, if command is <strong>GET</strong> andresource is <strong>/index.html</strong> the line sent will look like this:</p>
+<p>HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.</p>
+<p>This function sends an initial HTTP request with the specified command and resource. For example, if command is <strong>GET</strong> and resource is <strong>/index.html</strong> the line sent will look like this:</p>
 <pre><code>GET /index.html HTTP/1.1</code></pre>
 <p><strong>s</strong>: HTTP socket handle.</p>
 <p><strong>command</strong>: HTTP command, such as <strong>GET</strong>.</p>
