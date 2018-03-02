@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>libdill</title>
-  <link rel="stylesheet" type="text/css" href="http://libdill.org/main.css">
+  <link rel="stylesheet" type="text/css" href="main.css">
 </head>
 <body>
 
@@ -200,13 +200,13 @@ $ genhtml -o lcov libdill.info</code></pre>
 <p>After doing the steps above open <code>lcov/index.html</code> in your browser.</p>
 <h2 id="faq-how-are-the-man-pages-generated">FAQ: How are the man pages generated?</h2>
 <p>The source for all the man pages is <code>man/manpages.src</code>. If you want to fix the man pages edit that file.</p>
-<p>To generate actual man pages from the source do the following:</p>
+<p>To generate actual man pages from the source you'll need <code>nodejs</code> and <code>pandoc</code>. Do the following:</p>
 <pre><code>$ cd man
 $ ./generate.sh</code></pre>
 <p>Generated man pages are added to the git repository so that they are available even for users without the appropriate toolchain installed.</p>
 <h2 id="faq-how-is-the-website-generated">FAQ: How is the website generated?</h2>
 <p>The source for the website is in <code>website/src</code> directory. The source for man pages is in <code>man/manpages.src</code>.</p>
-<p>To generate the acutal website do the following:</p>
+<p>To generate the acutal website you'll need <code>nodejs</code> and <code>pandoc</code>. Do the following:</p>
 <pre><code>$ cd website
 $ ./generate.sh</code></pre>
 <p>Generated HTML pages are added to the git repository so that they are available even for users without the appropriate toolchain installed.</p>
