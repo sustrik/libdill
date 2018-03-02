@@ -21,10 +21,10 @@ int\ http_detach(int\ s,\ int64_t\ deadline);
 in the future.\f[]
 .PP
 HTTP is an application\-level protocol described in RFC 7230.
-Thisimplementation handles only the request/response exchange.
-Whatevercomes after that must be handled by a different protocol.
+This implementation handles only the request/response exchange.
+Whatever comes after that must be handled by a different protocol.
 .PP
-This function does the terminal handshake and returns underlyingsocket
+This function does the terminal handshake and returns underlying socket
 to the user.
 The socket is closed even in the case of error.
 .PP

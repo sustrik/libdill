@@ -23,8 +23,8 @@
 <span class="dt">int</span> chrecv(<span class="dt">int</span> ch, <span class="dt">void</span>* val, <span class="dt">size_t</span> len, <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>Receives a message from a channel.</p>
-<p>The size of the message requested from the channel must match thesize of the message sent to the channel. Otherwise, both peers failwith <strong>EMSGSIZE</strong> error.</p>
-<p>If there's no one sending a message at the moment, the functionblocks until someone shows up or until the deadline expires.</p>
+<p>The size of the message requested from the channel must match the size of the message sent to the channel. Otherwise, both peers fail with <strong>EMSGSIZE</strong> error.</p>
+<p>If there's no one sending a message at the moment, the function blocks until someone shows up or until the deadline expires.</p>
 <p><strong>ch</strong>: The channel.</p>
 <p><strong>val</strong>: The buffer to receive the message to.</p>
 <p><strong>len</strong>: Size of the buffer, in bytes.</p>

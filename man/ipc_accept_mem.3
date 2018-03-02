@@ -16,15 +16,15 @@ int\ ipc_accept_mem(int\ s,\ void*\ mem,\ int64_t\ deadline);
 .fi
 .SH DESCRIPTION
 .PP
-IPC protocol is a bytestream protocol for transporting data
-amongprocesses on the same machine.
-It is an equivalent to POSIX\f[B]AF_LOCAL\f[] sockets.
+IPC protocol is a bytestream protocol for transporting data among
+processes on the same machine.
+It is an equivalent to POSIX \f[B]AF_LOCAL\f[] sockets.
 .PP
 This function accepts an incoming IPC connection.
 .PP
-This function allows to avoid one dynamic memory allocation bystoring
+This function allows to avoid one dynamic memory allocation by storing
 the object in user\-supplied memory.
-Unless you arehyper\-optimizing use \f[B]ipc_accept\f[] instead.
+Unless you are hyper\-optimizing use \f[B]ipc_accept\f[] instead.
 .PP
 \f[B]s\f[]: Socket created by \f[B]ipc_listen\f[].
 .PP

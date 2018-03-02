@@ -3304,7 +3304,7 @@ function make_paragraphs(t) {
             prev = "quotes"
             continue
         }
-        res += ln
+        res += " " + ln
         prev = "text"
     }
     return res

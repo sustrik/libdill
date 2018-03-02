@@ -17,14 +17,14 @@ int\ udp_send(int\ s,\ const\ struct\ ipaddr*\ addr,\ const\ void*\ buf,\ size_t
 .SH DESCRIPTION
 .PP
 UDP is an unreliable message\-based protocol defined in RFC 768.
-The sizeof the message is limited.
-The protocol has no initial or terminalhandshake.
+The size of the message is limited.
+The protocol has no initial or terminal handshake.
 A single socket can be used to different destinations.
 .PP
 This function sends an UDP packet.
 .PP
-Given that UDP protocol is unreliable the function has no deadline.If
-packet cannot be sent it will be silently dropped.
+Given that UDP protocol is unreliable the function has no deadline.
+If packet cannot be sent it will be silently dropped.
 .PP
 \f[B]s\f[]: Handle of the UDP socket.
 .PP

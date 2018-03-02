@@ -23,7 +23,7 @@
 <span class="dt">int</span> ipc_pair_mem(<span class="dt">void</span>* mem, <span class="dt">int</span> s[<span class="dv">2</span>]);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>This function creates a pair of mutually connected IPC sockets.</p>
-<p>This function allows to avoid one dynamic memory allocation bystoring the object in user-supplied memory. Unless you arehyper-optimizing use <strong>ipc_pair</strong> instead.</p>
+<p>This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use <strong>ipc_pair</strong> instead.</p>
 <p><strong>mem</strong>: The memory to store the newly created object. It must be at least <strong>IPC_PAIR_SIZE</strong> bytes long and must not be deallocated before the object is closed.</p>
 <p><strong>s</strong>: Out parameter. Two handles to the opposite ends of the connection.</p>
 <p>The sockets can be cleanly shut down using <strong>ipc_close</strong> function.</p>

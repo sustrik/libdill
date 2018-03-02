@@ -17,16 +17,16 @@ int\ hclose(int\ h);
 .SH DESCRIPTION
 .PP
 This function closes a handle.
-Once all handles pointing to the sameunderlying object have been closed,
-the object is deallocatedimmediately, without blocking.
+Once all handles pointing to the same underlying object have been
+closed, the object is deallocated immediately, without blocking.
 .PP
-The function guarantees that all associated resources aredeallocated.
-However, it does not guarantee that the handle\[aq]s workwill have been
+The function guarantees that all associated resources are deallocated.
+However, it does not guarantee that the handle\[aq]s work will have been
 fully finished.
-E.g., outbound network data may notbe flushed.
+E.g., outbound network data may not be flushed.
 .PP
-In the case of network protocol sockets the entire protocol stackis
-closed, the topmost protocol as well as all the protocolsbeneath it.
+In the case of network protocol sockets the entire protocol stack is
+closed, the topmost protocol as well as all the protocols beneath it.
 .PP
 \f[B]h\f[]: The handle.
 .SH RETURN VALUE

@@ -23,7 +23,7 @@
 <span class="dt">int</span> http_recvfield(<span class="dt">int</span> s, <span class="dt">char</span>* name, <span class="dt">size_t</span> namelen, <span class="dt">char</span>* value, <span class="dt">size_t</span> valuelen, <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p><strong>WARNING: This is experimental functionality and the API may change in the future.</strong></p>
-<p>HTTP is an application-level protocol described in RFC 7230. Thisimplementation handles only the request/response exchange. Whatevercomes after that must be handled by a different protocol.</p>
+<p>HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.</p>
 <p>This function receives an HTTP field from the peer.</p>
 <p><strong>s</strong>: HTTP socket handle.</p>
 <p><strong>name</strong>: Buffer to store name of the field.</p>

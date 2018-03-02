@@ -17,14 +17,14 @@ int\ crlf_attach(int\ s);
 .SH DESCRIPTION
 .PP
 CRLF is a message\-based protocol that delimits messages usign CR+LF
-bytesequence (0x0D 0x0A).
-In other words, it\[aq]s a protocol to send textmessages separated by
+byte sequence (0x0D 0x0A).
+In other words, it\[aq]s a protocol to send text messages separated by
 newlines.
-The protocol has no initial handshake.Terminal handshake is accomplished
-by each peer sending an empty line.
+The protocol has no initial handshake.
+Terminal handshake is accomplished by each peer sending an empty line.
 .PP
-This function instantiates CRLF protocol on top of the
-underlyingprotocol.
+This function instantiates CRLF protocol on top of the underlying
+protocol.
 .PP
 \f[B]s\f[]: Handle of the underlying socket.
 It must be a bytestream protocol.

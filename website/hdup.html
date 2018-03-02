@@ -22,9 +22,9 @@
 
 <span class="dt">int</span> hdup(<span class="dt">int</span> h);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>Duplicates a handle. The new handle will refer to the sameunderlying object.</p>
+<p>Duplicates a handle. The new handle will refer to the same underlying object.</p>
 <p><strong>h</strong>: Handle to duplicate.</p>
-<p>Each duplicate of a handle requires its own call to <strong>hclose</strong>.The underlying object is deallocated when all handles pointing to ithave been closed.</p>
+<p>Each duplicate of a handle requires its own call to <strong>hclose</strong>. The underlying object is deallocated when all handles pointing to it have been closed.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>In case of success the function returns newly duplicated handle. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>

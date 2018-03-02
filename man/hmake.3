@@ -22,19 +22,19 @@ int\ hmake(struct\ hvfs*\ hvfs);
 .fi
 .SH DESCRIPTION
 .PP
-A handle is the user\-space equivalent of a file descriptor.Coroutines
-and channels are represented by handles.
+A handle is the user\-space equivalent of a file descriptor.
+Coroutines and channels are represented by handles.
 .PP
-Unlike with file descriptors, however, you can use the
-\f[B]hmake\f[]function to create your own type of handle.
+Unlike with file descriptors, however, you can use the \f[B]hmake\f[]
+function to create your own type of handle.
 .PP
-The argument of the function is a virtual\-function table ofoperations
+The argument of the function is a virtual\-function table of operations
 associated with the handle.
 .PP
-When implementing the \f[B]close\f[] operation, keep in mind
-thatinvoking blocking operations is not allowed, as blocking
-operationsinvoked within the context of a \f[B]close\f[] operation will
-fail withan \f[B]ECANCELED\f[] error.
+When implementing the \f[B]close\f[] operation, keep in mind that
+invoking blocking operations is not allowed, as blocking operations
+invoked within the context of a \f[B]close\f[] operation will fail with
+an \f[B]ECANCELED\f[] error.
 .PP
 To close a handle, use the \f[B]hclose\f[] function.
 .PP

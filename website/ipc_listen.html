@@ -22,11 +22,11 @@
 
 <span class="dt">int</span> ipc_listen(<span class="dt">const</span> <span class="dt">char</span>* addr, <span class="dt">int</span> backlog);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>IPC protocol is a bytestream protocol for transporting data amongprocesses on the same machine. It is an equivalent to POSIX<strong>AF_LOCAL</strong> sockets.</p>
-<p>This function starts listening for incoming IPC connections.The connections can be accepted using <strong>ipc_accept</strong> function.</p>
+<p>IPC protocol is a bytestream protocol for transporting data among processes on the same machine. It is an equivalent to POSIX <strong>AF_LOCAL</strong> sockets.</p>
+<p>This function starts listening for incoming IPC connections. The connections can be accepted using <strong>ipc_accept</strong> function.</p>
 <p><strong>addr</strong>: The filename to listen on.</p>
 <p><strong>backlog</strong>: Maximum number of connections that can be kept open without accepting them.</p>
-<p>The socket can be closed either by <strong>hclose</strong> or <strong>ipc_close</strong>.Both ways are equivalent.</p>
+<p>The socket can be closed either by <strong>hclose</strong> or <strong>ipc_close</strong>. Both ways are equivalent.</p>
 <p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>In case of success the function returns newly created socket. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>

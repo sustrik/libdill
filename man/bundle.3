@@ -17,24 +17,24 @@ int\ bundle(void);
 .SH DESCRIPTION
 .PP
 Coroutines are always running in bundles.
-Even a single coroutinecreated by \f[B]go\f[] gets its own bundle.
-A bundle is a lifetimecontrol mechanism.
-When it is closed, all coroutines within thebundle are canceled.
+Even a single coroutine created by \f[B]go\f[] gets its own bundle.
+A bundle is a lifetime control mechanism.
+When it is closed, all coroutines within the bundle are canceled.
 .PP
 This function creates an empty bundle.
-Coroutines can be added tothe bundle using the \f[B]bundle_go\f[] and
+Coroutines can be added to the bundle using the \f[B]bundle_go\f[] and
 \f[B]bundle_go_mem\f[] functions.
 .PP
-If \f[B]hdone\f[] is called on a bundle, it waits until all
-coroutinesexit.
-After calling \f[B]hdone\f[], irrespective of whether it succeedsor
-times out, no further coroutines can be launched using thebundle.
+If \f[B]hdone\f[] is called on a bundle, it waits until all coroutines
+exit.
+After calling \f[B]hdone\f[], irrespective of whether it succeeds or
+times out, no further coroutines can be launched using the bundle.
 .PP
-When \f[B]hclose()\f[] is called on the bundle, all the
-coroutinescontained in the bundle will be canceled.
-In other words, all theblocking functions within the coroutine will
-start failing with an\f[B]ECANCELED\f[] error.
-The \f[B]hclose()\f[] function itself won\[aq]t exituntil all the
+When \f[B]hclose()\f[] is called on the bundle, all the coroutines
+contained in the bundle will be canceled.
+In other words, all the blocking functions within the coroutine will
+start failing with an \f[B]ECANCELED\f[] error.
+The \f[B]hclose()\f[] function itself won\[aq]t exit until all the
 coroutines in the bundle exit.
 .SH RETURN VALUE
 .PP

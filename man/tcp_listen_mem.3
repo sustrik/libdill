@@ -16,16 +16,16 @@ int\ tcp_listen_mem(const\ struct\ ipaddr*\ addr,\ int\ backlog,\ void*\ mem);
 .fi
 .SH DESCRIPTION
 .PP
-TCP protocol is a reliable bytestream protocol for transporting dataover
-network.
+TCP protocol is a reliable bytestream protocol for transporting data
+over network.
 It is defined in RFC 793.
 .PP
-This function starts listening for incoming connections.The connections
-can be accepted using \f[B]tcp_accept\f[] function.
+This function starts listening for incoming connections.
+The connections can be accepted using \f[B]tcp_accept\f[] function.
 .PP
-This function allows to avoid one dynamic memory allocation bystoring
+This function allows to avoid one dynamic memory allocation by storing
 the object in user\-supplied memory.
-Unless you arehyper\-optimizing use \f[B]tcp_listen\f[] instead.
+Unless you are hyper\-optimizing use \f[B]tcp_listen\f[] instead.
 .PP
 \f[B]addr\f[]: IP address to listen on.
 .PP
@@ -37,7 +37,8 @@ It must be at least \f[B]TCP_LISTENER_SIZE\f[] bytes long and must not
 be deallocated before the object is closed.
 .PP
 The socket can be closed either by \f[B]hclose\f[] or
-\f[B]tcp_close\f[].Both ways are equivalent.
+\f[B]tcp_close\f[].
+Both ways are equivalent.
 .PP
 This function is not available if libdill is compiled with
 \f[B]\-\-disable\-sockets\f[] option.

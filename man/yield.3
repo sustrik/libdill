@@ -18,9 +18,9 @@ int\ yield(void);
 .PP
 By calling this function, you give other coroutines a chance to run.
 .PP
-You should consider using \f[B]yield\f[] when doing lengthy
-computationswhich don\[aq]t have natural coroutine switching points such
-as socketor channel operations or msleep.
+You should consider using \f[B]yield\f[] when doing lengthy computations
+which don\[aq]t have natural coroutine switching points such as socket
+or channel operations or msleep.
 .SH RETURN VALUE
 .PP
 In case of success the function returns 0.

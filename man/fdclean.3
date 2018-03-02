@@ -16,16 +16,17 @@ void\ fdclean(int\ fd);
 .fi
 .SH DESCRIPTION
 .PP
-This function drops any state that libdill associates with a
-filedescriptor.
-It has to be called before the file descriptor isclosed.
+This function drops any state that libdill associates with a file
+descriptor.
+It has to be called before the file descriptor is closed.
 If it is not, the behavior is undefined.
 .PP
-It should also be used whenever you are losing control of the
-filedescriptor.
-For example, when passing it to a third\-party library.Also, if you are
-handed the file descriptor by third party codeyou should call this
-function just before returning it back to theoriginal owner.
+It should also be used whenever you are losing control of the file
+descriptor.
+For example, when passing it to a third\-party library.
+Also, if you are handed the file descriptor by third party code you
+should call this function just before returning it back to the original
+owner.
 .PP
 \f[B]fd\f[]: file descriptor (OS\-level one, not a libdill handle)
 .SH RETURN VALUE

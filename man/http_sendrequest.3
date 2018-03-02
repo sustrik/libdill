@@ -20,12 +20,12 @@ int\ http_sendrequest(int\ s,\ const\ char*\ command,\ const\ char*\ resource,\ 
 in the future.\f[]
 .PP
 HTTP is an application\-level protocol described in RFC 7230.
-Thisimplementation handles only the request/response exchange.
-Whatevercomes after that must be handled by a different protocol.
+This implementation handles only the request/response exchange.
+Whatever comes after that must be handled by a different protocol.
 .PP
-This function sends an initial HTTP request with the specifiedcommand
+This function sends an initial HTTP request with the specified command
 and resource.
-For example, if command is \f[B]GET\f[] andresource is
+For example, if command is \f[B]GET\f[] and resource is
 \f[B]/index.html\f[] the line sent will look like this:
 .IP
 .nf

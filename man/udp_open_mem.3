@@ -17,15 +17,15 @@ int\ udp_open_mem(struct\ ipaddr*\ local,\ struct\ ipaddr*\ remote,\ void*\ mem)
 .SH DESCRIPTION
 .PP
 UDP is an unreliable message\-based protocol defined in RFC 768.
-The sizeof the message is limited.
-The protocol has no initial or terminalhandshake.
+The size of the message is limited.
+The protocol has no initial or terminal handshake.
 A single socket can be used to different destinations.
 .PP
 This function creates an UDP socket.
 .PP
-This function allows to avoid one dynamic memory allocation bystoring
+This function allows to avoid one dynamic memory allocation by storing
 the object in user\-supplied memory.
-Unless you arehyper\-optimizing use \f[B]udp_open\f[] instead.
+Unless you are hyper\-optimizing use \f[B]udp_open\f[] instead.
 .PP
 \f[B]local\f[]: IP address to be used to set source IP address in
 outgoing packets.

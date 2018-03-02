@@ -20,13 +20,13 @@ int\ http_sendfield(int\ s,\ const\ char*\ name,\ const\ char*\ value,\ int64_t\
 in the future.\f[]
 .PP
 HTTP is an application\-level protocol described in RFC 7230.
-Thisimplementation handles only the request/response exchange.
-Whatevercomes after that must be handled by a different protocol.
+This implementation handles only the request/response exchange.
+Whatever comes after that must be handled by a different protocol.
 .PP
 This function sends an HTTP field, i.e.
-a name/value pair, to thepeer.
-For example, if name is \f[B]Host\f[] and resource
-is\f[B]www.example.org\f[] the line sent will look like this:
+a name/value pair, to the peer.
+For example, if name is \f[B]Host\f[] and resource is
+\f[B]www.example.org\f[] the line sent will look like this:
 .IP
 .nf
 \f[C]
@@ -34,10 +34,10 @@ Host:\ www.example.org
 \f[]
 .fi
 .PP
-After sending the last field of HTTP request don\[aq]t forget to
-call\f[B]hdone\f[] on the socket.
-It will send an empty line to the server tolet it know that the request
-is finished and it should startprocessing it.
+After sending the last field of HTTP request don\[aq]t forget to call
+\f[B]hdone\f[] on the socket.
+It will send an empty line to the server to let it know that the request
+is finished and it should start processing it.
 .PP
 \f[B]s\f[]: HTTP socket handle.
 .PP

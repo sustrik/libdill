@@ -22,7 +22,7 @@
 
 <span class="dt">int</span> ipc_connect(<span class="dt">const</span> <span class="dt">char</span>* addr, <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>IPC protocol is a bytestream protocol for transporting data amongprocesses on the same machine. It is an equivalent to POSIX<strong>AF_LOCAL</strong> sockets.</p>
+<p>IPC protocol is a bytestream protocol for transporting data among processes on the same machine. It is an equivalent to POSIX <strong>AF_LOCAL</strong> sockets.</p>
 <p>This function creates a connection to a remote IPC endpoint.</p>
 <p><strong>addr</strong>: Filename to connect to.</p>
 <p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>

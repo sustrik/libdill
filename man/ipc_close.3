@@ -16,18 +16,18 @@ int\ ipc_close(int\ s,\ int64_t\ deadline);
 .fi
 .SH DESCRIPTION
 .PP
-IPC protocol is a bytestream protocol for transporting data
-amongprocesses on the same machine.
-It is an equivalent to POSIX\f[B]AF_LOCAL\f[] sockets.
+IPC protocol is a bytestream protocol for transporting data among
+processes on the same machine.
+It is an equivalent to POSIX \f[B]AF_LOCAL\f[] sockets.
 .PP
 This function closes a IPC socket cleanly.
-Unlike \f[B]hclose\f[] it letsthe peer know that it is shutting down and
-waits till the peeracknowledged the shutdown.
-If this terminal handshake cannot bedone it returns error.
-The socket is closed even in the case oferror.
+Unlike \f[B]hclose\f[] it lets the peer know that it is shutting down
+and waits till the peer acknowledged the shutdown.
+If this terminal handshake cannot be done it returns error.
+The socket is closed even in the case of error.
 .PP
-It can also be used to close IPC listener socket in which case
-it\[aq]sequivalent to calling \f[B]hclose\f[].
+It can also be used to close IPC listener socket in which case it\[aq]s
+equivalent to calling \f[B]hclose\f[].
 .PP
 \f[B]s\f[]: The IPC socket.
 .PP

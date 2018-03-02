@@ -23,8 +23,8 @@
 <span class="dt">int</span> http_sendstatus(<span class="dt">int</span> s, <span class="dt">int</span> status, <span class="dt">const</span> <span class="dt">char</span>* reason, <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p><strong>WARNING: This is experimental functionality and the API may change in the future.</strong></p>
-<p>HTTP is an application-level protocol described in RFC 7230. Thisimplementation handles only the request/response exchange. Whatevercomes after that must be handled by a different protocol.</p>
-<p>This function sends an HTTP status line to the peer. It is meant tobe done at the beginning of the HTTP response. For example, ifstatus is 404 and reason is 'Not found' the line sent will look likethis:</p>
+<p>HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.</p>
+<p>This function sends an HTTP status line to the peer. It is meant to be done at the beginning of the HTTP response. For example, if status is 404 and reason is 'Not found' the line sent will look like this:</p>
 <pre><code>HTTP/1.1 404 Not found</code></pre>
 <p><strong>s</strong>: HTTP socket handle.</p>
 <p><strong>status</strong>: HTTP status such as 200 or 404.</p>

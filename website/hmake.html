@@ -28,10 +28,10 @@
 
 <span class="dt">int</span> hmake(<span class="kw">struct</span> hvfs* hvfs);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>A handle is the user-space equivalent of a file descriptor.Coroutines and channels are represented by handles.</p>
-<p>Unlike with file descriptors, however, you can use the <strong>hmake</strong>function to create your own type of handle.</p>
-<p>The argument of the function is a virtual-function table ofoperations associated with the handle.</p>
-<p>When implementing the <strong>close</strong> operation, keep in mind thatinvoking blocking operations is not allowed, as blocking operationsinvoked within the context of a <strong>close</strong> operation will fail withan <strong>ECANCELED</strong> error.</p>
+<p>A handle is the user-space equivalent of a file descriptor. Coroutines and channels are represented by handles.</p>
+<p>Unlike with file descriptors, however, you can use the <strong>hmake</strong> function to create your own type of handle.</p>
+<p>The argument of the function is a virtual-function table of operations associated with the handle.</p>
+<p>When implementing the <strong>close</strong> operation, keep in mind that invoking blocking operations is not allowed, as blocking operations invoked within the context of a <strong>close</strong> operation will fail with an <strong>ECANCELED</strong> error.</p>
 <p>To close a handle, use the <strong>hclose</strong> function.</p>
 <p><strong>hvfs</strong>: virtual-function table of operations associated with the handle</p>
 <h1 id="return-value">RETURN VALUE</h1>

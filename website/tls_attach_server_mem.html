@@ -23,9 +23,9 @@
 <span class="dt">int</span> tls_attach_server_mem(<span class="dt">int</span> s, <span class="dt">const</span> <span class="dt">char</span>* cert, <span class="dt">const</span> <span class="dt">char</span>* cert, <span class="dt">void</span>* mem, <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p><strong>WARNING: This is experimental functionality and the API may change in the future.</strong></p>
-<p>TLS is a cryptographic protocol to provide secure communication overthe network. It is a bytestream protocol.</p>
-<p>This function instantiates TLS protocol on top of the underlyingprotocol. TLS protocol being asymmetric, client and server sides areintialized in different ways. This particular function initializesthe server side of the connection.</p>
-<p>This function allows to avoid one dynamic memory allocation bystoring the object in user-supplied memory. Unless you arehyper-optimizing use <strong>tls_attach_server</strong> instead.</p>
+<p>TLS is a cryptographic protocol to provide secure communication over the network. It is a bytestream protocol.</p>
+<p>This function instantiates TLS protocol on top of the underlying protocol. TLS protocol being asymmetric, client and server sides are intialized in different ways. This particular function initializes the server side of the connection.</p>
+<p>This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use <strong>tls_attach_server</strong> instead.</p>
 <p><strong>s</strong>: Handle of the underlying socket. It must be a bytestream protocol.</p>
 <p><strong>cert</strong>: Filename of the file contianing the certificate.</p>
 <p><strong>cert</strong>: Filename of the file contianing the private key.</p>

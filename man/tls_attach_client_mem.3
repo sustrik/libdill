@@ -20,19 +20,19 @@ int\ tls_attach_client_mem(int\ s,\ void*\ mem,\ int64_t\ deadline);
 \f[B]WARNING: This is experimental functionality and the API may change
 in the future.\f[]
 .PP
-TLS is a cryptographic protocol to provide secure communication overthe
+TLS is a cryptographic protocol to provide secure communication over the
 network.
 It is a bytestream protocol.
 .PP
-This function instantiates TLS protocol on top of the
-underlyingprotocol.
-TLS protocol being asymmetric, client and server sides areintialized in
+This function instantiates TLS protocol on top of the underlying
+protocol.
+TLS protocol being asymmetric, client and server sides are intialized in
 different ways.
-This particular function initializesthe client side of the connection.
+This particular function initializes the client side of the connection.
 .PP
-This function allows to avoid one dynamic memory allocation bystoring
+This function allows to avoid one dynamic memory allocation by storing
 the object in user\-supplied memory.
-Unless you arehyper\-optimizing use \f[B]tls_attach_client\f[] instead.
+Unless you are hyper\-optimizing use \f[B]tls_attach_client\f[] instead.
 .PP
 \f[B]s\f[]: Handle of the underlying socket.
 It must be a bytestream protocol.

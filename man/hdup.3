@@ -17,13 +17,13 @@ int\ hdup(int\ h);
 .SH DESCRIPTION
 .PP
 Duplicates a handle.
-The new handle will refer to the sameunderlying object.
+The new handle will refer to the same underlying object.
 .PP
 \f[B]h\f[]: Handle to duplicate.
 .PP
-Each duplicate of a handle requires its own call to \f[B]hclose\f[].The
-underlying object is deallocated when all handles pointing to ithave
-been closed.
+Each duplicate of a handle requires its own call to \f[B]hclose\f[].
+The underlying object is deallocated when all handles pointing to it
+have been closed.
 .SH RETURN VALUE
 .PP
 In case of success the function returns newly duplicated handle.

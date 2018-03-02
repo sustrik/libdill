@@ -24,8 +24,8 @@ int\ choose(struct\ chclause*\ clauses,\ int\ nclauses,\ int64_t\ deadline);
 .SH DESCRIPTION
 .PP
 Accepts a list of channel operations.
-Performs one that can be donefirst.
-If multiple operations can be done immediately, the one thatcomes
+Performs one that can be done first.
+If multiple operations can be done immediately, the one that comes
 earlier in the array is executed.
 .PP
 \f[B]clauses\f[]: Operations to choose from.
@@ -58,9 +58,9 @@ the function to exit.
 In case of error it returns \-1 and sets \f[B]errno\f[] to one of the
 values below.
 .PP
-Even if an index is returned, \f[B]errno\f[] may still be set toan error
-value.
-The operation was successfull only if \f[B]errno\f[]is set to zero.
+Even if an index is returned, \f[B]errno\f[] may still be set to an
+error value.
+The operation was successfull only if \f[B]errno\f[] is set to zero.
 .SH ERRORS
 .IP \[bu] 2
 \f[B]ECANCELED\f[]: Current coroutine was canceled.
@@ -69,8 +69,8 @@ The operation was successfull only if \f[B]errno\f[]is set to zero.
 .IP \[bu] 2
 \f[B]ETIMEDOUT\f[]: Deadline was reached.
 .PP
-Additionally, if the function returns an index it can set
-\f[B]errno\f[]to one of the following values:
+Additionally, if the function returns an index it can set \f[B]errno\f[]
+to one of the following values:
 .IP \[bu] 2
 \f[B]0\f[]: Operation was completed successfully.
 .IP \[bu] 2

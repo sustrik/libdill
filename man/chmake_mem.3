@@ -17,15 +17,15 @@ int\ chmake_mem(void*\ mem,\ int\ chv[2]);
 .SH DESCRIPTION
 .PP
 Creates a bidirectional channel.
-In case of success handles to theboth sides of the channel will be
+In case of success handles to the both sides of the channel will be
 returned in \f[B]chv\f[] parameter.
 .PP
-A channel is a synchronization primitive, not a container.It doesn\[aq]t
-store any items.
+A channel is a synchronization primitive, not a container.
+It doesn\[aq]t store any items.
 .PP
-This function allows to avoid one dynamic memory allocation bystoring
+This function allows to avoid one dynamic memory allocation by storing
 the object in user\-supplied memory.
-Unless you arehyper\-optimizing use \f[B]chmake\f[] instead.
+Unless you are hyper\-optimizing use \f[B]chmake\f[] instead.
 .PP
 \f[B]mem\f[]: The memory to store the newly created object.
 It must be at least \f[B]CHSIZE\f[] bytes long and must not be

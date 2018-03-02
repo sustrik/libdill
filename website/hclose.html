@@ -22,9 +22,9 @@
 
 <span class="dt">int</span> hclose(<span class="dt">int</span> h);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>This function closes a handle. Once all handles pointing to the sameunderlying object have been closed, the object is deallocatedimmediately, without blocking.</p>
-<p>The function guarantees that all associated resources aredeallocated. However, it does not guarantee that the handle's workwill have been fully finished. E.g., outbound network data may notbe flushed.</p>
-<p>In the case of network protocol sockets the entire protocol stackis closed, the topmost protocol as well as all the protocolsbeneath it.</p>
+<p>This function closes a handle. Once all handles pointing to the same underlying object have been closed, the object is deallocated immediately, without blocking.</p>
+<p>The function guarantees that all associated resources are deallocated. However, it does not guarantee that the handle's work will have been fully finished. E.g., outbound network data may not be flushed.</p>
+<p>In the case of network protocol sockets the entire protocol stack is closed, the topmost protocol as well as all the protocols beneath it.</p>
 <p><strong>h</strong>: The handle.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>In case of success the function returns 0. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>

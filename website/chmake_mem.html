@@ -22,9 +22,9 @@
 
 <span class="dt">int</span> chmake_mem(<span class="dt">void</span>* mem, <span class="dt">int</span> chv[<span class="dv">2</span>]);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>Creates a bidirectional channel. In case of success handles to theboth sides of the channel will be returned in <strong>chv</strong> parameter.</p>
-<p>A channel is a synchronization primitive, not a container.It doesn't store any items.</p>
-<p>This function allows to avoid one dynamic memory allocation bystoring the object in user-supplied memory. Unless you arehyper-optimizing use <strong>chmake</strong> instead.</p>
+<p>Creates a bidirectional channel. In case of success handles to the both sides of the channel will be returned in <strong>chv</strong> parameter.</p>
+<p>A channel is a synchronization primitive, not a container. It doesn't store any items.</p>
+<p>This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use <strong>chmake</strong> instead.</p>
 <p><strong>mem</strong>: The memory to store the newly created object. It must be at least <strong>CHSIZE</strong> bytes long and must not be deallocated before the object is closed.</p>
 <p><strong>chv</strong>: Out parameter. Two handles to the opposite ends of the channel.</p>
 <h1 id="return-value">RETURN VALUE</h1>

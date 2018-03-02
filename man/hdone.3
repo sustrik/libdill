@@ -28,8 +28,8 @@ However, it does not wait until it is acknowledged by the peer.
 After hdone is called on a handle, any attempts to send more data to the
 handle will result in EPIPE error.
 .PP
-Handle implementation may also decide to prevent any furtherreceiving of
-data and return EPIPE error instead.
+Handle implementation may also decide to prevent any further receiving
+of data and return EPIPE error instead.
 .PP
 \f[B]h\f[]: The handle.
 .PP

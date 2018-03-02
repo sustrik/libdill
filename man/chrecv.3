@@ -18,12 +18,12 @@ int\ chrecv(int\ ch,\ void*\ val,\ size_t\ len,\ int64_t\ deadline);
 .PP
 Receives a message from a channel.
 .PP
-The size of the message requested from the channel must match thesize of
-the message sent to the channel.
-Otherwise, both peers failwith \f[B]EMSGSIZE\f[] error.
+The size of the message requested from the channel must match the size
+of the message sent to the channel.
+Otherwise, both peers fail with \f[B]EMSGSIZE\f[] error.
 .PP
-If there\[aq]s no one sending a message at the moment, the
-functionblocks until someone shows up or until the deadline expires.
+If there\[aq]s no one sending a message at the moment, the function
+blocks until someone shows up or until the deadline expires.
 .PP
 \f[B]ch\f[]: The channel.
 .PP

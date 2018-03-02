@@ -16,12 +16,12 @@ int\ tcp_listen(const\ struct\ ipaddr*\ addr,\ int\ backlog);
 .fi
 .SH DESCRIPTION
 .PP
-TCP protocol is a reliable bytestream protocol for transporting dataover
-network.
+TCP protocol is a reliable bytestream protocol for transporting data
+over network.
 It is defined in RFC 793.
 .PP
-This function starts listening for incoming connections.The connections
-can be accepted using \f[B]tcp_accept\f[] function.
+This function starts listening for incoming connections.
+The connections can be accepted using \f[B]tcp_accept\f[] function.
 .PP
 \f[B]addr\f[]: IP address to listen on.
 .PP
@@ -29,7 +29,8 @@ can be accepted using \f[B]tcp_accept\f[] function.
 without accepting them.
 .PP
 The socket can be closed either by \f[B]hclose\f[] or
-\f[B]tcp_close\f[].Both ways are equivalent.
+\f[B]tcp_close\f[].
+Both ways are equivalent.
 .PP
 This function is not available if libdill is compiled with
 \f[B]\-\-disable\-sockets\f[] option.

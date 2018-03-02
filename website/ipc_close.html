@@ -22,9 +22,9 @@
 
 <span class="dt">int</span> ipc_close(<span class="dt">int</span> s, <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>IPC protocol is a bytestream protocol for transporting data amongprocesses on the same machine. It is an equivalent to POSIX<strong>AF_LOCAL</strong> sockets.</p>
-<p>This function closes a IPC socket cleanly. Unlike <strong>hclose</strong> it letsthe peer know that it is shutting down and waits till the peeracknowledged the shutdown. If this terminal handshake cannot bedone it returns error. The socket is closed even in the case oferror.</p>
-<p>It can also be used to close IPC listener socket in which case it'sequivalent to calling <strong>hclose</strong>.</p>
+<p>IPC protocol is a bytestream protocol for transporting data among processes on the same machine. It is an equivalent to POSIX <strong>AF_LOCAL</strong> sockets.</p>
+<p>This function closes a IPC socket cleanly. Unlike <strong>hclose</strong> it lets the peer know that it is shutting down and waits till the peer acknowledged the shutdown. If this terminal handshake cannot be done it returns error. The socket is closed even in the case of error.</p>
+<p>It can also be used to close IPC listener socket in which case it's equivalent to calling <strong>hclose</strong>.</p>
 <p><strong>s</strong>: The IPC socket.</p>
 <p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
 <p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>

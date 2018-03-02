@@ -16,11 +16,11 @@ int\ ipaddr_remote(struct\ ipaddr*\ addr,\ const\ char*\ name,\ int\ port,\ int\
 .fi
 .SH DESCRIPTION
 .PP
-Converts an IP address in human\-readable format, or a name of aremote
+Converts an IP address in human\-readable format, or a name of a remote
 host into an \f[B]ipaddr\f[] structure.
 .PP
 Mode specifies which kind of addresses should be returned.
-Possiblevalues are:
+Possible values are:
 .IP \[bu] 2
 \f[B]IPADDR_IPV4\f[]: Get IPv4 address.
 .IP \[bu] 2
@@ -32,9 +32,9 @@ otherwise.
 \f[B]IPADDR_PREF_IPV6\f[]: Get IPv6 address if possible, IPv4 address
 otherwise.
 .PP
-Setting the argument to zero invokes default behaviour, which, at
-thepresent, is \f[B]IPADDR_PREF_IPV4\f[].
-However, in the future when IPv6 becomesmore common it may be switched
+Setting the argument to zero invokes default behaviour, which, at the
+present, is \f[B]IPADDR_PREF_IPV4\f[].
+However, in the future when IPv6 becomes more common it may be switched
 to \f[B]IPADDR_PREF_IPV6\f[].
 .PP
 \f[B]addr\f[]: Out parameter, The IP address object.

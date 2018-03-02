@@ -16,15 +16,15 @@ int\ tcp_accept_mem(int\ s,\ struct\ ipaddr*\ addr,\ void*\ mem,\ int64_t\ deadl
 .fi
 .SH DESCRIPTION
 .PP
-TCP protocol is a reliable bytestream protocol for transporting dataover
-network.
+TCP protocol is a reliable bytestream protocol for transporting data
+over network.
 It is defined in RFC 793.
 .PP
 This function accepts an incoming TCP connection.
 .PP
-This function allows to avoid one dynamic memory allocation bystoring
+This function allows to avoid one dynamic memory allocation by storing
 the object in user\-supplied memory.
-Unless you arehyper\-optimizing use \f[B]tcp_accept\f[] instead.
+Unless you are hyper\-optimizing use \f[B]tcp_accept\f[] instead.
 .PP
 \f[B]s\f[]: Socket created by \f[B]tcp_listen\f[].
 .PP

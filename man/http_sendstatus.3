@@ -20,13 +20,13 @@ int\ http_sendstatus(int\ s,\ int\ status,\ const\ char*\ reason,\ int64_t\ dead
 in the future.\f[]
 .PP
 HTTP is an application\-level protocol described in RFC 7230.
-Thisimplementation handles only the request/response exchange.
-Whatevercomes after that must be handled by a different protocol.
+This implementation handles only the request/response exchange.
+Whatever comes after that must be handled by a different protocol.
 .PP
 This function sends an HTTP status line to the peer.
-It is meant tobe done at the beginning of the HTTP response.
-For example, ifstatus is 404 and reason is \[aq]Not found\[aq] the line
-sent will look likethis:
+It is meant to be done at the beginning of the HTTP response.
+For example, if status is 404 and reason is \[aq]Not found\[aq] the line
+sent will look like this:
 .IP
 .nf
 \f[C]

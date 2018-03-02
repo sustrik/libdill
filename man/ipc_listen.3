@@ -16,12 +16,12 @@ int\ ipc_listen(const\ char*\ addr,\ int\ backlog);
 .fi
 .SH DESCRIPTION
 .PP
-IPC protocol is a bytestream protocol for transporting data
-amongprocesses on the same machine.
-It is an equivalent to POSIX\f[B]AF_LOCAL\f[] sockets.
+IPC protocol is a bytestream protocol for transporting data among
+processes on the same machine.
+It is an equivalent to POSIX \f[B]AF_LOCAL\f[] sockets.
 .PP
-This function starts listening for incoming IPC connections.The
-connections can be accepted using \f[B]ipc_accept\f[] function.
+This function starts listening for incoming IPC connections.
+The connections can be accepted using \f[B]ipc_accept\f[] function.
 .PP
 \f[B]addr\f[]: The filename to listen on.
 .PP
@@ -29,7 +29,8 @@ connections can be accepted using \f[B]ipc_accept\f[] function.
 without accepting them.
 .PP
 The socket can be closed either by \f[B]hclose\f[] or
-\f[B]ipc_close\f[].Both ways are equivalent.
+\f[B]ipc_close\f[].
+Both ways are equivalent.
 .PP
 This function is not available if libdill is compiled with
 \f[B]\-\-disable\-sockets\f[] option.
