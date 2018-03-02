@@ -1,0 +1,97 @@
+
+#toplist {
+    padding-left: 0px;
+    padding-bottom: 1em;
+}
+
+#toplist li {
+    display: inline;
+    list-style-type: none;
+    padding-right: 15px;
+}
+
+#toplist a {
+    font-weight: bold;
+    text-decoration: none;
+}
+
+body {
+    width:50em;
+    padding-top: 2em;
+    padding-bottom: 2em;
+    padding-left: 5em;
+    padding-right: 5em;
+    font-family: sans-serif;
+}
+
+h1 {
+    font-size: 200%;
+}
+
+h2 {
+    font-size: 180%;
+}
+
+h3 {
+    font-size: 160%;
+}
+
+h4 {
+    font-size: 140%;
+}
+
+h5 {
+    font-size: 120%;
+}
+
+h6 {
+    font-size: 100%;
+}
+
+#toc {
+    list-style-type: none;
+}
+
+#toc a {
+    text-decoration: none;
+}
+
+a {
+    color: black;
+}
+
+a.download {
+    color: red;
+}
+
+p.lang {
+    font-style: italic;
+}
+
+tt {
+    font-size: 120%
+  }
+
+pre {
+    padding: 20px;
+    border: 1px dotted;
+    font-size: 120%
+}
+
+th, td {
+    padding-bottom: 0.3em;
+    padding-right: 2em;
+}
+
+.kw,.dt {
+    color: indianRed;
+}
+
+.dv,.st {
+    color: teal;
+}
+
+.ot {
+    color: grey;
+}
+
