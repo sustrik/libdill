@@ -24,7 +24,10 @@
 <h1 id="description">DESCRIPTION</h1>
 <p>This function receives data from a bytestream socket. It is ablocking operation that unblocks only after the requested amount ofdata is received. There is no such thing as partial receive.If a problem, including timeout, occurs while receiving the data,an error is returned to the user and the socket cannot be used forreceiving from that point on.</p>
 <p>This function accepts a linked list of I/O buffers instead of asingle buffer. Argument <strong>first</strong> points to the first item in thelist, <strong>last</strong> points to the last buffer in the list. The listrepresents a single, fragmented message, not a list of multiplemessages. Structure <strong>iolist</strong> has the following members:</p>
-<pre><code>void *iol_base;          /* Pointer to the buffer. */    size_t iol_len;          /* Size of the buffer. */    struct iolist *iol_next; /* Next buffer in the list. */    int iol_rsvd;            /* Reserved. Must be set to zero. */</code></pre>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">void</span> *iol_base;          <span class="co">/* Pointer to the buffer. */</span>
+<span class="dt">size_t</span> iol_len;          <span class="co">/* Size of the buffer. */</span>
+<span class="kw">struct</span> iolist *iol_next; <span class="co">/* Next buffer in the list. */</span>
+<span class="dt">int</span> iol_rsvd;            <span class="co">/* Reserved. Must be set to zero. */</span></code></pre></div>
 <p>The function returns <strong>EINVAL</strong> error in the case the list ismalformed:</p>
 <ul>
 <li>If <strong>last-&gt;iol_next</strong> is not <strong>NULL</strong>.</li>

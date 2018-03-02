@@ -3068,10 +3068,12 @@ function generate_man_page(fx, sections, mem) {
             represents a single, fragmented message, not a list of multiple
             messages. Structure **iolist** has the following members:
 
-                void *iol_base;          /* Pointer to the buffer. */
-                size_t iol_len;          /* Size of the buffer. */
-                struct iolist *iol_next; /* Next buffer in the list. */
-                int iol_rsvd;            /* Reserved. Must be set to zero. */
+            \`\`\`c
+            void *iol_base;          /* Pointer to the buffer. */
+            size_t iol_len;          /* Size of the buffer. */
+            struct iolist *iol_next; /* Next buffer in the list. */
+            int iol_rsvd;            /* Reserved. Must be set to zero. */
+            \`\`\`
 
             The function returns **EINVAL** error in the case the list is
             malformed:
