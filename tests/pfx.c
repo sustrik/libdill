@@ -120,7 +120,7 @@ int main(void) {
     errno_assert(rc == 0);
     rc = hclose(ts0);
     errno_assert(rc == 0);
-    rc = hdone(clh, -1);
+    rc = bundle_wait(clh, -1);
     errno_assert(rc == 0);
     rc = hclose(clh);
     errno_assert(rc == 0);

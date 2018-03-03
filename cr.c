@@ -69,7 +69,6 @@ static const int dill_bundle_type_placeholder = 0;
 const void *dill_bundle_type = &dill_bundle_type_placeholder;
 static void *dill_bundle_query(struct hvfs *vfs, const void *type);
 static void dill_bundle_close(struct hvfs *vfs);
-static int dill_bundle_done(struct hvfs *vfs, int64_t deadline);
 
 struct dill_bundle {
     /* Table of virtual functions. */
@@ -81,8 +80,6 @@ struct dill_bundle {
     struct dill_clause *waiter;
     /* If true, the bundle was created by bundle_mem. */
     unsigned int mem : 1;
-    /* If true, hdone() was already called on this bundle. */
-    unsigned int done : 1;
 };
 
 DILL_CT_ASSERT(BUNDLE_SIZE >= sizeof(struct dill_bundle));
@@ -96,11 +93,10 @@ int bundle_mem(void *mem) {
     struct dill_bundle *b = (struct dill_bundle*)mem;
     b->vfs.query = dill_bundle_query;
     b->vfs.close = dill_bundle_close;
-    b->vfs.done = dill_bundle_done;
+    b->vfs.done = NULL;
     dill_list_init(&b->crs);
     b->waiter = NULL;
     b->mem = 1;
-    b->done = 0;
     return hmake(&b->vfs);
 }
 
@@ -135,21 +131,24 @@ static void dill_bundle_close(struct hvfs *vfs) {
     if(!self->mem) free(self);
 }
 
-static int dill_bundle_done(struct hvfs *vfs, int64_t deadline) {
-    struct dill_bundle *self = (struct dill_bundle*)vfs;
-    if(self->done) {errno = EPIPE; return -1;}
-    self->done = 1;
-    if(!dill_list_empty(&self->crs)) {
-        struct dill_clause cl;
-        self->waiter = &cl;
-        dill_waitfor(&cl, 0, NULL);
-        struct dill_tmclause tmcl;
-        dill_timer(&tmcl, 1, deadline);
-        int id = dill_wait();
-        if(dill_slow(id < 0)) return -1;
-        if(dill_slow(id == 1)) {errno = ETIMEDOUT; return -1;}
-        dill_assert(id == 0);
-    }
+int bundle_wait(int h, int64_t deadline) {
+    int rc = dill_canblock();
+    if(dill_slow(rc < 0)) return -1;
+    struct dill_bundle *self = hquery(h, dill_bundle_type);
+    if(dill_slow(!self)) return -1;
+    /* If there are no coroutines in the bundle succeed immediately. */
+    if(dill_list_empty(&self->crs)) return 0;
+    /* Otherwise wait for all coroutines to finish. */
+    struct dill_clause cl;
+    self->waiter = &cl;
+    dill_waitfor(&cl, 0, NULL);
+    struct dill_tmclause tmcl;
+    dill_timer(&tmcl, 1, deadline);
+    int id = dill_wait();
+    self->waiter = NULL;
+    if(dill_slow(id < 0)) return -1;
+    if(dill_slow(id == 1)) {errno = ETIMEDOUT; return -1;}
+    dill_assert(id == 0);
     return 0;
 }
 
@@ -266,7 +265,6 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
     }
     struct dill_bundle *bundle = hquery(bndl, dill_bundle_type);
     if(dill_slow(!bundle)) {err = errno; goto error2;}
-    if(dill_slow(bundle->done)) {err = EPIPE; goto error2;}
     /* Allocate a stack. */
     struct dill_cr *cr;
     size_t stacksz;

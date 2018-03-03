@@ -109,48 +109,46 @@ int main(void) {
     rc = hclose(hndl8);
     errno_assert(rc == 0);
 
-    /* Test hdone() on empty bundle. */
+    /* Test waiting on empty bundle. */
     int hndl9 = bundle();
     errno_assert(hndl9 >= 0);
-    rc = hdone(hndl9, -1);
+    rc = bundle_wait(hndl9, -1);
     errno_assert(rc == 0);
-    rc = hdone(hndl9, -1);
-    errno_assert(rc == -1 && errno == EPIPE);
     rc = hclose(hndl9);
     errno_assert(rc == 0);
 
-    /* Test hdone() on bundle with one coroutine. */
+    /* Test waiting on bundle with one coroutine. */
     int hndl10 = go(worker3(50));
     errno_assert(hndl10 >= 0);
-    rc = hdone(hndl10, -1);
+    rc = bundle_wait(hndl10, -1);
     errno_assert(rc == 0);
     rc = hclose(hndl10);
     errno_assert(rc == 0);
 
-    /* Test hdone() on bundle with two coroutines. */
+    /* Test waiting on bundle with two coroutines. */
     int hndl11 = bundle();
     errno_assert(hndl11 >= 0);
     rc = bundle_go(hndl11, worker3(50));
     errno_assert(rc == 0);
     rc = bundle_go(hndl11, worker3(100));
     errno_assert(rc == 0);
-    rc = hdone(hndl11, -1);
+    rc = bundle_wait(hndl11, -1);
     errno_assert(rc == 0);
     rc = bundle_go(hndl11, worker1());
-    assert(rc == -1 && errno == EPIPE);
+    errno_assert(rc == 0);
     rc = hclose(hndl11);
     errno_assert(rc == 0);
 
-    /* Test hdone() on bundle with timout. */
+    /* Test waiting on bundle with timout. */
     int hndl12 = go(worker3(50));
     errno_assert(hndl12 >= 0);
-    rc = hdone(hndl12, now() + 1000);
+    rc = bundle_wait(hndl12, now() + 1000);
     errno_assert(rc == 0);
     rc = hclose(hndl12);
     errno_assert(rc == 0);
     int hndl13 = go(worker2());
     errno_assert(hndl13 >= 0);
-    rc = hdone(hndl13, now() + 50);
+    rc = bundle_wait(hndl13, now() + 50);
     errno_assert(rc == -1 && errno == ETIMEDOUT);
     rc = hclose(hndl13);
     errno_assert(rc == 0);

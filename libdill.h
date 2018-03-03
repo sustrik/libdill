@@ -100,6 +100,7 @@ DILL_EXPORT int hdone(int h, int64_t deadline);
 
 DILL_EXPORT int bundle(void);
 DILL_EXPORT int bundle_mem(void *mem);
+DILL_EXPORT int bundle_wait(int h, int64_t deadline);
 
 #define coroutine __attribute__((noinline))
 
