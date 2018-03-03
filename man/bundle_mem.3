@@ -25,10 +25,8 @@ This function creates an empty bundle.
 Coroutines can be added to the bundle using the \f[B]bundle_go\f[] and
 \f[B]bundle_go_mem\f[] functions.
 .PP
-If \f[B]hdone\f[] is called on a bundle, it waits until all coroutines
-exit.
-After calling \f[B]hdone\f[], irrespective of whether it succeeds or
-times out, no further coroutines can be launched using the bundle.
+To wait until coroutines in the bundle finish use \f[B]bundle_wait\f[]
+function.
 .PP
 When \f[B]hclose()\f[] is called on the bundle, all the coroutines
 contained in the bundle will be canceled.
@@ -67,12 +65,14 @@ int\ b\ =\ bundle();
 bundle_go(b,\ worker());
 bundle_go(b,\ worker());
 bundle_go(b,\ worker());
-msleep(now()\ +\ 1000);
-/*\ Cancel\ any\ workers\ that\ are\ still\ running.\ */
+/*\ Give\ wrokers\ 1\ second\ to\ finish.\ */
+bundle_wait(b,\ now()\ +\ 1000);
+/*\ Cancel\ any\ remaining\ workers.\ */
 hclose(b);
 \f[]
 .fi
 .SH SEE ALSO
 .PP
 \f[B]bundle\f[](3) \f[B]bundle_go\f[](3) \f[B]bundle_go_mem\f[](3)
-\f[B]go\f[](3) \f[B]go_mem\f[](3) \f[B]hclose\f[](3) \f[B]yield\f[](3)
+\f[B]bundle_wait\f[](3) \f[B]go\f[](3) \f[B]go_mem\f[](3)
+\f[B]hclose\f[](3) \f[B]yield\f[](3)

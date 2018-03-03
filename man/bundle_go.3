@@ -87,12 +87,14 @@ int\ b\ =\ bundle();
 bundle_go(b,\ worker());
 bundle_go(b,\ worker());
 bundle_go(b,\ worker());
-msleep(now()\ +\ 1000);
-/*\ Cancel\ any\ workers\ that\ are\ still\ running.\ */
+/*\ Give\ wrokers\ 1\ second\ to\ finish.\ */
+bundle_wait(b,\ now()\ +\ 1000);
+/*\ Cancel\ any\ remaining\ workers.\ */
 hclose(b);
 \f[]
 .fi
 .SH SEE ALSO
 .PP
 \f[B]bundle\f[](3) \f[B]bundle_go_mem\f[](3) \f[B]bundle_mem\f[](3)
-\f[B]go\f[](3) \f[B]go_mem\f[](3) \f[B]yield\f[](3)
+\f[B]bundle_wait\f[](3) \f[B]go\f[](3) \f[B]go_mem\f[](3)
+\f[B]yield\f[](3)
