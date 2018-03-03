@@ -49,9 +49,10 @@ go(bar(a));</code></pre></div>
 bundle_go(b, worker());
 bundle_go(b, worker());
 bundle_go(b, worker());
-msleep(now() + <span class="dv">1000</span>);
-<span class="co">/* Cancel any workers that are still running. */</span>
+<span class="co">/* Give wrokers 1 second to finish. */</span>
+bundle_wait(b, now() + <span class="dv">1000</span>);
+<span class="co">/* Cancel any remaining workers. */</span>
 hclose(b);</code></pre></div>
 <h1 id="see-also">SEE ALSO</h1>
-<p><strong>bundle</strong>(3) <strong>bundle_go</strong>(3) <strong>bundle_mem</strong>(3) <strong>go</strong>(3) <strong>go_mem</strong>(3) <strong>yield</strong>(3)</p>
+<p><strong>bundle</strong>(3) <strong>bundle_go</strong>(3) <strong>bundle_mem</strong>(3) <strong>bundle_wait</strong>(3) <strong>go</strong>(3) <strong>go_mem</strong>(3) <strong>yield</strong>(3)</p>
 </body>
