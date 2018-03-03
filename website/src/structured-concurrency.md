@@ -269,18 +269,18 @@ int main(void) {
     for(i = 0; i != 3; i++)
         bundle_go(b, worker()); /* 1. */
     /* 3. */
-    hdone(b, now() + 500);
+    bundle_wait(b, now() + 500);
     /* 4. */
     hclose(b); /* 5. */
     return 0;
 }
 ```
 
-There are two scenarios worth considering. First, all the children can end before the deadline expires. In that case `hdone()` exits immediately after the last child is finished (point 4.):
+There are two scenarios worth considering. First, all the children can end before the deadline expires. In that case `bundle_wait()` exits immediately after the last child is finished (point 4.):
 
 ![](usecase8.png)
 
-In the second scenario, there are still some children running when deadline is reached. `hdone()` exits with `ETIMEDOUT` at point 4. The remaining coroutines are canceled at point 5. 
+In the second scenario, there are still some children running when deadline is reached. `bundle_wait()` exits with `ETIMEDOUT` at point 4. The remaining coroutines are canceled at point 5. 
 
 ![](usecase9.png)
 
@@ -315,7 +315,7 @@ int main(void) {
         bundle_go(b, worker(ch[0])); /* 1. */
     msleep(now() + 5000);
     hdone(ch[1], -1); /* 2. */
-    rc = hdone(b, now() + 500);
+    rc = bundle_wait(b, now() + 500);
     if(rc < 0 && errno == ETIMEDOUT) {
         /* 4. */
     }

@@ -195,14 +195,14 @@ For example, an object called <code>tcp_connection</code> may run two coroutines
     <span class="cf">for</span>(i = <span class="dv">0</span>; i != <span class="dv">3</span>; i++)
         bundle_go(b, worker()); <span class="co">/* 1. */</span>
     <span class="co">/* 3. */</span>
-    hdone(b, now() + <span class="dv">500</span>);
+    bundle_wait(b, now() + <span class="dv">500</span>);
     <span class="co">/* 4. */</span>
     hclose(b); <span class="co">/* 5. */</span>
     <span class="cf">return</span> <span class="dv">0</span>;
 }</code></pre></div>
-<p>There are two scenarios worth considering. First, all the children can end before the deadline expires. In that case <code>hdone()</code> exits immediately after the last child is finished (point 4.):</p>
+<p>There are two scenarios worth considering. First, all the children can end before the deadline expires. In that case <code>bundle_wait()</code> exits immediately after the last child is finished (point 4.):</p>
 <p><img src="usecase8.png" /></p>
-<p>In the second scenario, there are still some children running when deadline is reached. <code>hdone()</code> exits with <code>ETIMEDOUT</code> at point 4. The remaining coroutines are canceled at point 5.</p>
+<p>In the second scenario, there are still some children running when deadline is reached. <code>bundle_wait()</code> exits with <code>ETIMEDOUT</code> at point 4. The remaining coroutines are canceled at point 5.</p>
 <p><img src="usecase9.png" /></p>
 <h4 id="parent-coroutine-broadcast-a-shutdown-signal-to-children">Parent coroutine broadcast a shutdown signal to children</h4>
 <p>Consider the previous use case except that the child coroutines are doing work in an infinite loop. Giving them grace period to finish doesn't make sense. They are not going to finish on their own, ever.</p>
@@ -230,7 +230,7 @@ For example, an object called <code>tcp_connection</code> may run two coroutines
         bundle_go(b, worker(ch[<span class="dv">0</span>])); <span class="co">/* 1. */</span>
     msleep(now() + <span class="dv">5000</span>);
     hdone(ch[<span class="dv">1</span>], <span class="dv">-1</span>); <span class="co">/* 2. */</span>
-    rc = hdone(b, now() + <span class="dv">500</span>);
+    rc = bundle_wait(b, now() + <span class="dv">500</span>);
     <span class="cf">if</span>(rc &lt; <span class="dv">0</span> &amp;&amp; errno == ETIMEDOUT) {
         <span class="co">/* 4. */</span>
     }
