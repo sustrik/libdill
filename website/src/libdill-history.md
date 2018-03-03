@@ -1,6 +1,12 @@
 
 # Past versions
 
+**Mar 3rd 2018 <http://libdill.org/libdill-2.5.tar.gz>**
+
+* Bug in TLS protocol solved
+* Function budle_wait added
+* Brand new man pages
+
 **Feb 17th, 2018 <http://libdill.org/libdill-2.4.tar.gz>**
 
 * Experimental TLS protocol
