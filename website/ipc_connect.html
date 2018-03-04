@@ -47,7 +47,7 @@
 <li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = tcp_connect(<span class="st">&quot;/tmp/test.ipc&quot;</span>, <span class="dv">-1</span>);
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = ipc_connect(<span class="st">&quot;/tmp/test.ipc&quot;</span>, <span class="dv">-1</span>);
 bsend(s, <span class="st">&quot;ABC&quot;</span>, <span class="dv">3</span>, <span class="dv">-1</span>);
 <span class="dt">char</span> buf[<span class="dv">3</span>];
 brecv(s, buf, <span class="kw">sizeof</span>(buf), <span class="dv">-1</span>);

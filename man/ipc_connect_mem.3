@@ -88,7 +88,7 @@ address is not a directory.
 .IP
 .nf
 \f[C]
-int\ s\ =\ tcp_connect("/tmp/test.ipc",\ \-1);
+int\ s\ =\ ipc_connect("/tmp/test.ipc",\ \-1);
 bsend(s,\ "ABC",\ 3,\ \-1);
 char\ buf[3];
 brecv(s,\ buf,\ sizeof(buf),\ \-1);
