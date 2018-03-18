@@ -41,6 +41,22 @@ coroutine void nohttp_client(int s) {
     errno_assert(rc == 0);
 }
 
+coroutine void http_client(int s) {
+    s = ws_attach_client(s, "/", "www.example.org", WS_BINARY, -1);
+    errno_assert(s >= 0);
+    int rc = msend(s, "ABC", 3, -1);
+    errno_assert(rc == 0);
+    char buf[3];
+    ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
+    errno_assert(sz >= 0);
+    assert(sz == 3);
+    assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
+    s = ws_detach(s, -1);
+    errno_assert(s >= 0);
+    rc = hclose(s);
+    errno_assert(rc == 0);
+}
+
 int main(void) {
     int p[2];
     int rc = ipc_pair(p);
@@ -51,6 +67,28 @@ int main(void) {
     errno_assert(s >= 0);
     char buf[3];
     ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
+    errno_assert(sz >= 0);
+    assert(sz == 3);
+    assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
+    rc = msend(s, "DEF", 3, -1);
+    errno_assert(rc == 0);
+    s = ws_detach(s, -1);
+    errno_assert(s >= 0);
+    rc = hclose(s);
+    errno_assert(rc == 0);
+    rc = hclose(cr);
+    errno_assert(rc == 0);
+
+    rc = ipc_pair(p);
+    errno_assert(rc == 0);
+    cr = go(http_client(p[1]));
+    errno_assert(cr >= 0);
+    char resource[256];
+    char host[256];
+    s = ws_attach_server(p[0], WS_BINARY, resource, sizeof(resource),
+        host, sizeof(host), -1);
+    errno_assert(s >= 0);
+    sz = mrecv(s, buf, sizeof(buf), -1);
     errno_assert(sz >= 0);
     assert(sz == 3);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
