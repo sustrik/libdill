@@ -76,7 +76,6 @@ libdill_la_SOURCES += \
     tcp.c \
     udp.c \
     ws.c \
-    wsraw.c \
     dns/dns.h \
     dns/dns.c
 endif
@@ -135,8 +134,7 @@ check_PROGRAMS += \
     tests/pfx \
     tests/udp \
     tests/http \
-    tests/ws \
-    tests/wsraw
+    tests/ws
 endif
 
 if DILL_SOCKETS

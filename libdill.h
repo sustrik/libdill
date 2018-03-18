@@ -631,133 +631,86 @@ DILL_EXPORT int tls_detach(
 #endif
 
 /******************************************************************************/
-/*  Raw WebSockets protocol (only what goes after initial HTTP handshake).    */
-/******************************************************************************/
-
-#if defined(__i386__)
-#  define WSRAW_SIZE 44
-#else
-#  define WSRAW_SIZE 88
-#endif
-
-#define WSRAW_TYPE_BINARY 0
-#define WSRAW_TYPE_TEXT 1
-
-#define WSRAW_KEY_SIZE 32
-
-DILL_EXPORT int wsraw_request_key(
-    char *request_key);
-DILL_EXPORT int wsraw_response_key(
-    const char *request_key,
-    char *response_key);
-DILL_EXPORT int wsraw_attach_client(
-    int s,
-    int type,
-    int64_t deadline);
-DILL_EXPORT int wsraw_attach_client_mem(
-    int s,
-    int type,
-    void *mem,
-    int64_t deadline);
-DILL_EXPORT int wsraw_attach_server(
-    int s,
-    int type,
-    int64_t deadline);
-DILL_EXPORT int wsraw_attach_server_mem(
-    int s,
-    int type,
-    void *mem,
-    int64_t deadline);
-DILL_EXPORT int wsraw_send(
-    int s,
-    int type,
-    const void *buf,
-    size_t len,
-    int64_t deadline);
-DILL_EXPORT ssize_t wsraw_recv(
-    int s,
-    int *type,
-    void *buf,
-    size_t len,
-    int64_t deadline);
-DILL_EXPORT int wsraw_sendl(
-    int s,
-    int type,
-    struct iolist *first,
-    struct iolist *last,
-    int64_t deadline);
-DILL_EXPORT ssize_t wsraw_recvl(
-    int s,
-    int *type,
-    struct iolist *first,
-    struct iolist *last,
-    int64_t deadline);
-DILL_EXPORT int wsraw_detach(
-    int s,
-    int64_t deadline);
-
-/******************************************************************************/
 /*  WebSockets protocol.                                                      */
 /******************************************************************************/
 
 #if defined(__i386__)
-#  define WS_SIZE 128
+#  define WS_SIZE 44
 #else
-#  define WS_SIZE 256
+#  define WS_SIZE 88
 #endif
 
-#define WS_TYPE_BINARY WSRAW_TYPE_BINARY
-#define WS_TYPE_TEXT WSRAW_TYPE_TEXT
+#define WS_BINARY 0
+#define WS_TEXT 1
+#define WS_NOHTTP 2
 
 DILL_EXPORT int ws_attach_client(
     int s,
     const char *resource,
     const char *host,
-    int type,
+    int flags,
     int64_t deadline);
 DILL_EXPORT int ws_attach_client_mem(
     int s,
+    int flags,
     const char *resource,
     const char *host,
-    int type,
     void *mem,
     int64_t deadline);
 DILL_EXPORT int ws_attach_server(
     int s,
-    int type,
+    int flags,
+    char *resource,
+    size_t resourcelen,
+    char *host,
+    size_t hostlen,
     int64_t deadline);
 DILL_EXPORT int ws_attach_server_mem(
     int s,
-    int type,
+    int flags,
+    char *resource,
+    size_t resourcelen,
+    char *host,
+    size_t hostlen,
     void *mem,
     int64_t deadline);
 DILL_EXPORT int ws_send(
     int s,
-    int type,
+    int flags,
     const void *buf,
     size_t len,
     int64_t deadline);
 DILL_EXPORT ssize_t ws_recv(
     int s,
-    int *type,
+    int *flags,
     void *buf,
     size_t len,
     int64_t deadline);
 DILL_EXPORT int ws_sendl(
     int s,
-    int type,
+    int flags,
     struct iolist *first,
     struct iolist *last,
     int64_t deadline);
 DILL_EXPORT ssize_t ws_recvl(
     int s,
-    int *type,
+    int *flags,
     struct iolist *first,
     struct iolist *last,
     int64_t deadline);
 DILL_EXPORT int ws_detach(
     int s,
     int64_t deadline);
+
+/* Helper functions for those who want to implement HTTP exchange by hand. */
+
+#define WS_KEY_SIZE 32
+
+DILL_EXPORT int ws_request_key(
+    char *request_key);
+DILL_EXPORT int ws_response_key(
+    const char *request_key,
+    char *response_key);
 
 #endif
 

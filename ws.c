@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "iol.h"
 #include "utils.h"
 
 dill_unique_id(ws_type);
@@ -36,7 +37,10 @@ struct ws_sock {
     struct hvfs hvfs;
     struct msock_vfs mvfs;
     int u;
-    char wsraw[WSRAW_SIZE];
+    int flags;
+    unsigned int indone : 1;
+    unsigned int outdone: 1;
+    unsigned int server : 1;
     unsigned int mem : 1;
 };
 
@@ -58,101 +62,99 @@ static void *ws_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int ws_attach_client_mem(int s, const char *resource, const char *host,
-      int type, void *mem, int64_t deadline) {
-    int err;
-    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
-    if(dill_slow(type != WS_TYPE_BINARY && type != WS_TYPE_TEXT)) {
-        errno = EINVAL; goto error1;}
-    char http_mem[HTTP_SIZE];
-    int http = http_attach_mem(s, http_mem);
-    if(dill_slow(http < 0)) {err = errno; goto error1;}
-    /* Initial request. */
-    int rc = http_sendrequest(http, "GET", resource, deadline);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    rc = http_sendfield(http, "Host", host, deadline);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    rc = http_sendfield(http, "Upgrade", "websocket", deadline);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    rc = http_sendfield(http, "Connection", "Upgrade", deadline);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    char request_key[WSRAW_KEY_SIZE];
-    rc = wsraw_request_key(request_key);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    rc = http_sendfield(http, "Sec-WebSocket-Key", request_key, deadline);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    rc = http_sendfield(http, "Sec-WebSocket-Version", "13", deadline);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    /* TODO: Protocol, Extensions, custom fields? */
-    rc = hdone(http, deadline);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    /* Receive the reply from the server. */
-    char reason[256];
-    rc = http_recvstatus(http, reason, sizeof(reason), deadline);
-    if(dill_slow(rc != 101)) {err = EPROTO; goto error1;}
-    int has_upgrade = 0;
-    int has_connection = 0;
-    int has_key = 0;
-    while(1) {
-        char name[256];
-        char value[256];
-        rc = http_recvfield(http, name, sizeof(name), value, sizeof(value), -1);
-        if(rc < 0 && errno == EPIPE) break;
-        if(dill_slow(rc < 0)) {err = errno; goto error1;}
-        if(strcasecmp(name, "Upgrade") == 0) {
-           if(has_upgrade || strcasecmp(value, "websocket") != 0) {
-               err = EPROTO; goto error1;}
-           has_upgrade = 1;
-           continue;
-        }
-        if(strcasecmp(name, "Connection") == 0) {
-           if(has_connection || strcasecmp(value, "Upgrade") != 0) {
-               err = EPROTO; goto error1;}
-           has_connection = 1;
-           continue;
-        }
-        if(strcasecmp(name, "Sec-WebSocket-Accept") == 0) {
-            if(has_key) {err = EPROTO; goto error1;}
-            char response_key[WSRAW_KEY_SIZE];
-            rc = wsraw_response_key(request_key, response_key);
-            if(dill_slow(rc < 0)) {err = errno; goto error1;}
-            if(dill_slow(strcmp(value, response_key) != 0)) {
-                err = EPROTO; goto error1;}
-            has_key = 1;
-            continue;
-        }
-    }
-    if(!has_upgrade) {err = EPROTO; goto error1;}
-    if(!has_connection) {err = EPROTO; goto error1;}
-    if(!has_key) {err = EPROTO; goto error1;}
-    s = http_detach(http, deadline);
-    if(dill_slow(s < 0)) {err = errno; goto error1;}
+int ws_attach_client_mem(int s, int flags, const char *resource,
+      const char *host, void *mem, int64_t deadline) {
+    if(dill_slow(!mem)) {errno = EINVAL; return -1;}
+    if(dill_slow(!hquery(s, bsock_type))) return -1;
     struct ws_sock *self = (struct ws_sock*)mem;
-    s = wsraw_attach_client_mem(s, type, self->wsraw, deadline);
-    if(dill_slow(s < 0)) {err = errno; goto error1;}
-    /* Create the object. */
     self->hvfs.query = ws_hquery;
     self->hvfs.close = ws_hclose;
     self->hvfs.done = ws_hdone;
     self->mvfs.msendl = ws_msendl;
     self->mvfs.mrecvl = ws_mrecvl;
     self->u = s;
+    self->flags = flags;
+    self->indone = 0;
+    self->outdone = 0;
+    self->server = 0;
     self->mem = 1;
-    /* Create the handle. */
-    int h = hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error1;}
-    return h;
-error1:
-    perror("error");
-    dill_assert(0);
+    if(flags & WS_NOHTTP) return hmake(&self->hvfs);
+    if(dill_slow(!resource || !host)) {errno = EINVAL; return -1;}
+    char http_mem[HTTP_SIZE];
+    s = http_attach_mem(self->u, http_mem);
+
+    /* Send HTTP request. */
+    if(dill_slow(s < 0)) return -1;
+    int rc = http_sendrequest(s, "GET", resource, deadline);
+    if(dill_slow(rc < 0)) return -1;
+    rc = http_sendfield(s, "Host", host, deadline);
+    if(dill_slow(rc < 0)) return -1;
+    rc = http_sendfield(s, "Upgrade", "websocket", deadline);
+    if(dill_slow(rc < 0)) return -1;
+    rc = http_sendfield(s, "Connection", "Upgrade", deadline);
+    if(dill_slow(rc < 0)) return -1;
+    char request_key[WS_KEY_SIZE];
+    rc = ws_request_key(request_key);
+    if(dill_slow(rc < 0)) return -1;
+    rc = http_sendfield(s, "Sec-WebSocket-Key", request_key, deadline);
+    if(dill_slow(rc < 0)) return -1;
+    rc = http_sendfield(s, "Sec-WebSocket-Version", "13", deadline);
+    if(dill_slow(rc < 0)) return -1;
+    /* TODO: Protocol, Extensions? */
+    rc = hdone(s, deadline);
+    if(dill_slow(rc < 0)) return -1;
+
+    /* Receive HTTP response from the server. */
+    char reason[256];
+    rc = http_recvstatus(s, reason, sizeof(reason), deadline);
+    if(dill_slow(rc != 101)) {errno = EPROTO; return -1;}
+    int has_upgrade = 0;
+    int has_connection = 0;
+    int has_key = 0;
+    while(1) {
+        char name[256];
+        char value[256];
+        rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
+        if(rc < 0 && errno == EPIPE) break;
+        if(dill_slow(rc < 0)) return -1;
+        if(strcasecmp(name, "Upgrade") == 0) {
+           if(has_upgrade || strcasecmp(value, "websocket") != 0) {
+               errno = EPROTO; return -1;}
+           has_upgrade = 1;
+           continue;
+        }
+        if(strcasecmp(name, "Connection") == 0) {
+           if(has_connection || strcasecmp(value, "Upgrade") != 0) {
+               errno = EPROTO; return -1;}
+           has_connection = 1;
+           continue;
+        }
+        if(strcasecmp(name, "Sec-WebSocket-Accept") == 0) {
+            if(has_key) {errno = EPROTO; return -1;}
+            char response_key[WS_KEY_SIZE];
+            rc = ws_response_key(request_key, response_key);
+            if(dill_slow(rc < 0)) return -1;
+            if(dill_slow(strcmp(value, response_key) != 0)) {
+                errno = EPROTO; return -1;}
+            has_key = 1;
+            continue;
+        }
+    }
+    if(!has_upgrade) {errno = EPROTO; return -1;}
+    if(!has_connection) {errno = EPROTO; return -1;}
+    if(!has_key) {errno = EPROTO; return -1;}
+
+    self->u = http_detach(s, deadline);
+    if(dill_slow(self->u < 0)) return -1;
+    return hmake(&self->hvfs);
 }
 
-int ws_attach_client(int s, const char *resource, const char *host,
-      int type, int64_t deadline) {
+int ws_attach_client(int s, const char *resource, const char *host, int flags,
+      int64_t deadline) {
     int err;
     struct ws_sock *obj = malloc(sizeof(struct ws_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ws = ws_attach_client_mem(s, resource, host, type, obj, deadline);
+    int ws = ws_attach_client_mem(s, flags, resource, host, obj, deadline);
     if(dill_slow(ws < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ws;
@@ -163,105 +165,105 @@ error1:
     return -1;
 }
 
-int ws_attach_server_mem(int s, int type, void *mem, int64_t deadline) {
-    int err;
-    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
-    if(dill_slow(type != WS_TYPE_BINARY && type != WS_TYPE_TEXT)) {
-        errno = EINVAL; goto error1;}
+int ws_attach_server_mem(int s, int flags, char *resource, size_t resourcelen,
+      char *host, size_t hostlen, void *mem, int64_t deadline) {
+    if(dill_slow(!mem)) {errno = EINVAL; return -1;}
+    if(dill_slow(!hquery(s, bsock_type))) return -1;
+    struct ws_sock *self = (struct ws_sock*)mem;
+    self->hvfs.query = ws_hquery;
+    self->hvfs.close = ws_hclose;
+    self->hvfs.done = ws_hdone;
+    self->mvfs.msendl = ws_msendl;
+    self->mvfs.mrecvl = ws_mrecvl;
+    self->u = s;
+    self->flags = flags;
+    self->indone = 0;
+    self->outdone = 0;
+    self->server = 1;
+    self->mem = 1;
+    if(flags & WS_NOHTTP) return hmake(&self->hvfs);
+
     char http_mem[HTTP_SIZE];
-    int http = http_attach_mem(s, http_mem);
-    if(dill_slow(http < 0)) {err = errno; goto error1;}
-    /* Receive the request from the client. */
+    s = http_attach_mem(s, http_mem);
+    if(dill_slow(s < 0)) return -1;
+
+    /* Receive the HTTP request from the client. */
     char command[32];
-    char resource[256];
-    int rc = http_recvrequest(http, command, sizeof(command),
-        resource, sizeof(resource), deadline);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    if(dill_slow(strcmp(command, "GET") != 0)) {err = EPROTO; goto error1;}
+    int rc = http_recvrequest(s, command, sizeof(command),
+        resource, resourcelen, deadline);
+    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(strcmp(command, "GET") != 0)) {errno = EPROTO; return -1;}
     int has_host = 0;
     int has_upgrade = 0;
     int has_connection = 0;
     int has_key = 0;
     int has_version = 0;
-    char response_key[WSRAW_KEY_SIZE];
+    char response_key[WS_KEY_SIZE];
     while(1) {
         char name[256];
         char value[256];
-        rc = http_recvfield(http, name, sizeof(name), value, sizeof(value), -1);
+        rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
         if(rc < 0 && errno == EPIPE) break;
-        if(dill_slow(rc < 0)) {err = errno; goto error1;}
+        if(dill_slow(rc < 0)) return -1;
         if(strcasecmp(name, "Host") == 0) {
-           if(has_host != 0) {err = EPROTO; goto error1;}
+           if(has_host != 0) {errno = EPROTO; return -1;}
            has_host = 1;
            continue;
         }
         if(strcasecmp(name, "Upgrade") == 0) {
            if(has_upgrade || strcasecmp(value, "websocket") != 0) {
-               err = EPROTO; goto error1;}
+               errno = EPROTO; return -1;}
            has_upgrade = 1;
            continue;
         }
         if(strcasecmp(name, "Connection") == 0) {
            if(has_connection || strcasecmp(value, "Upgrade") != 0) {
-               err = EPROTO; goto error1;}
+               errno = EPROTO; return -1;}
            has_connection = 1;
            continue;
         }
         if(strcasecmp(name, "Sec-WebSocket-Key") == 0) {
-            if(has_key) {err = EPROTO; goto error1;}
+            if(has_key) {errno = EPROTO; return -1;}
             /* Generate the key to be sent back to the client. */
-            rc = wsraw_response_key(value, response_key);
-            if(dill_slow(rc < 0)) {err = errno; goto error1;}
+            rc = ws_response_key(value, response_key);
+            if(dill_slow(rc < 0)) return -1;
             has_key = 1;
             continue;
         }
         if(strcasecmp(name, "Sec-WebSocket-Version") == 0) {
            if(has_version || strcasecmp(value, "13") != 0) {
-               err = EPROTO; goto error1;}
+               errno = EPROTO; return -1;}
            has_version = 1;
            continue;
         }
     }
-    if(!has_upgrade) {err = EPROTO; goto error1;}
-    if(!has_connection) {err = EPROTO; goto error1;}
-    if(!has_key) {err = EPROTO; goto error1;}
-    if(!has_version) {err = EPROTO; goto error1;}
-    /* Send response back to the client. */
-    rc = http_sendstatus(http, 101, "Switching Protocols", deadline);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    rc = http_sendfield(http, "Upgrade", "websocket", deadline);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    rc = http_sendfield(http, "Connection", "Upgrade", deadline);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    rc = http_sendfield(http, "Sec-WebSocket-Accept", response_key, deadline);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    s = http_detach(http, deadline);
-    if(dill_slow(s < 0)) {err = errno; goto error1;}
-    struct ws_sock *self = (struct ws_sock*)mem;
-    s = wsraw_attach_server_mem(s, type, self->wsraw, deadline);
-    if(dill_slow(s < 0)) {err = errno; goto error1;}
-    /* Create the object. */
-    self->hvfs.query = ws_hquery;
-    self->hvfs.close = ws_hclose;
-    self->hvfs.done = ws_hdone;
-    self->mvfs.msendl = ws_msendl;
-    self->mvfs.mrecvl = ws_mrecvl;
-    self->u = s;
-    self->mem = 1;
-    /* Create the handle. */
-    int h = hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error1;}
-    return h;
-error1:
-    perror("error");
-    dill_assert(0);
+    if(!has_upgrade) {errno = EPROTO; return -1;}
+    if(!has_connection) {errno = EPROTO; return -1;}
+    if(!has_key) {errno = EPROTO; return -1;}
+    if(!has_version) {errno = EPROTO; return -1;}
+
+    /* Send HTTP response back to the client. */
+    rc = http_sendstatus(s, 101, "Switching Protocols", deadline);
+    if(dill_slow(rc < 0)) return -1;
+    rc = http_sendfield(s, "Upgrade", "websocket", deadline);
+    if(dill_slow(rc < 0)) return -1;
+    rc = http_sendfield(s, "Connection", "Upgrade", deadline);
+    if(dill_slow(rc < 0)) return -1;
+    rc = http_sendfield(s, "Sec-WebSocket-Accept", response_key, deadline);
+    if(dill_slow(rc < 0)) return -1;
+
+    self->u = http_detach(s, deadline);
+    if(dill_slow(self->u < 0)) return -1;
+    return hmake(&self->hvfs);
 }
 
-int ws_attach_server(int s, int type, int64_t deadline) {
+int ws_attach_server(int s, int flags, char *resource, size_t resourcelen,
+      char *host, size_t hostlen, int64_t deadline) {
     int err;
     struct ws_sock *obj = malloc(sizeof(struct ws_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ws = ws_attach_server_mem(s, type, obj, deadline);
+    int ws = ws_attach_server_mem(s, flags, resource, resourcelen,
+        host, hostlen, obj, deadline);
     if(dill_slow(ws < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ws;
@@ -272,47 +274,261 @@ error1:
     return -1;
 }
 
-int ws_send(int s, int type, const void *buf, size_t len, int64_t deadline) {
-    struct iolist iol = {(void*)buf, len, NULL, 0};
-    return ws_sendl(s, type, &iol, &iol, deadline);
+static int ws_sendl_base(struct msock_vfs *mvfs, int flags,
+      struct iolist *first, struct iolist *last, int64_t deadline) {
+    struct ws_sock *self = dill_cont(mvfs, struct ws_sock, mvfs);
+    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    size_t len;
+    int rc = iol_check(first, last, NULL, &len);
+    if(dill_slow(rc < 0)) return -1;
+    uint8_t buf[12];
+    size_t sz;
+    buf[0] = (flags & WS_TEXT) ? 0x81 : 0x82;
+    if(len > 0xffff) {
+        buf[1] = 127;
+        dill_putll(buf + 2, len);
+        sz = 10;
+    }
+    else if(len > 125) {
+        buf[1] = 126;
+        dill_puts(buf + 2, len);
+        sz = 4;
+    }
+    else {
+        buf[1] = (uint8_t)len;
+        sz = 2;
+    }
+    uint8_t mask[4];
+    if(!self->server) {
+        rc = dill_random(mask, sizeof(mask));
+        if(dill_slow(rc < 0)) return -1;
+        buf[1] |= 0x80;
+        memcpy(buf + sz, mask, 4);
+        sz += 4;
+    }
+    rc = bsend(self->u, buf, sz, deadline);
+    if(dill_slow(rc < 0)) return -1;
+    /* On the server side we can send the payload as is. */
+    if(self->server) {
+        rc = bsendl(self->u, first, last, deadline);
+        if(dill_slow(rc < 0)) return -1;
+        return 0;
+    }
+    /* On the client side, the payload has to be masked. */
+    size_t pos = 0;
+    while(first) {
+        size_t i;
+        for(i = 0; i != first->iol_len; ++i) {
+            uint8_t b = ((uint8_t*)first->iol_base)[i] ^
+                mask[pos++ % sizeof(mask)];
+            rc = bsend(self->u, &b, 1, deadline);
+            if(dill_slow(rc < 0)) return -1;
+        }
+        first = first->iol_next;
+    }
+    return 0;
 }
 
-ssize_t ws_recv(int s, int *type, void *buf, size_t len, int64_t deadline) {
-    struct iolist iol = {(void*)buf, len, NULL, 0};
-    return ws_recvl(s, type, &iol, &iol, deadline);
+static ssize_t ws_recvl_base(struct msock_vfs *mvfs, int *flags,
+      struct iolist *first, struct iolist *last, int64_t deadline) {
+    struct ws_sock *self = dill_cont(mvfs, struct ws_sock, mvfs);
+    if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
+    if(first != NULL || last != NULL) {
+        int rc = iol_check(first, last, NULL, NULL);
+        if(dill_slow(rc < 0)) return -1;
+    }
+    size_t res = 0;
+    /* Message may consist of multiple frames. Read them one by one. */
+    struct iolist it;
+    if(first) it = *first;
+    while(1) {
+        uint8_t hdr1[2];
+        int rc = brecv(self->u, hdr1, sizeof(hdr1), deadline);
+        if(dill_slow(rc < 0)) return -1;
+        if(hdr1[0] & 0x70) {errno = EPROTO; return -1;}
+        int opcode = hdr1[0] & 0x0f;
+        /* TODO: Other opcodes. */
+        switch(opcode) {
+        case 1:
+            if(flags) *flags = WS_TEXT;
+            break;
+        case 2:
+            if(flags) *flags = WS_BINARY;
+            break;
+        case 8:
+            self->indone = 1;
+            errno = EPIPE;
+            return -1;
+        default:
+            errno = EPROTO;
+            return -1;
+        }
+        if(!self->server ^ !(hdr1[1] & 0x80)) {errno = EPROTO; return -1;}
+        size_t sz = hdr1[1] & 0x7f;
+        if(sz == 126) {
+            uint8_t hdr2[2];
+            rc = brecv(self->u, hdr2, sizeof(hdr2), deadline);
+            if(dill_slow(rc < 0)) return -1;
+            sz = dill_gets(hdr2);
+        }
+        else if(sz == 127) {
+            uint8_t hdr2[8];
+            rc = brecv(self->u, hdr2, sizeof(hdr2), deadline);
+            if(dill_slow(rc < 0)) return -1;
+            sz = dill_getll(hdr2);
+        }
+        res += sz;
+        uint8_t mask[4];
+        if(self->server) {
+            rc = brecv(self->u, mask, sizeof(mask), deadline);
+            if(dill_slow(rc < 0)) return -1;
+        }
+        /* Frame may be read into multiple iolist elements. */
+        if(first == NULL && last == NULL) {
+            rc = brecv(self->u, NULL, sz, deadline);
+            if(dill_slow(rc < 0)) return -1;
+        } else {
+            while(1) {
+                size_t toread = sz < it.iol_len ? sz : it.iol_len;
+                if(toread > 0) {
+                    rc = brecv(self->u, it.iol_base, toread, deadline);
+                    if(dill_slow(rc < 0)) return -1;
+                    if(self->server) {
+                        size_t i;
+                        for(i = 0; i != toread; ++i)
+                            ((uint8_t*)it.iol_base)[i] ^= mask[i % 4];
+                    }
+                }
+                sz -= it.iol_len;
+                if(sz == 0) break;
+                if(dill_slow(!it.iol_next)) {errno = EMSGSIZE; return -1;}
+                it = *it.iol_next;
+            }
+        }
+        if(hdr1[0] & 0x80) break;
+    }
+    return res;
 }
 
-int ws_sendl(int s, int type, struct iolist *first, struct iolist *last,
+int ws_send(int s, int flags, const void *buf, size_t len, int64_t deadline) {
+    struct ws_sock *self = hquery(s, ws_type);
+    if(dill_slow(!self)) return -1;
+    struct iolist iol = {(void*)buf, len, NULL, 0};
+    return ws_sendl_base(&self->mvfs, flags, &iol, &iol, deadline);
+}
+
+ssize_t ws_recv(int s, int *flags, void *buf, size_t len, int64_t deadline) {
+    struct ws_sock *self = hquery(s, ws_type);
+    if(dill_slow(!self)) return -1;
+    struct iolist iol = {(void*)buf, len, NULL, 0};
+    return ws_recvl_base(&self->mvfs, flags, &iol, &iol, deadline);
+}
+
+int ws_sendl(int s, int flags, struct iolist *first, struct iolist *last,
       int64_t deadline) {
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
-    return wsraw_sendl(self->u, type, first, last, deadline);
+    return ws_sendl_base(&self->mvfs, flags, first, last, deadline);
 }
 
-ssize_t ws_recvl(int s, int *type, struct iolist *first, struct iolist *last,
+ssize_t ws_recvl(int s, int *flags, struct iolist *first, struct iolist *last,
       int64_t deadline) {
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
-    return wsraw_recvl(self->u, type, first, last, deadline);
+    return ws_recvl_base(&self->mvfs, flags, first, last, deadline);
 }
 
 static int ws_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct ws_sock *self = dill_cont(mvfs, struct ws_sock, mvfs);
-    return msendl(self->u, first, last, deadline);
+    return ws_sendl_base(mvfs, self->flags, first, last, deadline);
 }
 
 static ssize_t ws_mrecvl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct ws_sock *self = dill_cont(mvfs, struct ws_sock, mvfs);
-    return mrecvl(self->u, first, last, deadline);
+    int flags;
+    ssize_t sz = ws_recvl_base(mvfs, &flags, first, last, deadline);
+    if(dill_slow(sz < 0)) return -1;
+    if(dill_slow((flags & WS_TEXT) != (self->flags & WS_TEXT))) {
+        errno = EPROTO; return -1;}
+    return sz;
 }
 
 static int ws_hdone(struct hvfs *hvfs, int64_t deadline) {
-    dill_assert(0);
+    struct ws_sock *self = dill_cont(hvfs, struct ws_sock, hvfs);
+    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    /* TODO: Status code and message. */
+    uint8_t buf[6] = {0};
+    buf[0] = 0x88;
+    int rc = bsend(self->u, buf, self->server ? 2 : 6, deadline);
+    if(dill_slow(rc < 0)) return -1;
+    self->outdone = 1;
+    return 0;
+}
+
+int ws_detach(int s, int64_t deadline) {
+    struct ws_sock *self = hquery(s, ws_type);
+    if(dill_slow(!self)) return -1;
+    if(!self->outdone) {
+        int rc = ws_hdone(&self->hvfs, deadline);
+        if(dill_slow(rc < 0)) return -1;
+    }
+    while(1) {
+        ssize_t sz = ws_recvl_base(&self->mvfs, NULL, NULL, NULL, deadline);
+        if(sz < 0) {
+             if(errno == EPIPE) break;
+             return -1;
+        }
+    }
+    int u = self->u;
+    if(!self->mem) free(self);
+    return u;
 }
 
 static void ws_hclose(struct hvfs *hvfs) {
-    dill_assert(0);
+    struct ws_sock *self = (struct ws_sock*)hvfs;
+    int rc = hclose(self->u);
+    dill_assert(rc == 0);
+    if(!self->mem) free(self);
+}
+
+/******************************************************************************/
+/*  Helper functions.                                                         */
+/******************************************************************************/
+
+int ws_request_key(char *request_key) {
+    if(dill_slow(!request_key)) {errno = EINVAL; return -1;}
+    uint8_t nonce[16];
+    int rc = dill_random(nonce, sizeof(nonce));
+    if(dill_slow(rc < 0)) return -1;
+    rc = dill_base64_encode(nonce, sizeof(nonce), request_key, WS_KEY_SIZE);
+    if(dill_slow(rc < 0)) {errno = EFAULT; return -1;}
+    return 0;
+}
+
+int ws_response_key(const char *request_key, char *response_key) {
+    if(dill_slow(!request_key)) {errno = EINVAL; return -1;}
+    if(dill_slow(!response_key)) {errno = EINVAL; return -1;}
+    /* Decode the request key and check whether it's a 16-byte nonce. */
+    uint8_t nonce[16];
+    int rc = dill_base64_decode(request_key, strlen(request_key),
+        nonce, sizeof(nonce));
+    if(dill_slow(rc != sizeof(nonce))) {errno = EPROTO; return -1;}
+    /* Create the response key. */
+    struct dill_sha1 sha1;
+    dill_sha1_init(&sha1);
+    int i;
+    /* The key sent in the original request. */
+    for(i = 0; request_key[i] != 0; ++i)
+        dill_sha1_hashbyte(&sha1, request_key[i]);
+    /* RFC 6455-specified UUID. */
+    const char *uuid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    for(i = 0; uuid[i] != 0; ++i) dill_sha1_hashbyte(&sha1, uuid[i]);
+    /* Convert the SHA1 to Base64. */
+    rc = dill_base64_encode(dill_sha1_result(&sha1), DILL_SHA1_HASH_LEN,
+        response_key, WS_KEY_SIZE);
+    if(dill_slow(rc < 0)) {errno = EFAULT; return -1;}
+    return 0;
 }
 
