@@ -110,5 +110,45 @@ const char *dill_lstrip(const char *string, char delim);
 /* Returns a pointer after the last character in string that is not delim. */
 const char *dill_rstrip(const char *string, char delim);
 
+/* Cryptographically random bytes. */
+int dill_random(uint8_t *buf, size_t len);
+
+/******************************************************************************/
+/* Base64 functions are based on base64.c (Public Domain) by Jon Mayo.        */
+/******************************************************************************/
+
+int dill_base64_encode(const uint8_t *in, size_t in_len,
+    char *out, size_t out_len);
+int dill_base64_decode(const char *in, size_t in_len,
+    uint8_t *out, size_t out_len);
+
+/******************************************************************************/
+/*  SHA-1 SECURITY NOTICE:                                                    */
+/*  The algorithm as designed below is not intended for general purpose use.  */
+/*  As-designed, it is a single-purpose function for this WebSocket           */
+/*  Opening Handshake. As per RFC 6455 10.8, SHA-1 usage "doesn't depend on   */
+/*  any security properties of SHA-1, such as collision resistance or         */
+/*  resistance to the second pre-image attack (as described in [RFC4270])".   */
+/*  Caveat emptor for uses of this function elsewhere.                        */
+/*                                                                            */
+/*  Based on sha1.c (Public Domain) by Steve Reid, these functions calculate  */
+/*  the SHA1 hash of arbitrary byte locations byte-by-byte.                   */
+/******************************************************************************/
+
+#define DILL_SHA1_HASH_LEN 20
+#define DILL_SHA1_BLOCK_LEN 64
+
+struct dill_sha1 {
+    uint32_t buffer[DILL_SHA1_BLOCK_LEN / sizeof (uint32_t)];
+    uint32_t state[DILL_SHA1_HASH_LEN / sizeof (uint32_t)];
+    uint32_t bytes_hashed;
+    uint8_t buffer_offset;
+    uint8_t is_little_endian;
+};
+
+void dill_sha1_init(struct dill_sha1 *self);
+void dill_sha1_hashbyte(struct dill_sha1 *self, uint8_t data);
+uint8_t *dill_sha1_result(struct dill_sha1 *self);
+
 #endif
 

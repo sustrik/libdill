@@ -630,6 +630,88 @@ DILL_EXPORT int tls_detach(
 
 #endif
 
+/******************************************************************************/
+/*  WebSockets protocol.                                                      */
+/******************************************************************************/
+
+#if defined(__i386__)
+#  define WS_SIZE 44
+#else
+#  define WS_SIZE 88
+#endif
+
+#define WS_BINARY 0
+#define WS_TEXT 1
+#define WS_NOHTTP 2
+
+DILL_EXPORT int ws_attach_client(
+    int s,
+    const char *resource,
+    const char *host,
+    int flags,
+    int64_t deadline);
+DILL_EXPORT int ws_attach_client_mem(
+    int s,
+    int flags,
+    const char *resource,
+    const char *host,
+    void *mem,
+    int64_t deadline);
+DILL_EXPORT int ws_attach_server(
+    int s,
+    int flags,
+    char *resource,
+    size_t resourcelen,
+    char *host,
+    size_t hostlen,
+    int64_t deadline);
+DILL_EXPORT int ws_attach_server_mem(
+    int s,
+    int flags,
+    char *resource,
+    size_t resourcelen,
+    char *host,
+    size_t hostlen,
+    void *mem,
+    int64_t deadline);
+DILL_EXPORT int ws_send(
+    int s,
+    int flags,
+    const void *buf,
+    size_t len,
+    int64_t deadline);
+DILL_EXPORT ssize_t ws_recv(
+    int s,
+    int *flags,
+    void *buf,
+    size_t len,
+    int64_t deadline);
+DILL_EXPORT int ws_sendl(
+    int s,
+    int flags,
+    struct iolist *first,
+    struct iolist *last,
+    int64_t deadline);
+DILL_EXPORT ssize_t ws_recvl(
+    int s,
+    int *flags,
+    struct iolist *first,
+    struct iolist *last,
+    int64_t deadline);
+DILL_EXPORT int ws_detach(
+    int s,
+    int64_t deadline);
+
+/* Helper functions for those who want to implement HTTP exchange by hand. */
+
+#define WS_KEY_SIZE 32
+
+DILL_EXPORT int ws_request_key(
+    char *request_key);
+DILL_EXPORT int ws_response_key(
+    const char *request_key,
+    char *response_key);
+
 #endif
 
 #endif
