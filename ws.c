@@ -396,7 +396,7 @@ static ssize_t ws_recvl_base(struct msock_vfs *mvfs, int *flags,
                         ((uint8_t*)it.iol_base)[i] ^= mask[i % 4];
                 }
             }
-            sz -= it.iol_len;
+            sz -= toread;
             if(sz == 0) break;
             if(dill_slow(!it.iol_next)) {errno = EMSGSIZE; return -1;}
             it = *it.iol_next;
