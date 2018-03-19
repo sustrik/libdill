@@ -336,17 +336,15 @@ static ssize_t ws_recvl_base(struct msock_vfs *mvfs, int *flags,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct ws_sock *self = dill_cont(mvfs, struct ws_sock, mvfs);
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
-    if(first != NULL || last != NULL) {
-        int rc = iol_check(first, last, NULL, NULL);
-        if(dill_slow(rc < 0)) return -1;
-    }
+    int rc = iol_check(first, last, NULL, NULL);
+    if(dill_slow(rc < 0)) return -1;
     size_t res = 0;
     /* Message may consist of multiple frames. Read them one by one. */
     struct iolist it;
     if(first) it = *first;
     while(1) {
         uint8_t hdr1[2];
-        int rc = brecv(self->u, hdr1, sizeof(hdr1), deadline);
+        rc = brecv(self->u, hdr1, sizeof(hdr1), deadline);
         if(dill_slow(rc < 0)) return -1;
         if(hdr1[0] & 0x70) {errno = EPROTO; return -1;}
         int opcode = hdr1[0] & 0x0f;
@@ -387,26 +385,21 @@ static ssize_t ws_recvl_base(struct msock_vfs *mvfs, int *flags,
             if(dill_slow(rc < 0)) return -1;
         }
         /* Frame may be read into multiple iolist elements. */
-        if(first == NULL && last == NULL) {
-            rc = brecv(self->u, NULL, sz, deadline);
-            if(dill_slow(rc < 0)) return -1;
-        } else {
-            while(1) {
-                size_t toread = sz < it.iol_len ? sz : it.iol_len;
-                if(toread > 0) {
-                    rc = brecv(self->u, it.iol_base, toread, deadline);
-                    if(dill_slow(rc < 0)) return -1;
-                    if(self->server) {
-                        size_t i;
-                        for(i = 0; i != toread; ++i)
-                            ((uint8_t*)it.iol_base)[i] ^= mask[i % 4];
-                    }
+        while(1) {
+            size_t toread = sz < it.iol_len ? sz : it.iol_len;
+            if(toread > 0) {
+                rc = brecv(self->u, it.iol_base, toread, deadline);
+                if(dill_slow(rc < 0)) return -1;
+                if(self->server) {
+                    size_t i;
+                    for(i = 0; i != toread; ++i)
+                        ((uint8_t*)it.iol_base)[i] ^= mask[i % 4];
                 }
-                sz -= it.iol_len;
-                if(sz == 0) break;
-                if(dill_slow(!it.iol_next)) {errno = EMSGSIZE; return -1;}
-                it = *it.iol_next;
             }
+            sz -= it.iol_len;
+            if(sz == 0) break;
+            if(dill_slow(!it.iol_next)) {errno = EMSGSIZE; return -1;}
+            it = *it.iol_next;
         }
         if(hdr1[0] & 0x80) break;
     }
@@ -478,7 +471,8 @@ int ws_detach(int s, int64_t deadline) {
         if(dill_slow(rc < 0)) return -1;
     }
     while(1) {
-        ssize_t sz = ws_recvl_base(&self->mvfs, NULL, NULL, NULL, deadline);
+        struct iolist iol = {NULL, SIZE_MAX, NULL, 0};
+        ssize_t sz = ws_recvl_base(&self->mvfs, NULL, &iol, &iol, deadline);
         if(sz < 0) {
              if(errno == EPIPE) break;
              return -1;
