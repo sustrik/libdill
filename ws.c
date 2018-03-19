@@ -207,6 +207,9 @@ int ws_attach_server_mem(int s, int flags, char *resource, size_t resourcelen,
         if(dill_slow(rc < 0)) return -1;
         if(strcasecmp(name, "Host") == 0) {
            if(has_host != 0) {errno = EPROTO; return -1;}
+           if(dill_slow(strlen(value) >= hostlen)) {
+               errno = EMSGSIZE; return -1;}
+           strcpy(host, value);
            has_host = 1;
            continue;
         }

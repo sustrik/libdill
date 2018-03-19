@@ -22,6 +22,8 @@
 
 */
 
+#include <string.h>
+
 #include "assert.h"
 #include "../libdill.h"
 
@@ -88,6 +90,8 @@ int main(void) {
     s = ws_attach_server(p[0], WS_BINARY, resource, sizeof(resource),
         host, sizeof(host), -1);
     errno_assert(s >= 0);
+    assert(strcmp(resource, "/") == 0);
+    assert(strcmp(host, "www.example.org") == 0);
     sz = mrecv(s, buf, sizeof(buf), -1);
     errno_assert(sz >= 0);
     assert(sz == 3);
