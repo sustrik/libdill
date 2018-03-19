@@ -178,6 +178,43 @@ int main() {
     rc = hclose(s[1]);
     errno_assert(rc == 0);
 
+    /* Try skipping some data. */
+    rc = ipc_pair(s);
+    errno_assert(rc == 0);
+    rc = bsend(s[0], "ABCDEFGHIJ", 10, -1);
+    errno_assert(rc == 0);
+    rc = brecv(s[1], buf, 3, -1);
+    errno_assert(rc == 0);
+    assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
+    rc = brecv(s[1], NULL, 3, -1);
+    errno_assert(rc == 0);
+    rc = brecv(s[1], buf, 3, -1);
+    errno_assert(rc == 0);
+    assert(buf[0] == 'G' && buf[1] == 'H' && buf[2] == 'I');
+    rc = hclose(s[0]);
+    errno_assert(rc == 0);
+    rc = hclose(s[1]);
+    errno_assert(rc == 0);
+
+    /* Try skipping some data using an iolist. */
+    rc = ipc_pair(s);
+    errno_assert(rc == 0);
+    rc = bsend(s[0], "ABCDEFGHIJ", 10, -1);
+    errno_assert(rc == 0);
+    char bufx[3];
+    char bufy[3];
+    struct iolist iolx3 = {bufy, sizeof(bufy), NULL, 0};
+    struct iolist iolx2 = {NULL, 3, &iolx3, 0};
+    struct iolist iolx1 = {bufx, sizeof(bufx), &iolx2, 0};
+    rc = brecvl(s[1], &iolx1, &iolx3, -1);
+    errno_assert(rc == 0);
+    assert(bufx[0] == 'A' && bufx[1] == 'B' && bufx[2] == 'C');
+    assert(bufy[0] == 'G' && bufy[1] == 'H' && bufy[2] == 'I');
+    rc = hclose(s[0]);
+    errno_assert(rc == 0);
+    rc = hclose(s[1]);
+    errno_assert(rc == 0);
+
     return 0;
 }
 
