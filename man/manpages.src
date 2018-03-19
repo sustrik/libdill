@@ -3101,6 +3101,9 @@ function generate_man_page(fx, sections, mem) {
             int iol_rsvd;            /* Reserved. Must be set to zero. */
             \`\`\`
 
+            When receiving, **iol_base** equal to NULL means that **iol_len**
+            bytes should be skipped.
+
             The function returns **EINVAL** error in the case the list is
             malformed:
 
