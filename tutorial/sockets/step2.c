@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     struct ipaddr addr;
     int rc = ipaddr_remote(&addr, argv[2], port, 0, -1);
     if(rc != 0) {
-        perror("Cannot resolve server addres");
+        perror("Cannot resolve server address");
         return 1;
     }
 

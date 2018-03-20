@@ -45,7 +45,7 @@ The first thing we have to is to convert the name of the server to its IP addres
 struct ipaddr addr;
 int rc = ipaddr_remote(&addr, argv[2], port, 0, -1);
 if(rc != 0) {
-    perror("Cannot resolve server addres");
+    perror("Cannot resolve server address");
     return 1;
 }
 ```
@@ -64,7 +64,7 @@ if(s < 0) {
 
 Once again, the error is handled in a POSIX-y way. From now on, to keep the tutorial succint, we are going to ommit error handling code. However, if you want to add it, all you have to do is to follow the above pattern.
 
-At the end of the program we want to close the TCP socket. There are two ways to do that. First, you can use `hclose`, the generic function for closing handles. This function does close the socket and deallocates all the allocated resources, however, it doesn't negotiate an orderly shutdown with the remote peer. If you use `hclose` to close a socket, there's no guarantee that the peer will even notice, let alone shutting down in an orderly manner. While this may sound like a bad idea there are legitimate cases where you should do exactly that. If you are under DoS attach, for example, it makes sense to close offending connections as soon as possible rather than trying to play nice with the attacker:
+At the end of the program we want to close the TCP socket. There are two ways to do that. First, you can use `hclose`, the generic function for closing handles. This function does close the socket and deallocates all the allocated resources, however, it doesn't negotiate an orderly shutdown with the remote peer. If you use `hclose` to close a socket, there's no guarantee that the peer will even notice, let alone shutting down in an orderly manner. While this may sound like a bad idea there are legitimate cases where you should do exactly that. If you are under DoS attack, for example, it makes sense to close offending connections as soon as possible rather than trying to play nice with the attacker:
 
 ```c
 rc = hclose(s);
