@@ -17,6 +17,10 @@ int\ ws_request_key(char*\ request_key);
 .fi
 .SH DESCRIPTION
 .PP
+WebSocket is a message\-based protocol defined in RFC 6455.
+It can be used as a bidirectional communication channel for
+communication with a web server.
+.PP
 This is a helper function that can be used when doing a custom HTTP
 handshake for the WebSocket protocol (see \f[B]WS_NOHTTP\f[] flag).
 It generates an unique RFC\-compliant key to be filled into
@@ -26,6 +30,9 @@ The generated key is null\-terminated.
 .PP
 \f[B]request_key\f[]: Buffer to hold the generated request key.
 It must be at least \f[B]WS_KEY_SIZE\f[] bytes long.
+.PP
+This function is not available if libdill is compiled with
+\f[B]\-\-disable\-sockets\f[] option.
 .SH RETURN VALUE
 .PP
 In case of success the function returns 0.
@@ -45,4 +52,5 @@ http_sendfield(s,\ "Sec\-WebSocket\-Key",\ request_key,\ \-1);
 .fi
 .SH SEE ALSO
 .PP
-\f[B]ws_response_key\f[](3)
+\f[B]mrecv\f[](3) \f[B]mrecvl\f[](3) \f[B]msend\f[](3)
+\f[B]msendl\f[](3) \f[B]ws_response_key\f[](3)

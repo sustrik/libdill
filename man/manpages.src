@@ -2967,6 +2967,8 @@ fxs = [
            },
         ],
 
+        protocol: ws_protocol,
+
         prologue: `
             This is a helper function that can be used when doing a custom HTTP
             handshake for the WebSocket protocol (see **WS_NOHTTP** flag).
@@ -3008,6 +3010,8 @@ fxs = [
                `,
            },
         ],
+
+        protocol: ws_protocol,
 
         prologue: `
             This is a helper function that can be used when doing a custom HTTP
