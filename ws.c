@@ -202,7 +202,8 @@ int ws_attach_server_mem(int s, int flags, char *resource, size_t resourcelen,
     while(1) {
         char name[256];
         char value[256];
-        rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
+        rc = http_recvfield(s, name, sizeof(name), value, sizeof(value),
+            deadline);
         if(rc < 0 && errno == EPIPE) break;
         if(dill_slow(rc < 0)) return -1;
         if(strcasecmp(name, "Host") == 0) {
