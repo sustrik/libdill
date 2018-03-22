@@ -22,6 +22,7 @@
 
 <span class="dt">int</span> ws_response_key(<span class="dt">const</span> <span class="dt">char</span>* request_key, <span class="dt">char</span>* response_key);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
+<p><strong>WARNING: This is experimental functionality and the API may change in the future.</strong></p>
 <p>WebSocket is a message-based protocol defined in RFC 6455. It can be used as a bidirectional communication channel for communication with a web server.</p>
 <p>This is a helper function that can be used when doing a custom HTTP handshake for the WebSocket protocol (see <strong>WS_NOHTTP</strong> flag). On the server, it can be used to generates an RFC-compliant response key, to be filled into <strong>Sec-WebSocket-Accept</strong> field, for a request key received from the client. On the client side, it can be used to verify that the response key received from the server is correct.</p>
 <p>The generated key is null-terminated.</p>

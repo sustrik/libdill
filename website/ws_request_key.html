@@ -22,6 +22,7 @@
 
 <span class="dt">int</span> ws_request_key(<span class="dt">char</span>* request_key);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
+<p><strong>WARNING: This is experimental functionality and the API may change in the future.</strong></p>
 <p>WebSocket is a message-based protocol defined in RFC 6455. It can be used as a bidirectional communication channel for communication with a web server.</p>
 <p>This is a helper function that can be used when doing a custom HTTP handshake for the WebSocket protocol (see <strong>WS_NOHTTP</strong> flag). It generates an unique RFC-compliant key to be filled into <strong>Sec-WebSocket-Key</strong> of the HTTP request.</p>
 <p>The generated key is null-terminated.</p>
