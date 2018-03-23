@@ -2359,6 +2359,7 @@ fxs = [
 
         prologue: `
             This function blocks until the deadline expires or an error occurs.
+            In the former case it returns zero.
         `,
 
         example: `
