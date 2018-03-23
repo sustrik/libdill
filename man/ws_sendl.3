@@ -100,6 +100,8 @@ values below.
 .IP \[bu] 2
 \f[B]ECANCELED\f[]: Current coroutine was canceled.
 .IP \[bu] 2
+\f[B]ECONNRESET\f[]: Broken connection.
+.IP \[bu] 2
 \f[B]EINVAL\f[]: Invalid argument.
 .IP \[bu] 2
 \f[B]ENOTSUP\f[]: The handle does not support this operation.
@@ -127,6 +129,6 @@ tcp_close(s,\ \-1);
 .SH SEE ALSO
 .PP
 \f[B]mrecv\f[](3) \f[B]mrecvl\f[](3) \f[B]msend\f[](3)
-\f[B]msendl\f[](3) \f[B]now\f[](3) \f[B]ws_recv\f[](3)
-\f[B]ws_recvl\f[](3) \f[B]ws_request_key\f[](3)
+\f[B]msendl\f[](3) \f[B]now\f[](3) \f[B]ws_detach\f[](3)
+\f[B]ws_recv\f[](3) \f[B]ws_recvl\f[](3) \f[B]ws_request_key\f[](3)
 \f[B]ws_response_key\f[](3) \f[B]ws_send\f[](3)

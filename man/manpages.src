@@ -2955,6 +2955,36 @@ fxs = [
         }
     },
     {
+        name: "ws_detach",
+        info: "terminates WebSocket protocol and returns the underlying socket",
+        result: {
+            type: "int",
+            success: "underlying socket handle",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the WebSocket socket.",
+           },
+        ],
+        protocol: ws_protocol,
+        prologue: `
+            This function does the terminal WebSocket handshake and returns
+            the underlying socket to the user. The socket is closed even in the
+            case of error.
+        `,
+
+        has_handle_argument: true,
+        has_deadline: true,
+        uses_connection: true,
+
+        custom_errors: {
+            ENOTSUP: "The handle is not an WebSocket protocol handle.",
+        },
+    },
+    {
         name: "ws_recv",
         info: "receives a WebSocket message",
         result: {
@@ -2993,6 +3023,7 @@ fxs = [
         `,
 
         has_handle_argument: true,
+        uses_connection: true,
         has_deadline: true,
 
         errors: ["EINVAL", "EMSGSIZE"],
@@ -3026,6 +3057,7 @@ fxs = [
         `,
 
         has_handle_argument: true,
+        uses_connection: true,
         has_deadline: true,
         has_iol: true,
 
@@ -3166,6 +3198,7 @@ fxs = [
         `,
 
         has_handle_argument: true,
+        uses_connection: true,
         has_deadline: true,
 
         errors: ["EINVAL"],
@@ -3205,6 +3238,7 @@ fxs = [
         `,
 
         has_handle_argument: true,
+        uses_connection: true,
         has_iol: true,
         has_deadline: true,
 
