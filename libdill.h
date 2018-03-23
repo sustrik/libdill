@@ -646,9 +646,9 @@ DILL_EXPORT int tls_detach(
 
 DILL_EXPORT int ws_attach_client(
     int s,
+    int flags,
     const char *resource,
     const char *host,
-    int flags,
     int64_t deadline);
 DILL_EXPORT int ws_attach_client_mem(
     int s,

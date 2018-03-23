@@ -149,7 +149,7 @@ int ws_attach_client_mem(int s, int flags, const char *resource,
     return hmake(&self->hvfs);
 }
 
-int ws_attach_client(int s, const char *resource, const char *host, int flags,
+int ws_attach_client(int s, int flags, const char *resource, const char *host,
       int64_t deadline) {
     int err;
     struct ws_sock *obj = malloc(sizeof(struct ws_sock));

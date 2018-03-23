@@ -28,7 +28,7 @@
 #include "../libdill.h"
 
 coroutine void nohttp_client(int s) {
-    s = ws_attach_client(s, NULL, NULL, WS_NOHTTP | WS_TEXT, -1);
+    s = ws_attach_client(s, WS_NOHTTP | WS_TEXT, NULL, NULL, -1);
     errno_assert(s >= 0);
     int rc = msend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
@@ -44,7 +44,7 @@ coroutine void nohttp_client(int s) {
 }
 
 coroutine void http_client(int s) {
-    s = ws_attach_client(s, "/", "www.example.org", WS_BINARY, -1);
+    s = ws_attach_client(s, WS_BINARY, "/", "www.example.org", -1);
     errno_assert(s >= 0);
     int rc = msend(s, "ABC", 3, -1);
     errno_assert(rc == 0);

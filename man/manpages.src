@@ -131,6 +131,29 @@ go_info = `
     \`\`\`
 `
 
+ws_flags = `
+            The socket can be either text- (**WS_TEXT** flag) or binary-
+            (**WS_BINARY** flag) based. Binary is the default. When sending
+            messages via **msend** or **msendl** these will be typed based on
+            the socket type. When receiving messages via **mrecv** or **mrecvl**
+            encountering a message that doesn't match the socket type results in
+            **EPROTO** error.
+
+            If you want to combine text and binary messages you can do so by
+            using functions such as **ws_send** and **ws_recv**.
+
+            **WS_NOHTTP** flag can be combined with socket type flags. If set,
+            the protocol will skip the initial HTTP handshake. In this case
+            **resource** and **host** arguments won't be used and can be set
+            to **NULL**.
+
+            Skipping HTTP handshake is useful when you want to do the handshake
+            on your own. For example, if you want to implement custom WebSocket
+            extensions or if you want to write a multi-protocol application
+            where initial HTTP handshake can be followed by different kinds
+            of protocols (e.g. HTML and WebSocket).
+`
+
 crlf_protocol = {
     section: "CRLF protocol",
     type: "message",
@@ -2953,6 +2976,134 @@ fxs = [
         custom_errors: {
             EMSGSIZE: "The message is too long to fit into an UDP packet.",
         }
+    },
+    {
+        name: "ws_attach_client",
+        info: "creates WebSocket protocol on the top of underlying socket",
+        result: {
+            type: "int",
+            success: "newly created socket handle",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
+           },
+           {
+               name: "flags",
+               type: "int",
+               info: "Flags. See above.",
+           },
+           {
+               name: "resource",
+               type: "const char*",
+               info: "HTTP resource to use.",
+           },
+           {
+               name: "host",
+               type: "const char*",
+               info: "Virtual HTTP host to use.",
+           },
+        ],
+        protocol: ws_protocol,
+        prologue: `
+            This function instantiates WebSocket protocol on top of the
+            underlying bytestream protocol. WebSocket protocol being asymmetric,
+            client and server sides are intialized in different ways. This
+            particular function initializes the client side of the connection.
+        ` + ws_flags,
+        epilogue: `
+            The socket can be cleanly shut down using **ws_detach** function.
+        `,
+        has_handle_argument: true,
+        has_deadline: true,
+        allocates_handle: true,
+        uses_connection: true,
+
+        mem: "WS_SIZE",
+
+        errors: ["EINVAL"],
+
+        custom_errors: {
+            EPROTO: "Underlying socket is not a bytestream socket.",
+        },
+    },
+    {
+        name: "ws_attach_server",
+        info: "creates WebSocket protocol on the top of underlying socket",
+        result: {
+            type: "int",
+            success: "newly created socket handle",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
+           },
+           {
+               name: "flags",
+               type: "int",
+               info: "Flags. See above.",
+           },
+           {
+               name: "resource",
+               type: "char*",
+               info: "Out parameter. HTTP resource specified by the client.",
+           },
+           {
+               name: "resourcelen",
+               type: "size_t",
+               info: "Size of the **resource** buffer.",
+           },
+           {
+               name: "host",
+               type: "char*",
+               info: "Out parameter. Virtual host specified by the client.",
+           },
+           {
+               name: "hostlen",
+               type: "size_t",
+               info: "Size of the **host** buffer.",
+           },
+        ],
+        protocol: ws_protocol,
+        prologue: `
+            This function instantiates WebSocket protocol on top of the
+            underlying bytestream protocol. WebSocket protocol being asymmetric,
+            client and server sides are intialized in different ways. This
+            particular function initializes the client side of the connection.
+        ` + ws_flags,
+        epilogue: `
+            The socket can be cleanly shut down using **ws_detach** function.
+        `,
+        has_handle_argument: true,
+        has_deadline: true,
+        allocates_handle: true,
+        uses_connection: true,
+
+        mem: "WS_SIZE",
+
+        errors: ["EINVAL"],
+
+        custom_errors: {
+            EPROTO: "Underlying socket is not a bytestream socket.",
+        },
+
+        example: `
+            int s = tcp_accept(listener, NULL, -1);
+            s = tls_attach_server(s, -1);
+            bsend(s, "ABC", 3, -1);
+            char buf[3];
+            ssize_t sz = brecv(s, buf, sizeof(buf), -1);
+            s = tls_detach(s, -1);
+            tcp_close(s);
+        `,
     },
     {
         name: "ws_detach",
