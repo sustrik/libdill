@@ -3043,6 +3043,95 @@ fxs = [
         `,
     },
     {
+        name: "ws_send",
+        info: "sends a WebSocket message",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "The socket handle.",
+           },
+           {
+               name: "flags",
+               type: "int",
+               info: `
+                   Type of message to send. Either **WS_BINARY** or **WS_TEXT**.
+                   This will override the type specified when attaching the
+                   socket.
+               `,
+           },
+           {
+               name: "buf",
+               type: "const void*",
+               info: "Data to send.",
+           },
+           {
+               name: "len",
+               type: "size_t",
+               info: "Number of bytes to send.",
+           },
+        ],
+        protocol: ws_protocol,
+        prologue: `
+            This function works very much like **msend** except that it allows
+            message type (text or binary) to be specified explicitly rather
+            that using the type specified at attach time.
+        `,
+
+        has_handle_argument: true,
+        has_deadline: true,
+
+        errors: ["EINVAL"],
+        custom_errors: {
+            EPIPE: "Closed connection.",
+        },
+    },
+    {
+        name: "ws_sendl",
+        info: "sends a WebSocket message",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "The socket handle.",
+           },
+           {
+               name: "flags",
+               type: "int",
+               info: `
+                   Type of message to send. Either **WS_BINARY** or **WS_TEXT**.
+                   This will override the type specified when attaching the
+                   socket.
+               `,
+           },
+        ],
+        protocol: ws_protocol,
+        prologue: `
+            This function works very much like **msendl** except that it allows
+            message type (text or binary) to be specified explicitly rather
+            that using the type specified at attach time.
+        `,
+
+        has_handle_argument: true,
+        has_iol: true,
+        has_deadline: true,
+
+        errors: ["EINVAL"],
+        custom_errors: {
+            EPIPE: "Closed connection.",
+        },
+    },
+    {
         name: "yield",
         section: "Coroutines",
         info: "yields CPU to other coroutines",
@@ -3173,13 +3262,18 @@ function generate_man_page(fx, sections, mem) {
         })
     }
 
-    for(var j = 0; j < a.length; j++) {
-        if(a[j].type) t += a[j].type + " "
-        t += a[j].name
-        if(a[j].postfix) t += a[j].postfix
-        if(j != a.length - 1) t += ", "
+    if(a.length == 0 && !fx.has_iol && !mem && !fx.has_deadline) {
+        t += "void"
+    } else {
+        t += "\n"
+        for(var j = 0; j < a.length; j++) {
+            t += "    "
+            if(a[j].type) t += a[j].type + " "
+            t += a[j].name
+            if(a[j].postfix) t += a[j].postfix
+            if(j != a.length - 1) t += ",\n"
+        }
     }
-    if(a.length == 0 && !fx.has_iol && !mem && !fx.has_deadline) t += "void"
     t += ");\n```\n\n"
 
     /**************************************************************************/

@@ -11,7 +11,10 @@ tcp_listen_mem \- starts listening for incoming TCP connections
 \f[C]
 #include\ <libdill.h>
 
-int\ tcp_listen_mem(const\ struct\ ipaddr*\ addr,\ int\ backlog,\ void*\ mem);
+int\ tcp_listen_mem(
+\ \ \ \ const\ struct\ ipaddr*\ addr,
+\ \ \ \ int\ backlog,
+\ \ \ \ void*\ mem);
 \f[]
 .fi
 .SH DESCRIPTION

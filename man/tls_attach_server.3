@@ -11,7 +11,11 @@ tls_attach_server \- creates TLS protocol on top of underlying socket
 \f[C]
 #include\ <libdill.h>
 
-int\ tls_attach_server(int\ s,\ const\ char*\ cert,\ const\ char*\ cert,\ int64_t\ deadline);
+int\ tls_attach_server(
+\ \ \ \ int\ s,
+\ \ \ \ const\ char*\ cert,
+\ \ \ \ const\ char*\ cert,
+\ \ \ \ int64_t\ deadline);
 \f[]
 .fi
 .SH DESCRIPTION

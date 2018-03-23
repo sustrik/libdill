@@ -11,7 +11,11 @@ http_sendstatus \- sends HTTP status to the peer
 \f[C]
 #include\ <libdill.h>
 
-int\ http_sendstatus(int\ s,\ int\ status,\ const\ char*\ reason,\ int64_t\ deadline);
+int\ http_sendstatus(
+\ \ \ \ int\ s,
+\ \ \ \ int\ status,
+\ \ \ \ const\ char*\ reason,
+\ \ \ \ int64_t\ deadline);
 \f[]
 .fi
 .SH DESCRIPTION

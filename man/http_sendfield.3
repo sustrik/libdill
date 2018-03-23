@@ -11,7 +11,11 @@ http_sendfield \- sends HTTP field to the peer
 \f[C]
 #include\ <libdill.h>
 
-int\ http_sendfield(int\ s,\ const\ char*\ name,\ const\ char*\ value,\ int64_t\ deadline);
+int\ http_sendfield(
+\ \ \ \ int\ s,
+\ \ \ \ const\ char*\ name,
+\ \ \ \ const\ char*\ value,
+\ \ \ \ int64_t\ deadline);
 \f[]
 .fi
 .SH DESCRIPTION

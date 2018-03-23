@@ -11,7 +11,13 @@ http_recvrequest \- receives HTTP request from the peer
 \f[C]
 #include\ <libdill.h>
 
-int\ http_recvrequest(int\ s,\ char*\ command,\ size_t\ commandlen,\ char*\ resource,\ size_t\ resourcelen,\ int64_t\ deadline);
+int\ http_recvrequest(
+\ \ \ \ int\ s,
+\ \ \ \ char*\ command,
+\ \ \ \ size_t\ commandlen,
+\ \ \ \ char*\ resource,
+\ \ \ \ size_t\ resourcelen,
+\ \ \ \ int64_t\ deadline);
 \f[]
 .fi
 .SH DESCRIPTION

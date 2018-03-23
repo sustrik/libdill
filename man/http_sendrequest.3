@@ -11,7 +11,11 @@ http_sendrequest \- sends initial HTTP request
 \f[C]
 #include\ <libdill.h>
 
-int\ http_sendrequest(int\ s,\ const\ char*\ command,\ const\ char*\ resource,\ int64_t\ deadline);
+int\ http_sendrequest(
+\ \ \ \ int\ s,
+\ \ \ \ const\ char*\ command,
+\ \ \ \ const\ char*\ resource,
+\ \ \ \ int64_t\ deadline);
 \f[]
 .fi
 .SH DESCRIPTION

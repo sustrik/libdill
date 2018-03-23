@@ -11,7 +11,11 @@ bsendl \- sends data to a socket
 \f[C]
 #include\ <libdill.h>
 
-int\ bsendl(int\ s,\ struct\ iolist*\ first,\ struct\ iolist*\ last,\ int64_t\ deadline);
+int\ bsendl(
+\ \ \ \ int\ s,
+\ \ \ \ struct\ iolist*\ first,
+\ \ \ \ struct\ iolist*\ last,
+\ \ \ \ int64_t\ deadline);
 \f[]
 .fi
 .SH DESCRIPTION

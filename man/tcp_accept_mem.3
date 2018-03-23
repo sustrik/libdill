@@ -11,7 +11,11 @@ tcp_accept_mem \- accepts an incoming TCP connection
 \f[C]
 #include\ <libdill.h>
 
-int\ tcp_accept_mem(int\ s,\ struct\ ipaddr*\ addr,\ void*\ mem,\ int64_t\ deadline);
+int\ tcp_accept_mem(
+\ \ \ \ int\ s,
+\ \ \ \ struct\ ipaddr*\ addr,
+\ \ \ \ void*\ mem,
+\ \ \ \ int64_t\ deadline);
 \f[]
 .fi
 .SH DESCRIPTION

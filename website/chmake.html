@@ -20,7 +20,8 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> chmake(<span class="dt">int</span> chv[<span class="dv">2</span>]);</code></pre></div>
+<span class="dt">int</span> chmake(
+    <span class="dt">int</span> chv[<span class="dv">2</span>]);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>Creates a bidirectional channel. In case of success handles to the both sides of the channel will be returned in <strong>chv</strong> parameter.</p>
 <p>A channel is a synchronization primitive, not a container. It doesn't store any items.</p>

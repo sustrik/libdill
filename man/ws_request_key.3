@@ -12,7 +12,8 @@ field
 \f[C]
 #include\ <libdill.h>
 
-int\ ws_request_key(char*\ request_key);
+int\ ws_request_key(
+\ \ \ \ char*\ request_key);
 \f[]
 .fi
 .SH DESCRIPTION
@@ -56,4 +57,5 @@ http_sendfield(s,\ "Sec\-WebSocket\-Key",\ request_key,\ \-1);
 .SH SEE ALSO
 .PP
 \f[B]mrecv\f[](3) \f[B]mrecvl\f[](3) \f[B]msend\f[](3)
-\f[B]msendl\f[](3) \f[B]ws_response_key\f[](3)
+\f[B]msendl\f[](3) \f[B]ws_response_key\f[](3) \f[B]ws_send\f[](3)
+\f[B]ws_sendl\f[](3)

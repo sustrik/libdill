@@ -20,7 +20,11 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> brecvl(<span class="dt">int</span> s, <span class="kw">struct</span> iolist* first, <span class="kw">struct</span> iolist* last, <span class="dt">int64_t</span> deadline);</code></pre></div>
+<span class="dt">int</span> brecvl(
+    <span class="dt">int</span> s,
+    <span class="kw">struct</span> iolist* first,
+    <span class="kw">struct</span> iolist* last,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>This function receives data from a bytestream socket. It is a blocking operation that unblocks only after the requested amount of data is received. There is no such thing as partial receive. If a problem, including timeout, occurs while receiving the data, an error is returned to the user and the socket cannot be used for receiving from that point on.</p>
 <p>This function accepts a linked list of I/O buffers instead of a single buffer. Argument <strong>first</strong> points to the first item in the list, <strong>last</strong> points to the last buffer in the list. The list represents a single, fragmented message, not a list of multiple messages. Structure <strong>iolist</strong> has the following members:</p>

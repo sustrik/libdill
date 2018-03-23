@@ -20,7 +20,8 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">void</span> fdclean(<span class="dt">int</span> fd);</code></pre></div>
+<span class="dt">void</span> fdclean(
+    <span class="dt">int</span> fd);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>This function drops any state that libdill associates with a file descriptor. It has to be called before the file descriptor is closed. If it is not, the behavior is undefined.</p>
 <p>It should also be used whenever you are losing control of the file descriptor. For example, when passing it to a third-party library. Also, if you are handed the file descriptor by third party code you should call this function just before returning it back to the original owner.</p>

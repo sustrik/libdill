@@ -27,7 +27,10 @@
     <span class="dt">size_t</span> len;
 };
 
-<span class="dt">int</span> choose(<span class="kw">struct</span> chclause* clauses, <span class="dt">int</span> nclauses, <span class="dt">int64_t</span> deadline);</code></pre></div>
+<span class="dt">int</span> choose(
+    <span class="kw">struct</span> chclause* clauses,
+    <span class="dt">int</span> nclauses,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>Accepts a list of channel operations. Performs one that can be done first. If multiple operations can be done immediately, the one that comes earlier in the array is executed.</p>
 <p><strong>clauses</strong>: Operations to choose from. See below.</p>

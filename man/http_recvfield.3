@@ -11,7 +11,13 @@ http_recvfield \- receives HTTP field from the peer
 \f[C]
 #include\ <libdill.h>
 
-int\ http_recvfield(int\ s,\ char*\ name,\ size_t\ namelen,\ char*\ value,\ size_t\ valuelen,\ int64_t\ deadline);
+int\ http_recvfield(
+\ \ \ \ int\ s,
+\ \ \ \ char*\ name,
+\ \ \ \ size_t\ namelen,
+\ \ \ \ char*\ value,
+\ \ \ \ size_t\ valuelen,
+\ \ \ \ int64_t\ deadline);
 \f[]
 .fi
 .SH DESCRIPTION

@@ -11,7 +11,11 @@ udp_send \- sends an UDP packet
 \f[C]
 #include\ <libdill.h>
 
-int\ udp_send(int\ s,\ const\ struct\ ipaddr*\ addr,\ const\ void*\ buf,\ size_t\ len);
+int\ udp_send(
+\ \ \ \ int\ s,
+\ \ \ \ const\ struct\ ipaddr*\ addr,
+\ \ \ \ const\ void*\ buf,
+\ \ \ \ size_t\ len);
 \f[]
 .fi
 .SH DESCRIPTION

@@ -11,7 +11,11 @@ mrecvl \- receives a message
 \f[C]
 #include\ <libdill.h>
 
-ssize_t\ mrecvl(int\ s,\ struct\ iolist*\ first,\ struct\ iolist*\ last,\ int64_t\ deadline);
+ssize_t\ mrecvl(
+\ \ \ \ int\ s,
+\ \ \ \ struct\ iolist*\ first,
+\ \ \ \ struct\ iolist*\ last,
+\ \ \ \ int64_t\ deadline);
 \f[]
 .fi
 .SH DESCRIPTION

@@ -20,7 +20,8 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdillimpl.h&gt;</span>
 
-<span class="dt">void</span>* hquery(<span class="dt">int</span> h);</code></pre></div>
+<span class="dt">void</span>* hquery(
+    <span class="dt">int</span> h);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>Returns an opaque pointer associated with the passed handle and type. This function is a fundamental construct for building APIs on top of handles.</p>
 <p>The type argument is not interpreted in any way. It is used only as an unique ID. A unique ID can be created, for instance, like this:</p>

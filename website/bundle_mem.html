@@ -20,7 +20,8 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> bundle_mem(<span class="dt">void</span>* mem);</code></pre></div>
+<span class="dt">int</span> bundle_mem(
+    <span class="dt">void</span>* mem);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>Coroutines are always running in bundles. Even a single coroutine created by <strong>go</strong> gets its own bundle. A bundle is a lifetime control mechanism. When it is closed, all coroutines within the bundle are canceled.</p>
 <p>This function creates an empty bundle. Coroutines can be added to the bundle using the <strong>bundle_go</strong> and <strong>bundle_go_mem</strong> functions.</p>

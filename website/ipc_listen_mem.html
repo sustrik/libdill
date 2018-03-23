@@ -20,7 +20,10 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> ipc_listen_mem(<span class="dt">const</span> <span class="dt">char</span>* addr, <span class="dt">int</span> backlog, <span class="dt">void</span>* mem);</code></pre></div>
+<span class="dt">int</span> ipc_listen_mem(
+    <span class="dt">const</span> <span class="dt">char</span>* addr,
+    <span class="dt">int</span> backlog,
+    <span class="dt">void</span>* mem);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>IPC protocol is a bytestream protocol for transporting data among processes on the same machine. It is an equivalent to POSIX <strong>AF_LOCAL</strong> sockets.</p>
 <p>This function starts listening for incoming IPC connections. The connections can be accepted using <strong>ipc_accept</strong> function.</p>

@@ -20,7 +20,8 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> ws_request_key(<span class="dt">char</span>* request_key);</code></pre></div>
+<span class="dt">int</span> ws_request_key(
+    <span class="dt">char</span>* request_key);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p><strong>WARNING: This is experimental functionality and the API may change in the future.</strong></p>
 <p>WebSocket is a message-based protocol defined in RFC 6455. It can be used as a bidirectional communication channel for communication with a web server.</p>
@@ -39,5 +40,5 @@
 ws_request_key(request_key);
 http_sendfield(s, <span class="st">&quot;Sec-WebSocket-Key&quot;</span>, request_key, <span class="dv">-1</span>);</code></pre></div>
 <h1 id="see-also">SEE ALSO</h1>
-<p><strong>mrecv</strong>(3) <strong>mrecvl</strong>(3) <strong>msend</strong>(3) <strong>msendl</strong>(3) <strong>ws_response_key</strong>(3)</p>
+<p><strong>mrecv</strong>(3) <strong>mrecvl</strong>(3) <strong>msend</strong>(3) <strong>msendl</strong>(3) <strong>ws_response_key</strong>(3) <strong>ws_send</strong>(3) <strong>ws_sendl</strong>(3)</p>
 </body>

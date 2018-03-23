@@ -11,7 +11,12 @@ ipaddr_remote \- resolve the address of a remote IP endpoint
 \f[C]
 #include\ <libdill.h>
 
-int\ ipaddr_remote(struct\ ipaddr*\ addr,\ const\ char*\ name,\ int\ port,\ int\ mode,\ int64_t\ deadline);
+int\ ipaddr_remote(
+\ \ \ \ struct\ ipaddr*\ addr,
+\ \ \ \ const\ char*\ name,
+\ \ \ \ int\ port,
+\ \ \ \ int\ mode,
+\ \ \ \ int64_t\ deadline);
 \f[]
 .fi
 .SH DESCRIPTION

@@ -11,7 +11,10 @@ tcp_connect_mem \- creates a connection to remote TCP endpoint
 \f[C]
 #include\ <libdill.h>
 
-int\ tcp_connect_mem(const\ struct\ ipaddr*\ addr,\ void*\ mem,\ int64_t\ deadline);
+int\ tcp_connect_mem(
+\ \ \ \ const\ struct\ ipaddr*\ addr,
+\ \ \ \ void*\ mem,
+\ \ \ \ int64_t\ deadline);
 \f[]
 .fi
 .SH DESCRIPTION

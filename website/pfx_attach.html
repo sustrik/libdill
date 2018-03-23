@@ -20,7 +20,8 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> pfx_attach(<span class="dt">int</span> s);</code></pre></div>
+<span class="dt">int</span> pfx_attach(
+    <span class="dt">int</span> s);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>PFX is a message-based protocol to send binary messages prefixed by 8-byte size in network byte order. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending eight 0xFF bytes.</p>
 <p>This function instantiates PFX protocol on top of the underlying protocol.</p>
