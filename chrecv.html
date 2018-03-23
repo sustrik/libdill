@@ -20,7 +20,11 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> chrecv(<span class="dt">int</span> ch, <span class="dt">void</span>* val, <span class="dt">size_t</span> len, <span class="dt">int64_t</span> deadline);</code></pre></div>
+<span class="dt">int</span> chrecv(
+    <span class="dt">int</span> ch,
+    <span class="dt">void</span>* val,
+    <span class="dt">size_t</span> len,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>Receives a message from a channel.</p>
 <p>The size of the message requested from the channel must match the size of the message sent to the channel. Otherwise, both peers fail with <strong>EMSGSIZE</strong> error.</p>

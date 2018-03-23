@@ -20,7 +20,11 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> udp_send(<span class="dt">int</span> s, <span class="dt">const</span> <span class="kw">struct</span> ipaddr* addr, <span class="dt">const</span> <span class="dt">void</span>* buf, <span class="dt">size_t</span> len);</code></pre></div>
+<span class="dt">int</span> udp_send(
+    <span class="dt">int</span> s,
+    <span class="dt">const</span> <span class="kw">struct</span> ipaddr* addr,
+    <span class="dt">const</span> <span class="dt">void</span>* buf,
+    <span class="dt">size_t</span> len);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>UDP is an unreliable message-based protocol defined in RFC 768. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.</p>
 <p>This function sends an UDP packet.</p>

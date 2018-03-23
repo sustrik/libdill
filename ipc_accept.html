@@ -20,7 +20,9 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> ipc_accept(<span class="dt">int</span> s, <span class="dt">int64_t</span> deadline);</code></pre></div>
+<span class="dt">int</span> ipc_accept(
+    <span class="dt">int</span> s,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>IPC protocol is a bytestream protocol for transporting data among processes on the same machine. It is an equivalent to POSIX <strong>AF_LOCAL</strong> sockets.</p>
 <p>This function accepts an incoming IPC connection.</p>

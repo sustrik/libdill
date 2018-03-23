@@ -20,7 +20,9 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> bundle_go(<span class="dt">int</span> bndl, expression);</code></pre></div>
+<span class="dt">int</span> bundle_go(
+    <span class="dt">int</span> bndl,
+    expression);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>This construct launches a coroutine within the specified bundle. For more information about bundles see <strong>bundle</strong>.</p>
 <p>The coroutine gets a 1MB stack. The stack is guarded by a non-writeable memory page. Therefore, stack overflow will result in a <strong>SEGFAULT</strong> rather than overwriting memory that doesn't belong to it.</p>

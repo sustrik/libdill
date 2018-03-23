@@ -20,7 +20,9 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> tcp_close(<span class="dt">int</span> s, <span class="dt">int64_t</span> deadline);</code></pre></div>
+<span class="dt">int</span> tcp_close(
+    <span class="dt">int</span> s,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>TCP protocol is a reliable bytestream protocol for transporting data over network. It is defined in RFC 793.</p>
 <p>This function closes a TCP socket cleanly. Unlike <strong>hclose</strong> it lets the peer know that it is shutting down and waits till the peer acknowledged the shutdown. If this terminal handshake cannot be done it returns error. The socket is closed even in the case of error.</p>

@@ -20,7 +20,12 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> ipaddr_remote(<span class="kw">struct</span> ipaddr* addr, <span class="dt">const</span> <span class="dt">char</span>* name, <span class="dt">int</span> port, <span class="dt">int</span> mode, <span class="dt">int64_t</span> deadline);</code></pre></div>
+<span class="dt">int</span> ipaddr_remote(
+    <span class="kw">struct</span> ipaddr* addr,
+    <span class="dt">const</span> <span class="dt">char</span>* name,
+    <span class="dt">int</span> port,
+    <span class="dt">int</span> mode,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>Converts an IP address in human-readable format, or a name of a remote host into an <strong>ipaddr</strong> structure.</p>
 <p>Mode specifies which kind of addresses should be returned. Possible values are:</p>

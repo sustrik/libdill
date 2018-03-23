@@ -20,7 +20,11 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> http_recvstatus(<span class="dt">int</span> s, <span class="dt">char</span>* reason, <span class="dt">size_t</span> reasonlen, <span class="dt">int64_t</span> deadline);</code></pre></div>
+<span class="dt">int</span> http_recvstatus(
+    <span class="dt">int</span> s,
+    <span class="dt">char</span>* reason,
+    <span class="dt">size_t</span> reasonlen,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p><strong>WARNING: This is experimental functionality and the API may change in the future.</strong></p>
 <p>HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.</p>

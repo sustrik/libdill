@@ -20,7 +20,9 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> hdone(<span class="dt">int</span> h, <span class="dt">int64_t</span> deadline);</code></pre></div>
+<span class="dt">int</span> hdone(
+    <span class="dt">int</span> h,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>This function is used to inform the handle that there will be no more input. This gives it time to finish it's work and possibly inform the user when it is safe to close the handle.</p>
 <p>For example, in case of TCP protocol handle, hdone would send out a FIN packet. However, it does not wait until it is acknowledged by the peer.</p>

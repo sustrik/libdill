@@ -20,7 +20,8 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> hclose(<span class="dt">int</span> h);</code></pre></div>
+<span class="dt">int</span> hclose(
+    <span class="dt">int</span> h);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>This function closes a handle. Once all handles pointing to the same underlying object have been closed, the object is deallocated immediately, without blocking.</p>
 <p>The function guarantees that all associated resources are deallocated. However, it does not guarantee that the handle's work will have been fully finished. E.g., outbound network data may not be flushed.</p>

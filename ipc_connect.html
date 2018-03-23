@@ -20,7 +20,9 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> ipc_connect(<span class="dt">const</span> <span class="dt">char</span>* addr, <span class="dt">int64_t</span> deadline);</code></pre></div>
+<span class="dt">int</span> ipc_connect(
+    <span class="dt">const</span> <span class="dt">char</span>* addr,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>IPC protocol is a bytestream protocol for transporting data among processes on the same machine. It is an equivalent to POSIX <strong>AF_LOCAL</strong> sockets.</p>
 <p>This function creates a connection to a remote IPC endpoint.</p>
@@ -47,7 +49,7 @@
 <li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = tcp_connect(<span class="st">&quot;/tmp/test.ipc&quot;</span>, <span class="dv">-1</span>);
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = ipc_connect(<span class="st">&quot;/tmp/test.ipc&quot;</span>, <span class="dv">-1</span>);
 bsend(s, <span class="st">&quot;ABC&quot;</span>, <span class="dv">3</span>, <span class="dv">-1</span>);
 <span class="dt">char</span> buf[<span class="dv">3</span>];
 brecv(s, buf, <span class="kw">sizeof</span>(buf), <span class="dv">-1</span>);

@@ -20,7 +20,9 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> bundle_wait(<span class="dt">int</span> bndl, <span class="dt">int64_t</span> deadline);</code></pre></div>
+<span class="dt">int</span> bundle_wait(
+    <span class="dt">int</span> bndl,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>If there are no coroutines in the bundle the function will succeed immediately. Otherwise, it will wait until all the coroutines in the bundle finish or until deadline is reached.</p>
 <p><strong>bndl</strong>: Handle of a coroutine bundle.</p>

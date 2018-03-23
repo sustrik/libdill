@@ -20,7 +20,8 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">const</span> <span class="kw">struct</span> sockaddr* ipaddr_sockaddr(<span class="dt">const</span> <span class="kw">struct</span> ipaddr* addr);</code></pre></div>
+<span class="dt">const</span> <span class="kw">struct</span> sockaddr* ipaddr_sockaddr(
+    <span class="dt">const</span> <span class="kw">struct</span> ipaddr* addr);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>Returns <strong>sockaddr</strong> structure corresponding to the IP address. This function is typically used in combination with ipaddr_len to pass address and its length to POSIX socket APIs.</p>
 <p><strong>addr</strong>: IP address object.</p>

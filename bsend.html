@@ -20,7 +20,11 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> bsend(<span class="dt">int</span> s, <span class="dt">const</span> <span class="dt">void</span>* buf, <span class="dt">size_t</span> len, <span class="dt">int64_t</span> deadline);</code></pre></div>
+<span class="dt">int</span> bsend(
+    <span class="dt">int</span> s,
+    <span class="dt">const</span> <span class="dt">void</span>* buf,
+    <span class="dt">size_t</span> len,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>This function sends data to a bytestream socket. It is a blocking operation that unblocks only after all the data are sent. There is no such thing as partial send. If a problem, including timeout, occurs while sending the data error is returned to the user and the socket cannot be used for sending from that point on.</p>
 <p><strong>s</strong>: The socket to send the data to.</p>

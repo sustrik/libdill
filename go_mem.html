@@ -20,7 +20,10 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> go_mem(expression, <span class="dt">void</span>* mem, <span class="dt">size_t</span> memlen);</code></pre></div>
+<span class="dt">int</span> go_mem(
+    expression,
+    <span class="dt">void</span>* mem,
+    <span class="dt">size_t</span> memlen);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>This construct launches a coroutine on a user-supplied stack. The stack has no guard page and stack overflow will result in overwriting memory.</p>
 <p><strong>expression</strong>: Expression to evaluate as a coroutine.</p>

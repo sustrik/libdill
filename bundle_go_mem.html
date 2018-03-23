@@ -20,7 +20,11 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> bundle_go_mem(<span class="dt">int</span> bndl, expression, <span class="dt">void</span>* mem, <span class="dt">size_t</span> memlen);</code></pre></div>
+<span class="dt">int</span> bundle_go_mem(
+    <span class="dt">int</span> bndl,
+    expression,
+    <span class="dt">void</span>* mem,
+    <span class="dt">size_t</span> memlen);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>This construct launches a coroutine within the specified bundle. For more information about bundles see <strong>bundle</strong>.</p>
 <p>The stack for the coroutine is supplied by the user. The stack has no guard page and stack overflow will result in overwriting memory.</p>
