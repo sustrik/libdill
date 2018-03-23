@@ -47,7 +47,7 @@
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> ipaddr addr;
 <span class="dt">int</span> rc = ipaddr_remote(&amp;addr, argv[<span class="dv">2</span>], port, <span class="dv">0</span>, <span class="dv">-1</span>);
 <span class="cf">if</span>(rc != <span class="dv">0</span>) {
-    perror(<span class="st">&quot;Cannot resolve server addres&quot;</span>);
+    perror(<span class="st">&quot;Cannot resolve server address&quot;</span>);
     <span class="cf">return</span> <span class="dv">1</span>;
 }</code></pre></div>
 <p>Note that errors from all libdill functions are reported in standard POSIX way: Each function may indicate an error in a different way. It case of <code>ipaddr_remote</code> it happens to be by returning -1. However, the actual error code is always passed in <code>errno</code>. Adhering to this standard system allows us to use standard POSIX error handling functions such as <code>perror</code>.</p>
@@ -58,7 +58,7 @@
     <span class="cf">return</span> <span class="dv">1</span>;
 }</code></pre></div>
 <p>Once again, the error is handled in a POSIX-y way. From now on, to keep the tutorial succint, we are going to ommit error handling code. However, if you want to add it, all you have to do is to follow the above pattern.</p>
-<p>At the end of the program we want to close the TCP socket. There are two ways to do that. First, you can use <code>hclose</code>, the generic function for closing handles. This function does close the socket and deallocates all the allocated resources, however, it doesn't negotiate an orderly shutdown with the remote peer. If you use <code>hclose</code> to close a socket, there's no guarantee that the peer will even notice, let alone shutting down in an orderly manner. While this may sound like a bad idea there are legitimate cases where you should do exactly that. If you are under DoS attach, for example, it makes sense to close offending connections as soon as possible rather than trying to play nice with the attacker:</p>
+<p>At the end of the program we want to close the TCP socket. There are two ways to do that. First, you can use <code>hclose</code>, the generic function for closing handles. This function does close the socket and deallocates all the allocated resources, however, it doesn't negotiate an orderly shutdown with the remote peer. If you use <code>hclose</code> to close a socket, there's no guarantee that the peer will even notice, let alone shutting down in an orderly manner. While this may sound like a bad idea there are legitimate cases where you should do exactly that. If you are under DoS attack, for example, it makes sense to close offending connections as soon as possible rather than trying to play nice with the attacker:</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">rc = hclose(s);
 assert(rc == <span class="dv">0</span>);</code></pre></div>
 <p>The other way to close a socket is to execute a protocol-specific shutdown procedure:</p>

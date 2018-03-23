@@ -52,7 +52,11 @@
 ipaddr_remote(&amp;addr, <span class="st">&quot;www.example.org&quot;</span>, <span class="dv">80</span>, <span class="dv">0</span>, <span class="dv">-1</span>);
 <span class="dt">int</span> s = tcp_connect(&amp;addr, <span class="dv">-1</span>);
 s = ws_attach_client(s, <span class="st">&quot;/&quot;</span>, <span class="st">&quot;www.example.org&quot;</span>, WS_TEXT, <span class="dv">-1</span>);
-msend(s, <span class="st">&quot;Hello, world!&quot;</span>, <span class="dv">13</span>, <span class="dv">-1</span>);
+ws_send(s, WS_TEXT, <span class="st">&quot;Hello, world!&quot;</span>, <span class="dv">13</span>, <span class="dv">-1</span>);
+<span class="dt">int</span> flags;
+<span class="dt">char</span> buf[<span class="dv">256</span>];
+<span class="dt">ssize_t</span> sz = ws_recv(s, &amp;flags, buf, <span class="kw">sizeof</span>(buf), <span class="dv">-1</span>);
+assert(flags &amp; WS_TEXT);
 s = ws_detach(s, <span class="dv">-1</span>);
 tcp_close(s, <span class="dv">-1</span>);</code></pre></div>
 <h1 id="see-also">SEE ALSO</h1>
