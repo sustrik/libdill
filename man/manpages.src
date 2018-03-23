@@ -2367,7 +2367,7 @@ fxs = [
                 perror("Cannot sleep");
                 exit(1);
             }
-            printf("Slept succefully for 1 second.\n");
+            printf("Slept succefully for 1 second.\\n");
         `,
     },
     {

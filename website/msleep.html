@@ -32,13 +32,12 @@
 <li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">            <span class="dt">int</span> rc = msleep(now() + <span class="dv">1000</span>);
-            <span class="cf">if</span>(rc != <span class="dv">0</span>) {
-                perror(<span class="st">&quot;Cannot sleep&quot;</span>);
-                exit(<span class="dv">1</span>);
-            }
-            printf(<span class="st">&quot;Slept succefully for 1 second.</span>
-<span class="st">&quot;);</span></code></pre></div>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> rc = msleep(now() + <span class="dv">1000</span>);
+<span class="cf">if</span>(rc != <span class="dv">0</span>) {
+    perror(<span class="st">&quot;Cannot sleep&quot;</span>);
+    exit(<span class="dv">1</span>);
+}
+printf(<span class="st">&quot;Slept succefully for 1 second.</span><span class="sc">\n</span><span class="st">&quot;</span>);</code></pre></div>
 <h1 id="see-also">SEE ALSO</h1>
 <p><strong>now</strong>(3) <strong>now</strong>(3)</p>
 </body>

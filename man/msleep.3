@@ -38,13 +38,12 @@ values below.
 .IP
 .nf
 \f[C]
-\ \ \ \ \ \ \ \ \ \ \ \ int\ rc\ =\ msleep(now()\ +\ 1000);
-\ \ \ \ \ \ \ \ \ \ \ \ if(rc\ !=\ 0)\ {
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ perror("Cannot\ sleep");
-\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ exit(1);
-\ \ \ \ \ \ \ \ \ \ \ \ }
-\ \ \ \ \ \ \ \ \ \ \ \ printf("Slept\ succefully\ for\ 1\ second.
-");
+int\ rc\ =\ msleep(now()\ +\ 1000);
+if(rc\ !=\ 0)\ {
+\ \ \ \ perror("Cannot\ sleep");
+\ \ \ \ exit(1);
+}
+printf("Slept\ succefully\ for\ 1\ second.\\n");
 \f[]
 .fi
 .SH SEE ALSO
