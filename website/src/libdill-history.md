@@ -1,6 +1,10 @@
 
 # Past versions
 
+**Mar 23rd 2018 <http://libdill.org/libdill-2.6.tar.gz>**
+
+* Experimental support for WebSockets added
+
 **Mar 3rd 2018 <http://libdill.org/libdill-2.5.tar.gz>**
 
 * Bug in TLS protocol solved
