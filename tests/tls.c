@@ -102,7 +102,7 @@ int main(void) {
     errno_assert(u[0] >= 0);
     rc = hclose(u[0]);
     errno_assert(rc == 0);
-    rc = hdone(cr, -1);
+    rc = bundle_wait(cr, -1);
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
@@ -125,7 +125,7 @@ int main(void) {
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
     rc = ipc_close(u[0], -1);
     errno_assert(rc == 0);
-    rc = hdone(cr, -1);
+    rc = bundle_wait(cr, -1);
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
@@ -151,7 +151,7 @@ int main(void) {
     }
     u[0] = tls_detach(s, -1);
     errno_assert(u[0] >= 0);
-    rc = hdone(cr, -1);
+    rc = bundle_wait(cr, -1);
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
