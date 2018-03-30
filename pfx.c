@@ -228,6 +228,6 @@ static void pfx_hclose(struct hvfs *hvfs) {
         int rc = hclose(self->u);
         dill_assert(rc == 0);
     }
-    free(self);
+    if(!self->mem) free(self);
 }
 
