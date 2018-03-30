@@ -34,7 +34,7 @@ coroutine void client(void) {
     int s = tcp_connect(&addr, -1);
     errno_assert(s >= 0);
 
-    int cs = pfx_attach(s);
+    int cs = pfx_attach(s, 8, 0);
     errno_assert(cs >= 0);
     rc = msend(cs, "ABC", 3, -1);
     errno_assert(rc == 0);
@@ -60,7 +60,7 @@ int main(void) {
     int as = tcp_accept(ls, NULL, -1);
     errno_assert(as >= 0);
 
-    int cs = pfx_attach(as);
+    int cs = pfx_attach(as, 8, 0);
     errno_assert(cs >= 0);
     char buf[16];
     ssize_t sz = mrecv(cs, buf, sizeof(buf), -1);
@@ -75,14 +75,18 @@ int main(void) {
     errno_assert(ts >= 0);
     rc = hclose(ts);
     errno_assert(rc == 0);
+    rc = bundle_wait(clh, -1);
+    errno_assert(rc == 0);
+    rc = hclose(clh);
+    errno_assert(rc == 0);
 
     int h[2];
     rc = ipc_pair(h);
     errno_assert(rc == 0);
-    int s0 = pfx_attach(h[0]);
+    int s0 = pfx_attach(h[0], 3, PFX_LITTLE_ENDIAN);
     errno_assert(s0 >= 0);
     char mem[PFX_SIZE];
-    int s1 = pfx_attach_mem(h[1], mem);
+    int s1 = pfx_attach_mem(h[1], 3, PFX_LITTLE_ENDIAN, mem);
     errno_assert(s1 >= 0);
     rc = msend(s0, "First", 5, -1);
     errno_assert(rc == 0);
@@ -119,10 +123,6 @@ int main(void) {
     rc = hclose(ts1);
     errno_assert(rc == 0);
     rc = hclose(ts0);
-    errno_assert(rc == 0);
-    rc = bundle_wait(clh, -1);
-    errno_assert(rc == 0);
-    rc = hclose(clh);
     errno_assert(rc == 0);
     rc = hclose(ls);
     errno_assert(rc == 0);

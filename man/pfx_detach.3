@@ -19,10 +19,10 @@ int\ pfx_detach(
 .SH DESCRIPTION
 .PP
 PFX is a message\-based protocol to send binary messages prefixed by
-8\-byte size in network byte order.
+size.
 The protocol has no initial handshake.
-Terminal handshake is accomplished by each peer sending eight 0xFF
-bytes.
+Terminal handshake is accomplished by each peer sending size field
+filled by 0xff bytes.
 .PP
 This function does the terminal handshake and returns underlying socket
 to the user.
@@ -61,7 +61,7 @@ values below.
 .nf
 \f[C]
 int\ s\ =\ tcp_connect(&addr,\ \-1);
-s\ =\ pfx_attach(s);
+s\ =\ pfx_attach(s,\ 2,\ 0);
 msend(s,\ "ABC",\ 3,\ \-1);
 char\ buf[256];
 ssize_t\ sz\ =\ mrecv(s,\ buf,\ sizeof(buf),\ \-1);

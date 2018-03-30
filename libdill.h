@@ -465,15 +465,22 @@ DILL_EXPORT int ipc_pair_mem(
 /******************************************************************************/
 
 #if defined(__i386__)
-#  define PFX_SIZE 28
+#  define PFX_SIZE 36
 #else
-#  define PFX_SIZE 56
+#  define PFX_SIZE 72
 #endif
 
+#define PFX_BIG_ENDIAN 0
+#define PFX_LITTLE_ENDIAN 1
+
 DILL_EXPORT int pfx_attach(
-    int s);
+    int s,
+    size_t hdrlen,
+    int flags);
 DILL_EXPORT int pfx_attach_mem(
     int s,
+    size_t hdrlen,
+    int flags,
     void *mem);
 DILL_EXPORT int pfx_detach(
     int s,

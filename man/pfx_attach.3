@@ -12,22 +12,32 @@ pfx_attach \- creates PFX protocol on top of underlying socket
 #include\ <libdill.h>
 
 int\ pfx_attach(
-\ \ \ \ int\ s);
+\ \ \ \ int\ s,
+\ \ \ \ size_t\ hdrlen,
+\ \ \ \ int\ flags);
 \f[]
 .fi
 .SH DESCRIPTION
 .PP
 PFX is a message\-based protocol to send binary messages prefixed by
-8\-byte size in network byte order.
+size.
 The protocol has no initial handshake.
-Terminal handshake is accomplished by each peer sending eight 0xFF
-bytes.
+Terminal handshake is accomplished by each peer sending size field
+filled by 0xff bytes.
 .PP
 This function instantiates PFX protocol on top of the underlying
 protocol.
 .PP
 \f[B]s\f[]: Handle of the underlying socket.
 It must be a bytestream protocol.
+.PP
+\f[B]hdrlen\f[]: Size of the length field, in bytes.
+.PP
+\f[B]flags\f[]: If set to \f[B]PFX_BIG_ENDIAN\f[] (also known as network
+byte order, the default option) the most significant byte of the size
+will be sent first on the wire.
+If set to \f[B]PFX_LITTLE_ENDIAN\f[] the least signiticant byte will
+come first.
 .PP
 The socket can be cleanly shut down using \f[B]pfx_detach\f[] function.
 .PP
@@ -41,6 +51,8 @@ values below.
 .SH ERRORS
 .IP \[bu] 2
 \f[B]EBADF\f[]: Invalid handle.
+.IP \[bu] 2
+\f[B]EINVAL\f[]: Invalid argument.
 .IP \[bu] 2
 \f[B]EMFILE\f[]: The maximum number of file descriptors in the process
 are already open.
@@ -58,7 +70,7 @@ are already open.
 .nf
 \f[C]
 int\ s\ =\ tcp_connect(&addr,\ \-1);
-s\ =\ pfx_attach(s);
+s\ =\ pfx_attach(s,\ 2,\ 0);
 msend(s,\ "ABC",\ 3,\ \-1);
 char\ buf[256];
 ssize_t\ sz\ =\ mrecv(s,\ buf,\ sizeof(buf),\ \-1);
