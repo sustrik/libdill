@@ -53,7 +53,7 @@ struct term_sock {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(TERM_SIZE >= sizeof(struct term_sock));
+DILL_CT_ASSERT(sizeof(struct term_storage) >= sizeof(struct term_sock));
 
 static void *term_hquery(struct hvfs *hvfs, const void *type) {
     struct term_sock *self = (struct term_sock*)hvfs;
@@ -63,7 +63,8 @@ static void *term_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int term_attach_mem(int s, const void *buf, size_t len, void *mem) {
+int term_attach_mem(int s, const void *buf, size_t len,
+      struct term_storage *mem) {
     int err;
     if(dill_slow(!mem && len > MAX_TERMINATOR_LENGTH)) {
         err = EINVAL; goto error1;}
@@ -104,9 +105,9 @@ error1:
 
 int term_attach(int s, const void *buf, size_t len) {
     int err;
-    struct term_sock *obj = malloc(TERM_SIZE);
+    struct term_sock *obj = malloc(sizeof(struct term_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int cs = term_attach_mem(s, buf, len, obj);
+    int cs = term_attach_mem(s, buf, len, (struct term_storage*)obj);
     if(dill_slow(cs < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return cs;

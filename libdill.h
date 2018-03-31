@@ -775,11 +775,13 @@ DILL_EXPORT int ws_response_key(
 /*  Implementes terminal handshake on the top of any message-based protocol.  */
 /******************************************************************************/
 
+struct term_storage {
 #if defined(__i386__)
-#  define TERM_SIZE 68
+    char _[68];
 #else
-#  define TERM_SIZE 104
+    char _[104];
 #endif
+};
 
 DILL_EXPORT int term_attach(
     int s,
@@ -789,7 +791,7 @@ DILL_EXPORT int term_attach_mem(
     int s,
     const void *buf,
     size_t len,
-    void *mem);
+    struct term_storage *mem);
 DILL_EXPORT int term_done(
     int s,
     int64_t deadline);
