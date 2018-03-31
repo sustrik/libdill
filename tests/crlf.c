@@ -81,8 +81,8 @@ int main() {
     errno_assert(rc == 0);
     int s0 = crlf_attach(h[0]);
     errno_assert(s0 >= 0);
-    char mem[CRLF_SIZE];
-    int s1 = crlf_attach_mem(h[1], mem);
+    struct crlf_storage mem;
+    int s1 = crlf_attach_mem(h[1], &mem);
     errno_assert(s1 >= 0);
     rc = msend(s0, "First", 5, -1);
     errno_assert(rc == 0);

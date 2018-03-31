@@ -53,7 +53,7 @@ struct crlf_sock {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(CRLF_SIZE >= sizeof(struct crlf_sock));
+DILL_CT_ASSERT(sizeof(struct crlf_storage) >= sizeof(struct crlf_sock));
 
 static void *crlf_hquery(struct hvfs *hvfs, const void *type) {
     struct crlf_sock *self = (struct crlf_sock*)hvfs;
@@ -63,7 +63,7 @@ static void *crlf_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int crlf_attach_mem(int s, void *mem) {
+int crlf_attach_mem(int s, struct crlf_storage *mem) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Make a private copy of the underlying socket. */
@@ -101,9 +101,9 @@ error1:
 
 int crlf_attach(int s) {
     int err;
-    struct crlf_sock *obj = malloc(CRLF_SIZE);
+    struct crlf_sock *obj = malloc(sizeof(struct crlf_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int cs = crlf_attach_mem(s, obj);
+    int cs = crlf_attach_mem(s, (struct crlf_storage*)obj);
     if(dill_slow(cs < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return cs;

@@ -60,7 +60,7 @@ struct dill_chclause {
     size_t len;
 };
 
-DILL_CT_ASSERT(CHSIZE >= sizeof(struct dill_halfchan) * 2);
+DILL_CT_ASSERT(sizeof(struct chstorage) >= sizeof(struct dill_halfchan) * 2);
 
 /******************************************************************************/
 /*  Handle implementation.                                                    */
@@ -95,7 +95,7 @@ static void dill_halfchan_init(struct dill_halfchan *ch, int index) {
     ch->closed = 0;
 }
 
-int chmake_mem(void *mem, int chv[2]) {
+int chmake_mem(struct chstorage *mem, int chv[2]) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Returns ECANCELED if the coroutine is shutting down. */
@@ -120,7 +120,7 @@ error1:
 
 int chmake(int chv[2]) {
     int err;
-    void *ch = malloc(CHSIZE);
+    struct chstorage *ch = malloc(sizeof(struct chstorage));
     if(dill_slow(!ch)) {err = ENOMEM; goto error1;}
     int h = chmake_mem(ch, chv);
     if(dill_slow(h < 0)) {err = errno; goto error2;}

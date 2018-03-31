@@ -43,11 +43,11 @@ struct http_sock {
     /* Underlying CRLF socket. */
     int s;
     unsigned int mem : 1;
-    char crlf_mem[CRLF_SIZE];
+    struct crlf_storage crlf_mem;
     char rxbuf[1024];
 };
 
-DILL_CT_ASSERT(HTTP_SIZE >= sizeof(struct http_sock));
+DILL_CT_ASSERT(sizeof(struct http_storage) >= sizeof(struct http_sock));
 
 static void *http_hquery(struct hvfs *hvfs, const void *type) {
     struct http_sock *obj = (struct http_sock*)hvfs;
@@ -56,7 +56,7 @@ static void *http_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int http_attach_mem(int s, void *mem) {
+int http_attach_mem(int s, struct http_storage *mem) {
     int err;
     /* Check whether underlying socket is a bytestream. */
     if(dill_slow(!hquery(s, bsock_type))) {err = errno; goto error1;}
@@ -74,7 +74,7 @@ int http_attach_mem(int s, void *mem) {
     int tmp = hdup(s);
     if(dill_slow(tmp < 0)) {err = errno; goto error3;}
     /* Wrap the underlying socket into CRLF protocol. */
-    obj->s = crlf_attach_mem(tmp, obj->crlf_mem);
+    obj->s = crlf_attach_mem(tmp, &obj->crlf_mem);
     if(dill_slow(obj->s < 0)) {err = errno; goto error4;}
     /* Function succeeded. We can now close original undelying handle. */
     int rc = hclose(s);
@@ -95,9 +95,9 @@ error1:
 
 int http_attach(int s) {
     int err;
-    struct http_sock *obj = malloc(HTTP_SIZE);
+    struct http_sock *obj = malloc(sizeof(struct http_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int cs = http_attach_mem(s, obj);
+    int cs = http_attach_mem(s, (struct http_storage*)obj);
     if(dill_slow(cs < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return cs;

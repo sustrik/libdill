@@ -92,14 +92,16 @@ DILL_EXPORT int hdone(int h, int64_t deadline);
 /*  Coroutines                                                                */
 /******************************************************************************/
 
+struct bundle_storage {
 #if defined(__i386__)
-#  define BUNDLE_SIZE 32
+    char _[32];
 #else
-#  define BUNDLE_SIZE 64
+    char _[64];
 #endif
+};
 
 DILL_EXPORT int bundle(void);
-DILL_EXPORT int bundle_mem(void *mem);
+DILL_EXPORT int bundle_mem(struct bundle_storage *mem);
 DILL_EXPORT int bundle_wait(int h, int64_t deadline);
 
 #define coroutine __attribute__((noinline))
@@ -257,14 +259,17 @@ struct chclause {
     size_t len;
 };
 
+
+struct chstorage {
 #if defined(__i386__)
-#  define CHSIZE 72
+    char _[72];
 #else
-#  define CHSIZE 144
+    char _[144];
 #endif
+};
 
 DILL_EXPORT int chmake(int chv[2]);
-DILL_EXPORT int chmake_mem(void *mem, int chv[2]);
+DILL_EXPORT int chmake_mem(struct chstorage *mem, int chv[2]);
 DILL_EXPORT int chsend(int ch, const void *val, size_t len, int64_t deadline);
 DILL_EXPORT int chrecv(int ch, void *val, size_t len, int64_t deadline);
 DILL_EXPORT int choose(struct chclause *clauses, int nclauses,
@@ -379,13 +384,21 @@ DILL_EXPORT void ipaddr_setport(
 /*  TCP protocol.                                                             */
 /******************************************************************************/
 
+struct tcp_listener_storage {
 #if defined(__i386__)
-#  define TCP_LISTENER_SIZE 36
-#  define TCP_SIZE 2040
+    char _[36];
 #else
-#  define TCP_LISTENER_SIZE 72
-#  define TCP_SIZE 2080
+    char _[72];
 #endif
+};
+
+struct tcp_storage {
+#if defined(__i386__)
+    char _[2040];
+#else
+    char _[2080];
+#endif
+};
 
 DILL_EXPORT int tcp_listen(
     struct ipaddr *addr,
@@ -393,7 +406,7 @@ DILL_EXPORT int tcp_listen(
 DILL_EXPORT int tcp_listen_mem(
     struct ipaddr *addr,
     int backlog,
-    void *mem);
+    struct tcp_listener_storage *mem);
 DILL_EXPORT int tcp_accept(
     int s,
     struct ipaddr *addr,
@@ -401,14 +414,14 @@ DILL_EXPORT int tcp_accept(
 DILL_EXPORT int tcp_accept_mem(
     int s,
     struct ipaddr *addr,
-    void *mem,
+    struct tcp_storage *mem,
     int64_t deadline);
 DILL_EXPORT int tcp_connect(
     const struct ipaddr *addr,
     int64_t deadline);
 DILL_EXPORT int tcp_connect_mem(
     const struct ipaddr *addr,
-    void *mem,
+    struct tcp_storage *mem,
     int64_t deadline);
 DILL_EXPORT int tcp_close(
     int s,
@@ -418,15 +431,29 @@ DILL_EXPORT int tcp_close(
 /*  IPC protocol.                                                            */
 /******************************************************************************/
 
+struct ipc_listener_storage {
 #if defined(__i386__)
-#  define IPC_LISTENER_SIZE 20
-#  define IPC_SIZE 2040
-#  define IPC_PAIR_SIZE 4080
+    char _[20];
 #else
-#  define IPC_LISTENER_SIZE 40
-#  define IPC_SIZE 2080
-#  define IPC_PAIR_SIZE 4160
+    char _[40];
 #endif
+};
+
+struct ipc_storage {
+#if defined(__i386__)
+    char _[2040];
+#else
+    char _[2080];
+#endif
+};
+
+struct ipc_pair_storage {
+#if defined(__i386__)
+    char _[4080];
+#else
+    char _[4160];
+#endif
+};
 
 DILL_EXPORT int ipc_listen(
     const char *addr,
@@ -434,20 +461,20 @@ DILL_EXPORT int ipc_listen(
 DILL_EXPORT int ipc_listen_mem(
     const char *addr,
     int backlog,
-    void *mem);
+    struct ipc_listener_storage *mem);
 DILL_EXPORT int ipc_accept(
     int s,
     int64_t deadline);
 DILL_EXPORT int ipc_accept_mem(
     int s,
-    void *mem,
+    struct ipc_storage *mem,
     int64_t deadline);
 DILL_EXPORT int ipc_connect(
     const char *addr,
     int64_t deadline);
 DILL_EXPORT int ipc_connect_mem(
     const char *addr,
-    void *mem,
+    struct ipc_storage *mem,
     int64_t deadline);
 DILL_EXPORT int ipc_close(
     int s,
@@ -455,7 +482,7 @@ DILL_EXPORT int ipc_close(
 DILL_EXPORT int ipc_pair(
     int s[2]);
 DILL_EXPORT int ipc_pair_mem(
-    void *mem,
+    struct ipc_pair_storage *mem,
     int s[2]);
 
 /******************************************************************************/
@@ -464,11 +491,13 @@ DILL_EXPORT int ipc_pair_mem(
 /*  The protocol is terminated by 0xffffffffffffffff.                         */
 /******************************************************************************/
 
+struct pfx_storage {
 #if defined(__i386__)
-#  define PFX_SIZE 36
+    char _[36];
 #else
-#  define PFX_SIZE 72
+    char _[72];
 #endif
+};
 
 #define PFX_BIG_ENDIAN 0
 #define PFX_LITTLE_ENDIAN 1
@@ -481,7 +510,7 @@ DILL_EXPORT int pfx_attach_mem(
     int s,
     size_t hdrlen,
     int flags,
-    void *mem);
+    struct pfx_storage *mem);
 DILL_EXPORT int pfx_detach(
     int s,
     int64_t deadline);
@@ -492,17 +521,19 @@ DILL_EXPORT int pfx_detach(
 /*  The protocol is terminated by an empty line.                              */
 /******************************************************************************/
 
+struct crlf_storage {
 #if defined(__i386__)
-#  define CRLF_SIZE 36
+    char _[36];
 #else
-#  define CRLF_SIZE 72
+    char _[72];
 #endif
+};
 
 DILL_EXPORT int crlf_attach(
     int s);
 DILL_EXPORT int crlf_attach_mem(
     int s,
-    void *mem);
+    struct crlf_storage *mem);
 DILL_EXPORT int crlf_detach(
     int s,
     int64_t deadline);
@@ -512,11 +543,13 @@ DILL_EXPORT int crlf_detach(
 /*  Each UDP packet is treated as a separate message.                         */
 /******************************************************************************/
 
+struct udp_storage {
 #if defined(__i386__)
-#  define UDP_SIZE 44
+    char _[44];
 #else
-#  define UDP_SIZE 88
+    char _[88];
 #endif
+};
 
 DILL_EXPORT int udp_open(
     struct ipaddr *local,
@@ -524,7 +557,7 @@ DILL_EXPORT int udp_open(
 DILL_EXPORT int udp_open_mem(
     struct ipaddr *local,
     const struct ipaddr *remote,
-    void *mem);
+    struct udp_storage *mem);
 DILL_EXPORT int udp_send(
     int s,
     const struct ipaddr *addr,
@@ -552,17 +585,19 @@ DILL_EXPORT ssize_t udp_recvl(
 /*  HTTP                                                                      */
 /******************************************************************************/
 
+struct http_storage {
 #if defined(__i386__)
-#  define HTTP_SIZE 1080
+    char _[1080];
 #else
-#  define HTTP_SIZE 1136
+    char _[1136];
 #endif
+};
 
 DILL_EXPORT int http_attach(
     int s);
 DILL_EXPORT int http_attach_mem(
     int s,
-    void *mem);
+    struct http_storage *mem);
 DILL_EXPORT int http_detach(
     int s,
     int64_t deadline);
@@ -607,11 +642,13 @@ DILL_EXPORT int http_recvfield(
 
 #if !defined DILL_DISABLE_TLS
 
+struct tls_storage {
 #if defined(__i386__)
-#  define TLS_SIZE 44
+    char _[44];
 #else
-#  define TLS_SIZE 88
+    char _[88];
 #endif
+};
 
 DILL_EXPORT int tls_attach_server(
     int s,
@@ -622,14 +659,14 @@ DILL_EXPORT int tls_attach_server_mem(
     int s,
     const char *cert,
     const char *pkey,
-    void *mem,
+    struct tls_storage *mem,
     int64_t deadline);
 DILL_EXPORT int tls_attach_client(
     int s,
     int64_t deadline);
 DILL_EXPORT int tls_attach_client_mem(
     int s,
-    void *mem,
+    struct tls_storage *mem,
     int64_t deadline);
 DILL_EXPORT int tls_detach(
     int s,
@@ -641,11 +678,13 @@ DILL_EXPORT int tls_detach(
 /*  WebSockets protocol.                                                      */
 /******************************************************************************/
 
+struct ws_storage {
 #if defined(__i386__)
-#  define WS_SIZE 44
+    char _[44];
 #else
-#  define WS_SIZE 88
+    char _[88];
 #endif
+};
 
 #define WS_BINARY 0
 #define WS_TEXT 1
@@ -662,7 +701,7 @@ DILL_EXPORT int ws_attach_client_mem(
     int flags,
     const char *resource,
     const char *host,
-    void *mem,
+    struct ws_storage *mem,
     int64_t deadline);
 DILL_EXPORT int ws_attach_server(
     int s,
@@ -679,7 +718,7 @@ DILL_EXPORT int ws_attach_server_mem(
     size_t resourcelen,
     char *host,
     size_t hostlen,
-    void *mem,
+    struct ws_storage *mem,
     int64_t deadline);
 DILL_EXPORT int ws_send(
     int s,

@@ -50,7 +50,7 @@ struct tls_sock {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(TLS_SIZE >= sizeof(struct tls_sock));
+DILL_CT_ASSERT(sizeof(struct tls_storage) >= sizeof(struct tls_sock));
 
 static void tls_init(void);
 static BIO *tls_new_cbio(void *mem);
@@ -72,7 +72,7 @@ static void *tls_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int tls_attach_client_mem(int s, void *mem, int64_t deadline) {
+int tls_attach_client_mem(int s, struct tls_storage *mem, int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Check whether underlying socket is a bytestream. */
@@ -143,7 +143,7 @@ int tls_attach_client(int s, int64_t deadline) {
     int err;
     struct tls_sock *obj = malloc(sizeof(struct tls_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ts = tls_attach_client_mem(s, obj, deadline);
+    int ts = tls_attach_client_mem(s, (struct tls_storage*)obj, deadline);
     if(dill_slow(ts < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ts;
@@ -155,7 +155,7 @@ error1:
 }
 
 int tls_attach_server_mem(int s, const char *cert, const char *pkey,
-      void *mem, int64_t deadline) {
+      struct tls_storage *mem, int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Check whether underlying socket is a bytestream. */
@@ -233,7 +233,8 @@ int tls_attach_server(int s, const char *cert, const char *pkey,
     int err;
     struct tls_sock *obj = malloc(sizeof(struct tls_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ts = tls_attach_server_mem(s, cert, pkey, obj, deadline);
+    int ts = tls_attach_server_mem(s, cert, pkey, (struct tls_storage*)obj,
+        deadline);
     if(dill_slow(ts < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ts;

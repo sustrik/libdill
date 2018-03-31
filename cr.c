@@ -82,9 +82,9 @@ struct dill_bundle {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(BUNDLE_SIZE >= sizeof(struct dill_bundle));
+DILL_CT_ASSERT(sizeof(struct bundle_storage) >= sizeof(struct dill_bundle));
 
-int bundle_mem(void *mem) {
+int bundle_mem(struct bundle_storage *mem) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; return -1;}
     /* Returns ECANCELED if the coroutine is shutting down. */
@@ -104,7 +104,7 @@ int bundle(void) {
     int err;
     struct dill_bundle *b = malloc(sizeof(struct dill_bundle));
     if(dill_slow(!b)) {err = ENOMEM; goto error1;}
-    int h = bundle_mem(b);
+    int h = bundle_mem((struct bundle_storage*)b);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     b->mem = 0;
     return h;
@@ -255,8 +255,8 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
     if(new_bundle) {
         if(*ptr) {
             bndl = bundle_mem(*ptr);
-            *ptr = ((uint8_t*)*ptr) + BUNDLE_SIZE;
-            len -= BUNDLE_SIZE;
+            *ptr = ((uint8_t*)*ptr) + sizeof(struct bundle_storage);
+            len -= sizeof(struct bundle_storage);
         }
         else {
             bndl = bundle();

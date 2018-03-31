@@ -98,8 +98,9 @@ int main(void) {
     errno_assert(rc == 0);
 
     /* Test deadline. */
-    char mem[TCP_LISTENER_SIZE];
-    int ls = tcp_listen_mem(&addr, 10, mem);
+    
+    struct tcp_listener_storage mem;
+    int ls = tcp_listen_mem(&addr, 10, &mem);
     errno_assert(ls >= 0);
     int cr = go(client(5555));
     errno_assert(cr >= 0);
@@ -178,8 +179,7 @@ int main(void) {
     memset(buffer, 0, sizeof(buffer));
     while(1) {
         rc = bsend(as, buffer, 2048, -1);
-        if(rc == -1 && errno == ECONNRESET)
-            break;
+        if(rc == -1 && errno == ECONNRESET) break;
         errno_assert(rc == 0);
     }
     rc = tcp_close(as, -1);

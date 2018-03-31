@@ -44,7 +44,7 @@ struct ws_sock {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(WS_SIZE >= sizeof(struct ws_sock));
+DILL_CT_ASSERT(sizeof(struct ws_storage) >= sizeof(struct ws_sock));
 
 static void *ws_hquery(struct hvfs *hvfs, const void *type);
 static void ws_hclose(struct hvfs *hvfs);
@@ -63,7 +63,7 @@ static void *ws_hquery(struct hvfs *hvfs, const void *type) {
 }
 
 int ws_attach_client_mem(int s, int flags, const char *resource,
-      const char *host, void *mem, int64_t deadline) {
+      const char *host, struct ws_storage *mem, int64_t deadline) {
     if(dill_slow(!mem)) {errno = EINVAL; return -1;}
     if(dill_slow(!hquery(s, bsock_type))) return -1;
     struct ws_sock *self = (struct ws_sock*)mem;
@@ -80,8 +80,8 @@ int ws_attach_client_mem(int s, int flags, const char *resource,
     self->mem = 1;
     if(flags & WS_NOHTTP) return hmake(&self->hvfs);
     if(dill_slow(!resource || !host)) {errno = EINVAL; return -1;}
-    char http_mem[HTTP_SIZE];
-    s = http_attach_mem(self->u, http_mem);
+    struct http_storage http_mem;
+    s = http_attach_mem(self->u, &http_mem);
 
     /* Send HTTP request. */
     if(dill_slow(s < 0)) return -1;
@@ -154,7 +154,8 @@ int ws_attach_client(int s, int flags, const char *resource, const char *host,
     int err;
     struct ws_sock *obj = malloc(sizeof(struct ws_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ws = ws_attach_client_mem(s, flags, resource, host, obj, deadline);
+    int ws = ws_attach_client_mem(s, flags, resource, host,
+        (struct ws_storage*)obj, deadline);
     if(dill_slow(ws < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ws;
@@ -166,7 +167,7 @@ error1:
 }
 
 int ws_attach_server_mem(int s, int flags, char *resource, size_t resourcelen,
-      char *host, size_t hostlen, void *mem, int64_t deadline) {
+      char *host, size_t hostlen, struct ws_storage *mem, int64_t deadline) {
     if(dill_slow(!mem)) {errno = EINVAL; return -1;}
     if(dill_slow(!hquery(s, bsock_type))) return -1;
     struct ws_sock *self = (struct ws_sock*)mem;
@@ -183,8 +184,8 @@ int ws_attach_server_mem(int s, int flags, char *resource, size_t resourcelen,
     self->mem = 1;
     if(flags & WS_NOHTTP) return hmake(&self->hvfs);
 
-    char http_mem[HTTP_SIZE];
-    s = http_attach_mem(s, http_mem);
+    struct http_storage http_mem;
+    s = http_attach_mem(s, &http_mem);
     if(dill_slow(s < 0)) return -1;
 
     /* Receive the HTTP request from the client. */
@@ -268,7 +269,7 @@ int ws_attach_server(int s, int flags, char *resource, size_t resourcelen,
     struct ws_sock *obj = malloc(sizeof(struct ws_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
     int ws = ws_attach_server_mem(s, flags, resource, resourcelen,
-        host, hostlen, obj, deadline);
+        host, hostlen, (struct ws_storage*)obj, deadline);
     if(dill_slow(ws < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ws;

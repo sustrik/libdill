@@ -85,8 +85,8 @@ int main(void) {
     errno_assert(rc == 0);
     int s0 = pfx_attach(h[0], 3, PFX_LITTLE_ENDIAN);
     errno_assert(s0 >= 0);
-    char mem[PFX_SIZE];
-    int s1 = pfx_attach_mem(h[1], 3, PFX_LITTLE_ENDIAN, mem);
+    struct pfx_storage mem;
+    int s1 = pfx_attach_mem(h[1], 3, PFX_LITTLE_ENDIAN, &mem);
     errno_assert(s1 >= 0);
     rc = msend(s0, "First", 5, -1);
     errno_assert(rc == 0);

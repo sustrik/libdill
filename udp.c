@@ -50,7 +50,7 @@ struct udp_sock {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(UDP_SIZE >= sizeof(struct udp_sock));
+DILL_CT_ASSERT(sizeof(struct udp_storage) >= sizeof(struct udp_sock));
 
 static void *udp_hquery(struct hvfs *hvfs, const void *type) {
     struct udp_sock *obj = (struct udp_sock*)hvfs;
@@ -60,7 +60,8 @@ static void *udp_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int udp_open_mem(struct ipaddr *local, const struct ipaddr *remote, void *mem) {
+int udp_open_mem(struct ipaddr *local, const struct ipaddr *remote,
+      struct udp_storage *mem) {
     int err;
     /* Sanity checking. */
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
@@ -113,9 +114,9 @@ error1:
 
 int udp_open(struct ipaddr *local, const struct ipaddr *remote) {
     int err;
-    struct udp_sock *obj = malloc(UDP_SIZE);
+    struct udp_sock *obj = malloc(sizeof(struct udp_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int s = udp_open_mem(local, remote, obj);
+    int s = udp_open_mem(local, remote, (struct udp_storage*)obj);
     if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return s;

@@ -320,9 +320,9 @@ int main() {
     errno_assert(rc == 0);
 
     /* Channel with user-supplied storage. */
-    char mem[CHSIZE];
+    struct chstorage mem;
     int ch20[2];
-    rc = chmake_mem(mem, ch20);
+    rc = chmake_mem(&mem, ch20);
     errno_assert(rc == 0);
     rc = chrecv(ch20[0], NULL, 0, now() + 50);
     errno_assert(rc == -1 && errno == ETIMEDOUT);

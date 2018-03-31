@@ -59,7 +59,7 @@ struct tcp_conn {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(TCP_SIZE >= sizeof(struct tcp_conn));
+DILL_CT_ASSERT(sizeof(struct tcp_storage) >= sizeof(struct tcp_conn));
 
 static void *tcp_hquery(struct hvfs *hvfs, const void *type) {
     struct tcp_conn *self = (struct tcp_conn*)hvfs;
@@ -69,7 +69,8 @@ static void *tcp_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int tcp_connect_mem(const struct ipaddr *addr, void *mem, int64_t deadline) {
+int tcp_connect_mem(const struct ipaddr *addr, struct tcp_storage *mem,
+        int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Open a socket. */
@@ -94,9 +95,9 @@ error1:
 
 int tcp_connect(const struct ipaddr *addr, int64_t deadline) {
     int err;
-    struct tcp_conn *obj = malloc(TCP_SIZE);
+    struct tcp_conn *obj = malloc(sizeof(struct tcp_conn));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int s = tcp_connect_mem(addr, obj, deadline);
+    int s = tcp_connect_mem(addr, (struct tcp_storage*)obj, deadline);
     if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return s;
@@ -195,7 +196,8 @@ struct tcp_listener {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(TCP_LISTENER_SIZE >= sizeof(struct tcp_listener));
+DILL_CT_ASSERT(sizeof(struct tcp_listener_storage) >=
+    sizeof(struct tcp_listener));
 
 static void *tcp_listener_hquery(struct hvfs *hvfs, const void *type) {
     struct tcp_listener *self = (struct tcp_listener*)hvfs;
@@ -204,7 +206,8 @@ static void *tcp_listener_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int tcp_listen_mem(struct ipaddr *addr, int backlog, void *mem) {
+int tcp_listen_mem(struct ipaddr *addr, int backlog,
+      struct tcp_listener_storage *mem) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Open the listening socket. */
@@ -247,9 +250,9 @@ error1:
 
 int tcp_listen(struct ipaddr *addr, int backlog) {
     int err;
-    struct tcp_listener *obj = malloc(TCP_LISTENER_SIZE);
+    struct tcp_listener *obj = malloc(sizeof(struct tcp_listener));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ls = tcp_listen_mem(addr, backlog, obj);
+    int ls = tcp_listen_mem(addr, backlog, (struct tcp_listener_storage*)obj);
     if(dill_slow(ls < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ls;
@@ -260,7 +263,8 @@ error1:
     return -1;
 }
 
-int tcp_accept_mem(int s, struct ipaddr *addr, void *mem, int64_t deadline) {
+int tcp_accept_mem(int s, struct ipaddr *addr, struct tcp_storage *mem,
+        int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Retrieve the listener object. */
@@ -286,9 +290,9 @@ error1:
 
 int tcp_accept(int s, struct ipaddr *addr, int64_t deadline) {
     int err;
-    struct tcp_conn *obj = malloc(TCP_SIZE);
+    struct tcp_conn *obj = malloc(sizeof(struct tcp_conn));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int as = tcp_accept_mem(s, addr, obj, deadline);
+    int as = tcp_accept_mem(s, addr, (struct tcp_storage*)obj, deadline);
     if(dill_slow(as < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return as;

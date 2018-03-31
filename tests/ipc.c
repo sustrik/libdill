@@ -85,8 +85,8 @@ int main() {
     errno_assert(ls >= 0);
     int cr = go(client());
     errno_assert(cr >= 0);
-    char mem[IPC_SIZE];
-    int as = ipc_accept_mem(ls, mem, -1);
+    struct ipc_storage mem;
+    int as = ipc_accept_mem(ls, &mem, -1);
     errno_assert(as >= 0);
     int64_t deadline = now() + 30;
     ssize_t sz = sizeof(buf);

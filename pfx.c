@@ -53,7 +53,7 @@ struct pfx_sock {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(PFX_SIZE >= sizeof(struct pfx_sock));
+DILL_CT_ASSERT(sizeof(struct pfx_storage) >= sizeof(struct pfx_sock));
 
 static void *pfx_hquery(struct hvfs *hvfs, const void *type) {
     struct pfx_sock *self = (struct pfx_sock*)hvfs;
@@ -63,7 +63,7 @@ static void *pfx_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int pfx_attach_mem(int s, size_t hdrlen, int flags, void *mem) {
+int pfx_attach_mem(int s, size_t hdrlen, int flags, struct pfx_storage *mem) {
     int err;
     if(dill_slow(!mem || hdrlen == 0)) {err = EINVAL; goto error1;}
     /* Make a private copy of the underlying socket. */
@@ -104,9 +104,9 @@ error1:
 
 int pfx_attach(int s, size_t hdrlen, int flags) {
     int err;
-    struct pfx_sock *obj = malloc(PFX_SIZE);
+    struct pfx_sock *obj = malloc(sizeof(struct pfx_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ps = pfx_attach_mem(s, hdrlen, flags, obj);
+    int ps = pfx_attach_mem(s, hdrlen, flags, (struct pfx_storage*)obj);
     if(dill_slow(ps < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ps;

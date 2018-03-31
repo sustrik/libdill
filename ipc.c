@@ -62,7 +62,7 @@ struct ipc_conn {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(IPC_SIZE >= sizeof(struct ipc_conn));
+DILL_CT_ASSERT(sizeof(struct ipc_storage) >= sizeof(struct ipc_conn));
 
 static void *ipc_hquery(struct hvfs *hvfs, const void *type) {
     struct ipc_conn *self = (struct ipc_conn*)hvfs;
@@ -72,7 +72,8 @@ static void *ipc_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int ipc_connect_mem(const char *addr, void *mem, int64_t deadline) {
+int ipc_connect_mem(const char *addr, struct ipc_storage *mem,
+      int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Create a UNIX address out of the address string. */
@@ -101,9 +102,9 @@ error1:
 
 int ipc_connect(const char *addr, int64_t deadline) {
     int err;
-    struct ipc_conn *obj = malloc(IPC_SIZE);
+    struct ipc_conn *obj = malloc(sizeof(struct ipc_conn));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int s = ipc_connect_mem(addr, obj, deadline);
+    int s = ipc_connect_mem(addr, (struct ipc_storage*)obj, deadline);
     if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return s;
@@ -201,7 +202,8 @@ struct ipc_listener {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(IPC_LISTENER_SIZE >= sizeof(struct ipc_listener));
+DILL_CT_ASSERT(sizeof(struct ipc_listener_storage) >=
+    sizeof(struct ipc_listener));
 
 static void *ipc_listener_hquery(struct hvfs *hvfs, const void *type) {
     struct ipc_listener *self = (struct ipc_listener*)hvfs;
@@ -210,7 +212,8 @@ static void *ipc_listener_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int ipc_listen_mem(const char *addr, int backlog, void *mem) {
+int ipc_listen_mem(const char *addr, int backlog,
+      struct ipc_listener_storage *mem) {
     int err;
     /* Create a UNIX address out of the address string. */
     struct sockaddr_un su;
@@ -247,9 +250,9 @@ error1:
 
 int ipc_listen(const char *addr, int backlog) {
     int err;
-    struct ipc_listener *obj = malloc(IPC_LISTENER_SIZE);
+    struct ipc_listener *obj = malloc(sizeof(struct ipc_listener));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ls = ipc_listen_mem(addr, backlog, obj);
+    int ls = ipc_listen_mem(addr, backlog, (struct ipc_listener_storage*)obj);
     if(dill_slow(ls < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ls;
@@ -260,7 +263,7 @@ error1:
     return -1;
 }
 
-int ipc_accept_mem(int s, void *mem, int64_t deadline) {
+int ipc_accept_mem(int s, struct ipc_storage *mem, int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Retrieve the listener object. */
@@ -273,7 +276,7 @@ int ipc_accept_mem(int s, void *mem, int64_t deadline) {
     int rc = fd_unblock(as);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
-    int h = ipc_makeconn(as, mem);
+    int h = ipc_makeconn(as, (struct ipc_conn*)mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
@@ -285,9 +288,9 @@ error1:
 
 int ipc_accept(int s, int64_t deadline) {
     int err;
-    struct ipc_conn *obj = malloc(IPC_SIZE);
+    struct ipc_conn *obj = malloc(sizeof(struct ipc_conn));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int as = ipc_accept_mem(s, obj, deadline);
+    int as = ipc_accept_mem(s, (struct ipc_storage*)obj, deadline);
     if(dill_slow(as < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return as;
@@ -308,7 +311,7 @@ static void ipc_listener_hclose(struct hvfs *hvfs) {
 /*  UNIX pair                                                                 */
 /******************************************************************************/
 
-int ipc_pair_mem(void *mem, int s[2]) {
+int ipc_pair_mem(struct ipc_pair_storage *mem, int s[2]) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Create the pair. */
