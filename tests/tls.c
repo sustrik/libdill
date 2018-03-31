@@ -32,7 +32,7 @@ coroutine void client1(int u) {
     errno_assert(s >= 0);
     int rc = bsend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
-    rc = hdone(s, -1);
+    rc = tls_done(s, -1);
     errno_assert(rc == 0);
     char buf[3];
     rc = brecv(s, buf, sizeof(buf), -1);
@@ -96,7 +96,7 @@ int main(void) {
     errno_assert(rc == -1 && errno == EPIPE);
     rc = bsend(s, "DEF", 3, -1);
     errno_assert(rc == 0);
-    rc = hdone(s, -1);
+    rc = tls_done(s, -1);
     errno_assert(rc == 0);
     u[0] = tls_detach(s, -1);
     errno_assert(u[0] >= 0);

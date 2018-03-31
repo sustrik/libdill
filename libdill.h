@@ -673,6 +673,9 @@ DILL_EXPORT int tls_attach_client_mem(
     int s,
     struct tls_storage *mem,
     int64_t deadline);
+DILL_EXPORT int tls_done(
+    int s,
+    int64_t deadline);
 DILL_EXPORT int tls_detach(
     int s,
     int64_t deadline);

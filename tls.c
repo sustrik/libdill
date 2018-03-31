@@ -58,7 +58,6 @@ static int tls_followup(struct tls_sock *self, int rc, int64_t deadline);
 
 static void *tls_hquery(struct hvfs *hvfs, const void *type);
 static void tls_hclose(struct hvfs *hvfs);
-static int tls_hdone(struct hvfs *hvfs, int64_t deadline);
 static int tls_bsendl(struct bsock_vfs *bvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 static int tls_brecvl(struct bsock_vfs *bvfs,
@@ -103,7 +102,7 @@ int tls_attach_client_mem(int s, struct tls_storage *mem, int64_t deadline) {
     struct tls_sock *self = (struct tls_sock*)mem;
     self->hvfs.query = tls_hquery;
     self->hvfs.close = tls_hclose;
-    self->hvfs.done = tls_hdone;
+    self->hvfs.done = NULL;
     self->bvfs.bsendl = tls_bsendl;
     self->bvfs.brecvl = tls_brecvl;
     self->ctx = ctx;
@@ -192,7 +191,7 @@ int tls_attach_server_mem(int s, const char *cert, const char *pkey,
     struct tls_sock *self = (struct tls_sock*)mem;
     self->hvfs.query = tls_hquery;
     self->hvfs.close = tls_hclose;
-    self->hvfs.done = tls_hdone;
+    self->hvfs.done = NULL;
     self->bvfs.bsendl = tls_bsendl;
     self->bvfs.brecvl = tls_brecvl;
     self->ctx = ctx;
@@ -245,8 +244,9 @@ error1:
     return -1;
 }
 
-static int tls_hdone(struct hvfs *hvfs, int64_t deadline) {
-    struct tls_sock *self = (struct tls_sock*)hvfs;
+int tls_done(int s, int64_t deadline) {
+    struct tls_sock *self = hquery(s, tls_type);
+    if(dill_slow(!self)) return -1;
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     while(1) {
@@ -268,7 +268,7 @@ int tls_detach(int s, int64_t deadline) {
     if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
     /* Start terminal TLS handshake. */
     if(!self->outdone) {
-        int rc = tls_hdone(&self->hvfs, deadline);
+        int rc = tls_done(s, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     /* Wait for the handshake acknowledgement from the peer. */
