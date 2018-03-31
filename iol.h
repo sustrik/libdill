@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2017 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -39,6 +39,15 @@ int iol_check(struct iolist *first, struct iolist *last,
    as the iolist, otherwise undefined behaviour ensues. The data buffers
    as such are not affected by this operation .*/
 void iol_toiov(struct iolist *first, struct iovec *iov);
+
+/* Trims first n bytes from the iolist. Returns the trimmed iolist. Keeps the
+   original iolist unchanged. Returns 0 in the case of success, -1 is there
+   are less than N bytes in the original iolist. */
+int iol_ltrim(struct iolist *first, size_t n, struct iolist *result);
+
+/* Copies supplied bytes into the iolist. Returns 0 on success, -1 is bytes
+   won't fit into the iolist. */
+int iol_copy(const void *src, size_t srclen, struct iolist *first);
 
 #endif
 

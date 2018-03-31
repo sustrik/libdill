@@ -758,6 +758,34 @@ DILL_EXPORT int ws_response_key(
     const char *request_key,
     char *response_key);
 
+
+/******************************************************************************/
+/*  TERM protocol.                                                            */
+/*  Implementes terminal handshake on the top of any message-based protocol.  */
+/******************************************************************************/
+
+#if defined(__i386__)
+#  define TERM_SIZE 44
+#else
+#  define TERM_SIZE 128
+#endif
+
+DILL_EXPORT int term_attach(
+    int s,
+    const void *buf,
+    size_t len);
+DILL_EXPORT int term_attach_mem(
+    int s,
+    const void *buf,
+    size_t len,
+    void *mem);
+DILL_EXPORT int term_done(
+    int s,
+    int64_t deadline);
+DILL_EXPORT int term_detach(
+    int s,
+    int64_t deadline);
+
 #endif
 
 #endif

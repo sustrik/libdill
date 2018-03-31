@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2017 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -58,5 +58,34 @@ void iol_toiov(struct iolist *first, struct iovec *iov) {
         ++iov;
         first = first->iol_next;
     }
+}
+
+int iol_ltrim(struct iolist *first, size_t n, struct iolist *result) {
+    while(n) {
+        if(!first) return -1;
+        if(first->iol_len >= n) break;
+        n -= first->iol_len;
+        first = first->iol_next;
+    }
+    result->iol_base = first->iol_base ? ((uint8_t*)first->iol_base) + n : NULL;
+    result->iol_len = first->iol_len - n;
+    result->iol_next = first->iol_next;
+    result->iol_rsvd = 0;
+    return 0;
+}
+
+int iol_copy(const void *src, size_t srclen, struct iolist *first) {
+    const uint8_t *p = src;
+    while(1) {
+        if(!srclen) return 0;
+        if(!first) return -1;
+        if(first->iol_len >= srclen) break;
+        if(first->iol_base) memcpy(first->iol_base, p, first->iol_len);
+        p += first->iol_len;
+        srclen -= first->iol_len;
+        first = first->iol_next; 
+    }
+    if(first->iol_base) memcpy(first->iol_base, p, srclen);
+    return 0;
 }
 

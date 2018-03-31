@@ -74,6 +74,7 @@ libdill_la_SOURCES += \
     msock.c \
     pfx.c \
     tcp.c \
+    term.c \
     udp.c \
     ws.c \
     dns/dns.h \
@@ -134,7 +135,8 @@ check_PROGRAMS += \
     tests/pfx \
     tests/udp \
     tests/http \
-    tests/ws
+    tests/ws \
+    tests/term
 endif
 
 if DILL_SOCKETS
