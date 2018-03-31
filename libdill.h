@@ -488,7 +488,6 @@ DILL_EXPORT int ipc_pair_mem(
 /******************************************************************************/
 /*  PFX protocol.                                                             */
 /*  Messages are prefixed by 8-byte size in network byte order.               */
-/*  The protocol is terminated by 0xffffffffffffffff.                         */
 /******************************************************************************/
 
 struct pfx_storage {

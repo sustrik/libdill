@@ -94,8 +94,6 @@ int main(void) {
     errno_assert(rc == 0);
     rc = msend(s0, "Third", 5, -1);
     errno_assert(rc == 0);
-    rc = hdone(s0, -1);
-    errno_assert(rc == 0);
     sz = mrecv(s1, buf, sizeof(buf), -1);
     errno_assert(sz >= 0);
     assert(sz == 5 && memcmp(buf, "First", 5) == 0);
@@ -104,8 +102,6 @@ int main(void) {
     sz = mrecv(s1, buf, sizeof(buf), -1);
     errno_assert(sz >= 0);
     assert(sz == 5 && memcmp(buf, "Third", 5) == 0);
-    sz = mrecv(s1, buf, sizeof(buf), -1);
-    assert(sz < 0 && errno == EPIPE);
     rc = msend(s1, "Red", 3, -1);
     errno_assert(rc == 0);
     rc = msend(s1, "Blue", 4, -1);
@@ -116,8 +112,6 @@ int main(void) {
     errno_assert(sz == 3 && memcmp(buf, "Red", 3) == 0);
     sz = mrecv(s0, buf, sizeof(buf), -1);
     errno_assert(sz == 4 && memcmp(buf, "Blue", 4) == 0);
-    sz = mrecv(s0, buf, sizeof(buf), -1);
-    assert(sz < 0 && errno == EPIPE);
     int ts0 = pfx_detach(s0, -1);
     errno_assert(ts0 >= 0);
     rc = hclose(ts1);

@@ -34,7 +34,6 @@ dill_unique_id(pfx_type);
 
 static void *pfx_hquery(struct hvfs *hvfs, const void *type);
 static void pfx_hclose(struct hvfs *hvfs);
-static int pfx_hdone(struct hvfs *hvfs, int64_t deadline);
 static int pfx_msendl(struct msock_vfs *mvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 static ssize_t pfx_mrecvl(struct msock_vfs *mvfs,
@@ -46,8 +45,6 @@ struct pfx_sock {
     int u;
     size_t hdrlen;
     unsigned int bigendian : 1;
-    unsigned int indone : 1;
-    unsigned int outdone: 1;
     unsigned int inerr : 1;
     unsigned int outerr : 1;
     unsigned int mem : 1;
@@ -79,14 +76,12 @@ int pfx_attach_mem(int s, size_t hdrlen, int flags, struct pfx_storage *mem) {
     struct pfx_sock *self = (struct pfx_sock*)mem;
     self->hvfs.query = pfx_hquery;
     self->hvfs.close = pfx_hclose;
-    self->hvfs.done = pfx_hdone;
+    self->hvfs.done = NULL;
     self->mvfs.msendl = pfx_msendl;
     self->mvfs.mrecvl = pfx_mrecvl;
     self->u = u;
     self->hdrlen = hdrlen;
     self->bigendian = !(flags & PFX_LITTLE_ENDIAN);
-    self->indone = 0;
-    self->outdone = 0;
     self->inerr = 0;
     self->outerr = 0;
     self->mem = 1;
@@ -117,47 +112,17 @@ error1:
     return -1;
 }
 
-static int pfx_hdone(struct hvfs *hvfs, int64_t deadline) {
-    struct pfx_sock *self = (struct pfx_sock*)hvfs;
-    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
-    if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
-    uint8_t buf[self->hdrlen];
-    memset(buf, 0xff, sizeof(buf));
-    int rc = bsend(self->u, buf, sizeof(buf), deadline);
-    if(dill_slow(rc < 0)) {self->outerr = 1; return -1;}
-    self->outdone = 1;
-    return 0;
-}
-
 int pfx_detach(int s, int64_t deadline) {
-    int err;
     struct pfx_sock *self = hquery(s, pfx_type);
     if(dill_slow(!self)) return -1;
-    if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
-    /* If not done already start the terminal handshake. */
-    if(!self->outdone) {
-        int rc = pfx_hdone(&self->hvfs, deadline);
-        if(dill_slow(rc < 0)) {err = errno; goto error;}
-    }
-    /* Drain incoming messages until termination message is received. */
-    while(1) {
-        ssize_t sz = pfx_mrecvl(&self->mvfs, NULL, NULL, deadline);
-        if(sz < 0 && errno == EPIPE) break;
-        if(dill_slow(sz < 0)) {err = errno; goto error;}
-    }
     int u = self->u;
     if(!self->mem) free(self);
     return u;
-error:
-    pfx_hclose(&self->hvfs);
-    errno = err;
-    return -1;
 }
 
 static int pfx_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct pfx_sock *self = dill_cont(mvfs, struct pfx_sock, mvfs);
-    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     uint8_t szbuf[self->hdrlen];
     size_t sz = 0;
@@ -178,23 +143,17 @@ static int pfx_msendl(struct msock_vfs *mvfs,
 static ssize_t pfx_mrecvl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct pfx_sock *self = dill_cont(mvfs, struct pfx_sock, mvfs);
-    if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
     uint8_t szbuf[self->hdrlen];
     int rc = brecv(self->u, szbuf, self->hdrlen, deadline);
     if(dill_slow(rc < 0)) {self->inerr = 1; return -1;}
     uint64_t sz = 0;
-    int done = 1;
     int i;
     for(i = 0; i != self->hdrlen; ++i) {
         uint8_t c = szbuf[self->bigendian ? i : (self->hdrlen - i - 1)];
-        if(c != 0xff) done = 0;
         sz <<= 8;
         sz |= c;
     }
-    /* Peer is terminating. */
-    if(dill_slow(done)) {
-        self->indone = 1; errno = EPIPE; return -1;}
     /* Skip the message. */
     if(!first) {
         rc = brecv(self->u, NULL, sz, deadline);
