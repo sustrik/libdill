@@ -765,9 +765,9 @@ DILL_EXPORT int ws_response_key(
 /******************************************************************************/
 
 #if defined(__i386__)
-#  define TERM_SIZE 44
+#  define TERM_SIZE 68
 #else
-#  define TERM_SIZE 128
+#  define TERM_SIZE 104
 #endif
 
 DILL_EXPORT int term_attach(
