@@ -752,6 +752,9 @@ DILL_EXPORT ssize_t ws_recvl(
     struct iolist *first,
     struct iolist *last,
     int64_t deadline);
+DILL_EXPORT int ws_done(
+    int s,
+    int64_t deadline);
 DILL_EXPORT int ws_detach(
     int s,
     int64_t deadline);

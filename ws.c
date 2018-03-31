@@ -48,7 +48,6 @@ DILL_CT_ASSERT(sizeof(struct ws_storage) >= sizeof(struct ws_sock));
 
 static void *ws_hquery(struct hvfs *hvfs, const void *type);
 static void ws_hclose(struct hvfs *hvfs);
-static int ws_hdone(struct hvfs *hvfs, int64_t deadline);
 static int ws_msendl(struct msock_vfs *mvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 static ssize_t ws_mrecvl(struct msock_vfs *mvfs,
@@ -69,7 +68,7 @@ int ws_attach_client_mem(int s, int flags, const char *resource,
     struct ws_sock *self = (struct ws_sock*)mem;
     self->hvfs.query = ws_hquery;
     self->hvfs.close = ws_hclose;
-    self->hvfs.done = ws_hdone;
+    self->hvfs.done = NULL;
     self->mvfs.msendl = ws_msendl;
     self->mvfs.mrecvl = ws_mrecvl;
     self->u = s;
@@ -173,7 +172,7 @@ int ws_attach_server_mem(int s, int flags, char *resource, size_t resourcelen,
     struct ws_sock *self = (struct ws_sock*)mem;
     self->hvfs.query = ws_hquery;
     self->hvfs.close = ws_hclose;
-    self->hvfs.done = ws_hdone;
+    self->hvfs.done = NULL;
     self->mvfs.msendl = ws_msendl;
     self->mvfs.mrecvl = ws_mrecvl;
     self->u = s;
@@ -454,8 +453,9 @@ static ssize_t ws_mrecvl(struct msock_vfs *mvfs,
     return sz;
 }
 
-static int ws_hdone(struct hvfs *hvfs, int64_t deadline) {
-    struct ws_sock *self = dill_cont(hvfs, struct ws_sock, hvfs);
+int ws_done(int s, int64_t deadline) {
+    struct ws_sock *self = hquery(s, ws_type);
+    if(dill_slow(!self)) return -1;
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     /* TODO: Status code and message. */
     uint8_t buf[6] = {0};
@@ -470,7 +470,7 @@ int ws_detach(int s, int64_t deadline) {
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
     if(!self->outdone) {
-        int rc = ws_hdone(&self->hvfs, deadline);
+        int rc = ws_done(s, deadline);
         if(dill_slow(rc < 0)) return -1;
     }
     while(1) {
