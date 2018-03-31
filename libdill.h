@@ -479,6 +479,9 @@ DILL_EXPORT int ipc_connect_mem(
     const char *addr,
     struct ipc_storage *mem,
     int64_t deadline);
+DILL_EXPORT int ipc_done(
+    int s,
+    int64_t deadline);
 DILL_EXPORT int ipc_close(
     int s,
     int64_t deadline);

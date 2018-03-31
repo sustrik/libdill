@@ -44,7 +44,6 @@ dill_unique_id(ipc_type);
 
 static void *ipc_hquery(struct hvfs *hvfs, const void *type);
 static void ipc_hclose(struct hvfs *hvfs);
-static int ipc_hdone(struct hvfs *hvfs, int64_t deadline);
 static int ipc_bsendl(struct bsock_vfs *bvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 static int ipc_brecvl(struct bsock_vfs *bvfs,
@@ -138,8 +137,9 @@ static int ipc_brecvl(struct bsock_vfs *bvfs,
     return -1;
 }
 
-static int ipc_hdone(struct hvfs *hvfs, int64_t deadline) {
-    struct ipc_conn *self = (struct ipc_conn*)hvfs;
+int ipc_done(int s, int64_t deadline) {
+    struct ipc_conn *self = hquery(s, ipc_type);
+    if(dill_slow(!self)) return -1;
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     /* Shutdown is done asynchronously on kernel level.
@@ -166,7 +166,7 @@ int ipc_close(int s, int64_t deadline) {
     /* If not done already, flush the outbound data and start the terminal
        handshake. */
     if(!self->outdone) {
-        int rc = ipc_hdone(&self->hvfs, deadline);
+        int rc = ipc_done(s, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     /* Now we are going to read all the inbound data until we reach end of the
@@ -399,7 +399,7 @@ static int ipc_makeconn(int fd, void *mem) {
     struct ipc_conn *self = (struct ipc_conn*)mem;
     self->hvfs.query = ipc_hquery;
     self->hvfs.close = ipc_hclose;
-    self->hvfs.done = ipc_hdone;
+    self->hvfs.done = NULL;
     self->bvfs.bsendl = ipc_bsendl;
     self->bvfs.brecvl = ipc_brecvl;
     self->fd = fd;

@@ -128,7 +128,7 @@ int main() {
     errno_assert(cr >= 0);
     rc = bsend(s[0], "ABC", 3, -1);
     errno_assert(rc == 0);
-    rc = hdone(s[0], -1);
+    rc = ipc_done(s[0], -1);
     errno_assert(rc == 0);
     rc = brecv(s[0], buf, 3, -1);
     errno_assert(rc == 0);
