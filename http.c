@@ -42,7 +42,7 @@ struct http_sock {
     struct hvfs hvfs;
     /* Underlying CRLF socket. */
     int s;
-    int rxerr;
+    unsigned int mem : 1;
     char crlf_mem[CRLF_SIZE];
     char rxbuf[1024];
 };
@@ -56,18 +56,17 @@ static void *http_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int http_attach(int s) {
+int http_attach_mem(int s, void *mem) {
     int err;
     /* Check whether underlying socket is a bytestream. */
     if(dill_slow(!hquery(s, bsock_type))) {err = errno; goto error1;}
     /* Create the object. */
-    struct http_sock *obj = malloc(sizeof(struct http_sock));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
+    struct http_sock *obj = (struct http_sock*)mem;
     obj->hvfs.query = http_hquery;
     obj->hvfs.close = http_hclose;
     obj->hvfs.done = http_hdone;
     obj->s = -1;
-    obj->rxerr = 0;
+    obj->mem = 1;
     /* Create the handle. */
     int h = hmake(&obj->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
@@ -94,9 +93,19 @@ error1:
     return -1;
 }
 
-int http_attach_mem(int s, void *mem) {
-    /* TODO */
-    return http_attach(s);
+int http_attach(int s) {
+    int err;
+    struct http_sock *obj = malloc(HTTP_SIZE);
+    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
+    int cs = http_attach_mem(s, obj);
+    if(dill_slow(cs < 0)) {err = errno; goto error2;}
+    obj->mem = 0;
+    return cs;
+error2:
+    free(obj);
+error1:
+    errno = err;
+    return -1;
 }
 
 static int http_hdone(struct hvfs *hvfs, int64_t deadline) {
@@ -109,7 +118,7 @@ int http_detach(int s, int64_t deadline) {
     if(dill_slow(!obj)) return -1;
     int u = crlf_detach(obj->s, deadline);
     int err = errno;
-    free(obj);
+    if(!obj->mem) free(obj);
     return u;
 }
 
@@ -145,7 +154,6 @@ int http_recvrequest(int s, char *command, size_t commandlen,
       char *resource, size_t resourcelen, int64_t deadline) {
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
-    if(dill_slow(obj->rxerr)) {errno = obj->rxerr; return -1;}
     ssize_t sz = mrecv(obj->s, obj->rxbuf, sizeof(obj->rxbuf) - 1, deadline);
     if(dill_slow(sz < 0)) return -1;
     obj->rxbuf[sz] = 0;
@@ -208,7 +216,6 @@ int http_sendstatus(int s, int status, const char *reason, int64_t deadline) {
 int http_recvstatus(int s, char *reason, size_t reasonlen, int64_t deadline) {
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
-    if(dill_slow(obj->rxerr)) {errno = obj->rxerr; return -1;}
     ssize_t sz = mrecv(obj->s, obj->rxbuf, sizeof(obj->rxbuf) - 1, deadline);
     if(dill_slow(sz < 0)) return -1;
     obj->rxbuf[sz] = 0;
@@ -273,7 +280,6 @@ int http_recvfield(int s, char *name, size_t namelen,
       char *value, size_t valuelen, int64_t deadline) {
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
-    if(dill_slow(obj->rxerr)) {errno = obj->rxerr; return -1;}
     ssize_t sz = mrecv(obj->s, obj->rxbuf, sizeof(obj->rxbuf) - 1, deadline);
     if(dill_slow(sz < 0)) return -1;
     obj->rxbuf[sz] = 0;
@@ -310,6 +316,6 @@ static void http_hclose(struct hvfs *hvfs) {
         int rc = hclose(obj->s);
         dill_assert(rc == 0);
     }
-    free(obj);
+    if(obj->mem) free(obj);
 }
 
