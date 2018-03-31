@@ -41,7 +41,6 @@ static int tcp_makeconn(int fd, void *mem);
 
 static void *tcp_hquery(struct hvfs *hvfs, const void *type);
 static void tcp_hclose(struct hvfs *hvfs);
-static int tcp_hdone(struct hvfs *hvfs, int64_t deadline);
 static int tcp_bsendl(struct bsock_vfs *bvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 static int tcp_brecvl(struct bsock_vfs *bvfs,
@@ -132,8 +131,9 @@ static int tcp_brecvl(struct bsock_vfs *bvfs,
     return -1;
 }
 
-static int tcp_hdone(struct hvfs *hvfs, int64_t deadline) {
-    struct tcp_conn *self = (struct tcp_conn*)hvfs;
+int tcp_done(int s, int64_t deadline) {
+    struct tcp_conn *self = hquery(s, tcp_type);
+    if(dill_slow(!self)) return -1;
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     /* Flushing the tx buffer is done asynchronously on kernel level. */
@@ -159,7 +159,7 @@ int tcp_close(int s, int64_t deadline) {
     /* If not done already, flush the outbound data and start the terminal
        handshake. */
     if(!self->outdone) {
-        int rc = tcp_hdone(&self->hvfs, deadline);
+        int rc = tcp_done(s, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     /* Now we are going to read all the inbound data until we reach end of the
@@ -327,7 +327,7 @@ static int tcp_makeconn(int fd, void *mem) {
     struct tcp_conn *self = (struct tcp_conn*)mem;
     self->hvfs.query = tcp_hquery;
     self->hvfs.close = tcp_hclose;
-    self->hvfs.done = tcp_hdone;
+    self->hvfs.done = NULL;
     self->bvfs.bsendl = tcp_bsendl;
     self->bvfs.brecvl = tcp_brecvl;
     self->fd = fd;

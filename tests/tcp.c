@@ -155,7 +155,7 @@ int main(void) {
     errno_assert(as >= 0);
     rc = bsend(as, "ABC", 3, -1);
     errno_assert(rc == 0);
-    rc = hdone(as, -1);
+    rc = tcp_done(as, -1);
     errno_assert(rc == 0);
     rc = brecv(as, buf, 3, -1);
     errno_assert(rc == 0);

@@ -423,6 +423,9 @@ DILL_EXPORT int tcp_connect_mem(
     const struct ipaddr *addr,
     struct tcp_storage *mem,
     int64_t deadline);
+DILL_EXPORT int tcp_done(
+    int s,
+    int64_t deadline);
 DILL_EXPORT int tcp_close(
     int s,
     int64_t deadline);
