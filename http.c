@@ -36,7 +36,6 @@ dill_unique_id(http_type);
 
 static void *http_hquery(struct hvfs *hvfs, const void *type);
 static void http_hclose(struct hvfs *hvfs);
-static int http_hdone(struct hvfs *hvfs, int64_t deadline);
 
 struct http_sock {
     struct hvfs hvfs;
@@ -44,6 +43,7 @@ struct http_sock {
     int s;
     unsigned int mem : 1;
     struct crlf_storage crlf_mem;
+    struct term_storage term_mem;
     char rxbuf[1024];
 };
 
@@ -64,7 +64,7 @@ int http_attach_mem(int s, struct http_storage *mem) {
     struct http_sock *obj = (struct http_sock*)mem;
     obj->hvfs.query = http_hquery;
     obj->hvfs.close = http_hclose;
-    obj->hvfs.done = http_hdone;
+    obj->hvfs.done = NULL;
     obj->s = -1;
     obj->mem = 1;
     /* Create the handle. */
@@ -73,13 +73,16 @@ int http_attach_mem(int s, struct http_storage *mem) {
     /* Make a private copy of the underlying socket. */
     int tmp = hdup(s);
     if(dill_slow(tmp < 0)) {err = errno; goto error3;}
-    /* Wrap the underlying socket into CRLF protocol. */
+    /* Wrap the underlying socket into CRLF and TERM protocol. */
     obj->s = crlf_attach_mem(tmp, &obj->crlf_mem);
     if(dill_slow(obj->s < 0)) {err = errno; goto error4;}
-    /* Function succeeded. We can now close original undelying handle. */
+    obj->s = term_attach_mem(obj->s, NULL, 0, &obj->term_mem);
+    if(dill_slow(obj->s < 0)) {err = errno; goto error4;}
+    /* Function succeeded. We can now close original underlying handle. */
     int rc = hclose(s);
     dill_assert(rc == 0);
     return h;
+    /* TODO: Fix error handling. */
 error4:
     rc = hclose(tmp);
     dill_assert(rc == 0);
@@ -108,17 +111,23 @@ error1:
     return -1;
 }
 
-static int http_hdone(struct hvfs *hvfs, int64_t deadline) {
-    struct http_sock *obj = (struct http_sock*)hvfs;
-    return hdone(obj->s, deadline);
+int http_done(int s, int64_t deadline) {
+    struct http_sock *obj = hquery(s, http_type);
+    if(dill_slow(!obj)) return -1;
+    return term_done(obj->s, deadline);
 }
 
 int http_detach(int s, int64_t deadline) {
+    int err;
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
-    int u = crlf_detach(obj->s, deadline);
-    int err = errno;
+    int u = term_detach(obj->s, deadline);
+    if(dill_slow(u < 0)) {err = errno; goto error;}
+    u = crlf_detach(u, deadline);
+    if(dill_slow(u < 0)) {err = errno; goto error;}
+error:
     if(!obj->mem) free(obj);
+    errno = err;
     return u;
 }
 

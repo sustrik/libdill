@@ -44,7 +44,7 @@ coroutine void client(void) {
     assert(buf[0] == 'G' && buf[1] == 'H' && buf[2] == 'I');
     rc = msend(cs, "DEF", 3, -1);
     errno_assert(rc == 0);
-    int ts = pfx_detach(cs, -1);
+    int ts = pfx_detach(cs);
     errno_assert(ts >= 0);
     rc = hclose(ts);
     errno_assert(rc == 0);
@@ -71,7 +71,7 @@ int main(void) {
     sz = mrecv(cs, buf, sizeof(buf), -1);
     errno_assert(sz == 3);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    int ts = pfx_detach(cs, -1);
+    int ts = pfx_detach(cs);
     errno_assert(ts >= 0);
     rc = hclose(ts);
     errno_assert(rc == 0);
@@ -106,13 +106,13 @@ int main(void) {
     errno_assert(rc == 0);
     rc = msend(s1, "Blue", 4, -1);
     errno_assert(rc == 0);
-    int ts1 = pfx_detach(s1, -1);
+    int ts1 = pfx_detach(s1);
     errno_assert(ts1 >= 0);
     sz = mrecv(s0, buf, sizeof(buf), -1);
     errno_assert(sz == 3 && memcmp(buf, "Red", 3) == 0);
     sz = mrecv(s0, buf, sizeof(buf), -1);
     errno_assert(sz == 4 && memcmp(buf, "Blue", 4) == 0);
-    int ts0 = pfx_detach(s0, -1);
+    int ts0 = pfx_detach(s0);
     errno_assert(ts0 >= 0);
     rc = hclose(ts1);
     errno_assert(rc == 0);

@@ -517,8 +517,7 @@ DILL_EXPORT int pfx_attach_mem(
     int flags,
     struct pfx_storage *mem);
 DILL_EXPORT int pfx_detach(
-    int s,
-    int64_t deadline);
+    int s);
 
 /******************************************************************************/
 /*  CRLF protocol.                                                            */
@@ -592,9 +591,9 @@ DILL_EXPORT ssize_t udp_recvl(
 
 struct http_storage {
 #if defined(__i386__)
-    char _[1080];
+    char _[1148];
 #else
-    char _[1136];
+    char _[1240];
 #endif
 };
 
@@ -603,6 +602,9 @@ DILL_EXPORT int http_attach(
 DILL_EXPORT int http_attach_mem(
     int s,
     struct http_storage *mem);
+DILL_EXPORT int http_done(
+    int s,
+    int64_t deadline);
 DILL_EXPORT int http_detach(
     int s,
     int64_t deadline);

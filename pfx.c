@@ -112,7 +112,7 @@ error1:
     return -1;
 }
 
-int pfx_detach(int s, int64_t deadline) {
+int pfx_detach(int s) {
     struct pfx_sock *self = hquery(s, pfx_type);
     if(dill_slow(!self)) return -1;
     int u = self->u;

@@ -136,13 +136,15 @@ int term_detach(int s, int64_t deadline) {
         int rc = term_done(s, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
-    while(1) {
-        struct iolist iol = {NULL, SIZE_MAX, NULL, 0};
-        ssize_t sz = term_mrecvl(&self->mvfs, &iol, &iol, deadline);
-        if(sz < 0) {
-            if(errno == EPIPE) break;
-            err = errno;
-            goto error;
+    if(!self->indone) {
+        while(1) {
+            struct iolist iol = {NULL, SIZE_MAX, NULL, 0};
+            ssize_t sz = term_mrecvl(&self->mvfs, &iol, &iol, deadline);
+            if(sz < 0) {
+                if(errno == EPIPE) break;
+                err = errno;
+                goto error;
+            }
         }
     }
     int u = self->u;
@@ -165,6 +167,16 @@ static int term_msendl(struct msock_vfs *mvfs,
 static ssize_t term_mrecvl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct term_sock *self = dill_cont(mvfs, struct term_sock, mvfs);
+    if(self->len == 0) {
+        ssize_t sz = mrecvl(self->u, first, last, deadline);
+        if(dill_slow(sz < 0)) return -1;
+        if(dill_slow(sz == 0)) {
+            self->indone = 1;
+            errno = EPIPE;
+            return -1;
+        }
+        return sz;
+    }
     struct iolist trimmed = {0};
     int rc = iol_ltrim(first, self->len, &trimmed);
     uint8_t buf[self->len];

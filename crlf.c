@@ -33,7 +33,6 @@ dill_unique_id(crlf_type);
 
 static void *crlf_hquery(struct hvfs *hvfs, const void *type);
 static void crlf_hclose(struct hvfs *hvfs);
-static int crlf_hdone(struct hvfs *hvfs, int64_t deadline);
 static int crlf_msendl(struct msock_vfs *mvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 static ssize_t crlf_mrecvl(struct msock_vfs *mvfs,
@@ -46,8 +45,6 @@ struct crlf_sock {
     /* Given that we are doing one recv call per byte, let's cache the pointer
        to bsock interface of the underlying socket to make it faster. */
     struct bsock_vfs *uvfs;
-    unsigned int indone : 1;
-    unsigned int outdone : 1;
     unsigned int inerr : 1;
     unsigned int outerr : 1;
     unsigned int mem : 1;
@@ -75,15 +72,13 @@ int crlf_attach_mem(int s, struct crlf_storage *mem) {
     struct crlf_sock *self = (struct crlf_sock*)mem;
     self->hvfs.query = crlf_hquery;
     self->hvfs.close = crlf_hclose;
-    self->hvfs.done = crlf_hdone;
+    self->hvfs.done = NULL;
     self->mvfs.msendl = crlf_msendl;
     self->mvfs.mrecvl = crlf_mrecvl;
     self->u = u;
     self->uvfs = hquery(u, bsock_type);
     if(dill_slow(!self->uvfs && errno == ENOTSUP)) {err = EPROTO; goto error2;}
     if(dill_slow(!self->uvfs)) {err = errno; goto error2;}
-    self->indone = 0;
-    self->outdone = 0;
     self->inerr = 0;
     self->outerr = 0;
     self->mem = 1;
@@ -114,45 +109,17 @@ error1:
     return -1;
 }
 
-static int crlf_hdone(struct hvfs *hvfs, int64_t deadline) {
-    struct crlf_sock *self = (struct crlf_sock*)hvfs;
-    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
-    if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
-    int rc = bsend(self->u, "\r\n", 2, deadline);
-    if(dill_slow(rc < 0)) {self->outerr = 1; return -1;}
-    self->outdone = 1;
-    return 0;
-}
-
 int crlf_detach(int s, int64_t deadline) {
-    int err;
     struct crlf_sock *self = hquery(s, crlf_type);
     if(dill_slow(!self)) return -1;
-    if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
-    /* If not done already start the terminal handshake. */
-    if(!self->outdone) {
-        int rc = crlf_hdone(&self->hvfs, deadline);
-        if(dill_slow(rc < 0)) {err = errno; goto error;}
-    }
-    /* Drain incoming messages until termination message is received. */
-    while(1) {
-        ssize_t sz = crlf_mrecvl(&self->mvfs, NULL, NULL, deadline);
-        if(sz < 0 && errno == EPIPE) break;
-        if(dill_slow(sz < 0)) {err = errno; goto error;}
-    }
     int u = self->u;
     if(!self->mem) free(self);
     return u;
-error:
-    crlf_hclose(&self->hvfs);
-    errno = err;
-    return -1;
 }
 
 static int crlf_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct crlf_sock *self = dill_cont(mvfs, struct crlf_sock, mvfs);
-    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     /* Make sure that message doesn't contain CRLF sequence. */
     uint8_t c = 0;
@@ -168,8 +135,6 @@ static int crlf_msendl(struct msock_vfs *mvfs,
         }
         sz += it->iol_len;
     }
-    /* Can't send empty line. Empty line is used as protocol terminator. */
-    if(dill_slow(sz == 0)) {self->outerr = 1; errno = EINVAL; return -1;}
     struct iolist iol = {(void*)"\r\n", 2, NULL, 0};
     last->iol_next = &iol;
     int rc = self->uvfs->bsendl(self->uvfs, first, &iol, deadline);
@@ -181,7 +146,6 @@ static int crlf_msendl(struct msock_vfs *mvfs,
 static ssize_t crlf_mrecvl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct crlf_sock *self = dill_cont(mvfs, struct crlf_sock, mvfs);
-    if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
     size_t recvd = 0;
     char c1 = 0;
@@ -211,8 +175,6 @@ static ssize_t crlf_mrecvl(struct msock_vfs *mvfs,
         ++recvd;
         if(c1 == '\r' && c2 == '\n') break;
     }
-    /* Empty line means that peer is terminating. */
-    if(dill_slow(recvd == 2)) {self->indone = 1; errno = EPIPE; return -1;}
     return recvd - 2;
 }
 

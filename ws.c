@@ -100,7 +100,7 @@ int ws_attach_client_mem(int s, int flags, const char *resource,
     rc = http_sendfield(s, "Sec-WebSocket-Version", "13", deadline);
     if(dill_slow(rc < 0)) return -1;
     /* TODO: Protocol, Extensions? */
-    rc = hdone(s, deadline);
+    rc = http_done(s, deadline);
     if(dill_slow(rc < 0)) return -1;
 
     /* Receive HTTP response from the server. */
