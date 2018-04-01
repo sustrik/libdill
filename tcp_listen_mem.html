@@ -23,14 +23,14 @@
 <span class="dt">int</span> tcp_listen_mem(
     <span class="dt">const</span> <span class="kw">struct</span> ipaddr* addr,
     <span class="dt">int</span> backlog,
-    <span class="dt">void</span>* mem);</code></pre></div>
+    <span class="kw">struct</span> tcp_listener_storage* mem);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>TCP protocol is a reliable bytestream protocol for transporting data over network. It is defined in RFC 793.</p>
 <p>This function starts listening for incoming connections. The connections can be accepted using <strong>tcp_accept</strong> function.</p>
 <p>This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use <strong>tcp_listen</strong> instead.</p>
 <p><strong>addr</strong>: IP address to listen on.</p>
 <p><strong>backlog</strong>: Maximum number of connections that can be kept open without accepting them.</p>
-<p><strong>mem</strong>: The memory to store the newly created object. It must be at least <strong>TCP_LISTENER_SIZE</strong> bytes long and must not be deallocated before the object is closed.</p>
+<p><strong>mem</strong>: The structure to store the newly created object in. It must not be deallocated before the object is closed.</p>
 <p>The socket can be closed either by <strong>hclose</strong> or <strong>tcp_close</strong>. Both ways are equivalent.</p>
 <p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
 <h1 id="return-value">RETURN VALUE</h1>

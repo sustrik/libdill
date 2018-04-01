@@ -21,14 +21,14 @@
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
 <span class="dt">int</span> bundle_mem(
-    <span class="dt">void</span>* mem);</code></pre></div>
+    <span class="kw">struct</span> bundle_storage* mem);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>Coroutines are always running in bundles. Even a single coroutine created by <strong>go</strong> gets its own bundle. A bundle is a lifetime control mechanism. When it is closed, all coroutines within the bundle are canceled.</p>
 <p>This function creates an empty bundle. Coroutines can be added to the bundle using the <strong>bundle_go</strong> and <strong>bundle_go_mem</strong> functions.</p>
 <p>To wait until coroutines in the bundle finish use <strong>bundle_wait</strong> function.</p>
 <p>When <strong>hclose()</strong> is called on the bundle, all the coroutines contained in the bundle will be canceled. In other words, all the blocking functions within the coroutine will start failing with an <strong>ECANCELED</strong> error. The <strong>hclose()</strong> function itself won't exit until all the coroutines in the bundle exit.</p>
 <p>This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use <strong>bundle</strong> instead.</p>
-<p><strong>mem</strong>: The memory to store the newly created object. It must be at least <strong>BUNDLE_SIZE</strong> bytes long and must not be deallocated before the object is closed.</p>
+<p><strong>mem</strong>: The structure to store the newly created object in. It must not be deallocated before the object is closed.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>In case of success the function returns handle of the newly create coroutine bundle. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>

@@ -22,14 +22,14 @@
 
 <span class="dt">int</span> ipc_connect_mem(
     <span class="dt">const</span> <span class="dt">char</span>* addr,
-    <span class="dt">void</span>* mem,
+    <span class="kw">struct</span> ipc_storage* mem,
     <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>IPC protocol is a bytestream protocol for transporting data among processes on the same machine. It is an equivalent to POSIX <strong>AF_LOCAL</strong> sockets.</p>
 <p>This function creates a connection to a remote IPC endpoint.</p>
 <p>This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use <strong>ipc_connect</strong> instead.</p>
 <p><strong>addr</strong>: Filename to connect to.</p>
-<p><strong>mem</strong>: The memory to store the newly created object. It must be at least <strong>IPC_SIZE</strong> bytes long and must not be deallocated before the object is closed.</p>
+<p><strong>mem</strong>: The structure to store the newly created object in. It must not be deallocated before the object is closed.</p>
 <p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
 <p>The socket can be cleanly shut down using <strong>ipc_close</strong> function.</p>
 <p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
