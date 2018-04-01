@@ -26,6 +26,8 @@ overwriting memory.
 \f[B]expression\f[]: Expression to evaluate as a coroutine.
 .PP
 \f[B]mem\f[]: Buffer to hold the coroutine\[aq]s stack.
+The buffer doesn\[aq]t have to be aligned.
+The function will take care of properly aligning the stack itself.
 .PP
 \f[B]memlen\f[]: Size of the \f[B]mem\f[] buffer.
 .PP

@@ -1169,7 +1169,9 @@ fxs = [
             {
                 name: "mem",
                 type: "void*",
-                info: "Buffer to hold the coroutine's stack.",
+                info: "Buffer to hold the coroutine's stack. The buffer " +
+                      "doesn't have to be aligned. The function will take " +
+                      "care of properly aligning the stack itself.",
             },
             {
                 name: "memlen",

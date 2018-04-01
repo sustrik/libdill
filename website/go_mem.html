@@ -27,7 +27,7 @@
 <h1 id="description">DESCRIPTION</h1>
 <p>This construct launches a coroutine on a user-supplied stack. The stack has no guard page and stack overflow will result in overwriting memory.</p>
 <p><strong>expression</strong>: Expression to evaluate as a coroutine.</p>
-<p><strong>mem</strong>: Buffer to hold the coroutine's stack.</p>
+<p><strong>mem</strong>: Buffer to hold the coroutine's stack. The buffer doesn't have to be aligned. The function will take care of properly aligning the stack itself.</p>
 <p><strong>memlen</strong>: Size of the <strong>mem</strong> buffer.</p>
 <p>The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller coroutine. The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.</p>
 <p>Any function to be invoked as a coroutine must be declared with the <strong>coroutine</strong> specifier.</p>
