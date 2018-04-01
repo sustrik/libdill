@@ -15,7 +15,7 @@ int\ pfx_attach_mem(
 \ \ \ \ int\ s,
 \ \ \ \ size_t\ hdrlen,
 \ \ \ \ int\ flags,
-\ \ \ \ void*\ mem);
+\ \ \ \ struct\ pfx_storage*\ mem);
 \f[]
 .fi
 .SH DESCRIPTION
@@ -44,9 +44,8 @@ will be sent first on the wire.
 If set to \f[B]PFX_LITTLE_ENDIAN\f[] the least signiticant byte will
 come first.
 .PP
-\f[B]mem\f[]: The memory to store the newly created object.
-It must be at least \f[B]PFX_SIZE\f[] bytes long and must not be
-deallocated before the object is closed.
+\f[B]mem\f[]: The structure to store the newly created object in.
+It must not be deallocated before the object is closed.
 .PP
 The socket can be cleanly shut down using \f[B]pfx_detach\f[] function.
 .PP

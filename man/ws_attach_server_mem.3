@@ -19,7 +19,7 @@ int\ ws_attach_server_mem(
 \ \ \ \ size_t\ resourcelen,
 \ \ \ \ char*\ host,
 \ \ \ \ size_t\ hostlen,
-\ \ \ \ void*\ mem,
+\ \ \ \ struct\ ws_storage*\ mem,
 \ \ \ \ int64_t\ deadline);
 \f[]
 .fi
@@ -82,9 +82,8 @@ Virtual host specified by the client.
 .PP
 \f[B]hostlen\f[]: Size of the \f[B]host\f[] buffer.
 .PP
-\f[B]mem\f[]: The memory to store the newly created object.
-It must be at least \f[B]WS_SIZE\f[] bytes long and must not be
-deallocated before the object is closed.
+\f[B]mem\f[]: The structure to store the newly created object in.
+It must not be deallocated before the object is closed.
 .PP
 \f[B]deadline\f[]: A point in time when the operation should time out,
 in milliseconds.

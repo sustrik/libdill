@@ -17,7 +17,7 @@ int\ ws_attach_client_mem(
 \ \ \ \ int\ flags,
 \ \ \ \ const\ char*\ resource,
 \ \ \ \ const\ char*\ host,
-\ \ \ \ void*\ mem,
+\ \ \ \ struct\ ws_storage*\ mem,
 \ \ \ \ int64_t\ deadline);
 \f[]
 .fi
@@ -74,9 +74,8 @@ See above.
 .PP
 \f[B]host\f[]: Virtual HTTP host to use.
 .PP
-\f[B]mem\f[]: The memory to store the newly created object.
-It must be at least \f[B]WS_SIZE\f[] bytes long and must not be
-deallocated before the object is closed.
+\f[B]mem\f[]: The structure to store the newly created object in.
+It must not be deallocated before the object is closed.
 .PP
 \f[B]deadline\f[]: A point in time when the operation should time out,
 in milliseconds.

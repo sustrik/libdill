@@ -12,7 +12,7 @@ bundle_mem \- create an empty coroutine bundle
 #include\ <libdill.h>
 
 int\ bundle_mem(
-\ \ \ \ void*\ mem);
+\ \ \ \ struct\ bundle_storage*\ mem);
 \f[]
 .fi
 .SH DESCRIPTION
@@ -40,9 +40,8 @@ This function allows to avoid one dynamic memory allocation by storing
 the object in user\-supplied memory.
 Unless you are hyper\-optimizing use \f[B]bundle\f[] instead.
 .PP
-\f[B]mem\f[]: The memory to store the newly created object.
-It must be at least \f[B]BUNDLE_SIZE\f[] bytes long and must not be
-deallocated before the object is closed.
+\f[B]mem\f[]: The structure to store the newly created object in.
+It must not be deallocated before the object is closed.
 .SH RETURN VALUE
 .PP
 In case of success the function returns handle of the newly create

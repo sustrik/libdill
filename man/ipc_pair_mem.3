@@ -12,7 +12,7 @@ ipc_pair_mem \- creates a pair of mutually connected IPC sockets
 #include\ <libdill.h>
 
 int\ ipc_pair_mem(
-\ \ \ \ void*\ mem,
+\ \ \ \ struct\ ipc_pair_storage*\ mem,
 \ \ \ \ int\ s[2]);
 \f[]
 .fi
@@ -24,9 +24,8 @@ This function allows to avoid one dynamic memory allocation by storing
 the object in user\-supplied memory.
 Unless you are hyper\-optimizing use \f[B]ipc_pair\f[] instead.
 .PP
-\f[B]mem\f[]: The memory to store the newly created object.
-It must be at least \f[B]IPC_PAIR_SIZE\f[] bytes long and must not be
-deallocated before the object is closed.
+\f[B]mem\f[]: The structure to store the newly created object in.
+It must not be deallocated before the object is closed.
 .PP
 \f[B]s\f[]: Out parameter.
 Two handles to the opposite ends of the connection.

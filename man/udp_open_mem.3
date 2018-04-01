@@ -14,7 +14,7 @@ udp_open_mem \- opens an UDP socket
 int\ udp_open_mem(
 \ \ \ \ struct\ ipaddr*\ local,
 \ \ \ \ struct\ ipaddr*\ remote,
-\ \ \ \ void*\ mem);
+\ \ \ \ struct\ udp_storage*\ mem);
 \f[]
 .fi
 .SH DESCRIPTION
@@ -43,9 +43,8 @@ to \f[B]NULL\f[].
 It is also used by \f[B]msend\f[] and \f[B]mrecv\f[] functions which
 don\[aq]t allow to specify the destination address explicitly.
 .PP
-\f[B]mem\f[]: The memory to store the newly created object.
-It must be at least \f[B]UDP_SIZE\f[] bytes long and must not be
-deallocated before the object is closed.
+\f[B]mem\f[]: The structure to store the newly created object in.
+It must not be deallocated before the object is closed.
 .PP
 To close this socket use \f[B]hclose\f[] function.
 .PP

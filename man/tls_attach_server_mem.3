@@ -16,7 +16,7 @@ int\ tls_attach_server_mem(
 \ \ \ \ int\ s,
 \ \ \ \ const\ char*\ cert,
 \ \ \ \ const\ char*\ cert,
-\ \ \ \ void*\ mem,
+\ \ \ \ struct\ tls_storage*\ mem,
 \ \ \ \ int64_t\ deadline);
 \f[]
 .fi
@@ -46,9 +46,8 @@ It must be a bytestream protocol.
 .PP
 \f[B]cert\f[]: Filename of the file contianing the private key.
 .PP
-\f[B]mem\f[]: The memory to store the newly created object.
-It must be at least \f[B]TLS_SIZE\f[] bytes long and must not be
-deallocated before the object is closed.
+\f[B]mem\f[]: The structure to store the newly created object in.
+It must not be deallocated before the object is closed.
 .PP
 \f[B]deadline\f[]: A point in time when the operation should time out,
 in milliseconds.

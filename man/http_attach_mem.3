@@ -13,7 +13,7 @@ http_attach_mem \- creates HTTP protocol on top of underlying socket
 
 int\ http_attach_mem(
 \ \ \ \ int\ s,
-\ \ \ \ void*\ mem);
+\ \ \ \ struct\ http_storage*\ mem);
 \f[]
 .fi
 .SH DESCRIPTION
@@ -35,9 +35,8 @@ Unless you are hyper\-optimizing use \f[B]http_attach\f[] instead.
 \f[B]s\f[]: Handle of the underlying socket.
 It must be a bytestream protocol.
 .PP
-\f[B]mem\f[]: The memory to store the newly created object.
-It must be at least \f[B]HTTP_SIZE\f[] bytes long and must not be
-deallocated before the object is closed.
+\f[B]mem\f[]: The structure to store the newly created object in.
+It must not be deallocated before the object is closed.
 .PP
 The socket can be cleanly shut down using \f[B]http_detach\f[] function.
 .PP

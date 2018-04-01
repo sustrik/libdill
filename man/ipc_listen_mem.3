@@ -14,7 +14,7 @@ ipc_listen_mem \- starts listening for incoming IPC connections
 int\ ipc_listen_mem(
 \ \ \ \ const\ char*\ addr,
 \ \ \ \ int\ backlog,
-\ \ \ \ void*\ mem);
+\ \ \ \ struct\ ipc_listener_storage*\ mem);
 \f[]
 .fi
 .SH DESCRIPTION
@@ -35,9 +35,8 @@ Unless you are hyper\-optimizing use \f[B]ipc_listen\f[] instead.
 \f[B]backlog\f[]: Maximum number of connections that can be kept open
 without accepting them.
 .PP
-\f[B]mem\f[]: The memory to store the newly created object.
-It must be at least \f[B]IPC_LISTENER_SIZE\f[] bytes long and must not
-be deallocated before the object is closed.
+\f[B]mem\f[]: The structure to store the newly created object in.
+It must not be deallocated before the object is closed.
 .PP
 The socket can be closed either by \f[B]hclose\f[] or
 \f[B]ipc_close\f[].

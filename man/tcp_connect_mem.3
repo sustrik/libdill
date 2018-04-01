@@ -13,7 +13,7 @@ tcp_connect_mem \- creates a connection to remote TCP endpoint
 
 int\ tcp_connect_mem(
 \ \ \ \ const\ struct\ ipaddr*\ addr,
-\ \ \ \ void*\ mem,
+\ \ \ \ struct\ tcp_storage*\ mem,
 \ \ \ \ int64_t\ deadline);
 \f[]
 .fi
@@ -31,9 +31,8 @@ Unless you are hyper\-optimizing use \f[B]tcp_connect\f[] instead.
 .PP
 \f[B]addr\f[]: IP address to connect to.
 .PP
-\f[B]mem\f[]: The memory to store the newly created object.
-It must be at least \f[B]TCP_SIZE\f[] bytes long and must not be
-deallocated before the object is closed.
+\f[B]mem\f[]: The structure to store the newly created object in.
+It must not be deallocated before the object is closed.
 .PP
 \f[B]deadline\f[]: A point in time when the operation should time out,
 in milliseconds.

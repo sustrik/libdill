@@ -47,7 +47,7 @@ Schema:
     example: example of the usage of the function, a piece of C code;
              if present, overrides the protocol example
     mem: size // if set, _mem variant of the function will be generated;
-              // size if the size macro such as TCP_SIZE or UDP_SIZE
+              // size if the name of the storage struct, e.h. "tcp_storage".
 */
 
 var fs = require('fs');
@@ -547,7 +547,7 @@ fxs = [
 
         example: bundle_example,
 
-        mem: "BUNDLE_SIZE",
+        mem: "bundle_storage",
     },
     {
         name: "bundle_go",
@@ -706,7 +706,7 @@ fxs = [
             }
         `,
 
-        mem: "CHSIZE",
+        mem: "chstorage",
     },
     {
         name: "choose",
@@ -945,7 +945,7 @@ fxs = [
         `,
         has_handle_argument: true,
         allocates_handle: true,
-        mem: "CRLF_SIZE",
+        mem: "crlf_storage",
         custom_errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
         },
@@ -1467,7 +1467,7 @@ fxs = [
         `,
         has_handle_argument: true,
         allocates_handle: true,
-        mem: "HTTP_SIZE",
+        mem: "http_storage",
 
         custom_errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
@@ -2023,7 +2023,7 @@ fxs = [
 
         has_handle_argument: true,
         allocates_handle: true,
-        mem: "IPC_SIZE",
+        mem: "ipc_storage",
     },
     {
         name: "ipc_close",
@@ -2091,7 +2091,7 @@ fxs = [
         `,
 
         allocates_handle: true,
-        mem: "IPC_SIZE",
+        mem: "ipc_storage",
 
         errors: ["EINVAL"],
         custom_errors: {
@@ -2146,7 +2146,7 @@ fxs = [
         `,
 
         allocates_handle: true,
-        mem: "IPC_LISTENER_SIZE",
+        mem: "ipc_listener_storage",
 
         errors: ["EINVAL"],
         custom_errors: {
@@ -2194,7 +2194,7 @@ fxs = [
               int rc = ipc_pair(s);
         `,
 
-        mem: "IPC_PAIR_SIZE",
+        mem: "ipc_pair_storage",
     },
     {
         name: "mrecv",
@@ -2465,7 +2465,7 @@ fxs = [
         has_handle_argument: true,
         allocates_handle: true,
 
-        mem: "PFX_SIZE",
+        mem: "pfx_storage",
 
         errors: ['EINVAL'],
         custom_errors: {
@@ -2536,7 +2536,7 @@ fxs = [
 
         has_handle_argument: true,
         allocates_handle: true,
-        mem: "TCP_SIZE",
+        mem: "tcp_storage",
 
         errors: ["ECANCELED"],
     },
@@ -2606,7 +2606,7 @@ fxs = [
         `,
 
         allocates_handle: true,
-        mem: "TCP_SIZE",
+        mem: "tcp_storage",
 
         errors: ["EINVAL"],
         custom_errors: {
@@ -2661,7 +2661,7 @@ fxs = [
         `,
 
         allocates_handle: true,
-        mem: "TCP_LISTENER_SIZE",
+        mem: "tcp_listener_storage",
 
         errors: ["EINVAL"],
         custom_errors: {
@@ -2700,7 +2700,7 @@ fxs = [
         allocates_handle: true,
         uses_connection: true,
 
-        mem: "TLS_SIZE",
+        mem: "tls_storage",
 
         custom_errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
@@ -2747,7 +2747,7 @@ fxs = [
         allocates_handle: true,
         uses_connection: true,
 
-        mem: "TLS_SIZE",
+        mem: "tls_storage",
 
         errors: ["EINVAL"],
 
@@ -2827,7 +2827,7 @@ fxs = [
         epilogue: "To close this socket use **hclose** function.",
 
         allocates_handle: true,
-        mem: "UDP_SIZE",
+        mem: "udp_storage",
 
         errors: ["EINVAL"],
         custom_errors: {
@@ -3037,7 +3037,7 @@ fxs = [
         allocates_handle: true,
         uses_connection: true,
 
-        mem: "WS_SIZE",
+        mem: "ws_storage",
 
         errors: ["EINVAL"],
 
@@ -3101,7 +3101,7 @@ fxs = [
         allocates_handle: true,
         uses_connection: true,
 
-        mem: "WS_SIZE",
+        mem: "ws_storage",
 
         errors: ["EINVAL"],
 
@@ -3522,10 +3522,9 @@ function generate_man_page(fx, sections, mem) {
     if(mem) {
         memarg = {
             name: "mem",
-            type: "void*",
-            info: "The memory to store the newly created object. It must be " +
-                  "at least **" + fx.mem + "** bytes long and must not be " +
-                  "deallocated before the object is closed.",
+            type: "struct " + fx.mem + "*",
+            info: "The structure to store the newly created object in. It " +
+                  "must not be deallocated before the object is closed.",
         }
         if(fx.name === "chmake" || fx.name === "ipc_pair") a.unshift(memarg)
         else a.push(memarg)

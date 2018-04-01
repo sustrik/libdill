@@ -14,7 +14,7 @@ tcp_accept_mem \- accepts an incoming TCP connection
 int\ tcp_accept_mem(
 \ \ \ \ int\ s,
 \ \ \ \ struct\ ipaddr*\ addr,
-\ \ \ \ void*\ mem,
+\ \ \ \ struct\ tcp_storage*\ mem,
 \ \ \ \ int64_t\ deadline);
 \f[]
 .fi
@@ -36,9 +36,8 @@ Unless you are hyper\-optimizing use \f[B]tcp_accept\f[] instead.
 IP address of the connecting endpoint.
 Can be \f[B]NULL\f[].
 .PP
-\f[B]mem\f[]: The memory to store the newly created object.
-It must be at least \f[B]TCP_SIZE\f[] bytes long and must not be
-deallocated before the object is closed.
+\f[B]mem\f[]: The structure to store the newly created object in.
+It must not be deallocated before the object is closed.
 .PP
 \f[B]deadline\f[]: A point in time when the operation should time out,
 in milliseconds.
