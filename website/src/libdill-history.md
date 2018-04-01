@@ -1,11 +1,21 @@
 
 # Past versions
 
-**Mar 23rd 2018 <http://libdill.org/libdill-2.6.tar.gz>**
+**Apr 1st, 2018 <http://libdill.org/libdill-2.7.tar.gz>**
+
+* All mem functions take a structure instead of a raw byte buffer
+    * More compile-time safety checks
+    * Alignment done by compiler rather than left to the user
+* PFX protocol is parametrized
+    * Customizable size of the 'size' field
+    * Customizable endianness of the field
+* Several bug fixes.
+
+**Mar 23rd, 2018 <http://libdill.org/libdill-2.6.tar.gz>**
 
 * Experimental support for WebSockets added
 
-**Mar 3rd 2018 <http://libdill.org/libdill-2.5.tar.gz>**
+**Mar 3rd, 2018 <http://libdill.org/libdill-2.5.tar.gz>**
 
 * Bug in TLS protocol solved
 * Function budle_wait added
