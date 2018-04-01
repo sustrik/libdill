@@ -234,7 +234,6 @@ int tcp_listen_mem(struct ipaddr *addr, int backlog,
     struct tcp_listener *self = (struct tcp_listener*)mem;
     self->hvfs.query = tcp_listener_hquery;
     self->hvfs.close = tcp_listener_hclose;
-    self->hvfs.done = NULL;
     self->fd = s;
     self->mem = 1;
     /* Create handle. */
@@ -327,7 +326,6 @@ static int tcp_makeconn(int fd, void *mem) {
     struct tcp_conn *self = (struct tcp_conn*)mem;
     self->hvfs.query = tcp_hquery;
     self->hvfs.close = tcp_hclose;
-    self->hvfs.done = NULL;
     self->bvfs.bsendl = tcp_bsendl;
     self->bvfs.brecvl = tcp_brecvl;
     self->fd = fd;

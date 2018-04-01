@@ -60,7 +60,7 @@ perf/chan
 perf/ctxswitch
 perf/go
 perf/whispers
-perf/hdone
+perf/done
 perf/choose
 perf/timer
 *.gcno

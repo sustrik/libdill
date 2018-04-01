@@ -82,7 +82,6 @@ int term_attach_mem(int s, const void *buf, size_t len,
     struct term_sock *self = (struct term_sock*)mem;
     self->hvfs.query = term_hquery;
     self->hvfs.close = term_hclose;
-    self->hvfs.done = NULL;
     self->mvfs.msendl = term_msendl;
     self->mvfs.mrecvl = term_mrecvl;
     self->u = u;

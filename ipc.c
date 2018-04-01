@@ -234,7 +234,6 @@ int ipc_listen_mem(const char *addr, int backlog,
     struct ipc_listener *self = (struct ipc_listener*)mem;
     self->hvfs.query = ipc_listener_hquery;
     self->hvfs.close = ipc_listener_hclose;
-    self->hvfs.done = NULL;
     self->fd = s;
     self->mem = 1;
     /* Create handle. */
@@ -399,7 +398,6 @@ static int ipc_makeconn(int fd, void *mem) {
     struct ipc_conn *self = (struct ipc_conn*)mem;
     self->hvfs.query = ipc_hquery;
     self->hvfs.close = ipc_hclose;
-    self->hvfs.done = NULL;
     self->bvfs.bsendl = ipc_bsendl;
     self->bvfs.brecvl = ipc_brecvl;
     self->fd = fd;

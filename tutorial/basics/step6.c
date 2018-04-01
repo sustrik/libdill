@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
         assert(rc == 0);
     }
 
-    rc = hdone(b, now() + 10000);
+    rc = chdone(b, now() + 10000);
     assert(rc == 0 || (rc < 0 && errno == ETIMEDOUT));
 
     rc = hclose(b);

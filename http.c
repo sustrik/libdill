@@ -64,7 +64,6 @@ int http_attach_mem(int s, struct http_storage *mem) {
     struct http_sock *obj = (struct http_sock*)mem;
     obj->hvfs.query = http_hquery;
     obj->hvfs.close = http_hclose;
-    obj->hvfs.done = NULL;
     obj->s = -1;
     obj->mem = 1;
     /* Create the handle. */

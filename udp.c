@@ -94,7 +94,6 @@ int udp_open_mem(struct ipaddr *local, const struct ipaddr *remote,
     struct udp_sock *obj = (struct udp_sock*)mem;
     obj->hvfs.query = udp_hquery;
     obj->hvfs.close = udp_hclose;
-    obj->hvfs.done = NULL; /* hdone() is not supported for UDP sockets. */
     obj->mvfs.msendl = udp_msendl;
     obj->mvfs.mrecvl = udp_mrecvl;
     obj->fd = s;

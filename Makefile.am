@@ -203,7 +203,7 @@ noinst_PROGRAMS += \
     perf/ctxswitch \
     perf/chan \
     perf/choose \
-    perf/hdone \
+    perf/done \
     perf/whispers \
     perf/timer
 

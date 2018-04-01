@@ -59,7 +59,6 @@ static const int dill_cr_type_placeholder = 0;
 static const void *dill_cr_type = &dill_cr_type_placeholder;
 static void *dill_cr_query(struct hvfs *vfs, const void *type);
 static void dill_cr_close(struct hvfs *vfs);
-static int dill_cr_done(struct hvfs *vfs, int64_t deadline);
 
 /******************************************************************************/
 /*  Bundle.                                                                   */
@@ -93,7 +92,6 @@ int bundle_mem(struct bundle_storage *mem) {
     struct dill_bundle *b = (struct dill_bundle*)mem;
     b->vfs.query = dill_bundle_query;
     b->vfs.close = dill_bundle_close;
-    b->vfs.done = NULL;
     dill_list_init(&b->crs);
     b->waiter = NULL;
     b->mem = 1;
@@ -293,7 +291,6 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
     --cr;
     cr->vfs.query = dill_cr_query;
     cr->vfs.close = dill_cr_close;
-    cr->vfs.done = dill_cr_done;
     dill_list_insert(&cr->bundle, &bundle->crs);
     cr->ready.next = NULL;
     dill_slist_init(&cr->clauses);
@@ -421,11 +418,6 @@ static void dill_cr_close(struct hvfs *vfs) {
 #endif
     /* Now that the coroutine is finished, deallocate it. */
     if(!cr->mem) dill_freestack(cr + 1);
-}
-
-static int dill_cr_done(struct hvfs *vfs, int64_t deadline) {
-    errno = ENOTSUP;
-    return -1;
 }
 
 /******************************************************************************/

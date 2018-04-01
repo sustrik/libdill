@@ -42,7 +42,7 @@ struct dill_halfchan {
     struct dill_list out;
     /* Whether this is the fist or the second half-channel of the channel. */
     unsigned int index : 1;
-    /* 1 if hdone() has been called on this channel. 0 otherwise. */
+    /* 1 if chdone() has been called on this channel. 0 otherwise. */
     unsigned int done : 1;
     /* 1 if the object was created with chmake_mem(). */
     unsigned int mem : 1;
@@ -70,7 +70,6 @@ static const int dill_halfchan_type_placeholder = 0;
 const void *dill_halfchan_type = &dill_halfchan_type_placeholder;
 static void *dill_halfchan_query(struct hvfs *vfs, const void *type);
 static void dill_halfchan_close(struct hvfs *vfs);
-static int dill_halfchan_done(struct hvfs *vfs, int64_t deadline);
 
 /******************************************************************************/
 /*  Helpers.                                                                  */
@@ -86,7 +85,6 @@ static int dill_halfchan_done(struct hvfs *vfs, int64_t deadline);
 static void dill_halfchan_init(struct dill_halfchan *ch, int index) {
     ch->vfs.query = dill_halfchan_query;
     ch->vfs.close = dill_halfchan_close;
-    ch->vfs.done = dill_halfchan_done;
     dill_list_init(&ch->in);
     dill_list_init(&ch->out);
     ch->index = index;
@@ -257,9 +255,9 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     return 0;
 }
 
-static int dill_halfchan_done(struct hvfs *vfs, int64_t deadline) {
-    struct dill_halfchan *ch = (struct dill_halfchan*)vfs;
-    dill_assert(ch);
+int chdone(int h, int64_t deadline) {
+    struct dill_halfchan *ch = hquery(h, dill_halfchan_type);
+    if(dill_slow(!ch)) return -1;
     /* Done is always done to the opposite side of the channel. */
     ch = dill_halfchan_other(ch);
     if(ch->done) {errno = EPIPE; return -1;}

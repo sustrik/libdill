@@ -40,7 +40,6 @@ struct quux {
 
 static void *quux_hquery(struct hvfs *hvfs, const void *id);
 static void quux_hclose(struct hvfs *hvfs);
-static int quux_hdone(struct hvfs *hvfs, int64_t deadline);
 
 int quux_attach(int u) {
     int err;
@@ -48,7 +47,6 @@ int quux_attach(int u) {
     if(!self) {err = ENOMEM; goto error1;}
     self->hvfs.query = quux_hquery;
     self->hvfs.close = quux_hclose;
-    self->hvfs.done = quux_hdone;
     self->u = u;
     int h = hmake(&self->hvfs);
     if(h < 0) {int err = errno; goto error2;}
@@ -78,11 +76,6 @@ static void *quux_hquery(struct hvfs *hvfs, const void *type) {
 static void quux_hclose(struct hvfs *hvfs) {
     struct quux *self = (struct quux*)hvfs;
     free(self);
-}
-
-static int quux_hdone(struct hvfs *hvfs, int64_t deadline) {
-    errno = ENOTSUP;
-    return -1;
 }
 
 coroutine void client(int s) {

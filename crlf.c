@@ -72,7 +72,6 @@ int crlf_attach_mem(int s, struct crlf_storage *mem) {
     struct crlf_sock *self = (struct crlf_sock*)mem;
     self->hvfs.query = crlf_hquery;
     self->hvfs.close = crlf_hclose;
-    self->hvfs.done = NULL;
     self->mvfs.msendl = crlf_msendl;
     self->mvfs.mrecvl = crlf_mrecvl;
     self->u = u;

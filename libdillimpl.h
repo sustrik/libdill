@@ -34,7 +34,6 @@
 struct hvfs {
     void *(*query)(struct hvfs *vfs, const void *type);
     void (*close)(struct hvfs *vfs);
-    int (*done)(struct hvfs *vfs, int64_t deadline);
     /* Reserved. Do not use directly! */
     unsigned int refcount;
 };

@@ -68,7 +68,6 @@ int ws_attach_client_mem(int s, int flags, const char *resource,
     struct ws_sock *self = (struct ws_sock*)mem;
     self->hvfs.query = ws_hquery;
     self->hvfs.close = ws_hclose;
-    self->hvfs.done = NULL;
     self->mvfs.msendl = ws_msendl;
     self->mvfs.mrecvl = ws_mrecvl;
     self->u = s;
@@ -172,7 +171,6 @@ int ws_attach_server_mem(int s, int flags, char *resource, size_t resourcelen,
     struct ws_sock *self = (struct ws_sock*)mem;
     self->hvfs.query = ws_hquery;
     self->hvfs.close = ws_hclose;
-    self->hvfs.done = NULL;
     self->mvfs.msendl = ws_msendl;
     self->mvfs.mrecvl = ws_mrecvl;
     self->u = s;

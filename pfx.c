@@ -76,7 +76,6 @@ int pfx_attach_mem(int s, size_t hdrlen, int flags, struct pfx_storage *mem) {
     struct pfx_sock *self = (struct pfx_sock*)mem;
     self->hvfs.query = pfx_hquery;
     self->hvfs.close = pfx_hclose;
-    self->hvfs.done = NULL;
     self->mvfs.msendl = pfx_msendl;
     self->mvfs.mrecvl = pfx_mrecvl;
     self->u = u;

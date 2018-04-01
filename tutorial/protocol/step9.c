@@ -48,7 +48,6 @@ struct quux {
 
 static void *quux_hquery(struct hvfs *hvfs, const void *id);
 static void quux_hclose(struct hvfs *hvfs);
-static int quux_hdone(struct hvfs *hvfs, int64_t deadline);
 static int quux_msendl(struct msock_vfs *mvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 static ssize_t quux_mrecvl(struct msock_vfs *mvfs,
@@ -60,7 +59,6 @@ int quux_attach(int u, int64_t deadline) {
     if(!self) {err = ENOMEM; goto error1;}
     self->hvfs.query = quux_hquery;
     self->hvfs.close = quux_hclose;
-    self->hvfs.done = quux_hdone;
     self->mvfs.msendl = quux_msendl;
     self->mvfs.mrecvl = quux_mrecvl;
     self->u = u;
@@ -88,13 +86,25 @@ error1:
     return -1;
 }
 
+int quux_done(int h, int64_t deadline) {
+    struct quux *self = hquery(h, quux_type);
+    if(!self) return -1;
+    if(self->senddone) {errno = EPIPE; return -1;}
+    if(self->senderr) {errno = ECONNRESET; return -1;}
+    uint8_t c = 255;
+    int rc = bsend(self->u, &c, 1, deadline);
+    if(rc < 0) {self->senderr = 1; return -1;}
+    self->senddone = 1;
+    return 0;
+}
+
 int quux_detach(int h, int64_t deadline) {
     int err;
     struct quux *self = hquery(h, quux_type);
     if(!self) return -1;
     if(self->senderr || self->recverr) {err = ECONNRESET; goto error;}
     if(!self->senddone) {
-        int rc = quux_hdone(&self->hvfs, deadline);
+        int rc = quux_done(h, deadline);
         if(rc < 0) {err = errno; goto error;}
     }
     while(1) {
@@ -122,17 +132,6 @@ static void *quux_hquery(struct hvfs *hvfs, const void *type) {
 static void quux_hclose(struct hvfs *hvfs) {
     struct quux *self = (struct quux*)hvfs;
     free(self);
-}
-
-static int quux_hdone(struct hvfs *hvfs, int64_t deadline) {
-    struct quux *self = (struct quux*)hvfs;
-    if(self->senddone) {errno = EPIPE; return -1;}
-    if(self->senderr) {errno = ECONNRESET; return -1;}
-    uint8_t c = 255;
-    int rc = bsend(self->u, &c, 1, deadline);
-    if(rc < 0) {self->senderr = 1; return -1;}
-    self->senddone = 1;
-    return 0;
 }
 
 static int quux_msendl(struct msock_vfs *mvfs,
