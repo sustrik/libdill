@@ -194,8 +194,8 @@ cleanup:
 <span class="cf">if</span>(sz &lt; <span class="dv">0</span>) <span class="cf">goto</span> cleanup;</code></pre></div>
 <p>Note that <code>errno</code> is set to <code>ETIMEDOUT</code> if the deadline is reached. Since we're treating all errors the same (by closing the connection), we don't make any specific provisions for deadline expiries.</p>
 <p>Now note that the third connection to the greetserver is closed immediately without even given user a chance to enter their name. This is a common use case for network servers. When the server is being shut down we want it to stop accepting new connections, but we also want to give it some time to finish handling those connections that are still open.</p>
-<p>This can be achieved by calling <code>hdone()</code> on the <code>dialogue()</code> coroutine bundle. <code>hdone()</code> waits for all the coroutines in the bundle to finish. Also, it allows to specify a deadline. We can do so immediately after exiting the loop:</p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">rc = hdone(b, now() + <span class="dv">10000</span>);
+<p>This can be achieved by calling <code>bundle_wait()</code> on the <code>dialogue()</code> coroutine bundle. <code>bundle_wait()</code> waits for all the coroutines in the bundle to finish. Also, it allows to specify a deadline. We can do so immediately after exiting the loop:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">rc = bundle_wait(b, now() + <span class="dv">10000</span>);
 assert(rc == <span class="dv">0</span> || (rc &lt; <span class="dv">0</span> &amp;&amp; errno == ETIMEDOUT));</code></pre></div>
 <h2 id="step-6-communication-among-coroutines">Step 6: Communication among coroutines</h2>
 <p>Suppose we want the greetserver to keep statistics: The overall number of connections made, the number of those that are active at the moment and the number of those that have failed.</p>
