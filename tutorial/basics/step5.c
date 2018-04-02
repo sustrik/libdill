@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
         assert(rc == 0);
     }
 
-    rc = hdone(b, now() + 10000);
+    rc = bundle_wait(b, now() + 10000);
     assert(rc == 0);
 
     rc = hclose(b);
