@@ -291,10 +291,10 @@ Note that `errno` is set to `ETIMEDOUT` if the deadline is reached. Since we're 
 
 Now note that the third connection to the greetserver is closed immediately without even given user a chance to enter their name. This is a common use case for network servers. When the server is being shut down we want it to stop accepting new connections, but we also want to give it some time to finish handling those connections that are still open.
 
-This can be achieved by calling `hdone()` on the `dialogue()` coroutine bundle. `hdone()` waits for all the coroutines in the bundle to finish. Also, it allows to specify a deadline. We can do so immediately after exiting the loop:
+This can be achieved by calling `bundle_wait()` on the `dialogue()` coroutine bundle. `bundle_wait()` waits for all the coroutines in the bundle to finish. Also, it allows to specify a deadline. We can do so immediately after exiting the loop:
 
 ```c
-rc = hdone(b, now() + 10000);
+rc = bundle_wait(b, now() + 10000);
 assert(rc == 0 || (rc < 0 && errno == ETIMEDOUT));
 ``` 
 
