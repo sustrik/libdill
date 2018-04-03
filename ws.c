@@ -66,6 +66,9 @@ int ws_attach_client_mem(int s, int flags, const char *resource,
     if(dill_slow(!mem)) {errno = EINVAL; return -1;}
     if(dill_slow(!hquery(s, bsock_type))) return -1;
     struct ws_sock *self = (struct ws_sock*)mem;
+    /* Take ownership of the underlying socket. */
+    s = hown(s);
+    if(dill_slow(s < 0)) return -1;
     self->hvfs.query = ws_hquery;
     self->hvfs.close = ws_hclose;
     self->mvfs.msendl = ws_msendl;
@@ -169,6 +172,9 @@ int ws_attach_server_mem(int s, int flags, char *resource, size_t resourcelen,
     if(dill_slow(!mem)) {errno = EINVAL; return -1;}
     if(dill_slow(!hquery(s, bsock_type))) return -1;
     struct ws_sock *self = (struct ws_sock*)mem;
+    /* Take ownership of the underlying socket. */
+    s = hown(s);
+    if(dill_slow(s < 0)) return -1;
     self->hvfs.query = ws_hquery;
     self->hvfs.close = ws_hclose;
     self->mvfs.msendl = ws_msendl;

@@ -58,16 +58,10 @@ int main(void) {
     int ch[2];
     rc = chmake(ch);
     errno_assert(rc == 0);
-    int i;
-    int hndls[300];
-    for(i = 0; i != 300; ++i) {
-        hndls[i] = hdup(ch[0]);
-        errno_assert(hndls[i] >= 0);
-    }
-    for(i = 0; i != 300; ++i) {
-        rc = hclose(hndls[i]);
-        errno_assert(rc == 0);
-    }
+    ch[0] = hown(ch[0]);
+    errno_assert(ch[0] >= 0);
+    ch[1] = hown(ch[1]);
+    errno_assert(ch[1] >= 0);
     rc = hclose(ch[0]);
     errno_assert(rc == 0);
     rc = hclose(ch[1]);

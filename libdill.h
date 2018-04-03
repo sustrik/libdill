@@ -84,7 +84,7 @@ DILL_EXPORT int64_t now(void);
 /*  Handles                                                                   */
 /******************************************************************************/
 
-DILL_EXPORT int hdup(int h);
+DILL_EXPORT int hown(int h);
 DILL_EXPORT int hclose(int h);
 
 /******************************************************************************/

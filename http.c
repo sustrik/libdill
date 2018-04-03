@@ -69,21 +69,18 @@ int http_attach_mem(int s, struct http_storage *mem) {
     /* Create the handle. */
     int h = hmake(&obj->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
-    /* Make a private copy of the underlying socket. */
-    int tmp = hdup(s);
+    /* Take ownership of the underlying socket. */
+    int tmp = hown(s);
     if(dill_slow(tmp < 0)) {err = errno; goto error3;}
     /* Wrap the underlying socket into CRLF and TERM protocol. */
     obj->s = crlf_attach_mem(tmp, &obj->crlf_mem);
     if(dill_slow(obj->s < 0)) {err = errno; goto error4;}
     obj->s = term_attach_mem(obj->s, NULL, 0, &obj->term_mem);
     if(dill_slow(obj->s < 0)) {err = errno; goto error4;}
-    /* Function succeeded. We can now close original underlying handle. */
-    int rc = hclose(s);
-    dill_assert(rc == 0);
     return h;
     /* TODO: Fix error handling. */
-error4:
-    rc = hclose(tmp);
+error4:;
+    int rc = hclose(tmp);
     dill_assert(rc == 0);
 error3:;
     rc = hclose(h);

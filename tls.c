@@ -93,16 +93,14 @@ int tls_attach_client_mem(int s, struct tls_storage *mem, int64_t deadline) {
     if(dill_slow(!bio)) {err = errno; goto error3;}
 	  SSL_set_bio(ssl, bio, bio);
     /* Make a private copy of the underlying socket. */
-    int u = hdup(s);
-    if(dill_slow(u < 0)) {err = errno; goto error4;}
-    int rc = hclose(s);
-    dill_assert(rc == 0);
+    /* Take ownership of the underlying socket. */
+    int u = hown(s);
+    if(dill_slow(u < 0)) {err = errno; goto error1;}
     s = u;
     /* Create the object. */
     struct tls_sock *self = (struct tls_sock*)mem;
     self->hvfs.query = tls_hquery;
     self->hvfs.close = tls_hclose;
-    self->hvfs.done = NULL;
     self->bvfs.bsendl = tls_bsendl;
     self->bvfs.brecvl = tls_brecvl;
     self->ctx = ctx;
@@ -117,7 +115,7 @@ int tls_attach_client_mem(int s, struct tls_storage *mem, int64_t deadline) {
     /* Initial handshaking. */
     while(1) {
         ERR_clear_error();
-        rc = SSL_connect(ssl);
+        int rc = SSL_connect(ssl);
         if(tls_followup(self, rc, deadline)) break;
         if(dill_slow(errno != 0)) {err = errno; goto error4;}
     }
@@ -131,8 +129,8 @@ error3:
     SSL_free(ssl);
 error2:
     SSL_CTX_free(ctx);
-error1:
-    rc = hclose(s);
+error1:;
+    int rc = hclose(s);
     dill_assert(rc == 0);
     errno = err;
     return -1;
@@ -181,17 +179,14 @@ int tls_attach_server_mem(int s, const char *cert, const char *pkey,
     BIO *bio = tls_new_cbio(mem);
     if(dill_slow(!bio)) {err = errno; goto error3;}
 	  SSL_set_bio(ssl, bio, bio);
-    /* Make a private copy of the underlying socket. */
-    int u = hdup(s);
-    if(dill_slow(u < 0)) {err = errno; goto error4;}
-    rc = hclose(s);
-    dill_assert(rc == 0);
+    /* Take ownership of the underlying socket. */
+    int u = hown(s);
+    if(dill_slow(u < 0)) {err = errno; goto error1;}
     s = u;
     /* Create the object. */
     struct tls_sock *self = (struct tls_sock*)mem;
     self->hvfs.query = tls_hquery;
     self->hvfs.close = tls_hclose;
-    self->hvfs.done = NULL;
     self->bvfs.bsendl = tls_bsendl;
     self->bvfs.brecvl = tls_brecvl;
     self->ctx = ctx;

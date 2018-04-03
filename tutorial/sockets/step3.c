@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     assert(rc == 0);
     rc = http_sendfield(s, "Connection", "close", -1);
     assert(rc == 0);
-    rc = hdone(s, -1);
+    rc = http_done(s, -1);
     assert(rc == 0);
 
     char reason[256];

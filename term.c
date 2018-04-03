@@ -69,11 +69,9 @@ int term_attach_mem(int s, const void *buf, size_t len,
     if(dill_slow(!mem && len > MAX_TERMINATOR_LENGTH)) {
         err = EINVAL; goto error1;}
     if(dill_slow(len > 0 && !buf)) {err = EINVAL; goto error1;}
-    /* Make a private copy of the underlying socket. */
-    int u = hdup(s);
+    /* Take ownership of the underlying socket. */
+    int u = hown(s);
     if(dill_slow(u < 0)) {err = errno; goto error1;}
-    int rc = hclose(s);
-    dill_assert(rc == 0);
     /* Check whether underlying socket is message-based. */
     void *q = hquery(u, msock_type);
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error2;}
@@ -94,8 +92,8 @@ int term_attach_mem(int s, const void *buf, size_t len,
     int h = hmake(&self->hvfs);
     if(dill_slow(h < 0)) {int err = errno; goto error2;}
     return h;
-error2:
-    rc = hclose(u);
+error2:;
+    int rc = hclose(u);
     dill_assert(rc == 0);
 error1:
     errno = err;

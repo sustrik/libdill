@@ -63,11 +63,9 @@ static void *pfx_hquery(struct hvfs *hvfs, const void *type) {
 int pfx_attach_mem(int s, size_t hdrlen, int flags, struct pfx_storage *mem) {
     int err;
     if(dill_slow(!mem || hdrlen == 0)) {err = EINVAL; goto error1;}
-    /* Make a private copy of the underlying socket. */
-    int u = hdup(s);
+    /* Take ownership of the underlying socket. */
+    int u = hown(s);
     if(dill_slow(u < 0)) {err = errno; goto error1;}
-    int rc = hclose(s);
-    dill_assert(rc == 0);
     /* Check whether underlying socket is a bytestream. */
     void *q = hquery(u, bsock_type);
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error2;}
@@ -88,8 +86,8 @@ int pfx_attach_mem(int s, size_t hdrlen, int flags, struct pfx_storage *mem) {
     int h = hmake(&self->hvfs);
     if(dill_slow(h < 0)) {int err = errno; goto error2;}
     return h;
-error2:
-    rc = hclose(u);
+error2:;
+    int rc = hclose(u);
     dill_assert(rc == 0);
 error1:
     errno = err;
