@@ -61,33 +61,33 @@ int main() {
     errno_assert(sz >= 0);
     assert(sz == 3);
     assert(buf[0] == 'H' && buf[1] == 'I' && buf[2] == 'J');
+    s1 = nacl_detach(s1);
+    errno_assert(s1 >= 0);
+    s0 = nacl_detach(s0);
+    errno_assert(s0 >= 0);
     rc = hclose(s1);
     errno_assert(rc == 0);
     rc = hclose(s0);
     errno_assert(rc == 0);
 
-#if 0
-    /* Test communication with wrong key. */
     rc = ipc_pair(s);
-    assert(rc == 0);
-
-    pfx0 = pfx_attach(log0, 2, 0);
-    assert(pfx0 >= 0);
-    pfx1 = pfx_attach(log1, 2, 0);
-    assert(pfx1 >= 0);
-    nacl0 = nacl_attach(pfx0, key, 32, -1);
-    assert(nacl0 >= 0);
-    nacl1 = nacl_attach(pfx1, badkey, 32, -1);
-    assert(nacl1 >= 0);
-    rc = msend(nacl0, "ABC", 3, -1);
-    assert(rc == 0);
-    sz = mrecv(nacl1, buf, sizeof(buf), -1);
-    assert(sz == -1 && errno == EACCES);
-    rc = hclose(nacl1);
-    assert(rc == 0);
-    rc = hclose(nacl0);
-    assert(rc == 0);
-#endif
+    errno_assert(rc == 0);
+    s0 = pfx_attach(s[0], 1, 0);
+    errno_assert(s0 >= 0);
+    s1 = pfx_attach(s[1], 1, 0);
+    errno_assert(s1 >= 0);
+    s0 = nacl_attach(s0, key, 32, -1);
+    errno_assert(s0 >= 0);
+    s1 = nacl_attach(s1, badkey, 32, -1);
+    errno_assert(s1 >= 0);
+    rc = msend(s0, "ABC", 3, -1);
+    errno_assert(rc == 0);
+    sz = mrecv(s1, buf, sizeof(buf), -1);
+    errno_assert(sz < 0 && errno == EACCES);
+    rc = hclose(s1);
+    errno_assert(rc == 0);
+    rc = hclose(s0);
+    errno_assert(rc == 0);
 
     return 0;
 }
