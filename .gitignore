@@ -31,6 +31,8 @@ tests/*.o
 test-suite.log
 dns/.deps/
 dns/.dirstamp
+tweetnacl/.deps/
+tweetnacl/.dirstamp
 tests/chan
 tests/choose
 tests/example
@@ -54,6 +56,7 @@ tests/tls
 tests/bundle
 tests/http
 tests/ws
+tests/nacl
 perf/.dirstamp
 perf/chan
 perf/ctxswitch
@@ -68,6 +71,8 @@ tests/*.gcno
 tests/*.gcda
 dns/*.gcno
 dns/*.gcda
+tweetnacl/*.gcno
+tweetnacl/*.gcda
 tutorial/basics/step1
 tutorial/basics/step2
 tutorial/basics/step3

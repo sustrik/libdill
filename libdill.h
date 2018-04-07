@@ -758,6 +758,18 @@ DILL_EXPORT int ws_response_key(
     const char *request_key,
     char *response_key);
 
+/******************************************************************************/
+/*  NaCl protocol. Based to TweetNaCl.                                        */
+/******************************************************************************/
+
+DILL_EXPORT int nacl_attach(
+    int s,
+    const void *key,
+    size_t keylen,
+    int64_t deadline);
+DILL_EXPORT int nacl_detach(
+    int s);
+
 #endif
 
 #endif
