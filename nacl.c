@@ -64,10 +64,11 @@ static void *nacl_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int nacl_attach(int s, const void *key, size_t keylen, int64_t deadline) {
+DILL_CT_ASSERT(NACL_KEY_SIZE == crypto_secretbox_KEYBYTES);
+
+int nacl_attach(int s, const void *key, int64_t deadline) {
     int err;
-    if(dill_slow(!key || keylen != crypto_secretbox_KEYBYTES)) {
-        err = EINVAL; goto error2;}
+    if(dill_slow(!key)) {err = EINVAL; goto error2;}
     /* Check whether underlying socket is message-based. */
     if(dill_slow(!hquery(s, msock_type))) {err = errno; goto error1;}
     /* Create the object. */
