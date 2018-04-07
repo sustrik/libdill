@@ -38,9 +38,10 @@ int main() {
     errno_assert(s0 >= 0);
     int s1 = pfx_attach(s[1], 1, 0);
     errno_assert(s1 >= 0);
-    s0 = nacl_attach(s0, key, -1);
+    struct nacl_storage mem;
+    s0 = nacl_attach_mem(s0, key, &mem);
     errno_assert(s0 >= 0);
-    s1 = nacl_attach(s1, key, -1);
+    s1 = nacl_attach(s1, key);
     errno_assert(s1 >= 0);
     rc = msend(s0, "ABC", 3, -1);
     errno_assert(rc == 0);
@@ -77,9 +78,9 @@ int main() {
     errno_assert(s0 >= 0);
     s1 = pfx_attach(s[1], 1, 0);
     errno_assert(s1 >= 0);
-    s0 = nacl_attach(s0, key, -1);
+    s0 = nacl_attach(s0, key);
     errno_assert(s0 >= 0);
-    s1 = nacl_attach(s1, badkey, -1);
+    s1 = nacl_attach(s1, badkey);
     errno_assert(s1 >= 0);
     rc = msend(s0, "ABC", 3, -1);
     errno_assert(rc == 0);
@@ -101,9 +102,9 @@ int main() {
     errno_assert(rc == 0);
     s1 = udp_open(NULL, &addr1);
     errno_assert(s1 >= 0);
-    s0 = nacl_attach(s0, key, -1);
+    s0 = nacl_attach(s0, key);
     errno_assert(s0 >= 0);
-    s1 = nacl_attach(s1, key, -1);
+    s1 = nacl_attach(s1, key);
     errno_assert(s1 >= 0);
     while(1) {
         rc = msend(s1, "ABC", 3, -1);

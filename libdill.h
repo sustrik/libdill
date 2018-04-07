@@ -764,10 +764,21 @@ DILL_EXPORT int ws_response_key(
 
 #define NACL_KEY_SIZE 32
 
+struct nacl_storage {
+#if defined(__i386__)
+    char _[76];
+#else
+    char _[120];
+#endif
+};
+
 DILL_EXPORT int nacl_attach(
     int s,
+    const void *key);
+DILL_EXPORT int nacl_attach_mem(
+    int s,
     const void *key,
-    int64_t deadline);
+    struct nacl_storage *mem);
 DILL_EXPORT int nacl_detach(
     int s);
 
