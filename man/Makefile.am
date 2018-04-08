@@ -26,6 +26,7 @@ man3_MANS = \
     bundle_go_mem.3 \
     bundle_wait.3 \
     bundle_mem.3 \
+    chdone.3 \
     chmake.3 \
     chmake_mem.3 \
     choose.3 \
