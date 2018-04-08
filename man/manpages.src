@@ -1538,6 +1538,45 @@ fxs = [
         },
     },
     {
+        name: "http_done",
+        info: "half-closes a HTTP connection",
+
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "s",
+                type: "int",
+                info: "The HTTP connection handle.",
+            },
+        ],
+
+        has_deadline: true,
+
+        protocol: http_protocol,
+
+        prologue: `
+            This function closes the outbound half of an HTTP connection.
+            Technically, it sends a blank line to the peer. This will, in turn,
+            cause the peer to get **EPIPE** error after it has received all
+            the data.
+
+            Note that HTTP servers rely on getting a blank line before they
+            send a response to a request. Therefore, client, after sending
+            all the fields, must use **http_done** to inform the server that
+            it should act upon the request.
+        `,
+
+        has_handle_argument: true,
+
+        custom_errors: {
+            EPIPE: "The connection was already half-closed.",
+        },
+    },
+    {
         name: "http_recvfield",
         info: "receives HTTP field from the peer",
         result: {
@@ -2897,6 +2936,39 @@ fxs = [
         },
     },
     {
+        name: "tls_done",
+        info: "half-closes a TLS protocol",
+
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "s",
+                type: "int",
+                info: "The TLS connection handle.",
+            },
+        ],
+
+        has_deadline: true,
+
+        protocol: tls_protocol,
+
+        prologue: `
+            This function closes the outbound half of TLS connection. This will,
+            in turn, cause the peer to get **EPIPE** error after it has received
+            all the data. 
+        `,
+
+        has_handle_argument: true,
+
+        custom_errors: {
+            EPIPE: "The connection was already half-closed.",
+        },
+    },
+    {
         name: "udp_open",
         info: "opens an UDP socket",
         result: {
@@ -3249,6 +3321,39 @@ fxs = [
 
         custom_errors: {
             ENOTSUP: "The handle is not an WebSocket protocol handle.",
+        },
+    },
+    {
+        name: "ws_done",
+        info: "half-closes a WebSocket connection",
+
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "s",
+                type: "int",
+                info: "The WebSocket connection handle.",
+            },
+        ],
+
+        has_deadline: true,
+
+        protocol: ws_protocol,
+
+        prologue: `
+            This function closes the outbound half of a WebSocket connection.
+            This will, in turn, cause the peer to get **EPIPE** error after it
+            has received all the data. 
+        `,
+
+        has_handle_argument: true,
+
+        custom_errors: {
+            EPIPE: "The connection was already half-closed.",
         },
     },
     {

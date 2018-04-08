@@ -56,6 +56,7 @@ man3_MANS = \
     http_attach.3 \
     http_attach_mem.3 \
     http_detach.3 \
+    http_done.3 \
     http_recvfield.3 \
     http_recvrequest.3 \
     http_recvstatus.3 \
@@ -100,12 +101,25 @@ man3_MANS = \
     tls_attach_server.3 \
     tls_attach_server_mem.3 \
     tls_detach.3 \
+    tls_done.3 \
     udp_open.3 \
     udp_open_mem.3 \
     udp_send.3 \
     udp_sendl.3 \
     udp_recv.3 \
-    udp_recvl.3
+    udp_recvl.3 \
+    ws_attach_client.3 \
+    ws_attach_client_mem.3 \
+    ws_attach_server.3 \
+    ws_attach_server_mem.3 \
+    ws_detach.3 \
+    ws_done.3 \
+    ws_recv.3 \
+    ws_recvl.3 \
+    ws_request_key.3 \
+    ws_response_key.3 \
+    ws_send.3 \
+    ws_sendl.3
 
 SUFFIXES = .3
 

@@ -771,7 +771,6 @@ DILL_EXPORT int ws_response_key(
     const char *request_key,
     char *response_key);
 
-
 /******************************************************************************/
 /*  TERM protocol.                                                            */
 /*  Implementes terminal handshake on the top of any message-based protocol.  */
