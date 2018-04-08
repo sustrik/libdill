@@ -39,7 +39,7 @@ Host:\ www.example.org
 .fi
 .PP
 After sending the last field of HTTP request don\[aq]t forget to call
-\f[B]hdone\f[] on the socket.
+\f[B]http_done\f[] on the socket.
 It will send an empty line to the server to let it know that the request
 is finished and it should start processing it.
 .PP
@@ -85,7 +85,7 @@ int\ s\ =\ tcp_connect(&addr,\ \-1);
 s\ =\ http_attach(s);
 http_sendrequest(s,\ "GET",\ "/",\ \-1);
 http_sendfield(s,\ "Host",\ "www.example.org",\ \-1);
-hdone(s,\ \-1);
+http_done(s,\ \-1);
 char\ reason[256];
 http_recvstatus(s,\ reason,\ sizeof(reason),\ \-1);
 while(1)\ {
