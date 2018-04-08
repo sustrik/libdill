@@ -2663,6 +2663,38 @@ fxs = [
         `
     },
     {
+        name: "tcp_done",
+        info: "half-closes a TCP connection",
+
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "s",
+                type: "int",
+                info: "The TCP connection handle.",
+            },
+        ],
+
+        has_deadline: true,
+
+        protocol: tcp_protocol,
+
+        prologue: `
+            This function closes the outbound half of TCP connection.
+            Technically, it sends a FIN packet to the peer.
+        `,
+
+        has_handle_argument: true,
+
+        custom_errors: {
+            EPIPE: "The connection was already half-closed.",
+        },
+    },
+    {
         name: "tcp_listen",
         info: "starts listening for incoming TCP connections",
 
