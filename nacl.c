@@ -54,10 +54,7 @@ struct nacl_sock {
     uint8_t *buf1;
     uint8_t *buf2;
     uint8_t key[crypto_secretbox_KEYBYTES];
-    unsigned int mem : 1;
 };
-
-DILL_CT_ASSERT(sizeof(struct nacl_storage) >= sizeof(struct nacl_sock));
 
 static void *nacl_hquery(struct hvfs *hvfs, const void *type) {
     struct nacl_sock *obj = (struct nacl_sock*)hvfs;
@@ -69,14 +66,13 @@ static void *nacl_hquery(struct hvfs *hvfs, const void *type) {
 
 DILL_CT_ASSERT(NACL_KEY_SIZE == crypto_secretbox_KEYBYTES);
 
-DILL_EXPORT int nacl_attach_mem(int s, const void *key,
-      struct nacl_storage *mem) {
+int nacl_attach(int s, const void *key, int64_t deadline) {
     int err;
-    if(dill_slow(!key || !mem)) {err = EINVAL; goto error2;}
+    if(dill_slow(!key)) {err = EINVAL; goto error2;}
     /* Check whether underlying socket is message-based. */
     if(dill_slow(!hquery(s, msock_type))) {err = errno; goto error1;}
     /* Create the object. */
-    struct nacl_sock *obj = (struct nacl_sock*)mem;
+    struct nacl_sock *obj = malloc(sizeof(struct nacl_sock));
     if(dill_slow(!obj)) {errno = ENOMEM; goto error1;}
     obj->hvfs.query = nacl_hquery;
     obj->hvfs.close = nacl_hclose;
@@ -87,7 +83,6 @@ DILL_EXPORT int nacl_attach_mem(int s, const void *key,
     obj->buf1 = NULL;
     obj->buf2 = NULL;
     memcpy(obj->key, key, crypto_secretbox_KEYBYTES);
-    obj->mem = 1;
     /* Create the handle. */
     int h = hmake(&obj->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
@@ -98,24 +93,8 @@ DILL_EXPORT int nacl_attach_mem(int s, const void *key,
     dill_assert(rc == 0);
     return h;
 error3:
-    /* TODO: fix error handling */
     rc = hclose(h);
     dill_assert(rc == 0);
-error2:
-    free(obj);
-error1:
-    errno = err;
-    return -1;
-}
-
-int nacl_attach(int s, const void *key) {
-    int err;
-    struct nacl_sock *obj = malloc(sizeof(struct nacl_sock));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int cs = nacl_attach_mem(s, key, (struct nacl_storage*)obj);
-    if(dill_slow(cs < 0)) {err = errno; goto error2;}
-    obj->mem = 0;
-    return cs;
 error2:
     free(obj);
 error1:
@@ -129,7 +108,7 @@ int nacl_detach(int s) {
     free(obj->buf1);
     free(obj->buf2);
     int u = obj->s;
-    if(!obj->mem) free(obj);
+    free(obj);
     return u;
 }
 
@@ -225,6 +204,6 @@ static void nacl_hclose(struct hvfs *hvfs) {
     }
     free(obj->buf1);
     free(obj->buf2);
-    if(!obj->mem) free(obj);
+    free(obj);
 }
 
