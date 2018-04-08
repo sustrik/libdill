@@ -255,7 +255,7 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     return 0;
 }
 
-int chdone(int h, int64_t deadline) {
+int chdone(int h) {
     struct dill_halfchan *ch = hquery(h, dill_halfchan_type);
     if(dill_slow(!ch)) return -1;
     /* Done is always done to the opposite side of the channel. */

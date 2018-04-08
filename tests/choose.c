@@ -300,7 +300,7 @@ int main() {
     int ch18[2];
     rc = chmake(ch18);
     errno_assert(rc == 0);
-    rc = chdone(ch18[0], -1);
+    rc = chdone(ch18[0]);
     errno_assert(rc == 0);
     struct chclause cls15[] = {{CHRECV, ch18[1], &val, sizeof(val)}};
     rc = choose(cls15, 1, -1);

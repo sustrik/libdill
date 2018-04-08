@@ -191,7 +191,7 @@ int main() {
     int ch8[2];
     rc = chmake(ch8);
     errno_assert(rc == 0);
-    rc = chdone(ch8[0], -1);
+    rc = chdone(ch8[0]);
     errno_assert(rc == 0);
     rc = chrecv(ch8[1], &val, sizeof(val), -1);
     errno_assert(rc == -1 && errno == EPIPE);
@@ -213,7 +213,7 @@ int main() {
     errno_assert(hndl6[0] >= 0);
     hndl6[1] = go(receiver2(ch12[0]));
     errno_assert(hndl6[1] >= 0);
-    rc = chdone(ch12[1], -1);
+    rc = chdone(ch12[1]);
     errno_assert(rc == 0);
     rc = chrecv(ch12[1], &val, sizeof(val), -1);
     errno_assert(rc == 0);
@@ -243,7 +243,7 @@ int main() {
     errno_assert(hndl8[2] >= 0);
     rc = msleep(now() + 50);
     errno_assert(rc == 0);
-    rc = chdone(ch15[1], -1);
+    rc = chdone(ch15[1]);
     errno_assert(rc == 0);
     rc = hclose(ch15[1]);
     errno_assert(rc == 0);

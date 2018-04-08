@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
         int ch[2];
         chmake(ch);
         int h = go(worker(ch[0]));
-        chdone(ch[1], -1);
+        chdone(ch[1]);
         hclose(h);
         hclose(ch[1]);
         hclose(ch[0]);

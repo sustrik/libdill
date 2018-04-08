@@ -271,7 +271,7 @@ DILL_EXPORT int chmake(int chv[2]);
 DILL_EXPORT int chmake_mem(struct chstorage *mem, int chv[2]);
 DILL_EXPORT int chsend(int ch, const void *val, size_t len, int64_t deadline);
 DILL_EXPORT int chrecv(int ch, void *val, size_t len, int64_t deadline);
-DILL_EXPORT int chdone(int ch, int64_t deadline);
+DILL_EXPORT int chdone(int ch);
 DILL_EXPORT int choose(struct chclause *clauses, int nclauses,
     int64_t deadline);
 
