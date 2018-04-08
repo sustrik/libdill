@@ -76,11 +76,8 @@ libdill_la_SOURCES += \
     tcp.c \
     udp.c \
     ws.c \
-    nacl.c \
     dns/dns.h \
-    dns/dns.c \
-    tweetnacl/tweetnacl.h \
-    tweetnacl/tweetnacl.c
+    dns/dns.c
 endif
 
 if DILL_SOCKETS
@@ -137,8 +134,7 @@ check_PROGRAMS += \
     tests/pfx \
     tests/udp \
     tests/http \
-    tests/ws \
-    tests/nacl
+    tests/ws
 endif
 
 if DILL_SOCKETS
