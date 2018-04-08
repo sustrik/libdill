@@ -16,18 +16,17 @@
 <li><a href="tutorial.html">Tutorials</a></li>
 </ul>
 <h1 id="name">NAME</h1>
-<p>hdup - duplicates a handle</p>
+<p>hown - transfer ownership of a handle</p>
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> hdup(
+<span class="dt">int</span> hown(
     <span class="dt">int</span> h);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>Duplicates a handle. The new handle will refer to the same underlying object.</p>
-<p><strong>h</strong>: Handle to duplicate.</p>
-<p>Each duplicate of a handle requires its own call to <strong>hclose</strong>. The underlying object is deallocated when all handles pointing to it have been closed.</p>
+<p>Handles are integers. You own a handle if you know its numeric value. To transfer ownership this function changes the number associated with the object. The old number becomes invalid and using it will result in undefined behavior. The new number can be used in exactly the same way as the old one would.</p>
+<p><strong>h</strong>: Handle to transfer.</p>
 <h1 id="return-value">RETURN VALUE</h1>
-<p>In case of success the function returns newly duplicated handle. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<p>In case of success the function returns new handle. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
 <li><strong>EBADF</strong>: Invalid handle.</li>
@@ -37,9 +36,9 @@
 </ul>
 <h1 id="example">EXAMPLE</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> h1 = tcp_connect(&amp;addr, deadline);
-h2 = hdup(h1);
-hclose(h1);
-hclose(h2); <span class="co">/* The socket gets deallocated here. */</span></code></pre></div>
+<span class="dt">int</span> h2 = hown(h1);
+<span class="co">/* h1 is invalid here */</span>
+hclose(h2);</code></pre></div>
 <h1 id="see-also">SEE ALSO</h1>
 <p><strong>hclose</strong>(3) <strong>hclose</strong>(3) <strong>hdone</strong>(3) <strong>hmake</strong>(3) <strong>hquery</strong>(3)</p>
 </body>

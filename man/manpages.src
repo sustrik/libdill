@@ -1295,43 +1295,39 @@ fxs = [
         `
     },
     {
-        name: "hdup",
+        name: "hown",
         section: "Handles",
-        info: "duplicates a handle",
+        info: "transfer ownership of a handle",
 
         result: {
             type: "int",
-            success: "newly duplicated handle",
+            success: "new handle",
             error: "-1",
         },
         args: [
             {
                 name: "h",
                 type: "int",
-                info: "Handle to duplicate.",
+                info: "Handle to transfer.",
             }
         ],
 
         allocates_handle: true,
 
         prologue: `
-            Duplicates a handle. The new handle will refer to the same
-            underlying object.
+            Handles are integers. You own a handle if you know its numeric
+            value. To transfer ownership this function changes the number
+            associated with the object. The old number becomes invalid and
+            using it will result in undefined behavior. The new number can
+            be used in exactly the same way as the old one would.
         `,
-        epilogue: `
-            Each duplicate of a handle requires its own call to **hclose**.
-            The underlying object is deallocated when all handles pointing to it
-            have been closed.
-        `,
-
         errors: ["EBADF"],
 
         example: `
             int h1 = tcp_connect(&addr, deadline);
-            h2 = hdup(h1);
-            hclose(h1);
-            hclose(h2); /* The socket gets deallocated here. */
-        `
+            int h2 = hown(h1);
+            /* h1 is invalid here */
+            hclose(h2);        `
     },
     {
         name: "hmake",
