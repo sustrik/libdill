@@ -2148,6 +2148,39 @@ fxs = [
         `
     },
     {
+        name: "ipc_done",
+        info: "half-closes a IPC connection",
+
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "s",
+                type: "int",
+                info: "The IPC connection handle.",
+            },
+        ],
+
+        has_deadline: true,
+
+        protocol: ipc_protocol,
+
+        prologue: `
+            This function closes the outbound half of ICP connection.
+            This will cause the peer to get **EPIPE** error after it has
+            received all the data. 
+        `,
+
+        has_handle_argument: true,
+
+        custom_errors: {
+            EPIPE: "The connection was already half-closed.",
+        },
+    },
+    {
         name: "ipc_listen",
         info: "starts listening for incoming IPC connections",
 
@@ -2685,7 +2718,9 @@ fxs = [
 
         prologue: `
             This function closes the outbound half of TCP connection.
-            Technically, it sends a FIN packet to the peer.
+            Technically, it sends a FIN packet to the peer. This will, in turn,
+            cause the peer to get **EPIPE** error after it has received all
+            the data. 
         `,
 
         has_handle_argument: true,

@@ -75,6 +75,7 @@ man3_MANS = \
     ipc_close.3 \
     ipc_connect.3 \
     ipc_connect_mem.3 \
+    ipc_done.3 \
     ipc_listen.3 \
     ipc_listen_mem.3 \
     ipc_pair.3 \
