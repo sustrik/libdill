@@ -70,7 +70,6 @@ int main() {
     rc = hclose(s0);
     errno_assert(rc == 0);
 
-    /* Test wrong key. */
     rc = ipc_pair(s);
     errno_assert(rc == 0);
     s0 = pfx_attach(s[0], 1, 0);
@@ -85,38 +84,6 @@ int main() {
     errno_assert(rc == 0);
     sz = mrecv(s1, buf, sizeof(buf), -1);
     errno_assert(sz < 0 && errno == EACCES);
-    rc = hclose(s1);
-    errno_assert(rc == 0);
-    rc = hclose(s0);
-    errno_assert(rc == 0);
-
-    /* Test sending via UDP. */
-    struct ipaddr addr0;
-    rc = ipaddr_local(&addr0, NULL, 5555, IPADDR_IPV4);
-    errno_assert(rc == 0);
-    s0 = udp_open(&addr0, NULL);
-    errno_assert(s0 >= 0);
-    struct ipaddr addr1;
-    rc = ipaddr_remote(&addr1, "127.0.0.1", 5555, IPADDR_IPV4, -1);
-    errno_assert(rc == 0);
-    s1 = udp_open(NULL, &addr1);
-    errno_assert(s1 >= 0);
-    s0 = nacl_attach(s0, key, 32, -1);
-    errno_assert(s0 >= 0);
-    s1 = nacl_attach(s1, key, 32, -1);
-    errno_assert(s1 >= 0);
-    while(1) {
-        rc = msend(s1, "ABC", 3, -1);
-        errno_assert(rc == 0);
-        char buf[16];
-        ssize_t sz = mrecv(s0, buf, sizeof(buf), now() + 100);
-        if(sz < 0 && errno == ETIMEDOUT)
-            continue;
-        errno_assert(sz >= 0);
-        assert(sz == 3);
-        assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-        break;
-    }
     rc = hclose(s1);
     errno_assert(rc == 0);
     rc = hclose(s0);
