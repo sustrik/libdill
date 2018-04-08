@@ -54,6 +54,8 @@ struct nacl_sock {
     uint8_t *buf1;
     uint8_t *buf2;
     uint8_t key[crypto_secretbox_KEYBYTES];
+    uint8_t send_nonce[crypto_secretbox_NONCEBYTES];
+    uint8_t recv_nonce[crypto_secretbox_NONCEBYTES];
 };
 
 static void *nacl_hquery(struct hvfs *hvfs, const void *type) {
@@ -82,13 +84,16 @@ int nacl_attach(int s, const void *key, size_t keylen, int64_t deadline) {
     obj->buf1 = NULL;
     obj->buf2 = NULL;
     memcpy(obj->key, key, crypto_secretbox_KEYBYTES);
+    /* Generate random nonce for sending. */
+    int rc = dill_random(obj->send_nonce, crypto_secretbox_NONCEBYTES); 
+    if(dill_slow(rc != 0)) {err = errno; goto error2;}
     /* Create the handle. */
     int h = hmake(&obj->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     /* Make a private copy of the underlying socket. */
     obj->s = hdup(s);
     if(dill_slow(obj->s < 0)) {err = errno; goto error3;}
-    int rc = hclose(s);
+    rc = hclose(s);
     dill_assert(rc == 0);
     return h;
 error3:
@@ -131,10 +136,12 @@ static int nacl_msendl(struct msock_vfs *mvfs,
     /* If needed, adjust the buffers. */
     rc = nacl_resizebufs(obj, NACL_EXTRABYTES + len);
     if(dill_slow(rc < 0)) return -1;
-    /* Generate random nonce. */
-    uint8_t nonce[crypto_secretbox_NONCEBYTES];
-    rc = dill_random(nonce, crypto_secretbox_NONCEBYTES); 
-    if(dill_slow(rc != 0)) return -1;
+    /* Increase nonce. */
+    int i;
+    for(i = 0; i != sizeof(obj->send_nonce); ++i) {
+        obj->send_nonce[i]++;
+        if(obj->send_nonce[i]) break;
+    }
     /* Encrypt and authenticate the message. */
     size_t mlen = len + crypto_secretbox_ZEROBYTES;
     memset(obj->buf1, 0, crypto_secretbox_ZEROBYTES);
@@ -144,9 +151,9 @@ static int nacl_msendl(struct msock_vfs *mvfs,
         memcpy(pos, it->iol_base, it->iol_len);
         pos += it->iol_len;
     }
-    crypto_secretbox(obj->buf2, obj->buf1, mlen, nonce, obj->key);
+    crypto_secretbox(obj->buf2, obj->buf1, mlen, obj->send_nonce, obj->key);
     /* Prepare the message: nonce + ciphertext */
-    memcpy(obj->buf1, nonce, crypto_secretbox_NONCEBYTES);
+    memcpy(obj->buf1, obj->send_nonce, crypto_secretbox_NONCEBYTES);
     memcpy(obj->buf1 + crypto_secretbox_NONCEBYTES,
         obj->buf2 + crypto_secretbox_BOXZEROBYTES,
         mlen - crypto_secretbox_BOXZEROBYTES);
@@ -168,8 +175,7 @@ static ssize_t nacl_mrecvl(struct msock_vfs *mvfs,
     if(dill_slow(sz < 0)) return -1;
     if(sz > NACL_EXTRABYTES + len) {errno = EMSGSIZE; return -1;}
     /* Store the nonce. */
-    uint8_t nonce[crypto_secretbox_NONCEBYTES];
-    memcpy(nonce, obj->buf1, crypto_secretbox_NONCEBYTES);
+    memcpy(obj->recv_nonce, obj->buf1, crypto_secretbox_NONCEBYTES);
     /* Decrypt and authenticate the message. */
     size_t clen = crypto_secretbox_BOXZEROBYTES +
         (sz - crypto_secretbox_NONCEBYTES);
@@ -177,7 +183,8 @@ static ssize_t nacl_mrecvl(struct msock_vfs *mvfs,
     memcpy(obj->buf2 + crypto_secretbox_BOXZEROBYTES,
         obj->buf1 + crypto_secretbox_NONCEBYTES,
         clen - crypto_secretbox_BOXZEROBYTES);
-    rc = crypto_secretbox_open(obj->buf1, obj->buf2, clen, nonce, obj->key);
+    rc = crypto_secretbox_open(obj->buf1, obj->buf2, clen,
+        obj->recv_nonce, obj->key);
     if(dill_slow(rc < 0)) {errno = EACCES; return -1;}
     /* Copy the message into user's buffer. */
     sz = clen - crypto_secretbox_ZEROBYTES;
