@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     for(i = 0; i != 3; i++) {
         int s = tcp_accept(ls, NULL, -1);
         assert(s >= 0);
-        s = crlf_attach(s);
+        s = postfix_attach(s);
         assert(s >= 0);
         rc = bundle_go(b, dialogue(s));
         assert(rc == 0);

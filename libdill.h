@@ -520,12 +520,12 @@ DILL_EXPORT int prefix_detach(
     int s);
 
 /******************************************************************************/
-/*  CRLF protocol.                                                            */
+/*  POSTFIX protocol.                                                         */
 /*  Messages are delimited by CRLF (0x0d 0x0a) sequences.                     */
 /*  The protocol is terminated by an empty line.                              */
 /******************************************************************************/
 
-struct crlf_storage {
+struct postfix_storage {
 #if defined(__i386__)
     char _[36];
 #else
@@ -533,12 +533,12 @@ struct crlf_storage {
 #endif
 };
 
-DILL_EXPORT int crlf_attach(
+DILL_EXPORT int postfix_attach(
     int s);
-DILL_EXPORT int crlf_attach_mem(
+DILL_EXPORT int postfix_attach_mem(
     int s,
-    struct crlf_storage *mem);
-DILL_EXPORT int crlf_detach(
+    struct postfix_storage *mem);
+DILL_EXPORT int postfix_detach(
     int s,
     int64_t deadline);
 

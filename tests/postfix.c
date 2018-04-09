@@ -34,7 +34,7 @@ coroutine void client(void) {
     int s = tcp_connect(&addr, -1);
     errno_assert(s >= 0);
 
-    cs = crlf_attach(s);
+    cs = postfix_attach(s);
     errno_assert(cs >= 0);
     rc = msend(cs, "ABC", 3, -1);
     errno_assert(rc == 0);
@@ -44,7 +44,7 @@ coroutine void client(void) {
     assert(buf[0] == 'G' && buf[1] == 'H' && buf[2] == 'I');
     rc = msend(cs, "DEF", 3, -1);
     errno_assert(rc == 0);
-    s = crlf_detach(cs, -1);
+    s = postfix_detach(cs, -1);
     errno_assert(s >= 0);
     rc = hclose(s);
     errno_assert(rc == 0);
@@ -60,7 +60,7 @@ int main() {
     int as = tcp_accept(ls, NULL, -1);
     errno_assert(as >= 0);
 
-    int cs = crlf_attach(as);
+    int cs = postfix_attach(as);
     errno_assert(cs >= 0);
     char buf[16];
     ssize_t sz = mrecv(cs, buf, sizeof(buf), -1);
@@ -71,7 +71,7 @@ int main() {
     sz = mrecv(cs, buf, sizeof(buf), -1);
     errno_assert(sz == 3);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    int ts = crlf_detach(cs, -1);
+    int ts = postfix_detach(cs, -1);
     errno_assert(ts >= 0);
     rc = hclose(ts);
     errno_assert(rc == 0);
@@ -79,10 +79,10 @@ int main() {
     int h[2];
     rc = ipc_pair(h);
     errno_assert(rc == 0);
-    int s0 = crlf_attach(h[0]);
+    int s0 = postfix_attach(h[0]);
     errno_assert(s0 >= 0);
-    struct crlf_storage mem;
-    int s1 = crlf_attach_mem(h[1], &mem);
+    struct postfix_storage mem;
+    int s1 = postfix_attach_mem(h[1], &mem);
     errno_assert(s1 >= 0);
     rc = msend(s0, "First", 5, -1);
     errno_assert(rc == 0);
@@ -102,13 +102,13 @@ int main() {
     errno_assert(rc == 0);
     rc = msend(s1, "Blue", 4, -1);
     errno_assert(rc == 0);
-    int ts1 = crlf_detach(s1, -1);
+    int ts1 = postfix_detach(s1, -1);
     errno_assert(ts1 >= 0);
     sz = mrecv(s0, buf, sizeof(buf), -1);
     errno_assert(sz == 3 && memcmp(buf, "Red", 3) == 0);
     sz = mrecv(s0, buf, sizeof(buf), -1);
     errno_assert(sz == 4 && memcmp(buf, "Blue", 4) == 0);
-    int ts0 = crlf_detach(s0, -1);
+    int ts0 = postfix_detach(s0, -1);
     errno_assert(ts0 >= 0);
     rc = hclose(ts1);
     errno_assert(rc == 0);

@@ -49,9 +49,6 @@ man3_MANS = \
     brecvl.3 \
     bsend.3 \
     bsendl.3 \
-    crlf_attach.3 \
-    crlf_attach_mem.3 \
-    crlf_detach.3 \
     http_attach.3 \
     http_attach_mem.3 \
     http_detach.3 \
@@ -84,6 +81,9 @@ man3_MANS = \
     mrecvl.3 \
     msend.3 \
     msendl.3 \
+    postfix_attach.3 \
+    postfix_attach_mem.3 \
+    postfix_detach.3 \
     prefix_attach.3 \
     prefix_attach_mem.3 \
     prefix_detach.3 \

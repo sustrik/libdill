@@ -39,10 +39,10 @@ static void http_hclose(struct hvfs *hvfs);
 
 struct http_sock {
     struct hvfs hvfs;
-    /* Underlying CRLF socket. */
+    /* Underlying POSTFIX socket. */
     int s;
     unsigned int mem : 1;
-    struct crlf_storage crlf_mem;
+    struct postfix_storage postfix_mem;
     struct term_storage term_mem;
     char rxbuf[1024];
 };
@@ -72,8 +72,8 @@ int http_attach_mem(int s, struct http_storage *mem) {
     /* Take ownership of the underlying socket. */
     int tmp = hown(s);
     if(dill_slow(tmp < 0)) {err = errno; goto error3;}
-    /* Wrap the underlying socket into CRLF and TERM protocol. */
-    obj->s = crlf_attach_mem(tmp, &obj->crlf_mem);
+    /* Wrap the underlying socket into POSTFIX and TERM protocol. */
+    obj->s = postfix_attach_mem(tmp, &obj->postfix_mem);
     if(dill_slow(obj->s < 0)) {err = errno; goto error4;}
     obj->s = term_attach_mem(obj->s, NULL, 0, &obj->term_mem);
     if(dill_slow(obj->s < 0)) {err = errno; goto error4;}
@@ -119,7 +119,7 @@ int http_detach(int s, int64_t deadline) {
     if(dill_slow(!obj)) return -1;
     int u = term_detach(obj->s, deadline);
     if(dill_slow(u < 0)) {err = errno; goto error;}
-    u = crlf_detach(u, deadline);
+    u = postfix_detach(u, deadline);
     if(dill_slow(u < 0)) {err = errno; goto error;}
 error:
     if(!obj->mem) free(obj);

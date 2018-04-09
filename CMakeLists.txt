@@ -8,7 +8,6 @@ set(sources
      bsock.c
      chan.c
      cr.c
-     crlf.c
      ctx.c
      fd.c
      handle.c
@@ -18,6 +17,7 @@ set(sources
      libdill.c
      msock.c
      now.c
+     postfix.c
      prefix.c
      pollset.c
      rbtree.c
@@ -133,7 +133,6 @@ if(BUILD_TESTING)
     set(test_files
         tests/chan.c
         tests/choose.c
-        tests/crlf.c
         tests/example.c
         tests/fd.c
         tests/go.c
@@ -142,6 +141,7 @@ if(BUILD_TESTING)
         tests/ipaddr.c
         tests/ipc.c
         tests/overload.c
+        tests/postfix.c
         tests/prefix.c
         tests/rbtree.c
         tests/signals.c

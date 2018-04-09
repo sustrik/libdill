@@ -154,22 +154,22 @@ ws_flags = `
             of protocols (e.g. HTML and WebSocket).
 `
 
-crlf_protocol = {
-    section: "CRLF protocol",
+postfix_protocol = {
+    section: "POSTFIX protocol",
     type: "message",
     info: `
-        CRLF is a message-based protocol that delimits messages usign CR+LF byte
+        POSTFIX is a message-based protocol that delimits messages usign CR+LF byte
         sequence (0x0D 0x0A). In other words, it's a protocol to send text
         messages separated by newlines. The protocol has no initial handshake.
         Terminal handshake is accomplished by each peer sending an empty line.
     `,
     example: `
         int s = tcp_connect(&addr, -1);
-        s = crlf_attach(s);
+        s = postfix_attach(s);
         msend(s, "ABC", 3, -1);
         char buf[256];
         ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
-        s = crlf_detach(s, -1);
+        s = postfix_detach(s, -1);
         tcp_close(s);
     `,
 }
@@ -957,8 +957,8 @@ fxs = [
         `,
     },
     {
-        name: "crlf_attach",
-        info: "creates CRLF protocol on top of underlying socket",
+        name: "postfix_attach",
+        info: "creates POSTFIX protocol on top of underlying socket",
         result: {
             type: "int",
             success: "newly created socket handle",
@@ -972,24 +972,24 @@ fxs = [
                      "bytestream protocol.",
            },
         ],
-        protocol: crlf_protocol,
+        protocol: postfix_protocol,
         prologue: `
-            This function instantiates CRLF protocol on top of the underlying
+            This function instantiates POSTFIX protocol on top of the underlying
             protocol.
         `,
         epilogue: `
-            The socket can be cleanly shut down using **crlf_detach** function.
+            The socket can be cleanly shut down using **postfix_detach** function.
         `,
         has_handle_argument: true,
         allocates_handle: true,
-        mem: "crlf_storage",
+        mem: "postfix_storage",
         custom_errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
         },
     },
     {
-        name: "crlf_detach",
-        info: "terminates CRLF protocol and returns the underlying socket",
+        name: "postfix_detach",
+        info: "terminates POSTFIX protocol and returns the underlying socket",
 
         result: {
             type: "int",
@@ -1000,10 +1000,10 @@ fxs = [
            {
                name: "s",
                type: "int",
-               info: "Handle of the CRLF socket.",
+               info: "Handle of the POSTFIX socket.",
            },
         ],
-        protocol: crlf_protocol,
+        protocol: postfix_protocol,
         prologue: `
             This function does the terminal handshake and returns underlying
             socket to the user. The socket is closed even in the case of error.
@@ -1013,7 +1013,7 @@ fxs = [
         uses_connection: true,
 
         custom_errors: {
-            ENOTSUP: "The handle is not a CRLF protocol handle.",
+            ENOTSUP: "The handle is not a POSTFIX protocol handle.",
         },
     },
     {
@@ -1470,7 +1470,7 @@ fxs = [
            {
                name: "s",
                type: "int",
-               info: "Handle of the CRLF socket.",
+               info: "Handle of the POSTFIX socket.",
            },
         ],
         protocol: http_protocol,
@@ -3932,7 +3932,7 @@ t += generate_section("TCP protocol", sections)
 t += generate_section("IPC protocol", sections)
 t += generate_section("UDP protocol", sections)
 t += generate_section("TLS protocol", sections)
-t += generate_section("CRLF protocol", sections)
+t += generate_section("POSTFIX protocol", sections)
 t += generate_section("PREFIX protocol", sections)
 t += generate_section("HTTP protocol", sections)
 t += generate_section("WebSocket protocol", sections)
