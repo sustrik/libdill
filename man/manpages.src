@@ -238,21 +238,21 @@ ipc_protocol = {
     `
 }
 
-pfx_protocol = {
-    section: "PFX protocol",
+prefix_protocol = {
+    section: "PREFIX protocol",
     type: "message",
     info: `
-        PFX  is a message-based protocol to send binary messages prefixed by
+        PREFIX  is a message-based protocol to send binary messages prefixed by
         size. The protocol has no initial handshake. Terminal handshake is
         accomplished by each peer sending size field filled by 0xff bytes.
     `,
     example: `
         int s = tcp_connect(&addr, -1);
-        s = pfx_attach(s, 2, 0);
+        s = prefix_attach(s, 2, 0);
         msend(s, "ABC", 3, -1);
         char buf[256];
         ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
-        s = pfx_detach(s, -1);
+        s = prefix_detach(s, -1);
         tcp_close(s);
     `
 }
@@ -2482,8 +2482,8 @@ fxs = [
         `,
     },
     {
-        name: "pfx_attach",
-        info: "creates PFX protocol on top of underlying socket",
+        name: "prefix_attach",
+        info: "creates PREFIX protocol on top of underlying socket",
         result: {
             type: "int",
             success: "newly created socket handle",
@@ -2504,25 +2504,25 @@ fxs = [
            {
                name: "flags",
                type: "int",
-               info: "If set to **PFX_BIG_ENDIAN** (also known as network " +
+               info: "If set to **PREFIX_BIG_ENDIAN** (also known as network " +
                      "byte order, the default option) the most significant " +
                      "byte of the size will be sent first on the wire. If " +
-                     "set to **PFX_LITTLE_ENDIAN** the least signiticant " +
+                     "set to **PREFIX_LITTLE_ENDIAN** the least signiticant " +
                      "byte will come first.",
            },
         ],
-        protocol: pfx_protocol,
+        protocol: prefix_protocol,
         prologue: `
-            This function instantiates PFX protocol on top of the underlying
+            This function instantiates PREFIX protocol on top of the underlying
             protocol.
         `,
-        epilogue: "The socket can be cleanly shut down using **pfx_detach** " +
+        epilogue: "The socket can be cleanly shut down using **prefix_detach** " +
                   "function.",
 
         has_handle_argument: true,
         allocates_handle: true,
 
-        mem: "pfx_storage",
+        mem: "prefix_storage",
 
         errors: ['EINVAL'],
         custom_errors: {
@@ -2530,8 +2530,8 @@ fxs = [
         },
     },
     {
-        name: "pfx_detach",
-        info: "terminates PFX protocol and returns the underlying socket",
+        name: "prefix_detach",
+        info: "terminates PREFIX protocol and returns the underlying socket",
         result: {
             type: "int",
             success: "underlying socket handle",
@@ -2541,10 +2541,10 @@ fxs = [
            {
                name: "s",
                type: "int",
-               info: "Handle of the PFX socket.",
+               info: "Handle of the PREFIX socket.",
            },
         ],
-        protocol: pfx_protocol,
+        protocol: prefix_protocol,
         prologue: `
             This function does the terminal handshake and returns underlying
             socket to the user. The socket is closed even in the case of error.
@@ -2555,7 +2555,7 @@ fxs = [
         uses_connection: true,
 
         custom_errors: {
-            ENOTSUP: "The handle is not a PFX protocol handle.",
+            ENOTSUP: "The handle is not a PREFIX protocol handle.",
         },
     },
     {
@@ -3933,7 +3933,7 @@ t += generate_section("IPC protocol", sections)
 t += generate_section("UDP protocol", sections)
 t += generate_section("TLS protocol", sections)
 t += generate_section("CRLF protocol", sections)
-t += generate_section("PFX protocol", sections)
+t += generate_section("PREFIX protocol", sections)
 t += generate_section("HTTP protocol", sections)
 t += generate_section("WebSocket protocol", sections)
 fs.writeFile("toc.md", t)

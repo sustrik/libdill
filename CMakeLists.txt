@@ -18,7 +18,7 @@ set(sources
      libdill.c
      msock.c
      now.c
-     pfx.c
+     prefix.c
      pollset.c
      rbtree.c
      stack.c
@@ -142,7 +142,7 @@ if(BUILD_TESTING)
         tests/ipaddr.c
         tests/ipc.c
         tests/overload.c
-        tests/pfx.c
+        tests/prefix.c
         tests/rbtree.c
         tests/signals.c
         tests/sleep.c

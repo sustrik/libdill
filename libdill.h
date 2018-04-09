@@ -492,11 +492,11 @@ DILL_EXPORT int ipc_pair_mem(
     int s[2]);
 
 /******************************************************************************/
-/*  PFX protocol.                                                             */
-/*  Messages are prefixed by 8-byte size in network byte order.               */
+/*  PREFIX protocol.                                                          */
+/*  Messages are prefixed size.                                               */
 /******************************************************************************/
 
-struct pfx_storage {
+struct prefix_storage {
 #if defined(__i386__)
     char _[36];
 #else
@@ -504,19 +504,19 @@ struct pfx_storage {
 #endif
 };
 
-#define PFX_BIG_ENDIAN 0
-#define PFX_LITTLE_ENDIAN 1
+#define PREFIX_BIG_ENDIAN 0
+#define PREFIX_LITTLE_ENDIAN 1
 
-DILL_EXPORT int pfx_attach(
+DILL_EXPORT int prefix_attach(
     int s,
     size_t hdrlen,
     int flags);
-DILL_EXPORT int pfx_attach_mem(
+DILL_EXPORT int prefix_attach_mem(
     int s,
     size_t hdrlen,
     int flags,
-    struct pfx_storage *mem);
-DILL_EXPORT int pfx_detach(
+    struct prefix_storage *mem);
+DILL_EXPORT int prefix_detach(
     int s);
 
 /******************************************************************************/

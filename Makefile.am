@@ -72,7 +72,7 @@ libdill_la_SOURCES += \
     ipc.c \
     ipaddr.c \
     msock.c \
-    pfx.c \
+    prefix.c \
     tcp.c \
     term.c \
     udp.c \
@@ -132,7 +132,7 @@ check_PROGRAMS += \
     tests/tcp \
     tests/ipc \
     tests/crlf \
-    tests/pfx \
+    tests/prefix \
     tests/udp \
     tests/http \
     tests/ws \

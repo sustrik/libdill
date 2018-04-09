@@ -84,9 +84,9 @@ man3_MANS = \
     mrecvl.3 \
     msend.3 \
     msendl.3 \
-    pfx_attach.3 \
-    pfx_attach_mem.3 \
-    pfx_detach.3 \
+    prefix_attach.3 \
+    prefix_attach_mem.3 \
+    prefix_detach.3 \
     tcp_done.3 \
     tcp_accept.3 \
     tcp_accept_mem.3 \

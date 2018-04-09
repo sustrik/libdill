@@ -30,16 +30,16 @@
 
 #include "utils.h"
 
-dill_unique_id(pfx_type);
+dill_unique_id(prefix_type);
 
-static void *pfx_hquery(struct hvfs *hvfs, const void *type);
-static void pfx_hclose(struct hvfs *hvfs);
-static int pfx_msendl(struct msock_vfs *mvfs,
+static void *prefix_hquery(struct hvfs *hvfs, const void *type);
+static void prefix_hclose(struct hvfs *hvfs);
+static int prefix_msendl(struct msock_vfs *mvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
-static ssize_t pfx_mrecvl(struct msock_vfs *mvfs,
+static ssize_t prefix_mrecvl(struct msock_vfs *mvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 
-struct pfx_sock {
+struct prefix_sock {
     struct hvfs hvfs;
     struct msock_vfs mvfs;
     int u;
@@ -50,17 +50,18 @@ struct pfx_sock {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct pfx_storage) >= sizeof(struct pfx_sock));
+DILL_CT_ASSERT(sizeof(struct prefix_storage) >= sizeof(struct prefix_sock));
 
-static void *pfx_hquery(struct hvfs *hvfs, const void *type) {
-    struct pfx_sock *self = (struct pfx_sock*)hvfs;
+static void *prefix_hquery(struct hvfs *hvfs, const void *type) {
+    struct prefix_sock *self = (struct prefix_sock*)hvfs;
     if(type == msock_type) return &self->mvfs;
-    if(type == pfx_type) return self;
+    if(type == prefix_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
 
-int pfx_attach_mem(int s, size_t hdrlen, int flags, struct pfx_storage *mem) {
+int prefix_attach_mem(int s, size_t hdrlen, int flags,
+      struct prefix_storage *mem) {
     int err;
     if(dill_slow(!mem || hdrlen == 0)) {err = EINVAL; goto error1;}
     /* Take ownership of the underlying socket. */
@@ -71,14 +72,14 @@ int pfx_attach_mem(int s, size_t hdrlen, int flags, struct pfx_storage *mem) {
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error2;}
     if(dill_slow(!q)) {err = errno; goto error2;}
     /* Create the object. */
-    struct pfx_sock *self = (struct pfx_sock*)mem;
-    self->hvfs.query = pfx_hquery;
-    self->hvfs.close = pfx_hclose;
-    self->mvfs.msendl = pfx_msendl;
-    self->mvfs.mrecvl = pfx_mrecvl;
+    struct prefix_sock *self = (struct prefix_sock*)mem;
+    self->hvfs.query = prefix_hquery;
+    self->hvfs.close = prefix_hclose;
+    self->mvfs.msendl = prefix_msendl;
+    self->mvfs.mrecvl = prefix_mrecvl;
     self->u = u;
     self->hdrlen = hdrlen;
-    self->bigendian = !(flags & PFX_LITTLE_ENDIAN);
+    self->bigendian = !(flags & PREFIX_LITTLE_ENDIAN);
     self->inerr = 0;
     self->outerr = 0;
     self->mem = 1;
@@ -94,11 +95,11 @@ error1:
     return -1;
 }
 
-int pfx_attach(int s, size_t hdrlen, int flags) {
+int prefix_attach(int s, size_t hdrlen, int flags) {
     int err;
-    struct pfx_sock *obj = malloc(sizeof(struct pfx_sock));
+    struct prefix_sock *obj = malloc(sizeof(struct prefix_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ps = pfx_attach_mem(s, hdrlen, flags, (struct pfx_storage*)obj);
+    int ps = prefix_attach_mem(s, hdrlen, flags, (struct prefix_storage*)obj);
     if(dill_slow(ps < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ps;
@@ -109,17 +110,17 @@ error1:
     return -1;
 }
 
-int pfx_detach(int s) {
-    struct pfx_sock *self = hquery(s, pfx_type);
+int prefix_detach(int s) {
+    struct prefix_sock *self = hquery(s, prefix_type);
     if(dill_slow(!self)) return -1;
     int u = self->u;
     if(!self->mem) free(self);
     return u;
 }
 
-static int pfx_msendl(struct msock_vfs *mvfs,
+static int prefix_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct pfx_sock *self = dill_cont(mvfs, struct pfx_sock, mvfs);
+    struct prefix_sock *self = dill_cont(mvfs, struct prefix_sock, mvfs);
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     uint8_t szbuf[self->hdrlen];
     size_t sz = 0;
@@ -137,9 +138,9 @@ static int pfx_msendl(struct msock_vfs *mvfs,
     return 0;
 }
 
-static ssize_t pfx_mrecvl(struct msock_vfs *mvfs,
+static ssize_t prefix_mrecvl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct pfx_sock *self = dill_cont(mvfs, struct pfx_sock, mvfs);
+    struct prefix_sock *self = dill_cont(mvfs, struct prefix_sock, mvfs);
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
     uint8_t szbuf[self->hdrlen];
     int rc = brecv(self->u, szbuf, self->hdrlen, deadline);
@@ -178,8 +179,8 @@ static ssize_t pfx_mrecvl(struct msock_vfs *mvfs,
     return sz;
 }
 
-static void pfx_hclose(struct hvfs *hvfs) {
-    struct pfx_sock *self = (struct pfx_sock*)hvfs;
+static void prefix_hclose(struct hvfs *hvfs) {
+    struct prefix_sock *self = (struct prefix_sock*)hvfs;
     if(dill_fast(self->u >= 0)) {
         int rc = hclose(self->u);
         dill_assert(rc == 0);

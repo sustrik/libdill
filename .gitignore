@@ -48,7 +48,7 @@ tests/tcp
 tests/ipc
 tests/iol
 tests/crlf
-tests/pfx
+tests/prefix
 tests/udp
 tests/tls
 tests/bundle
