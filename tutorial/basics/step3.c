@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
     while(1) {
         int s = tcp_accept(ls, NULL, -1);
         assert(s >= 0);
-        s = postfix_attach(s);
+        s = suffix_attach(s);
         assert(s >= 0);
         int cr = go(dialogue(s));
         assert(cr >= 0);

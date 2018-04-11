@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
     for(i = 0; i != 3; i++) {
         int s = tcp_accept(ls, NULL, -1);
         assert(s >= 0);
-        s = postfix_attach(s);
+        s = suffix_attach(s);
         assert(s >= 0);
         rc = bundle_go(b, dialogue(s, ch[1]));
         assert(rc == 0);

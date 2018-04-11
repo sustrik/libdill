@@ -47,7 +47,7 @@ tests/ipaddr
 tests/tcp
 tests/ipc
 tests/iol
-tests/postfix
+tests/suffix
 tests/prefix
 tests/udp
 tests/tls

@@ -24,7 +24,7 @@ Schema:
         {
             name: name of the argument
             type: type of the argument
-            postfix: part of the type to go after the name (e.g. "[]")
+            suffix: part of the type to go after the name (e.g. "[]")
             info: description of the argument
         }
     ]
@@ -154,22 +154,22 @@ ws_flags = `
             of protocols (e.g. HTML and WebSocket).
 `
 
-postfix_protocol = {
-    section: "POSTFIX protocol",
+suffix_protocol = {
+    section: "SUFFIX protocol",
     type: "message",
     info: `
-        POSTFIX is a message-based protocol that delimits messages usign CR+LF byte
+        SUFFIX is a message-based protocol that delimits messages usign CR+LF byte
         sequence (0x0D 0x0A). In other words, it's a protocol to send text
         messages separated by newlines. The protocol has no initial handshake.
         Terminal handshake is accomplished by each peer sending an empty line.
     `,
     example: `
         int s = tcp_connect(&addr, -1);
-        s = postfix_attach(s);
+        s = suffix_attach(s);
         msend(s, "ABC", 3, -1);
         char buf[256];
         ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
-        s = postfix_detach(s, -1);
+        s = suffix_detach(s, -1);
         tcp_close(s);
     `,
 }
@@ -717,7 +717,7 @@ fxs = [
             {
                 name: "chv",
                 type: "int",
-                postfix: "[2]",
+                suffix: "[2]",
                 info: "Out parameter. Two handles to the opposite ends of the channel."
             },
         ],
@@ -957,8 +957,8 @@ fxs = [
         `,
     },
     {
-        name: "postfix_attach",
-        info: "creates POSTFIX protocol on top of underlying socket",
+        name: "suffix_attach",
+        info: "creates SUFFIX protocol on top of underlying socket",
         result: {
             type: "int",
             success: "newly created socket handle",
@@ -972,24 +972,24 @@ fxs = [
                      "bytestream protocol.",
            },
         ],
-        protocol: postfix_protocol,
+        protocol: suffix_protocol,
         prologue: `
-            This function instantiates POSTFIX protocol on top of the underlying
+            This function instantiates SUFFIX protocol on top of the underlying
             protocol.
         `,
         epilogue: `
-            The socket can be cleanly shut down using **postfix_detach** function.
+            The socket can be cleanly shut down using **suffix_detach** function.
         `,
         has_handle_argument: true,
         allocates_handle: true,
-        mem: "postfix_storage",
+        mem: "suffix_storage",
         custom_errors: {
             EPROTO: "Underlying socket is not a bytestream socket.",
         },
     },
     {
-        name: "postfix_detach",
-        info: "terminates POSTFIX protocol and returns the underlying socket",
+        name: "suffix_detach",
+        info: "terminates SUFFIX protocol and returns the underlying socket",
 
         result: {
             type: "int",
@@ -1000,10 +1000,10 @@ fxs = [
            {
                name: "s",
                type: "int",
-               info: "Handle of the POSTFIX socket.",
+               info: "Handle of the SUFFIX socket.",
            },
         ],
-        protocol: postfix_protocol,
+        protocol: suffix_protocol,
         prologue: `
             This function does the terminal handshake and returns underlying
             socket to the user. The socket is closed even in the case of error.
@@ -1013,7 +1013,7 @@ fxs = [
         uses_connection: true,
 
         custom_errors: {
-            ENOTSUP: "The handle is not a POSTFIX protocol handle.",
+            ENOTSUP: "The handle is not a SUFFIX protocol handle.",
         },
     },
     {
@@ -1470,7 +1470,7 @@ fxs = [
            {
                name: "s",
                type: "int",
-               info: "Handle of the POSTFIX socket.",
+               info: "Handle of the SUFFIX socket.",
            },
         ],
         protocol: http_protocol,
@@ -2230,7 +2230,7 @@ fxs = [
             {
                 name: "s",
                 type: "int",
-                postfix: "[2]",
+                suffix: "[2]",
                 info: "Out parameter. Two handles to the opposite ends of the connection."
             },
         ],
@@ -3707,7 +3707,7 @@ function generate_man_page(fx, sections, mem) {
             t += "    "
             if(a[j].type) t += a[j].type + " "
             t += a[j].name
-            if(a[j].postfix) t += a[j].postfix
+            if(a[j].suffix) t += a[j].suffix
             if(j != a.length - 1) t += ",\n"
         }
     }
@@ -3932,7 +3932,7 @@ t += generate_section("TCP protocol", sections)
 t += generate_section("IPC protocol", sections)
 t += generate_section("UDP protocol", sections)
 t += generate_section("TLS protocol", sections)
-t += generate_section("POSTFIX protocol", sections)
+t += generate_section("SUFFIX protocol", sections)
 t += generate_section("PREFIX protocol", sections)
 t += generate_section("HTTP protocol", sections)
 t += generate_section("WebSocket protocol", sections)

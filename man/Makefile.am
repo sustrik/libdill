@@ -81,12 +81,12 @@ man3_MANS = \
     mrecvl.3 \
     msend.3 \
     msendl.3 \
-    postfix_attach.3 \
-    postfix_attach_mem.3 \
-    postfix_detach.3 \
     prefix_attach.3 \
     prefix_attach_mem.3 \
     prefix_detach.3 \
+    suffix_attach.3 \
+    suffix_attach_mem.3 \
+    suffix_detach.3 \
     tcp_done.3 \
     tcp_accept.3 \
     tcp_accept_mem.3 \

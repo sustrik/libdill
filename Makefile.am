@@ -63,7 +63,6 @@ libdill_la_SOURCES = \
 if DILL_SOCKETS
 libdill_la_SOURCES += \
     bsock.c \
-    postfix.c \
     fd.h \
     fd.c \
     http.c \
@@ -73,6 +72,7 @@ libdill_la_SOURCES += \
     ipaddr.c \
     msock.c \
     prefix.c \
+    suffix.c \
     tcp.c \
     term.c \
     udp.c \
@@ -131,8 +131,8 @@ check_PROGRAMS += \
     tests/iol \
     tests/tcp \
     tests/ipc \
-    tests/postfix \
     tests/prefix \
+    tests/suffix \
     tests/udp \
     tests/http \
     tests/ws \

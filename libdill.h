@@ -520,12 +520,12 @@ DILL_EXPORT int prefix_detach(
     int s);
 
 /******************************************************************************/
-/*  POSTFIX protocol.                                                         */
+/*  SUFFIX protocol.                                                          */
 /*  Messages are delimited by CRLF (0x0d 0x0a) sequences.                     */
 /*  The protocol is terminated by an empty line.                              */
 /******************************************************************************/
 
-struct postfix_storage {
+struct suffix_storage {
 #if defined(__i386__)
     char _[36];
 #else
@@ -533,12 +533,12 @@ struct postfix_storage {
 #endif
 };
 
-DILL_EXPORT int postfix_attach(
+DILL_EXPORT int suffix_attach(
     int s);
-DILL_EXPORT int postfix_attach_mem(
+DILL_EXPORT int suffix_attach_mem(
     int s,
-    struct postfix_storage *mem);
-DILL_EXPORT int postfix_detach(
+    struct suffix_storage *mem);
+DILL_EXPORT int suffix_detach(
     int s,
     int64_t deadline);
 

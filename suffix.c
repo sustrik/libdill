@@ -29,16 +29,16 @@
 
 #include "utils.h"
 
-dill_unique_id(postfix_type);
+dill_unique_id(suffix_type);
 
-static void *postfix_hquery(struct hvfs *hvfs, const void *type);
-static void postfix_hclose(struct hvfs *hvfs);
-static int postfix_msendl(struct msock_vfs *mvfs,
+static void *suffix_hquery(struct hvfs *hvfs, const void *type);
+static void suffix_hclose(struct hvfs *hvfs);
+static int suffix_msendl(struct msock_vfs *mvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
-static ssize_t postfix_mrecvl(struct msock_vfs *mvfs,
+static ssize_t suffix_mrecvl(struct msock_vfs *mvfs,
     struct iolist *first, struct iolist *last, int64_t deadline);
 
-struct postfix_sock {
+struct suffix_sock {
     struct hvfs hvfs;
     struct msock_vfs mvfs;
     int u;
@@ -50,28 +50,28 @@ struct postfix_sock {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct postfix_storage) >= sizeof(struct postfix_sock));
+DILL_CT_ASSERT(sizeof(struct suffix_storage) >= sizeof(struct suffix_sock));
 
-static void *postfix_hquery(struct hvfs *hvfs, const void *type) {
-    struct postfix_sock *self = (struct postfix_sock*)hvfs;
+static void *suffix_hquery(struct hvfs *hvfs, const void *type) {
+    struct suffix_sock *self = (struct suffix_sock*)hvfs;
     if(type == msock_type) return &self->mvfs;
-    if(type == postfix_type) return self;
+    if(type == suffix_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
 
-int postfix_attach_mem(int s, struct postfix_storage *mem) {
+int suffix_attach_mem(int s, struct suffix_storage *mem) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Take ownership of the underlying socket. */
     int u = hown(s);
     if(dill_slow(u < 0)) {err = errno; goto error1;}
     /* Create the object. */
-    struct postfix_sock *self = (struct postfix_sock*)mem;
-    self->hvfs.query = postfix_hquery;
-    self->hvfs.close = postfix_hclose;
-    self->mvfs.msendl = postfix_msendl;
-    self->mvfs.mrecvl = postfix_mrecvl;
+    struct suffix_sock *self = (struct suffix_sock*)mem;
+    self->hvfs.query = suffix_hquery;
+    self->hvfs.close = suffix_hclose;
+    self->mvfs.msendl = suffix_msendl;
+    self->mvfs.mrecvl = suffix_mrecvl;
     self->u = u;
     self->uvfs = hquery(u, bsock_type);
     if(dill_slow(!self->uvfs && errno == ENOTSUP)) {err = EPROTO; goto error2;}
@@ -91,11 +91,11 @@ error1:
     return -1;
 }
 
-int postfix_attach(int s) {
+int suffix_attach(int s) {
     int err;
-    struct postfix_sock *obj = malloc(sizeof(struct postfix_sock));
+    struct suffix_sock *obj = malloc(sizeof(struct suffix_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int cs = postfix_attach_mem(s, (struct postfix_storage*)obj);
+    int cs = suffix_attach_mem(s, (struct suffix_storage*)obj);
     if(dill_slow(cs < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return cs;
@@ -106,17 +106,17 @@ error1:
     return -1;
 }
 
-int postfix_detach(int s, int64_t deadline) {
-    struct postfix_sock *self = hquery(s, postfix_type);
+int suffix_detach(int s, int64_t deadline) {
+    struct suffix_sock *self = hquery(s, suffix_type);
     if(dill_slow(!self)) return -1;
     int u = self->u;
     if(!self->mem) free(self);
     return u;
 }
 
-static int postfix_msendl(struct msock_vfs *mvfs,
+static int suffix_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct postfix_sock *self = dill_cont(mvfs, struct postfix_sock, mvfs);
+    struct suffix_sock *self = dill_cont(mvfs, struct suffix_sock, mvfs);
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     /* Make sure that message doesn't contain CRLF sequence. */
     uint8_t c = 0;
@@ -140,9 +140,9 @@ static int postfix_msendl(struct msock_vfs *mvfs,
     return 0;
 }
 
-static ssize_t postfix_mrecvl(struct msock_vfs *mvfs,
+static ssize_t suffix_mrecvl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct postfix_sock *self = dill_cont(mvfs, struct postfix_sock, mvfs);
+    struct suffix_sock *self = dill_cont(mvfs, struct suffix_sock, mvfs);
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
     size_t recvd = 0;
     char c1 = 0;
@@ -175,8 +175,8 @@ static ssize_t postfix_mrecvl(struct msock_vfs *mvfs,
     return recvd - 2;
 }
 
-static void postfix_hclose(struct hvfs *hvfs) {
-    struct postfix_sock *self = (struct postfix_sock*)hvfs;
+static void suffix_hclose(struct hvfs *hvfs) {
+    struct suffix_sock *self = (struct suffix_sock*)hvfs;
     if(dill_fast(self->u >= 0)) {
         int rc = hclose(self->u);
         dill_assert(rc == 0);
