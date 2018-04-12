@@ -55,6 +55,7 @@ struct dill_handle {
 int dill_ctx_handle_init(struct dill_ctx_handle *ctx) {
     ctx->handles = NULL;
     ctx->nhandles = 0;
+    ctx->nused = 0;
     ctx->first = -1;
     ctx->last = -1;
     return 0;
@@ -71,8 +72,10 @@ int hmake(struct hvfs *vfs) {
     /* Returns ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
-    /* If there's no space for the new handle, expand the array. */
-    if(dill_slow(ctx->first == -1)) {
+    /* If there's no space for the new handle, expand the array.
+       Keep at least 8 handles unused so that there's at least some rotation
+       of handle numbers even if operating close to the current limit. */
+    if(dill_slow(ctx->nhandles - ctx->nused <= 8)) {
         /* Start with 256 handles, double the size when needed. */
         int sz = ctx->nhandles ? ctx->nhandles * 2 : 256;
         struct dill_handle *hndls =
@@ -98,6 +101,7 @@ int hmake(struct hvfs *vfs) {
     ctx->handles[h].next = -2;
     ctx->handles[h].type = NULL;
     ctx->handles[h].ptr = NULL;
+    ctx->nused++;
     return h;
 }
 
@@ -151,6 +155,7 @@ int hclose(int h) {
     if(ctx->first == -1) ctx->first = h;
     else ctx->handles[ctx->last].next = h;
     ctx->last = h;
+    ctx->nused--;
     return 0;
 }
 
