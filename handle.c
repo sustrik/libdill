@@ -112,8 +112,11 @@ int hown(int h) {
     if(dill_slow(res < 0)) return -1;
     /* Return a handle to the shared pool. */
     hndl->ptr = NULL;
-    hndl->next = ctx->unused;
-    ctx->unused = h;
+    hndl->next = -1;
+    if(ctx->first == -1) ctx->first = h;
+    else ctx->handles[ctx->last].next = h;
+    ctx->last = h;
+    ctx->nused--;
     return res;
 }
 
