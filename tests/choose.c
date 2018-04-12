@@ -333,7 +333,7 @@ int main() {
     int hndl11 = go(sender3(ch22[0], 4444, start + 50));
     errno_assert(hndl11 >= 0);
     struct chclause cls18[] = {{CHRECV, ch22[1], &val, sizeof(val)}};
-    rc = choose(cls17, 1, start + 1000);
+    rc = choose(cls18, 1, start + 1000);
     choose_assert(0, 0);
     assert(val == 4444);
     diff = now() - start;

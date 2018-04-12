@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2016 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -55,7 +55,8 @@ struct dill_handle {
 int dill_ctx_handle_init(struct dill_ctx_handle *ctx) {
     ctx->handles = NULL;
     ctx->nhandles = 0;
-    ctx->unused = -1;
+    ctx->first = -1;
+    ctx->last = -1;
     return 0;
 }
 
@@ -71,7 +72,7 @@ int hmake(struct hvfs *vfs) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* If there's no space for the new handle, expand the array. */
-    if(dill_slow(ctx->unused == -1)) {
+    if(dill_slow(ctx->first == -1)) {
         /* Start with 256 handles, double the size when needed. */
         int sz = ctx->nhandles ? ctx->nhandles * 2 : 256;
         struct dill_handle *hndls =
@@ -82,14 +83,16 @@ int hmake(struct hvfs *vfs) {
         for(i = ctx->nhandles; i != sz - 1; ++i)
             hndls[i].next = i + 1;
         hndls[sz - 1].next = -1;
-        ctx->unused = ctx->nhandles;
+        ctx->first = ctx->nhandles;
+        ctx->last = sz - 1; 
         /* Adjust the array. */
         ctx->handles = hndls;
         ctx->nhandles = sz;
     }
     /* Return first handle from the list of unused handles. */
-    int h = ctx->unused;
-    ctx->unused = ctx->handles[h].next;
+    int h = ctx->first;
+    ctx->first = ctx->handles[h].next;
+    if(dill_slow(ctx->first) == -1) ctx->last = -1;
     vfs->refcount = 1;
     ctx->handles[h].vfs = vfs;
     ctx->handles[h].next = -2;
@@ -144,8 +147,10 @@ int hclose(int h) {
     /* Mark the cache as invalid. */
     hndl->ptr = NULL;
     /* Return a handle to the shared pool. */
-    hndl->next = ctx->unused;
-    ctx->unused = h;
+    hndl->next = -1;
+    if(ctx->first == -1) ctx->first = h;
+    else ctx->handles[ctx->last].next = h;
+    ctx->last = h;
     return 0;
 }
 

@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2016 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -29,8 +29,9 @@ struct dill_ctx_handle {
     /* Array of handles. The size of the array is stored in 'nhandles'. */
     struct dill_handle *handles;
     int nhandles;
-    /* Points to the first item in the list of unused handles. */
-    int unused;
+    /* Points to the first and last item in the list of unused handles. */
+    int first;
+    int last;
 };
 
 int dill_ctx_handle_init(struct dill_ctx_handle *ctx);
