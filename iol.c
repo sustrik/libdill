@@ -29,6 +29,11 @@
 
 int iol_check(struct iolist *first, struct iolist *last,
       size_t *nbufs, size_t *nbytes) {
+    if(!first && !last) {
+        if(nbufs) *nbufs = 0;
+        if(nbytes) *nbytes = 0;
+        return 0;
+    }
     if(dill_slow(!first || !last || last->iol_next)) {
         errno = EINVAL; return -1;}
     size_t nbf = 0, nbt = 0, res = 0;

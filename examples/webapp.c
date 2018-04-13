@@ -112,7 +112,7 @@ coroutine void ws_worker(int s) {
     assert(rc == 0);
 
     /* Perform the final WebSocket handshake. */
-    s = ws_detach(s, -1);
+    s = ws_detach(s, 1000, "OK", 2, -1);
     assert(s >= 0);
 
     /* Close the TCP connection. */

@@ -690,9 +690,9 @@ DILL_EXPORT int tls_detach(
 
 struct ws_storage {
 #if defined(__i386__)
-    char _[44];
+    char _[172];
 #else
-    char _[88];
+    char _[216];
 #endif
 };
 
@@ -756,10 +756,21 @@ DILL_EXPORT ssize_t ws_recvl(
     int64_t deadline);
 DILL_EXPORT int ws_done(
     int s,
+    uint16_t status,
+    const void *buf,
+    size_t len,
     int64_t deadline);
 DILL_EXPORT int ws_detach(
     int s,
+    uint16_t status,
+    const void *buf,
+    size_t len,
     int64_t deadline);
+DILL_EXPORT ssize_t ws_status(
+    int s,
+    uint16_t *status,
+    void *buf,
+    size_t len);
 
 /* Helper functions for those who want to implement HTTP exchange by hand. */
 

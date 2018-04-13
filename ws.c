@@ -42,6 +42,9 @@ struct ws_sock {
     unsigned int outdone: 1;
     unsigned int server : 1;
     unsigned int mem : 1;
+    uint16_t status;
+    uint8_t msglen;
+    uint8_t msg[128];
 };
 
 DILL_CT_ASSERT(sizeof(struct ws_storage) >= sizeof(struct ws_sock));
@@ -79,6 +82,8 @@ int ws_attach_client_mem(int s, int flags, const char *resource,
     self->outdone = 0;
     self->server = 0;
     self->mem = 1;
+    self->status = 0;
+    self->msglen = 0;
     if(flags & WS_NOHTTP) return hmake(&self->hvfs);
     if(dill_slow(!resource || !host)) {errno = EINVAL; return -1;}
     struct http_storage http_mem;
@@ -185,12 +190,12 @@ int ws_attach_server_mem(int s, int flags, char *resource, size_t resourcelen,
     self->outdone = 0;
     self->server = 1;
     self->mem = 1;
+    self->status = 0;
+    self->msglen = 0;
     if(flags & WS_NOHTTP) return hmake(&self->hvfs);
-
     struct http_storage http_mem;
     s = http_attach_mem(s, &http_mem);
     if(dill_slow(s < 0)) return -1;
-
     /* Receive the HTTP request from the client. */
     char command[32];
     int rc = http_recvrequest(s, command, sizeof(command),
@@ -283,7 +288,7 @@ error1:
     return -1;
 }
 
-static int ws_sendl_base(struct msock_vfs *mvfs, int flags,
+static int ws_sendl_base(struct msock_vfs *mvfs, uint8_t type,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct ws_sock *self = dill_cont(mvfs, struct ws_sock, mvfs);
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
@@ -292,7 +297,7 @@ static int ws_sendl_base(struct msock_vfs *mvfs, int flags,
     if(dill_slow(rc < 0)) return -1;
     uint8_t buf[12];
     size_t sz;
-    buf[0] = (flags & WS_TEXT) ? 0x81 : 0x82;
+    buf[0] = 0x80 | type;
     if(len > 0xffff) {
         buf[1] = 127;
         dill_putll(buf + 2, len);
@@ -330,7 +335,7 @@ static int ws_sendl_base(struct msock_vfs *mvfs, int flags,
         for(i = 0; i != first->iol_len; ++i) {
             uint8_t b = ((uint8_t*)first->iol_base)[i] ^
                 mask[pos++ % sizeof(mask)];
-            rc = bsend(self->u, &b, 1, deadline);
+            rc = bsend(self->u, &b, 1, deadline); 
             if(dill_slow(rc < 0)) return -1;
         }
         first = first->iol_next;
@@ -349,6 +354,7 @@ static ssize_t ws_recvl_base(struct msock_vfs *mvfs, int *flags,
     struct iolist it;
     if(first) it = *first;
     while(1) {
+        struct iolist iol_msg;
         uint8_t hdr1[2];
         rc = brecv(self->u, hdr1, sizeof(hdr1), deadline);
         if(dill_slow(rc < 0)) return -1;
@@ -356,6 +362,8 @@ static ssize_t ws_recvl_base(struct msock_vfs *mvfs, int *flags,
         int opcode = hdr1[0] & 0x0f;
         /* TODO: Other opcodes. */
         switch(opcode) {
+        case 0:
+            break;
         case 1:
             if(flags) *flags = WS_TEXT;
             break;
@@ -363,9 +371,16 @@ static ssize_t ws_recvl_base(struct msock_vfs *mvfs, int *flags,
             if(flags) *flags = WS_BINARY;
             break;
         case 8:
+            it.iol_base = &self->status;
+            it.iol_len = 2;
+            it.iol_next = &iol_msg;
+            it.iol_rsvd = 0;
+            iol_msg.iol_base = self->msg;
+            iol_msg.iol_len = sizeof(self->msg);
+            iol_msg.iol_next = NULL;
+            iol_msg.iol_rsvd = 0;
             self->indone = 1;
-            errno = EPIPE;
-            return -1;
+            break;
         default:
             errno = EPROTO;
             return -1;
@@ -385,6 +400,9 @@ static ssize_t ws_recvl_base(struct msock_vfs *mvfs, int *flags,
             sz = dill_getll(hdr2);
         }
         res += sz;
+        /* Control frames cannot be fragmented or longer than 125 bytes. */
+        if(dill_slow(opcode >= 8 && (sz > 125 || !(hdr1[0] & 0x80)))) {
+            errno = EPROTO; return -1;}
         uint8_t mask[4];
         if(self->server) {
             rc = brecv(self->u, mask, sizeof(mask), deadline);
@@ -409,6 +427,15 @@ static ssize_t ws_recvl_base(struct msock_vfs *mvfs, int *flags,
         }
         if(hdr1[0] & 0x80) break;
     }
+    if(dill_slow(self->indone)) {
+        if(dill_slow(res == 1)) {errno = EPROTO; return -1;}
+        if(res >= 2) {
+           self->status = dill_gets((uint8_t*)&self->status);
+           self->msglen = (uint8_t)res - 2;
+        }
+        errno = EPIPE;
+        return -1;
+    }
     return res;
 }
 
@@ -416,7 +443,8 @@ int ws_send(int s, int flags, const void *buf, size_t len, int64_t deadline) {
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
     struct iolist iol = {(void*)buf, len, NULL, 0};
-    return ws_sendl_base(&self->mvfs, flags, &iol, &iol, deadline);
+    return ws_sendl_base(&self->mvfs, (flags & WS_TEXT) ? 0x1 : 0x2,
+        &iol, &iol, deadline);
 }
 
 ssize_t ws_recv(int s, int *flags, void *buf, size_t len, int64_t deadline) {
@@ -430,7 +458,8 @@ int ws_sendl(int s, int flags, struct iolist *first, struct iolist *last,
       int64_t deadline) {
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
-    return ws_sendl_base(&self->mvfs, flags, first, last, deadline);
+    return ws_sendl_base(&self->mvfs, (flags & WS_TEXT) ? 0x1 : 0x2,
+        first, last, deadline);
 }
 
 ssize_t ws_recvl(int s, int *flags, struct iolist *first, struct iolist *last,
@@ -443,7 +472,8 @@ ssize_t ws_recvl(int s, int *flags, struct iolist *first, struct iolist *last,
 static int ws_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct ws_sock *self = dill_cont(mvfs, struct ws_sock, mvfs);
-    return ws_sendl_base(mvfs, self->flags, first, last, deadline);
+    return ws_sendl_base(mvfs, (self->flags & WS_TEXT) ? 0x1 : 0x2,
+        first, last, deadline);
 }
 
 static ssize_t ws_mrecvl(struct msock_vfs *mvfs,
@@ -457,24 +487,30 @@ static ssize_t ws_mrecvl(struct msock_vfs *mvfs,
     return sz;
 }
 
-int ws_done(int s, int64_t deadline) {
+int ws_done(int s, uint16_t status, const void *buf, size_t len,
+      int64_t deadline) {
+    if(dill_slow((status != 0 && status < 1000) || (!buf && len > 0))) {
+        errno = EINVAL; return -1;}
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
-    /* TODO: Status code and message. */
-    uint8_t buf[6] = {0};
-    buf[0] = 0x88;
-    int rc = bsend(self->u, buf, self->server ? 2 : 6, deadline);
+    struct iolist iol2 = {(void*)buf, len, NULL, 0};
+    uint8_t sbuf[2];
+    dill_puts(sbuf, status);
+    struct iolist iol1 = {status ? sbuf : NULL, status ? sizeof(sbuf) : 0,
+        &iol2, 0};
+    int rc = ws_sendl_base(&self->mvfs, 0x8, &iol1, &iol2, deadline);
     if(dill_slow(rc < 0)) return -1;
     self->outdone = 1;
     return 0;
 }
 
-int ws_detach(int s, int64_t deadline) {
+int ws_detach(int s, uint16_t status, const void *buf, size_t len,
+      int64_t deadline) {
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
     if(!self->outdone) {
-        int rc = ws_done(s, deadline);
+        int rc = ws_done(s, status, buf, len, deadline);
         if(dill_slow(rc < 0)) return -1;
     }
     while(1) {
@@ -495,6 +531,19 @@ static void ws_hclose(struct hvfs *hvfs) {
     int rc = hclose(self->u);
     dill_assert(rc == 0);
     if(!self->mem) free(self);
+}
+
+ssize_t ws_status(int s, uint16_t *status, void *buf, size_t len) {
+    if(dill_slow(!buf && len)) {errno = EINVAL; return -1;}
+    struct ws_sock *self = hquery(s, ws_type);
+    if(dill_slow(!self)) return -1;
+    if(dill_slow(!self->indone)) {errno = EAGAIN; return -1;}
+    if(status) *status = self->status;
+    if(buf) {
+        if(dill_slow(len < self->msglen)) {errno = EMSGSIZE; return -1;}
+        memcpy(buf, self->msg, self->msglen);
+    }
+    return self->msglen;
 }
 
 /******************************************************************************/
