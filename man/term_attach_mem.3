@@ -21,9 +21,6 @@ int\ term_attach_mem(
 .fi
 .SH DESCRIPTION
 .PP
-\f[B]WARNING: This is experimental functionality and the API may change
-in the future.\f[]
-.PP
 TERM is a protocol that implements clean terminal handshake between
 peers.
 When creating the protocol instance user specifies the terminal message
@@ -109,4 +106,4 @@ s\ =\ term_detach(s);
 .PP
 \f[B]hclose\f[](3) \f[B]mrecv\f[](3) \f[B]mrecvl\f[](3)
 \f[B]msend\f[](3) \f[B]msendl\f[](3) \f[B]now\f[](3)
-\f[B]term_attach\f[](3)
+\f[B]term_attach\f[](3) \f[B]term_detach\f[](3) \f[B]term_done\f[](3)

@@ -26,7 +26,6 @@
     <span class="dt">size_t</span> len,
     <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p><strong>WARNING: This is experimental functionality and the API may change in the future.</strong></p>
 <p>TERM is a protocol that implements clean terminal handshake between peers. When creating the protocol instance user specifies the terminal message to use. When closing the protocol, terminal messages are exchanged between peers in both directions. After the protocol shuts down the peers agree on their position in the message stream.</p>
 <p>This function instantiates TERM protocol on top of the underlying protocol.</p>
 <p><strong>s</strong>: Handle of the underlying socket. It must be a message protocol.</p>
@@ -63,5 +62,5 @@ term_done(s, <span class="dv">-1</span>);
 }
 s = term_detach(s);</code></pre></div>
 <h1 id="see-also">SEE ALSO</h1>
-<p><strong>hclose</strong>(3) <strong>mrecv</strong>(3) <strong>mrecvl</strong>(3) <strong>msend</strong>(3) <strong>msendl</strong>(3) <strong>now</strong>(3) <strong>term_attach_mem</strong>(3)</p>
+<p><strong>hclose</strong>(3) <strong>mrecv</strong>(3) <strong>mrecvl</strong>(3) <strong>msend</strong>(3) <strong>msendl</strong>(3) <strong>now</strong>(3) <strong>term_attach_mem</strong>(3) <strong>term_detach</strong>(3) <strong>term_done</strong>(3)</p>
 </body>

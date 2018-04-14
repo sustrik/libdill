@@ -301,7 +301,6 @@ term_protocol = {
         }
         s = term_detach(s);
     `,
-    experimental: true,
 }
 
 tls_protocol = {
@@ -2845,6 +2844,64 @@ fxs = [
         },
     },
     {
+        name: "term_detach",
+        info: "cleanly terminates the protocol",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "The TERM protocol handle.",
+           },
+        ],
+        protocol: term_protocol,
+        prologue: `
+            This function cleanly terminates TERM protocol. If termination
+            message wasn't yet sent to the peer using **term_done** function
+            it will be sent now. Afterwards, any outstanding inbound messages
+            will be received and dropped silently. The function returns
+            after termination message from the peer is received.
+        `,
+        has_handle_argument: true,
+        has_deadline: true,
+        custom_errors: {
+            ENOTSUP: "The handle is not a TERM protocol handle.",
+        },
+    },
+    {
+        name: "term_done",
+        info: "half-closes the connection",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "The TERM protocol handle.",
+           },
+        ],
+        protocol: term_protocol,
+        prologue: `
+            This function sends the termination message to the peer. Afterwards,
+            it is not possible to send more messages. However, it is still
+            possible to receiving outstanding inbound messages.
+        `,
+        has_handle_argument: true,
+        has_deadline: true,
+
+        custom_errors: {
+            EIPE: "The termination message was already sent.",
+            ENOTSUP: "The handle is not a TERM protocol handle.",
+        },
+    },
+    {
         name: "tls_attach_client",
         info: "creates TLS protocol on top of underlying socket",
         result: {
@@ -4099,6 +4156,7 @@ t += generate_section("UDP protocol", sections)
 t += generate_section("TLS protocol", sections)
 t += generate_section("SUFFIX protocol", sections)
 t += generate_section("PREFIX protocol", sections)
+t += generate_section("TERM protocol", sections)
 t += generate_section("HTTP protocol", sections)
 t += generate_section("WebSocket protocol", sections)
 fs.writeFile("toc.md", t)
