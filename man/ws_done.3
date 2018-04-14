@@ -13,6 +13,9 @@ ws_done \- half\-closes a WebSocket connection
 
 int\ ws_done(
 \ \ \ \ int\ s,
+\ \ \ \ int\ status,
+\ \ \ \ const\ void*\ buf,
+\ \ \ \ size_t\ len,
 \ \ \ \ int64_t\ deadline);
 \f[]
 .fi
@@ -30,6 +33,16 @@ This will, in turn, cause the peer to get \f[B]EPIPE\f[] error after it
 has received all the data.
 .PP
 \f[B]s\f[]: The WebSocket connection handle.
+.PP
+\f[B]status\f[]: Status to send to the peer.
+If set zero, no status will be sent.
+.PP
+\f[B]buf\f[]: Message to send to the peer.
+If set to NULL, no message will be sent.
+Note that WebSocket protocol limits the sizeof the shutdown message to
+125 bytes.
+.PP
+\f[B]len\f[]: Size of the message to send to the peer, in bytes.
 .PP
 \f[B]deadline\f[]: A point in time when the operation should time out,
 in milliseconds.
@@ -82,3 +95,4 @@ tcp_close(s,\ \-1);
 \f[B]ws_attach_server_mem\f[](3) \f[B]ws_detach\f[](3)
 \f[B]ws_recv\f[](3) \f[B]ws_recvl\f[](3) \f[B]ws_request_key\f[](3)
 \f[B]ws_response_key\f[](3) \f[B]ws_send\f[](3) \f[B]ws_sendl\f[](3)
+\f[B]ws_status\f[](3)

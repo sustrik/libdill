@@ -437,6 +437,7 @@ static ssize_t ws_recvl_base(struct msock_vfs *mvfs, int *flags,
                errno = EPROTO; return -1;}
            self->msglen = (uint8_t)res - 2;
         }
+        else self->msglen = 0;
         errno = EPIPE;
         return -1;
     }
