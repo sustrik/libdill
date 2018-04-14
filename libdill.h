@@ -91,13 +91,7 @@ DILL_EXPORT int hclose(int h);
 /*  Coroutines                                                                */
 /******************************************************************************/
 
-struct bundle_storage {
-#if defined(__i386__)
-    char _[32];
-#else
-    char _[64];
-#endif
-};
+struct bundle_storage {char _[64];};
 
 DILL_EXPORT int bundle(void);
 DILL_EXPORT int bundle_mem(struct bundle_storage *mem);
@@ -258,14 +252,7 @@ struct chclause {
     size_t len;
 };
 
-
-struct chstorage {
-#if defined(__i386__)
-    char _[72];
-#else
-    char _[144];
-#endif
-};
+struct chstorage {char _[144];};
 
 DILL_EXPORT int chmake(int chv[2]);
 DILL_EXPORT int chmake_mem(struct chstorage *mem, int chv[2]);
@@ -384,21 +371,9 @@ DILL_EXPORT void ipaddr_setport(
 /*  TCP protocol.                                                             */
 /******************************************************************************/
 
-struct tcp_listener_storage {
-#if defined(__i386__)
-    char _[36];
-#else
-    char _[72];
-#endif
-};
+struct tcp_listener_storage {char _[72];};
 
-struct tcp_storage {
-#if defined(__i386__)
-    char _[2040];
-#else
-    char _[2080];
-#endif
-};
+struct tcp_storage {char _[2080];};
 
 DILL_EXPORT int tcp_listen(
     struct ipaddr *addr,
@@ -434,29 +409,11 @@ DILL_EXPORT int tcp_close(
 /*  IPC protocol.                                                            */
 /******************************************************************************/
 
-struct ipc_listener_storage {
-#if defined(__i386__)
-    char _[20];
-#else
-    char _[40];
-#endif
-};
+struct ipc_listener_storage {char _[40];};
 
-struct ipc_storage {
-#if defined(__i386__)
-    char _[2040];
-#else
-    char _[2080];
-#endif
-};
+struct ipc_storage {char _[2080];};
 
-struct ipc_pair_storage {
-#if defined(__i386__)
-    char _[4080];
-#else
-    char _[4160];
-#endif
-};
+struct ipc_pair_storage {char _[4160];};
 
 DILL_EXPORT int ipc_listen(
     const char *addr,
@@ -496,13 +453,7 @@ DILL_EXPORT int ipc_pair_mem(
 /*  Messages are prefixed size.                                               */
 /******************************************************************************/
 
-struct prefix_storage {
-#if defined(__i386__)
-    char _[36];
-#else
-    char _[72];
-#endif
-};
+struct prefix_storage {char _[72];};
 
 #define PREFIX_BIG_ENDIAN 0
 #define PREFIX_LITTLE_ENDIAN 1
@@ -525,13 +476,7 @@ DILL_EXPORT int prefix_detach(
 /*  The protocol is terminated by an empty line.                              */
 /******************************************************************************/
 
-struct suffix_storage {
-#if defined(__i386__)
-    char _[36];
-#else
-    char _[72];
-#endif
-};
+struct suffix_storage {char _[72];};
 
 DILL_EXPORT int suffix_attach(
     int s);
@@ -547,13 +492,7 @@ DILL_EXPORT int suffix_detach(
 /*  Each UDP packet is treated as a separate message.                         */
 /******************************************************************************/
 
-struct udp_storage {
-#if defined(__i386__)
-    char _[44];
-#else
-    char _[88];
-#endif
-};
+struct udp_storage {char _[88];};
 
 DILL_EXPORT int udp_open(
     struct ipaddr *local,
@@ -589,13 +528,7 @@ DILL_EXPORT ssize_t udp_recvl(
 /*  HTTP                                                                      */
 /******************************************************************************/
 
-struct http_storage {
-#if defined(__i386__)
-    char _[1148];
-#else
-    char _[1240];
-#endif
-};
+struct http_storage {char _[1240];};
 
 DILL_EXPORT int http_attach(
     int s);
@@ -649,13 +582,7 @@ DILL_EXPORT int http_recvfield(
 
 #if !defined DILL_DISABLE_TLS
 
-struct tls_storage {
-#if defined(__i386__)
-    char _[44];
-#else
-    char _[88];
-#endif
-};
+struct tls_storage {char _[88];};
 
 DILL_EXPORT int tls_attach_server(
     int s,
@@ -688,13 +615,7 @@ DILL_EXPORT int tls_detach(
 /*  WebSockets protocol.                                                      */
 /******************************************************************************/
 
-struct ws_storage {
-#if defined(__i386__)
-    char _[172];
-#else
-    char _[216];
-#endif
-};
+struct ws_storage {char _[216];};
 
 #define WS_BINARY 0
 #define WS_TEXT 1
@@ -787,13 +708,7 @@ DILL_EXPORT int ws_response_key(
 /*  Implementes terminal handshake on the top of any message-based protocol.  */
 /******************************************************************************/
 
-struct term_storage {
-#if defined(__i386__)
-    char _[68];
-#else
-    char _[104];
-#endif
-};
+struct term_storage {char _[104];};
 
 DILL_EXPORT int term_attach(
     int s,
