@@ -318,12 +318,16 @@ DILL_EXPORT int dill_choose(
 /*  Gather/scatter list.                                                      */
 /******************************************************************************/
 
-struct iolist {
+struct dill_iolist {
     void *iol_base;
     size_t iol_len;
-    struct iolist *iol_next;
+    struct dill_iolist *iol_next;
     int iol_rsvd;
 };
+
+#if !defined DILL_DISABLE_RAW_NAMES
+#define iolist dill_iolist
+#endif
 
 /******************************************************************************/
 /*  Bytestream sockets.                                                       */
@@ -341,13 +345,13 @@ DILL_EXPORT int dill_brecv(
     int64_t deadline);
 DILL_EXPORT int dill_bsendl(
     int s,
-    struct iolist *first,
-    struct iolist *last,
+    struct dill_iolist *first,
+    struct dill_iolist *last,
     int64_t deadline);
 DILL_EXPORT int dill_brecvl(
     int s,
-    struct iolist *first,
-    struct iolist *last,
+    struct dill_iolist *first,
+    struct dill_iolist *last,
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
@@ -373,13 +377,13 @@ DILL_EXPORT ssize_t dill_mrecv(
     int64_t deadline);
 DILL_EXPORT int dill_msendl(
     int s,
-    struct iolist *first,
-    struct iolist *last,
+    struct dill_iolist *first,
+    struct dill_iolist *last,
     int64_t deadline);
 DILL_EXPORT ssize_t dill_mrecvl(
     int s,
-    struct iolist *first,
-    struct iolist *last,
+    struct dill_iolist *first,
+    struct dill_iolist *last,
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
@@ -639,13 +643,13 @@ DILL_EXPORT ssize_t dill_udp_recv(
 DILL_EXPORT int dill_udp_sendl(
     int s,
     const struct ipaddr *addr,
-    struct iolist *first,
-    struct iolist *last);
+    struct dill_iolist *first,
+    struct dill_iolist *last);
 DILL_EXPORT ssize_t dill_udp_recvl(
     int s,
     struct ipaddr *addr,
-    struct iolist *first,
-    struct iolist *last,
+    struct dill_iolist *first,
+    struct dill_iolist *last,
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
@@ -824,14 +828,14 @@ DILL_EXPORT ssize_t dill_ws_recv(
 DILL_EXPORT int dill_ws_sendl(
     int s,
     int flags,
-    struct iolist *first,
-    struct iolist *last,
+    struct dill_iolist *first,
+    struct dill_iolist *last,
     int64_t deadline);
 DILL_EXPORT ssize_t dill_ws_recvl(
     int s,
     int *flags,
-    struct iolist *first,
-    struct iolist *last,
+    struct dill_iolist *first,
+    struct dill_iolist *last,
     int64_t deadline);
 DILL_EXPORT int dill_ws_done(
     int s,
