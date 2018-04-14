@@ -31,13 +31,19 @@
 /*  Handles                                                                   */
 /******************************************************************************/
 
-struct hvfs {
-    void *(*query)(struct hvfs *vfs, const void *type);
-    void (*close)(struct hvfs *vfs);
+struct dill_hvfs {
+    void *(*query)(struct dill_hvfs *vfs, const void *type);
+    void (*close)(struct dill_hvfs *vfs);
 };
 
-DILL_EXPORT int hmake(struct hvfs *vfs);
-DILL_EXPORT void *hquery(int h, const void *type);
+DILL_EXPORT int dill_hmake(struct dill_hvfs *vfs);
+DILL_EXPORT void *dill_hquery(int h, const void *type);
+
+#if !defined DILL_DISABLE_RAW_NAMES
+#define hvfs dill_hvfs
+#define hmake dill_hmake
+#define hquery dill_hquery
+#endif
 
 #if !defined DILL_DISABLE_SOCKETS
 
@@ -45,27 +51,37 @@ DILL_EXPORT void *hquery(int h, const void *type);
 /*  Bytestream sockets.                                                       */
 /******************************************************************************/
 
-DILL_EXPORT extern const void *bsock_type;
+DILL_EXPORT extern const void *dill_bsock_type;
 
-struct bsock_vfs {
-    int (*bsendl)(struct bsock_vfs *vfs,
-        struct iolist *first, struct iolist *last, int64_t deadline);
-    int (*brecvl)(struct bsock_vfs *vfs,
-        struct iolist *first, struct iolist *last, int64_t deadline);
+struct dill_bsock_vfs {
+    int (*bsendl)(struct dill_bsock_vfs *vfs,
+        struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
+    int (*brecvl)(struct dill_bsock_vfs *vfs,
+        struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
 };
+
+#if !defined DILL_DISABLE_RAW_NAMES
+#define bsock_vfs dill_bsock_vfs
+#define bsock_type dill_bsock_type
+#endif
 
 /******************************************************************************/
 /*  Message sockets.                                                          */
 /******************************************************************************/
 
-DILL_EXPORT extern const void *msock_type;
+DILL_EXPORT extern const void *dill_msock_type;
 
-struct msock_vfs {
-    int (*msendl)(struct msock_vfs *vfs,
-        struct iolist *first, struct iolist *last, int64_t deadline);
-    ssize_t (*mrecvl)(struct msock_vfs *vfs,
-        struct iolist *first, struct iolist *last, int64_t deadline);
+struct dill_msock_vfs {
+    int (*msendl)(struct dill_msock_vfs *vfs,
+        struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
+    ssize_t (*mrecvl)(struct dill_msock_vfs *vfs,
+        struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
 };
+
+#if !defined DILL_DISABLE_RAW_NAMES
+#define msock_vfs dill_msock_vfs
+#define msock_type dill_msock_type
+#endif
 
 #endif
 

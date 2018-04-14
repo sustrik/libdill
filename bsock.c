@@ -28,17 +28,17 @@
 #include "libdillimpl.h"
 #include "utils.h"
 
-dill_unique_id(bsock_type);
+dill_unique_id(dill_bsock_type);
 
 int dill_bsend(int s, const void *buf, size_t len, int64_t deadline) {
-    struct bsock_vfs *b = hquery(s, bsock_type);
+    struct bsock_vfs *b = hquery(s, dill_bsock_type);
     if(dill_slow(!b)) return -1;
     struct iolist iol = {(void*)buf, len, NULL, 0};
     return b->bsendl(b, &iol, &iol, deadline);
 }
 
 int dill_brecv(int s, void *buf, size_t len, int64_t deadline) {
-    struct bsock_vfs *b = hquery(s, bsock_type);
+    struct bsock_vfs *b = hquery(s, dill_bsock_type);
     if(dill_slow(!b)) return -1;
     struct iolist iol = {buf, len, NULL, 0};
     return b->brecvl(b, &iol, &iol, deadline);
@@ -46,7 +46,7 @@ int dill_brecv(int s, void *buf, size_t len, int64_t deadline) {
 
 int dill_bsendl(int s, struct iolist *first, struct iolist *last,
       int64_t deadline) {
-    struct bsock_vfs *b = hquery(s, bsock_type);
+    struct bsock_vfs *b = hquery(s, dill_bsock_type);
     if(dill_slow(!b)) return -1;
     if(dill_slow(!first || !last || last->iol_next)) {
         errno = EINVAL; return -1;}
@@ -55,7 +55,7 @@ int dill_bsendl(int s, struct iolist *first, struct iolist *last,
 
 int dill_brecvl(int s, struct iolist *first, struct iolist *last,
       int64_t deadline) {
-    struct bsock_vfs *b = hquery(s, bsock_type);
+    struct bsock_vfs *b = hquery(s, dill_bsock_type);
     if(dill_slow(!b)) return -1;
     if(dill_slow((first && !last) || (!first && last) || last->iol_next)) {
         errno = EINVAL; return -1;}

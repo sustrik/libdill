@@ -65,7 +65,7 @@ void dill_ctx_handle_term(struct dill_ctx_handle *ctx) {
     free(ctx->handles);
 }
 
-int hmake(struct hvfs *vfs) {
+int dill_hmake(struct hvfs *vfs) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
     if(dill_slow(!vfs || !vfs->query || !vfs->close)) {
         errno = EINVAL; return -1;}
@@ -120,7 +120,7 @@ int dill_hown(int h) {
     return res;
 }
 
-void *hquery(int h, const void *type) {
+void *dill_hquery(int h, const void *type) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
     CHECKHANDLE(h, NULL);
     /* Try and use the cached pointer first; otherwise do the expensive virtual

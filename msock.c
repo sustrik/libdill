@@ -28,17 +28,17 @@
 #include "libdillimpl.h"
 #include "utils.h"
 
-dill_unique_id(msock_type);
+dill_unique_id(dill_msock_type);
 
 int dill_msend(int s, const void *buf, size_t len, int64_t deadline) {
-    struct msock_vfs *m = hquery(s, msock_type);
+    struct msock_vfs *m = hquery(s, dill_msock_type);
     if(dill_slow(!m)) return -1;
     struct iolist iol = {(void*)buf, len, NULL, 0};
     return m->msendl(m, &iol, &iol, deadline);
 }
 
 ssize_t dill_mrecv(int s, void *buf, size_t len, int64_t deadline) {
-    struct msock_vfs *m = hquery(s, msock_type);
+    struct msock_vfs *m = hquery(s, dill_msock_type);
     if(dill_slow(!m)) return -1;
     struct iolist iol = {buf, len, NULL, 0};
     return m->mrecvl(m, &iol, &iol, deadline);
@@ -46,7 +46,7 @@ ssize_t dill_mrecv(int s, void *buf, size_t len, int64_t deadline) {
 
 int dill_msendl(int s, struct iolist *first, struct iolist *last,
       int64_t deadline) {
-    struct msock_vfs *m = hquery(s, msock_type);
+    struct msock_vfs *m = hquery(s, dill_msock_type);
     if(dill_slow(!m)) return -1;
     if(dill_slow(!first || !last || last->iol_next)) {
         errno = EINVAL; return -1;}
@@ -55,7 +55,7 @@ int dill_msendl(int s, struct iolist *first, struct iolist *last,
 
 ssize_t dill_mrecvl(int s, struct iolist *first, struct iolist *last,
       int64_t deadline) {
-    struct msock_vfs *m = hquery(s, msock_type);
+    struct msock_vfs *m = hquery(s, dill_msock_type);
     if(dill_slow(!m)) return -1;
     if(dill_slow((last && last->iol_next) ||
           (!first && last) ||
