@@ -596,7 +596,7 @@ DILL_EXPORT int dill_prefix_detach(
 /*  Messages are suffixed by specified string of bytes.                       */
 /******************************************************************************/
 
-struct dill_suffix_storage {char _[112];};
+struct dill_suffix_storage {char _[144];};
 
 DILL_EXPORT int dill_suffix_attach(
     int s,
@@ -669,7 +669,7 @@ DILL_EXPORT ssize_t dill_udp_recvl(
 /*  HTTP                                                                      */
 /******************************************************************************/
 
-struct dill_http_storage {char _[1280];};
+struct dill_http_storage {char _[1312];};
 
 DILL_EXPORT int dill_http_attach(
     int s);
@@ -780,7 +780,7 @@ DILL_EXPORT int dill_tls_detach(
 /*  WebSockets protocol.                                                      */
 /******************************************************************************/
 
-struct dill_ws_storage {char _[256];};
+struct dill_ws_storage {char _[288];};
 
 #define DILL_WS_BINARY 0
 #define DILL_WS_TEXT 1

@@ -79,10 +79,10 @@ int main() {
     int h[2];
     rc = ipc_pair(h);
     errno_assert(rc == 0);
-    int s0 = suffix_attach(h[0], "\r\n", 2);
+    int s0 = suffix_attach(h[0], "1234567890", 10);
     errno_assert(s0 >= 0);
     struct suffix_storage mem;
-    int s1 = suffix_attach_mem(h[1], "\r\n", 2, &mem);
+    int s1 = suffix_attach_mem(h[1], "1234567890", 10, &mem);
     errno_assert(s1 >= 0);
     rc = msend(s0, "First", 5, -1);
     errno_assert(rc == 0);
@@ -93,7 +93,8 @@ int main() {
     sz = mrecv(s1, buf, sizeof(buf), -1);
     errno_assert(sz >= 0);
     assert(sz == 5 && memcmp(buf, "First", 5) == 0);
-    sz = mrecvl(s1, NULL, NULL, -1);
+    struct iolist iol = {NULL, SIZE_MAX, NULL, 0};
+    sz = mrecvl(s1, &iol, &iol, -1);
     errno_assert(sz >= 0);
     sz = mrecv(s1, buf, sizeof(buf), -1);
     errno_assert(sz >= 0);

@@ -46,6 +46,7 @@ struct suffix_sock {
     /* Given that we are doing one recv call per byte, let's cache the pointer
        to bsock interface of the underlying socket to make it faster. */
     struct bsock_vfs *uvfs;
+    uint8_t buf[32];
     uint8_t suffix[32];
     size_t suffixlen;
     unsigned int inerr : 1;
@@ -126,21 +127,8 @@ static int suffix_msendl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct suffix_sock *self = dill_cont(mvfs, struct suffix_sock, mvfs);
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
-    /* Make sure that message doesn't contain CRLF sequence. */
-    uint8_t c = 0;
-    size_t sz = 0;
-    struct iolist *it;
-    for(it = first; it; it = it->iol_next) {
-        int i;
-        for(i = 0; i != it->iol_len; ++i) {
-            uint8_t c2 = ((uint8_t*)it->iol_base)[i];
-            if(dill_slow(c == '\r' && c2 == '\n')) {
-                self->outerr = 1; errno = EINVAL; return -1;}
-            c = c2;
-        }
-        sz += it->iol_len;
-    }
-    struct iolist iol = {(void*)"\r\n", 2, NULL, 0};
+    /* TODO: Make sure that message doesn't contain suffix sequence. */
+    struct iolist iol = {self->suffix, self->suffixlen, NULL, 0};
     last->iol_next = &iol;
     int rc = self->uvfs->bsendl(self->uvfs, first, &iol, deadline);
     last->iol_next = NULL;
@@ -152,35 +140,36 @@ static ssize_t suffix_mrecvl(struct msock_vfs *mvfs,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct suffix_sock *self = dill_cont(mvfs, struct suffix_sock, mvfs);
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
-    size_t recvd = 0;
-    char c1 = 0;
-    char c2 = 0;
-    struct iolist iol = {&c2, 1, NULL, 0};
-    struct iolist *it = first;
-    size_t column = 0;
+    /* First fill in the temporary buffer. */
+    struct iolist iol = {self->buf, self->suffixlen, NULL, 0};
+    int rc = self->uvfs->brecvl(self->uvfs, &iol, &iol, deadline);
+    if(dill_slow(rc < 0)) {self->inerr = 1; return -1;}
+    /* Read the input, character by character. */
+    iol.iol_base = self->buf + self->suffixlen - 1;
+    iol.iol_len = 1;
+    size_t sz = 0;
+    struct iolist it = *first;
     while(1) {
-        /* The pipeline looks like this: buffer <- c1 <- c2 <- socket */
-        /* buffer <- c1 */
-        if(first) {
-            if(!it) {self->inerr = 1; errno = EMSGSIZE; return -1;}
-            if(recvd > 1) {
-                if(it->iol_base) ((char*)it->iol_base)[column] = c1;
-                ++column;
-                if(column == it->iol_len) {
-                    column = 0;
-                    it = it->iol_next;
-                }
-            }
+        /* Check for suffix. */
+        if(memcmp(self->buf, self->suffix, self->suffixlen) == 0) break;
+        /* Ignore empty iolist items. */
+        while(first->iol_len == 0) {
+            if(!it.iol_next) {self->inerr = 1; errno = EMSGSIZE; return -1;}
+            it = *it.iol_next;
         }
-        /* c1 <- c2 */
-        c1 = c2;
-        /* c2 <- socket */
-        int rc = self->uvfs->brecvl(self->uvfs, &iol, &iol, deadline);
+        /* Move one character to the user's iolist. */
+        if(it.iol_base) {
+            ((uint8_t*)it.iol_base)[0] = self->buf[0];
+            it.iol_base = ((uint8_t*)it.iol_base) + 1;
+            it.iol_len--;
+        }
+        /* Read new character into the temporary buffer. */
+        memmove(self->buf, self->buf + 1, self->suffixlen - 1);
+        rc = self->uvfs->brecvl(self->uvfs, &iol, &iol, deadline);
         if(dill_slow(rc < 0)) {self->inerr = 1; return -1;}
-        ++recvd;
-        if(c1 == '\r' && c2 == '\n') break;
+        sz++;
     }
-    return recvd - 2;
+    return sz;
 }
 
 static void suffix_hclose(struct hvfs *hvfs) {
