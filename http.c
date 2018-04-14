@@ -73,7 +73,7 @@ int dill_http_attach_mem(int s, struct http_storage *mem) {
     int tmp = hown(s);
     if(dill_slow(tmp < 0)) {err = errno; goto error3;}
     /* Wrap the underlying socket into SUFFIX and TERM protocol. */
-    obj->s = suffix_attach_mem(tmp, &obj->suffix_mem);
+    obj->s = suffix_attach_mem(tmp, "\r\n", 2, &obj->suffix_mem);
     if(dill_slow(obj->s < 0)) {err = errno; goto error4;}
     obj->s = term_attach_mem(obj->s, NULL, 0, &obj->term_mem);
     if(dill_slow(obj->s < 0)) {err = errno; goto error4;}

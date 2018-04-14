@@ -26,6 +26,7 @@
 #include <libdillimpl.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "utils.h"
 
@@ -45,12 +46,14 @@ struct suffix_sock {
     /* Given that we are doing one recv call per byte, let's cache the pointer
        to bsock interface of the underlying socket to make it faster. */
     struct bsock_vfs *uvfs;
+    uint8_t suffix[32];
+    size_t suffixlen;
     unsigned int inerr : 1;
     unsigned int outerr : 1;
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct suffix_storage) >= sizeof(struct suffix_sock));
+//DILL_CT_ASSERT(sizeof(struct suffix_storage) >= sizeof(struct suffix_sock));
 
 static void *suffix_hquery(struct hvfs *hvfs, const void *type) {
     struct suffix_sock *self = (struct suffix_sock*)hvfs;
@@ -60,9 +63,11 @@ static void *suffix_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int dill_suffix_attach_mem(int s, struct suffix_storage *mem) {
+int dill_suffix_attach_mem(int s, const void *suffix, size_t suffixlen,
+      struct suffix_storage *mem) {
     int err;
-    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
+    if(dill_slow(!mem || !suffix || suffixlen == 0 || suffixlen > 32)) {
+        err = EINVAL; goto error1;}
     /* Take ownership of the underlying socket. */
     int u = hown(s);
     if(dill_slow(u < 0)) {err = errno; goto error1;}
@@ -76,6 +81,8 @@ int dill_suffix_attach_mem(int s, struct suffix_storage *mem) {
     self->uvfs = hquery(u, bsock_type);
     if(dill_slow(!self->uvfs && errno == ENOTSUP)) {err = EPROTO; goto error2;}
     if(dill_slow(!self->uvfs)) {err = errno; goto error2;}
+    memcpy(self->suffix, suffix, suffixlen);
+    self->suffixlen = suffixlen;
     self->inerr = 0;
     self->outerr = 0;
     self->mem = 1;
@@ -91,11 +98,12 @@ error1:
     return -1;
 }
 
-int dill_suffix_attach(int s) {
+int dill_suffix_attach(int s, const void *suffix, size_t suffixlen) {
     int err;
     struct suffix_sock *obj = malloc(sizeof(struct suffix_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int cs = suffix_attach_mem(s, (struct suffix_storage*)obj);
+    int cs = suffix_attach_mem(s, suffix, suffixlen,
+        (struct suffix_storage*)obj);
     if(dill_slow(cs < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return cs;

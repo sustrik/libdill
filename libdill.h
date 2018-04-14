@@ -562,7 +562,7 @@ DILL_EXPORT int dill_ipc_pair_mem(
 
 /******************************************************************************/
 /*  PREFIX protocol.                                                          */
-/*  Messages are prefixed size.                                               */
+/*  Messages are prefixed by size.                                            */
 /******************************************************************************/
 
 struct dill_prefix_storage {char _[72];};
@@ -593,16 +593,19 @@ DILL_EXPORT int dill_prefix_detach(
 
 /******************************************************************************/
 /*  SUFFIX protocol.                                                          */
-/*  Messages are delimited by CRLF (0x0d 0x0a) sequences.                     */
-/*  The protocol is terminated by an empty line.                              */
+/*  Messages are suffixed by specified string of bytes.                       */
 /******************************************************************************/
 
-struct dill_suffix_storage {char _[72];};
+struct dill_suffix_storage {char _[112];};
 
 DILL_EXPORT int dill_suffix_attach(
-    int s);
+    int s,
+    const void *suffix,
+    size_t suffixlen);
 DILL_EXPORT int dill_suffix_attach_mem(
     int s,
+    const void *suffix,
+    size_t suffixlen,
     struct dill_suffix_storage *mem);
 DILL_EXPORT int dill_suffix_detach(
     int s,
@@ -666,7 +669,7 @@ DILL_EXPORT ssize_t dill_udp_recvl(
 /*  HTTP                                                                      */
 /******************************************************************************/
 
-struct dill_http_storage {char _[1240];};
+struct dill_http_storage {char _[1280];};
 
 DILL_EXPORT int dill_http_attach(
     int s);
@@ -777,7 +780,7 @@ DILL_EXPORT int dill_tls_detach(
 /*  WebSockets protocol.                                                      */
 /******************************************************************************/
 
-struct dill_ws_storage {char _[216];};
+struct dill_ws_storage {char _[256];};
 
 #define DILL_WS_BINARY 0
 #define DILL_WS_TEXT 1
