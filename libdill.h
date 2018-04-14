@@ -163,7 +163,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
         ".cfi_offset %%rip, 56 \n\t"\
         "jmp    *%%rcx\n\t"\
         : : "d" (ctx), "a" (1))
-#define DILL_SETSP(x) \
+#define dill_setsp(x) \
     asm(""::"r"(alloca(sizeof(size_t))));\
     asm volatile("leaq (%%rax), %%rsp"::"rax"(x));
 
@@ -199,7 +199,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
         ".cfi_offset %%eip, 20 \n\t"\
         "jmp    *%%ecx\n\t"\
         : : "d" (ctx), "a" (1))
-#define DILL_SETSP(x) \
+#define dill_setsp(x) \
     asm(""::"r"(alloca(sizeof(size_t))));\
     asm volatile("leal (%%eax), %%esp"::"eax"(x));
 
@@ -208,8 +208,8 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 #define dill_setjmp(ctx) sigsetjmp(ctx, 0)
 #define dill_longjmp(ctx) siglongjmp(ctx, 1)
 /* For newer GCCs, -fstack-protector breaks on this; use -fno-stack-protector.
-   Alternatively, implement a custom DILL_SETSP for your microarchitecture. */
-#define DILL_SETSP(x) \
+   Alternatively, implement a custom dill_setsp for your microarchitecture. */
+#define dill_setsp(x) \
     dill_unoptimisable = alloca((char*)alloca(sizeof(size_t)) - (char*)(x));
 #endif
 
@@ -221,7 +221,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
    outer scope and a local variable in this macro causes the variable to
    get weird values. To avoid that, we use fancy names (dill_*__). */ 
 
-#define go_(fn, ptr, len, bndl) \
+#define dill_go_(fn, ptr, len, bndl) \
     ({\
         sigjmp_buf *dill_ctx__;\
         void *dill_stk__ = (ptr);\
@@ -229,7 +229,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
             (bndl), __FILE__, __LINE__);\
         if(dill_handle__ >= 0) {\
             if(!dill_setjmp(*dill_ctx__)) {\
-                DILL_SETSP(dill_stk__);\
+                dill_setsp(dill_stk__);\
                 fn;\
                 dill_epilogue();\
             }\
@@ -237,11 +237,11 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
         dill_handle__;\
     })
 
-#define go(fn) go_(fn, NULL, 0, -1)
-#define go_mem(fn, ptr, len) go_(fn, ptr, len, -1)
+#define dill_go(fn) dill_go_(fn, NULL, 0, -1)
+#define dill_go_mem(fn, ptr, len) dill_go_(fn, ptr, len, -1)
 
-#define bundle_go(bndl, fn) go_(fn, NULL, 0, bndl)
-#define bundle_go_mem(bndl, fn, ptr, len) go_(fn, ptr, len, bndl)
+#define dill_bundle_go(bndl, fn) dill_go_(fn, NULL, 0, bndl)
+#define dill_bundle_go_mem(bndl, fn, ptr, len) dill_go_(fn, ptr, len, bndl)
 
 struct dill_bundle_storage {char _[64];};
 
@@ -251,6 +251,10 @@ DILL_EXPORT int dill_bundle_wait(int h, int64_t deadline);
 DILL_EXPORT int dill_yield(void);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define go dill_go
+#define go_mem dill_go_mem
+#define bundle_go dill_bundle_go
+#define bundle_go_mem dill_bundle_go_mem
 #define bundle_storage dill_bundle_storage
 #define bundle dill_bundle
 #define bundle_mem dill_bundle_mem
@@ -262,8 +266,8 @@ DILL_EXPORT int dill_yield(void);
 /*  Channels                                                                  */
 /******************************************************************************/
 
-#define CHSEND 1
-#define CHRECV 2
+#define DILL_CHSEND 1
+#define DILL_CHRECV 2
 
 struct chclause {
     int op;
@@ -297,6 +301,8 @@ DILL_EXPORT int dill_choose(
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define CHSEND DILL_CHSEND
+#define CHRECV DILL_CHRECV
 #define chstorage dill_chstorage
 #define chmake dill_chmake
 #define chmake_mem dill_chmake_mem
@@ -389,11 +395,11 @@ DILL_EXPORT ssize_t dill_mrecvl(
 
 struct sockaddr;
 
-#define IPADDR_IPV4 1
-#define IPADDR_IPV6 2
-#define IPADDR_PREF_IPV4 3
-#define IPADDR_PREF_IPV6 4
-#define IPADDR_MAXSTRLEN 46
+#define DILL_IPADDR_IPV4 1
+#define DILL_IPADDR_IPV6 2
+#define DILL_IPADDR_PREF_IPV4 3
+#define DILL_IPADDR_PREF_IPV6 4
+#define DILL_IPADDR_MAXSTRLEN 46
 
 struct dill_ipaddr {char _[32];};
 
@@ -424,6 +430,11 @@ DILL_EXPORT void dill_ipaddr_setport(
     int port);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define IPADDR_IPV4 DILL_IPADDR_IPV4 
+#define IPADDR_IPV6 DILL_IPADDR_IPV6
+#define IPADDR_PREF_IPV4 DILL_IPADDR_PREF_IPV4 
+#define IPADDR_PREF_IPV6 DILL_IPADDR_PREF_IPV6
+#define IPADDR_MAXSTRLEN DILL_IPADDR_MAXSTRLEN
 #define ipaddr dill_ipaddr
 #define ipaddr_local dill_ipaddr_local
 #define ipaddr_remote dill_ipaddr_remote
@@ -552,8 +563,8 @@ DILL_EXPORT int dill_ipc_pair_mem(
 
 struct dill_prefix_storage {char _[72];};
 
-#define PREFIX_BIG_ENDIAN 0
-#define PREFIX_LITTLE_ENDIAN 1
+#define DILL_PREFIX_BIG_ENDIAN 0
+#define DILL_PREFIX_LITTLE_ENDIAN 1
 
 DILL_EXPORT int dill_prefix_attach(
     int s,
@@ -568,6 +579,8 @@ DILL_EXPORT int dill_prefix_detach(
     int s);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define PREFIX_BIG_ENDIAN DILL_PREFIX_BIG_ENDIAN
+#define PREFIX_LITTLE_ENDIAN DILL_PREFIX_LITTLE_ENDIAN
 #define prefix_storage dill_prefix_storage
 #define prefix_attach dill_prefix_attach
 #define prefix_attach_mem dill_prefix_attach_mem
@@ -762,9 +775,9 @@ DILL_EXPORT int dill_tls_detach(
 
 struct dill_ws_storage {char _[216];};
 
-#define WS_BINARY 0
-#define WS_TEXT 1
-#define WS_NOHTTP 2
+#define DILL_WS_BINARY 0
+#define DILL_WS_TEXT 1
+#define DILL_WS_NOHTTP 2
 
 DILL_EXPORT int dill_ws_attach_client(
     int s,
@@ -849,6 +862,9 @@ DILL_EXPORT int dill_ws_response_key(
     char *response_key);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define WS_BINARY DILL_WS_BINARY
+#define WS_TEXT DILL_WS_TEXT
+#define WS_NOHTTP DILL_WS_NOHTTP
 #define ws_storage dill_ws_storage
 #define ws_attach_server dill_ws_attach_server
 #define ws_attach_server_mem dill_ws_attach_server_mem
