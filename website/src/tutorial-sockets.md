@@ -195,7 +195,7 @@ assert(rc == 0);
 Finally, we have to inform the server that we are done with the request and that it can process it now. On the protocol level this means that the socket will send an empty line to the server:
 
 ```c
-rc = hdone(s, -1);
+rc = http_done(s, -1);
 assert(rc == 0);
 ```
 

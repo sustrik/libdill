@@ -121,7 +121,7 @@ rc = http_sendfield(s, <span class="st">&quot;Connection&quot;</span>, <span cla
 assert(rc == <span class="dv">0</span>);</code></pre></div>
 <p><code>Host</code> option is mandatory in HTTP/1.1 and we will simply fill in the server name. By setting <code>Connection</code> option to <code>close</code> we are asking the web server to close the connection after it sends us the web page. If we did not set that option it would leave the connection open just in case we wanted to send more HTTP requests.</p>
 <p>Finally, we have to inform the server that we are done with the request and that it can process it now. On the protocol level this means that the socket will send an empty line to the server:</p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">rc = hdone(s, <span class="dv">-1</span>);
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">rc = http_done(s, <span class="dv">-1</span>);
 assert(rc == <span class="dv">0</span>);</code></pre></div>
 <p>Now we can receive the response from the server:</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> reason[<span class="dv">256</span>];
