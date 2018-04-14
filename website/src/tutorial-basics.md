@@ -125,11 +125,11 @@ Everything seems to work as expected. Let's now move on to the step 2.
 When a new connection arrives, the first thing that we want to do is to establish the network protocol we'll be using. libdill contains a small library of easily composable microprotocols that allows you to compose a wide range of protocols just by plugging different microprotocols into each other in a lego brick fashion. In this tutorial, however, we are going to limit ourselves to just a very simple setup.  On top of the TCP connection that we've just created, we'll have a simple protocol that will split the TCP bytestream into discrete messages, using line breaks (`CR+LF`) as delimiters:
 
 ```c
-int s = crlf_attach(s);
+int s = suffix_attach(s, "\r\n", 2);
 assert(s >= 0);
 ```
 
-Note that `hclose()` works recursively.  Given that our CRLF socket wraps an underlying TCP socket, a single call to `hclose()` will close both of them.
+Note that `hclose()` works recursively.  Given that our SUFFIX socket wraps an underlying TCP socket, a single call to `hclose()` will close both of them.
 
 Once finished with the setup, we can send the "What's your name?" question to the client:
 
@@ -138,7 +138,7 @@ rc = msend(s, "What's your name?", 17, -1);
 if(rc != 0) goto cleanup;
 ```
 
-Note that `msend()` works with messages, not bytes (the name stands for "message send"). Consequently, the data will act as a single unit: either all of it is received or none of it is. Also, we don't have to care about message delimiters. That's done for us by the CRLF protocol.
+Note that `msend()` works with messages, not bytes (the name stands for "message send"). Consequently, the data will act as a single unit: either all of it is received or none of it is. Also, we don't have to care about message delimiters. That's done for us by the SUFFIX protocol.
 
 To handle possible errors from `msend()` (such as when the client has closed the connection), add a `cleanup` label before the `hclose` line and jump to it whenever you want to close the connection and proceed without crashing the server.
 
@@ -148,7 +148,7 @@ ssize_t sz = mrecv(s, inbuf, sizeof(inbuf), -1);
 if(sz < 0) goto cleanup;
 ```
 
-The above piece of code simply reads the reply from the client. The reply is a single message, which in the case of the CRLF protocol translates to a single line of text. The `mrecv` function returns the number of bytes in the message.
+The above piece of code simply reads the reply from the client. The reply is a single message, which in our case translates to a single line of text. The `mrecv` function returns the number of bytes in the message.
 
 Having received a reply, we can now construct the greeting and send it to the client. The analysis of this code is left as an exercise to the reader:
 
@@ -195,7 +195,7 @@ int main(int argc, char *argv[]) {
     while(1) {
         int s = tcp_accept(ls, NULL, -1);
         assert(s >= 0);
-        s = crlf_attach(s);
+        s = suffix_attach(s, "\r\n", 2);
         assert(s >= 0);
         int cr = go(dialog(s));
         assert(cr >= 0);
@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
     for(i = 0; i != 3; i++) {
         int s = tcp_accept(ls, NULL, -1);
         assert(s >= 0);
-        s = crlf_attach(s);
+        s = suffix_attach(s, "\r\n", 2);
         assert(s >= 0);
         rc = bundle_go(b, dialogue(s));
         assert(rc == 0);
@@ -337,7 +337,7 @@ int main(int argc, char *argv[]) {
     while(1) {
         int s = tcp_accept(ls, NULL, -1);
         assert(s >= 0);
-        s = crlf_attach(s);
+        s = suffix_attach(s, "\r\n", 2);
         assert(s >= 0);
         int cr = go(dialogue(s, ch[1]));
         assert(cr >= 0);
@@ -428,10 +428,6 @@ active: 0      succeeded: 0      failed: 1
 The first line is displayed when the connection is established: There is one active connection and no connection has succeeded or failed yet.
 
 The second line shows up when the connection times out: There are no active connection anymore and one connection has failed so far.
-
-Now try pressing enter in telnet when asked for your name. The connection will be terminated by the server immediately, without sending the greeting, and the server log will report one failed connection. What's going on here?
-
-The reason for the behavior is that the CRLF protocol treats an empty line as a connection termination request. Thus, when you press enter in telnet, you send an empty line which causes `mrecv()` on the server side to return the `EPIPE` error, which represents "connection terminated by peer". The server will jump directly into to the cleanup code.
 
 And that's the end of the tutorial. Enjoy your time with the library!
 
