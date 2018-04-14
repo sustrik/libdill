@@ -337,9 +337,7 @@ struct sockaddr;
 #define IPADDR_PREF_IPV6 4
 #define IPADDR_MAXSTRLEN 46
 
-struct ipaddr {
-    char data[32];
-};
+struct ipaddr {char data[32];};
 
 DILL_EXPORT int ipaddr_local(
     struct ipaddr *addr,
