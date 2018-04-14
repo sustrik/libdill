@@ -12,23 +12,27 @@ suffix_attach \- creates SUFFIX protocol on top of underlying socket
 #include\ <libdill.h>
 
 int\ suffix_attach(
-\ \ \ \ int\ s);
+\ \ \ \ int\ s,
+\ \ \ \ const\ void*\ suffix,
+\ \ \ \ size_t\ suffixlen);
 \f[]
 .fi
 .SH DESCRIPTION
 .PP
-SUFFIX is a message\-based protocol that delimits messages usign CR+LF
-byte sequence (0x0D 0x0A).
-In other words, it\[aq]s a protocol to send text messages separated by
-newlines.
-The protocol has no initial handshake.
-Terminal handshake is accomplished by each peer sending an empty line.
+SUFFIX is a message\-based protocol that delimits messages by specific
+byte sequences.
+For example, many protocols are line\-based, with individual messages
+separated by CR+LF sequence.
 .PP
 This function instantiates SUFFIX protocol on top of the underlying
 protocol.
 .PP
 \f[B]s\f[]: Handle of the underlying socket.
 It must be a bytestream protocol.
+.PP
+\f[B]suffix\f[]: The delimiter byte sequence.
+.PP
+\f[B]suffixlen\f[]: The size of the delimiter, in bytes.
 .PP
 The socket can be cleanly shut down using \f[B]suffix_detach\f[]
 function.
@@ -59,13 +63,14 @@ are already open.
 .IP
 .nf
 \f[C]
-int\ s\ =\ tcp_connect(&addr,\ \-1);
-s\ =\ suffix_attach(s);
-msend(s,\ "ABC",\ 3,\ \-1);
-char\ buf[256];
-ssize_t\ sz\ =\ mrecv(s,\ buf,\ sizeof(buf),\ \-1);
-s\ =\ suffix_detach(s,\ \-1);
-tcp_close(s);
+\ \ \ \ \ \ \ \ int\ s\ =\ tcp_connect(&addr,\ \-1);
+\ \ \ \ \ \ \ \ s\ =\ suffix_attach(s,\ "
+",\ 2);
+\ \ \ \ \ \ \ \ msend(s,\ "ABC",\ 3,\ \-1);
+\ \ \ \ \ \ \ \ char\ buf[256];
+\ \ \ \ \ \ \ \ ssize_t\ sz\ =\ mrecv(s,\ buf,\ sizeof(buf),\ \-1);
+\ \ \ \ \ \ \ \ s\ =\ suffix_detach(s,\ \-1);
+\ \ \ \ \ \ \ \ tcp_close(s);
 \f[]
 .fi
 .SH SEE ALSO
