@@ -39,7 +39,7 @@ coroutine void nohttp_client(int s) {
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
     sz = mrecv(s, buf, sizeof(buf), -1);
     assert(sz < 0 && errno == EPIPE);
-    uint16_t status;
+    int status;
     sz = ws_status(s, &status, buf, sizeof(buf));
     errno_assert(sz >= 0);
     assert(status == 1000);
@@ -63,7 +63,7 @@ coroutine void http_client(int s) {
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
     sz = mrecv(s, buf, sizeof(buf), -1);
     assert(sz < 0 && errno == EPIPE);
-    uint16_t status;
+    int status;
     sz = ws_status(s, &status, buf, sizeof(buf));
     errno_assert(sz >= 0);
     assert(status == 1000);

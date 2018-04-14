@@ -431,6 +431,8 @@ static ssize_t ws_recvl_base(struct msock_vfs *mvfs, int *flags,
         if(dill_slow(res == 1)) {errno = EPROTO; return -1;}
         if(res >= 2) {
            self->status = dill_gets((uint8_t*)&self->status);
+           if(dill_slow(self->status < 1000 || self->status > 4999)) {
+               errno = EPROTO; return -1;}
            self->msglen = (uint8_t)res - 2;
         }
         errno = EPIPE;
@@ -487,10 +489,10 @@ static ssize_t ws_mrecvl(struct msock_vfs *mvfs,
     return sz;
 }
 
-int ws_done(int s, uint16_t status, const void *buf, size_t len,
+int ws_done(int s, int status, const void *buf, size_t len,
       int64_t deadline) {
-    if(dill_slow((status != 0 && status < 1000) || (!buf && len > 0))) {
-        errno = EINVAL; return -1;}
+    if(dill_slow((status != 0 && (status < 1000 || status > 4999)) ||
+        (!buf && len > 0))) {errno = EINVAL; return -1;}
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
@@ -505,7 +507,7 @@ int ws_done(int s, uint16_t status, const void *buf, size_t len,
     return 0;
 }
 
-int ws_detach(int s, uint16_t status, const void *buf, size_t len,
+int ws_detach(int s, int status, const void *buf, size_t len,
       int64_t deadline) {
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
@@ -533,7 +535,7 @@ static void ws_hclose(struct hvfs *hvfs) {
     if(!self->mem) free(self);
 }
 
-ssize_t ws_status(int s, uint16_t *status, void *buf, size_t len) {
+ssize_t ws_status(int s, int *status, void *buf, size_t len) {
     if(dill_slow(!buf && len)) {errno = EINVAL; return -1;}
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;

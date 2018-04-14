@@ -756,19 +756,19 @@ DILL_EXPORT ssize_t ws_recvl(
     int64_t deadline);
 DILL_EXPORT int ws_done(
     int s,
-    uint16_t status,
+    int status,
     const void *buf,
     size_t len,
     int64_t deadline);
 DILL_EXPORT int ws_detach(
     int s,
-    uint16_t status,
+    int status,
     const void *buf,
     size_t len,
     int64_t deadline);
 DILL_EXPORT ssize_t ws_status(
     int s,
-    uint16_t *status,
+    int *status,
     void *buf,
     size_t len);
 
