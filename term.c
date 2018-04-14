@@ -63,7 +63,7 @@ static void *term_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int term_attach_mem(int s, const void *buf, size_t len,
+int dill_term_attach_mem(int s, const void *buf, size_t len,
       struct term_storage *mem) {
     int err;
     if(dill_slow(!mem && len > MAX_TERMINATOR_LENGTH)) {
@@ -100,7 +100,7 @@ error1:
     return -1;
 }
 
-int term_attach(int s, const void *buf, size_t len) {
+int dill_term_attach(int s, const void *buf, size_t len) {
     int err;
     struct term_sock *obj = malloc(sizeof(struct term_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
@@ -115,7 +115,7 @@ error1:
     return -1;
 }
 
-int term_done(int s, int64_t deadline) {
+int dill_term_done(int s, int64_t deadline) {
     struct term_sock *self = hquery(s, term_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
@@ -125,7 +125,7 @@ int term_done(int s, int64_t deadline) {
     return 0;
 }
 
-int term_detach(int s, int64_t deadline) {
+int dill_term_detach(int s, int64_t deadline) {
     int err;
     struct term_sock *self = hquery(s, term_type);
     if(dill_slow(!self)) return -1;

@@ -64,7 +64,7 @@ static void *ws_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int ws_attach_client_mem(int s, int flags, const char *resource,
+int dill_ws_attach_client_mem(int s, int flags, const char *resource,
       const char *host, struct ws_storage *mem, int64_t deadline) {
     if(dill_slow(!mem)) {errno = EINVAL; return -1;}
     if(dill_slow(!hquery(s, bsock_type))) return -1;
@@ -155,8 +155,8 @@ int ws_attach_client_mem(int s, int flags, const char *resource,
     return hmake(&self->hvfs);
 }
 
-int ws_attach_client(int s, int flags, const char *resource, const char *host,
-      int64_t deadline) {
+int dill_ws_attach_client(int s, int flags, const char *resource,
+      const char *host, int64_t deadline) {
     int err;
     struct ws_sock *obj = malloc(sizeof(struct ws_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
@@ -172,8 +172,10 @@ error1:
     return -1;
 }
 
-int ws_attach_server_mem(int s, int flags, char *resource, size_t resourcelen,
-      char *host, size_t hostlen, struct ws_storage *mem, int64_t deadline) {
+int dill_ws_attach_server_mem(int s, int flags,
+      char *resource, size_t resourcelen,
+      char *host, size_t hostlen,
+      struct ws_storage *mem, int64_t deadline) {
     if(dill_slow(!mem)) {errno = EINVAL; return -1;}
     if(dill_slow(!hquery(s, bsock_type))) return -1;
     struct ws_sock *self = (struct ws_sock*)mem;
@@ -271,7 +273,7 @@ int ws_attach_server_mem(int s, int flags, char *resource, size_t resourcelen,
     return hmake(&self->hvfs);
 }
 
-int ws_attach_server(int s, int flags, char *resource, size_t resourcelen,
+int dill_ws_attach_server(int s, int flags, char *resource, size_t resourcelen,
       char *host, size_t hostlen, int64_t deadline) {
     int err;
     struct ws_sock *obj = malloc(sizeof(struct ws_sock));
@@ -441,7 +443,8 @@ static ssize_t ws_recvl_base(struct msock_vfs *mvfs, int *flags,
     return res;
 }
 
-int ws_send(int s, int flags, const void *buf, size_t len, int64_t deadline) {
+int dill_ws_send(int s, int flags, const void *buf, size_t len,
+      int64_t deadline) {
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
     struct iolist iol = {(void*)buf, len, NULL, 0};
@@ -449,14 +452,15 @@ int ws_send(int s, int flags, const void *buf, size_t len, int64_t deadline) {
         &iol, &iol, deadline);
 }
 
-ssize_t ws_recv(int s, int *flags, void *buf, size_t len, int64_t deadline) {
+ssize_t dill_ws_recv(int s, int *flags, void *buf, size_t len,
+      int64_t deadline) {
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
     struct iolist iol = {(void*)buf, len, NULL, 0};
     return ws_recvl_base(&self->mvfs, flags, &iol, &iol, deadline);
 }
 
-int ws_sendl(int s, int flags, struct iolist *first, struct iolist *last,
+int dill_ws_sendl(int s, int flags, struct iolist *first, struct iolist *last,
       int64_t deadline) {
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
@@ -464,8 +468,8 @@ int ws_sendl(int s, int flags, struct iolist *first, struct iolist *last,
         first, last, deadline);
 }
 
-ssize_t ws_recvl(int s, int *flags, struct iolist *first, struct iolist *last,
-      int64_t deadline) {
+ssize_t dill_ws_recvl(int s, int *flags, struct iolist *first,
+      struct iolist *last, int64_t deadline) {
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
     return ws_recvl_base(&self->mvfs, flags, first, last, deadline);
@@ -489,7 +493,7 @@ static ssize_t ws_mrecvl(struct msock_vfs *mvfs,
     return sz;
 }
 
-int ws_done(int s, int status, const void *buf, size_t len,
+int dill_ws_done(int s, int status, const void *buf, size_t len,
       int64_t deadline) {
     if(dill_slow((status != 0 && (status < 1000 || status > 4999)) ||
         (!buf && len > 0))) {errno = EINVAL; return -1;}
@@ -507,7 +511,7 @@ int ws_done(int s, int status, const void *buf, size_t len,
     return 0;
 }
 
-int ws_detach(int s, int status, const void *buf, size_t len,
+int dill_ws_detach(int s, int status, const void *buf, size_t len,
       int64_t deadline) {
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
@@ -535,7 +539,7 @@ static void ws_hclose(struct hvfs *hvfs) {
     if(!self->mem) free(self);
 }
 
-ssize_t ws_status(int s, int *status, void *buf, size_t len) {
+ssize_t dill_ws_status(int s, int *status, void *buf, size_t len) {
     if(dill_slow(!buf && len)) {errno = EINVAL; return -1;}
     struct ws_sock *self = hquery(s, ws_type);
     if(dill_slow(!self)) return -1;
@@ -552,7 +556,7 @@ ssize_t ws_status(int s, int *status, void *buf, size_t len) {
 /*  Helper functions.                                                         */
 /******************************************************************************/
 
-int ws_request_key(char *request_key) {
+int dill_ws_request_key(char *request_key) {
     if(dill_slow(!request_key)) {errno = EINVAL; return -1;}
     uint8_t nonce[16];
     int rc = dill_random(nonce, sizeof(nonce));
@@ -562,7 +566,7 @@ int ws_request_key(char *request_key) {
     return 0;
 }
 
-int ws_response_key(const char *request_key, char *response_key) {
+int dill_ws_response_key(const char *request_key, char *response_key) {
     if(dill_slow(!request_key)) {errno = EINVAL; return -1;}
     if(dill_slow(!response_key)) {errno = EINVAL; return -1;}
     /* Decode the request key and check whether it's a 16-byte nonce. */

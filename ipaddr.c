@@ -138,26 +138,26 @@ static int ipaddr_literal(struct ipaddr *addr, const char *name, int port,
     }
 }
 
-int ipaddr_family(const struct ipaddr *addr) {
+int dill_ipaddr_family(const struct ipaddr *addr) {
     return ((struct sockaddr*)addr)->sa_family;
 }
 
-int ipaddr_len(const struct ipaddr *addr) {
+int dill_ipaddr_len(const struct ipaddr *addr) {
     return ipaddr_family(addr) == AF_INET ?
         sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6);
 }
 
-const struct sockaddr *ipaddr_sockaddr(const struct ipaddr *addr) {
+const struct sockaddr *dill_ipaddr_sockaddr(const struct ipaddr *addr) {
     return (const struct sockaddr*)addr;
 }
 
-int ipaddr_port(const struct ipaddr *addr) {
+int dill_ipaddr_port(const struct ipaddr *addr) {
     return ntohs(ipaddr_family(addr) == AF_INET ?
         ((struct sockaddr_in*)addr)->sin_port :
         ((struct sockaddr_in6*)addr)->sin6_port);
 }
 
-void ipaddr_setport(struct ipaddr *addr, int port) {
+void dill_ipaddr_setport(struct ipaddr *addr, int port) {
     if(ipaddr_family(addr) == AF_INET)
         ((struct sockaddr_in*)addr)->sin_port = htons(port);
     else
@@ -165,7 +165,7 @@ void ipaddr_setport(struct ipaddr *addr, int port) {
 }
 
 /* Convert IP address from network format to ASCII dot notation. */
-const char *ipaddr_str(const struct ipaddr *addr, char *ipstr) {
+const char *dill_ipaddr_str(const struct ipaddr *addr, char *ipstr) {
     if(ipaddr_family(addr) == AF_INET) {
         return inet_ntop(AF_INET, &(((struct sockaddr_in*)addr)->sin_addr),
             ipstr, INET_ADDRSTRLEN);
@@ -176,7 +176,8 @@ const char *ipaddr_str(const struct ipaddr *addr, char *ipstr) {
     }
 }
 
-int ipaddr_local(struct ipaddr *addr, const char *name, int port, int mode) {
+int dill_ipaddr_local(struct ipaddr *addr, const char *name, int port,
+      int mode) {
     memset(addr, 0, sizeof(struct ipaddr));
     if(!name) 
         return ipaddr_ipany(addr, port, mode);
@@ -257,8 +258,8 @@ static void dns_freeaddrinfo(struct addrinfo *ent) {
     free(ent);
 }
 
-int ipaddr_remote(struct ipaddr *addr, const char *name, int port, int mode,
-      int64_t deadline) {
+int dill_ipaddr_remote(struct ipaddr *addr, const char *name, int port,
+      int mode, int64_t deadline) {
     memset(addr, 0, sizeof(struct ipaddr));
     int rc = ipaddr_literal(addr, name, port, mode);
     if(rc == 0)

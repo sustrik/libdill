@@ -60,7 +60,7 @@ static void *suffix_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int suffix_attach_mem(int s, struct suffix_storage *mem) {
+int dill_suffix_attach_mem(int s, struct suffix_storage *mem) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Take ownership of the underlying socket. */
@@ -91,7 +91,7 @@ error1:
     return -1;
 }
 
-int suffix_attach(int s) {
+int dill_suffix_attach(int s) {
     int err;
     struct suffix_sock *obj = malloc(sizeof(struct suffix_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
@@ -106,7 +106,7 @@ error1:
     return -1;
 }
 
-int suffix_detach(int s, int64_t deadline) {
+int dill_suffix_detach(int s, int64_t deadline) {
     struct suffix_sock *self = hquery(s, suffix_type);
     if(dill_slow(!self)) return -1;
     int u = self->u;

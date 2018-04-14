@@ -93,7 +93,7 @@ static void dill_halfchan_init(struct dill_halfchan *ch, int index) {
     ch->closed = 0;
 }
 
-int chmake_mem(struct chstorage *mem, int chv[2]) {
+int dill_chmake_mem(struct chstorage *mem, int chv[2]) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Returns ECANCELED if the coroutine is shutting down. */
@@ -116,7 +116,7 @@ error1:
     return -1;
 }
 
-int chmake(int chv[2]) {
+int dill_chmake(int chv[2]) {
     int err;
     struct chstorage *ch = malloc(sizeof(struct chstorage));
     if(dill_slow(!ch)) {err = ENOMEM; goto error1;}
@@ -176,7 +176,7 @@ static void dill_chcancel(struct dill_clause *cl) {
     dill_list_erase(&chcl->item);
 }
 
-int chsend(int h, const void *val, size_t len, int64_t deadline) {
+int dill_chsend(int h, const void *val, size_t len, int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Get the channel interface. */
@@ -216,7 +216,7 @@ int chsend(int h, const void *val, size_t len, int64_t deadline) {
     return 0;
 }
 
-int chrecv(int h, void *val, size_t len, int64_t deadline) {
+int dill_chrecv(int h, void *val, size_t len, int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Get the channel interface. */
@@ -255,7 +255,7 @@ int chrecv(int h, void *val, size_t len, int64_t deadline) {
     return 0;
 }
 
-int chdone(int h) {
+int dill_chdone(int h) {
     struct dill_halfchan *ch = hquery(h, dill_halfchan_type);
     if(dill_slow(!ch)) return -1;
     /* Done is always done to the opposite side of the channel. */
@@ -277,7 +277,7 @@ int chdone(int h) {
     return 0;
 }
 
-int choose(struct chclause *clauses, int nclauses, int64_t deadline) {
+int dill_choose(struct chclause *clauses, int nclauses, int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     if(dill_slow(nclauses < 0 || (nclauses != 0 && !clauses))) {

@@ -131,7 +131,7 @@ static int tcp_brecvl(struct bsock_vfs *bvfs,
     return -1;
 }
 
-int tcp_done(int s, int64_t deadline) {
+int dill_tcp_done(int s, int64_t deadline) {
     struct tcp_conn *self = hquery(s, tcp_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
@@ -147,7 +147,7 @@ int tcp_done(int s, int64_t deadline) {
     return 0;
 }
 
-int tcp_close(int s, int64_t deadline) {
+int dill_tcp_close(int s, int64_t deadline) {
     int err;
     /* Listener socket needs no special treatment. */
     if(hquery(s, tcp_listener_type)) {
@@ -206,7 +206,7 @@ static void *tcp_listener_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int tcp_listen_mem(struct ipaddr *addr, int backlog,
+int dill_tcp_listen_mem(struct ipaddr *addr, int backlog,
       struct tcp_listener_storage *mem) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
@@ -247,7 +247,7 @@ error1:
     return -1;
 }
 
-int tcp_listen(struct ipaddr *addr, int backlog) {
+int dill_tcp_listen(struct ipaddr *addr, int backlog) {
     int err;
     struct tcp_listener *obj = malloc(sizeof(struct tcp_listener));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
@@ -262,7 +262,7 @@ error1:
     return -1;
 }
 
-int tcp_accept_mem(int s, struct ipaddr *addr, struct tcp_storage *mem,
+int dill_tcp_accept_mem(int s, struct ipaddr *addr, struct tcp_storage *mem,
         int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
@@ -287,7 +287,7 @@ error1:
     return -1;
 }
 
-int tcp_accept(int s, struct ipaddr *addr, int64_t deadline) {
+int dill_tcp_accept(int s, struct ipaddr *addr, int64_t deadline) {
     int err;
     struct tcp_conn *obj = malloc(sizeof(struct tcp_conn));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
@@ -299,14 +299,6 @@ error2:
     free(obj);
 error1:
     errno = err;
-    return -1;
-}
-
-int tcp_fd(int s) {
-    struct tcp_listener *lst = hquery(s, tcp_listener_type);
-    if(lst) return lst->fd;
-    struct tcp_conn *conn = hquery(s, tcp_type);
-    if(conn) return conn->fd;
     return -1;
 }
 

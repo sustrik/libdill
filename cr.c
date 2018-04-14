@@ -83,7 +83,7 @@ struct dill_bundle {
 
 DILL_CT_ASSERT(sizeof(struct bundle_storage) >= sizeof(struct dill_bundle));
 
-int bundle_mem(struct bundle_storage *mem) {
+int dill_bundle_mem(struct bundle_storage *mem) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; return -1;}
     /* Returns ECANCELED if the coroutine is shutting down. */
@@ -98,7 +98,7 @@ int bundle_mem(struct bundle_storage *mem) {
     return hmake(&b->vfs);
 }
 
-int bundle(void) {
+int dill_bundle(void) {
     int err;
     struct dill_bundle *b = malloc(sizeof(struct dill_bundle));
     if(dill_slow(!b)) {err = ENOMEM; goto error1;}
@@ -129,7 +129,7 @@ static void dill_bundle_close(struct hvfs *vfs) {
     if(!self->mem) free(self);
 }
 
-int bundle_wait(int h, int64_t deadline) {
+int dill_bundle_wait(int h, int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     struct dill_bundle *self = hquery(h, dill_bundle_type);
@@ -525,7 +525,7 @@ static void dill_cancel(struct dill_cr *cr, int err) {
     dill_docancel(cr, -1, err);
 }
 
-int yield(void) {
+int dill_yield(void) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;

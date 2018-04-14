@@ -60,7 +60,7 @@ static void *udp_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int udp_open_mem(struct ipaddr *local, const struct ipaddr *remote,
+int dill_udp_open_mem(struct ipaddr *local, const struct ipaddr *remote,
       struct udp_storage *mem) {
     int err;
     /* Sanity checking. */
@@ -111,7 +111,7 @@ error1:
     return -1;
 }
 
-int udp_open(struct ipaddr *local, const struct ipaddr *remote) {
+int dill_udp_open(struct ipaddr *local, const struct ipaddr *remote) {
     int err;
     struct udp_sock *obj = malloc(sizeof(struct udp_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
@@ -126,7 +126,7 @@ error1:
     return -1;
 }
 
-int udp_sendl_(struct msock_vfs *mvfs, const struct ipaddr *addr,
+static int udp_sendl_(struct msock_vfs *mvfs, const struct ipaddr *addr,
       struct iolist *first, struct iolist *last) {
     struct udp_sock *obj = dill_cont(mvfs, struct udp_sock, mvfs);
     /* If no destination IP address is provided, fall back to the stored one. */
@@ -155,7 +155,7 @@ int udp_sendl_(struct msock_vfs *mvfs, const struct ipaddr *addr,
     return -1;
 }
 
-ssize_t udp_recvl_(struct msock_vfs *mvfs, struct ipaddr *addr,
+static ssize_t udp_recvl_(struct msock_vfs *mvfs, struct ipaddr *addr,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct udp_sock *obj = dill_cont(mvfs, struct udp_sock, mvfs);
     struct msghdr hdr;
@@ -181,14 +181,14 @@ ssize_t udp_recvl_(struct msock_vfs *mvfs, struct ipaddr *addr,
     }
 }
 
-int udp_send(int s, const struct ipaddr *addr, const void *buf, size_t len) {
+int dill_udp_send(int s, const struct ipaddr *addr, const void *buf, size_t len) {
     struct msock_vfs *m = hquery(s, msock_type);
     if(dill_slow(!m)) return -1;
     struct iolist iol = {(void*)buf, len, NULL, 0};
     return udp_sendl_(m, addr, &iol, &iol);
 }
 
-ssize_t udp_recv(int s, struct ipaddr *addr, void *buf, size_t len,
+ssize_t dill_udp_recv(int s, struct ipaddr *addr, void *buf, size_t len,
       int64_t deadline) {
     struct msock_vfs *m = hquery(s, msock_type);
     if(dill_slow(!m)) return -1;
@@ -196,14 +196,14 @@ ssize_t udp_recv(int s, struct ipaddr *addr, void *buf, size_t len,
     return udp_recvl_(m, addr, &iol, &iol, deadline);
 }
 
-int udp_sendl(int s, const struct ipaddr *addr,
+int dill_udp_sendl(int s, const struct ipaddr *addr,
       struct iolist *first, struct iolist *last) {
     struct msock_vfs *m = hquery(s, msock_type);
     if(dill_slow(!m)) return -1;
     return udp_sendl_(m, addr, first, last);
 }
 
-ssize_t udp_recvl(int s, struct ipaddr *addr,
+ssize_t dill_udp_recvl(int s, struct ipaddr *addr,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct msock_vfs *m = hquery(s, msock_type);
     if(dill_slow(!m)) return -1;

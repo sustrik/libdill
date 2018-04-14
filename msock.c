@@ -30,21 +30,22 @@
 
 dill_unique_id(msock_type);
 
-int msend(int s, const void *buf, size_t len, int64_t deadline) {
+int dill_msend(int s, const void *buf, size_t len, int64_t deadline) {
     struct msock_vfs *m = hquery(s, msock_type);
     if(dill_slow(!m)) return -1;
     struct iolist iol = {(void*)buf, len, NULL, 0};
     return m->msendl(m, &iol, &iol, deadline);
 }
 
-ssize_t mrecv(int s, void *buf, size_t len, int64_t deadline) {
+ssize_t dill_mrecv(int s, void *buf, size_t len, int64_t deadline) {
     struct msock_vfs *m = hquery(s, msock_type);
     if(dill_slow(!m)) return -1;
     struct iolist iol = {buf, len, NULL, 0};
     return m->mrecvl(m, &iol, &iol, deadline);
 }
 
-int msendl(int s, struct iolist *first, struct iolist *last, int64_t deadline) {
+int dill_msendl(int s, struct iolist *first, struct iolist *last,
+      int64_t deadline) {
     struct msock_vfs *m = hquery(s, msock_type);
     if(dill_slow(!m)) return -1;
     if(dill_slow(!first || !last || last->iol_next)) {
@@ -52,7 +53,7 @@ int msendl(int s, struct iolist *first, struct iolist *last, int64_t deadline) {
     return m->msendl(m, first, last, deadline);
 }
 
-ssize_t mrecvl(int s, struct iolist *first, struct iolist *last,
+ssize_t dill_mrecvl(int s, struct iolist *first, struct iolist *last,
       int64_t deadline) {
     struct msock_vfs *m = hquery(s, msock_type);
     if(dill_slow(!m)) return -1;

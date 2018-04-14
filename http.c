@@ -56,7 +56,7 @@ static void *http_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int http_attach_mem(int s, struct http_storage *mem) {
+int dill_http_attach_mem(int s, struct http_storage *mem) {
     int err;
     /* Check whether underlying socket is a bytestream. */
     if(dill_slow(!hquery(s, bsock_type))) {err = errno; goto error1;}
@@ -92,7 +92,7 @@ error1:
     return -1;
 }
 
-int http_attach(int s) {
+int dill_http_attach(int s) {
     int err;
     struct http_sock *obj = malloc(sizeof(struct http_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
@@ -107,13 +107,13 @@ error1:
     return -1;
 }
 
-int http_done(int s, int64_t deadline) {
+int dill_http_done(int s, int64_t deadline) {
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
     return term_done(obj->s, deadline);
 }
 
-int http_detach(int s, int64_t deadline) {
+int dill_http_detach(int s, int64_t deadline) {
     int err;
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
@@ -127,7 +127,7 @@ error:
     return u;
 }
 
-int http_sendrequest(int s, const char *command, const char *resource,
+int dill_http_sendrequest(int s, const char *command, const char *resource,
       int64_t deadline) {
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
@@ -155,7 +155,7 @@ int http_sendrequest(int s, const char *command, const char *resource,
     return msendl(obj->s, &iol[0], &iol[3], deadline);
 }
 
-int http_recvrequest(int s, char *command, size_t commandlen,
+int dill_http_recvrequest(int s, char *command, size_t commandlen,
       char *resource, size_t resourcelen, int64_t deadline) {
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
@@ -191,7 +191,7 @@ int http_recvrequest(int s, char *command, size_t commandlen,
     return 0;
 }
 
-int http_sendstatus(int s, int status, const char *reason, int64_t deadline) {
+int dill_http_sendstatus(int s, int status, const char *reason, int64_t deadline) {
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
     if(dill_slow(status < 100 || status > 599)) {errno = EINVAL; return -1;}
@@ -218,7 +218,7 @@ int http_sendstatus(int s, int status, const char *reason, int64_t deadline) {
     return msendl(obj->s, &iol[0], &iol[2], deadline);
 }
 
-int http_recvstatus(int s, char *reason, size_t reasonlen, int64_t deadline) {
+int dill_http_recvstatus(int s, char *reason, size_t reasonlen, int64_t deadline) {
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
     ssize_t sz = mrecv(obj->s, obj->rxbuf, sizeof(obj->rxbuf) - 1, deadline);
@@ -254,7 +254,7 @@ int http_recvstatus(int s, char *reason, size_t reasonlen, int64_t deadline) {
     return status;
 }
 
-int http_sendfield(int s, const char *name, const char *value,
+int dill_http_sendfield(int s, const char *name, const char *value,
       int64_t deadline) {
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;
@@ -281,7 +281,7 @@ int http_sendfield(int s, const char *name, const char *value,
     return msendl(obj->s, &iol[0], &iol[2], deadline);
 }
 
-int http_recvfield(int s, char *name, size_t namelen,
+int dill_http_recvfield(int s, char *name, size_t namelen,
       char *value, size_t valuelen, int64_t deadline) {
     struct http_sock *obj = hquery(s, http_type);
     if(dill_slow(!obj)) return -1;

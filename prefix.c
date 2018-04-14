@@ -60,7 +60,7 @@ static void *prefix_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int prefix_attach_mem(int s, size_t hdrlen, int flags,
+int dill_prefix_attach_mem(int s, size_t hdrlen, int flags,
       struct prefix_storage *mem) {
     int err;
     if(dill_slow(!mem || hdrlen == 0)) {err = EINVAL; goto error1;}
@@ -95,7 +95,7 @@ error1:
     return -1;
 }
 
-int prefix_attach(int s, size_t hdrlen, int flags) {
+int dill_prefix_attach(int s, size_t hdrlen, int flags) {
     int err;
     struct prefix_sock *obj = malloc(sizeof(struct prefix_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
@@ -110,7 +110,7 @@ error1:
     return -1;
 }
 
-int prefix_detach(int s) {
+int dill_prefix_detach(int s) {
     struct prefix_sock *self = hquery(s, prefix_type);
     if(dill_slow(!self)) return -1;
     int u = self->u;

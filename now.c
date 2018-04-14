@@ -81,7 +81,7 @@ int64_t now_(void) {
 #endif
 }
 
-int64_t now(void) {
+int64_t dill_now(void) {
 #if defined(__x86_64__) || defined(__i386__)
     /* On x86 platforms, rdtsc instruction can be used to quickly check time
        in form of CPU cycles. If less than 1M cycles have elapsed since the

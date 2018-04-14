@@ -30,21 +30,22 @@
 
 dill_unique_id(bsock_type);
 
-int bsend(int s, const void *buf, size_t len, int64_t deadline) {
+int dill_bsend(int s, const void *buf, size_t len, int64_t deadline) {
     struct bsock_vfs *b = hquery(s, bsock_type);
     if(dill_slow(!b)) return -1;
     struct iolist iol = {(void*)buf, len, NULL, 0};
     return b->bsendl(b, &iol, &iol, deadline);
 }
 
-int brecv(int s, void *buf, size_t len, int64_t deadline) {
+int dill_brecv(int s, void *buf, size_t len, int64_t deadline) {
     struct bsock_vfs *b = hquery(s, bsock_type);
     if(dill_slow(!b)) return -1;
     struct iolist iol = {buf, len, NULL, 0};
     return b->brecvl(b, &iol, &iol, deadline);
 }
 
-int bsendl(int s, struct iolist *first, struct iolist *last, int64_t deadline) {
+int dill_bsendl(int s, struct iolist *first, struct iolist *last,
+      int64_t deadline) {
     struct bsock_vfs *b = hquery(s, bsock_type);
     if(dill_slow(!b)) return -1;
     if(dill_slow(!first || !last || last->iol_next)) {
@@ -52,7 +53,8 @@ int bsendl(int s, struct iolist *first, struct iolist *last, int64_t deadline) {
     return b->bsendl(b, first, last, deadline);
 }
 
-int brecvl(int s, struct iolist *first, struct iolist *last, int64_t deadline) {
+int dill_brecvl(int s, struct iolist *first, struct iolist *last,
+      int64_t deadline) {
     struct bsock_vfs *b = hquery(s, bsock_type);
     if(dill_slow(!b)) return -1;
     if(dill_slow((first && !last) || (!first && last) || last->iol_next)) {

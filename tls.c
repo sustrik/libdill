@@ -71,7 +71,8 @@ static void *tls_hquery(struct hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int tls_attach_client_mem(int s, struct tls_storage *mem, int64_t deadline) {
+int dill_tls_attach_client_mem(int s, struct tls_storage *mem,
+      int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Check whether underlying socket is a bytestream. */
@@ -136,7 +137,7 @@ error1:;
     return -1;
 }
 
-int tls_attach_client(int s, int64_t deadline) {
+int dill_tls_attach_client(int s, int64_t deadline) {
     int err;
     struct tls_sock *obj = malloc(sizeof(struct tls_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
@@ -151,7 +152,7 @@ error1:
     return -1;
 }
 
-int tls_attach_server_mem(int s, const char *cert, const char *pkey,
+int dill_tls_attach_server_mem(int s, const char *cert, const char *pkey,
       struct tls_storage *mem, int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
@@ -222,7 +223,7 @@ error1:
     return -1;
 }
 
-int tls_attach_server(int s, const char *cert, const char *pkey,
+int dill_tls_attach_server(int s, const char *cert, const char *pkey,
       int64_t deadline) {
     int err;
     struct tls_sock *obj = malloc(sizeof(struct tls_sock));
@@ -239,7 +240,7 @@ error1:
     return -1;
 }
 
-int tls_done(int s, int64_t deadline) {
+int dill_tls_done(int s, int64_t deadline) {
     struct tls_sock *self = hquery(s, tls_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
@@ -256,7 +257,7 @@ int tls_done(int s, int64_t deadline) {
     return -1;
 }
 
-int tls_detach(int s, int64_t deadline) {
+int dill_tls_detach(int s, int64_t deadline) {
     int err;
     struct tls_sock *self = hquery(s, tls_type);
     if(dill_slow(!self)) return -1;

@@ -27,7 +27,7 @@
 #include "pollset.h"
 #include "utils.h"
 
-int msleep(int64_t deadline) {
+int dill_msleep(int64_t deadline) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
@@ -39,7 +39,7 @@ int msleep(int64_t deadline) {
     return 0;
 }
 
-int fdin(int fd, int64_t deadline) {
+int dill_fdin(int fd, int64_t deadline) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
@@ -57,7 +57,7 @@ int fdin(int fd, int64_t deadline) {
     return 0;
 }
 
-int fdout(int fd, int64_t deadline) {
+int dill_fdout(int fd, int64_t deadline) {
     /* Return ECANCELED if shutting down. */
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
@@ -75,7 +75,7 @@ int fdout(int fd, int64_t deadline) {
     return 0;
 }
 
-int fdclean(int fd) {
+int dill_fdclean(int fd) {
     return dill_pollset_clean(fd);
 }
 

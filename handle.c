@@ -104,7 +104,7 @@ int hmake(struct hvfs *vfs) {
     return h;
 }
 
-int hown(int h) {
+int dill_hown(int h) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
     CHECKHANDLE(h, -1);
     /* Create a new handle for the same object. */
@@ -137,7 +137,7 @@ void *hquery(int h, const void *type) {
     }
 }
 
-int hclose(int h) {
+int dill_hclose(int h) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
     CHECKHANDLE(h, -1);
     /* This will guarantee that blocking functions cannot be called anywhere
