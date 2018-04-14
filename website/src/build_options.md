@@ -1,6 +1,11 @@
 # Libdill build options
 
-You can pass the following options to `./configure`:
+When including a header file (`libdill.h` or `libdillimpl.h`) you can define following macros:
+
+* `DILL_DISABLE_SOCKETS`: Don't declare socket-related symbols.
+* `DILL_DISABLE_RAW_NAMES`: Each name in libdill has two variants. One is raw ("go", "WS_TEXT", "struct iolist"), another one has a prefix ("dill_go", "DILL_WS_TEXT", "struct dill_iolist"). Defining this macro causes raw variants not to be declared. Use this option if you want to avoid name colisions with third party header files.
+
+When building the library you can pass the following options to `./configure`:
 
 * `--disable-shared`: Generate only a static library. This option causes tests to be linked with libdill statically, thereby making debugging easier.
 * `--disable-sockets`: Don't build libdill's socket library. Build only the core functionality.
