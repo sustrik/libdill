@@ -276,6 +276,34 @@ tcp_protocol = {
     `
 }
 
+term_protocol = {
+    section: "TERM protocol",
+    type: "message",
+    info: `
+        TERM is a protocol that implements clean terminal handshake between
+        peers. When creating the protocol instance user specifies the terminal
+        message to use. When closing the protocol, terminal messages are
+        exchanged between peers in both directions. After the protocol shuts
+        down the peers agree on their position in the message stream.
+    `,
+    example: `
+        s = term_attach(s, "STOP", 4);
+        ...
+        /* Send terminal message to the peer. */
+        term_done(s, -1);
+        /* Process remaining inbound messages. */
+        while(1) {
+            char buf[256];
+            ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
+            /* Check whether terminal message was received from the peer. */
+            if(sz < 0 && errno == EPIPE) break;
+            frobnicate(buff, sz);
+        }
+        s = term_detach(s);
+    `,
+    experimental: true,
+}
+
 tls_protocol = {
     section: "TLS protocol",
     type: "bytestream",
@@ -294,6 +322,7 @@ tls_protocol = {
     `,
     experimental: true,
 }
+
 
 udp_protocol = {
     section: "UDP protocol",
@@ -2769,6 +2798,50 @@ fxs = [
         custom_errors: {
             EADDRINUSE: "The specified address is already in use.",
             EADDRNOTAVAIL: "The specified address is not available from the local machine.",
+        },
+    },
+    {
+        name: "term_attach",
+        info: "creates TERM protocol on top of underlying socket",
+        result: {
+            type: "int",
+            success: "newly created socket handle",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a " +
+                     "message protocol.",
+           },
+           {
+               name: "buf",
+               type: "const void*",
+               info: "The terminal message.",
+           },
+           {
+               name: "len",
+               type: "size_t",
+               info: "Size of the terminal message, in bytes.",
+           },
+        ],
+        protocol: term_protocol,
+        prologue: `
+            This function instantiates TERM protocol on top of the underlying
+            protocol.
+        `,
+        epilogue: `
+            The socket can be cleanly shut down using **term_detach** function.
+        `,
+        has_handle_argument: true,
+        has_deadline: true,
+        allocates_handle: true,
+
+        mem: "term_storage",
+
+        custom_errors: {
+            EPROTO: "Underlying socket is not a message socket.",
         },
     },
     {
