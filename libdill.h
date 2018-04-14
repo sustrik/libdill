@@ -243,14 +243,15 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 #define bundle_go(bndl, fn) go_(fn, NULL, 0, bndl)
 #define bundle_go_mem(bndl, fn, ptr, len) go_(fn, ptr, len, bndl)
 
-struct bundle_storage {char _[64];};
+struct dill_bundle_storage {char _[64];};
 
 DILL_EXPORT int dill_bundle(void);
-DILL_EXPORT int dill_bundle_mem(struct bundle_storage *mem);
+DILL_EXPORT int dill_bundle_mem(struct dill_bundle_storage *mem);
 DILL_EXPORT int dill_bundle_wait(int h, int64_t deadline);
 DILL_EXPORT int dill_yield(void);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define bundle_storage dill_bundle_storage
 #define bundle dill_bundle
 #define bundle_mem dill_bundle_mem
 #define bundle_wait dill_bundle_wait
@@ -271,12 +272,12 @@ struct chclause {
     size_t len;
 };
 
-struct chstorage {char _[144];};
+struct dill_chstorage {char _[144];};
 
 DILL_EXPORT int dill_chmake(
     int chv[2]);
 DILL_EXPORT int dill_chmake_mem(
-    struct chstorage *mem,
+    struct dill_chstorage *mem,
     int chv[2]);
 DILL_EXPORT int dill_chsend(
     int ch,
@@ -296,6 +297,7 @@ DILL_EXPORT int dill_choose(
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define chstorage dill_chstorage
 #define chmake dill_chmake
 #define chmake_mem dill_chmake_mem
 #define chsend dill_chsend
@@ -393,35 +395,36 @@ struct sockaddr;
 #define IPADDR_PREF_IPV6 4
 #define IPADDR_MAXSTRLEN 46
 
-struct ipaddr {char _[32];};
+struct dill_ipaddr {char _[32];};
 
 DILL_EXPORT int dill_ipaddr_local(
-    struct ipaddr *addr,
+    struct dill_ipaddr *addr,
     const char *name,
     int port,
     int mode);
 DILL_EXPORT int dill_ipaddr_remote(
-    struct ipaddr *addr,
+    struct dill_ipaddr *addr,
     const char *name,
     int port,
     int mode,
     int64_t deadline);
 DILL_EXPORT const char *dill_ipaddr_str(
-    const struct ipaddr *addr,
+    const struct dill_ipaddr *addr,
     char *ipstr);
 DILL_EXPORT int dill_ipaddr_family(
-    const struct ipaddr *addr);
+    const struct dill_ipaddr *addr);
 DILL_EXPORT const struct sockaddr *dill_ipaddr_sockaddr(
-    const struct ipaddr *addr);
+    const struct dill_ipaddr *addr);
 DILL_EXPORT int dill_ipaddr_len(
-    const struct ipaddr *addr);
+    const struct dill_ipaddr *addr);
 DILL_EXPORT int dill_ipaddr_port(
-    const struct ipaddr *addr);
+    const struct dill_ipaddr *addr);
 DILL_EXPORT void dill_ipaddr_setport(
-    struct ipaddr *addr,
+    struct dill_ipaddr *addr,
     int port);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define ipaddr dill_ipaddr
 #define ipaddr_local dill_ipaddr_local
 #define ipaddr_remote dill_ipaddr_remote
 #define ipaddr_str dill_ipaddr_str
@@ -436,9 +439,9 @@ DILL_EXPORT void dill_ipaddr_setport(
 /*  TCP protocol.                                                             */
 /******************************************************************************/
 
-struct tcp_listener_storage {char _[72];};
+struct dill_tcp_listener_storage {char _[72];};
 
-struct tcp_storage {char _[2080];};
+struct dill_tcp_storage {char _[2080];};
 
 DILL_EXPORT int dill_tcp_listen(
     struct ipaddr *addr,
@@ -446,7 +449,7 @@ DILL_EXPORT int dill_tcp_listen(
 DILL_EXPORT int dill_tcp_listen_mem(
     struct ipaddr *addr,
     int backlog,
-    struct tcp_listener_storage *mem);
+    struct dill_tcp_listener_storage *mem);
 DILL_EXPORT int dill_tcp_accept(
     int s,
     struct ipaddr *addr,
@@ -454,14 +457,14 @@ DILL_EXPORT int dill_tcp_accept(
 DILL_EXPORT int dill_tcp_accept_mem(
     int s,
     struct ipaddr *addr,
-    struct tcp_storage *mem,
+    struct dill_tcp_storage *mem,
     int64_t deadline);
 DILL_EXPORT int dill_tcp_connect(
     const struct ipaddr *addr,
     int64_t deadline);
 DILL_EXPORT int dill_tcp_connect_mem(
     const struct ipaddr *addr,
-    struct tcp_storage *mem,
+    struct dill_tcp_storage *mem,
     int64_t deadline);
 DILL_EXPORT int dill_tcp_done(
     int s,
@@ -471,6 +474,8 @@ DILL_EXPORT int dill_tcp_close(
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define tcp_listener_storage dill_tcp_listener_storage
+#define tcp_storage dill_tcp_storage
 #define tcp_listen dill_tcp_listen
 #define tcp_listen_mem dill_tcp_listen_mem
 #define tcp_accept dill_tcp_accept
@@ -485,11 +490,11 @@ DILL_EXPORT int dill_tcp_close(
 /*  IPC protocol.                                                            */
 /******************************************************************************/
 
-struct ipc_listener_storage {char _[40];};
+struct dill_ipc_listener_storage {char _[40];};
 
-struct ipc_storage {char _[2080];};
+struct dill_ipc_storage {char _[2080];};
 
-struct ipc_pair_storage {char _[4160];};
+struct dill_ipc_pair_storage {char _[4160];};
 
 DILL_EXPORT int dill_ipc_listen(
     const char *addr,
@@ -497,20 +502,20 @@ DILL_EXPORT int dill_ipc_listen(
 DILL_EXPORT int dill_ipc_listen_mem(
     const char *addr,
     int backlog,
-    struct ipc_listener_storage *mem);
+    struct dill_ipc_listener_storage *mem);
 DILL_EXPORT int dill_ipc_accept(
     int s,
     int64_t deadline);
 DILL_EXPORT int dill_ipc_accept_mem(
     int s,
-    struct ipc_storage *mem,
+    struct dill_ipc_storage *mem,
     int64_t deadline);
 DILL_EXPORT int dill_ipc_connect(
     const char *addr,
     int64_t deadline);
 DILL_EXPORT int dill_ipc_connect_mem(
     const char *addr,
-    struct ipc_storage *mem,
+    struct dill_ipc_storage *mem,
     int64_t deadline);
 DILL_EXPORT int dill_ipc_done(
     int s,
@@ -521,10 +526,13 @@ DILL_EXPORT int dill_ipc_close(
 DILL_EXPORT int dill_ipc_pair(
     int s[2]);
 DILL_EXPORT int dill_ipc_pair_mem(
-    struct ipc_pair_storage *mem,
+    struct dill_ipc_pair_storage *mem,
     int s[2]);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define ipc_listener_storage dill_ipc_listener_storage
+#define ipc_storage dill_ipc_storage
+#define ipc_pair_storage dill_ipc_pair_storage
 #define ipc_listen dill_ipc_listen
 #define ipc_listen_mem dill_ipc_listen_mem
 #define ipc_accept dill_ipc_accept
@@ -542,7 +550,7 @@ DILL_EXPORT int dill_ipc_pair_mem(
 /*  Messages are prefixed size.                                               */
 /******************************************************************************/
 
-struct prefix_storage {char _[72];};
+struct dill_prefix_storage {char _[72];};
 
 #define PREFIX_BIG_ENDIAN 0
 #define PREFIX_LITTLE_ENDIAN 1
@@ -555,11 +563,12 @@ DILL_EXPORT int dill_prefix_attach_mem(
     int s,
     size_t hdrlen,
     int flags,
-    struct prefix_storage *mem);
+    struct dill_prefix_storage *mem);
 DILL_EXPORT int dill_prefix_detach(
     int s);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define prefix_storage dill_prefix_storage
 #define prefix_attach dill_prefix_attach
 #define prefix_attach_mem dill_prefix_attach_mem
 #define prefix_detach dill_prefix_detach
@@ -571,18 +580,19 @@ DILL_EXPORT int dill_prefix_detach(
 /*  The protocol is terminated by an empty line.                              */
 /******************************************************************************/
 
-struct suffix_storage {char _[72];};
+struct dill_suffix_storage {char _[72];};
 
 DILL_EXPORT int dill_suffix_attach(
     int s);
 DILL_EXPORT int dill_suffix_attach_mem(
     int s,
-    struct suffix_storage *mem);
+    struct dill_suffix_storage *mem);
 DILL_EXPORT int dill_suffix_detach(
     int s,
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define suffix_storage dill_suffix_storage
 #define suffix_attach dill_suffix_attach
 #define suffix_attach_mem dill_suffix_attach_mem
 #define suffix_detach dill_suffix_detach
@@ -593,7 +603,7 @@ DILL_EXPORT int dill_suffix_detach(
 /*  Each UDP packet is treated as a separate message.                         */
 /******************************************************************************/
 
-struct udp_storage {char _[88];};
+struct dill_udp_storage {char _[88];};
 
 DILL_EXPORT int dill_udp_open(
     struct ipaddr *local,
@@ -601,7 +611,7 @@ DILL_EXPORT int dill_udp_open(
 DILL_EXPORT int dill_udp_open_mem(
     struct ipaddr *local,
     const struct ipaddr *remote,
-    struct udp_storage *mem);
+    struct dill_udp_storage *mem);
 DILL_EXPORT int dill_udp_send(
     int s,
     const struct ipaddr *addr,
@@ -626,6 +636,7 @@ DILL_EXPORT ssize_t dill_udp_recvl(
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define udp_storage dill_udp_storage
 #define udp_open dill_udp_open
 #define udp_open_mem dill_udp_open_mem
 #define udp_send dill_udp_send
@@ -638,13 +649,13 @@ DILL_EXPORT ssize_t dill_udp_recvl(
 /*  HTTP                                                                      */
 /******************************************************************************/
 
-struct http_storage {char _[1240];};
+struct dill_http_storage {char _[1240];};
 
 DILL_EXPORT int dill_http_attach(
     int s);
 DILL_EXPORT int dill_http_attach_mem(
     int s,
-    struct http_storage *mem);
+    struct dill_http_storage *mem);
 DILL_EXPORT int dill_http_done(
     int s,
     int64_t deadline);
@@ -687,6 +698,7 @@ DILL_EXPORT int dill_http_recvfield(
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define http_storage dill_http_storage
 #define http_attach dill_http_attach
 #define http_attach_mem dill_http_attach_mem
 #define http_done dill_http_done
@@ -705,7 +717,7 @@ DILL_EXPORT int dill_http_recvfield(
 
 #if !defined DILL_DISABLE_TLS
 
-struct tls_storage {char _[88];};
+struct dill_tls_storage {char _[88];};
 
 DILL_EXPORT int dill_tls_attach_server(
     int s,
@@ -716,14 +728,14 @@ DILL_EXPORT int dill_tls_attach_server_mem(
     int s,
     const char *cert,
     const char *pkey,
-    struct tls_storage *mem,
+    struct dill_tls_storage *mem,
     int64_t deadline);
 DILL_EXPORT int dill_tls_attach_client(
     int s,
     int64_t deadline);
 DILL_EXPORT int dill_tls_attach_client_mem(
     int s,
-    struct tls_storage *mem,
+    struct dill_tls_storage *mem,
     int64_t deadline);
 DILL_EXPORT int dill_tls_done(
     int s,
@@ -733,6 +745,7 @@ DILL_EXPORT int dill_tls_detach(
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define tls_storage dill_tls_storage
 #define tls_attach_server dill_tls_attach_server
 #define tls_attach_server_mem dill_tls_attach_server_mem
 #define tls_attach_client dill_tls_attach_client
@@ -747,7 +760,7 @@ DILL_EXPORT int dill_tls_detach(
 /*  WebSockets protocol.                                                      */
 /******************************************************************************/
 
-struct ws_storage {char _[216];};
+struct dill_ws_storage {char _[216];};
 
 #define WS_BINARY 0
 #define WS_TEXT 1
@@ -764,7 +777,7 @@ DILL_EXPORT int dill_ws_attach_client_mem(
     int flags,
     const char *resource,
     const char *host,
-    struct ws_storage *mem,
+    struct dill_ws_storage *mem,
     int64_t deadline);
 DILL_EXPORT int dill_ws_attach_server(
     int s,
@@ -781,7 +794,7 @@ DILL_EXPORT int dill_ws_attach_server_mem(
     size_t resourcelen,
     char *host,
     size_t hostlen,
-    struct ws_storage *mem,
+    struct dill_ws_storage *mem,
     int64_t deadline);
 DILL_EXPORT int dill_ws_send(
     int s,
@@ -836,6 +849,7 @@ DILL_EXPORT int dill_ws_response_key(
     char *response_key);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define ws_storage dill_ws_storage
 #define ws_attach_server dill_ws_attach_server
 #define ws_attach_server_mem dill_ws_attach_server_mem
 #define ws_attach_client dill_ws_attach_client
@@ -856,7 +870,7 @@ DILL_EXPORT int dill_ws_response_key(
 /*  Implementes terminal handshake on the top of any message-based protocol.  */
 /******************************************************************************/
 
-struct term_storage {char _[104];};
+struct dill_term_storage {char _[104];};
 
 DILL_EXPORT int dill_term_attach(
     int s,
@@ -866,7 +880,7 @@ DILL_EXPORT int dill_term_attach_mem(
     int s,
     const void *buf,
     size_t len,
-    struct term_storage *mem);
+    struct dill_term_storage *mem);
 DILL_EXPORT int dill_term_done(
     int s,
     int64_t deadline);
@@ -875,6 +889,7 @@ DILL_EXPORT int dill_term_detach(
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define term_storage dill_term_storage
 #define term_attach dill_term_attach
 #define term_attach_mem dill_term_attach_mem
 #define term_done dill_term_done
