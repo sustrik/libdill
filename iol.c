@@ -27,7 +27,7 @@
 #include "iol.h"
 #include "utils.h"
 
-int iol_check(struct iolist *first, struct iolist *last,
+int dill_iolcheck(struct iolist *first, struct iolist *last,
       size_t *nbufs, size_t *nbytes) {
     if(!first && !last) {
         if(nbufs) *nbufs = 0;
@@ -56,7 +56,7 @@ error:;
     return -1;
 }
 
-void iol_toiov(struct iolist *first, struct iovec *iov) {
+void dill_ioltoiov(struct iolist *first, struct iovec *iov) {
     while(first) {
         iov->iov_base = first->iol_base;
         iov->iov_len = first->iol_len;
@@ -65,7 +65,7 @@ void iol_toiov(struct iolist *first, struct iovec *iov) {
     }
 }
 
-int iol_ltrim(struct iolist *first, size_t n, struct iolist *result) {
+int dill_ioltrim(struct iolist *first, size_t n, struct iolist *result) {
     while(n) {
         if(!first) return -1;
         if(first->iol_len >= n) break;
@@ -79,7 +79,7 @@ int iol_ltrim(struct iolist *first, size_t n, struct iolist *result) {
     return 0;
 }
 
-int iol_copy(const void *src, size_t srclen, struct iolist *first) {
+int dill_iolcopy(const void *src, size_t srclen, struct iolist *first) {
     const uint8_t *p = src;
     while(1) {
         if(!srclen) return 0;

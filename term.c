@@ -175,7 +175,7 @@ static ssize_t term_mrecvl(struct msock_vfs *mvfs,
         return sz;
     }
     struct iolist trimmed = {0};
-    int rc = iol_ltrim(first, self->len, &trimmed);
+    int rc = dill_ioltrim(first, self->len, &trimmed);
     uint8_t buf[self->len];
     struct iolist iol = {buf, self->len, rc < 0 ? NULL : &trimmed, 0}; 
     ssize_t sz = mrecvl(self->u, &iol, rc < 0 ? &iol : last, deadline);
@@ -186,7 +186,7 @@ static ssize_t term_mrecvl(struct msock_vfs *mvfs,
         errno = EPIPE;
         return -1;
     }
-    iol_copy(buf, self->len, first);
+    dill_iolcopy(buf, self->len, first);
     return sz;
 }
 

@@ -295,7 +295,7 @@ static int ws_sendl_base(struct msock_vfs *mvfs, uint8_t type,
     struct ws_sock *self = dill_cont(mvfs, struct ws_sock, mvfs);
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     size_t len;
-    int rc = iol_check(first, last, NULL, &len);
+    int rc = dill_iolcheck(first, last, NULL, &len);
     if(dill_slow(rc < 0)) return -1;
     uint8_t buf[12];
     size_t sz;
@@ -349,7 +349,7 @@ static ssize_t ws_recvl_base(struct msock_vfs *mvfs, int *flags,
       struct iolist *first, struct iolist *last, int64_t deadline) {
     struct ws_sock *self = dill_cont(mvfs, struct ws_sock, mvfs);
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
-    int rc = iol_check(first, last, NULL, NULL);
+    int rc = dill_iolcheck(first, last, NULL, NULL);
     if(dill_slow(rc < 0)) return -1;
     size_t res = 0;
     /* Message may consist of multiple frames. Read them one by one. */

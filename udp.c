@@ -143,10 +143,10 @@ static int udp_sendl_(struct msock_vfs *mvfs, const struct ipaddr *addr,
     /* TODO: This is dangerous, it may cause stack overflow.
        There should probably be a on-heap per-socket buffer for that. */
     size_t niov;
-    int rc = iol_check(first, last, &niov, NULL);
+    int rc = dill_iolcheck(first, last, &niov, NULL);
     if(dill_slow(rc < 0)) return -1;
     struct iovec iov[niov];
-    iol_toiov(first, iov);
+    dill_ioltoiov(first, iov);
     hdr.msg_iov = (struct iovec*)iov;
     hdr.msg_iovlen = niov;
     ssize_t sz = sendmsg(obj->fd, &hdr, 0);
@@ -166,10 +166,10 @@ static ssize_t udp_recvl_(struct msock_vfs *mvfs, struct ipaddr *addr,
     /* TODO: This is dangerous, it may cause stack overflow.
        There should probably be a on-heap per-socket buffer for that. */
     size_t niov;
-    int rc = iol_check(first, last, &niov, NULL);
+    int rc = dill_iolcheck(first, last, &niov, NULL);
     if(dill_slow(rc < 0)) return -1;
     struct iovec iov[niov];
-    iol_toiov(first, iov);
+    dill_ioltoiov(first, iov);
     hdr.msg_iov = (struct iovec*)iov;
     hdr.msg_iovlen = niov;
     while(1) {

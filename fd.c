@@ -109,10 +109,10 @@ int fd_send(int s, struct iolist *first, struct iolist *last,
     /* TODO: This is dangerous, it may cause stack overflow.
        There should probably be a on-heap per-socket buffer for that. */
     size_t niov;
-    int rc = iol_check(first, last, &niov, NULL);
+    int rc = dill_iolcheck(first, last, &niov, NULL);
     if(dill_slow(rc < 0)) return -1;
     struct iovec iov[niov];
-    iol_toiov(first, iov);
+    dill_ioltoiov(first, iov);
     /* Message header will act as an iterator in the following loop. */
     struct msghdr hdr;
     memset(&hdr, 0, sizeof(hdr));
@@ -163,10 +163,10 @@ static int fd_recv_(int s, struct iolist *first, struct iolist *last,
     /* TODO: This is dangerous, it may cause stack overflow.
        There should probably be a on-heap per-socket buffer for that. */
     size_t niov;
-    int rc = iol_check(first, last, &niov, NULL);
+    int rc = dill_iolcheck(first, last, &niov, NULL);
     if(dill_slow(rc < 0)) return -1;
     struct iovec iov[niov];
-    iol_toiov(first, iov);
+    dill_ioltoiov(first, iov);
     /* Message header will act as an iterator in the following loop. */
     struct msghdr hdr;
     memset(&hdr, 0, sizeof(hdr));
