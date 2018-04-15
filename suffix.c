@@ -23,29 +23,30 @@
 */
 
 #include <errno.h>
-#include <libdillimpl.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+#define DILL_DISABLE_RAW_NAMES
+#include "libdillimpl.h"
 #include "utils.h"
 
-dill_unique_id(suffix_type);
+dill_unique_id(dill_suffix_type);
 
-static void *suffix_hquery(struct hvfs *hvfs, const void *type);
-static void suffix_hclose(struct hvfs *hvfs);
-static int suffix_msendl(struct msock_vfs *mvfs,
-    struct iolist *first, struct iolist *last, int64_t deadline);
-static ssize_t suffix_mrecvl(struct msock_vfs *mvfs,
-    struct iolist *first, struct iolist *last, int64_t deadline);
+static void *dill_suffix_hquery(struct dill_hvfs *hvfs, const void *type);
+static void dill_suffix_hclose(struct dill_hvfs *hvfs);
+static int dill_suffix_msendl(struct dill_msock_vfs *mvfs,
+    struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
+static ssize_t dill_suffix_mrecvl(struct dill_msock_vfs *mvfs,
+    struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
 
-struct suffix_sock {
-    struct hvfs hvfs;
-    struct msock_vfs mvfs;
+struct dill_suffix_sock {
+    struct dill_hvfs hvfs;
+    struct dill_msock_vfs mvfs;
     int u;
     /* Given that we are doing one recv call per byte, let's cache the pointer
        to bsock interface of the underlying socket to make it faster. */
-    struct bsock_vfs *uvfs;
+    struct dill_bsock_vfs *uvfs;
     uint8_t buf[32];
     uint8_t suffix[32];
     size_t suffixlen;
@@ -54,32 +55,33 @@ struct suffix_sock {
     unsigned int mem : 1;
 };
 
-//DILL_CT_ASSERT(sizeof(struct suffix_storage) >= sizeof(struct suffix_sock));
+DILL_CT_ASSERT(sizeof(struct dill_suffix_storage) >=
+    sizeof(struct dill_suffix_sock));
 
-static void *suffix_hquery(struct hvfs *hvfs, const void *type) {
-    struct suffix_sock *self = (struct suffix_sock*)hvfs;
-    if(type == msock_type) return &self->mvfs;
-    if(type == suffix_type) return self;
+static void *dill_suffix_hquery(struct dill_hvfs *hvfs, const void *type) {
+    struct dill_suffix_sock *self = (struct dill_suffix_sock*)hvfs;
+    if(type == dill_msock_type) return &self->mvfs;
+    if(type == dill_suffix_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
 
 int dill_suffix_attach_mem(int s, const void *suffix, size_t suffixlen,
-      struct suffix_storage *mem) {
+      struct dill_suffix_storage *mem) {
     int err;
     if(dill_slow(!mem || !suffix || suffixlen == 0 || suffixlen > 32)) {
         err = EINVAL; goto error1;}
     /* Take ownership of the underlying socket. */
-    int u = hown(s);
+    int u = dill_hown(s);
     if(dill_slow(u < 0)) {err = errno; goto error1;}
     /* Create the object. */
-    struct suffix_sock *self = (struct suffix_sock*)mem;
-    self->hvfs.query = suffix_hquery;
-    self->hvfs.close = suffix_hclose;
-    self->mvfs.msendl = suffix_msendl;
-    self->mvfs.mrecvl = suffix_mrecvl;
+    struct dill_suffix_sock *self = (struct dill_suffix_sock*)mem;
+    self->hvfs.query = dill_suffix_hquery;
+    self->hvfs.close = dill_suffix_hclose;
+    self->mvfs.msendl = dill_suffix_msendl;
+    self->mvfs.mrecvl = dill_suffix_mrecvl;
     self->u = u;
-    self->uvfs = hquery(u, bsock_type);
+    self->uvfs = dill_hquery(u, dill_bsock_type);
     if(dill_slow(!self->uvfs && errno == ENOTSUP)) {err = EPROTO; goto error2;}
     if(dill_slow(!self->uvfs)) {err = errno; goto error2;}
     memcpy(self->suffix, suffix, suffixlen);
@@ -88,11 +90,11 @@ int dill_suffix_attach_mem(int s, const void *suffix, size_t suffixlen,
     self->outerr = 0;
     self->mem = 1;
     /* Create the handle. */
-    int h = hmake(&self->hvfs);
+    int h = dill_hmake(&self->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:;
-    int rc = hclose(u);
+    int rc = dill_hclose(u);
     dill_assert(rc == 0);
 error1:
     errno = err;
@@ -101,10 +103,10 @@ error1:
 
 int dill_suffix_attach(int s, const void *suffix, size_t suffixlen) {
     int err;
-    struct suffix_sock *obj = malloc(sizeof(struct suffix_sock));
+    struct dill_suffix_sock *obj = malloc(sizeof(struct dill_suffix_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int cs = suffix_attach_mem(s, suffix, suffixlen,
-        (struct suffix_storage*)obj);
+    int cs = dill_suffix_attach_mem(s, suffix, suffixlen,
+        (struct dill_suffix_storage*)obj);
     if(dill_slow(cs < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return cs;
@@ -116,19 +118,20 @@ error1:
 }
 
 int dill_suffix_detach(int s, int64_t deadline) {
-    struct suffix_sock *self = hquery(s, suffix_type);
+    struct dill_suffix_sock *self = dill_hquery(s, dill_suffix_type);
     if(dill_slow(!self)) return -1;
     int u = self->u;
     if(!self->mem) free(self);
     return u;
 }
 
-static int suffix_msendl(struct msock_vfs *mvfs,
-      struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct suffix_sock *self = dill_cont(mvfs, struct suffix_sock, mvfs);
+static int dill_suffix_msendl(struct dill_msock_vfs *mvfs,
+      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
+    struct dill_suffix_sock *self = dill_cont(mvfs, struct dill_suffix_sock,
+        mvfs);
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     /* TODO: Make sure that message doesn't contain suffix sequence. */
-    struct iolist iol = {self->suffix, self->suffixlen, NULL, 0};
+    struct dill_iolist iol = {self->suffix, self->suffixlen, NULL, 0};
     last->iol_next = &iol;
     int rc = self->uvfs->bsendl(self->uvfs, first, &iol, deadline);
     last->iol_next = NULL;
@@ -136,19 +139,20 @@ static int suffix_msendl(struct msock_vfs *mvfs,
     return 0;
 }
 
-static ssize_t suffix_mrecvl(struct msock_vfs *mvfs,
-      struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct suffix_sock *self = dill_cont(mvfs, struct suffix_sock, mvfs);
+static ssize_t dill_suffix_mrecvl(struct dill_msock_vfs *mvfs,
+      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
+    struct dill_suffix_sock *self = dill_cont(mvfs, struct dill_suffix_sock,
+        mvfs);
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
     /* First fill in the temporary buffer. */
-    struct iolist iol = {self->buf, self->suffixlen, NULL, 0};
+    struct dill_iolist iol = {self->buf, self->suffixlen, NULL, 0};
     int rc = self->uvfs->brecvl(self->uvfs, &iol, &iol, deadline);
     if(dill_slow(rc < 0)) {self->inerr = 1; return -1;}
     /* Read the input, character by character. */
     iol.iol_base = self->buf + self->suffixlen - 1;
     iol.iol_len = 1;
     size_t sz = 0;
-    struct iolist it = *first;
+    struct dill_iolist it = *first;
     while(1) {
         /* Check for suffix. */
         if(memcmp(self->buf, self->suffix, self->suffixlen) == 0) break;
@@ -172,10 +176,10 @@ static ssize_t suffix_mrecvl(struct msock_vfs *mvfs,
     return sz;
 }
 
-static void suffix_hclose(struct hvfs *hvfs) {
-    struct suffix_sock *self = (struct suffix_sock*)hvfs;
+static void dill_suffix_hclose(struct dill_hvfs *hvfs) {
+    struct dill_suffix_sock *self = (struct dill_suffix_sock*)hvfs;
     if(dill_fast(self->u >= 0)) {
-        int rc = hclose(self->u);
+        int rc = dill_hclose(self->u);
         dill_assert(rc == 0);
     }
     if(!self->mem) free(self);
