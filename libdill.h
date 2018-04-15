@@ -459,26 +459,26 @@ struct dill_tcp_listener_storage {char _[72];};
 struct dill_tcp_storage {char _[2080];};
 
 DILL_EXPORT int dill_tcp_listen(
-    struct ipaddr *addr,
+    struct dill_ipaddr *addr,
     int backlog);
 DILL_EXPORT int dill_tcp_listen_mem(
-    struct ipaddr *addr,
+    struct dill_ipaddr *addr,
     int backlog,
     struct dill_tcp_listener_storage *mem);
 DILL_EXPORT int dill_tcp_accept(
     int s,
-    struct ipaddr *addr,
+    struct dill_ipaddr *addr,
     int64_t deadline);
 DILL_EXPORT int dill_tcp_accept_mem(
     int s,
-    struct ipaddr *addr,
+    struct dill_ipaddr *addr,
     struct dill_tcp_storage *mem,
     int64_t deadline);
 DILL_EXPORT int dill_tcp_connect(
-    const struct ipaddr *addr,
+    const struct dill_ipaddr *addr,
     int64_t deadline);
 DILL_EXPORT int dill_tcp_connect_mem(
-    const struct ipaddr *addr,
+    const struct dill_ipaddr *addr,
     struct dill_tcp_storage *mem,
     int64_t deadline);
 DILL_EXPORT int dill_tcp_done(
@@ -626,31 +626,31 @@ DILL_EXPORT int dill_suffix_detach(
 struct dill_udp_storage {char _[88];};
 
 DILL_EXPORT int dill_udp_open(
-    struct ipaddr *local,
-    const struct ipaddr *remote);
+    struct dill_ipaddr *local,
+    const struct dill_ipaddr *remote);
 DILL_EXPORT int dill_udp_open_mem(
-    struct ipaddr *local,
-    const struct ipaddr *remote,
+    struct dill_ipaddr *local,
+    const struct dill_ipaddr *remote,
     struct dill_udp_storage *mem);
 DILL_EXPORT int dill_udp_send(
     int s,
-    const struct ipaddr *addr,
+    const struct dill_ipaddr *addr,
     const void *buf,
     size_t len);
 DILL_EXPORT ssize_t dill_udp_recv(
     int s,
-    struct ipaddr *addr,
+    struct dill_ipaddr *addr,
     void *buf,
     size_t len,
     int64_t deadline);
 DILL_EXPORT int dill_udp_sendl(
     int s,
-    const struct ipaddr *addr,
+    const struct dill_ipaddr *addr,
     struct dill_iolist *first,
     struct dill_iolist *last);
 DILL_EXPORT ssize_t dill_udp_recvl(
     int s,
-    struct ipaddr *addr,
+    struct dill_ipaddr *addr,
     struct dill_iolist *first,
     struct dill_iolist *last,
     int64_t deadline);
