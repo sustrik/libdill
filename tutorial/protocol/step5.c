@@ -57,7 +57,7 @@ int quux_attach(int u) {
     self->hvfs.close = quux_hclose;
     self->mvfs.msendl = quux_msendl;
     self->mvfs.mrecvl = quux_mrecvl;
-    self->u = u;
+    self->u = hown(u);
     int h = hmake(&self->hvfs);
     if(h < 0) {int err = errno; goto error2;}
     return h;

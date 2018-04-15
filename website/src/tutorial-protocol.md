@@ -42,7 +42,6 @@ Let's add forward declarations for functions that will be filled into the virtua
 ```c
 static void *quux_hquery(struct hvfs *hvfs, const void *id);
 static void quux_hclose(struct hvfs *hvfs);
-static int quux_hdone(struct hvfs *hvfs, int64_t deadline);
 ```
 
 The `quux_open` function itself won't do much except for allocating the object, filling in the table of virtual functions and registering it with libdill runtime:
@@ -54,7 +53,6 @@ int quux_open(void) {
     if(!self) {err = ENOMEM; goto error1;}
     self->hvfs.query = quux_hquery;
     self->hvfs.close = quux_hclose;
-    self->hvfs.done = quux_hdone;
     int h = hmake(&self->hvfs);
     if(h < 0) {err = errno; goto error2;}
     return h;
@@ -193,7 +191,7 @@ int quux_attach(int u) {
     self->hvfs.query = quux_hquery;
     self->hvfs.close = quux_hclose;
     self->hvfs.done = quux_hdone;
-    self->u = u;
+    self->u = hown(u);
     int h = hmake(&self->hvfs);
     if(h < 0) {int err = errno; goto error2;}
     return h;
@@ -205,7 +203,9 @@ error1:
 }
 ```
 
-We can reuse `quux_frobnicate()` and rename it to `quux_detach()`. It will terminate the quux protocol and return the handle of the underlying protocol:
+Note gow `hown` function is used to take ownership of the underlying socket. `hown` will give it a new handle number, thus making the old handle number owned by the caller unusable.
+
+We can reuse `quux_frobnicate` and rename it to `quux_detach`. It will terminate the quux protocol and return the handle of the underlying protocol:
 
 ```c
 int quux_detach(int h) {
@@ -597,11 +597,12 @@ static ssize_t quux_mrecvl(struct msock_vfs *mvfs,
 }
 ```
 
-Virtual function `hdone()` is supposed to start the terminal handshake. However, it is not supposed to wait till it is finished. The semantics of `hdone()` are "user is not going to send any more data". You can think of it as of EOF marker of a kind.
+`quux_done` function will start the terminal handshake. However, it is not supposed to wait till it is finished. The semantics of the done function are "user is not going to send any more data". You can think of it as of EOF marker of a kind.
 
 ```c
-static int quux_hdone(struct hvfs *hvfs, int64_t deadline) {
-    struct quux *self = (struct quux*)hvfs;
+int quux_done(int h, int64_t deadline) {
+    struct quux *self = hquery(h, quux_type);
+    if(!self) return -1;
     if(self->senddone) {errno = EPIPE; return -1;}
     if(self->senderr) {errno = ECONNRESET; return -1;}
     uint8_t c = 255;
@@ -623,7 +624,7 @@ int quux_detach(int h, int64_t deadline) {
     if(!self) return -1;
     if(self->senderr || self->recverr) {err = ECONNRESET; goto error;}
     if(!self->senddone) {
-        int rc = quux_hdone(&self->hvfs, deadline);
+        int rc = quux_done(h, deadline);
         if(rc < 0) {err = errno; goto error;}
     }
     while(1) {

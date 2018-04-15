@@ -47,7 +47,7 @@ int quux_attach(int u) {
     if(!self) {err = ENOMEM; goto error1;}
     self->hvfs.query = quux_hquery;
     self->hvfs.close = quux_hclose;
-    self->u = u;
+    self->u = hown(u);
     int h = hmake(&self->hvfs);
     if(h < 0) {int err = errno; goto error2;}
     return h;

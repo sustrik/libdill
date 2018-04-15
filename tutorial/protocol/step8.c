@@ -59,7 +59,7 @@ int quux_attach(int u, int64_t deadline) {
     self->hvfs.close = quux_hclose;
     self->mvfs.msendl = quux_msendl;
     self->mvfs.mrecvl = quux_mrecvl;
-    self->u = u;
+    self->u = hown(u);
     self->senderr = 0;
     self->recverr = 0;
 
