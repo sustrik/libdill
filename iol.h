@@ -32,22 +32,23 @@
 /* Checks whether iolist is valid. Returns 0 in case of success or -1 in case
    of error. Fills in number of buffers in the list and overall number of bytes
    if requested. */
-int dill_iolcheck(struct iolist *first, struct iolist *last,
+int dill_iolcheck(struct dill_iolist *first, struct dill_iolist *last,
     size_t *nbufs, size_t *nbytes);
 
 /* Copy the iolist into an iovec. Iovec must have at least as much elements
    as the iolist, otherwise undefined behaviour ensues. The data buffers
    as such are not affected by this operation .*/
-void dill_ioltoiov(struct iolist *first, struct iovec *iov);
+void dill_ioltoiov(struct dill_iolist *first, struct iovec *iov);
 
 /* Trims first n bytes from the iolist. Returns the trimmed iolist. Keeps the
    original iolist unchanged. Returns 0 in the case of success, -1 is there
    are less than N bytes in the original iolist. */
-int dill_ioltrim(struct iolist *first, size_t n, struct iolist *result);
+int dill_ioltrim(struct dill_iolist *first, size_t n,
+    struct dill_iolist *result);
 
 /* Copies supplied bytes into the iolist. Returns 0 on success, -1 is bytes
    won't fit into the iolist. */
-int dill_iolcopy(const void *src, size_t srclen, struct iolist *first);
+int dill_iolcopy(const void *src, size_t srclen, struct dill_iolist *first);
 
 #endif
 

@@ -53,14 +53,14 @@ int fd_accept(
     int64_t deadline);
 int fd_send(
     int s,
-    struct iolist *first,
-    struct iolist *last,
+    struct dill_iolist *first,
+    struct dill_iolist *last,
     int64_t deadline);
 int fd_recv(
     int s,
     struct fd_rxbuf *rxbuf,
-    struct iolist *first,
-    struct iolist *last,
+    struct dill_iolist *first,
+    struct dill_iolist *last,
     int64_t deadline);
 void fd_close(
     int s);
