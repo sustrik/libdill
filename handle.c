@@ -46,7 +46,7 @@ struct dill_handle {
     void *ptr;
 };
 
-#define CHECKHANDLE(h, err) \
+#define DILL_CHECKHANDLE(h, err) \
     if(dill_slow((h) < 0 || (h) >= ctx->nhandles ||\
           ctx->handles[(h)].next != -2)) {\
         errno = EBADF; return (err);}\
@@ -106,7 +106,7 @@ int dill_hmake(struct hvfs *vfs) {
 
 int dill_hown(int h) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
-    CHECKHANDLE(h, -1);
+    DILL_CHECKHANDLE(h, -1);
     /* Create a new handle for the same object. */
     int res = hmake(hndl->vfs);
     if(dill_slow(res < 0)) return -1;
@@ -122,7 +122,7 @@ int dill_hown(int h) {
 
 void *dill_hquery(int h, const void *type) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
-    CHECKHANDLE(h, NULL);
+    DILL_CHECKHANDLE(h, NULL);
     /* Try and use the cached pointer first; otherwise do the expensive virtual
        call.*/
     if(dill_fast(hndl->ptr != NULL && hndl->type == type))
@@ -139,7 +139,7 @@ void *dill_hquery(int h, const void *type) {
 
 int dill_hclose(int h) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
-    CHECKHANDLE(h, -1);
+    DILL_CHECKHANDLE(h, -1);
     /* This will guarantee that blocking functions cannot be called anywhere
        inside the context of the close. */
     int old = dill_no_blocking(1);
