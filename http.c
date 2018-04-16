@@ -29,61 +29,63 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define DILL_DISABLE_RAW_NAMES
 #include "libdillimpl.h"
 #include "utils.h"
 
-dill_unique_id(http_type);
+dill_unique_id(dill_http_type);
 
-static void *http_hquery(struct hvfs *hvfs, const void *type);
-static void http_hclose(struct hvfs *hvfs);
+static void *dill_http_hquery(struct dill_hvfs *hvfs, const void *type);
+static void dill_http_hclose(struct dill_hvfs *hvfs);
 
-struct http_sock {
-    struct hvfs hvfs;
+struct dill_http_sock {
+    struct dill_hvfs hvfs;
     /* Underlying SUFFIX socket. */
     int s;
     unsigned int mem : 1;
-    struct suffix_storage suffix_mem;
-    struct term_storage term_mem;
+    struct dill_suffix_storage suffix_mem;
+    struct dill_term_storage term_mem;
     char rxbuf[1024];
 };
 
-DILL_CT_ASSERT(sizeof(struct http_storage) >= sizeof(struct http_sock));
+DILL_CT_ASSERT(sizeof(struct dill_http_storage) >=
+    sizeof(struct dill_http_sock));
 
-static void *http_hquery(struct hvfs *hvfs, const void *type) {
-    struct http_sock *obj = (struct http_sock*)hvfs;
-    if(type == http_type) return obj;
+static void *dill_http_hquery(struct dill_hvfs *hvfs, const void *type) {
+    struct dill_http_sock *obj = (struct dill_http_sock*)hvfs;
+    if(type == dill_http_type) return obj;
     errno = ENOTSUP;
     return NULL;
 }
 
-int dill_http_attach_mem(int s, struct http_storage *mem) {
+int dill_http_attach_mem(int s, struct dill_http_storage *mem) {
     int err;
     /* Check whether underlying socket is a bytestream. */
-    if(dill_slow(!hquery(s, bsock_type))) {err = errno; goto error1;}
+    if(dill_slow(!dill_hquery(s, dill_bsock_type))) {err = errno; goto error1;}
     /* Create the object. */
-    struct http_sock *obj = (struct http_sock*)mem;
-    obj->hvfs.query = http_hquery;
-    obj->hvfs.close = http_hclose;
+    struct dill_http_sock *obj = (struct dill_http_sock*)mem;
+    obj->hvfs.query = dill_http_hquery;
+    obj->hvfs.close = dill_http_hclose;
     obj->s = -1;
     obj->mem = 1;
     /* Create the handle. */
-    int h = hmake(&obj->hvfs);
+    int h = dill_hmake(&obj->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     /* Take ownership of the underlying socket. */
-    int tmp = hown(s);
+    int tmp = dill_hown(s);
     if(dill_slow(tmp < 0)) {err = errno; goto error3;}
     /* Wrap the underlying socket into SUFFIX and TERM protocol. */
-    obj->s = suffix_attach_mem(tmp, "\r\n", 2, &obj->suffix_mem);
+    obj->s = dill_suffix_attach_mem(tmp, "\r\n", 2, &obj->suffix_mem);
     if(dill_slow(obj->s < 0)) {err = errno; goto error4;}
-    obj->s = term_attach_mem(obj->s, NULL, 0, &obj->term_mem);
+    obj->s = dill_term_attach_mem(obj->s, NULL, 0, &obj->term_mem);
     if(dill_slow(obj->s < 0)) {err = errno; goto error4;}
     return h;
     /* TODO: Fix error handling. */
 error4:;
-    int rc = hclose(tmp);
+    int rc = dill_hclose(tmp);
     dill_assert(rc == 0);
 error3:;
-    rc = hclose(h);
+    rc = dill_hclose(h);
     dill_assert(rc == 0);
 error2:
     free(obj);
@@ -94,9 +96,9 @@ error1:
 
 int dill_http_attach(int s) {
     int err;
-    struct http_sock *obj = malloc(sizeof(struct http_sock));
+    struct dill_http_sock *obj = malloc(sizeof(struct dill_http_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int cs = http_attach_mem(s, (struct http_storage*)obj);
+    int cs = dill_http_attach_mem(s, (struct dill_http_storage*)obj);
     if(dill_slow(cs < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return cs;
@@ -108,18 +110,18 @@ error1:
 }
 
 int dill_http_done(int s, int64_t deadline) {
-    struct http_sock *obj = hquery(s, http_type);
+    struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
-    return term_done(obj->s, deadline);
+    return dill_term_done(obj->s, deadline);
 }
 
 int dill_http_detach(int s, int64_t deadline) {
     int err;
-    struct http_sock *obj = hquery(s, http_type);
+    struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
-    int u = term_detach(obj->s, deadline);
+    int u = dill_term_detach(obj->s, deadline);
     if(dill_slow(u < 0)) {err = errno; goto error;}
-    u = suffix_detach(u, deadline);
+    u = dill_suffix_detach(u, deadline);
     if(dill_slow(u < 0)) {err = errno; goto error;}
 error:
     if(!obj->mem) free(obj);
@@ -129,13 +131,13 @@ error:
 
 int dill_http_sendrequest(int s, const char *command, const char *resource,
       int64_t deadline) {
-    struct http_sock *obj = hquery(s, http_type);
+    struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
     if (strpbrk(command, " \t\n") != NULL) {
         errno = EINVAL; return -1;}
     if (strpbrk(resource, " \t\n") != NULL) {
         errno = EINVAL; return -1;}
-    struct iolist iol[4];
+    struct dill_iolist iol[4];
     iol[0].iol_base = (void*)command;
     iol[0].iol_len = strlen(command);
     iol[0].iol_next = &iol[1];
@@ -152,14 +154,15 @@ int dill_http_sendrequest(int s, const char *command, const char *resource,
     iol[3].iol_len = 9;
     iol[3].iol_next = NULL;
     iol[3].iol_rsvd = 0;
-    return msendl(obj->s, &iol[0], &iol[3], deadline);
+    return dill_msendl(obj->s, &iol[0], &iol[3], deadline);
 }
 
 int dill_http_recvrequest(int s, char *command, size_t commandlen,
       char *resource, size_t resourcelen, int64_t deadline) {
-    struct http_sock *obj = hquery(s, http_type);
+    struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
-    ssize_t sz = mrecv(obj->s, obj->rxbuf, sizeof(obj->rxbuf) - 1, deadline);
+    ssize_t sz = dill_mrecv(obj->s, obj->rxbuf, sizeof(obj->rxbuf) - 1,
+        deadline);
     if(dill_slow(sz < 0)) return -1;
     obj->rxbuf[sz] = 0;
     size_t pos = 0;
@@ -192,7 +195,7 @@ int dill_http_recvrequest(int s, char *command, size_t commandlen,
 }
 
 int dill_http_sendstatus(int s, int status, const char *reason, int64_t deadline) {
-    struct http_sock *obj = hquery(s, http_type);
+    struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
     if(dill_slow(status < 100 || status > 599)) {errno = EINVAL; return -1;}
     char buf[4];
@@ -202,7 +205,7 @@ int dill_http_sendstatus(int s, int status, const char *reason, int64_t deadline
     status %= 10;
     buf[2] = status + '0';
     buf[3] = ' ';
-    struct iolist iol[3];
+    struct dill_iolist iol[3];
     iol[0].iol_base = (void*)"HTTP/1.1 ";
     iol[0].iol_len = 9;
     iol[0].iol_next = &iol[1];
@@ -215,13 +218,15 @@ int dill_http_sendstatus(int s, int status, const char *reason, int64_t deadline
     iol[2].iol_len = strlen(reason);
     iol[2].iol_next = NULL;
     iol[2].iol_rsvd = 0;
-    return msendl(obj->s, &iol[0], &iol[2], deadline);
+    return dill_msendl(obj->s, &iol[0], &iol[2], deadline);
 }
 
-int dill_http_recvstatus(int s, char *reason, size_t reasonlen, int64_t deadline) {
-    struct http_sock *obj = hquery(s, http_type);
+int dill_http_recvstatus(int s, char *reason, size_t reasonlen,
+      int64_t deadline) {
+    struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
-    ssize_t sz = mrecv(obj->s, obj->rxbuf, sizeof(obj->rxbuf) - 1, deadline);
+    ssize_t sz = dill_mrecv(obj->s, obj->rxbuf, sizeof(obj->rxbuf) - 1,
+        deadline);
     if(dill_slow(sz < 0)) return -1;
     obj->rxbuf[sz] = 0;
     size_t pos = 0;
@@ -256,13 +261,13 @@ int dill_http_recvstatus(int s, char *reason, size_t reasonlen, int64_t deadline
 
 int dill_http_sendfield(int s, const char *name, const char *value,
       int64_t deadline) {
-    struct http_sock *obj = hquery(s, http_type);
+    struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
     /* Check whether name contains only valid characters. */
     if (strpbrk(name, "(),/:;<=>?@[\\]{}\" \t\n") != NULL) {
         errno = EINVAL; return -1;}
     if (strlen(value) == 0) {errno = EPROTO; return -1;}
-    struct iolist iol[3];
+    struct dill_iolist iol[3];
     iol[0].iol_base = (void*)name;
     iol[0].iol_len = strlen(name);
     iol[0].iol_next = &iol[1];
@@ -278,14 +283,15 @@ int dill_http_sendfield(int s, const char *name, const char *value,
     iol[2].iol_len = end - start;
     iol[2].iol_next = NULL;
     iol[2].iol_rsvd = 0;
-    return msendl(obj->s, &iol[0], &iol[2], deadline);
+    return dill_msendl(obj->s, &iol[0], &iol[2], deadline);
 }
 
 int dill_http_recvfield(int s, char *name, size_t namelen,
       char *value, size_t valuelen, int64_t deadline) {
-    struct http_sock *obj = hquery(s, http_type);
+    struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
-    ssize_t sz = mrecv(obj->s, obj->rxbuf, sizeof(obj->rxbuf) - 1, deadline);
+    ssize_t sz = dill_mrecv(obj->s, obj->rxbuf, sizeof(obj->rxbuf) - 1,
+        deadline);
     if(dill_slow(sz < 0)) return -1;
     obj->rxbuf[sz] = 0;
     size_t pos = 0;
@@ -315,10 +321,10 @@ int dill_http_recvfield(int s, char *name, size_t namelen,
     return 0;
 }
 
-static void http_hclose(struct hvfs *hvfs) {
-    struct http_sock *obj = (struct http_sock*)hvfs;
+static void dill_http_hclose(struct dill_hvfs *hvfs) {
+    struct dill_http_sock *obj = (struct dill_http_sock*)hvfs;
     if(dill_fast(obj->s >= 0)) {
-        int rc = hclose(obj->s);
+        int rc = dill_hclose(obj->s);
         dill_assert(rc == 0);
     }
     if(obj->mem) free(obj);
