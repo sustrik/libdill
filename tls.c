@@ -23,22 +23,23 @@
 */
 
 #include <errno.h>
-#include <libdillimpl.h>
 #include <openssl/bio.h>
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 #include <stdint.h>
 #include <stdlib.h>
 
+#define DILL_DISABLE_RAW_NAMES
+#include "libdillimpl.h"
 #include "utils.h"
 
-#define TLS_BUFSIZE 2048
+#define DILL_TLS_BUFSIZE 2048
 
-dill_unique_id(tls_type);
+dill_unique_id(dill_tls_type);
 
-struct tls_sock {
-    struct hvfs hvfs;
-    struct bsock_vfs bvfs;
+struct dill_tls_sock {
+    struct dill_hvfs hvfs;
+    struct dill_bsock_vfs bvfs;
     SSL_CTX *ctx;
     SSL *ssl;
     int u;
@@ -50,37 +51,38 @@ struct tls_sock {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct tls_storage) >= sizeof(struct tls_sock));
+DILL_CT_ASSERT(sizeof(struct dill_tls_storage) >= sizeof(struct dill_tls_sock));
 
-static void tls_init(void);
-static BIO *tls_new_cbio(void *mem);
-static int tls_followup(struct tls_sock *self, int rc, int64_t deadline);
+static void dill_tls_init(void);
+static BIO *dill_tls_new_cbio(void *mem);
+static int dill_tls_followup(struct dill_tls_sock *self, int rc,
+    int64_t deadline);
 
-static void *tls_hquery(struct hvfs *hvfs, const void *type);
-static void tls_hclose(struct hvfs *hvfs);
-static int tls_bsendl(struct bsock_vfs *bvfs,
-    struct iolist *first, struct iolist *last, int64_t deadline);
-static int tls_brecvl(struct bsock_vfs *bvfs,
-    struct iolist *first, struct iolist *last, int64_t deadline);
+static void *dill_tls_hquery(struct dill_hvfs *hvfs, const void *type);
+static void dill_tls_hclose(struct dill_hvfs *hvfs);
+static int dill_tls_bsendl(struct dill_bsock_vfs *bvfs,
+    struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
+static int dill_tls_brecvl(struct dill_bsock_vfs *bvfs,
+    struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
 
-static void *tls_hquery(struct hvfs *hvfs, const void *type) {
-    struct tls_sock *self = (struct tls_sock*)hvfs;
-    if(type == bsock_type) return &self->bvfs;
-    if(type == tls_type) return self;
+static void *dill_tls_hquery(struct dill_hvfs *hvfs, const void *type) {
+    struct dill_tls_sock *self = (struct dill_tls_sock*)hvfs;
+    if(type == dill_bsock_type) return &self->bvfs;
+    if(type == dill_tls_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
 
-int dill_tls_attach_client_mem(int s, struct tls_storage *mem,
+int dill_tls_attach_client_mem(int s, struct dill_tls_storage *mem,
       int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Check whether underlying socket is a bytestream. */
-    void *q = hquery(s, bsock_type);
+    void *q = dill_hquery(s, dill_bsock_type);
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
     if(dill_slow(!q)) {err = errno; goto error1;}
     /* Create OpenSSL connection context. */
-    tls_init();
+    dill_tls_init();
     const SSL_METHOD *method = SSLv23_method();
     if(dill_slow(!method)) {err = EFAULT; goto error1;}
     SSL_CTX *ctx = SSL_CTX_new(method);
@@ -90,20 +92,20 @@ int dill_tls_attach_client_mem(int s, struct tls_storage *mem,
     if(dill_slow(!ssl)) {err = EFAULT; goto error2;}
 	  SSL_set_connect_state(ssl);
     /* Create a BIO and attach it to the connection. */
-    BIO *bio = tls_new_cbio(mem);
+    BIO *bio = dill_tls_new_cbio(mem);
     if(dill_slow(!bio)) {err = errno; goto error3;}
 	  SSL_set_bio(ssl, bio, bio);
     /* Make a private copy of the underlying socket. */
     /* Take ownership of the underlying socket. */
-    int u = hown(s);
+    int u = dill_hown(s);
     if(dill_slow(u < 0)) {err = errno; goto error1;}
     s = u;
     /* Create the object. */
-    struct tls_sock *self = (struct tls_sock*)mem;
-    self->hvfs.query = tls_hquery;
-    self->hvfs.close = tls_hclose;
-    self->bvfs.bsendl = tls_bsendl;
-    self->bvfs.brecvl = tls_brecvl;
+    struct dill_tls_sock *self = (struct dill_tls_sock*)mem;
+    self->hvfs.query = dill_tls_hquery;
+    self->hvfs.close = dill_tls_hclose;
+    self->bvfs.bsendl = dill_tls_bsendl;
+    self->bvfs.brecvl = dill_tls_brecvl;
     self->ctx = ctx;
     self->ssl = ssl;
     self->u = u;
@@ -117,11 +119,11 @@ int dill_tls_attach_client_mem(int s, struct tls_storage *mem,
     while(1) {
         ERR_clear_error();
         int rc = SSL_connect(ssl);
-        if(tls_followup(self, rc, deadline)) break;
+        if(dill_tls_followup(self, rc, deadline)) break;
         if(dill_slow(errno != 0)) {err = errno; goto error4;}
     }
     /* Create the handle. */
-    int h = hmake(&self->hvfs);
+    int h = dill_hmake(&self->hvfs);
     if(dill_slow(h < 0)) {int err = errno; goto error4;}
     return h;
 error4:
@@ -131,7 +133,7 @@ error3:
 error2:
     SSL_CTX_free(ctx);
 error1:;
-    int rc = hclose(s);
+    int rc = dill_hclose(s);
     dill_assert(rc == 0);
     errno = err;
     return -1;
@@ -139,9 +141,10 @@ error1:;
 
 int dill_tls_attach_client(int s, int64_t deadline) {
     int err;
-    struct tls_sock *obj = malloc(sizeof(struct tls_sock));
+    struct dill_tls_sock *obj = malloc(sizeof(struct dill_tls_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ts = tls_attach_client_mem(s, (struct tls_storage*)obj, deadline);
+    int ts = dill_tls_attach_client_mem(s, (struct dill_tls_storage*)obj,
+        deadline);
     if(dill_slow(ts < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ts;
@@ -153,15 +156,15 @@ error1:
 }
 
 int dill_tls_attach_server_mem(int s, const char *cert, const char *pkey,
-      struct tls_storage *mem, int64_t deadline) {
+      struct dill_tls_storage *mem, int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Check whether underlying socket is a bytestream. */
-    void *q = hquery(s, bsock_type);
+    void *q = dill_hquery(s, dill_bsock_type);
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
     if(dill_slow(!q)) {err = errno; goto error1;}
     /* Create OpenSSL connection context. */
-    tls_init();
+    dill_tls_init();
     const SSL_METHOD *method = SSLv23_server_method();
     if(dill_slow(!method)) {err = EFAULT; goto error1;}
     SSL_CTX *ctx = SSL_CTX_new(method);
@@ -177,19 +180,19 @@ int dill_tls_attach_server_mem(int s, const char *cert, const char *pkey,
     if(dill_slow(!ssl)) {err = EFAULT; goto error2;}
 	  SSL_set_accept_state(ssl);
     /* Create a BIO and attach it to the connection. */
-    BIO *bio = tls_new_cbio(mem);
+    BIO *bio = dill_tls_new_cbio(mem);
     if(dill_slow(!bio)) {err = errno; goto error3;}
 	  SSL_set_bio(ssl, bio, bio);
     /* Take ownership of the underlying socket. */
-    int u = hown(s);
+    int u = dill_hown(s);
     if(dill_slow(u < 0)) {err = errno; goto error1;}
     s = u;
     /* Create the object. */
-    struct tls_sock *self = (struct tls_sock*)mem;
-    self->hvfs.query = tls_hquery;
-    self->hvfs.close = tls_hclose;
-    self->bvfs.bsendl = tls_bsendl;
-    self->bvfs.brecvl = tls_brecvl;
+    struct dill_tls_sock *self = (struct dill_tls_sock*)mem;
+    self->hvfs.query = dill_tls_hquery;
+    self->hvfs.close = dill_tls_hclose;
+    self->bvfs.bsendl = dill_tls_bsendl;
+    self->bvfs.brecvl = dill_tls_brecvl;
     self->ctx = ctx;
     self->ssl = ssl;
     self->u = u;
@@ -203,11 +206,11 @@ int dill_tls_attach_server_mem(int s, const char *cert, const char *pkey,
     while(1) {
         ERR_clear_error();
         rc = SSL_accept(ssl);
-        if(tls_followup(self, rc, deadline)) break;
+        if(dill_tls_followup(self, rc, deadline)) break;
         if(dill_slow(errno != 0)) {err = errno; goto error4;}
     }
     /* Create the handle. */
-    int h = hmake(&self->hvfs);
+    int h = dill_hmake(&self->hvfs);
     if(dill_slow(h < 0)) {int err = errno; goto error4;}
     return h;
 error4:
@@ -217,7 +220,7 @@ error3:
 error2:
     SSL_CTX_free(ctx);
 error1:
-    rc = hclose(s);
+    rc = dill_hclose(s);
     dill_assert(rc == 0);
     errno = err;
     return -1;
@@ -226,10 +229,10 @@ error1:
 int dill_tls_attach_server(int s, const char *cert, const char *pkey,
       int64_t deadline) {
     int err;
-    struct tls_sock *obj = malloc(sizeof(struct tls_sock));
+    struct dill_tls_sock *obj = malloc(sizeof(struct dill_tls_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ts = tls_attach_server_mem(s, cert, pkey, (struct tls_storage*)obj,
-        deadline);
+    int ts = dill_tls_attach_server_mem(s, cert, pkey,
+        (struct dill_tls_storage*)obj, deadline);
     if(dill_slow(ts < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ts;
@@ -241,7 +244,7 @@ error1:
 }
 
 int dill_tls_done(int s, int64_t deadline) {
-    struct tls_sock *self = hquery(s, tls_type);
+    struct dill_tls_sock *self = dill_hquery(s, dill_tls_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
@@ -250,7 +253,7 @@ int dill_tls_done(int s, int64_t deadline) {
         int rc = SSL_shutdown(self->ssl);
         if(rc == 0) {self->outdone = 1; return 0;}
         if(rc == 1) {self->outdone = 1; self->indone = 1; return 0;}
-        if(tls_followup(self, rc, deadline)) break;
+        if(dill_tls_followup(self, rc, deadline)) break;
     }
     dill_assert(errno != 0);
     self->outerr = 1;
@@ -259,12 +262,12 @@ int dill_tls_done(int s, int64_t deadline) {
 
 int dill_tls_detach(int s, int64_t deadline) {
     int err;
-    struct tls_sock *self = hquery(s, tls_type);
+    struct dill_tls_sock *self = dill_hquery(s, dill_tls_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
     /* Start terminal TLS handshake. */
     if(!self->outdone) {
-        int rc = tls_done(s, deadline);
+        int rc = dill_tls_done(s, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     /* Wait for the handshake acknowledgement from the peer. */
@@ -273,33 +276,33 @@ int dill_tls_detach(int s, int64_t deadline) {
             ERR_clear_error();
             int rc = SSL_shutdown(self->ssl);
             if(rc == 1) break;
-            if(tls_followup(self, rc, deadline)) {err = errno; goto error;}
+            if(dill_tls_followup(self, rc, deadline)) {err = errno; goto error;}
         }
     }
     int u = self->u;
     self->u = -1;
-    tls_hclose(&self->hvfs);
+    dill_tls_hclose(&self->hvfs);
     return u;
 error:
-    tls_hclose(&self->hvfs);
+    dill_tls_hclose(&self->hvfs);
     errno = err;
     return -1;
 }
 
-static int tls_bsendl(struct bsock_vfs *bvfs,
-      struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct tls_sock *self = dill_cont(bvfs, struct tls_sock, bvfs);
+static int dill_tls_bsendl(struct dill_bsock_vfs *bvfs,
+      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
+    struct dill_tls_sock *self = dill_cont(bvfs, struct dill_tls_sock, bvfs);
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     self->deadline = deadline;
-    struct iolist *it = first;
+    struct dill_iolist *it = first;
     while(1) {
         uint8_t *base = it->iol_base;
         size_t len = it->iol_len;
         while(1) {
             ERR_clear_error();
             int rc = SSL_write(self->ssl, base, len);
-            if(tls_followup(self, rc, deadline)) {
+            if(dill_tls_followup(self, rc, deadline)) {
                 if(dill_slow(errno != 0)) {
                     self->outerr = 1;
                     return -1;
@@ -315,20 +318,20 @@ static int tls_bsendl(struct bsock_vfs *bvfs,
     return 0;
 }
 
-static int tls_brecvl(struct bsock_vfs *bvfs,
-      struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct tls_sock *self = dill_cont(bvfs, struct tls_sock, bvfs);
+static int dill_tls_brecvl(struct dill_bsock_vfs *bvfs,
+      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
+    struct dill_tls_sock *self = dill_cont(bvfs, struct dill_tls_sock, bvfs);
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
     self->deadline = deadline;
-    struct iolist *it = first;
+    struct dill_iolist *it = first;
     while(1) {
         uint8_t *base = it->iol_base;
         size_t len = it->iol_len;
         while(1) {
             ERR_clear_error();
             int rc = SSL_read(self->ssl, base, len);
-            if(tls_followup(self, rc, deadline)) {
+            if(dill_tls_followup(self, rc, deadline)) {
                 if(dill_slow(errno != 0)) {
                     if(errno == EPIPE) self->indone = 1;
                     else self->inerr = 1;
@@ -345,12 +348,12 @@ static int tls_brecvl(struct bsock_vfs *bvfs,
     return 0;
 }
 
-static void tls_hclose(struct hvfs *hvfs) {
-    struct tls_sock *self = (struct tls_sock*)hvfs;
+static void dill_tls_hclose(struct dill_hvfs *hvfs) {
+    struct dill_tls_sock *self = (struct dill_tls_sock*)hvfs;
     SSL_free(self->ssl);
     SSL_CTX_free(self->ctx);
     if(dill_fast(self->u >= 0)) {
-        int rc = hclose(self->u);
+        int rc = dill_hclose(self->u);
         dill_assert(rc == 0);
     }
     free(self);
@@ -364,7 +367,8 @@ static void tls_hclose(struct hvfs *hvfs) {
    Returns 0 if the SSL function has to be restarted, 1 is we are done.
    In the latter case, error code is in errno.
    In the case of success errno is set to zero. */
-static int tls_followup(struct tls_sock *self, int rc, int64_t deadline) {
+static int dill_tls_followup(struct dill_tls_sock *self, int rc,
+      int64_t deadline) {
     int err;
     char errstr[120];
     int code = SSL_get_error(self->ssl, rc);
@@ -403,39 +407,39 @@ static int tls_followup(struct tls_sock *self, int rc, int64_t deadline) {
 /*  Custom BIO on top of a bsock.                                             */
 /******************************************************************************/
 
-static BIO_METHOD *tls_cbio = NULL;
+static BIO_METHOD *dill_tls_cbio = NULL;
 
-static BIO *tls_new_cbio(void *mem) {
-    BIO *bio = BIO_new(tls_cbio);
+static BIO *dill_tls_new_cbio(void *mem) {
+    BIO *bio = BIO_new(dill_tls_cbio);
     if(dill_slow(!bio)) {errno = EFAULT; return NULL;}
     BIO_set_data(bio, mem);
     BIO_set_init(bio, 1);
     return bio;
 }
 
-static int tls_cbio_create(BIO *bio) {
+static int dill_tls_cbio_create(BIO *bio) {
     return 1;
 }
 
-static int tls_cbio_destroy(BIO *bio) {
+static int dill_tls_cbio_destroy(BIO *bio) {
     return 1;
 }
 
-static int tls_cbio_write(BIO *bio, const char *buf, int len) {
-    struct tls_sock *self = (struct tls_sock*)BIO_get_data(bio);
-    int rc = bsend(self->u, buf, len, self->deadline);
+static int dill_tls_cbio_write(BIO *bio, const char *buf, int len) {
+    struct dill_tls_sock *self = (struct dill_tls_sock*)BIO_get_data(bio);
+    int rc = dill_bsend(self->u, buf, len, self->deadline);
     if(dill_slow(rc < 0)) return -1;
     return len;
 }
 
-static int tls_cbio_read(BIO *bio, char *buf, int len) {
-    struct tls_sock *self = (struct tls_sock*)BIO_get_data(bio);
-    int rc = brecv(self->u, buf, len, self->deadline);
+static int dill_tls_cbio_read(BIO *bio, char *buf, int len) {
+    struct dill_tls_sock *self = (struct dill_tls_sock*)BIO_get_data(bio);
+    int rc = dill_brecv(self->u, buf, len, self->deadline);
     if(dill_slow(rc < 0)) return -1;
     return len;
 }
 
-static long tls_cbio_ctrl(BIO *bio, int cmd, long larg, void *parg) {
+static long dill_tls_cbio_ctrl(BIO *bio, int cmd, long larg, void *parg) {
     switch(cmd) {
     case BIO_CTRL_FLUSH:
         return 1;
@@ -447,34 +451,33 @@ static long tls_cbio_ctrl(BIO *bio, int cmd, long larg, void *parg) {
     }
 }
 
-static void tls_term(void) {
-    BIO_meth_free(tls_cbio);
+static void dill_tls_term(void) {
+    BIO_meth_free(dill_tls_cbio);
     ERR_free_strings();
     EVP_cleanup();
 }
 
-static void tls_init(void)
-{
+static void dill_tls_init(void) {
     static int init = 0;
     if(dill_slow(!init)) {
         SSL_library_init();
         SSL_load_error_strings();
         /* Create our own custom BIO type. */
         int idx = BIO_get_new_index();
-        tls_cbio = BIO_meth_new(idx, "bsock");
-        dill_assert(tls_cbio);
-        int rc = BIO_meth_set_create(tls_cbio, tls_cbio_create);
+        dill_tls_cbio = BIO_meth_new(idx, "bsock");
+        dill_assert(dill_tls_cbio);
+        int rc = BIO_meth_set_create(dill_tls_cbio, dill_tls_cbio_create);
         dill_assert(rc == 1);
-        rc = BIO_meth_set_destroy(tls_cbio, tls_cbio_destroy);
+        rc = BIO_meth_set_destroy(dill_tls_cbio, dill_tls_cbio_destroy);
         dill_assert(rc == 1);
-        rc = BIO_meth_set_write(tls_cbio, tls_cbio_write);
+        rc = BIO_meth_set_write(dill_tls_cbio, dill_tls_cbio_write);
         dill_assert(rc == 1);
-        rc = BIO_meth_set_read(tls_cbio, tls_cbio_read);
+        rc = BIO_meth_set_read(dill_tls_cbio, dill_tls_cbio_read);
         dill_assert(rc == 1);
-        rc = BIO_meth_set_ctrl(tls_cbio, tls_cbio_ctrl);
+        rc = BIO_meth_set_ctrl(dill_tls_cbio, dill_tls_cbio_ctrl);
         dill_assert(rc == 1);
         /* Deallocate the method once the process exits. */
-        rc = atexit(tls_term);
+        rc = atexit(dill_tls_term);
         dill_assert(rc == 0);
         init = 1;
     }
