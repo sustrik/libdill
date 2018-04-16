@@ -111,7 +111,11 @@ int dill_hown(int h) {
     DILL_CHECKHANDLE(h, -1);
     /* Create a new handle for the same object. */
     int res = dill_hmake(hndl->vfs);
-    if(dill_slow(res < 0)) return -1;
+    if(dill_slow(res < 0)) {
+        int rc = dill_hclose(h);
+        dill_assert(rc == 0);
+        return -1;
+    }
     /* Return a handle to the shared pool. */
     hndl->ptr = NULL;
     hndl->next = -1;

@@ -70,20 +70,20 @@ int dill_suffix_attach_mem(int s, const void *suffix, size_t suffixlen,
       struct dill_suffix_storage *mem) {
     int err;
     if(dill_slow(!mem || !suffix || suffixlen == 0 || suffixlen > 32)) {
-        err = EINVAL; goto error1;}
+        err = EINVAL; goto error;}
     /* Take ownership of the underlying socket. */
-    int u = dill_hown(s);
-    if(dill_slow(u < 0)) {err = errno; goto error1;}
+    s = dill_hown(s);
+    if(dill_slow(s < 0)) {err = errno; goto error;}
     /* Create the object. */
     struct dill_suffix_sock *self = (struct dill_suffix_sock*)mem;
     self->hvfs.query = dill_suffix_hquery;
     self->hvfs.close = dill_suffix_hclose;
     self->mvfs.msendl = dill_suffix_msendl;
     self->mvfs.mrecvl = dill_suffix_mrecvl;
-    self->u = u;
-    self->uvfs = dill_hquery(u, dill_bsock_type);
-    if(dill_slow(!self->uvfs && errno == ENOTSUP)) {err = EPROTO; goto error2;}
-    if(dill_slow(!self->uvfs)) {err = errno; goto error2;}
+    self->u = s;
+    self->uvfs = dill_hquery(s, dill_bsock_type);
+    if(dill_slow(!self->uvfs && errno == ENOTSUP)) {err = EPROTO; goto error;}
+    if(dill_slow(!self->uvfs)) {err = errno; goto error;}
     memcpy(self->suffix, suffix, suffixlen);
     self->suffixlen = suffixlen;
     self->inerr = 0;
@@ -91,12 +91,13 @@ int dill_suffix_attach_mem(int s, const void *suffix, size_t suffixlen,
     self->mem = 1;
     /* Create the handle. */
     int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error2;}
+    if(dill_slow(h < 0)) {err = errno; goto error;}
     return h;
-error2:;
-    int rc = dill_hclose(u);
-    dill_assert(rc == 0);
-error1:
+error:
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
     errno = err;
     return -1;
 }
