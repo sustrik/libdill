@@ -89,9 +89,8 @@ int dill_ws_attach_client_mem(int s, int flags, const char *resource,
     if(dill_slow(!resource || !host)) {errno = EINVAL; return -1;}
     struct dill_http_storage http_mem;
     s = dill_http_attach_mem(self->u, &http_mem);
-
-    /* Send HTTP request. */
     if(dill_slow(s < 0)) return -1;
+    /* Send HTTP request. */
     int rc = dill_http_sendrequest(s, "GET", resource, deadline);
     if(dill_slow(rc < 0)) return -1;
     rc = dill_http_sendfield(s, "Host", host, deadline);

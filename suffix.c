@@ -73,7 +73,7 @@ int dill_suffix_attach_mem(int s, const void *suffix, size_t suffixlen,
         err = EINVAL; goto error;}
     /* Take ownership of the underlying socket. */
     s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error;}
+    if(dill_slow(s < 0)) {printf("foo1!\n");err = errno; goto error;}
     /* Create the object. */
     struct dill_suffix_sock *self = (struct dill_suffix_sock*)mem;
     self->hvfs.query = dill_suffix_hquery;

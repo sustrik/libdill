@@ -60,36 +60,32 @@ static void *dill_http_hquery(struct dill_hvfs *hvfs, const void *type) {
 
 int dill_http_attach_mem(int s, struct dill_http_storage *mem) {
     int err;
-    /* Check whether underlying socket is a bytestream. */
-    if(dill_slow(!dill_hquery(s, dill_bsock_type))) {err = errno; goto error1;}
-    /* Create the object. */
     struct dill_http_sock *obj = (struct dill_http_sock*)mem;
+    if(dill_slow(!mem)) {err = EINVAL; goto error;}
+    /* Check whether underlying socket is a bytestream. */
+    if(dill_slow(!dill_hquery(s, dill_bsock_type))) {err = errno; goto error;}
+    /* Take the ownership of the underlying socket. */
+    s = dill_hown(s);
+    if(dill_slow(s < 0)) {err = errno; goto error;}
+    /* Wrap the underlying socket into SUFFIX and TERM protocol. */
+    s = dill_suffix_attach_mem(s, "\r\n", 2, &obj->suffix_mem);
+    if(dill_slow(s < 0)) {err = errno; goto error;}
+    s = dill_term_attach_mem(s, NULL, 0, &obj->term_mem);
+    if(dill_slow(s < 0)) {err = errno; goto error;}
+    /* Create the object. */
     obj->hvfs.query = dill_http_hquery;
     obj->hvfs.close = dill_http_hclose;
-    obj->s = -1;
+    obj->s = s;
     obj->mem = 1;
     /* Create the handle. */
     int h = dill_hmake(&obj->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error2;}
-    /* Take ownership of the underlying socket. */
-    int tmp = dill_hown(s);
-    if(dill_slow(tmp < 0)) {err = errno; goto error3;}
-    /* Wrap the underlying socket into SUFFIX and TERM protocol. */
-    obj->s = dill_suffix_attach_mem(tmp, "\r\n", 2, &obj->suffix_mem);
-    if(dill_slow(obj->s < 0)) {err = errno; goto error4;}
-    obj->s = dill_term_attach_mem(obj->s, NULL, 0, &obj->term_mem);
-    if(dill_slow(obj->s < 0)) {err = errno; goto error4;}
+    if(dill_slow(h < 0)) {err = errno; goto error;}
     return h;
-    /* TODO: Fix error handling. */
-error4:;
-    int rc = dill_hclose(tmp);
-    dill_assert(rc == 0);
-error3:;
-    rc = dill_hclose(h);
-    dill_assert(rc == 0);
-error2:
-    free(obj);
-error1:
+error:
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
     errno = err;
     return -1;
 }
