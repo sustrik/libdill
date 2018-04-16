@@ -199,6 +199,8 @@
 <li><code>chdone</code> will signal both the senders and the receivers of a channel. This allows for scenarios such as multiple senders and a single receiver communicating via a single channel. The receiver can use <code>chdone</code> to let the senders know that it's terminating.</li>
 <li>libmill's <code>fdwait</code> was replaced by <code>fdin</code> and <code>fdout</code>. The idea is that if we want data to flow through the connection in both directions in parallel, we should use two coroutines rather than one.</li>
 </ol>
+<h2 id="faq-i-have-name-clashes-with-libdill.-how-do-i-avoid-that">FAQ: I have name clashes with libdill. How do I avoid that?</h2>
+<p>Define <code>DILL_DISABLE_RAW_NAMES</code> before including <code>libdill.h</code>. All the symbols defined by libdill will be prefixed by <code>dill_</code>. For example: <code>dill_go</code>, <code>struct dill_iolist</code> or <code>DILL_WS_TEXT</code>.</p>
 <h2 id="faq-how-can-i-access-the-source-code">FAQ: How can I access the source code?</h2>
 <p>To clone the repository, run:</p>
 <pre><code>$ git clone https://github.com/sustrik/libdill.git</code></pre>

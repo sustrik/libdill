@@ -37,6 +37,10 @@ Technically, these are the differences:
 4. `chdone` will signal both the senders and the receivers of a channel. This allows for scenarios such as multiple senders and a single receiver communicating via a single channel. The receiver can use `chdone` to let the senders know that it's terminating.
 5. libmill's `fdwait` was replaced by `fdin` and `fdout`. The idea is that if we want data to flow through the connection in both directions in parallel, we should use two coroutines rather than one.
 
+## FAQ: I have name clashes with libdill. How do I avoid that?
+
+Define `DILL_DISABLE_RAW_NAMES` before including `libdill.h`. All the symbols defined by libdill will be prefixed by `dill_`. For example: `dill_go`, `struct dill_iolist` or `DILL_WS_TEXT`.
+
 ## FAQ: How can I access the source code?
 
 To clone the repository, run:
