@@ -67,12 +67,13 @@ static void *dill_ws_hquery(struct dill_hvfs *hvfs, const void *type) {
 
 int dill_ws_attach_client_mem(int s, int flags, const char *resource,
       const char *host, struct dill_ws_storage *mem, int64_t deadline) {
-    if(dill_slow(!mem)) {errno = EINVAL; return -1;}
-    if(dill_slow(!dill_hquery(s, dill_bsock_type))) return -1;
+    int err;
+    if(dill_slow(!mem)) {err = EINVAL; goto error;}
+    if(dill_slow(!dill_hquery(s, dill_bsock_type))) {err = errno; goto error;}
     struct dill_ws_sock *self = (struct dill_ws_sock*)mem;
     /* Take ownership of the underlying socket. */
     s = dill_hown(s);
-    if(dill_slow(s < 0)) return -1;
+    if(dill_slow(s < 0)) {err = errno; goto error;}
     self->hvfs.query = dill_ws_hquery;
     self->hvfs.close = dill_ws_hclose;
     self->mvfs.msendl = dill_ws_msendl;
@@ -85,34 +86,39 @@ int dill_ws_attach_client_mem(int s, int flags, const char *resource,
     self->mem = 1;
     self->status = 0;
     self->msglen = 0;
-    if(flags & DILL_WS_NOHTTP) return dill_hmake(&self->hvfs);
-    if(dill_slow(!resource || !host)) {errno = EINVAL; return -1;}
+    if(flags & DILL_WS_NOHTTP) {
+        int h = dill_hmake(&self->hvfs);
+        if(dill_slow(h < 0)) {err = errno; goto error;}
+        return h;
+    }
+    if(dill_slow(!resource || !host)) {err = EINVAL; goto error;}
     struct dill_http_storage http_mem;
-    s = dill_http_attach_mem(self->u, &http_mem);
-    if(dill_slow(s < 0)) return -1;
+    s = dill_http_attach_mem(s, &http_mem);
+    if(dill_slow(s < 0)) {err = errno; goto error;}
     /* Send HTTP request. */
     int rc = dill_http_sendrequest(s, "GET", resource, deadline);
-    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     rc = dill_http_sendfield(s, "Host", host, deadline);
-    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     rc = dill_http_sendfield(s, "Upgrade", "websocket", deadline);
-    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     rc = dill_http_sendfield(s, "Connection", "Upgrade", deadline);
-    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     char request_key[WS_KEY_SIZE];
     rc = dill_ws_request_key(request_key);
-    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     rc = dill_http_sendfield(s, "Sec-WebSocket-Key", request_key, deadline);
-    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     rc = dill_http_sendfield(s, "Sec-WebSocket-Version", "13", deadline);
-    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     /* TODO: Protocol, Extensions? */
     rc = dill_http_done(s, deadline);
-    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
 
     /* Receive HTTP response from the server. */
     char reason[256];
     rc = dill_http_recvstatus(s, reason, sizeof(reason), deadline);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     if(dill_slow(rc != 101)) {errno = EPROTO; return -1;}
     int has_upgrade = 0;
     int has_connection = 0;
@@ -123,37 +129,45 @@ int dill_ws_attach_client_mem(int s, int flags, const char *resource,
         rc = dill_http_recvfield(s, name, sizeof(name), value, sizeof(value),
             deadline);
         if(rc < 0 && errno == EPIPE) break;
-        if(dill_slow(rc < 0)) return -1;
+        if(dill_slow(rc < 0)) {err = errno; goto error;}
         if(strcasecmp(name, "Upgrade") == 0) {
            if(has_upgrade || strcasecmp(value, "websocket") != 0) {
-               errno = EPROTO; return -1;}
+               err = EPROTO; goto error;}
            has_upgrade = 1;
            continue;
         }
         if(strcasecmp(name, "Connection") == 0) {
            if(has_connection || strcasecmp(value, "Upgrade") != 0) {
-               errno = EPROTO; return -1;}
+               err = EPROTO; goto error;}
            has_connection = 1;
            continue;
         }
         if(strcasecmp(name, "Sec-WebSocket-Accept") == 0) {
-            if(has_key) {errno = EPROTO; return -1;}
+            if(has_key) {err = EPROTO; goto error;}
             char response_key[WS_KEY_SIZE];
             rc = dill_ws_response_key(request_key, response_key);
-            if(dill_slow(rc < 0)) return -1;
+            if(dill_slow(rc < 0)) {err = errno; goto error;}
             if(dill_slow(strcmp(value, response_key) != 0)) {
-                errno = EPROTO; return -1;}
+                err = EPROTO; goto error;}
             has_key = 1;
             continue;
         }
     }
-    if(!has_upgrade) {errno = EPROTO; return -1;}
-    if(!has_connection) {errno = EPROTO; return -1;}
-    if(!has_key) {errno = EPROTO; return -1;}
+    if(!has_upgrade || !has_connection || !has_key) {err = EPROTO; goto error;}
 
-    self->u = dill_http_detach(s, deadline);
-    if(dill_slow(self->u < 0)) return -1;
-    return dill_hmake(&self->hvfs);
+    s = dill_http_detach(s, deadline);
+    if(dill_slow(s < 0)) {err = errno; goto error;}
+    self->u = s;
+    int h = dill_hmake(&self->hvfs);
+    if(dill_slow(h < 0)) {err = errno; goto error;}
+    return h;
+error:
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
+    errno = err;
+    return -1;
 }
 
 int dill_ws_attach_client(int s, int flags, const char *resource,
@@ -177,12 +191,13 @@ int dill_ws_attach_server_mem(int s, int flags,
       char *resource, size_t resourcelen,
       char *host, size_t hostlen,
       struct dill_ws_storage *mem, int64_t deadline) {
-    if(dill_slow(!mem)) {errno = EINVAL; return -1;}
-    if(dill_slow(!dill_hquery(s, dill_bsock_type))) return -1;
+    int err;
+    if(dill_slow(!mem)) {err = EINVAL; goto error;}
+    if(dill_slow(!dill_hquery(s, dill_bsock_type))) {err = errno; goto error;}
     struct dill_ws_sock *self = (struct dill_ws_sock*)mem;
     /* Take ownership of the underlying socket. */
     s = dill_hown(s);
-    if(dill_slow(s < 0)) return -1;
+    if(dill_slow(s < 0)) {err = errno; goto error;}
     self->hvfs.query = dill_ws_hquery;
     self->hvfs.close = dill_ws_hclose;
     self->mvfs.msendl = dill_ws_msendl;
@@ -195,16 +210,20 @@ int dill_ws_attach_server_mem(int s, int flags,
     self->mem = 1;
     self->status = 0;
     self->msglen = 0;
-    if(flags & DILL_WS_NOHTTP) return dill_hmake(&self->hvfs);
+    if(flags & DILL_WS_NOHTTP) {
+        int h = dill_hmake(&self->hvfs);
+        if(dill_slow(h < 0)) {err = errno; goto error;}
+        return h;
+    }
     struct dill_http_storage http_mem;
     s = dill_http_attach_mem(s, &http_mem);
-    if(dill_slow(s < 0)) return -1;
+    if(dill_slow(s < 0)) {err = errno; goto error;}
     /* Receive the HTTP request from the client. */
     char command[32];
     int rc = dill_http_recvrequest(s, command, sizeof(command),
         resource, resourcelen, deadline);
-    if(dill_slow(rc < 0)) return -1;
-    if(dill_slow(strcmp(command, "GET") != 0)) {errno = EPROTO; return -1;}
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
+    if(dill_slow(strcmp(command, "GET") != 0)) {err = EPROTO; goto error;}
     int has_host = 0;
     int has_upgrade = 0;
     int has_connection = 0;
@@ -217,61 +236,69 @@ int dill_ws_attach_server_mem(int s, int flags,
         rc = dill_http_recvfield(s, name, sizeof(name), value, sizeof(value),
             deadline);
         if(rc < 0 && errno == EPIPE) break;
-        if(dill_slow(rc < 0)) return -1;
+        if(dill_slow(rc < 0)) {err = errno; goto error;}
         if(strcasecmp(name, "Host") == 0) {
-           if(has_host != 0) {errno = EPROTO; return -1;}
+           if(has_host != 0) {err = EPROTO; goto error;}
            /* TODO: Is this the correct error code? */
            if(dill_slow(strlen(value) >= hostlen)) {
-               errno = EMSGSIZE; return -1;}
+               err = EMSGSIZE; goto error;}
            strcpy(host, value);
            has_host = 1;
            continue;
         }
         if(strcasecmp(name, "Upgrade") == 0) {
            if(has_upgrade || strcasecmp(value, "websocket") != 0) {
-               errno = EPROTO; return -1;}
+               err = EPROTO; goto error;}
            has_upgrade = 1;
            continue;
         }
         if(strcasecmp(name, "Connection") == 0) {
            if(has_connection || strcasecmp(value, "Upgrade") != 0) {
-               errno = EPROTO; return -1;}
+               err = EPROTO; goto error;}
            has_connection = 1;
            continue;
         }
         if(strcasecmp(name, "Sec-WebSocket-Key") == 0) {
-            if(has_key) {errno = EPROTO; return -1;}
+            if(has_key) {err = EPROTO; goto error;}
             /* Generate the key to be sent back to the client. */
             rc = dill_ws_response_key(value, response_key);
-            if(dill_slow(rc < 0)) return -1;
+            if(dill_slow(rc < 0)) {err = errno; goto error;}
             has_key = 1;
             continue;
         }
         if(strcasecmp(name, "Sec-WebSocket-Version") == 0) {
            if(has_version || strcasecmp(value, "13") != 0) {
-               errno = EPROTO; return -1;}
+               err = EPROTO; goto error;}
            has_version = 1;
            continue;
         }
     }
-    if(!has_upgrade) {errno = EPROTO; return -1;}
-    if(!has_connection) {errno = EPROTO; return -1;}
-    if(!has_key) {errno = EPROTO; return -1;}
-    if(!has_version) {errno = EPROTO; return -1;}
+    if(dill_slow(!has_upgrade || !has_connection || !has_key || !has_version)) {
+        err = EPROTO; goto error;}
 
     /* Send HTTP response back to the client. */
     rc = dill_http_sendstatus(s, 101, "Switching Protocols", deadline);
-    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     rc = dill_http_sendfield(s, "Upgrade", "websocket", deadline);
-    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     rc = dill_http_sendfield(s, "Connection", "Upgrade", deadline);
-    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     rc = dill_http_sendfield(s, "Sec-WebSocket-Accept", response_key, deadline);
-    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
 
-    self->u = dill_http_detach(s, deadline);
-    if(dill_slow(self->u < 0)) return -1;
-    return dill_hmake(&self->hvfs);
+    s = dill_http_detach(s, deadline);
+    if(dill_slow(s < 0)) {err = errno; goto error;}
+    self->u = s;
+    int h = dill_hmake(&self->hvfs);
+    if(dill_slow(h < 0)) {err = errno; goto error;}
+    return h;
+error:
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
+    errno = err;
+    return -1;
 }
 
 int dill_ws_attach_server(int s, int flags, char *resource, size_t resourcelen,
