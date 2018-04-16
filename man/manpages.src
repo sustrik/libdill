@@ -1346,6 +1346,8 @@ fxs = [
             associated with the object. The old number becomes invalid and
             using it will result in undefined behavior. The new number can
             be used in exactly the same way as the old one would.
+
+            If the function fails, the old handle remains usable.
         `,
         errors: ["EBADF"],
 
