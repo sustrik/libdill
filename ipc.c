@@ -28,12 +28,13 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#define DILL_DISABLE_RAW_NAMES
 #include "libdillimpl.h"
 #include "fd.h"
 #include "utils.h"
 
-static int ipc_resolve(const char *addr, struct sockaddr_un *su);
-static int ipc_makeconn(int fd, void *mem);
+static int dill_ipc_resolve(const char *addr, struct sockaddr_un *su);
+static int dill_ipc_makeconn(int fd, void *mem);
 
 dill_unique_id(ipc_listener_type);
 dill_unique_id(ipc_type);
@@ -42,16 +43,16 @@ dill_unique_id(ipc_type);
 /*  UNIX connection socket                                                    */
 /******************************************************************************/
 
-static void *ipc_hquery(struct hvfs *hvfs, const void *type);
-static void ipc_hclose(struct hvfs *hvfs);
-static int ipc_bsendl(struct bsock_vfs *bvfs,
-    struct iolist *first, struct iolist *last, int64_t deadline);
-static int ipc_brecvl(struct bsock_vfs *bvfs,
-    struct iolist *first, struct iolist *last, int64_t deadline);
+static void *dill_ipc_hquery(struct dill_hvfs *hvfs, const void *type);
+static void dill_ipc_hclose(struct dill_hvfs *hvfs);
+static int dill_ipc_bsendl(struct dill_bsock_vfs *bvfs,
+    struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
+static int dill_ipc_brecvl(struct dill_bsock_vfs *bvfs,
+    struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
 
-struct ipc_conn {
-    struct hvfs hvfs;
-    struct bsock_vfs bvfs;
+struct dill_ipc_conn {
+    struct dill_hvfs hvfs;
+    struct dill_bsock_vfs bvfs;
     int fd;
     struct dill_fd_rxbuf rxbuf;
     unsigned int indone : 1;
@@ -61,23 +62,23 @@ struct ipc_conn {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct ipc_storage) >= sizeof(struct ipc_conn));
+DILL_CT_ASSERT(sizeof(struct dill_ipc_storage) >= sizeof(struct dill_ipc_conn));
 
-static void *ipc_hquery(struct hvfs *hvfs, const void *type) {
-    struct ipc_conn *self = (struct ipc_conn*)hvfs;
-    if(type == bsock_type) return &self->bvfs;
+static void *dill_ipc_hquery(struct dill_hvfs *hvfs, const void *type) {
+    struct dill_ipc_conn *self = (struct dill_ipc_conn*)hvfs;
+    if(type == dill_bsock_type) return &self->bvfs;
     if(type == ipc_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
 
-int dill_ipc_connect_mem(const char *addr, struct ipc_storage *mem,
+int dill_ipc_connect_mem(const char *addr, struct dill_ipc_storage *mem,
       int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Create a UNIX address out of the address string. */
     struct sockaddr_un su;
-    int rc = ipc_resolve(addr, &su);
+    int rc = dill_ipc_resolve(addr, &su);
     if(rc < 0) {err = errno; goto error1;}
     /* Open a socket. */
     int s = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -89,7 +90,7 @@ int dill_ipc_connect_mem(const char *addr, struct ipc_storage *mem,
     rc = dill_fd_connect(s, (struct sockaddr*)&su, sizeof(su), deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
-    int h = ipc_makeconn(s, mem);
+    int h = dill_ipc_makeconn(s, mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
@@ -101,9 +102,9 @@ error1:
 
 int dill_ipc_connect(const char *addr, int64_t deadline) {
     int err;
-    struct ipc_conn *obj = malloc(sizeof(struct ipc_conn));
+    struct dill_ipc_conn *obj = malloc(sizeof(struct dill_ipc_conn));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int s = ipc_connect_mem(addr, (struct ipc_storage*)obj, deadline);
+    int s = dill_ipc_connect_mem(addr, (struct dill_ipc_storage*)obj, deadline);
     if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return s;
@@ -114,9 +115,9 @@ error1:
     return -1;
 }
 
-static int ipc_bsendl(struct bsock_vfs *bvfs,
-      struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct ipc_conn *self = dill_cont(bvfs, struct ipc_conn, bvfs);
+static int dill_ipc_bsendl(struct dill_bsock_vfs *bvfs,
+      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
+    struct dill_ipc_conn *self = dill_cont(bvfs, struct dill_ipc_conn, bvfs);
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     ssize_t sz = dill_fd_send(self->fd, first, last, deadline);
@@ -125,9 +126,9 @@ static int ipc_bsendl(struct bsock_vfs *bvfs,
     return -1;
 }
 
-static int ipc_brecvl(struct bsock_vfs *bvfs,
-      struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct ipc_conn *self = dill_cont(bvfs, struct ipc_conn, bvfs);
+static int dill_ipc_brecvl(struct dill_bsock_vfs *bvfs,
+      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
+    struct dill_ipc_conn *self = dill_cont(bvfs, struct dill_ipc_conn, bvfs);
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
     int rc = dill_fd_recv(self->fd, &self->rxbuf, first, last, deadline);
@@ -138,7 +139,7 @@ static int ipc_brecvl(struct bsock_vfs *bvfs,
 }
 
 int dill_ipc_done(int s, int64_t deadline) {
-    struct ipc_conn *self = hquery(s, ipc_type);
+    struct dill_ipc_conn *self = dill_hquery(s, ipc_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
@@ -157,34 +158,34 @@ int dill_ipc_done(int s, int64_t deadline) {
 int dill_ipc_close(int s, int64_t deadline) {
     int err;
     /* Listener socket needs no special treatment. */
-    if(hquery(s, ipc_listener_type)) {
-        return hclose(s);
+    if(dill_hquery(s, ipc_listener_type)) {
+        return dill_hclose(s);
     }
-    struct ipc_conn *self = hquery(s, ipc_type);
+    struct dill_ipc_conn *self = dill_hquery(s, ipc_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
     /* If not done already, flush the outbound data and start the terminal
        handshake. */
     if(!self->outdone) {
-        int rc = ipc_done(s, deadline);
+        int rc = dill_ipc_done(s, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     /* Now we are going to read all the inbound data until we reach end of the
        stream. That way we can be sure that the peer either received all our
        data or consciously closed the connection without reading all of it. */
-    int rc = ipc_brecvl(&self->bvfs, NULL, NULL, deadline);
+    int rc = dill_ipc_brecvl(&self->bvfs, NULL, NULL, deadline);
     dill_assert(rc < 0);
     if(dill_slow(errno != EPIPE)) {err = errno; goto error;}
-    ipc_hclose(&self->hvfs);
+    dill_ipc_hclose(&self->hvfs);
     return 0;
 error:
-    ipc_hclose(&self->hvfs);
+    dill_ipc_hclose(&self->hvfs);
     errno = err;
     return -1;
 }
 
-static void ipc_hclose(struct hvfs *hvfs) {
-    struct ipc_conn *self = (struct ipc_conn*)hvfs;
+static void dill_ipc_hclose(struct dill_hvfs *hvfs) {
+    struct dill_ipc_conn *self = (struct dill_ipc_conn*)hvfs;
     dill_fd_close(self->fd);
     if(!self->mem) free(self);
 }
@@ -193,31 +194,31 @@ static void ipc_hclose(struct hvfs *hvfs) {
 /*  UNIX listener socket                                                      */
 /******************************************************************************/
 
-static void *ipc_listener_hquery(struct hvfs *hvfs, const void *type);
-static void ipc_listener_hclose(struct hvfs *hvfs);
+static void *dill_ipc_listener_hquery(struct dill_hvfs *hvfs, const void *type);
+static void dill_ipc_listener_hclose(struct dill_hvfs *hvfs);
 
-struct ipc_listener {
-    struct hvfs hvfs;
+struct dill_ipc_listener {
+    struct dill_hvfs hvfs;
     int fd;
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct ipc_listener_storage) >=
-    sizeof(struct ipc_listener));
+DILL_CT_ASSERT(sizeof(struct dill_ipc_listener_storage) >=
+    sizeof(struct dill_ipc_listener));
 
-static void *ipc_listener_hquery(struct hvfs *hvfs, const void *type) {
-    struct ipc_listener *self = (struct ipc_listener*)hvfs;
+static void *dill_ipc_listener_hquery(struct dill_hvfs *hvfs, const void *type) {
+    struct dill_ipc_listener *self = (struct dill_ipc_listener*)hvfs;
     if(type == ipc_listener_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
 
 int dill_ipc_listen_mem(const char *addr, int backlog,
-      struct ipc_listener_storage *mem) {
+      struct dill_ipc_listener_storage *mem) {
     int err;
     /* Create a UNIX address out of the address string. */
     struct sockaddr_un su;
-    int rc = ipc_resolve(addr, &su);
+    int rc = dill_ipc_resolve(addr, &su);
     if(rc < 0) {err = errno; goto error1;}
     /* Open the listening socket. */
     int s = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -231,13 +232,13 @@ int dill_ipc_listen_mem(const char *addr, int backlog,
     rc = listen(s, backlog);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the object. */
-    struct ipc_listener *self = (struct ipc_listener*)mem;
-    self->hvfs.query = ipc_listener_hquery;
-    self->hvfs.close = ipc_listener_hclose;
+    struct dill_ipc_listener *self = (struct dill_ipc_listener*)mem;
+    self->hvfs.query = dill_ipc_listener_hquery;
+    self->hvfs.close = dill_ipc_listener_hclose;
     self->fd = s;
     self->mem = 1;
     /* Create handle. */
-    int h = hmake(&self->hvfs);
+    int h = dill_hmake(&self->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
@@ -249,9 +250,10 @@ error1:
 
 int dill_ipc_listen(const char *addr, int backlog) {
     int err;
-    struct ipc_listener *obj = malloc(sizeof(struct ipc_listener));
+    struct dill_ipc_listener *obj = malloc(sizeof(struct dill_ipc_listener));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ls = ipc_listen_mem(addr, backlog, (struct ipc_listener_storage*)obj);
+    int ls = dill_ipc_listen_mem(addr, backlog,
+        (struct dill_ipc_listener_storage*)obj);
     if(dill_slow(ls < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ls;
@@ -262,11 +264,11 @@ error1:
     return -1;
 }
 
-int dill_ipc_accept_mem(int s, struct ipc_storage *mem, int64_t deadline) {
+int dill_ipc_accept_mem(int s, struct dill_ipc_storage *mem, int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Retrieve the listener object. */
-    struct ipc_listener *lst = hquery(s, ipc_listener_type);
+    struct dill_ipc_listener *lst = dill_hquery(s, ipc_listener_type);
     if(dill_slow(!lst)) {err = errno; goto error1;}
     /* Try to get new connection in a non-blocking way. */
     int as = dill_fd_accept(lst->fd, NULL, NULL, deadline);
@@ -275,7 +277,7 @@ int dill_ipc_accept_mem(int s, struct ipc_storage *mem, int64_t deadline) {
     int rc = dill_fd_unblock(as);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
-    int h = ipc_makeconn(as, (struct ipc_conn*)mem);
+    int h = dill_ipc_makeconn(as, (struct dill_ipc_conn*)mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
@@ -287,9 +289,9 @@ error1:
 
 int dill_ipc_accept(int s, int64_t deadline) {
     int err;
-    struct ipc_conn *obj = malloc(sizeof(struct ipc_conn));
+    struct dill_ipc_conn *obj = malloc(sizeof(struct dill_ipc_conn));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int as = ipc_accept_mem(s, (struct ipc_storage*)obj, deadline);
+    int as = dill_ipc_accept_mem(s, (struct dill_ipc_storage*)obj, deadline);
     if(dill_slow(as < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return as;
@@ -300,8 +302,8 @@ error1:
     return -1;
 }
 
-static void ipc_listener_hclose(struct hvfs *hvfs) {
-    struct ipc_listener *self = (struct ipc_listener*)hvfs;
+static void dill_ipc_listener_hclose(struct dill_hvfs *hvfs) {
+    struct dill_ipc_listener *self = (struct dill_ipc_listener*)hvfs;
     dill_fd_close(self->fd);
     if(!self->mem) free(self);
 }
@@ -310,7 +312,7 @@ static void ipc_listener_hclose(struct hvfs *hvfs) {
 /*  UNIX pair                                                                 */
 /******************************************************************************/
 
-int dill_ipc_pair_mem(struct ipc_pair_storage *mem, int s[2]) {
+int dill_ipc_pair_mem(struct dill_ipc_pair_storage *mem, int s[2]) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Create the pair. */
@@ -323,14 +325,14 @@ int dill_ipc_pair_mem(struct ipc_pair_storage *mem, int s[2]) {
     rc = dill_fd_unblock(fds[1]);
     if(dill_slow(rc < 0)) {err = errno; goto error3;}
     /* Create the handles. */
-    struct ipc_conn *conns = (struct ipc_conn*)mem;
-    s[0] = ipc_makeconn(fds[0], &conns[0]);
+    struct dill_ipc_conn *conns = (struct dill_ipc_conn*)mem;
+    s[0] = dill_ipc_makeconn(fds[0], &conns[0]);
     if(dill_slow(s[0] < 0)) {err = errno; goto error3;}
-    s[1] = ipc_makeconn(fds[1], &conns[1]);
+    s[1] = dill_ipc_makeconn(fds[1], &conns[1]);
     if(dill_slow(s[1] < 0)) {err = errno; goto error4;}
     return 0;
 error4:
-    rc = hclose(s[0]);
+    rc = dill_hclose(s[0]);
     goto error2;
 error3:
     dill_fd_close(fds[0]);
@@ -353,20 +355,20 @@ int dill_ipc_pair(int s[2]) {
     rc = dill_fd_unblock(fds[1]);
     if(dill_slow(rc < 0)) {err = errno; goto error3;}
     /* Allocate the memory. */
-    struct ipc_conn *conn0 = malloc(sizeof(struct ipc_conn));
+    struct dill_ipc_conn *conn0 = malloc(sizeof(struct dill_ipc_conn));
     if(dill_slow(!conn0)) {err = ENOMEM; goto error3;}
-    struct ipc_conn *conn1 = malloc(sizeof(struct ipc_conn));
+    struct dill_ipc_conn *conn1 = malloc(sizeof(struct dill_ipc_conn));
     if(dill_slow(!conn1)) {err = ENOMEM; goto error4;}
     /* Create the handles. */
-    s[0] = ipc_makeconn(fds[0], conn0);
+    s[0] = dill_ipc_makeconn(fds[0], conn0);
     if(dill_slow(s[0] < 0)) {err = errno; goto error5;}
     conn0->mem = 0;
-    s[1] = ipc_makeconn(fds[1], conn1);
+    s[1] = dill_ipc_makeconn(fds[1], conn1);
     if(dill_slow(s[1] < 0)) {err = errno; goto error6;}
     conn1->mem = 0;
     return 0;
 error6:
-    rc = hclose(s[0]);
+    rc = dill_hclose(s[0]);
     goto error2;
 error5:
     free(conn1);
@@ -385,7 +387,7 @@ error1:
 /*  Helpers                                                                   */
 /******************************************************************************/
 
-static int ipc_resolve(const char *addr, struct sockaddr_un *su) {
+static int dill_ipc_resolve(const char *addr, struct sockaddr_un *su) {
     dill_assert(su);
     if(strlen(addr) >= sizeof(su->sun_path)) {errno = ENAMETOOLONG; return -1;}
     su->sun_family = AF_UNIX;
@@ -393,13 +395,13 @@ static int ipc_resolve(const char *addr, struct sockaddr_un *su) {
     return 0;
 }
 
-static int ipc_makeconn(int fd, void *mem) {
+static int dill_ipc_makeconn(int fd, void *mem) {
     /* Create the object. */
-    struct ipc_conn *self = (struct ipc_conn*)mem;
-    self->hvfs.query = ipc_hquery;
-    self->hvfs.close = ipc_hclose;
-    self->bvfs.bsendl = ipc_bsendl;
-    self->bvfs.brecvl = ipc_brecvl;
+    struct dill_ipc_conn *self = (struct dill_ipc_conn*)mem;
+    self->hvfs.query = dill_ipc_hquery;
+    self->hvfs.close = dill_ipc_hclose;
+    self->bvfs.bsendl = dill_ipc_bsendl;
+    self->bvfs.brecvl = dill_ipc_brecvl;
     self->fd = fd;
     dill_fd_initrxbuf(&self->rxbuf);
     self->indone = 0;
@@ -408,6 +410,6 @@ static int ipc_makeconn(int fd, void *mem) {
     self->outerr = 0;
     self->mem = 1;
     /* Create the handle. */
-    return hmake(&self->hvfs);
+    return dill_hmake(&self->hvfs);
 }
 
