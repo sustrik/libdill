@@ -130,7 +130,7 @@ error3:
     SSL_free(ssl);
 error2:
     SSL_CTX_free(ctx);
-error1:;
+error1:
     if(s >= 0) {
         int rc = dill_hclose(s);
         dill_assert(rc == 0);
@@ -143,14 +143,18 @@ int dill_tls_attach_client(int s, int64_t deadline) {
     int err;
     struct dill_tls_sock *obj = malloc(sizeof(struct dill_tls_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ts = dill_tls_attach_client_mem(s, (struct dill_tls_storage*)obj,
+    s = dill_tls_attach_client_mem(s, (struct dill_tls_storage*)obj,
         deadline);
-    if(dill_slow(ts < 0)) {err = errno; goto error2;}
+    if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
-    return ts;
+    return s;
 error2:
     free(obj);
 error1:
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
     errno = err;
     return -1;
 }
@@ -232,14 +236,18 @@ int dill_tls_attach_server(int s, const char *cert, const char *pkey,
     int err;
     struct dill_tls_sock *obj = malloc(sizeof(struct dill_tls_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ts = dill_tls_attach_server_mem(s, cert, pkey,
+    s = dill_tls_attach_server_mem(s, cert, pkey,
         (struct dill_tls_storage*)obj, deadline);
-    if(dill_slow(ts < 0)) {err = errno; goto error2;}
+    if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
-    return ts;
+    return s;
 error2:
     free(obj);
 error1:
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
     errno = err;
     return -1;
 }

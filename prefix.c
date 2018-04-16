@@ -102,14 +102,18 @@ int dill_prefix_attach(int s, size_t hdrlen, int flags) {
     int err;
     struct dill_prefix_sock *obj = malloc(sizeof(struct dill_prefix_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ps = dill_prefix_attach_mem(s, hdrlen, flags,
+    s = dill_prefix_attach_mem(s, hdrlen, flags,
         (struct dill_prefix_storage*)obj);
-    if(dill_slow(ps < 0)) {err = errno; goto error2;}
+    if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
-    return ps;
+    return s;
 error2:
     free(obj);
 error1:
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
     errno = err;
     return -1;
 }

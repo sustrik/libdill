@@ -106,14 +106,18 @@ int dill_suffix_attach(int s, const void *suffix, size_t suffixlen) {
     int err;
     struct dill_suffix_sock *obj = malloc(sizeof(struct dill_suffix_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int cs = dill_suffix_attach_mem(s, suffix, suffixlen,
+    s = dill_suffix_attach_mem(s, suffix, suffixlen,
         (struct dill_suffix_storage*)obj);
-    if(dill_slow(cs < 0)) {err = errno; goto error2;}
+    if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
-    return cs;
+    return s;
 error2:
     free(obj);
 error1:
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
     errno = err;
     return -1;
 }
