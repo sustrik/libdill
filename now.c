@@ -30,7 +30,7 @@
 
 #include "ctx.h"
 
-int64_t mnow(void) {
+int64_t dill_mnow(void) {
 
 /* Implementation using Mach timers. */
 #if defined __APPLE__
@@ -49,9 +49,9 @@ int64_t mnow(void) {
 #elif defined CLOCK_MONOTONIC
     clock_t id = CLOCK_MONOTONIC;
 #else
-#define DILL_NOW_FALLBACK
+#define DILL_dill_now_FALLBACK
 #endif
-#if !defined DILL_NOW_FALLBACK
+#if !defined DILL_dill_now_FALLBACK
     struct timespec ts;
     int rc = clock_gettime(id, &ts);
     dill_assert (rc == 0);
@@ -71,13 +71,13 @@ int64_t mnow(void) {
 
 /* Like now(), this function can be called only after context is initialized
    but unlike now() it doesn't do time caching. */
-static int64_t now_(void) {
+static int64_t dill_now_(void) {
 #if defined __APPLE__
     struct dill_ctx_now *ctx = &dill_getctx->now;
     uint64_t ticks = mach_absolute_time();
     return (int64_t)(ticks * ctx->mtid.numer / ctx->mtid.denom / 1000000);
 #else
-    return mnow();
+    return dill_mnow();
 #endif
 }
 
@@ -85,7 +85,7 @@ int64_t dill_now(void) {
 #if defined(__x86_64__) || defined(__i386__)
     /* On x86 platforms, rdtsc instruction can be used to quickly check time
        in form of CPU cycles. If less than 1M cycles have elapsed since the
-       last now_() call we assume it's still the same millisecond and return
+       last dill_now_() call we assume it's still the same millisecond and return
        cached time. This optimization can give a huge speedup with old systems.
        1M number is chosen is such a way that it results in getting time every
        millisecond on 1GHz processors. On faster processors we'll query time
@@ -98,10 +98,10 @@ int64_t dill_now(void) {
     if(diff < 0) diff = -diff;
     if(dill_fast(diff < 1000000ULL)) return ctx->last_time;
     ctx->last_tsc = tsc;
-    ctx->last_time = now_();
+    ctx->last_time = dill_now_();
     return ctx->last_time;
 #else
-    return now_();
+    return dill_now_();
 #endif
 }
 
@@ -110,7 +110,7 @@ int dill_ctx_now_init(struct dill_ctx_now *ctx) {
     mach_timebase_info(&ctx->mtid);
 #endif
 #if defined(__x86_64__) || defined(__i386__)
-    ctx->last_time = mnow();
+    ctx->last_time = dill_mnow();
     ctx->last_tsc = __rdtsc();
 #endif
     return 0;
