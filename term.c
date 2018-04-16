@@ -69,22 +69,22 @@ int dill_term_attach_mem(int s, const void *buf, size_t len,
       struct dill_term_storage *mem) {
     int err;
     if(dill_slow(!mem && len > DILL_MAX_TERMINATOR_LENGTH)) {
-        err = EINVAL; goto error1;}
-    if(dill_slow(len > 0 && !buf)) {err = EINVAL; goto error1;}
+        err = EINVAL; goto error;}
+    if(dill_slow(len > 0 && !buf)) {err = EINVAL; goto error;}
     /* Take ownership of the underlying socket. */
-    int u = dill_hown(s);
-    if(dill_slow(u < 0)) {err = errno; goto error1;}
+    s = dill_hown(s);
+    if(dill_slow(s < 0)) {err = errno; goto error;}
     /* Check whether underlying socket is message-based. */
-    void *q = dill_hquery(u, dill_msock_type);
-    if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error2;}
-    if(dill_slow(!q)) {err = errno; goto error2;}
+    void *q = dill_hquery(s, dill_msock_type);
+    if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error;}
+    if(dill_slow(!q)) {err = errno; goto error;}
     /* Create the object. */
     struct dill_term_sock *self = (struct dill_term_sock*)mem;
     self->hvfs.query = dill_term_hquery;
     self->hvfs.close = dill_term_hclose;
     self->mvfs.msendl = dill_term_msendl;
     self->mvfs.mrecvl = dill_term_mrecvl;
-    self->u = u;
+    self->u = s;
     self->len = len;
     memcpy(self->buf, buf, len);
     self->indone = 0;
@@ -92,12 +92,13 @@ int dill_term_attach_mem(int s, const void *buf, size_t len,
     self->mem = 1;
     /* Create the handle. */
     int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error2;}
+    if(dill_slow(h < 0)) {int err = errno; goto error;}
     return h;
-error2:;
-    int rc = dill_hclose(u);
-    dill_assert(rc == 0);
-error1:
+error:
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
     errno = err;
     return -1;
 }
