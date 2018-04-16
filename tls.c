@@ -95,11 +95,9 @@ int dill_tls_attach_client_mem(int s, struct dill_tls_storage *mem,
     BIO *bio = dill_tls_new_cbio(mem);
     if(dill_slow(!bio)) {err = errno; goto error3;}
 	  SSL_set_bio(ssl, bio, bio);
-    /* Make a private copy of the underlying socket. */
     /* Take ownership of the underlying socket. */
-    int u = dill_hown(s);
-    if(dill_slow(u < 0)) {err = errno; goto error1;}
-    s = u;
+    s = dill_hown(s);
+    if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Create the object. */
     struct dill_tls_sock *self = (struct dill_tls_sock*)mem;
     self->hvfs.query = dill_tls_hquery;
@@ -108,7 +106,7 @@ int dill_tls_attach_client_mem(int s, struct dill_tls_storage *mem,
     self->bvfs.brecvl = dill_tls_brecvl;
     self->ctx = ctx;
     self->ssl = ssl;
-    self->u = u;
+    self->u = s;
     self->deadline = -1;
     self->indone = 0;
     self->outdone = 0;
@@ -133,8 +131,10 @@ error3:
 error2:
     SSL_CTX_free(ctx);
 error1:;
-    int rc = dill_hclose(s);
-    dill_assert(rc == 0);
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
     errno = err;
     return -1;
 }
@@ -184,9 +184,8 @@ int dill_tls_attach_server_mem(int s, const char *cert, const char *pkey,
     if(dill_slow(!bio)) {err = errno; goto error3;}
 	  SSL_set_bio(ssl, bio, bio);
     /* Take ownership of the underlying socket. */
-    int u = dill_hown(s);
-    if(dill_slow(u < 0)) {err = errno; goto error1;}
-    s = u;
+    s = dill_hown(s);
+    if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Create the object. */
     struct dill_tls_sock *self = (struct dill_tls_sock*)mem;
     self->hvfs.query = dill_tls_hquery;
@@ -195,7 +194,7 @@ int dill_tls_attach_server_mem(int s, const char *cert, const char *pkey,
     self->bvfs.brecvl = dill_tls_brecvl;
     self->ctx = ctx;
     self->ssl = ssl;
-    self->u = u;
+    self->u = s;
     self->deadline = -1;
     self->indone = 0;
     self->outdone = 0;
@@ -220,8 +219,10 @@ error3:
 error2:
     SSL_CTX_free(ctx);
 error1:
-    rc = dill_hclose(s);
-    dill_assert(rc == 0);
+    if(s >= 0) {
+        rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
     errno = err;
     return -1;
 }
