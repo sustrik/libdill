@@ -25,37 +25,38 @@
 #include <errno.h>
 #include <stddef.h>
 
+#define DILL_DISABLE_RAW_NAMES
 #include "libdillimpl.h"
 #include "utils.h"
 
 dill_unique_id(dill_bsock_type);
 
 int dill_bsend(int s, const void *buf, size_t len, int64_t deadline) {
-    struct bsock_vfs *b = hquery(s, dill_bsock_type);
+    struct dill_bsock_vfs *b = dill_hquery(s, dill_bsock_type);
     if(dill_slow(!b)) return -1;
-    struct iolist iol = {(void*)buf, len, NULL, 0};
+    struct dill_iolist iol = {(void*)buf, len, NULL, 0};
     return b->bsendl(b, &iol, &iol, deadline);
 }
 
 int dill_brecv(int s, void *buf, size_t len, int64_t deadline) {
-    struct bsock_vfs *b = hquery(s, dill_bsock_type);
+    struct dill_bsock_vfs *b = dill_hquery(s, dill_bsock_type);
     if(dill_slow(!b)) return -1;
-    struct iolist iol = {buf, len, NULL, 0};
+    struct dill_iolist iol = {buf, len, NULL, 0};
     return b->brecvl(b, &iol, &iol, deadline);
 }
 
-int dill_bsendl(int s, struct iolist *first, struct iolist *last,
+int dill_bsendl(int s, struct dill_iolist *first, struct dill_iolist *last,
       int64_t deadline) {
-    struct bsock_vfs *b = hquery(s, dill_bsock_type);
+    struct dill_bsock_vfs *b = dill_hquery(s, dill_bsock_type);
     if(dill_slow(!b)) return -1;
     if(dill_slow(!first || !last || last->iol_next)) {
         errno = EINVAL; return -1;}
     return b->bsendl(b, first, last, deadline);
 }
 
-int dill_brecvl(int s, struct iolist *first, struct iolist *last,
+int dill_brecvl(int s, struct dill_iolist *first, struct dill_iolist *last,
       int64_t deadline) {
-    struct bsock_vfs *b = hquery(s, dill_bsock_type);
+    struct dill_bsock_vfs *b = dill_hquery(s, dill_bsock_type);
     if(dill_slow(!b)) return -1;
     if(dill_slow((first && !last) || (!first && last) || last->iol_next)) {
         errno = EINVAL; return -1;}
