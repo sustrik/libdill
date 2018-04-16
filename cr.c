@@ -57,8 +57,8 @@ volatile void *dill_unoptimisable = NULL;
 
 static const int dill_cr_type_placeholder = 0;
 static const void *dill_cr_type = &dill_cr_type_placeholder;
-static void *dill_cr_query(struct hvfs *vfs, const void *type);
-static void dill_cr_close(struct hvfs *vfs);
+static void *dill_cr_query(struct dill_hvfs *vfs, const void *type);
+static void dill_cr_close(struct dill_hvfs *vfs);
 
 /******************************************************************************/
 /*  Bundle.                                                                   */
@@ -66,12 +66,12 @@ static void dill_cr_close(struct hvfs *vfs);
 
 static const int dill_bundle_type_placeholder = 0;
 const void *dill_bundle_type = &dill_bundle_type_placeholder;
-static void *dill_bundle_query(struct hvfs *vfs, const void *type);
-static void dill_bundle_close(struct hvfs *vfs);
+static void *dill_bundle_query(struct dill_hvfs *vfs, const void *type);
+static void dill_bundle_close(struct dill_hvfs *vfs);
 
 struct dill_bundle {
     /* Table of virtual functions. */
-    struct hvfs vfs;
+    struct dill_hvfs vfs;
     /* List of coroutines in this bundle. */
     struct dill_list crs;
     /* If somebody is doing hdone() on this bundle, here's the clause
@@ -81,9 +81,10 @@ struct dill_bundle {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct bundle_storage) >= sizeof(struct dill_bundle));
+DILL_CT_ASSERT(sizeof(struct dill_bundle_storage) >=
+    sizeof(struct dill_bundle));
 
-int dill_bundle_mem(struct bundle_storage *mem) {
+int dill_bundle_mem(struct dill_bundle_storage *mem) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; return -1;}
     /* Returns ECANCELED if the coroutine is shutting down. */
@@ -95,14 +96,14 @@ int dill_bundle_mem(struct bundle_storage *mem) {
     dill_list_init(&b->crs);
     b->waiter = NULL;
     b->mem = 1;
-    return hmake(&b->vfs);
+    return dill_hmake(&b->vfs);
 }
 
 int dill_bundle(void) {
     int err;
     struct dill_bundle *b = malloc(sizeof(struct dill_bundle));
     if(dill_slow(!b)) {err = ENOMEM; goto error1;}
-    int h = bundle_mem((struct bundle_storage*)b);
+    int h = dill_bundle_mem((struct dill_bundle_storage*)b);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     b->mem = 0;
     return h;
@@ -113,13 +114,13 @@ error1:
     return -1;
 }
 
-static void *dill_bundle_query(struct hvfs *vfs, const void *type) {
+static void *dill_bundle_query(struct dill_hvfs *vfs, const void *type) {
     if(dill_fast(type == dill_bundle_type)) return vfs;
     errno = ENOTSUP;
     return NULL;
 }
 
-static void dill_bundle_close(struct hvfs *vfs) {
+static void dill_bundle_close(struct dill_hvfs *vfs) {
     struct dill_bundle *self = (struct dill_bundle*)vfs;
     struct dill_list *it = &self->crs;
     for(it = self->crs.next; it != &self->crs; it = dill_list_next(it)) {
@@ -132,7 +133,7 @@ static void dill_bundle_close(struct hvfs *vfs) {
 int dill_bundle_wait(int h, int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
-    struct dill_bundle *self = hquery(h, dill_bundle_type);
+    struct dill_bundle *self = dill_hquery(h, dill_bundle_type);
     if(dill_slow(!self)) return -1;
     /* If there are no coroutines in the bundle succeed immediately. */
     if(dill_list_empty(&self->crs)) return 0;
@@ -252,16 +253,16 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
     int new_bundle = bndl < 0;
     if(new_bundle) {
         if(*ptr) {
-            bndl = bundle_mem(*ptr);
-            *ptr = ((uint8_t*)*ptr) + sizeof(struct bundle_storage);
-            len -= sizeof(struct bundle_storage);
+            bndl = dill_bundle_mem(*ptr);
+            *ptr = ((uint8_t*)*ptr) + sizeof(struct dill_bundle_storage);
+            len -= sizeof(struct dill_bundle_storage);
         }
         else {
-            bndl = bundle();
+            bndl = dill_bundle();
         }
         if(dill_slow(bndl < 0)) {err = errno; goto error1;}
     }
-    struct dill_bundle *bundle = hquery(bndl, dill_bundle_type);
+    struct dill_bundle *bundle = dill_hquery(bndl, dill_bundle_type);
     if(dill_slow(!bundle)) {err = errno; goto error2;}
     /* Allocate a stack. */
     struct dill_cr *cr;
@@ -335,7 +336,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
     return new_bundle ? bndl : 0;
 error2:
     if(new_bundle) {
-        rc = hclose(bndl);
+        rc = dill_hclose(bndl);
         dill_assert(rc == 0);
     }
 error1:
@@ -369,7 +370,7 @@ void dill_epilogue(void) {
     dill_wait();
 }
 
-static void *dill_cr_query(struct hvfs *vfs, const void *type) {
+static void *dill_cr_query(struct dill_hvfs *vfs, const void *type) {
     struct dill_cr *cr = dill_cont(vfs, struct dill_cr, vfs);
     if(dill_fast(type == dill_cr_type)) return cr;
     errno = ENOTSUP;
@@ -377,7 +378,7 @@ static void *dill_cr_query(struct hvfs *vfs, const void *type) {
 }
 
 /* Gets called when coroutine handle is closed. */
-static void dill_cr_close(struct hvfs *vfs) {
+static void dill_cr_close(struct dill_hvfs *vfs) {
     struct dill_ctx_cr *ctx = &dill_getctx->cr;
     struct dill_cr *cr = dill_cont(vfs, struct dill_cr, vfs);
     /* If the coroutine has already finished, we are done. */
@@ -446,7 +447,7 @@ int dill_wait(void)  {
     /* For performance reasons, we want to avoid excessive checking of current
        time, so we cache the value here. It will be recomputed only after
        a blocking call. */
-    int64_t nw = now();
+    int64_t nw = dill_now();
     /*  Wait for timeouts and external events. However, if there are ready
        coroutines there's no need to poll for external events every time.
        Still, we'll do it at least once a second. The external signal may
@@ -469,7 +470,7 @@ int dill_wait(void)  {
             }
             /* Wait for events. */
             int fired = dill_pollset_poll(timeout);
-            if(timeout != 0) nw = now();
+            if(timeout != 0) nw = dill_now();
             if(dill_slow(fired < 0)) continue;
             /* Fire all expired timers. */
             if(!dill_rbtree_empty(&ctx->timers)) {

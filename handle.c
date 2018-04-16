@@ -39,7 +39,7 @@
 
 struct dill_handle {
     /* Table of virtual functions. */
-    struct hvfs *vfs;
+    struct dill_hvfs *vfs;
     /* Index of the next handle in the linked list of unused handles. -1 means
        'the end of the list'. -2 means 'handle is in use'. */
     int next;
@@ -67,7 +67,7 @@ void dill_ctx_handle_term(struct dill_ctx_handle *ctx) {
     free(ctx->handles);
 }
 
-int dill_hmake(struct hvfs *vfs) {
+int dill_hmake(struct dill_hvfs *vfs) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
     if(dill_slow(!vfs || !vfs->query || !vfs->close)) {
         errno = EINVAL; return -1;}
@@ -110,7 +110,7 @@ int dill_hown(int h) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
     DILL_CHECKHANDLE(h, -1);
     /* Create a new handle for the same object. */
-    int res = hmake(hndl->vfs);
+    int res = dill_hmake(hndl->vfs);
     if(dill_slow(res < 0)) return -1;
     /* Return a handle to the shared pool. */
     hndl->ptr = NULL;

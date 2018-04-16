@@ -25,11 +25,13 @@
 
 #include <stdint.h>
 
-#include "libdillimpl.h"
 #include "list.h"
 #include "qlist.h"
 #include "rbtree.h"
 #include "slist.h"
+
+#define DILL_DISABLE_RAW_NAMES
+#include "libdillimpl.h"
 
 /* The coroutine. The memory layout looks like this:
    +-------------------------------------------------------------+---------+
@@ -46,7 +48,7 @@ struct dill_cr {
        will be set to 'err'. */
     struct dill_slist ready;
     /* Virtual function table. */
-    struct hvfs vfs;
+    struct dill_hvfs vfs;
     int id;
     int err;
     /* When the coroutine is suspended 'ctx' holds the context
