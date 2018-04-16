@@ -23,65 +23,66 @@
 */
 
 #include <errno.h>
-#include <libdillimpl.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
+#define DILL_DISABLE_RAW_NAMES
+#include <libdillimpl.h>
 #include "iol.h"
 #include "utils.h"
 
-#define MAX_TERMINATOR_LENGTH 32
+#define DILL_MAX_TERMINATOR_LENGTH 32
 
-dill_unique_id(term_type);
+dill_unique_id(dill_term_type);
 
-static void *term_hquery(struct hvfs *hvfs, const void *type);
-static void term_hclose(struct hvfs *hvfs);
-static int term_msendl(struct msock_vfs *mvfs,
-    struct iolist *first, struct iolist *last, int64_t deadline);
-static ssize_t term_mrecvl(struct msock_vfs *mvfs,
-    struct iolist *first, struct iolist *last, int64_t deadline);
+static void *dill_term_hquery(struct dill_hvfs *hvfs, const void *type);
+static void dill_term_hclose(struct dill_hvfs *hvfs);
+static int dill_term_msendl(struct dill_msock_vfs *mvfs,
+    struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
+static ssize_t dill_term_mrecvl(struct dill_msock_vfs *mvfs,
+    struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
 
-struct term_sock {
-    struct hvfs hvfs;
-    struct msock_vfs mvfs;
+struct dill_term_sock {
+    struct dill_hvfs hvfs;
+    struct dill_msock_vfs mvfs;
     int u;
     size_t len;
-    uint8_t buf[MAX_TERMINATOR_LENGTH];
+    uint8_t buf[DILL_MAX_TERMINATOR_LENGTH];
     unsigned int indone : 1;
     unsigned int outdone : 1;
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct term_storage) >= sizeof(struct term_sock));
+DILL_CT_ASSERT(sizeof(struct dill_term_storage) >= sizeof(struct dill_term_sock));
 
-static void *term_hquery(struct hvfs *hvfs, const void *type) {
-    struct term_sock *self = (struct term_sock*)hvfs;
-    if(type == msock_type) return &self->mvfs;
-    if(type == term_type) return self;
+static void *dill_term_hquery(struct dill_hvfs *hvfs, const void *type) {
+    struct dill_term_sock *self = (struct dill_term_sock*)hvfs;
+    if(type == dill_msock_type) return &self->mvfs;
+    if(type == dill_term_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
 
 int dill_term_attach_mem(int s, const void *buf, size_t len,
-      struct term_storage *mem) {
+      struct dill_term_storage *mem) {
     int err;
-    if(dill_slow(!mem && len > MAX_TERMINATOR_LENGTH)) {
+    if(dill_slow(!mem && len > DILL_MAX_TERMINATOR_LENGTH)) {
         err = EINVAL; goto error1;}
     if(dill_slow(len > 0 && !buf)) {err = EINVAL; goto error1;}
     /* Take ownership of the underlying socket. */
-    int u = hown(s);
+    int u = dill_hown(s);
     if(dill_slow(u < 0)) {err = errno; goto error1;}
     /* Check whether underlying socket is message-based. */
-    void *q = hquery(u, msock_type);
+    void *q = dill_hquery(u, dill_msock_type);
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error2;}
     if(dill_slow(!q)) {err = errno; goto error2;}
     /* Create the object. */
-    struct term_sock *self = (struct term_sock*)mem;
-    self->hvfs.query = term_hquery;
-    self->hvfs.close = term_hclose;
-    self->mvfs.msendl = term_msendl;
-    self->mvfs.mrecvl = term_mrecvl;
+    struct dill_term_sock *self = (struct dill_term_sock*)mem;
+    self->hvfs.query = dill_term_hquery;
+    self->hvfs.close = dill_term_hclose;
+    self->mvfs.msendl = dill_term_msendl;
+    self->mvfs.mrecvl = dill_term_mrecvl;
     self->u = u;
     self->len = len;
     memcpy(self->buf, buf, len);
@@ -89,11 +90,11 @@ int dill_term_attach_mem(int s, const void *buf, size_t len,
     self->outdone = 0;
     self->mem = 1;
     /* Create the handle. */
-    int h = hmake(&self->hvfs);
+    int h = dill_hmake(&self->hvfs);
     if(dill_slow(h < 0)) {int err = errno; goto error2;}
     return h;
 error2:;
-    int rc = hclose(u);
+    int rc = dill_hclose(u);
     dill_assert(rc == 0);
 error1:
     errno = err;
@@ -102,9 +103,9 @@ error1:
 
 int dill_term_attach(int s, const void *buf, size_t len) {
     int err;
-    struct term_sock *obj = malloc(sizeof(struct term_sock));
+    struct dill_term_sock *obj = malloc(sizeof(struct dill_term_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int cs = term_attach_mem(s, buf, len, (struct term_storage*)obj);
+    int cs = dill_term_attach_mem(s, buf, len, (struct dill_term_storage*)obj);
     if(dill_slow(cs < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return cs;
@@ -116,10 +117,10 @@ error1:
 }
 
 int dill_term_done(int s, int64_t deadline) {
-    struct term_sock *self = hquery(s, term_type);
+    struct dill_term_sock *self = dill_hquery(s, dill_term_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
-    int rc = msend(self->u, self->buf, self->len, deadline);
+    int rc = dill_msend(self->u, self->buf, self->len, deadline);
     if(dill_slow(rc < 0)) return -1;
     self->outdone = 1;
     return 0;
@@ -127,16 +128,16 @@ int dill_term_done(int s, int64_t deadline) {
 
 int dill_term_detach(int s, int64_t deadline) {
     int err;
-    struct term_sock *self = hquery(s, term_type);
+    struct dill_term_sock *self = dill_hquery(s, dill_term_type);
     if(dill_slow(!self)) return -1;
     if(!self->outdone) {
-        int rc = term_done(s, deadline);
+        int rc = dill_term_done(s, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     if(!self->indone) {
         while(1) {
-            struct iolist iol = {NULL, SIZE_MAX, NULL, 0};
-            ssize_t sz = term_mrecvl(&self->mvfs, &iol, &iol, deadline);
+            struct dill_iolist iol = {NULL, SIZE_MAX, NULL, 0};
+            ssize_t sz = dill_term_mrecvl(&self->mvfs, &iol, &iol, deadline);
             if(sz < 0) {
                 if(errno == EPIPE) break;
                 err = errno;
@@ -148,24 +149,24 @@ int dill_term_detach(int s, int64_t deadline) {
     if(!self->mem) free(self);
     return u;
 error:;
-    int rc = hclose(s);
+    int rc = dill_hclose(s);
     dill_assert(rc == 0);
     errno = err;
     return -1;
 }
 
-static int term_msendl(struct msock_vfs *mvfs,
-      struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct term_sock *self = dill_cont(mvfs, struct term_sock, mvfs);
+static int dill_term_msendl(struct dill_msock_vfs *mvfs,
+      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
+    struct dill_term_sock *self = dill_cont(mvfs, struct dill_term_sock, mvfs);
     /* TODO: Check that it's not the terminal message. */
-    return msendl(self->u, first, last, deadline);
+    return dill_msendl(self->u, first, last, deadline);
 }
 
-static ssize_t term_mrecvl(struct msock_vfs *mvfs,
-      struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct term_sock *self = dill_cont(mvfs, struct term_sock, mvfs);
+static ssize_t dill_term_mrecvl(struct dill_msock_vfs *mvfs,
+      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
+    struct dill_term_sock *self = dill_cont(mvfs, struct dill_term_sock, mvfs);
     if(self->len == 0) {
-        ssize_t sz = mrecvl(self->u, first, last, deadline);
+        ssize_t sz = dill_mrecvl(self->u, first, last, deadline);
         if(dill_slow(sz < 0)) return -1;
         if(dill_slow(sz == 0)) {
             self->indone = 1;
@@ -174,11 +175,11 @@ static ssize_t term_mrecvl(struct msock_vfs *mvfs,
         }
         return sz;
     }
-    struct iolist trimmed = {0};
+    struct dill_iolist trimmed = {0};
     int rc = dill_ioltrim(first, self->len, &trimmed);
     uint8_t buf[self->len];
-    struct iolist iol = {buf, self->len, rc < 0 ? NULL : &trimmed, 0}; 
-    ssize_t sz = mrecvl(self->u, &iol, rc < 0 ? &iol : last, deadline);
+    struct dill_iolist iol = {buf, self->len, rc < 0 ? NULL : &trimmed, 0}; 
+    ssize_t sz = dill_mrecvl(self->u, &iol, rc < 0 ? &iol : last, deadline);
     if(dill_slow(sz < 0)) return -1;
     if(dill_slow(sz == self->len &&
           dill_slow(memcmp(self->buf, buf, self->len) == 0))) {
@@ -190,10 +191,10 @@ static ssize_t term_mrecvl(struct msock_vfs *mvfs,
     return sz;
 }
 
-static void term_hclose(struct hvfs *hvfs) {
-    struct term_sock *self = (struct term_sock*)hvfs;
+static void dill_term_hclose(struct dill_hvfs *hvfs) {
+    struct dill_term_sock *self = (struct dill_term_sock*)hvfs;
     if(dill_fast(self->u >= 0)) {
-        int rc = hclose(self->u);
+        int rc = dill_hclose(self->u);
         dill_assert(rc == 0);
     }
     if(!self->mem) free(self);
