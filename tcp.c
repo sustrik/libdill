@@ -26,29 +26,30 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define DILL_DISABLE_RAW_NAMES
 #include "libdillimpl.h"
 #include "fd.h"
 #include "utils.h"
 
-dill_unique_id(tcp_type);
-dill_unique_id(tcp_listener_type);
+dill_unique_id(dill_tcp_type);
+dill_unique_id(dill_tcp_listener_type);
 
-static int tcp_makeconn(int fd, void *mem);
+static int dill_tcp_makeconn(int fd, void *mem);
 
 /******************************************************************************/
 /*  TCP connection socket                                                     */
 /******************************************************************************/
 
-static void *tcp_hquery(struct hvfs *hvfs, const void *type);
-static void tcp_hclose(struct hvfs *hvfs);
-static int tcp_bsendl(struct bsock_vfs *bvfs,
-    struct iolist *first, struct iolist *last, int64_t deadline);
-static int tcp_brecvl(struct bsock_vfs *bvfs,
-    struct iolist *first, struct iolist *last, int64_t deadline);
+static void *dill_tcp_hquery(struct dill_hvfs *hvfs, const void *type);
+static void dill_tcp_hclose(struct dill_hvfs *hvfs);
+static int dill_tcp_bsendl(struct dill_bsock_vfs *bvfs,
+    struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
+static int dill_tcp_brecvl(struct dill_bsock_vfs *bvfs,
+    struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
 
-struct tcp_conn {
-    struct hvfs hvfs;
-    struct bsock_vfs bvfs;
+struct dill_tcp_conn {
+    struct dill_hvfs hvfs;
+    struct dill_bsock_vfs bvfs;
     int fd;
     struct fd_rxbuf rxbuf;
     unsigned int indone : 1;
@@ -58,31 +59,32 @@ struct tcp_conn {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct tcp_storage) >= sizeof(struct tcp_conn));
+DILL_CT_ASSERT(sizeof(struct dill_tcp_storage) >= sizeof(struct dill_tcp_conn));
 
-static void *tcp_hquery(struct hvfs *hvfs, const void *type) {
-    struct tcp_conn *self = (struct tcp_conn*)hvfs;
-    if(type == bsock_type) return &self->bvfs;
-    if(type == tcp_type) return self;
+static void *dill_tcp_hquery(struct dill_hvfs *hvfs, const void *type) {
+    struct dill_tcp_conn *self = (struct dill_tcp_conn*)hvfs;
+    if(type == dill_bsock_type) return &self->bvfs;
+    if(type == dill_tcp_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
 
-int tcp_connect_mem(const struct ipaddr *addr, struct tcp_storage *mem,
-        int64_t deadline) {
+int dill_tcp_connect_mem(const struct dill_ipaddr *addr,
+        struct dill_tcp_storage *mem, int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Open a socket. */
-    int s = socket(ipaddr_family(addr), SOCK_STREAM, 0);
+    int s = socket(dill_ipaddr_family(addr), SOCK_STREAM, 0);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Set it to non-blocking mode. */
     int rc = fd_unblock(s);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Connect to the remote endpoint. */
-    rc = fd_connect(s, ipaddr_sockaddr(addr), ipaddr_len(addr), deadline);
+    rc = fd_connect(s, dill_ipaddr_sockaddr(addr), dill_ipaddr_len(addr),
+        deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
-    int h = tcp_makeconn(s, mem);
+    int h = dill_tcp_makeconn(s, mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
@@ -92,11 +94,11 @@ error1:
     return -1;
 }
 
-int tcp_connect(const struct ipaddr *addr, int64_t deadline) {
+int dill_tcp_connect(const struct dill_ipaddr *addr, int64_t deadline) {
     int err;
-    struct tcp_conn *obj = malloc(sizeof(struct tcp_conn));
+    struct dill_tcp_conn *obj = malloc(sizeof(struct dill_tcp_conn));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int s = tcp_connect_mem(addr, (struct tcp_storage*)obj, deadline);
+    int s = dill_tcp_connect_mem(addr, (struct dill_tcp_storage*)obj, deadline);
     if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return s;
@@ -108,9 +110,9 @@ error1:
 
 }
 
-static int tcp_bsendl(struct bsock_vfs *bvfs,
-      struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct tcp_conn *self = dill_cont(bvfs, struct tcp_conn, bvfs);
+static int dill_tcp_bsendl(struct dill_bsock_vfs *bvfs,
+      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
+    struct dill_tcp_conn *self = dill_cont(bvfs, struct dill_tcp_conn, bvfs);
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     ssize_t sz = fd_send(self->fd, first, last, deadline);
@@ -119,9 +121,9 @@ static int tcp_bsendl(struct bsock_vfs *bvfs,
     return -1;
 }
 
-static int tcp_brecvl(struct bsock_vfs *bvfs,
-      struct iolist *first, struct iolist *last, int64_t deadline) {
-    struct tcp_conn *self = dill_cont(bvfs, struct tcp_conn, bvfs);
+static int dill_tcp_brecvl(struct dill_bsock_vfs *bvfs,
+      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
+    struct dill_tcp_conn *self = dill_cont(bvfs, struct dill_tcp_conn, bvfs);
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
     int rc = fd_recv(self->fd, &self->rxbuf, first, last, deadline);
@@ -132,7 +134,7 @@ static int tcp_brecvl(struct bsock_vfs *bvfs,
 }
 
 int dill_tcp_done(int s, int64_t deadline) {
-    struct tcp_conn *self = hquery(s, tcp_type);
+    struct dill_tcp_conn *self = dill_hquery(s, dill_tcp_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
@@ -150,34 +152,34 @@ int dill_tcp_done(int s, int64_t deadline) {
 int dill_tcp_close(int s, int64_t deadline) {
     int err;
     /* Listener socket needs no special treatment. */
-    if(hquery(s, tcp_listener_type)) {
-        return hclose(s);
+    if(dill_hquery(s, dill_tcp_listener_type)) {
+        return dill_hclose(s);
     }
-    struct tcp_conn *self = hquery(s, tcp_type);
+    struct dill_tcp_conn *self = dill_hquery(s, dill_tcp_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
     /* If not done already, flush the outbound data and start the terminal
        handshake. */
     if(!self->outdone) {
-        int rc = tcp_done(s, deadline);
+        int rc = dill_tcp_done(s, deadline);
         if(dill_slow(rc < 0)) {err = errno; goto error;}
     }
     /* Now we are going to read all the inbound data until we reach end of the
        stream. That way we can be sure that the peer either received all our
        data or consciously closed the connection without reading all of it. */
-    int rc = tcp_brecvl(&self->bvfs, NULL, NULL, deadline);
+    int rc = dill_tcp_brecvl(&self->bvfs, NULL, NULL, deadline);
     dill_assert(rc < 0);
     if(dill_slow(errno != EPIPE)) {err = errno; goto error;}
-    tcp_hclose(&self->hvfs);
+    dill_tcp_hclose(&self->hvfs);
     return 0;
 error:
-    tcp_hclose(&self->hvfs);
+    dill_tcp_hclose(&self->hvfs);
     errno = err;
     return -1;
 }
 
-static void tcp_hclose(struct hvfs *hvfs) {
-    struct tcp_conn *self = (struct tcp_conn*)hvfs;
+static void dill_tcp_hclose(struct dill_hvfs *hvfs) {
+    struct dill_tcp_conn *self = (struct dill_tcp_conn*)hvfs;
     fd_close(self->fd);
     if(!self->mem) free(self);
 }
@@ -186,58 +188,59 @@ static void tcp_hclose(struct hvfs *hvfs) {
 /*  TCP listener socket                                                       */
 /******************************************************************************/
 
-static void *tcp_listener_hquery(struct hvfs *hvfs, const void *type);
-static void tcp_listener_hclose(struct hvfs *hvfs);
+static void *dill_tcp_listener_hquery(struct dill_hvfs *hvfs, const void *type);
+static void dill_tcp_listener_hclose(struct dill_hvfs *hvfs);
 
-struct tcp_listener {
-    struct hvfs hvfs;
+struct dill_tcp_listener {
+    struct dill_hvfs hvfs;
     int fd;
-    struct ipaddr addr;
+    struct dill_ipaddr addr;
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct tcp_listener_storage) >=
-    sizeof(struct tcp_listener));
+DILL_CT_ASSERT(sizeof(struct dill_tcp_listener_storage) >=
+    sizeof(struct dill_tcp_listener));
 
-static void *tcp_listener_hquery(struct hvfs *hvfs, const void *type) {
-    struct tcp_listener *self = (struct tcp_listener*)hvfs;
-    if(type == tcp_listener_type) return self;
+static void *dill_tcp_listener_hquery(struct dill_hvfs *hvfs,
+      const void *type) {
+    struct dill_tcp_listener *self = (struct dill_tcp_listener*)hvfs;
+    if(type == dill_tcp_listener_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
 
-int dill_tcp_listen_mem(struct ipaddr *addr, int backlog,
-      struct tcp_listener_storage *mem) {
+int dill_tcp_listen_mem(struct dill_ipaddr *addr, int backlog,
+      struct dill_tcp_listener_storage *mem) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Open the listening socket. */
-    int s = socket(ipaddr_family(addr), SOCK_STREAM, 0);
+    int s = socket(dill_ipaddr_family(addr), SOCK_STREAM, 0);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Set it to non-blocking mode. */
     int rc = fd_unblock(s);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Start listening for incoming connections. */
-    rc = bind(s, ipaddr_sockaddr(addr), ipaddr_len(addr));
+    rc = bind(s, dill_ipaddr_sockaddr(addr), dill_ipaddr_len(addr));
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     rc = listen(s, backlog);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* If the user requested an ephemeral port,
        retrieve the port number assigned by the OS. */
-    if(ipaddr_port(addr) == 0) {
-        struct ipaddr baddr;
-        socklen_t len = sizeof(struct ipaddr);
+    if(dill_ipaddr_port(addr) == 0) {
+        struct dill_ipaddr baddr;
+        socklen_t len = sizeof(struct dill_ipaddr);
         rc = getsockname(s, (struct sockaddr*)&baddr, &len);
         if(rc < 0) {err = errno; goto error2;}
-        ipaddr_setport(addr, ipaddr_port(&baddr));
+        dill_ipaddr_setport(addr, dill_ipaddr_port(&baddr));
     }
     /* Create the object. */
-    struct tcp_listener *self = (struct tcp_listener*)mem;
-    self->hvfs.query = tcp_listener_hquery;
-    self->hvfs.close = tcp_listener_hclose;
+    struct dill_tcp_listener *self = (struct dill_tcp_listener*)mem;
+    self->hvfs.query = dill_tcp_listener_hquery;
+    self->hvfs.close = dill_tcp_listener_hclose;
     self->fd = s;
     self->mem = 1;
     /* Create handle. */
-    int h = hmake(&self->hvfs);
+    int h = dill_hmake(&self->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
@@ -247,11 +250,12 @@ error1:
     return -1;
 }
 
-int dill_tcp_listen(struct ipaddr *addr, int backlog) {
+int dill_tcp_listen(struct dill_ipaddr *addr, int backlog) {
     int err;
-    struct tcp_listener *obj = malloc(sizeof(struct tcp_listener));
+    struct dill_tcp_listener *obj = malloc(sizeof(struct dill_tcp_listener));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ls = tcp_listen_mem(addr, backlog, (struct tcp_listener_storage*)obj);
+    int ls = dill_tcp_listen_mem(addr, backlog,
+        (struct dill_tcp_listener_storage*)obj);
     if(dill_slow(ls < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return ls;
@@ -262,22 +266,22 @@ error1:
     return -1;
 }
 
-int dill_tcp_accept_mem(int s, struct ipaddr *addr, struct tcp_storage *mem,
-        int64_t deadline) {
+int dill_tcp_accept_mem(int s, struct dill_ipaddr *addr,
+        struct dill_tcp_storage *mem, int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Retrieve the listener object. */
-    struct tcp_listener *lst = hquery(s, tcp_listener_type);
+    struct dill_tcp_listener *lst = dill_hquery(s, dill_tcp_listener_type);
     if(dill_slow(!lst)) {err = errno; goto error1;}
     /* Try to get new connection in a non-blocking way. */
-    socklen_t addrlen = sizeof(struct ipaddr);
+    socklen_t addrlen = sizeof(struct dill_ipaddr);
     int as = fd_accept(lst->fd, (struct sockaddr*)addr, &addrlen, deadline);
     if(dill_slow(as < 0)) {err = errno; goto error1;}
     /* Set it to non-blocking mode. */
     int rc = fd_unblock(as);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
-    int h = tcp_makeconn(as, mem);
+    int h = dill_tcp_makeconn(as, mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
@@ -287,11 +291,12 @@ error1:
     return -1;
 }
 
-int dill_tcp_accept(int s, struct ipaddr *addr, int64_t deadline) {
+int dill_tcp_accept(int s, struct dill_ipaddr *addr, int64_t deadline) {
     int err;
-    struct tcp_conn *obj = malloc(sizeof(struct tcp_conn));
+    struct dill_tcp_conn *obj = malloc(sizeof(struct dill_tcp_conn));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int as = tcp_accept_mem(s, addr, (struct tcp_storage*)obj, deadline);
+    int as = dill_tcp_accept_mem(s, addr, (struct dill_tcp_storage*)obj,
+        deadline);
     if(dill_slow(as < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return as;
@@ -302,8 +307,8 @@ error1:
     return -1;
 }
 
-static void tcp_listener_hclose(struct hvfs *hvfs) {
-    struct tcp_listener *self = (struct tcp_listener*)hvfs;
+static void dill_tcp_listener_hclose(struct dill_hvfs *hvfs) {
+    struct dill_tcp_listener *self = (struct dill_tcp_listener*)hvfs;
     fd_close(self->fd);
     if(!self->mem) free(self);
 }
@@ -312,14 +317,14 @@ static void tcp_listener_hclose(struct hvfs *hvfs) {
 /*  Helpers                                                                   */
 /******************************************************************************/
 
-static int tcp_makeconn(int fd, void *mem) {
+static int dill_tcp_makeconn(int fd, void *mem) {
     int err;
     /* Create the object. */
-    struct tcp_conn *self = (struct tcp_conn*)mem;
-    self->hvfs.query = tcp_hquery;
-    self->hvfs.close = tcp_hclose;
-    self->bvfs.bsendl = tcp_bsendl;
-    self->bvfs.brecvl = tcp_brecvl;
+    struct dill_tcp_conn *self = (struct dill_tcp_conn*)mem;
+    self->hvfs.query = dill_tcp_hquery;
+    self->hvfs.close = dill_tcp_hclose;
+    self->bvfs.bsendl = dill_tcp_bsendl;
+    self->bvfs.brecvl = dill_tcp_brecvl;
     self->fd = fd;
     fd_initrxbuf(&self->rxbuf);
     self->indone = 0;
@@ -328,6 +333,6 @@ static int tcp_makeconn(int fd, void *mem) {
     self->outerr = 0;
     self->mem = 1;
     /* Create the handle. */
-    return hmake(&self->hvfs);
+    return dill_hmake(&self->hvfs);
 }
 
