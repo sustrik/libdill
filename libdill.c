@@ -23,9 +23,11 @@
 #include <stdint.h>
 
 #include "cr.h"
-#include "libdill.h"
 #include "pollset.h"
 #include "utils.h"
+
+#define DILL_DISABLE_RAW_NAMES
+#include "libdillimpl.h"
 
 int dill_msleep(int64_t deadline) {
     /* Return ECANCELED if shutting down. */

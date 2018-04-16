@@ -31,9 +31,11 @@
 
 #include "cr.h"
 #include "handle.h"
-#include "libdillimpl.h"
 #include "utils.h"
 #include "ctx.h"
+
+#define DILL_DISABLE_RAW_NAMES
+#include "libdillimpl.h"
 
 struct dill_handle {
     /* Table of virtual functions. */
