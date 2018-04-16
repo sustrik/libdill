@@ -36,7 +36,7 @@
 static int dill_ipc_resolve(const char *addr, struct sockaddr_un *su);
 static int dill_ipc_makeconn(int fd, void *mem);
 
-dill_unique_id(ipc_listener_type);
+dill_unique_id(dill_ipc_listener_type);
 dill_unique_id(dill_ipc_type);
 
 /******************************************************************************/
@@ -158,7 +158,7 @@ int dill_ipc_done(int s, int64_t deadline) {
 int dill_ipc_close(int s, int64_t deadline) {
     int err;
     /* Listener socket needs no special treatment. */
-    if(dill_hquery(s, ipc_listener_type)) {
+    if(dill_hquery(s, dill_ipc_listener_type)) {
         return dill_hclose(s);
     }
     struct dill_ipc_conn *self = dill_hquery(s, dill_ipc_type);
@@ -208,7 +208,7 @@ DILL_CT_ASSERT(sizeof(struct dill_ipc_listener_storage) >=
 
 static void *dill_ipc_listener_hquery(struct dill_hvfs *hvfs, const void *type) {
     struct dill_ipc_listener *self = (struct dill_ipc_listener*)hvfs;
-    if(type == ipc_listener_type) return self;
+    if(type == dill_ipc_listener_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
@@ -268,7 +268,7 @@ int dill_ipc_accept_mem(int s, struct dill_ipc_storage *mem, int64_t deadline) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     /* Retrieve the listener object. */
-    struct dill_ipc_listener *lst = dill_hquery(s, ipc_listener_type);
+    struct dill_ipc_listener *lst = dill_hquery(s, dill_ipc_listener_type);
     if(dill_slow(!lst)) {err = errno; goto error1;}
     /* Try to get new connection in a non-blocking way. */
     int as = dill_fd_accept(lst->fd, NULL, NULL, deadline);
