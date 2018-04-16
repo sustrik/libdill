@@ -131,10 +131,7 @@ error3:
 error2:
     SSL_CTX_free(ctx);
 error1:
-    if(s >= 0) {
-        int rc = dill_hclose(s);
-        dill_assert(rc == 0);
-    }
+    if(s >= 0) dill_hclose(s);
     errno = err;
     return -1;
 }
@@ -151,10 +148,7 @@ int dill_tls_attach_client(int s, int64_t deadline) {
 error2:
     free(obj);
 error1:
-    if(s >= 0) {
-        int rc = dill_hclose(s);
-        dill_assert(rc == 0);
-    }
+    if(s >= 0) dill_hclose(s);
     errno = err;
     return -1;
 }
@@ -223,10 +217,7 @@ error3:
 error2:
     SSL_CTX_free(ctx);
 error1:
-    if(s >= 0) {
-        rc = dill_hclose(s);
-        dill_assert(rc == 0);
-    }
+    if(s >= 0) dill_hclose(s);
     errno = err;
     return -1;
 }
@@ -244,10 +235,7 @@ int dill_tls_attach_server(int s, const char *cert, const char *pkey,
 error2:
     free(obj);
 error1:
-    if(s >= 0) {
-        int rc = dill_hclose(s);
-        dill_assert(rc == 0);
-    }
+    if(s >= 0) dill_hclose(s);
     errno = err;
     return -1;
 }

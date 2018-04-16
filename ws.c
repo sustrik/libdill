@@ -162,10 +162,7 @@ int dill_ws_attach_client_mem(int s, int flags, const char *resource,
     if(dill_slow(h < 0)) {err = errno; goto error;}
     return h;
 error:
-    if(s >= 0) {
-        int rc = dill_hclose(s);
-        dill_assert(rc == 0);
-    }
+    if(s >= 0) dill_hclose(s);
     errno = err;
     return -1;
 }
@@ -183,10 +180,7 @@ int dill_ws_attach_client(int s, int flags, const char *resource,
 error2:
     free(obj);
 error1:
-    if(s >= 0) {
-        int rc = dill_hclose(s);
-        dill_assert(rc == 0);
-    }
+    if(s >= 0) dill_hclose(s);
     errno = err;
     return -1;
 }
@@ -318,10 +312,7 @@ int dill_ws_attach_server(int s, int flags, char *resource, size_t resourcelen,
 error2:
     free(obj);
 error1:
-    if(s >= 0) {
-        int rc = dill_hclose(s);
-        dill_assert(rc == 0);
-    }
+    if(s >= 0) dill_hclose(s);
     errno = err;
     return -1;
 }

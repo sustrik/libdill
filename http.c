@@ -82,10 +82,7 @@ int dill_http_attach_mem(int s, struct dill_http_storage *mem) {
     if(dill_slow(h < 0)) {err = errno; goto error;}
     return h;
 error:
-    if(s >= 0) {
-        int rc = dill_hclose(s);
-        dill_assert(rc == 0);
-    }
+    if(s >= 0) dill_hclose(s);
     errno = err;
     return -1;
 }
@@ -101,10 +98,7 @@ int dill_http_attach(int s) {
 error2:
     free(obj);
 error1:
-    if(s >= 0) {
-        int rc = dill_hclose(s);
-        dill_assert(rc == 0);
-    }
+    if(s >= 0) dill_hclose(s);
     errno = err;
     return -1;
 }

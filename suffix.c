@@ -94,10 +94,7 @@ int dill_suffix_attach_mem(int s, const void *suffix, size_t suffixlen,
     if(dill_slow(h < 0)) {err = errno; goto error;}
     return h;
 error:
-    if(s >= 0) {
-        int rc = dill_hclose(s);
-        dill_assert(rc == 0);
-    }
+    if(s >= 0) dill_hclose(s);
     errno = err;
     return -1;
 }
@@ -114,10 +111,7 @@ int dill_suffix_attach(int s, const void *suffix, size_t suffixlen) {
 error2:
     free(obj);
 error1:
-    if(s >= 0) {
-        int rc = dill_hclose(s);
-        dill_assert(rc == 0);
-    }
+    if(s >= 0) dill_hclose(s);
     errno = err;
     return -1;
 }

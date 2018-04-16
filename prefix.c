@@ -90,10 +90,7 @@ int dill_prefix_attach_mem(int s, size_t hdrlen, int flags,
     if(dill_slow(h < 0)) {int err = errno; goto error;}
     return h;
 error:
-    if(s >= 0) {
-        int rc = dill_hclose(s);
-        dill_assert(rc == 0);
-    }
+    if(s >= 0) dill_hclose(s);
     errno = err;
     return -1;
 }
@@ -110,10 +107,7 @@ int dill_prefix_attach(int s, size_t hdrlen, int flags) {
 error2:
     free(obj);
 error1:
-    if(s >= 0) {
-        int rc = dill_hclose(s);
-        dill_assert(rc == 0);
-    }
+    if(s >= 0) dill_hclose(s);
     errno = err;
     return -1;
 }
