@@ -37,7 +37,7 @@ static int dill_ipc_resolve(const char *addr, struct sockaddr_un *su);
 static int dill_ipc_makeconn(int fd, void *mem);
 
 dill_unique_id(ipc_listener_type);
-dill_unique_id(ipc_type);
+dill_unique_id(dill_ipc_type);
 
 /******************************************************************************/
 /*  UNIX connection socket                                                    */
@@ -67,7 +67,7 @@ DILL_CT_ASSERT(sizeof(struct dill_ipc_storage) >= sizeof(struct dill_ipc_conn));
 static void *dill_ipc_hquery(struct dill_hvfs *hvfs, const void *type) {
     struct dill_ipc_conn *self = (struct dill_ipc_conn*)hvfs;
     if(type == dill_bsock_type) return &self->bvfs;
-    if(type == ipc_type) return self;
+    if(type == dill_ipc_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
@@ -139,7 +139,7 @@ static int dill_ipc_brecvl(struct dill_bsock_vfs *bvfs,
 }
 
 int dill_ipc_done(int s, int64_t deadline) {
-    struct dill_ipc_conn *self = dill_hquery(s, ipc_type);
+    struct dill_ipc_conn *self = dill_hquery(s, dill_ipc_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
@@ -161,7 +161,7 @@ int dill_ipc_close(int s, int64_t deadline) {
     if(dill_hquery(s, ipc_listener_type)) {
         return dill_hclose(s);
     }
-    struct dill_ipc_conn *self = dill_hquery(s, ipc_type);
+    struct dill_ipc_conn *self = dill_hquery(s, dill_ipc_type);
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
     /* If not done already, flush the outbound data and start the terminal
