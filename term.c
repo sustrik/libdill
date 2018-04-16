@@ -107,13 +107,17 @@ int dill_term_attach(int s, const void *buf, size_t len) {
     int err;
     struct dill_term_sock *obj = malloc(sizeof(struct dill_term_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int cs = dill_term_attach_mem(s, buf, len, (struct dill_term_storage*)obj);
-    if(dill_slow(cs < 0)) {err = errno; goto error2;}
+    s = dill_term_attach_mem(s, buf, len, (struct dill_term_storage*)obj);
+    if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
-    return cs;
+    return s;
 error2:
     free(obj);
 error1:
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
     errno = err;
     return -1;
 }

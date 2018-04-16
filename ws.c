@@ -175,14 +175,18 @@ int dill_ws_attach_client(int s, int flags, const char *resource,
     int err;
     struct dill_ws_sock *obj = malloc(sizeof(struct dill_ws_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ws = dill_ws_attach_client_mem(s, flags, resource, host,
+    s = dill_ws_attach_client_mem(s, flags, resource, host,
         (struct dill_ws_storage*)obj, deadline);
-    if(dill_slow(ws < 0)) {err = errno; goto error2;}
+    if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
-    return ws;
+    return s;
 error2:
     free(obj);
 error1:
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
     errno = err;
     return -1;
 }
@@ -306,14 +310,18 @@ int dill_ws_attach_server(int s, int flags, char *resource, size_t resourcelen,
     int err;
     struct dill_ws_sock *obj = malloc(sizeof(struct dill_ws_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ws = dill_ws_attach_server_mem(s, flags, resource, resourcelen,
+    s = dill_ws_attach_server_mem(s, flags, resource, resourcelen,
         host, hostlen, (struct dill_ws_storage*)obj, deadline);
-    if(dill_slow(ws < 0)) {err = errno; goto error2;}
+    if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
-    return ws;
+    return s;
 error2:
     free(obj);
 error1:
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
     errno = err;
     return -1;
 }

@@ -94,13 +94,17 @@ int dill_http_attach(int s) {
     int err;
     struct dill_http_sock *obj = malloc(sizeof(struct dill_http_sock));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int cs = dill_http_attach_mem(s, (struct dill_http_storage*)obj);
-    if(dill_slow(cs < 0)) {err = errno; goto error2;}
+    s = dill_http_attach_mem(s, (struct dill_http_storage*)obj);
+    if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
-    return cs;
+    return s;
 error2:
     free(obj);
 error1:
+    if(s >= 0) {
+        int rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
     errno = err;
     return -1;
 }
