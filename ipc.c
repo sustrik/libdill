@@ -53,7 +53,7 @@ struct ipc_conn {
     struct hvfs hvfs;
     struct bsock_vfs bvfs;
     int fd;
-    struct fd_rxbuf rxbuf;
+    struct dill_fd_rxbuf rxbuf;
     unsigned int indone : 1;
     unsigned int outdone : 1;
     unsigned int inerr : 1;
@@ -83,17 +83,17 @@ int dill_ipc_connect_mem(const char *addr, struct ipc_storage *mem,
     int s = socket(AF_UNIX, SOCK_STREAM, 0);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Set it to non-blocking mode. */
-    rc = fd_unblock(s);
+    rc = dill_fd_unblock(s);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Connect to the remote endpoint. */
-    rc = fd_connect(s, (struct sockaddr*)&su, sizeof(su), deadline);
+    rc = dill_fd_connect(s, (struct sockaddr*)&su, sizeof(su), deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
     int h = ipc_makeconn(s, mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    fd_close(s);
+    dill_fd_close(s);
 error1:
     errno = err;
     return -1;
@@ -119,7 +119,7 @@ static int ipc_bsendl(struct bsock_vfs *bvfs,
     struct ipc_conn *self = dill_cont(bvfs, struct ipc_conn, bvfs);
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
-    ssize_t sz = fd_send(self->fd, first, last, deadline);
+    ssize_t sz = dill_fd_send(self->fd, first, last, deadline);
     if(dill_fast(sz >= 0)) return sz;
     self->outerr = 1;
     return -1;
@@ -130,7 +130,7 @@ static int ipc_brecvl(struct bsock_vfs *bvfs,
     struct ipc_conn *self = dill_cont(bvfs, struct ipc_conn, bvfs);
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
-    int rc = fd_recv(self->fd, &self->rxbuf, first, last, deadline);
+    int rc = dill_fd_recv(self->fd, &self->rxbuf, first, last, deadline);
     if(dill_fast(rc == 0)) return 0;
     if(errno == EPIPE) self->indone = 1;
     else self->inerr = 1;
@@ -185,7 +185,7 @@ error:
 
 static void ipc_hclose(struct hvfs *hvfs) {
     struct ipc_conn *self = (struct ipc_conn*)hvfs;
-    fd_close(self->fd);
+    dill_fd_close(self->fd);
     if(!self->mem) free(self);
 }
 
@@ -223,7 +223,7 @@ int dill_ipc_listen_mem(const char *addr, int backlog,
     int s = socket(AF_UNIX, SOCK_STREAM, 0);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Set it to non-blocking mode. */
-    rc = fd_unblock(s);
+    rc = dill_fd_unblock(s);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Start listening for incoming connections. */
     rc = bind(s, (struct sockaddr*)&su, sizeof(su));
@@ -269,17 +269,17 @@ int dill_ipc_accept_mem(int s, struct ipc_storage *mem, int64_t deadline) {
     struct ipc_listener *lst = hquery(s, ipc_listener_type);
     if(dill_slow(!lst)) {err = errno; goto error1;}
     /* Try to get new connection in a non-blocking way. */
-    int as = fd_accept(lst->fd, NULL, NULL, deadline);
+    int as = dill_fd_accept(lst->fd, NULL, NULL, deadline);
     if(dill_slow(as < 0)) {err = errno; goto error1;}
     /* Set it to non-blocking mode. */
-    int rc = fd_unblock(as);
+    int rc = dill_fd_unblock(as);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
     int h = ipc_makeconn(as, (struct ipc_conn*)mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    fd_close(as);
+    dill_fd_close(as);
 error1:
     errno = err;
     return -1;
@@ -302,7 +302,7 @@ error1:
 
 static void ipc_listener_hclose(struct hvfs *hvfs) {
     struct ipc_listener *self = (struct ipc_listener*)hvfs;
-    fd_close(self->fd);
+    dill_fd_close(self->fd);
     if(!self->mem) free(self);
 }
 
@@ -318,9 +318,9 @@ int dill_ipc_pair_mem(struct ipc_pair_storage *mem, int s[2]) {
     int rc = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
     if(rc < 0) {err = errno; goto error1;}
     /* Set the sockets to non-blocking mode. */
-    rc = fd_unblock(fds[0]);
+    rc = dill_fd_unblock(fds[0]);
     if(dill_slow(rc < 0)) {err = errno; goto error3;}
-    rc = fd_unblock(fds[1]);
+    rc = dill_fd_unblock(fds[1]);
     if(dill_slow(rc < 0)) {err = errno; goto error3;}
     /* Create the handles. */
     struct ipc_conn *conns = (struct ipc_conn*)mem;
@@ -333,9 +333,9 @@ error4:
     rc = hclose(s[0]);
     goto error2;
 error3:
-    fd_close(fds[0]);
+    dill_fd_close(fds[0]);
 error2:
-    fd_close(fds[1]);
+    dill_fd_close(fds[1]);
 error1:
     errno = err;
     return -1;
@@ -348,9 +348,9 @@ int dill_ipc_pair(int s[2]) {
     int rc = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
     if(rc < 0) {err = errno; goto error1;}
     /* Set the sockets to non-blocking mode. */
-    rc = fd_unblock(fds[0]);
+    rc = dill_fd_unblock(fds[0]);
     if(dill_slow(rc < 0)) {err = errno; goto error3;}
-    rc = fd_unblock(fds[1]);
+    rc = dill_fd_unblock(fds[1]);
     if(dill_slow(rc < 0)) {err = errno; goto error3;}
     /* Allocate the memory. */
     struct ipc_conn *conn0 = malloc(sizeof(struct ipc_conn));
@@ -373,9 +373,9 @@ error5:
 error4:
     free(conn0);
 error3:
-    fd_close(fds[0]);
+    dill_fd_close(fds[0]);
 error2:
-    fd_close(fds[1]);
+    dill_fd_close(fds[1]);
 error1:
     errno = err;
     return -1;
@@ -401,7 +401,7 @@ static int ipc_makeconn(int fd, void *mem) {
     self->bvfs.bsendl = ipc_bsendl;
     self->bvfs.brecvl = ipc_brecvl;
     self->fd = fd;
-    fd_initrxbuf(&self->rxbuf);
+    dill_fd_initrxbuf(&self->rxbuf);
     self->indone = 0;
     self->outdone = 0;
     self->inerr = 0;

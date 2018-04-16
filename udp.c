@@ -76,7 +76,7 @@ int dill_udp_open_mem(struct dill_ipaddr *local,
     int s = socket(family, SOCK_DGRAM, 0);
     if(s < 0) {err = errno; goto error1;}
     /* Set it to non-blocking mode. */
-    int rc = fd_unblock(s);
+    int rc = dill_fd_unblock(s);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Start listening. */
     if(local) {
@@ -106,7 +106,7 @@ int dill_udp_open_mem(struct dill_ipaddr *local,
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    fd_close(s);
+    dill_fd_close(s);
 error1:
     errno = err;
     return -1;
@@ -232,7 +232,7 @@ static void dill_udp_hclose(struct dill_hvfs *hvfs) {
        Kernel-space implementation here, on the other hand, may queue
        outgoing packets rather than flushing them. The effect is balanced
        out by lingering when closing the socket. */
-    fd_close(obj->fd);
+    dill_fd_close(obj->fd);
     if(!obj->mem) free(obj);
 }
 

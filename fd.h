@@ -29,40 +29,41 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#define DILL_DISABLE_RAW_NAMES
 #include "libdill.h"
 
-struct fd_rxbuf {
+struct dill_fd_rxbuf {
     size_t len;
     size_t pos;
     uint8_t data[2000];
 };
 
-void fd_initrxbuf(
-    struct fd_rxbuf *rxbuf);
-int fd_unblock(
+void dill_fd_initrxbuf(
+    struct dill_fd_rxbuf *rxbuf);
+int dill_fd_unblock(
     int s);
-int fd_connect(
+int dill_fd_connect(
     int s,
     const struct sockaddr *addr,
     socklen_t addrlen,
     int64_t deadline);
-int fd_accept(
+int dill_fd_accept(
     int s,
     struct sockaddr *addr,
     socklen_t *addrlen,
     int64_t deadline);
-int fd_send(
+int dill_fd_send(
     int s,
     struct dill_iolist *first,
     struct dill_iolist *last,
     int64_t deadline);
-int fd_recv(
+int dill_fd_recv(
     int s,
-    struct fd_rxbuf *rxbuf,
+    struct dill_fd_rxbuf *rxbuf,
     struct dill_iolist *first,
     struct dill_iolist *last,
     int64_t deadline);
-void fd_close(
+void dill_fd_close(
     int s);
 
 #endif

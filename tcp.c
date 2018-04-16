@@ -51,7 +51,7 @@ struct dill_tcp_conn {
     struct dill_hvfs hvfs;
     struct dill_bsock_vfs bvfs;
     int fd;
-    struct fd_rxbuf rxbuf;
+    struct dill_fd_rxbuf rxbuf;
     unsigned int indone : 1;
     unsigned int outdone: 1;
     unsigned int inerr : 1;
@@ -77,10 +77,10 @@ int dill_tcp_connect_mem(const struct dill_ipaddr *addr,
     int s = socket(dill_ipaddr_family(addr), SOCK_STREAM, 0);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Set it to non-blocking mode. */
-    int rc = fd_unblock(s);
+    int rc = dill_fd_unblock(s);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Connect to the remote endpoint. */
-    rc = fd_connect(s, dill_ipaddr_sockaddr(addr), dill_ipaddr_len(addr),
+    rc = dill_fd_connect(s, dill_ipaddr_sockaddr(addr), dill_ipaddr_len(addr),
         deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
@@ -88,7 +88,7 @@ int dill_tcp_connect_mem(const struct dill_ipaddr *addr,
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    fd_close(s);
+    dill_fd_close(s);
 error1:
     errno = err;
     return -1;
@@ -115,7 +115,7 @@ static int dill_tcp_bsendl(struct dill_bsock_vfs *bvfs,
     struct dill_tcp_conn *self = dill_cont(bvfs, struct dill_tcp_conn, bvfs);
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
-    ssize_t sz = fd_send(self->fd, first, last, deadline);
+    ssize_t sz = dill_fd_send(self->fd, first, last, deadline);
     if(dill_fast(sz >= 0)) return sz;
     self->outerr = 1;
     return -1;
@@ -126,7 +126,7 @@ static int dill_tcp_brecvl(struct dill_bsock_vfs *bvfs,
     struct dill_tcp_conn *self = dill_cont(bvfs, struct dill_tcp_conn, bvfs);
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
-    int rc = fd_recv(self->fd, &self->rxbuf, first, last, deadline);
+    int rc = dill_fd_recv(self->fd, &self->rxbuf, first, last, deadline);
     if(dill_fast(rc == 0)) return 0;
     if(errno == EPIPE) self->indone = 1;
     else self->inerr = 1;
@@ -180,7 +180,7 @@ error:
 
 static void dill_tcp_hclose(struct dill_hvfs *hvfs) {
     struct dill_tcp_conn *self = (struct dill_tcp_conn*)hvfs;
-    fd_close(self->fd);
+    dill_fd_close(self->fd);
     if(!self->mem) free(self);
 }
 
@@ -217,7 +217,7 @@ int dill_tcp_listen_mem(struct dill_ipaddr *addr, int backlog,
     int s = socket(dill_ipaddr_family(addr), SOCK_STREAM, 0);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Set it to non-blocking mode. */
-    int rc = fd_unblock(s);
+    int rc = dill_fd_unblock(s);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Start listening for incoming connections. */
     rc = bind(s, dill_ipaddr_sockaddr(addr), dill_ipaddr_len(addr));
@@ -275,17 +275,18 @@ int dill_tcp_accept_mem(int s, struct dill_ipaddr *addr,
     if(dill_slow(!lst)) {err = errno; goto error1;}
     /* Try to get new connection in a non-blocking way. */
     socklen_t addrlen = sizeof(struct dill_ipaddr);
-    int as = fd_accept(lst->fd, (struct sockaddr*)addr, &addrlen, deadline);
+    int as = dill_fd_accept(lst->fd, (struct sockaddr*)addr, &addrlen,
+        deadline);
     if(dill_slow(as < 0)) {err = errno; goto error1;}
     /* Set it to non-blocking mode. */
-    int rc = fd_unblock(as);
+    int rc = dill_fd_unblock(as);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
     int h = dill_tcp_makeconn(as, mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
-    fd_close(as);
+    dill_fd_close(as);
 error1:
     errno = err;
     return -1;
@@ -309,7 +310,7 @@ error1:
 
 static void dill_tcp_listener_hclose(struct dill_hvfs *hvfs) {
     struct dill_tcp_listener *self = (struct dill_tcp_listener*)hvfs;
-    fd_close(self->fd);
+    dill_fd_close(self->fd);
     if(!self->mem) free(self);
 }
 
@@ -326,7 +327,7 @@ static int dill_tcp_makeconn(int fd, void *mem) {
     self->bvfs.bsendl = dill_tcp_bsendl;
     self->bvfs.brecvl = dill_tcp_brecvl;
     self->fd = fd;
-    fd_initrxbuf(&self->rxbuf);
+    dill_fd_initrxbuf(&self->rxbuf);
     self->indone = 0;
     self->outdone = 0;
     self->inerr = 0;

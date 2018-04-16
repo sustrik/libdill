@@ -23,7 +23,6 @@
 */
 
 #include <fcntl.h>
-#include <libdill.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -37,13 +36,13 @@
 #define FD_NOSIGNAL 0
 #endif
 
-void fd_initrxbuf(struct fd_rxbuf *rxbuf) {
+void dill_fd_initrxbuf(struct dill_fd_rxbuf *rxbuf) {
     dill_assert(rxbuf);
     rxbuf->len = 0;
     rxbuf->pos = 0;
 }
 
-int fd_unblock(int s) {
+int dill_fd_unblock(int s) {
     /* Switch to non-blocking mode. */
     int opt = fcntl(s, F_GETFL, 0);
     if (opt == -1)
@@ -64,14 +63,14 @@ int fd_unblock(int s) {
     return 0;
 }
 
-int fd_connect(int s, const struct sockaddr *addr, socklen_t addrlen,
+int dill_fd_connect(int s, const struct sockaddr *addr, socklen_t addrlen,
       int64_t deadline) {
     /* Initiate connect. */
     int rc = connect(s, addr, addrlen);
     if(rc == 0) return 0;
     if(dill_slow(errno != EINPROGRESS)) return -1;
     /* Connect is in progress. Let's wait till it's done. */
-    rc = fdout(s, deadline);
+    rc = dill_fdout(s, deadline);
     if(dill_slow(rc == -1)) return -1;
     /* Retrieve the error from the socket, if any. */
     int err = 0;
@@ -82,7 +81,7 @@ int fd_connect(int s, const struct sockaddr *addr, socklen_t addrlen,
     return 0;
 }
 
-int fd_accept(int s, struct sockaddr *addr, socklen_t *addrlen,
+int dill_fd_accept(int s, struct sockaddr *addr, socklen_t *addrlen,
       int64_t deadline) {
     int as;
     while(1) {
@@ -95,15 +94,15 @@ int fd_accept(int s, struct sockaddr *addr, socklen_t *addrlen,
         /* Propagate other errors to the caller. */
         if(dill_slow(errno != EAGAIN && errno != EWOULDBLOCK)) return -1;
         /* Operation is in progress. Wait till new connection is available. */
-        int rc = fdin(s, deadline);
+        int rc = dill_fdin(s, deadline);
         if(dill_slow(rc < 0)) return -1;
     }
-    int rc = fd_unblock(as);
+    int rc = dill_fd_unblock(as);
     dill_assert(rc == 0);
     return as;
 }
 
-int fd_send(int s, struct iolist *first, struct iolist *last,
+int dill_fd_send(int s, struct dill_iolist *first, struct dill_iolist *last,
       int64_t deadline) {
     /* Make a local iovec array. */
     /* TODO: This is dangerous, it may cause stack overflow.
@@ -151,14 +150,14 @@ int fd_send(int s, struct iolist *first, struct iolist *last,
             if(!hdr.msg_iovlen) return 0;
         }
         /* Wait till more data can be sent. */
-        int rc = fdout(s, deadline);
+        int rc = dill_fdout(s, deadline);
         if(dill_slow(rc < 0)) return -1;
     }
 }
 
-/* Same as fd_recv() but with no rx buffering. */
-static int fd_recv_(int s, struct iolist *first, struct iolist *last,
-      int64_t deadline) {
+/* Same as dill_fd_recv() but with no rx buffering. */
+static int dill_fd_recv_(int s, struct dill_iolist *first,
+      struct dill_iolist *last, int64_t deadline) {
     /* Make a local iovec array. */
     /* TODO: This is dangerous, it may cause stack overflow.
        There should probably be a on-heap per-socket buffer for that. */
@@ -197,27 +196,28 @@ static int fd_recv_(int s, struct iolist *first, struct iolist *last,
             if(!hdr.msg_iovlen) return 0;
         }
         /* Wait for more data. */
-        int rc = fdin(s, deadline);
+        int rc = dill_fdin(s, deadline);
         if(dill_slow(rc < 0)) return -1;
     }
 }
 
 /* Skip len bytes. If len is negative skip until error occurs. */
-static int fd_skip(int s, ssize_t len, int64_t deadline) {
+static int dill_fd_skip(int s, ssize_t len, int64_t deadline) {
     uint8_t buf[512];
     while(len) {
         size_t to_recv = len < 0 || len > sizeof(buf) ? sizeof(buf) : len;
-        struct iolist iol = {buf, to_recv, NULL, 0};
-        int rc = fd_recv_(s, &iol, &iol, deadline);
+        struct dill_iolist iol = {buf, to_recv, NULL, 0};
+        int rc = dill_fd_recv_(s, &iol, &iol, deadline);
         if(dill_slow(rc < 0)) return -1;
         if(len >= 0) len -= to_recv;
     }
     return 0;
 }
 
-/* Copy data from rxbuf to one iolist structure.
+/* Copy data from rxbuf to one dill_iolist structure.
    Returns number of bytes copied. */
-static size_t fd_copy(struct fd_rxbuf *rxbuf, struct iolist *iol) {
+static size_t dill_fd_copy(struct dill_fd_rxbuf *rxbuf,
+      struct dill_iolist *iol) {
     size_t rmn = rxbuf->len  - rxbuf->pos;
     if(rmn < iol->iol_len) {
         if(dill_fast(iol->iol_base))
@@ -234,28 +234,28 @@ static size_t fd_copy(struct fd_rxbuf *rxbuf, struct iolist *iol) {
     }
 }
 
-int fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
-      struct iolist *last, int64_t deadline) {
+int dill_fd_recv(int s, struct dill_fd_rxbuf *rxbuf, struct dill_iolist *first,
+      struct dill_iolist *last, int64_t deadline) {
     /* Skip all data until error occurs. */
-    if(dill_slow(!first && !last)) return fd_skip(s, -1, deadline);
+    if(dill_slow(!first && !last)) return dill_fd_skip(s, -1, deadline);
     /* Fill in data from the rxbuf. */
     size_t sz;
     while(1) {
-        sz = fd_copy(rxbuf, first);
+        sz = dill_fd_copy(rxbuf, first);
         if(sz < first->iol_len) break;
         first = first->iol_next;
         if(!first) return 0;
     }
     /* Copy the current iolist element so that we can modify it without
        changing the original list. */
-    struct iolist curr;
+    struct dill_iolist curr;
     curr.iol_base = first->iol_base ? first->iol_base + sz : NULL;
     curr.iol_len = first->iol_len - sz;
     curr.iol_next = first->iol_next;
     curr.iol_rsvd = 0;
     /* Find out how much data is still missing. */
     size_t miss = 0;
-    struct iolist *it = &curr;
+    struct dill_iolist *it = &curr;
     while(it) {
         miss += it->iol_len;
         it = it->iol_next;
@@ -263,7 +263,7 @@ int fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
     /* If requested amount of data is larger than rx buffer avoid the copy
        and read it directly into user's buffer. */
     if(miss > sizeof(rxbuf->data))
-        return fd_recv_(s, &curr, curr.iol_next ? last : &curr, deadline);
+        return dill_fd_recv_(s, &curr, curr.iol_next ? last : &curr, deadline);
     /* If small amount of data is requested use rx buffer. */
     while(1) {
         /* Read as much data as possible to the buffer to avoid extra
@@ -282,7 +282,7 @@ int fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
         rxbuf->pos = 0;
         /* Copy the data from rxbuffer to the iolist. */
         while(1) {
-            sz = fd_copy(rxbuf, &curr);
+            sz = dill_fd_copy(rxbuf, &curr);
             if(sz < curr.iol_len) break;
             if(!curr.iol_next) return 0;
             curr = *curr.iol_next;
@@ -290,13 +290,13 @@ int fd_recv(int s, struct fd_rxbuf *rxbuf, struct iolist *first,
         if(curr.iol_base) curr.iol_base += sz;
         curr.iol_len -= sz;
         /* Wait for more data. */
-        int rc = fdin(s, deadline);
+        int rc = dill_fdin(s, deadline);
         if(dill_slow(rc < 0)) return -1;
     }
 }
 
-void fd_close(int s) {
-    int rc = fdclean(s);
+void dill_fd_close(int s) {
+    int rc = dill_fdclean(s);
     dill_assert(rc == 0);
     /* Discard any pending outbound data. If SO_LINGER option cannot
        be set, never mind and continue anyway. */
