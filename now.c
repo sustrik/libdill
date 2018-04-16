@@ -71,7 +71,7 @@ int64_t mnow(void) {
 
 /* Like now(), this function can be called only after context is initialized
    but unlike now() it doesn't do time caching. */
-int64_t now_(void) {
+static int64_t now_(void) {
 #if defined __APPLE__
     struct dill_ctx_now *ctx = &dill_getctx->now;
     uint64_t ticks = mach_absolute_time();
