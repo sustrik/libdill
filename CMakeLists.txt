@@ -29,11 +29,14 @@ include_directories(${PROJECT_SOURCE_DIR} "${PROJECT_SOURCE_DIR}/dns")
 set_source_files_properties(dns/dns.c PROPERTIES COMPILE_FLAGS -std=c99)
 add_library(dill ${sources})
 
+find_package(Threads REQUIRED)
+target_link_libraries(dill PUBLIC Threads::Threads)
+
 # check and enable rt if available
 list(APPEND CMAKE_REQUIRED_LIBRARIES rt)
 check_symbol_exists(clock_gettime time.h HAVE_CLOCK_GETTIME)
 if(HAVE_CLOCK_GETTIME)
-  target_link_libraries(dill rt)
+  target_link_libraries(dill PUBLIC rt)
 endif()
 
 # Installation (https://github.com/forexample/package-example)
@@ -118,12 +121,12 @@ set(CMAKE_REQUIRED_DEFINITIONS )
 
 check_function_exists(mprotect HAVE_MPROTECT)
 if(HAVE_MPROTECT)
-  add_definitions(-DHAVE_MPROTECT)
+  target_compile_definitions(dill PUBLIC HAVE_MPROTECT)
 endif()
 
 check_function_exists(posix_memalign HAVE_POSIX_MEMALIGN)
 if(HAVE_POSIX_MEMALIGN)
-  add_definitions(-DHAVE_POSIX_MEMALIGN)
+  target_compile_definitions(dill PUBLIC HAVE_POSIX_MEMALIGN)
 endif()
 
 # tests
