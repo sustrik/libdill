@@ -127,10 +127,8 @@ int dill_http_sendrequest(int s, const char *command, const char *resource,
       int64_t deadline) {
     struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
-    if (strpbrk(command, " \t\n") != NULL) {
-        errno = EINVAL; return -1;}
-    if (strpbrk(resource, " \t\n") != NULL) {
-        errno = EINVAL; return -1;}
+    if (strpbrk(command, " \t\n") != NULL) {errno = EINVAL; return -1;}
+    if (strpbrk(resource, " \t\n") != NULL) {errno = EINVAL; return -1;}
     struct dill_iolist iol[4];
     iol[0].iol_base = (void*)command;
     iol[0].iol_len = strlen(command);
