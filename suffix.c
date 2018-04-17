@@ -117,11 +117,17 @@ error1:
 }
 
 int dill_suffix_detach(int s, int64_t deadline) {
+    int err;
     struct dill_suffix_sock *self = dill_hquery(s, dill_suffix_type);
-    if(dill_slow(!self)) return -1;
+    if(dill_slow(!self)) {err = errno; goto error;}
+    if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
     int u = self->u;
     if(!self->mem) free(self);
     return u;
+error:
+    if(s >= 0) dill_hclose(s);
+    errno = err;
+    return -1;
 }
 
 static int dill_suffix_msendl(struct dill_msock_vfs *mvfs,
