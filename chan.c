@@ -99,9 +99,6 @@ static void dill_halfchan_init(struct dill_halfchan *ch, int index) {
 int dill_chmake_mem(struct dill_chstorage *mem, int chv[2]) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
-    /* Returns ECANCELED if the coroutine is shutting down. */
-    int rc = dill_canblock();
-    if(dill_slow(rc < 0)) {err = errno; goto error1;};
     struct dill_halfchan *ch = (struct dill_halfchan*)mem;
     dill_halfchan_init(&ch[0], 0);
     dill_halfchan_init(&ch[1], 1);

@@ -24,7 +24,7 @@
     <span class="dt">int</span> h);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>Handles are integers. You own a handle if you know its numeric value. To transfer ownership this function changes the number associated with the object. The old number becomes invalid and using it will result in undefined behavior. The new number can be used in exactly the same way as the old one would.</p>
-<p>If the function fails, the old handle remains usable.</p>
+<p>If the function fails, the old handle is closed.</p>
 <p><strong>h</strong>: Handle to transfer.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>In case of success the function returns new handle. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>

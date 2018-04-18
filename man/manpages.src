@@ -759,7 +759,7 @@ fxs = [
 
         allocates_handle: true,
 
-        errors: ['ECANCELED', 'ENOMEM'],
+        errors: ['ENOMEM'],
 
         example: `
             int ch[2];
