@@ -353,7 +353,7 @@ static void dill_tls_hclose(struct dill_hvfs *hvfs) {
         int rc = dill_hclose(self->u);
         dill_assert(rc == 0);
     }
-    free(self);
+    if(!self->mem) free(self);
 }
 
 /******************************************************************************/

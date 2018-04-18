@@ -28,10 +28,12 @@
 #include <openssl/ssl.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
 
 #define DILL_DISABLE_RAW_NAMES
 #include "libdillimpl.h"
+#include "iol.h"
 #include "utils.h"
 
 #define DILL_TLS_BUFSIZE 2048
@@ -45,6 +47,8 @@ struct dill_dtls_sock {
     SSL *ssl;
     int u;
     int64_t deadline;
+    uint8_t *buf;
+    size_t buflen;
     unsigned int indone : 1;
     unsigned int outdone: 1;
     unsigned int inerr : 1;
@@ -110,6 +114,8 @@ int dill_dtls_attach_client_mem(int s, struct dill_dtls_storage *mem,
     self->ssl = ssl;
     self->u = s;
     self->deadline = -1;
+    self->buf = NULL;
+    self->buflen = 0;
     self->indone = 0;
     self->outdone = 0;
     self->inerr = 0;
@@ -194,6 +200,8 @@ int dill_dtls_attach_server_mem(int s, const char *cert, const char *pkey,
     self->ssl = ssl;
     self->u = s;
     self->deadline = -1;
+    self->buf = NULL;
+    self->buflen = 0;
     self->indone = 0;
     self->outdone = 0;
     self->inerr = 0;
@@ -293,11 +301,30 @@ static int dill_dtls_msendl(struct dill_msock_vfs *mvfs,
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     self->deadline = deadline;
-    /* TODO: Allow for multiple iolist items. */
-    dill_assert(first == last);
+    size_t sz;
+    int rc = dill_iolcheck(first, last, NULL, &sz);
+    if(dill_slow(rc < 0)) return -1;
+    struct dill_iolist iol = *first;
+    if(first != last) {
+        /* OpenSSL doesn't support iovecs so we have to copy everything into
+           a single buffer here. */
+        if(sz > self->buflen) {
+            self->buf = realloc(self->buf, sz);
+            if(!self->buf) {errno = ENOMEM; return -1;}
+            self->buflen = sz;
+        }
+        uint8_t *ptr = self->buf;
+        while(first) {
+            memcpy(ptr, first->iol_base, first->iol_len);
+            ptr += first->iol_len;
+            first = first->iol_next;
+        }
+        iol.iol_base = self->buf;
+        iol.iol_len = sz;
+    }
     while(1) {
         ERR_clear_error();
-        int rc = SSL_write(self->ssl, first->iol_base, first->iol_len);
+        int rc = SSL_write(self->ssl, iol.iol_base, iol.iol_len);
         if(!dill_dtls_followup(self, rc, deadline)) continue;
         if(dill_slow(errno != 0)) {self->outerr = 1; return -1;}
         dill_assert(rc == first->iol_len);
@@ -341,7 +368,8 @@ static void dill_dtls_hclose(struct dill_hvfs *hvfs) {
         int rc = dill_hclose(self->u);
         dill_assert(rc == 0);
     }
-    free(self);
+    if(self->buf) free(self->buf);
+    if(!self->mem) free(self);
 }
 
 /******************************************************************************/
@@ -370,6 +398,7 @@ static int dill_dtls_followup(struct dill_dtls_sock *self, int rc,
         /* Error from our custom BIO. */
         dill_assert(rc == -1);
         if(errno == 0) return 0;
+printf("%d\n", errno);
         return 1;
 	  case SSL_ERROR_SSL:
         /* SSL errors. Not clear how to convert them into errnos. */

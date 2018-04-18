@@ -43,17 +43,7 @@ coroutine void client(int s) {
     errno_assert(rc == 0);
 }
 
-int main(void) {
-    struct ipaddr src;
-    int rc = ipaddr_remote(&src, "127.0.0.1", 5555, 0, -1);
-    errno_assert(rc == 0);
-    struct ipaddr dst;
-    rc = ipaddr_remote(&dst, "127.0.0.1", 5556, 0, -1);
-    errno_assert(rc == 0);
-    int s1 = udp_open(&src, &dst);
-    errno_assert(s1 >= 0);
-    int s2 = udp_open(&dst, &src);
-    errno_assert(s2 >= 0);
+void do_handshake(int s1, int s2) {
     int cr = go(client(s2));
     errno_assert(cr >= 0);
     s1 = dtls_attach_server(s1, "tests/cert.pem", "tests/key.pem", -1);
@@ -71,10 +61,38 @@ int main(void) {
         errno_assert(rc == 0);
         break;
     }
-    rc = hclose(cr);
+    int rc = hclose(cr);
     errno_assert(rc == 0);
     rc = hclose(s1);
     errno_assert(rc == 0);
+}
+
+int main(void) {
+
+    /* Test DTLS over UDP. */
+    struct ipaddr src;
+    int rc = ipaddr_remote(&src, "127.0.0.1", 5555, 0, -1);
+    errno_assert(rc == 0);
+    struct ipaddr dst;
+    rc = ipaddr_remote(&dst, "127.0.0.1", 5556, 0, -1);
+    errno_assert(rc == 0);
+    int s1 = udp_open(&src, &dst);
+    errno_assert(s1 >= 0);
+    int s2 = udp_open(&dst, &src);
+    errno_assert(s2 >= 0);
+    //do_handshake(s1, s2);
+
+    /* Test DTLS over IPC/PREFIX. */
+#if 0
+    int sp[2];
+    rc = ipc_pair(sp);
+    errno_assert(rc == 0);
+    sp[0] = prefix_attach(sp[0], 2, 0);
+    errno_assert(sp[0] >= 0);
+    sp[1] = prefix_attach(sp[1], 2, 0);
+    errno_assert(sp[1] >= 0);
+    do_handshake(sp[0], sp[1]);
+#endif
 
     return 0;
 }
