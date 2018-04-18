@@ -87,9 +87,6 @@ DILL_CT_ASSERT(sizeof(struct dill_bundle_storage) >=
 int dill_bundle_mem(struct dill_bundle_storage *mem) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; return -1;}
-    /* Returns ECANCELED if the coroutine is shutting down. */
-    int rc = dill_canblock();
-    if(dill_slow(rc < 0)) return -1;
     struct dill_bundle *b = (struct dill_bundle*)mem;
     b->vfs.query = dill_bundle_query;
     b->vfs.close = dill_bundle_close;
