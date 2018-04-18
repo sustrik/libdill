@@ -84,6 +84,7 @@ endif
 if DILL_SOCKETS
 if HAVE_TLS
 libdill_la_SOURCES += \
+    dtls.c \
     tls.c
 endif
 endif
@@ -142,6 +143,7 @@ endif
 if DILL_SOCKETS
 if HAVE_TLS
 check_PROGRAMS += \
+    tests/dtls \
     tests/tls
 endif
 endif

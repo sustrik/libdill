@@ -55,6 +55,7 @@ tests/bundle
 tests/http
 tests/ws
 tests/term
+tests/dtls
 perf/.dirstamp
 perf/chan
 perf/ctxswitch
