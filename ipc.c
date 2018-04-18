@@ -55,6 +55,7 @@ struct dill_ipc_conn {
     struct dill_bsock_vfs bvfs;
     int fd;
     struct dill_fd_rxbuf rxbuf;
+    unsigned int busy : 1;
     unsigned int indone : 1;
     unsigned int outdone : 1;
     unsigned int inerr : 1;
@@ -118,9 +119,12 @@ error1:
 static int dill_ipc_bsendl(struct dill_bsock_vfs *bvfs,
       struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
     struct dill_ipc_conn *self = dill_cont(bvfs, struct dill_ipc_conn, bvfs);
+    if(dill_slow(self->busy)) {errno = EBUSY; return -1;}
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
+    self->busy = 1;
     ssize_t sz = dill_fd_send(self->fd, first, last, deadline);
+    self->busy = 0;
     if(dill_fast(sz >= 0)) return sz;
     self->outerr = 1;
     return -1;
@@ -129,9 +133,12 @@ static int dill_ipc_bsendl(struct dill_bsock_vfs *bvfs,
 static int dill_ipc_brecvl(struct dill_bsock_vfs *bvfs,
       struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
     struct dill_ipc_conn *self = dill_cont(bvfs, struct dill_ipc_conn, bvfs);
+    if(dill_slow(self->busy)) {errno = EBUSY; return -1;}
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
+    self->busy = 1;
     int rc = dill_fd_recv(self->fd, &self->rxbuf, first, last, deadline);
+    self->busy = 0;
     if(dill_fast(rc == 0)) return 0;
     if(errno == EPIPE) self->indone = 1;
     else self->inerr = 1;
@@ -404,6 +411,7 @@ static int dill_ipc_makeconn(int fd, void *mem) {
     self->bvfs.brecvl = dill_ipc_brecvl;
     self->fd = fd;
     dill_fd_initrxbuf(&self->rxbuf);
+    self->busy = 0;
     self->indone = 0;
     self->outdone = 0;
     self->inerr = 0;
