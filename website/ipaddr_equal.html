@@ -16,18 +16,22 @@
 <li><a href="tutorial.html">Tutorials</a></li>
 </ul>
 <h1 id="name">NAME</h1>
-<p>ipaddr_sockaddr - returns sockaddr structure corresponding to the IP address</p>
+<p>ipaddr_equal - compares two IP address</p>
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">const</span> <span class="kw">struct</span> sockaddr* ipaddr_sockaddr(
-    <span class="dt">const</span> <span class="kw">struct</span> ipaddr* addr);</code></pre></div>
+<span class="dt">int</span> ipaddr_equal(
+    <span class="dt">const</span> <span class="kw">struct</span> ipaddr* addr1,
+    <span class="dt">const</span> <span class="kw">struct</span> ipaddr* addr2,
+    <span class="dt">int</span> ignore_port);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>Returns <strong>sockaddr</strong> structure corresponding to the IP address. This function is typically used in combination with ipaddr_len to pass address and its length to POSIX socket APIs.</p>
-<p><strong>addr</strong>: IP address object.</p>
+<p>This function returns 1 is the two supplied IP addresses are the same or zero otherwise.</p>
+<p><strong>addr1</strong>: First IP address.</p>
+<p><strong>addr2</strong>: Second IP address.</p>
+<p><strong>ignore_port</strong>: If set to zero addresses with different ports will be considered unequal. Otherwise, ports won't be taken into account.</p>
 <p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
 <h1 id="return-value">RETURN VALUE</h1>
-<p>Pointer to <strong>sockaddr</strong> structure correspoding to the address object.</p>
+<p>1 if the arguments are equal, 0 otherwise.</p>
 <h1 id="errors">ERRORS</h1>
 <p>None.</p>
 <h1 id="example">EXAMPLE</h1>
@@ -36,5 +40,5 @@ ipaddr_remote(&amp;addr, <span class="st">&quot;www.example.org&quot;</span>, <s
 <span class="dt">int</span> s = socket(ipaddr_family(addr), SOCK_STREAM, <span class="dv">0</span>);
 connect(s, ipaddr_sockaddr(&amp;addr), ipaddr_len(&amp;addr));</code></pre></div>
 <h1 id="see-also">SEE ALSO</h1>
-<p><strong>ipaddr_equal</strong>(3) <strong>ipaddr_family</strong>(3) <strong>ipaddr_len</strong>(3) <strong>ipaddr_local</strong>(3) <strong>ipaddr_port</strong>(3) <strong>ipaddr_remote</strong>(3) <strong>ipaddr_setport</strong>(3) <strong>ipaddr_str</strong>(3)</p>
+<p><strong>ipaddr_family</strong>(3) <strong>ipaddr_len</strong>(3) <strong>ipaddr_local</strong>(3) <strong>ipaddr_port</strong>(3) <strong>ipaddr_remote</strong>(3) <strong>ipaddr_setport</strong>(3) <strong>ipaddr_sockaddr</strong>(3) <strong>ipaddr_str</strong>(3)</p>
 </body>

@@ -432,6 +432,10 @@ DILL_EXPORT int dill_ipaddr_port(
 DILL_EXPORT void dill_ipaddr_setport(
     struct dill_ipaddr *addr,
     int port);
+DILL_EXPORT int dill_ipaddr_equal(
+    const struct dill_ipaddr *addr1,
+    const struct dill_ipaddr *addr2,
+    int ignore_port);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define IPADDR_IPV4 DILL_IPADDR_IPV4 
@@ -448,6 +452,7 @@ DILL_EXPORT void dill_ipaddr_setport(
 #define ipaddr_len dill_ipaddr_len
 #define ipaddr_port dill_ipaddr_port
 #define ipaddr_setport dill_ipaddr_setport
+#define ipaddr_equal dill_ipaddr_equal
 #endif
 
 /******************************************************************************/

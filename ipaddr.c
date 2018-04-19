@@ -378,3 +378,25 @@ int dill_ipaddr_remote(struct dill_ipaddr *addr, const char *name, int port,
     return -1;
 }
 
+int dill_ipaddr_equal(const struct dill_ipaddr *addr1,
+      const struct dill_ipaddr *addr2, int ignore_port) {
+    if(dill_ipaddr_family(addr1) != dill_ipaddr_family(addr2)) return 0;
+    switch(dill_ipaddr_family(addr1)) {
+    case AF_INET:;
+        struct sockaddr_in *inaddr1 = (struct sockaddr_in*)addr1;
+        struct sockaddr_in *inaddr2 = (struct sockaddr_in*)addr2;
+        if(inaddr1->sin_addr.s_addr != inaddr2->sin_addr.s_addr) return 0;
+        if(!ignore_port && inaddr1->sin_port != inaddr2->sin_port) return 0;
+        break;
+    case AF_INET6:;
+        struct sockaddr_in6 *in6addr1 = (struct sockaddr_in6*)addr1;
+        struct sockaddr_in6 *in6addr2 = (struct sockaddr_in6*)addr2;
+        if(in6addr1->sin6_addr.s6_addr != in6addr2->sin6_addr.s6_addr) return 0;
+        if(!ignore_port && in6addr1->sin6_port != in6addr2->sin6_port) return 0;
+        break;
+    default:
+        dill_assert(0);
+    }
+    return 1;
+}
+
