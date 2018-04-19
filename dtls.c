@@ -327,7 +327,7 @@ static int dill_dtls_msendl(struct dill_msock_vfs *mvfs,
         int rc = SSL_write(self->ssl, iol.iol_base, iol.iol_len);
         if(!dill_dtls_followup(self, rc, deadline)) continue;
         if(dill_slow(errno != 0)) {self->outerr = 1; return -1;}
-        dill_assert(rc == first->iol_len);
+        dill_assert(rc == iol.iol_len);
         break;
     }
     return 0;
@@ -398,7 +398,6 @@ static int dill_dtls_followup(struct dill_dtls_sock *self, int rc,
         /* Error from our custom BIO. */
         dill_assert(rc == -1);
         if(errno == 0) return 0;
-printf("%d\n", errno);
         return 1;
 	  case SSL_ERROR_SSL:
         /* SSL errors. Not clear how to convert them into errnos. */

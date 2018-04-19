@@ -29,7 +29,9 @@ coroutine void client(int s) {
     s = dtls_attach_client(s, -1);
     errno_assert(s >= 0);
     while(1) {
-        int rc = msend(s, "ABC", 3, -1);
+        struct iolist iol2 = {"C", 1, NULL, 0};
+        struct iolist iol1 = {"AB", 2, &iol2, 0};
+        int rc = msendl(s, &iol1, &iol2, -1);
         errno_assert(rc == 0);
         char buf[16];
         ssize_t sz = mrecv(s, buf, sizeof(buf), now() + 100);
@@ -80,7 +82,7 @@ int main(void) {
     errno_assert(s1 >= 0);
     int s2 = udp_open(&dst, &src);
     errno_assert(s2 >= 0);
-    //do_handshake(s1, s2);
+    do_handshake(s1, s2);
 
     /* Test DTLS over IPC/PREFIX. */
 #if 0
