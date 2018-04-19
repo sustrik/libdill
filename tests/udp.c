@@ -27,12 +27,12 @@
 
 int main(void) {
     struct ipaddr addr1;
-    int rc = ipaddr_local(&addr1, NULL, 5555, 0);
+    int rc = ipaddr_local(&addr1, "127.0.0.1", 5555, 0);
     errno_assert(rc == 0);
     int s1 = udp_open(&addr1, NULL);
     errno_assert(s1 >= 0);
     struct ipaddr addr2;
-    rc = ipaddr_local(&addr2, NULL, 5556, 0);
+    rc = ipaddr_local(&addr2, "127.0.0.1", 5556, 0);
     errno_assert(rc == 0);
     struct udp_storage mem;
     int s2 = udp_open_mem(&addr2, &addr1, &mem);

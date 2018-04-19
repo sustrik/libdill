@@ -166,8 +166,9 @@ static ssize_t dill_udp_recvl_(struct dill_msock_vfs *mvfs,
     struct dill_udp_sock *obj = dill_cont(mvfs, struct dill_udp_sock, mvfs);
     if(dill_slow(obj->busy)) {errno = EBUSY; return -1;}
     struct msghdr hdr;
+    struct dill_ipaddr raddr;
     memset(&hdr, 0, sizeof(hdr));
-    hdr.msg_name = (void*)addr;
+    hdr.msg_name = (void*)&raddr;
     hdr.msg_namelen = sizeof(struct dill_ipaddr);
     /* Make a local iovec array. */
     /* TODO: This is dangerous, it may cause stack overflow.
@@ -181,7 +182,14 @@ static ssize_t dill_udp_recvl_(struct dill_msock_vfs *mvfs,
     hdr.msg_iovlen = niov;
     while(1) {
         ssize_t sz = recvmsg(obj->fd, &hdr, 0);
-        if(sz >= 0) return sz;
+        if(sz >= 0) {
+            /* If remote IP address is specified we'll silently drop all
+               packets coming from different addresses. */
+            if(obj->hasremote && !dill_ipaddr_equal(&raddr, &obj->remote, 0))
+                continue;
+            if(addr) *addr = raddr;
+            return sz;
+        }
         if(errno != EAGAIN && errno != EWOULDBLOCK) return -1;
         obj->busy = 1;
         rc = dill_fdin(obj->fd, deadline);
