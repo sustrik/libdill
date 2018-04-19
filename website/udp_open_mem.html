@@ -29,7 +29,7 @@
 <p>This function creates an UDP socket.</p>
 <p>This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use <strong>udp_open</strong> instead.</p>
 <p><strong>local</strong>: IP address to be used to set source IP address in outgoing packets. Also, the socket will receive packets sent to this address. If port in the address is set to zero an ephemeral port will be chosen and filled into the local address.</p>
-<p><strong>remote</strong>: IP address used as default destination for outbound packets. It is used when destination address in <strong>udp_send</strong> function is set to <strong>NULL</strong>. It is also used by <strong>msend</strong> and <strong>mrecv</strong> functions which don't allow to specify the destination address explicitly.</p>
+<p><strong>remote</strong>: IP address used as default destination for outbound packets. It is used when destination address in <strong>udp_send</strong> function is set to <strong>NULL</strong>. It is also used by <strong>msend</strong> and <strong>mrecv</strong> functions which don't allow to specify the destination address explicitly. Furthermore, if remote address is set, all the packets arriving from different addresses will be silently dropped.</p>
 <p><strong>mem</strong>: The structure to store the newly created object in. It must not be deallocated before the object is closed.</p>
 <p>To close this socket use <strong>hclose</strong> function.</p>
 <p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>

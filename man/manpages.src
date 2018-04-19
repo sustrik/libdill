@@ -3121,7 +3121,10 @@ fxs = [
                      "packets. It is used when destination address in " +
                      "**udp_send** function is set to **NULL**. It is also " +
                      "used by **msend** and **mrecv** functions which don't " +
-                     "allow to specify the destination address explicitly.",
+                     "allow to specify the destination address explicitly. " +
+                     "Furthermore, if remote address is set, all the " +
+                     "packets arriving from different addresses will be " +
+                     "silently dropped.",
            },
         ],
         protocol: udp_protocol,

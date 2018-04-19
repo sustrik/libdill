@@ -37,6 +37,8 @@ It is used when destination address in \f[B]udp_send\f[] function is set
 to \f[B]NULL\f[].
 It is also used by \f[B]msend\f[] and \f[B]mrecv\f[] functions which
 don\[aq]t allow to specify the destination address explicitly.
+Furthermore, if remote address is set, all the packets arriving from
+different addresses will be silently dropped.
 .PP
 To close this socket use \f[B]hclose\f[] function.
 .PP
