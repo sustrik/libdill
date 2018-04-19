@@ -62,5 +62,72 @@ int main(void) {
     ipaddr_str(&addr, buf);
     assert(strcmp(buf, "::1") == 0);
 
+    /* Test IP address comparisons. */
+    struct ipaddr addr1;
+    struct ipaddr addr2;
+
+    rc = ipaddr_local(&addr1, "1.2.3.4", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_local(&addr2, "1.2.3.4", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_equal(&addr1, &addr2, 0);
+    assert(rc == 1);
+
+    rc = ipaddr_local(&addr1, "1.2.3.4", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_local(&addr2, "4.3.2.1", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_equal(&addr1, &addr2, 0);
+    assert(rc == 0);
+
+    rc = ipaddr_local(&addr1, "1.2.3.4", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_local(&addr2, "1.2.3.4", 5556, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_equal(&addr1, &addr2, 0);
+    assert(rc == 0);
+
+    rc = ipaddr_local(&addr1, "1.2.3.4", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_local(&addr2, "1.2.3.4", 5556, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_equal(&addr1, &addr2, 1);
+    assert(rc == 1);
+
+    rc = ipaddr_local(&addr1, "::1:2:3:4", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_local(&addr2, "::1:2:3:4", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_equal(&addr1, &addr2, 0);
+    assert(rc == 1);
+
+    rc = ipaddr_local(&addr1, "::1:2:3:4", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_local(&addr2, "::4:3:2:1", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_equal(&addr1, &addr2, 0);
+    assert(rc == 0);
+
+    rc = ipaddr_local(&addr1, "::1:2:3:4", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_local(&addr2, "::1:2:3:4", 5556, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_equal(&addr1, &addr2, 0);
+    assert(rc == 0);
+
+    rc = ipaddr_local(&addr1, "::1:2:3:4", 5556, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_local(&addr2, "::1:2:3:4", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_equal(&addr1, &addr2, 1);
+    assert(rc == 1);
+
+    rc = ipaddr_local(&addr1, "::1:2:3:4", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_local(&addr2, "1.2.3.4", 5555, 0);
+    errno_assert(rc == 0);
+    rc = ipaddr_equal(&addr1, &addr2, 0);
+    assert(rc == 0);
+
     return 0;
 }

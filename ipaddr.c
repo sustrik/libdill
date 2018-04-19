@@ -391,7 +391,10 @@ int dill_ipaddr_equal(const struct dill_ipaddr *addr1,
     case AF_INET6:;
         struct sockaddr_in6 *in6addr1 = (struct sockaddr_in6*)addr1;
         struct sockaddr_in6 *in6addr2 = (struct sockaddr_in6*)addr2;
-        if(in6addr1->sin6_addr.s6_addr != in6addr2->sin6_addr.s6_addr) return 0;
+        if(memcmp(&in6addr1->sin6_addr.s6_addr,
+              &in6addr2->sin6_addr.s6_addr,
+              sizeof(in6addr1->sin6_addr.s6_addr)) != 0)
+            return 0;
         if(!ignore_port && in6addr1->sin6_port != in6addr2->sin6_port) return 0;
         break;
     default:
