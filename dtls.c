@@ -49,6 +49,7 @@ struct dill_dtls_sock {
     int64_t deadline;
     uint8_t *buf;
     size_t buflen;
+    unsigned int busy : 1;
     unsigned int indone : 1;
     unsigned int outdone: 1;
     unsigned int inerr : 1;
@@ -116,6 +117,7 @@ int dill_dtls_attach_client_mem(int s, struct dill_dtls_storage *mem,
     self->deadline = -1;
     self->buf = NULL;
     self->buflen = 0;
+    self->busy = 0;
     self->indone = 0;
     self->outdone = 0;
     self->inerr = 0;
@@ -298,6 +300,7 @@ error:
 static int dill_dtls_msendl(struct dill_msock_vfs *mvfs,
       struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
     struct dill_dtls_sock *self = dill_cont(mvfs, struct dill_dtls_sock, mvfs);
+    if(dill_slow(self->busy)) {errno = EBUSY; return -1;}
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     self->deadline = deadline;
@@ -324,8 +327,10 @@ static int dill_dtls_msendl(struct dill_msock_vfs *mvfs,
     }
     while(1) {
         ERR_clear_error();
+        self->busy = 1;
         int rc = SSL_write(self->ssl, iol.iol_base, iol.iol_len);
         if(!dill_dtls_followup(self, rc, deadline)) continue;
+        self->busy = 0;
         if(dill_slow(errno != 0)) {self->outerr = 1; return -1;}
         dill_assert(rc == iol.iol_len);
         break;
@@ -336,6 +341,7 @@ static int dill_dtls_msendl(struct dill_msock_vfs *mvfs,
 static ssize_t dill_dtls_mrecvl(struct dill_msock_vfs *mvfs,
       struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
     struct dill_dtls_sock *self = dill_cont(mvfs, struct dill_dtls_sock, mvfs);
+    if(dill_slow(self->busy)) {errno = EBUSY; return -1;}
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
     self->deadline = deadline;
@@ -344,8 +350,11 @@ static ssize_t dill_dtls_mrecvl(struct dill_msock_vfs *mvfs,
     ssize_t res = 0;
     while(1) {
         ERR_clear_error();
+        self->busy = 1;
         int rc = SSL_read(self->ssl, first->iol_base, first->iol_len);
-        if(!dill_dtls_followup(self, rc, deadline)) {
+        int rc2 = dill_dtls_followup(self, rc, deadline);
+        self->busy = 0;
+        if(!rc2) {
             res += rc;
             continue;
         }
