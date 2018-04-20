@@ -36,8 +36,6 @@
 #include "iol.h"
 #include "utils.h"
 
-#define DILL_TLS_BUFSIZE 2048
-
 dill_unique_id(dill_dtls_type);
 
 struct dill_dtls_sock {
@@ -340,14 +338,25 @@ static ssize_t dill_dtls_mrecvl(struct dill_msock_vfs *mvfs,
     if(dill_slow(self->busy)) {errno = EBUSY; return -1;}
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
+    size_t sz;
+    int rc = dill_iolcheck(first, last, NULL, &sz);
+    if(dill_slow(rc < 0)) return -1;
     self->deadline = deadline;
-    /* TODO: Allow for multiple iolist items. */
-    dill_assert(first == last);
+    uint8_t *buf = first->iol_base;
+    if(first != last) {
+        /* OpenSSL doesn't support iovecs so allocate a single buffer first. */
+        if(sz > self->buflen) {
+            self->buf = realloc(self->buf, sz);
+            if(!self->buf) {errno = ENOMEM; return -1;}
+            self->buflen = sz;
+        }
+        buf = self->buf;
+    }
     ssize_t res = 0;
     while(1) {
         ERR_clear_error();
         self->busy = 1;
-        int rc = SSL_read(self->ssl, first->iol_base, first->iol_len);
+        int rc = SSL_read(self->ssl, buf, sz);
         int rc2 = dill_dtls_followup(self, rc, deadline);
         self->busy = 0;
         if(!rc2) {
@@ -361,6 +370,10 @@ static ssize_t dill_dtls_mrecvl(struct dill_msock_vfs *mvfs,
         }
         res += rc;
         break;
+    }
+    if(first != last) {
+        rc = dill_iolto(buf, res, first); 
+        dill_assert(rc == 0);
     }
     return res;
 }

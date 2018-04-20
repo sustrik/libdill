@@ -29,12 +29,14 @@ coroutine void client(int s) {
     s = dtls_attach_client(s, -1);
     errno_assert(s >= 0);
     while(1) {
-        struct iolist iol2 = {"C", 1, NULL, 0};
-        struct iolist iol1 = {"AB", 2, &iol2, 0};
-        int rc = msendl(s, &iol1, &iol2, -1);
+        struct iolist siol2 = {"C", 1, NULL, 0};
+        struct iolist siol1 = {"AB", 2, &siol2, 0};
+        int rc = msendl(s, &siol1, &siol2, -1);
         errno_assert(rc == 0);
         char buf[16];
-        ssize_t sz = mrecv(s, buf, sizeof(buf), now() + 100);
+        struct iolist riol2 = {buf + 2, 14, NULL, 0};
+        struct iolist riol1 = {buf, 2, &riol2, 0};
+        ssize_t sz = mrecvl(s, &riol1, &riol2, now() + 100);
         if(sz < 0 && errno == ETIMEDOUT) continue;
         errno_assert(sz >= 0);
         assert(sz == 3);
