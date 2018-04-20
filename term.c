@@ -187,7 +187,7 @@ static ssize_t dill_term_mrecvl(struct dill_msock_vfs *mvfs,
         errno = EPIPE;
         return -1;
     }
-    dill_iolcopy(buf, self->len, first);
+    dill_iolto(buf, self->len, first);
     return sz;
 }
 

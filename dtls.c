@@ -316,12 +316,8 @@ static int dill_dtls_msendl(struct dill_msock_vfs *mvfs,
             if(!self->buf) {errno = ENOMEM; return -1;}
             self->buflen = sz;
         }
-        uint8_t *ptr = self->buf;
-        while(first) {
-            memcpy(ptr, first->iol_base, first->iol_len);
-            ptr += first->iol_len;
-            first = first->iol_next;
-        }
+        rc = dill_iolfrom(self->buf, self->buflen, first);
+        dill_assert(rc == 0);
         iol.iol_base = self->buf;
         iol.iol_len = sz;
     }

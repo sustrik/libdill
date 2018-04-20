@@ -46,9 +46,13 @@ void dill_ioltoiov(struct dill_iolist *first, struct iovec *iov);
 int dill_ioltrim(struct dill_iolist *first, size_t n,
     struct dill_iolist *result);
 
-/* Copies supplied bytes into the iolist. Returns 0 on success, -1 is bytes
+/* Copies supplied bytes into the iolist. Returns 0 on success, -1 if bytes
    won't fit into the iolist. */
-int dill_iolcopy(const void *src, size_t srclen, struct dill_iolist *first);
+int dill_iolto(const void *src, size_t srclen, struct dill_iolist *first);
+
+/* Copies supplied bytes from the iolist. Returns 0 on success, -1 is bytes
+   won't fit into the buffer. */
+int dill_iolfrom(void *dst, size_t dstlen, struct dill_iolist *first);
 
 #endif
 

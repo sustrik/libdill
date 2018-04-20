@@ -79,7 +79,7 @@ int dill_ioltrim(struct iolist *first, size_t n, struct iolist *result) {
     return 0;
 }
 
-int dill_iolcopy(const void *src, size_t srclen, struct iolist *first) {
+int dill_iolto(const void *src, size_t srclen, struct iolist *first) {
     const uint8_t *p = src;
     while(1) {
         if(!srclen) return 0;
@@ -91,6 +91,18 @@ int dill_iolcopy(const void *src, size_t srclen, struct iolist *first) {
         first = first->iol_next; 
     }
     if(first->iol_base) memcpy(first->iol_base, p, srclen);
+    return 0;
+}
+
+int dill_iolfrom(void *dst, size_t dstlen, struct dill_iolist *first) {
+    uint8_t *p = dst;
+    while(first) {
+        if(dstlen < first->iol_len) return -1;
+        memcpy(p, first->iol_base, first->iol_len);
+        p += first->iol_len;
+        dstlen -= first->iol_len;
+        first = first->iol_next;
+    }
     return 0;
 }
 
