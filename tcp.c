@@ -60,7 +60,7 @@ struct dill_tcp_conn {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct dill_tcp_storage) >= sizeof(struct dill_tcp_conn));
+DILL_CHECK_STORAGE(dill_tcp_conn, dill_tcp_storage)
 
 static void *dill_tcp_hquery(struct dill_hvfs *hvfs, const void *type) {
     struct dill_tcp_conn *self = (struct dill_tcp_conn*)hvfs;
@@ -205,8 +205,7 @@ struct dill_tcp_listener {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct dill_tcp_listener_storage) >=
-    sizeof(struct dill_tcp_listener));
+DILL_CHECK_STORAGE(dill_tcp_listener, dill_tcp_listener_storage)
 
 static void *dill_tcp_listener_hquery(struct dill_hvfs *hvfs,
       const void *type) {

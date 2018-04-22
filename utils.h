@@ -48,7 +48,24 @@
 #define DILL_CT_ASSERT_HELPER1(prefix, line) \
     DILL_CT_ASSERT_HELPER2(prefix, line)
 #define DILL_CT_ASSERT(x) \
-    typedef int DILL_CT_ASSERT_HELPER1(ct_assert_,__COUNTER__) [(x) ? 1 : -1]
+    typedef int DILL_CT_ASSERT_HELPER1(ct_assert_,__COUNTER__) [(x) ? 1 : -1];
+
+/* DILL_CHECK_STORAGE checks whether struct 'type' fits into struct 'storage'.
+   If DILL_PRINT_SIZES macro is defined it will also print the size
+   of 'type'. */
+#if defined DILL_PRINT_SIZES
+#define DILL_CHECK_STORAGE(type, storage) \
+    static void dill_print_size_2_##type(void) { \
+        char x[sizeof(struct type)]; \
+        dill_print_size(&x); \
+    } \
+    DILL_CT_ASSERT(sizeof(struct type) <= sizeof(struct storage))
+#else
+#define DILL_CHECK_STORAGE(type, storage) \
+    DILL_CT_ASSERT(sizeof(struct type) <= sizeof(struct storage))
+#endif
+
+void dill_print_size(char x);
 
 /* Optimisation hints. */
 #if defined __GNUC__ || defined __llvm__

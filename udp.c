@@ -52,7 +52,7 @@ struct dill_udp_sock {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct dill_udp_storage) >= sizeof(struct dill_udp_sock));
+DILL_CHECK_STORAGE(dill_udp_sock, dill_udp_storage)
 
 static void *dill_udp_hquery(struct dill_hvfs *hvfs, const void *type) {
     struct dill_udp_sock *obj = (struct dill_udp_sock*)hvfs;

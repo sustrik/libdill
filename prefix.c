@@ -51,8 +51,7 @@ struct dill_prefix_sock {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct dill_prefix_storage) >=
-    sizeof(struct dill_prefix_sock));
+DILL_CHECK_STORAGE(dill_prefix_sock, dill_prefix_storage)
 
 static void *dill_prefix_hquery(struct dill_hvfs *hvfs, const void *type) {
     struct dill_prefix_sock *self = (struct dill_prefix_sock*)hvfs;

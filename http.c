@@ -48,8 +48,7 @@ struct dill_http_sock {
     char rxbuf[1024];
 };
 
-DILL_CT_ASSERT(sizeof(struct dill_http_storage) >=
-    sizeof(struct dill_http_sock));
+DILL_CHECK_STORAGE(dill_http_sock, dill_http_storage)
 
 static void *dill_http_hquery(struct dill_hvfs *hvfs, const void *type) {
     struct dill_http_sock *obj = (struct dill_http_sock*)hvfs;

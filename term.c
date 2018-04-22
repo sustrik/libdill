@@ -54,8 +54,7 @@ struct dill_term_sock {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct dill_term_storage) >=
-    sizeof(struct dill_term_sock));
+DILL_CHECK_STORAGE(dill_term_sock, dill_term_storage)
 
 static void *dill_term_hquery(struct dill_hvfs *hvfs, const void *type) {
     struct dill_term_sock *self = (struct dill_term_sock*)hvfs;

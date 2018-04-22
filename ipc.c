@@ -63,7 +63,7 @@ struct dill_ipc_conn {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct dill_ipc_storage) >= sizeof(struct dill_ipc_conn));
+DILL_CHECK_STORAGE(dill_ipc_conn, dill_ipc_storage)
 
 static void *dill_ipc_hquery(struct dill_hvfs *hvfs, const void *type) {
     struct dill_ipc_conn *self = (struct dill_ipc_conn*)hvfs;
@@ -210,8 +210,7 @@ struct dill_ipc_listener {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct dill_ipc_listener_storage) >=
-    sizeof(struct dill_ipc_listener));
+DILL_CHECK_STORAGE(dill_ipc_listener, dill_ipc_listener_storage)
 
 static void *dill_ipc_listener_hquery(struct dill_hvfs *hvfs, const void *type) {
     struct dill_ipc_listener *self = (struct dill_ipc_listener*)hvfs;

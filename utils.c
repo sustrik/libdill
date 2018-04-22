@@ -34,6 +34,9 @@
 
 #include "utils.h"
 
+void dill_print_size(char x) {
+}
+
 int dill_maxfds(void) {
     /* Get the maximum number of file descriptors. */
     struct rlimit rlim;

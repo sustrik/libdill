@@ -48,7 +48,7 @@ struct dill_ws_sock {
     uint8_t msg[128];
 };
 
-DILL_CT_ASSERT(sizeof(struct dill_ws_storage) >= sizeof(struct dill_ws_sock));
+DILL_CHECK_STORAGE(dill_ws_sock, dill_ws_storage)
 
 static void *dill_ws_hquery(struct dill_hvfs *hvfs, const void *type);
 static void dill_ws_hclose(struct dill_hvfs *hvfs);

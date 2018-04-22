@@ -51,7 +51,7 @@ struct dill_tls_sock {
     unsigned int mem : 1;
 };
 
-DILL_CT_ASSERT(sizeof(struct dill_tls_storage) >= sizeof(struct dill_tls_sock));
+DILL_CHECK_STORAGE(dill_tls_sock, dill_tls_storage)
 
 static void dill_tls_init(void);
 static BIO *dill_tls_new_cbio(void *mem);

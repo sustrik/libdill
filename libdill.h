@@ -459,9 +459,9 @@ DILL_EXPORT int dill_ipaddr_equal(
 /*  TCP protocol.                                                             */
 /******************************************************************************/
 
-struct dill_tcp_listener_storage {char _[72];};
+struct dill_tcp_listener_storage {char _[56];};
 
-struct dill_tcp_storage {char _[2080];};
+struct dill_tcp_storage {char _[2064];};
 
 DILL_EXPORT int dill_tcp_listen(
     struct dill_ipaddr *addr,
@@ -510,11 +510,11 @@ DILL_EXPORT int dill_tcp_close(
 /*  IPC protocol.                                                            */
 /******************************************************************************/
 
-struct dill_ipc_listener_storage {char _[40];};
+struct dill_ipc_listener_storage {char _[24];};
 
-struct dill_ipc_storage {char _[2080];};
+struct dill_ipc_storage {char _[2064];};
 
-struct dill_ipc_pair_storage {char _[4160];};
+struct dill_ipc_pair_storage {char _[4128];};
 
 DILL_EXPORT int dill_ipc_listen(
     const char *addr,
@@ -570,7 +570,7 @@ DILL_EXPORT int dill_ipc_pair_mem(
 /*  Messages are prefixed by size.                                            */
 /******************************************************************************/
 
-struct dill_prefix_storage {char _[72];};
+struct dill_prefix_storage {char _[56];};
 
 #define DILL_PREFIX_BIG_ENDIAN 0
 #define DILL_PREFIX_LITTLE_ENDIAN 1
@@ -601,7 +601,7 @@ DILL_EXPORT int dill_prefix_detach(
 /*  Messages are suffixed by specified string of bytes.                       */
 /******************************************************************************/
 
-struct dill_suffix_storage {char _[144];};
+struct dill_suffix_storage {char _[128];};
 
 DILL_EXPORT int dill_suffix_attach(
     int s,
@@ -628,7 +628,7 @@ DILL_EXPORT int dill_suffix_detach(
 /*  Each UDP packet is treated as a separate message.                         */
 /******************************************************************************/
 
-struct dill_udp_storage {char _[88];};
+struct dill_udp_storage {char _[72];};
 
 DILL_EXPORT int dill_udp_open(
     struct dill_ipaddr *local,
@@ -674,7 +674,7 @@ DILL_EXPORT ssize_t dill_udp_recvl(
 /*  HTTP                                                                      */
 /******************************************************************************/
 
-struct dill_http_storage {char _[1312];};
+struct dill_http_storage {char _[1296];};
 
 DILL_EXPORT int dill_http_attach(
     int s);
@@ -742,7 +742,7 @@ DILL_EXPORT int dill_http_recvfield(
 /*  TLS protocol.                                                             */
 /******************************************************************************/
 
-struct dill_tls_storage {char _[88];};
+struct dill_tls_storage {char _[72];};
 
 DILL_EXPORT int dill_tls_attach_server(
     int s,
@@ -826,7 +826,7 @@ DILL_EXPORT int dill_dtls_detach(
 /*  WebSockets protocol.                                                      */
 /******************************************************************************/
 
-struct dill_ws_storage {char _[288];};
+struct dill_ws_storage {char _[176];};
 
 #define DILL_WS_BINARY 0
 #define DILL_WS_TEXT 1
@@ -939,7 +939,7 @@ DILL_EXPORT int dill_ws_response_key(
 /*  Implementes terminal handshake on the top of any message-based protocol.  */
 /******************************************************************************/
 
-struct dill_term_storage {char _[104];};
+struct dill_term_storage {char _[88];};
 
 DILL_EXPORT int dill_term_attach(
     int s,
