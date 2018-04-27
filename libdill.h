@@ -108,7 +108,7 @@ DILL_EXPORT int dill_hclose(int h);
 /*  Coroutines                                                                */
 /******************************************************************************/
 
-#define coroutine __attribute__((noinline))
+#define dill_coroutine __attribute__((noinline))
 
 DILL_EXPORT extern volatile void *dill_unoptimisable;
 
@@ -251,6 +251,7 @@ DILL_EXPORT int dill_bundle_wait(int h, int64_t deadline);
 DILL_EXPORT int dill_yield(void);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define coroutine dill_coroutine
 #define go dill_go
 #define go_mem dill_go_mem
 #define bundle_go dill_bundle_go
