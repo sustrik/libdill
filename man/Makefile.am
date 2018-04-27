@@ -95,6 +95,10 @@ man3_MANS = \
     tcp_connect_mem.3 \
     tcp_listen.3 \
     tcp_listen_mem.3 \
+    term_attach.3 \
+    term_attach_mem.3 \
+    term_detach.3 \
+    term_done.3 \
     tls_attach_client.3 \
     tls_attach_client_mem.3 \
     tls_attach_server.3 \
