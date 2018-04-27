@@ -122,14 +122,17 @@ Generated HTML pages are added to the git repository so that they are available 
 
 These instructions are intended for project maintainers:
 
+* Make sure that documentation is up-to-date.
+* Adjust `download.md` and `libdill-history.md` in `website/src` directory.
+* Regenerate the website: `cd website; ./generate.sh`.
+* Submit the changes.
 * Run `make distcheck` to check whether the packaging process still works.
 * Bump the ABI version appropriately (see here: <http://250bpm.com/blog:41>).
 * Commit and push your commits back to the master branch on GitHub.
-* Tag the new version and push the tag to GitHub (e.g. `git tag -a 0.3-beta; git push origin 0.3-beta`).
+* Tag the new version and push the tag to GitHub (e.g. `git tag -a 2.8; git push origin 2.8`).
 * Clone a clean repo from GitHub.
 * Build the package (`./autogen.sh; ./configure; make distcheck`).
 * Add the package to the `gh-pages` branch.
-* Adjust `download.md` and `libdill-history.md` in `gh-pages` branch.
-* Regenerate the documentation using `./gendocs.sh <version-number>`.
+* Copy the website from the master branch: `./publish.sh`.
 * Commit and push to `gh-pages`.
 * Announce the release on twitter, etc.

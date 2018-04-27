@@ -244,15 +244,18 @@ $ ./generate.sh</code></pre>
 <h2 id="faq-what-is-the-release-process">FAQ: What is the release process?</h2>
 <p>These instructions are intended for project maintainers:</p>
 <ul>
+<li>Make sure that documentation is up-to-date.</li>
+<li>Adjust <code>download.md</code> and <code>libdill-history.md</code> in <code>website/src</code> directory.</li>
+<li>Regenerate the website: <code>cd website; ./generate.sh</code>.</li>
+<li>Submit the changes.</li>
 <li>Run <code>make distcheck</code> to check whether the packaging process still works.</li>
 <li>Bump the ABI version appropriately (see here: <a href="http://250bpm.com/blog:41" class="uri">http://250bpm.com/blog:41</a>).</li>
 <li>Commit and push your commits back to the master branch on GitHub.</li>
-<li>Tag the new version and push the tag to GitHub (e.g. <code>git tag -a 0.3-beta; git push origin 0.3-beta</code>).</li>
+<li>Tag the new version and push the tag to GitHub (e.g. <code>git tag -a 2.8; git push origin 2.8</code>).</li>
 <li>Clone a clean repo from GitHub.</li>
 <li>Build the package (<code>./autogen.sh; ./configure; make distcheck</code>).</li>
 <li>Add the package to the <code>gh-pages</code> branch.</li>
-<li>Adjust <code>download.md</code> and <code>libdill-history.md</code> in <code>gh-pages</code> branch.</li>
-<li>Regenerate the documentation using <code>./gendocs.sh &lt;version-number&gt;</code>.</li>
+<li>Copy the website from the master branch: <code>./publish.sh</code>.</li>
 <li>Commit and push to <code>gh-pages</code>.</li>
 <li>Announce the release on twitter, etc.</li>
 </ul>
