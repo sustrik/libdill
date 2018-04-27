@@ -85,18 +85,18 @@ $</code></pre>
 <p>Everything seems to work as expected. Let's now move on to the step 2.</p>
 <h2 id="step-2-the-business-logic">Step 2: The business logic</h2>
 <p>When a new connection arrives, the first thing that we want to do is to establish the network protocol we'll be using. libdill contains a small library of easily composable microprotocols that allows you to compose a wide range of protocols just by plugging different microprotocols into each other in a lego brick fashion. In this tutorial, however, we are going to limit ourselves to just a very simple setup. On top of the TCP connection that we've just created, we'll have a simple protocol that will split the TCP bytestream into discrete messages, using line breaks (<code>CR+LF</code>) as delimiters:</p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = crlf_attach(s);
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = suffix_attach(s, <span class="st">&quot;</span><span class="sc">\r\n</span><span class="st">&quot;</span>, <span class="dv">2</span>);
 assert(s &gt;= <span class="dv">0</span>);</code></pre></div>
-<p>Note that <code>hclose()</code> works recursively. Given that our CRLF socket wraps an underlying TCP socket, a single call to <code>hclose()</code> will close both of them.</p>
+<p>Note that <code>hclose()</code> works recursively. Given that our SUFFIX socket wraps an underlying TCP socket, a single call to <code>hclose()</code> will close both of them.</p>
 <p>Once finished with the setup, we can send the &quot;What's your name?&quot; question to the client:</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">rc = msend(s, <span class="st">&quot;What&#39;s your name?&quot;</span>, <span class="dv">17</span>, <span class="dv">-1</span>);
 <span class="cf">if</span>(rc != <span class="dv">0</span>) <span class="cf">goto</span> cleanup;</code></pre></div>
-<p>Note that <code>msend()</code> works with messages, not bytes (the name stands for &quot;message send&quot;). Consequently, the data will act as a single unit: either all of it is received or none of it is. Also, we don't have to care about message delimiters. That's done for us by the CRLF protocol.</p>
+<p>Note that <code>msend()</code> works with messages, not bytes (the name stands for &quot;message send&quot;). Consequently, the data will act as a single unit: either all of it is received or none of it is. Also, we don't have to care about message delimiters. That's done for us by the SUFFIX protocol.</p>
 <p>To handle possible errors from <code>msend()</code> (such as when the client has closed the connection), add a <code>cleanup</code> label before the <code>hclose</code> line and jump to it whenever you want to close the connection and proceed without crashing the server.</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> inbuf[<span class="dv">256</span>];
 <span class="dt">ssize_t</span> sz = mrecv(s, inbuf, <span class="kw">sizeof</span>(inbuf), <span class="dv">-1</span>);
 <span class="cf">if</span>(sz &lt; <span class="dv">0</span>) <span class="cf">goto</span> cleanup;</code></pre></div>
-<p>The above piece of code simply reads the reply from the client. The reply is a single message, which in the case of the CRLF protocol translates to a single line of text. The <code>mrecv</code> function returns the number of bytes in the message.</p>
+<p>The above piece of code simply reads the reply from the client. The reply is a single message, which in our case translates to a single line of text. The <code>mrecv</code> function returns the number of bytes in the message.</p>
 <p>Having received a reply, we can now construct the greeting and send it to the client. The analysis of this code is left as an exercise to the reader:</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">inbuf[sz] = <span class="dv">0</span>;
 <span class="dt">char</span> outbuf[<span class="dv">256</span>];
@@ -132,7 +132,7 @@ cleanup:
     <span class="cf">while</span>(<span class="dv">1</span>) {
         <span class="dt">int</span> s = tcp_accept(ls, NULL, <span class="dv">-1</span>);
         assert(s &gt;= <span class="dv">0</span>);
-        s = crlf_attach(s);
+        s = suffix_attach(s, <span class="st">&quot;</span><span class="sc">\r\n</span><span class="st">&quot;</span>, <span class="dv">2</span>);
         assert(s &gt;= <span class="dv">0</span>);
         <span class="dt">int</span> cr = go(dialog(s));
         assert(cr &gt;= <span class="dv">0</span>);
@@ -158,7 +158,7 @@ cleanup:
     <span class="cf">for</span>(i = <span class="dv">0</span>; i != <span class="dv">3</span>; i++) {
         <span class="dt">int</span> s = tcp_accept(ls, NULL, <span class="dv">-1</span>);
         assert(s &gt;= <span class="dv">0</span>);
-        s = crlf_attach(s);
+        s = suffix_attach(s, <span class="st">&quot;</span><span class="sc">\r\n</span><span class="st">&quot;</span>, <span class="dv">2</span>);
         assert(s &gt;= <span class="dv">0</span>);
         rc = bundle_go(b, dialogue(s));
         assert(rc == <span class="dv">0</span>);
@@ -223,7 +223,7 @@ assert(rc == <span class="dv">0</span> || (rc &lt; <span class="dv">0</span> &am
     <span class="cf">while</span>(<span class="dv">1</span>) {
         <span class="dt">int</span> s = tcp_accept(ls, NULL, <span class="dv">-1</span>);
         assert(s &gt;= <span class="dv">0</span>);
-        s = crlf_attach(s);
+        s = suffix_attach(s, <span class="st">&quot;</span><span class="sc">\r\n</span><span class="st">&quot;</span>, <span class="dv">2</span>);
         assert(s &gt;= <span class="dv">0</span>);
         <span class="dt">int</span> cr = go(dialogue(s, ch[<span class="dv">1</span>]));
         assert(cr &gt;= <span class="dv">0</span>);
@@ -296,7 +296,5 @@ active: 1      succeeded: 0      failed: 0
 active: 0      succeeded: 0      failed: 1</code></pre>
 <p>The first line is displayed when the connection is established: There is one active connection and no connection has succeeded or failed yet.</p>
 <p>The second line shows up when the connection times out: There are no active connection anymore and one connection has failed so far.</p>
-<p>Now try pressing enter in telnet when asked for your name. The connection will be terminated by the server immediately, without sending the greeting, and the server log will report one failed connection. What's going on here?</p>
-<p>The reason for the behavior is that the CRLF protocol treats an empty line as a connection termination request. Thus, when you press enter in telnet, you send an empty line which causes <code>mrecv()</code> on the server side to return the <code>EPIPE</code> error, which represents &quot;connection terminated by peer&quot;. The server will jump directly into to the cleanup code.</p>
 <p>And that's the end of the tutorial. Enjoy your time with the library!</p>
 </body>

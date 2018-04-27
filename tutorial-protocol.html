@@ -37,8 +37,7 @@
 };</code></pre></div>
 <p>Let's add forward declarations for functions that will be filled into the virtual function table. We'll learn what each of them is good for shortly:</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">void</span> *quux_hquery(<span class="kw">struct</span> hvfs *hvfs, <span class="dt">const</span> <span class="dt">void</span> *id);
-<span class="dt">static</span> <span class="dt">void</span> quux_hclose(<span class="kw">struct</span> hvfs *hvfs);
-<span class="dt">static</span> <span class="dt">int</span> quux_hdone(<span class="kw">struct</span> hvfs *hvfs, <span class="dt">int64_t</span> deadline);</code></pre></div>
+<span class="dt">static</span> <span class="dt">void</span> quux_hclose(<span class="kw">struct</span> hvfs *hvfs);</code></pre></div>
 <p>The <code>quux_open</code> function itself won't do much except for allocating the object, filling in the table of virtual functions and registering it with libdill runtime:</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_open(<span class="dt">void</span>) {
     <span class="dt">int</span> err;
@@ -46,7 +45,6 @@
     <span class="cf">if</span>(!self) {err = ENOMEM; <span class="cf">goto</span> error1;}
     self-&gt;hvfs.query = quux_hquery;
     self-&gt;hvfs.close = quux_hclose;
-    self-&gt;hvfs.done = quux_hdone;
     <span class="dt">int</span> h = hmake(&amp;self-&gt;hvfs);
     <span class="cf">if</span>(h &lt; <span class="dv">0</span>) {err = errno; <span class="cf">goto</span> error2;}
     <span class="cf">return</span> h;
@@ -137,7 +135,7 @@ error1:
     self-&gt;hvfs.query = quux_hquery;
     self-&gt;hvfs.close = quux_hclose;
     self-&gt;hvfs.done = quux_hdone;
-    self-&gt;u = u;
+    self-&gt;u = hown(u);
     <span class="dt">int</span> h = hmake(&amp;self-&gt;hvfs);
     <span class="cf">if</span>(h &lt; <span class="dv">0</span>) {<span class="dt">int</span> err = errno; <span class="cf">goto</span> error2;}
     <span class="cf">return</span> h;
@@ -147,7 +145,8 @@ error1:
     errno = err;
     <span class="cf">return</span> <span class="dv">-1</span>;
 }</code></pre></div>
-<p>We can reuse <code>quux_frobnicate()</code> and rename it to <code>quux_detach()</code>. It will terminate the quux protocol and return the handle of the underlying protocol:</p>
+<p>Note gow <code>hown</code> function is used to take ownership of the underlying socket. <code>hown</code> will give it a new handle number, thus making the old handle number owned by the caller unusable.</p>
+<p>We can reuse <code>quux_frobnicate</code> and rename it to <code>quux_detach</code>. It will terminate the quux protocol and return the handle of the underlying protocol:</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_detach(<span class="dt">int</span> h) {
     <span class="kw">struct</span> quux *self = hquery(h, quux_type);
     <span class="cf">if</span>(!self) <span class="cf">return</span> <span class="dv">-1</span>;
@@ -388,9 +387,10 @@ error1:
     <span class="cf">if</span>(sz == <span class="dv">255</span>) {self-&gt;recvdone = <span class="dv">1</span>; errno = EPIPE; <span class="cf">return</span> <span class="dv">-1</span>;}
     ...
 }</code></pre></div>
-<p>Virtual function <code>hdone()</code> is supposed to start the terminal handshake. However, it is not supposed to wait till it is finished. The semantics of <code>hdone()</code> are &quot;user is not going to send any more data&quot;. You can think of it as of EOF marker of a kind.</p>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">static</span> <span class="dt">int</span> quux_hdone(<span class="kw">struct</span> hvfs *hvfs, <span class="dt">int64_t</span> deadline) {
-    <span class="kw">struct</span> quux *self = (<span class="kw">struct</span> quux*)hvfs;
+<p><code>quux_done</code> function will start the terminal handshake. However, it is not supposed to wait till it is finished. The semantics of the done function are &quot;user is not going to send any more data&quot;. You can think of it as of EOF marker of a kind.</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> quux_done(<span class="dt">int</span> h, <span class="dt">int64_t</span> deadline) {
+    <span class="kw">struct</span> quux *self = hquery(h, quux_type);
+    <span class="cf">if</span>(!self) <span class="cf">return</span> <span class="dv">-1</span>;
     <span class="cf">if</span>(self-&gt;senddone) {errno = EPIPE; <span class="cf">return</span> <span class="dv">-1</span>;}
     <span class="cf">if</span>(self-&gt;senderr) {errno = ECONNRESET; <span class="cf">return</span> <span class="dv">-1</span>;}
     <span class="dt">uint8_t</span> c = <span class="dv">255</span>;
@@ -407,7 +407,7 @@ error1:
     <span class="cf">if</span>(!self) <span class="cf">return</span> <span class="dv">-1</span>;
     <span class="cf">if</span>(self-&gt;senderr || self-&gt;recverr) {err = ECONNRESET; <span class="cf">goto</span> error;}
     <span class="cf">if</span>(!self-&gt;senddone) {
-        <span class="dt">int</span> rc = quux_hdone(&amp;self-&gt;hvfs, deadline);
+        <span class="dt">int</span> rc = quux_done(h, deadline);
         <span class="cf">if</span>(rc &lt; <span class="dv">0</span>) {err = errno; <span class="cf">goto</span> error;}
     }
     <span class="cf">while</span>(<span class="dv">1</span>) {

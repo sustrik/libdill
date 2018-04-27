@@ -30,7 +30,7 @@
 <p>HTTP is an application-level protocol described in RFC 7230. This implementation handles only the request/response exchange. Whatever comes after that must be handled by a different protocol.</p>
 <p>This function sends an HTTP field, i.e. a name/value pair, to the peer. For example, if name is <strong>Host</strong> and resource is <strong>www.example.org</strong> the line sent will look like this:</p>
 <pre><code>Host: www.example.org</code></pre>
-<p>After sending the last field of HTTP request don't forget to call <strong>hdone</strong> on the socket. It will send an empty line to the server to let it know that the request is finished and it should start processing it.</p>
+<p>After sending the last field of HTTP request don't forget to call <strong>http_done</strong> on the socket. It will send an empty line to the server to let it know that the request is finished and it should start processing it.</p>
 <p><strong>s</strong>: HTTP socket handle.</p>
 <p><strong>name</strong>: Name of the field.</p>
 <p><strong>value</strong>: Value of the field.</p>
@@ -52,7 +52,7 @@
 s = http_attach(s);
 http_sendrequest(s, <span class="st">&quot;GET&quot;</span>, <span class="st">&quot;/&quot;</span>, <span class="dv">-1</span>);
 http_sendfield(s, <span class="st">&quot;Host&quot;</span>, <span class="st">&quot;www.example.org&quot;</span>, <span class="dv">-1</span>);
-hdone(s, <span class="dv">-1</span>);
+http_done(s, <span class="dv">-1</span>);
 <span class="dt">char</span> reason[<span class="dv">256</span>];
 http_recvstatus(s, reason, <span class="kw">sizeof</span>(reason), <span class="dv">-1</span>);
 <span class="cf">while</span>(<span class="dv">1</span>) {
@@ -64,5 +64,5 @@ http_recvstatus(s, reason, <span class="kw">sizeof</span>(reason), <span class="
 s = http_detach(s, <span class="dv">-1</span>);
 tcp_close(s);</code></pre></div>
 <h1 id="see-also">SEE ALSO</h1>
-<p><strong>http_attach</strong>(3) <strong>http_attach_mem</strong>(3) <strong>http_detach</strong>(3) <strong>http_recvfield</strong>(3) <strong>http_recvrequest</strong>(3) <strong>http_recvstatus</strong>(3) <strong>http_sendrequest</strong>(3) <strong>http_sendstatus</strong>(3) <strong>now</strong>(3)</p>
+<p><strong>http_attach</strong>(3) <strong>http_attach_mem</strong>(3) <strong>http_detach</strong>(3) <strong>http_done</strong>(3) <strong>http_recvfield</strong>(3) <strong>http_recvrequest</strong>(3) <strong>http_recvstatus</strong>(3) <strong>http_sendrequest</strong>(3) <strong>http_sendstatus</strong>(3) <strong>now</strong>(3)</p>
 </body>

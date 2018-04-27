@@ -16,17 +16,17 @@
 <li><a href="tutorial.html">Tutorials</a></li>
 </ul>
 <h1 id="name">NAME</h1>
-<p>crlf_detach - terminates CRLF protocol and returns the underlying socket</p>
+<p>suffix_detach - terminates SUFFIX protocol and returns the underlying socket</p>
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> crlf_detach(
+<span class="dt">int</span> suffix_detach(
     <span class="dt">int</span> s,
     <span class="dt">int64_t</span> deadline);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
-<p>CRLF is a message-based protocol that delimits messages usign CR+LF byte sequence (0x0D 0x0A). In other words, it's a protocol to send text messages separated by newlines. The protocol has no initial handshake. Terminal handshake is accomplished by each peer sending an empty line.</p>
+<p>SUFFIX is a message-based protocol that delimits messages by specific byte sequences. For example, many protocols are line-based, with individual messages separated by CR+LF sequence.</p>
 <p>This function does the terminal handshake and returns underlying socket to the user. The socket is closed even in the case of error.</p>
-<p><strong>s</strong>: Handle of the CRLF socket.</p>
+<p><strong>s</strong>: Handle of the SUFFIX socket.</p>
 <p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
 <p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
 <h1 id="return-value">RETURN VALUE</h1>
@@ -36,17 +36,18 @@
 <li><strong>EBADF</strong>: Invalid handle.</li>
 <li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
 <li><strong>ECONNRESET</strong>: Broken connection.</li>
-<li><strong>ENOTSUP</strong>: The handle is not a CRLF protocol handle.</li>
+<li><strong>ENOTSUP</strong>: The handle is not a SUFFIX protocol handle.</li>
 <li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = tcp_connect(&amp;addr, <span class="dv">-1</span>);
-s = crlf_attach(s);
-msend(s, <span class="st">&quot;ABC&quot;</span>, <span class="dv">3</span>, <span class="dv">-1</span>);
-<span class="dt">char</span> buf[<span class="dv">256</span>];
-<span class="dt">ssize_t</span> sz = mrecv(s, buf, <span class="kw">sizeof</span>(buf), <span class="dv">-1</span>);
-s = crlf_detach(s, <span class="dv">-1</span>);
-tcp_close(s);</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">        <span class="dt">int</span> s = tcp_connect(&amp;addr, <span class="dv">-1</span>);
+        s = suffix_attach(s, <span class="st">&quot;</span>
+<span class="st">&quot;, 2);</span>
+        msend(s, <span class="st">&quot;ABC&quot;</span>, <span class="dv">3</span>, <span class="dv">-1</span>);
+        <span class="dt">char</span> buf[<span class="dv">256</span>];
+        <span class="dt">ssize_t</span> sz = mrecv(s, buf, <span class="kw">sizeof</span>(buf), <span class="dv">-1</span>);
+        s = suffix_detach(s, <span class="dv">-1</span>);
+        tcp_close(s);</code></pre></div>
 <h1 id="see-also">SEE ALSO</h1>
-<p><strong>crlf_attach</strong>(3) <strong>crlf_attach_mem</strong>(3) <strong>mrecv</strong>(3) <strong>mrecvl</strong>(3) <strong>msend</strong>(3) <strong>msendl</strong>(3) <strong>now</strong>(3)</p>
+<p><strong>mrecv</strong>(3) <strong>mrecvl</strong>(3) <strong>msend</strong>(3) <strong>msendl</strong>(3) <strong>now</strong>(3) <strong>suffix_attach</strong>(3) <strong>suffix_attach_mem</strong>(3)</p>
 </body>

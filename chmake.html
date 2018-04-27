@@ -30,7 +30,6 @@
 <p>In case of success the function returns 0. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>
 <ul>
-<li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
 <li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.</li>
 <li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.</li>
 <li><strong>ENOMEM</strong>: Not enough memory.</li>
@@ -43,5 +42,5 @@
     exit(<span class="dv">1</span>);
 }</code></pre></div>
 <h1 id="see-also">SEE ALSO</h1>
-<p><strong>chmake_mem</strong>(3) <strong>choose</strong>(3) <strong>chrecv</strong>(3) <strong>chsend</strong>(3) <strong>hclose</strong>(3)</p>
+<p><strong>chdone</strong>(3) <strong>chmake_mem</strong>(3) <strong>choose</strong>(3) <strong>chrecv</strong>(3) <strong>chsend</strong>(3) <strong>hclose</strong>(3)</p>
 </body>
