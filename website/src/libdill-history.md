@@ -1,6 +1,22 @@
 
 # Past versions
 
+**Apr 27th, 2018 <http://libdill.org/libdill-2.8.tar.gz>**
+
+* hdone() function was removed and replaced by type-specific done functions (e.g. "chdone", "tcp_done").
+* hdup() was replaced by hown() with different semantics (transfer of ownership).
+* PFX protocol renamed to PREFIX.
+* CRLF protocol renamed to SUFFIX, allows to sepcify arbitrary delimiter, not just CRLF.
+* Terminal handshake removed from PREFIX and SUFFIX protocols.
+* New protocol TERM added. It does terminal handshakes.
+* EBUSY error if a socket is used from multiple coroutines in parallel.
+* All the symbols exported from the library have "dill" prefix.
+* Macros to expand raw names to dill-prefixed names (chsend -> dill_chsend).
+* DILL_DISABLE_RAW_NAMES disables the raw name macros, prevents name clashes with different libraries.
+* Funcion ipaddr_equal() added. Compares two IP addresses.
+* Handle numbers are reused much more rarely.
+* Many bugfixes.
+
 **Apr 1st, 2018 <http://libdill.org/libdill-2.7.tar.gz>**
 
 * All mem functions take a structure instead of a raw byte buffer
