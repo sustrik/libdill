@@ -68,6 +68,10 @@ int main(void) {
     errno_assert(s >= 0);
     rc = hclose(s);
     errno_assert(s >= 0);
+    rc = bundle_wait(cr, -1);
+    errno_assert(rc == 0);
+    rc = hclose(cr);
+    errno_assert(rc == 0);
 
     return 0;
 }
