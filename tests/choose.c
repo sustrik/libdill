@@ -295,6 +295,10 @@ int main() {
     errno_assert(rc == 0);
     rc = hclose(ch17[0]);
     errno_assert(rc == 0);
+    rc = bundle_wait(hndl10, -1);
+    errno_assert(rc == 0);
+    rc = hclose(hndl10);
+    errno_assert(rc == 0);
 
     /* Test that 'in' on done-with channel fires. */
     int ch18[2];
@@ -339,6 +343,10 @@ int main() {
     diff = now() - start;
     time_assert(diff, 50);
     rc = hclose(hndl11);
+    errno_assert(rc == 0);
+    rc = hclose(ch22[0]);
+    errno_assert(rc == 0);
+    rc = hclose(ch22[1]);
     errno_assert(rc == 0);
 
     /* Test that first channel in the array is prioritized. */
