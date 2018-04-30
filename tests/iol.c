@@ -61,8 +61,8 @@ int main() {
     int ss[2];
     int rc = ipc_pair(ss);
     errno_assert(rc == 0);
-    rc = go(client(ss[1]));
-    errno_assert(rc >= 0);
+    int cr = go(client(ss[1]));
+    errno_assert(cr >= 0);
     char bufs[5][256];
     struct iolist iol[5];
     int i;
@@ -92,6 +92,10 @@ int main() {
         }
     }
     rc = ipc_close(ss[0], -1);
+    errno_assert(rc == 0);
+    rc = bundle_wait(cr, -1);
+    errno_assert(rc == 0);
+    rc = hclose(cr);
     errno_assert(rc == 0);
     return 0;
 }
