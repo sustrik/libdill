@@ -23,12 +23,17 @@
 */
 
 #include <fcntl.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+#include "ctx.h"
 #include "fd.h"
 #include "iol.h"
 #include "utils.h"
+
+#define DILL_FD_CACHESIZE 32
+#define DILL_FD_BUFSIZE 1984
 
 #if defined MSG_NOSIGNAL
 #define FD_NOSIGNAL MSG_NOSIGNAL
@@ -36,10 +41,51 @@
 #define FD_NOSIGNAL 0
 #endif
 
+int dill_ctx_fd_init(struct dill_ctx_fd *ctx) {
+    ctx->count = 0;
+    dill_slist_init(&ctx->cache);
+    return 0;
+}
+
+void dill_ctx_fd_term(struct dill_ctx_fd *ctx) {
+    while(1) {
+        struct dill_slist *it = dill_slist_pop(&ctx->cache);
+        if(it == &ctx->cache) break;
+        free(it);
+    }
+}
+
+static uint8_t *dill_fd_allocbuf(void) {
+    struct dill_ctx_fd *ctx = &dill_getctx->fd;
+    struct dill_slist *it = dill_slist_pop(&ctx->cache);
+    if(dill_fast(it != &ctx->cache)) {
+        ctx->count--;
+        return (uint8_t*)it;
+    }
+    uint8_t *p = malloc(DILL_FD_BUFSIZE);
+    if(dill_slow(!p)) {errno = ENOMEM; return NULL;}
+    return p;
+}
+
+static void dill_fd_freebuf(uint8_t *buf) {
+    struct dill_ctx_fd *ctx = &dill_getctx->fd;
+    if(ctx->count >= DILL_FD_CACHESIZE) {
+        free(buf);
+        return;
+    }
+    dill_slist_push(&ctx->cache, (struct dill_slist*)buf);
+    ctx->count++;
+}
+
 void dill_fd_initrxbuf(struct dill_fd_rxbuf *rxbuf) {
     dill_assert(rxbuf);
     rxbuf->len = 0;
     rxbuf->pos = 0;
+    rxbuf->buf = NULL;
+}
+
+void dill_fd_termrxbuf(struct dill_fd_rxbuf *rxbuf) {
+    if(rxbuf->buf) dill_fd_freebuf(rxbuf->buf);
 }
 
 int dill_fd_unblock(int s) {
@@ -219,19 +265,20 @@ static int dill_fd_skip(int s, ssize_t len, int64_t deadline) {
 static size_t dill_fd_copy(struct dill_fd_rxbuf *rxbuf,
       struct dill_iolist *iol) {
     size_t rmn = rxbuf->len  - rxbuf->pos;
+    if(!rmn) return 0;
     if(rmn < iol->iol_len) {
         if(dill_fast(iol->iol_base))
-            memcpy(iol->iol_base, rxbuf->data + rxbuf->pos, rmn);
+            memcpy(iol->iol_base, rxbuf->buf + rxbuf->pos, rmn);
         rxbuf->len = 0;
         rxbuf->pos = 0;
+        dill_fd_freebuf(rxbuf->buf);
+        rxbuf->buf = NULL;
         return rmn;
     }
-    else {
-        if(dill_fast(iol->iol_base))
-            memcpy(iol->iol_base, rxbuf->data + rxbuf->pos, iol->iol_len);
-        rxbuf->pos += iol->iol_len;
-        return iol->iol_len;
-    }
+    if(dill_fast(iol->iol_base))
+        memcpy(iol->iol_base, rxbuf->buf + rxbuf->pos, iol->iol_len);
+    rxbuf->pos += iol->iol_len;
+    return iol->iol_len;
 }
 
 int dill_fd_recv(int s, struct dill_fd_rxbuf *rxbuf, struct dill_iolist *first,
@@ -262,14 +309,18 @@ int dill_fd_recv(int s, struct dill_fd_rxbuf *rxbuf, struct dill_iolist *first,
     }
     /* If requested amount of data is larger than rx buffer avoid the copy
        and read it directly into user's buffer. */
-    if(miss > sizeof(rxbuf->data))
+    if(miss > DILL_FD_BUFSIZE)
         return dill_fd_recv_(s, &curr, curr.iol_next ? last : &curr, deadline);
     /* If small amount of data is requested use rx buffer. */
     while(1) {
         /* Read as much data as possible to the buffer to avoid extra
            syscalls. Do the speculative recv() first to avoid extra
            polling. Do fdin() only after recv() fails to get data. */
-        ssize_t sz = recv(s, rxbuf->data, sizeof(rxbuf->data), 0);
+        if(!rxbuf->buf) {
+            rxbuf->buf = dill_fd_allocbuf();
+            if(dill_slow(!rxbuf->buf)) return -1;
+        }
+        ssize_t sz = recv(s, rxbuf->buf, DILL_FD_BUFSIZE, 0);
         if(dill_slow(sz == 0)) {errno = EPIPE; return -1;}
         if(sz < 0) {
             if(dill_slow(errno != EWOULDBLOCK && errno != EAGAIN)) {

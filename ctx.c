@@ -27,6 +27,7 @@
 struct dill_ctx dill_ctx_ = {0};
 
 static void dill_ctx_atexit(void) {
+    dill_ctx_fd_term(&dill_ctx_.fd);
     dill_ctx_pollset_term(&dill_ctx_.pollset);
     dill_ctx_stack_term(&dill_ctx_.stack);
     dill_ctx_handle_term(&dill_ctx_.handle);
@@ -44,6 +45,8 @@ struct dill_ctx *dill_ctx_init(void) {
     rc = dill_ctx_stack_init(&dill_ctx_.stack);
     dill_assert(rc == 0);
     rc = dill_ctx_pollset_init(&dill_ctx_.pollset);
+    dill_assert(rc == 0);
+    rc = dill_ctx_fd_init(&dill_ctx_.fd);
     dill_assert(rc == 0);
     rc = atexit(dill_ctx_atexit);
     dill_assert(rc == 0);
@@ -94,6 +97,7 @@ static void *dill_main = NULL;
 
 static void dill_ctx_term(void *ptr) {
     struct dill_ctx *ctx = ptr;
+    dill_ctx_fd_term(&ctx->fd);
     dill_ctx_pollset_term(&ctx->pollset);
     dill_ctx_stack_term(&ctx->stack);
     dill_ctx_handle_term(&ctx->handle);
@@ -122,6 +126,8 @@ struct dill_ctx *dill_ctx_init(void) {
     dill_assert(rc == 0);
     rc = dill_ctx_pollset_init(&dill_ctx_.pollset);
     dill_assert(rc == 0);
+    rc = dill_ctx_fd_init(&dill_ctx_.fd);
+    dill_assert(rc == 0);
     rc = pthread_once(&dill_keyonce, dill_makekey);
     dill_assert(rc == 0);
     if(dill_ismain()) {
@@ -143,6 +149,7 @@ static void *dill_main = NULL;
 
 static void dill_ctx_term(void *ptr) {
     struct dill_ctx *ctx = ptr;
+    dill_ctx_fd_term(&ctx->fd);
     dill_ctx_pollset_term(&ctx->pollset);
     dill_ctx_stack_term(&ctx->stack);
     dill_ctx_handle_term(&ctx->handle);
@@ -177,6 +184,8 @@ struct dill_ctx *dill_getctx_(void) {
     rc = dill_ctx_stack_init(&ctx->stack);
     dill_assert(rc == 0);
     rc = dill_ctx_pollset_init(&ctx->pollset);
+    dill_assert(rc == 0);
+    rc = dill_ctx_fd_init(&ctx->fd);
     dill_assert(rc == 0);
     if(dill_ismain()) {
         dill_main = ctx;

@@ -194,6 +194,7 @@ error:
 static void dill_ipc_hclose(struct dill_hvfs *hvfs) {
     struct dill_ipc_conn *self = (struct dill_ipc_conn*)hvfs;
     dill_fd_close(self->fd);
+    dill_fd_termrxbuf(&self->rxbuf);
     if(!self->mem) free(self);
 }
 

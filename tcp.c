@@ -188,6 +188,7 @@ error:
 static void dill_tcp_hclose(struct dill_hvfs *hvfs) {
     struct dill_tcp_conn *self = (struct dill_tcp_conn*)hvfs;
     dill_fd_close(self->fd);
+    dill_fd_termrxbuf(&self->rxbuf);
     if(!self->mem) free(self);
 }
 

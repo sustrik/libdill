@@ -462,7 +462,7 @@ DILL_EXPORT int dill_ipaddr_equal(
 
 struct dill_tcp_listener_storage {char _[56];};
 
-struct dill_tcp_storage {char _[2064];};
+struct dill_tcp_storage {char _[72];};
 
 DILL_EXPORT int dill_tcp_listen(
     struct dill_ipaddr *addr,
@@ -513,9 +513,9 @@ DILL_EXPORT int dill_tcp_close(
 
 struct dill_ipc_listener_storage {char _[24];};
 
-struct dill_ipc_storage {char _[2064];};
+struct dill_ipc_storage {char _[72];};
 
-struct dill_ipc_pair_storage {char _[4128];};
+struct dill_ipc_pair_storage {char _[144];};
 
 DILL_EXPORT int dill_ipc_listen(
     const char *addr,

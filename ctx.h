@@ -24,6 +24,7 @@
 #define DILL_CTX_INCLUDED
 
 #include "cr.h"
+#include "fd.h"
 #include "handle.h"
 #include "now.h"
 #include "pollset.h"
@@ -38,6 +39,7 @@ struct dill_ctx {
     struct dill_ctx_handle handle;
     struct dill_ctx_stack stack;
     struct dill_ctx_pollset pollset;
+    struct dill_ctx_fd fd;
 };
 
 struct dill_ctx *dill_ctx_init(void);

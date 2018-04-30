@@ -31,14 +31,25 @@
 
 #define DILL_DISABLE_RAW_NAMES
 #include "libdill.h"
+#include "slist.h"
+
+struct dill_ctx_fd {
+    int count;
+    struct dill_slist cache;
+};
+
+int dill_ctx_fd_init(struct dill_ctx_fd *ctx);
+void dill_ctx_fd_term(struct dill_ctx_fd *ctx);
 
 struct dill_fd_rxbuf {
     size_t len;
     size_t pos;
-    uint8_t data[2000];
+    uint8_t *buf;
 };
 
 void dill_fd_initrxbuf(
+    struct dill_fd_rxbuf *rxbuf);
+void dill_fd_termrxbuf(
     struct dill_fd_rxbuf *rxbuf);
 int dill_fd_unblock(
     int s);
