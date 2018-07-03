@@ -70,6 +70,39 @@ static void *dill_tcp_hquery(struct dill_hvfs *hvfs, const void *type) {
     return NULL;
 }
 
+int dill_tcp_wrap_fd_mem(int fd, struct dill_tcp_storage *mem) {
+    int err;
+    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
+    if(dill_slow(fd < 0)) {err = errno; goto error1;}
+    /* Set the socket to non-blocking mode */
+    int rc = dill_fd_unblock(fd);
+    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    /* Create the handle */
+    int h = dill_tcp_makeconn(fd, mem);
+    if(dill_slow(h < 0)) {err = errno; goto error1;}
+    /* Return the handle */
+    return h;
+
+error1:
+    errno = err;
+    return -1;
+}
+
+int dill_tcp_wrap_fd(int fd) {
+    int err;
+    struct dill_tcp_conn *obj = malloc(sizeof(struct dill_tcp_conn));
+    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
+    int s = dill_tcp_wrap_fd_mem(fd, (struct dill_tcp_storage*)obj);
+    if (dill_slow(s < 0)) {err = errno; goto error2;}
+    obj->mem = 0;
+    return s;
+error2:
+    free(obj);
+error1:
+    errno = err;
+    return -1;
+}
+
 int dill_tcp_connect_mem(const struct dill_ipaddr *addr,
         struct dill_tcp_storage *mem, int64_t deadline) {
     int err;
