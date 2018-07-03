@@ -4,27 +4,7 @@ project(libdill VERSION 1.6 LANGUAGES C)
 include(CheckSymbolExists)
 include(CheckFunctionExists)
 
-set(sources
-     bsock.c
-     chan.c
-     cr.c
-     ctx.c
-     fd.c
-     handle.c
-     iol.c
-     ipaddr.c
-     ipc.c
-     libdill.c
-     msock.c
-     now.c
-     prefix.c
-     suffix.c
-     pollset.c
-     rbtree.c
-     stack.c
-     tcp.c
-     utils.c
-     dns/dns.c)
+file(GLOB sources ${CMAKE_CURRENT_LIST_DIR}/*.c ${CMAKE_CURRENT_LIST_DIR}/dns/dns.c)
 include_directories(${PROJECT_SOURCE_DIR} "${PROJECT_SOURCE_DIR}/dns")
 set_source_files_properties(dns/dns.c PROPERTIES COMPILE_FLAGS -std=c99)
 add_library(dill ${sources})
@@ -32,6 +12,10 @@ add_library(dill ${sources})
 # add pthread
 list(APPEND CMAKE_REQUIRED_LIBRARIES pthread)
 target_link_libraries(dill pthread)
+
+# add openssl # requires libssl-dev on ubuntu
+list(APPEND CMAKE_REQUIRED_LIBRARIES ssl)
+target_link_libraries(dill ssl)
 
 # check and enable rt if available
 list(APPEND CMAKE_REQUIRED_LIBRARIES rt)
