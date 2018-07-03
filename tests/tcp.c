@@ -21,8 +21,21 @@
   IN THE SOFTWARE.
 
 */
+#include <libdill.h>
 
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+
+#include <pthread.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <netdb.h>
+
+#include <libdill.h>
 
 #include "assert.h"
 #include "../libdill.h"
@@ -89,6 +102,7 @@ coroutine void client4(int port) {
 }
 
 static void move_lots_of_data(size_t nbytes, size_t buffer_size);
+static void test_wrap_fd();
 
 int main(void) {
     char buf[16];
@@ -206,6 +220,8 @@ int main(void) {
     move_lots_of_data(5000, 2001);    /* This and below will fail */
     move_lots_of_data(5000, 3000);
 
+    test_wrap_fd();
+
     return 0;
 }
 
@@ -310,4 +326,47 @@ static void move_lots_of_data(size_t nbytes, size_t buf_size) {
     hclose(rcv_hdl);
     hclose(pp[0]);
     hclose(pp[1]);
+}
+
+static void test_wrap_fd() {
+  struct addrinfo hints, *res;
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family   = AF_INET;
+  hints.ai_socktype = SOCK_STREAM;
+
+  if (getaddrinfo("libdill.org", "80", &hints, &res) < 0) {
+    printf("Fail\n");
+    exit(1);
+  }
+
+  int fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+  if (fd == -1) {
+    printf("Fail\n");
+    exit(1);
+  }
+
+  if (connect(fd, res->ai_addr, res->ai_addrlen) == -1) {
+    printf("Fail\n");
+    exit(1);
+  }
+
+  int h = tcp_wrap_fd(fd);
+  if (h < 0) {
+    printf("Fail\n");
+    exit(1);
+  }
+
+  h = http_attach(h);
+  http_sendrequest(h, "GET", "/", -1);
+  http_sendfield(h, "Host", "libdill.org", -1);
+  http_done(h, -1);
+  char reason[256];
+  http_recvstatus(h, reason, sizeof(reason), -1);
+  while (true) {
+    char name[256];
+    char value[256];
+    int rc = http_recvfield(h, name, sizeof(name), value, sizeof(value), -1);
+    if(rc == -1 && errno == EPIPE) break;
+  }
+  h = http_detach(h, -1);
 }
