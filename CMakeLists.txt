@@ -29,6 +29,10 @@ include_directories(${PROJECT_SOURCE_DIR} "${PROJECT_SOURCE_DIR}/dns")
 set_source_files_properties(dns/dns.c PROPERTIES COMPILE_FLAGS -std=c99)
 add_library(dill ${sources})
 
+# add pthread
+list(APPEND CMAKE_REQUIRED_LIBRARIES pthread)
+target_link_libraries(dill pthread)
+
 # check and enable rt if available
 list(APPEND CMAKE_REQUIRED_LIBRARIES rt)
 check_symbol_exists(clock_gettime time.h HAVE_CLOCK_GETTIME)
