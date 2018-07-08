@@ -76,6 +76,8 @@ int dill_fd_recv(
     int64_t deadline);
 void dill_fd_close(
     int s);
+int dill_fd_own(
+    int s);
 
 #endif
 

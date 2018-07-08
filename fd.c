@@ -361,3 +361,10 @@ void dill_fd_close(int s) {
     close(s);
 }
 
+int dill_fd_own(int s) {
+    int n = dup(s);
+    if(dill_slow(n < 0)) return -1;
+    dill_fd_close(s);
+    return n;
+}
+

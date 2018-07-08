@@ -74,6 +74,9 @@ int dill_tcp_fromfd_mem(int fd, struct dill_tcp_storage *mem) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     if(dill_slow(fd < 0)) {err = errno; goto error1;}
+    /* Take ownership of the file descriptor. */
+    fd = dill_fd_own(fd);
+    if(dill_slow(fd < 0)) {err = errno; goto error1;}
     /* Set the socket to non-blocking mode */
     int rc = dill_fd_unblock(fd);
     if(dill_slow(rc < 0)) {err = errno; goto error1;}
