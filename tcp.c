@@ -85,6 +85,14 @@ int dill_tcp_fromfd_mem(int fd, struct dill_tcp_storage *mem) {
     rc = getsockopt(fd, SOL_SOCKET, SO_ACCEPTCONN, &val, &valsz);
     if(dill_slow(rc < 0)) {err = errno; goto error1;}
     if(dill_slow(val != 0)) {err = EINVAL; goto error1;}
+    /* Make sure the socket is bound to IPv4 or IPv6 address.
+       This discards, for example, UNIX domain sockets. */
+    struct sockaddr_storage ss;
+    socklen_t sssz = sizeof(ss);
+    rc = getsockname(fd, (struct sockaddr*)&ss, &sssz);
+    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    if(dill_slow(ss.ss_family != AF_INET && ss.ss_family != AF_INET6)) {
+        err = EINVAL; goto error1;}
     /* Take ownership of the file descriptor. */
     fd = dill_fd_own(fd);
     if(dill_slow(fd < 0)) {err = errno; goto error1;}
