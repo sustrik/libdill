@@ -78,6 +78,12 @@ void dill_fd_close(
     int s);
 int dill_fd_own(
     int s);
+int dill_fd_check(
+    int s,
+    int type,
+    int family1,
+    int family2,
+    int listening);
 
 #endif
 

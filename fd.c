@@ -368,3 +368,24 @@ int dill_fd_own(int s) {
     return n;
 }
 
+int dill_fd_check(int s, int type, int family1, int family2, int listening) {
+    /* Check type. E.g. SOCK_STREAM vs. SOCK_DGRAM. */
+    int val;
+    socklen_t valsz = sizeof(val);
+    int rc = getsockopt(s, SOL_SOCKET, SO_TYPE, &val, &valsz);
+    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(val != type)) {errno = EINVAL; return -1;}
+    /* Check whether the socket is in listening mode. */
+    rc = getsockopt(s, SOL_SOCKET, SO_ACCEPTCONN, &val, &valsz);
+    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(val != listening)) {errno = EINVAL; return -1;}
+    /* Check family. E.g. AF_INET vs. AF_UNIX. */
+    struct sockaddr_storage ss;
+    socklen_t sssz = sizeof(ss);
+    rc = getsockname(s, (struct sockaddr*)&ss, &sssz);
+    if(dill_slow(rc < 0)) return -1;
+    if(dill_slow(ss.ss_family != family1 && ss.ss_family != family2)) {
+        errno = EINVAL; return -1;}
+    return 0;
+}
+
