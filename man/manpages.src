@@ -274,6 +274,35 @@ tcp_protocol = {
         brecv(s, buf, sizeof(buf), -1);
         tcp_close(s);
         tcp_close(ls);
+
+        /* tcp_wrap_fd sample */
+
+        struct addrinfo hints, *res;
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_family   = AF_INET;
+        hints.ai_socktype = SOCK_STREAM;
+
+        if (getaddrinfo("libdill.org", "80", &hints, &res) < 0) {
+          printf("Fail\n");
+          exit(1);
+        }
+
+        int fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+        if (fd == -1) {
+          printf("Fail\n");
+          exit(1);
+        }  
+
+        if (connect(fd, res->ai_addr, res->ai_addrlen) == -1) {
+          printf("Fail\n");
+          exit(1);
+        }
+
+        int h = tcp_wrap_fd(fd);
+        if (h < 0) {
+          printf("Fail\n");
+          exit(1);
+        }
     `
 }
 
@@ -2634,6 +2663,38 @@ fxs = [
         custom_errors: {
             ENOTSUP: "The handle is not a PREFIX protocol handle.",
         },
+    },
+    {
+        name: "tcp_wrap_fd",
+        info: "wraps given file descriptor into a TCP handle",
+
+        result: {
+            type: "int",
+            success: "handle with the given file descriptor",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "fd",
+                type: "int",
+                info: "File descriptor of the socket",
+            }
+        ],
+
+        has_deadline: false,
+
+        protocol: tcp_protocol,
+
+        prologue: `
+            Wraps given file descriptor (native one) into a libdill wrapper. Please, use it carefully - it may cause undefined behavior if underlying file descriptor is used directly.
+        `,
+        epilogue: ``,
+
+        has_handle_argument: false,
+        allocates_handle: true,
+        mem: "tcp_storage",
+
+        errors: ["ECANCELED"],
     },
     {
         name: "tcp_accept",
