@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/socket.h>
 
 #define DILL_DISABLE_RAW_NAMES
 #include "libdillimpl.h"
@@ -74,11 +75,21 @@ int dill_tcp_fromfd_mem(int fd, struct dill_tcp_storage *mem) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     if(dill_slow(fd < 0)) {err = errno; goto error1;}
+    /* Make sure that this is a TCP socket. */
+    int val;
+    socklen_t valsz = sizeof(val);
+    int rc = getsockopt(fd, SOL_SOCKET, SO_TYPE, &val, &valsz);
+    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    if(dill_slow(val != SOCK_STREAM)) {err = EINVAL; goto error1;}
+    /* Make sure it's not a listening socket. */
+    rc = getsockopt(fd, SOL_SOCKET, SO_ACCEPTCONN, &val, &valsz);
+    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    if(dill_slow(val != 0)) {err = EINVAL; goto error1;}
     /* Take ownership of the file descriptor. */
     fd = dill_fd_own(fd);
     if(dill_slow(fd < 0)) {err = errno; goto error1;}
     /* Set the socket to non-blocking mode */
-    int rc = dill_fd_unblock(fd);
+    rc = dill_fd_unblock(fd);
     if(dill_slow(rc < 0)) {err = errno; goto error1;}
     /* Create the handle */
     int h = dill_tcp_makeconn(fd, mem);
