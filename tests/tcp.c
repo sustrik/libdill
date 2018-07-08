@@ -102,7 +102,7 @@ coroutine void client4(int port) {
 }
 
 static void move_lots_of_data(size_t nbytes, size_t buffer_size);
-static void test_wrap_fd();
+static void test_fromfd();
 
 int main(void) {
     char buf[16];
@@ -220,7 +220,7 @@ int main(void) {
     move_lots_of_data(5000, 2001);    /* This and below will fail */
     move_lots_of_data(5000, 3000);
 
-    test_wrap_fd();
+    test_fromfd();
 
     return 0;
 }
@@ -328,45 +328,33 @@ static void move_lots_of_data(size_t nbytes, size_t buf_size) {
     hclose(pp[1]);
 }
 
-static void test_wrap_fd() {
-  struct addrinfo hints, *res;
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family   = AF_INET;
-  hints.ai_socktype = SOCK_STREAM;
+static void test_fromfd() {
+    struct ipaddr addr;
+    int rc = ipaddr_local(&addr, "127.0.0.1", 5555, 0);
+    errno_assert(rc == 0);
+    int ls = tcp_listen(&addr, 10);
+    assert(ls != -1);
 
-  if (getaddrinfo("libdill.org", "80", &hints, &res) < 0) {
-    printf("Fail\n");
-    exit(1);
-  }
+    int fd = socket(ipaddr_family(&addr), SOCK_STREAM, 0);
+    errno_assert(fd >= 0);
+    rc = connect(fd, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
+    errno_assert(rc == 0);
+    int s = tcp_fromfd(fd);
+    errno_assert(s >= 0);
+  
+    int as = tcp_accept(ls, NULL, -1);
+    errno_assert(s >= 0);
 
-  int fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-  if (fd == -1) {
-    printf("Fail\n");
-    exit(1);
-  }
+    rc = bsend(as, "ABC", 3, -1);
+    errno_assert(rc == 0);
+    char buf[3];
+    rc = brecv(s, buf, 3, -1);
+    errno_assert(rc == 0);
 
-  if (connect(fd, res->ai_addr, res->ai_addrlen) == -1) {
-    printf("Fail\n");
-    exit(1);
-  }
-
-  int h = tcp_fromfd(fd);
-  if (h < 0) {
-    printf("Fail\n");
-    exit(1);
-  }
-
-  h = http_attach(h);
-  http_sendrequest(h, "GET", "/", -1);
-  http_sendfield(h, "Host", "libdill.org", -1);
-  http_done(h, -1);
-  char reason[256];
-  http_recvstatus(h, reason, sizeof(reason), -1);
-  while (true) {
-    char name[256];
-    char value[256];
-    int rc = http_recvfield(h, name, sizeof(name), value, sizeof(value), -1);
-    if(rc == -1 && errno == EPIPE) break;
-  }
-  h = http_detach(h, -1);
+    rc = hclose(s);
+    errno_assert(rc == 0);
+    rc = hclose(as);
+    errno_assert(rc == 0);
+    rc = hclose(ls);
+    errno_assert(rc == 0);
 }
