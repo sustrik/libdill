@@ -464,11 +464,6 @@ struct dill_tcp_listener_storage {char _[56];};
 
 struct dill_tcp_storage {char _[72];};
 
-DILL_EXPORT int dill_tcp_wrap_fd(
-    int fd);
-DILL_EXPORT int dill_tcp_wrap_fd_mem(
-    int fd,
-    struct dill_tcp_storage *mem);
 DILL_EXPORT int dill_tcp_listen(
     struct dill_ipaddr *addr,
     int backlog);
@@ -498,12 +493,15 @@ DILL_EXPORT int dill_tcp_done(
 DILL_EXPORT int dill_tcp_close(
     int s,
     int64_t deadline);
+DILL_EXPORT int dill_tcp_fromfd(
+    int fd);
+DILL_EXPORT int dill_tcp_fromfd_mem(
+    int fd,
+    struct dill_tcp_storage *mem);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define tcp_listener_storage dill_tcp_listener_storage
 #define tcp_storage dill_tcp_storage
-#define tcp_wrap_fd dill_tcp_wrap_fd
-#define tcp_wrap_fd_mem dill_tcp_wrap_fd_mem
 #define tcp_listen dill_tcp_listen
 #define tcp_listen_mem dill_tcp_listen_mem
 #define tcp_accept dill_tcp_accept
@@ -512,6 +510,8 @@ DILL_EXPORT int dill_tcp_close(
 #define tcp_connect_mem dill_tcp_connect_mem
 #define tcp_done dill_tcp_done
 #define tcp_close dill_tcp_close
+#define tcp_fromfd dill_tcp_fromfd
+#define tcp_fromfd_mem dill_tcp_fromfd_mem
 #endif
 
 /******************************************************************************/

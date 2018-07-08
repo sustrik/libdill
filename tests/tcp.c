@@ -350,7 +350,7 @@ static void test_wrap_fd() {
     exit(1);
   }
 
-  int h = tcp_wrap_fd(fd);
+  int h = tcp_fromfd(fd);
   if (h < 0) {
     printf("Fail\n");
     exit(1);

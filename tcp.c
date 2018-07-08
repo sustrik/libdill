@@ -70,7 +70,7 @@ static void *dill_tcp_hquery(struct dill_hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int dill_tcp_wrap_fd_mem(int fd, struct dill_tcp_storage *mem) {
+int dill_tcp_fromfd_mem(int fd, struct dill_tcp_storage *mem) {
     int err;
     if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     if(dill_slow(fd < 0)) {err = errno; goto error1;}
@@ -88,11 +88,11 @@ error1:
     return -1;
 }
 
-int dill_tcp_wrap_fd(int fd) {
+int dill_tcp_fromfd(int fd) {
     int err;
     struct dill_tcp_conn *obj = malloc(sizeof(struct dill_tcp_conn));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int s = dill_tcp_wrap_fd_mem(fd, (struct dill_tcp_storage*)obj);
+    int s = dill_tcp_fromfd_mem(fd, (struct dill_tcp_storage*)obj);
     if (dill_slow(s < 0)) {err = errno; goto error2;}
     obj->mem = 0;
     return s;
