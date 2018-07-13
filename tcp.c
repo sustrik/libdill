@@ -34,6 +34,7 @@
 dill_unique_id(dill_tcp_type);
 dill_unique_id(dill_tcp_listener_type);
 
+static int dill_tcp_makelistener(int fd, void *mem);
 static int dill_tcp_makeconn(int fd, void *mem);
 
 /******************************************************************************/
@@ -72,8 +73,7 @@ static void *dill_tcp_hquery(struct dill_hvfs *hvfs, const void *type) {
 
 int dill_tcp_fromfd_mem(int fd, struct dill_tcp_storage *mem) {
     int err;
-    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
-    if(dill_slow(fd < 0)) {err = errno; goto error1;}
+    if(dill_slow(!mem || fd < 0)) {err = EINVAL; goto error1;}
     /* Make sure that the supplied file descriptor is of correct type. */
     int rc = dill_fd_check(fd, SOCK_STREAM, AF_INET, AF_INET6, 0);
     if(dill_slow(rc < 0)) {err = errno; goto error1;}
@@ -88,7 +88,6 @@ int dill_tcp_fromfd_mem(int fd, struct dill_tcp_storage *mem) {
     if(dill_slow(h < 0)) {err = errno; goto error1;}
     /* Return the handle */
     return h;
-
 error1:
     errno = err;
     return -1;
@@ -255,6 +254,45 @@ static void *dill_tcp_listener_hquery(struct dill_hvfs *hvfs,
     return NULL;
 }
 
+int dill_tcp_listener_fromfd(int fd) {
+    int err;
+    struct dill_tcp_listener *obj = malloc(sizeof(struct dill_tcp_listener));
+    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
+    int s = dill_tcp_listener_fromfd_mem(fd,
+        (struct dill_tcp_listener_storage*)obj);
+    if (dill_slow(s < 0)) {err = errno; goto error2;}
+    obj->mem = 0;
+    return s;
+error2:
+    free(obj);
+error1:
+    errno = err;
+    return -1;
+}
+
+int dill_tcp_listener_fromfd_mem(int fd,
+      struct dill_tcp_listener_storage *mem) {
+    int err;
+    if(dill_slow(!mem || fd < 0)) {err = EINVAL; goto error1;}
+    /* Make sure that the supplied file descriptor is of correct type. */
+    int rc = dill_fd_check(fd, SOCK_STREAM, AF_INET, AF_INET6, 1);
+    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    /* Take ownership of the file descriptor. */
+    fd = dill_fd_own(fd);
+    if(dill_slow(fd < 0)) {err = errno; goto error1;}
+    /* Set the socket to non-blocking mode */
+    rc = dill_fd_unblock(fd);
+    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    /* Create the handle */
+    int h = dill_tcp_makelistener(fd, mem);
+    if(dill_slow(h < 0)) {err = errno; goto error1;}
+    /* Return the handle */
+    return h;
+error1:
+    errno = err;
+    return -1;
+}
+
 int dill_tcp_listen_mem(struct dill_ipaddr *addr, int backlog,
       struct dill_tcp_listener_storage *mem) {
     int err;
@@ -279,14 +317,7 @@ int dill_tcp_listen_mem(struct dill_ipaddr *addr, int backlog,
         if(rc < 0) {err = errno; goto error2;}
         dill_ipaddr_setport(addr, dill_ipaddr_port(&baddr));
     }
-    /* Create the object. */
-    struct dill_tcp_listener *self = (struct dill_tcp_listener*)mem;
-    self->hvfs.query = dill_tcp_listener_hquery;
-    self->hvfs.close = dill_tcp_listener_hclose;
-    self->fd = s;
-    self->mem = 1;
-    /* Create handle. */
-    int h = dill_hmake(&self->hvfs);
+    int h = dill_tcp_makelistener(s, mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
@@ -364,8 +395,18 @@ static void dill_tcp_listener_hclose(struct dill_hvfs *hvfs) {
 /*  Helpers                                                                   */
 /******************************************************************************/
 
+static int dill_tcp_makelistener(int fd, void *mem) {
+    /* Create the object. */
+    struct dill_tcp_listener *self = (struct dill_tcp_listener*)mem;
+    self->hvfs.query = dill_tcp_listener_hquery;
+    self->hvfs.close = dill_tcp_listener_hclose;
+    self->fd = fd;
+    self->mem = 1;
+    /* Create the handle. */
+    return dill_hmake(&self->hvfs);
+}
+
 static int dill_tcp_makeconn(int fd, void *mem) {
-    int err;
     /* Create the object. */
     struct dill_tcp_conn *self = (struct dill_tcp_conn*)mem;
     self->hvfs.query = dill_tcp_hquery;

@@ -493,6 +493,11 @@ DILL_EXPORT int dill_tcp_done(
 DILL_EXPORT int dill_tcp_close(
     int s,
     int64_t deadline);
+DILL_EXPORT int dill_tcp_listener_fromfd(
+    int fd);
+DILL_EXPORT int dill_tcp_listener_fromfd_mem(
+    int fd,
+    struct dill_tcp_listener_storage *mem);
 DILL_EXPORT int dill_tcp_fromfd(
     int fd);
 DILL_EXPORT int dill_tcp_fromfd_mem(
@@ -510,6 +515,8 @@ DILL_EXPORT int dill_tcp_fromfd_mem(
 #define tcp_connect_mem dill_tcp_connect_mem
 #define tcp_done dill_tcp_done
 #define tcp_close dill_tcp_close
+#define tcp_listener_fromfd dill_tcp_listener_fromfd
+#define tcp_listener_fromfd_mem dill_tcp_listener_fromfd_mem
 #define tcp_fromfd dill_tcp_fromfd
 #define tcp_fromfd_mem dill_tcp_fromfd_mem
 #endif
