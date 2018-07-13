@@ -34,7 +34,6 @@
 #include "utils.h"
 
 static int dill_ipc_resolve(const char *addr, struct sockaddr_un *su);
-static int dill_ipc_makeconn(int fd, void *mem);
 
 dill_unique_id(dill_ipc_listener_type);
 dill_unique_id(dill_ipc_type);
@@ -64,6 +63,25 @@ struct dill_ipc_conn {
 };
 
 DILL_CHECK_STORAGE(dill_ipc_conn, dill_ipc_storage)
+
+static int dill_ipc_makeconn(int fd, void *mem) {
+    /* Create the object. */
+    struct dill_ipc_conn *self = (struct dill_ipc_conn*)mem;
+    self->hvfs.query = dill_ipc_hquery;
+    self->hvfs.close = dill_ipc_hclose;
+    self->bvfs.bsendl = dill_ipc_bsendl;
+    self->bvfs.brecvl = dill_ipc_brecvl;
+    self->fd = fd;
+    dill_fd_initrxbuf(&self->rxbuf);
+    self->busy = 0;
+    self->indone = 0;
+    self->outdone = 0;
+    self->inerr = 0;
+    self->outerr = 0;
+    self->mem = 1;
+    /* Create the handle. */
+    return dill_hmake(&self->hvfs);
+}
 
 static void *dill_ipc_hquery(struct dill_hvfs *hvfs, const void *type) {
     struct dill_ipc_conn *self = (struct dill_ipc_conn*)hvfs;
@@ -400,24 +418,5 @@ static int dill_ipc_resolve(const char *addr, struct sockaddr_un *su) {
     su->sun_family = AF_UNIX;
     strncpy(su->sun_path, addr, sizeof(su->sun_path));
     return 0;
-}
-
-static int dill_ipc_makeconn(int fd, void *mem) {
-    /* Create the object. */
-    struct dill_ipc_conn *self = (struct dill_ipc_conn*)mem;
-    self->hvfs.query = dill_ipc_hquery;
-    self->hvfs.close = dill_ipc_hclose;
-    self->bvfs.bsendl = dill_ipc_bsendl;
-    self->bvfs.brecvl = dill_ipc_brecvl;
-    self->fd = fd;
-    dill_fd_initrxbuf(&self->rxbuf);
-    self->busy = 0;
-    self->indone = 0;
-    self->outdone = 0;
-    self->inerr = 0;
-    self->outerr = 0;
-    self->mem = 1;
-    /* Create the handle. */
-    return dill_hmake(&self->hvfs);
 }
 

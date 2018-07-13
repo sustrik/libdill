@@ -34,9 +34,6 @@
 dill_unique_id(dill_tcp_type);
 dill_unique_id(dill_tcp_listener_type);
 
-static int dill_tcp_makelistener(int fd, void *mem);
-static int dill_tcp_makeconn(int fd, void *mem);
-
 /******************************************************************************/
 /*  TCP connection socket                                                     */
 /******************************************************************************/
@@ -62,6 +59,25 @@ struct dill_tcp_conn {
 };
 
 DILL_CHECK_STORAGE(dill_tcp_conn, dill_tcp_storage)
+
+static int dill_tcp_makeconn(int fd, void *mem) {
+    /* Create the object. */
+    struct dill_tcp_conn *self = (struct dill_tcp_conn*)mem;
+    self->hvfs.query = dill_tcp_hquery;
+    self->hvfs.close = dill_tcp_hclose;
+    self->bvfs.bsendl = dill_tcp_bsendl;
+    self->bvfs.brecvl = dill_tcp_brecvl;
+    self->fd = fd;
+    dill_fd_initrxbuf(&self->rxbuf);
+    self->busy = 0;
+    self->indone = 0;
+    self->outdone = 0;
+    self->inerr = 0;
+    self->outerr = 0;
+    self->mem = 1;
+    /* Create the handle. */
+    return dill_hmake(&self->hvfs);
+}
 
 static void *dill_tcp_hquery(struct dill_hvfs *hvfs, const void *type) {
     struct dill_tcp_conn *self = (struct dill_tcp_conn*)hvfs;
@@ -246,6 +262,17 @@ struct dill_tcp_listener {
 
 DILL_CHECK_STORAGE(dill_tcp_listener, dill_tcp_listener_storage)
 
+static int dill_tcp_makelistener(int fd, void *mem) {
+    /* Create the object. */
+    struct dill_tcp_listener *self = (struct dill_tcp_listener*)mem;
+    self->hvfs.query = dill_tcp_listener_hquery;
+    self->hvfs.close = dill_tcp_listener_hclose;
+    self->fd = fd;
+    self->mem = 1;
+    /* Create the handle. */
+    return dill_hmake(&self->hvfs);
+}
+
 static void *dill_tcp_listener_hquery(struct dill_hvfs *hvfs,
       const void *type) {
     struct dill_tcp_listener *self = (struct dill_tcp_listener*)hvfs;
@@ -389,39 +416,5 @@ static void dill_tcp_listener_hclose(struct dill_hvfs *hvfs) {
     struct dill_tcp_listener *self = (struct dill_tcp_listener*)hvfs;
     dill_fd_close(self->fd);
     if(!self->mem) free(self);
-}
-
-/******************************************************************************/
-/*  Helpers                                                                   */
-/******************************************************************************/
-
-static int dill_tcp_makelistener(int fd, void *mem) {
-    /* Create the object. */
-    struct dill_tcp_listener *self = (struct dill_tcp_listener*)mem;
-    self->hvfs.query = dill_tcp_listener_hquery;
-    self->hvfs.close = dill_tcp_listener_hclose;
-    self->fd = fd;
-    self->mem = 1;
-    /* Create the handle. */
-    return dill_hmake(&self->hvfs);
-}
-
-static int dill_tcp_makeconn(int fd, void *mem) {
-    /* Create the object. */
-    struct dill_tcp_conn *self = (struct dill_tcp_conn*)mem;
-    self->hvfs.query = dill_tcp_hquery;
-    self->hvfs.close = dill_tcp_hclose;
-    self->bvfs.bsendl = dill_tcp_bsendl;
-    self->bvfs.brecvl = dill_tcp_brecvl;
-    self->fd = fd;
-    dill_fd_initrxbuf(&self->rxbuf);
-    self->busy = 0;
-    self->indone = 0;
-    self->outdone = 0;
-    self->inerr = 0;
-    self->outerr = 0;
-    self->mem = 1;
-    /* Create the handle. */
-    return dill_hmake(&self->hvfs);
 }
 
