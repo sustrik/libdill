@@ -558,6 +558,16 @@ DILL_EXPORT int dill_ipc_done(
 DILL_EXPORT int dill_ipc_close(
     int s,
     int64_t deadline);
+DILL_EXPORT int dill_ipc_listener_fromfd(
+    int fd);
+DILL_EXPORT int dill_ipc_listener_fromfd_mem(
+    int fd,
+    struct dill_ipc_listener_storage *mem);
+DILL_EXPORT int dill_ipc_fromfd(
+    int fd);
+DILL_EXPORT int dill_ipc_fromfd_mem(
+    int fd,
+    struct dill_ipc_storage *mem);
 DILL_EXPORT int dill_ipc_pair(
     int s[2]);
 DILL_EXPORT int dill_ipc_pair_mem(
@@ -576,6 +586,10 @@ DILL_EXPORT int dill_ipc_pair_mem(
 #define ipc_connect_mem dill_ipc_connect_mem
 #define ipc_done dill_ipc_done
 #define ipc_close dill_ipc_close
+#define ipc_listener_fromfd dill_ipc_listener_fromfd
+#define ipc_listener_fromfd_mem dill_ipc_listener_fromfd_mem
+#define ipc_fromfd dill_ipc_fromfd
+#define ipc_fromfd_mem dill_ipc_fromfd_mem
 #define ipc_pair dill_ipc_pair
 #define ipc_pair_mem dill_ipc_pair_mem
 #endif

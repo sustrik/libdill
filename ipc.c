@@ -91,6 +91,43 @@ static void *dill_ipc_hquery(struct dill_hvfs *hvfs, const void *type) {
     return NULL;
 }
 
+int dill_ipc_fromfd_mem(int fd, struct dill_ipc_storage *mem) {
+    int err;
+    if(dill_slow(!mem || fd < 0)) {err = EINVAL; goto error1;}
+    /* Make sure that the supplied file descriptor is of correct type. */
+    int rc = dill_fd_check(fd, SOCK_STREAM, AF_UNIX, -1, 0);
+    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    /* Take ownership of the file descriptor. */
+    fd = dill_fd_own(fd);
+    if(dill_slow(fd < 0)) {err = errno; goto error1;}
+    /* Set the socket to non-blocking mode */
+    rc = dill_fd_unblock(fd);
+    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    /* Create the handle */
+    int h = dill_ipc_makeconn(fd, mem);
+    if(dill_slow(h < 0)) {err = errno; goto error1;}
+    /* Return the handle */
+    return h;
+error1:
+    errno = err;
+    return -1;
+}
+
+int dill_icp_fromfd(int fd) {
+    int err;
+    struct dill_ipc_conn *obj = malloc(sizeof(struct dill_ipc_conn));
+    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
+    int s = dill_ipc_fromfd_mem(fd, (struct dill_ipc_storage*)obj);
+    if (dill_slow(s < 0)) {err = errno; goto error2;}
+    obj->mem = 0;
+    return s;
+error2:
+    free(obj);
+error1:
+    errno = err;
+    return -1;
+}
+
 int dill_ipc_connect_mem(const char *addr, struct dill_ipc_storage *mem,
       int64_t deadline) {
     int err;
@@ -231,11 +268,63 @@ struct dill_ipc_listener {
 
 DILL_CHECK_STORAGE(dill_ipc_listener, dill_ipc_listener_storage)
 
-static void *dill_ipc_listener_hquery(struct dill_hvfs *hvfs, const void *type) {
+static void *dill_ipc_listener_hquery(struct dill_hvfs *hvfs,
+      const void *type) {
     struct dill_ipc_listener *self = (struct dill_ipc_listener*)hvfs;
     if(type == dill_ipc_listener_type) return self;
     errno = ENOTSUP;
     return NULL;
+}
+
+static int dill_ipc_makelistener(int fd,
+      struct dill_ipc_listener_storage *mem) {
+    /* Create the object. */
+    struct dill_ipc_listener *self = (struct dill_ipc_listener*)mem;
+    self->hvfs.query = dill_ipc_listener_hquery;
+    self->hvfs.close = dill_ipc_listener_hclose;
+    self->fd = fd;
+    self->mem = 1;
+    /* Create the handle. */
+    return dill_hmake(&self->hvfs);
+}
+
+int dill_ipc_listener_fromfd(int fd) {
+    int err;
+    struct dill_ipc_listener *obj = malloc(sizeof(struct dill_ipc_listener));
+    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
+    int s = dill_ipc_listener_fromfd_mem(fd,
+        (struct dill_ipc_listener_storage*)obj);
+    if (dill_slow(s < 0)) {err = errno; goto error2;}
+    obj->mem = 0;
+    return s;
+error2:
+    free(obj);
+error1:
+    errno = err;
+    return -1;
+}
+
+int dill_ipc_listener_fromfd_mem(int fd,
+      struct dill_ipc_listener_storage *mem) {
+    int err;
+    if(dill_slow(!mem || fd < 0)) {err = EINVAL; goto error1;}
+    /* Make sure that the supplied file descriptor is of correct type. */
+    int rc = dill_fd_check(fd, SOCK_STREAM, AF_UNIX, -1, 1);
+    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    /* Take ownership of the file descriptor. */
+    fd = dill_fd_own(fd);
+    if(dill_slow(fd < 0)) {err = errno; goto error1;}
+    /* Set the socket to non-blocking mode */
+    rc = dill_fd_unblock(fd);
+    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    /* Create the handle */
+    int h = dill_ipc_makelistener(fd, mem);
+    if(dill_slow(h < 0)) {err = errno; goto error1;}
+    /* Return the handle */
+    return h;
+error1:
+    errno = err;
+    return -1;
 }
 
 int dill_ipc_listen_mem(const char *addr, int backlog,
@@ -256,14 +345,7 @@ int dill_ipc_listen_mem(const char *addr, int backlog,
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     rc = listen(s, backlog);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
-    /* Create the object. */
-    struct dill_ipc_listener *self = (struct dill_ipc_listener*)mem;
-    self->hvfs.query = dill_ipc_listener_hquery;
-    self->hvfs.close = dill_ipc_listener_hclose;
-    self->fd = s;
-    self->mem = 1;
-    /* Create handle. */
-    int h = dill_hmake(&self->hvfs);
+    int h = dill_ipc_makelistener(s, mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
