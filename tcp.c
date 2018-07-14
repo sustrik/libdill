@@ -60,6 +60,14 @@ struct dill_tcp_conn {
 
 DILL_CHECK_STORAGE(dill_tcp_conn, dill_tcp_storage)
 
+static void *dill_tcp_hquery(struct dill_hvfs *hvfs, const void *type) {
+    struct dill_tcp_conn *self = (struct dill_tcp_conn*)hvfs;
+    if(type == dill_bsock_type) return &self->bvfs;
+    if(type == dill_tcp_type) return self;
+    errno = ENOTSUP;
+    return NULL;
+}
+
 static int dill_tcp_makeconn(int fd, void *mem) {
     /* Create the object. */
     struct dill_tcp_conn *self = (struct dill_tcp_conn*)mem;
@@ -77,14 +85,6 @@ static int dill_tcp_makeconn(int fd, void *mem) {
     self->mem = 1;
     /* Create the handle. */
     return dill_hmake(&self->hvfs);
-}
-
-static void *dill_tcp_hquery(struct dill_hvfs *hvfs, const void *type) {
-    struct dill_tcp_conn *self = (struct dill_tcp_conn*)hvfs;
-    if(type == dill_bsock_type) return &self->bvfs;
-    if(type == dill_tcp_type) return self;
-    errno = ENOTSUP;
-    return NULL;
 }
 
 int dill_tcp_fromfd_mem(int fd, struct dill_tcp_storage *mem) {
