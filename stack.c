@@ -132,6 +132,7 @@ void dill_freestack(void *stack) {
        this very function can be still executing on that stack. */
     if(ctx->count >= dill_max_cached_stacks) {
         struct dill_slist *old = dill_slist_pop(&ctx->cache);
+        --ctx->count;
 #if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD
         void *ptr = ((uint8_t*)(old + 1)) - dill_stack_size - dill_page_size();
         int rc = mprotect(ptr, dill_page_size(), PROT_READ|PROT_WRITE);
