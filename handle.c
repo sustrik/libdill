@@ -116,6 +116,8 @@ int dill_hown(int h) {
         dill_assert(rc == 0);
         return -1;
     }
+    /* In case handle array was reallocated we have to recompute the pointer. */
+    hndl = &ctx->handles[h];
     /* Return a handle to the shared pool. */
     hndl->ptr = NULL;
     hndl->next = -1;
