@@ -375,7 +375,8 @@ int dill_fd_check(int s, int type, int family1, int family2, int listening) {
     int rc = getsockopt(s, SOL_SOCKET, SO_TYPE, &val, &valsz);
     if(dill_slow(rc < 0)) return -1;
     if(dill_slow(val != type)) {errno = EINVAL; return -1;}
-    /* Check whether the socket is in listening mode. */
+    /* Check whether the socket is in listening mode.
+       Returns ENOPROTOOPT on OSX. */
     rc = getsockopt(s, SOL_SOCKET, SO_ACCEPTCONN, &val, &valsz);
     if(dill_slow(rc < 0 && errno != ENOPROTOOPT)) return -1;
     if(dill_slow(rc >= 0 && val != listening)) {errno = EINVAL; return -1;}
