@@ -1,6 +1,11 @@
 
 # Past versions
 
+**Jul 20th, 2018 <http://libdill.org/libdill-2.9.tar.gz>**
+
+* "fromfd" functions added allowing to wrap native OS sockets into lidill's socket classes.
+* Couple of bug fixes.
+
 **Apr 27th, 2018 <http://libdill.org/libdill-2.8.tar.gz>**
 
 * hdone() function was removed and replaced by type-specific done functions (e.g. "chdone", "tcp_done").
