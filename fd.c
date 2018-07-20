@@ -378,7 +378,7 @@ int dill_fd_check(int s, int type, int family1, int family2, int listening) {
     /* Check whether the socket is in listening mode. */
     rc = getsockopt(s, SOL_SOCKET, SO_ACCEPTCONN, &val, &valsz);
     if(dill_slow(rc < 0 && errno != ENOPROTOOPT)) return -1;
-    else if(dill_slow(val != listening)) {errno = EINVAL; return -1;}
+    if(dill_slow(rc >= 0 && val != listening)) {errno = EINVAL; return -1;}
     /* Check family. E.g. AF_INET vs. AF_UNIX. */
     struct sockaddr_storage ss;
     socklen_t sssz = sizeof(ss);
