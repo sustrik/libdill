@@ -74,6 +74,10 @@
 #define DILL_EXPORT
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /******************************************************************************/
 /*  Helpers                                                                   */
 /******************************************************************************/
@@ -994,6 +998,10 @@ DILL_EXPORT int dill_term_detach(
 #define term_detach dill_term_detach
 #endif
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif
