@@ -64,15 +64,15 @@ int quux_attach(int u, int64_t deadline) {
     self->recverr = 0;
 
     const int8_t local_version = 1;
-    int rc = bsend(u, &local_version, 1, deadline);
+    int rc = bsend(self->u, &local_version, 1, deadline);
     if(rc < 0) {err = errno; goto error2;}
     uint8_t remote_version;
-    rc = brecv(u, &remote_version, 1, deadline);
+    rc = brecv(self->u, &remote_version, 1, deadline);
     if(rc < 0) {err = errno; goto error2;}
     if(remote_version != local_version) {err = EPROTO; goto error2;}
 
     int h = hmake(&self->hvfs);
-    if(h < 0) {int err = errno; goto error2;}
+    if(h < 0) {err = errno; goto error2;}
     return h;
 error2:
     free(self);
