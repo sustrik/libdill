@@ -52,7 +52,7 @@
 #define DILL_VERSION_REVISION 0
 
 /*  How many past interface versions are still supported. */
-#define DILL_VERSION_AGE 1
+#define DILL_VERSION_AGE 2
 
 /******************************************************************************/
 /*  Symbol visibility                                                         */
