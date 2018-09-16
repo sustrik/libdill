@@ -1,6 +1,11 @@
 
 # Past versions
 
+**Sept 16th, 2018 <http://libdill.org/libdill-2.10.tar.gz>**
+
+* C++ guards added to libdill.h
+* Tutorials fixed
+
 **Jul 20th, 2018 <http://libdill.org/libdill-2.9.tar.gz>**
 
 * "fromfd" functions added allowing to wrap native OS sockets into lidill's socket classes.
