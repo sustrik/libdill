@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>suffix_attach_mem - creates SUFFIX protocol on top of underlying socket</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int</span> suffix_attach_mem(
+    <span class="dt">int</span> s,
+    <span class="dt">const</span> <span class="dt">void</span>* suffix,
+    <span class="dt">size_t</span> suffixlen,
+    <span class="kw">struct</span> suffix_storage* mem);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>SUFFIX is a message-based protocol that delimits messages by specific byte sequences. For example, many protocols are line-based, with individual messages separated by CR+LF sequence.</p>
+<p>This function instantiates SUFFIX protocol on top of the underlying protocol.</p>
+<p>This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use <strong>suffix_attach</strong> instead.</p>
+<p><strong>s</strong>: Handle of the underlying socket. It must be a bytestream protocol.</p>
+<p><strong>suffix</strong>: The delimiter byte sequence.</p>
+<p><strong>suffixlen</strong>: The size of the delimiter, in bytes.</p>
+<p><strong>mem</strong>: The structure to store the newly created object in. It must not be deallocated before the object is closed.</p>
+<p>The socket can be cleanly shut down using <strong>suffix_detach</strong> function.</p>
+<p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns newly created socket handle. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EBADF</strong>: Invalid handle.</li>
+<li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.</li>
+<li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.</li>
+<li><strong>ENOMEM</strong>: Not enough memory.</li>
+<li><strong>ENOTSUP</strong>: The handle does not support this operation.</li>
+<li><strong>EPROTO</strong>: Underlying socket is not a bytestream socket.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">        <span class="dt">int</span> s = tcp_connect(&amp;addr, <span class="dv">-1</span>);
+        s = suffix_attach(s, <span class="st">&quot;</span>
+<span class="st">&quot;, 2);</span>
+        msend(s, <span class="st">&quot;ABC&quot;</span>, <span class="dv">3</span>, <span class="dv">-1</span>);
+        <span class="dt">char</span> buf[<span class="dv">256</span>];
+        <span class="dt">ssize_t</span> sz = mrecv(s, buf, <span class="kw">sizeof</span>(buf), <span class="dv">-1</span>);
+        s = suffix_detach(s, <span class="dv">-1</span>);
+        tcp_close(s);</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>hclose</strong>(3) <strong>mrecv</strong>(3) <strong>mrecvl</strong>(3) <strong>msend</strong>(3) <strong>msendl</strong>(3) <strong>suffix_attach</strong>(3) <strong>suffix_detach</strong>(3)</p>
+</body>

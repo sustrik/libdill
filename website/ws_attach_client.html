@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>ws_attach_client - creates WebSocket protocol on the top of underlying socket</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int</span> ws_attach_client(
+    <span class="dt">int</span> s,
+    <span class="dt">int</span> flags,
+    <span class="dt">const</span> <span class="dt">char</span>* resource,
+    <span class="dt">const</span> <span class="dt">char</span>* host,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p><strong>WARNING: This is experimental functionality and the API may change in the future.</strong></p>
+<p>WebSocket is a message-based protocol defined in RFC 6455. It can be used as a bidirectional communication channel for communication with a web server.</p>
+<p>This function instantiates WebSocket protocol on top of the underlying bytestream protocol. WebSocket protocol being asymmetric, client and server sides are intialized in different ways. This particular function initializes the client side of the connection.</p>
+<p>The socket can be either text- (<strong>WS_TEXT</strong> flag) or binary- (<strong>WS_BINARY</strong> flag) based. Binary is the default. When sending messages via <strong>msend</strong> or <strong>msendl</strong> these will be typed based on the socket type. When receiving messages via <strong>mrecv</strong> or <strong>mrecvl</strong> encountering a message that doesn't match the socket type results in <strong>EPROTO</strong> error.</p>
+<p>If you want to combine text and binary messages you can do so by using functions such as <strong>ws_send</strong> and <strong>ws_recv</strong>.</p>
+<p><strong>WS_NOHTTP</strong> flag can be combined with socket type flags. If set, the protocol will skip the initial HTTP handshake. In this case <strong>resource</strong> and <strong>host</strong> arguments won't be used and can be set to <strong>NULL</strong>.</p>
+<p>Skipping HTTP handshake is useful when you want to do the handshake on your own. For example, if you want to implement custom WebSocket extensions or if you want to write a multi-protocol application where initial HTTP handshake can be followed by different kinds of protocols (e.g. HTML and WebSocket).</p>
+<p><strong>s</strong>: Handle of the underlying socket. It must be a bytestream protocol.</p>
+<p><strong>flags</strong>: Flags. See above.</p>
+<p><strong>resource</strong>: HTTP resource to use.</p>
+<p><strong>host</strong>: Virtual HTTP host to use.</p>
+<p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
+<p>The socket can be cleanly shut down using <strong>ws_detach</strong> function.</p>
+<p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns newly created socket handle. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EBADF</strong>: Invalid handle.</li>
+<li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
+<li><strong>ECONNRESET</strong>: Broken connection.</li>
+<li><strong>EINVAL</strong>: Invalid argument.</li>
+<li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.</li>
+<li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.</li>
+<li><strong>ENOMEM</strong>: Not enough memory.</li>
+<li><strong>ENOTSUP</strong>: The handle does not support this operation.</li>
+<li><strong>EPROTO</strong>: Underlying socket is not a bytestream socket.</li>
+<li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> ipaddr addr;
+ipaddr_remote(&amp;addr, <span class="st">&quot;www.example.org&quot;</span>, <span class="dv">80</span>, <span class="dv">0</span>, <span class="dv">-1</span>);
+<span class="dt">int</span> s = tcp_connect(&amp;addr, <span class="dv">-1</span>);
+s = ws_attach_client(s, <span class="st">&quot;/&quot;</span>, <span class="st">&quot;www.example.org&quot;</span>, WS_TEXT, <span class="dv">-1</span>);
+ws_send(s, WS_TEXT, <span class="st">&quot;Hello, world!&quot;</span>, <span class="dv">13</span>, <span class="dv">-1</span>);
+<span class="dt">int</span> flags;
+<span class="dt">char</span> buf[<span class="dv">256</span>];
+<span class="dt">ssize_t</span> sz = ws_recv(s, &amp;flags, buf, <span class="kw">sizeof</span>(buf), <span class="dv">-1</span>);
+assert(flags &amp; WS_TEXT);
+s = ws_detach(s, <span class="dv">-1</span>);
+tcp_close(s, <span class="dv">-1</span>);</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>hclose</strong>(3) <strong>mrecv</strong>(3) <strong>mrecvl</strong>(3) <strong>msend</strong>(3) <strong>msendl</strong>(3) <strong>now</strong>(3) <strong>ws_attach_client_mem</strong>(3) <strong>ws_attach_server</strong>(3) <strong>ws_attach_server_mem</strong>(3) <strong>ws_detach</strong>(3) <strong>ws_done</strong>(3) <strong>ws_recv</strong>(3) <strong>ws_recvl</strong>(3) <strong>ws_request_key</strong>(3) <strong>ws_response_key</strong>(3) <strong>ws_send</strong>(3) <strong>ws_sendl</strong>(3) <strong>ws_status</strong>(3)</p>
+</body>

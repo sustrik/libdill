@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>msendl - sends a message</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int</span> msendl(
+    <span class="dt">int</span> s,
+    <span class="kw">struct</span> iolist* first,
+    <span class="kw">struct</span> iolist* last,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>This function sends a message to a socket. It is a blocking operation that unblocks only after entire message is sent. There is no such thing as partial send. If a problem, including timeout, occurs while sending the message error is returned to the user and the socket cannot be used for sending from that point on.</p>
+<p>This function accepts a linked list of I/O buffers instead of a single buffer. Argument <strong>first</strong> points to the first item in the list, <strong>last</strong> points to the last buffer in the list. The list represents a single, fragmented message, not a list of multiple messages. Structure <strong>iolist</strong> has the following members:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">void</span> *iol_base;          <span class="co">/* Pointer to the buffer. */</span>
+<span class="dt">size_t</span> iol_len;          <span class="co">/* Size of the buffer. */</span>
+<span class="kw">struct</span> iolist *iol_next; <span class="co">/* Next buffer in the list. */</span>
+<span class="dt">int</span> iol_rsvd;            <span class="co">/* Reserved. Must be set to zero. */</span></code></pre></div>
+<p>When receiving, <strong>iol_base</strong> equal to NULL means that <strong>iol_len</strong> bytes should be skipped.</p>
+<p>The function returns <strong>EINVAL</strong> error in the case the list is malformed:</p>
+<ul>
+<li>If <strong>last-&gt;iol_next</strong> is not <strong>NULL</strong>.</li>
+<li>If <strong>first</strong> and <strong>last</strong> don't belong to the same list.</li>
+<li>If there's a loop in the list.</li>
+<li>If <strong>iol_rsvd</strong> of any item is non-zero.</li>
+</ul>
+<p>The list (but not the buffers themselves) can be temporarily modified while the function is in progress. However, once the function returns the list is guaranteed to be the same as before the call.</p>
+<p><strong>s</strong>: The socket to send the message to.</p>
+<p><strong>first</strong>: Pointer to the first item of a linked list of I/O buffers.</p>
+<p><strong>last</strong>: Pointer to the last item of a linked list of I/O buffers.</p>
+<p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns 0. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EBADF</strong>: Invalid handle.</li>
+<li><strong>EBUSY</strong>: The handle is currently being used by a different coroutine.</li>
+<li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
+<li><strong>ECONNRESET</strong>: Broken connection.</li>
+<li><strong>EINVAL</strong>: Invalid argument.</li>
+<li><strong>EMSGSIZE</strong>: The message is too long.</li>
+<li><strong>ENOTSUP</strong>: The handle does not support this operation.</li>
+<li><strong>EPIPE</strong>: Closed connection.</li>
+<li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
+</ul>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>mrecv</strong>(3) <strong>mrecvl</strong>(3) <strong>msend</strong>(3) <strong>now</strong>(3)</p>
+</body>

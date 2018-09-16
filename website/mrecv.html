@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>mrecv - receives a message</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">ssize_t</span> mrecv(
+    <span class="dt">int</span> s,
+    <span class="dt">void</span>* buf,
+    <span class="dt">size_t</span> len,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>This function receives message from a socket. It is a blocking operation that unblocks only after entire message is received. There is no such thing as partial receive. Either entire message is received or no message at all.</p>
+<p><strong>s</strong>: The socket.</p>
+<p><strong>buf</strong>: Buffer to receive the message to.</p>
+<p><strong>len</strong>: Size of the buffer, in bytes.</p>
+<p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns size of the received message, in bytes. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EBADF</strong>: Invalid handle.</li>
+<li><strong>EBUSY</strong>: The handle is currently being used by a different coroutine.</li>
+<li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
+<li><strong>ECONNRESET</strong>: Broken connection.</li>
+<li><strong>EINVAL</strong>: Invalid argument.</li>
+<li><strong>EMSGSIZE</strong>: The data won't fit into the supplied buffer.</li>
+<li><strong>ENOTSUP</strong>: The handle does not support this operation.</li>
+<li><strong>EPIPE</strong>: Closed connection.</li>
+<li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> msg[<span class="dv">100</span>];
+<span class="dt">ssize_t</span> msgsz = mrecv(s, msg, <span class="kw">sizeof</span>(msg), <span class="dv">-1</span>);</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>mrecvl</strong>(3) <strong>msend</strong>(3) <strong>msendl</strong>(3) <strong>now</strong>(3)</p>
+</body>

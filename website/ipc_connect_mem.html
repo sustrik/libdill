@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>ipc_connect_mem - creates a connection to remote IPC endpoint</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int</span> ipc_connect_mem(
+    <span class="dt">const</span> <span class="dt">char</span>* addr,
+    <span class="kw">struct</span> ipc_storage* mem,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>IPC protocol is a bytestream protocol for transporting data among processes on the same machine. It is an equivalent to POSIX <strong>AF_LOCAL</strong> sockets.</p>
+<p>This function creates a connection to a remote IPC endpoint.</p>
+<p>This function allows to avoid one dynamic memory allocation by storing the object in user-supplied memory. Unless you are hyper-optimizing use <strong>ipc_connect</strong> instead.</p>
+<p><strong>addr</strong>: Filename to connect to.</p>
+<p><strong>mem</strong>: The structure to store the newly created object in. It must not be deallocated before the object is closed.</p>
+<p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
+<p>The socket can be cleanly shut down using <strong>ipc_close</strong> function.</p>
+<p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns newly created socket handle. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EACCES</strong>: The process does not have appropriate privileges.</li>
+<li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
+<li><strong>ECONNREFUSED</strong>: The target address was not listening for connections or refused the connection request.</li>
+<li><strong>ECONNRESET</strong>: Remote host reset the connection request.</li>
+<li><strong>EINVAL</strong>: Invalid argument.</li>
+<li><strong>ELOOP</strong>: A loop exists in symbolic links encountered during resolution of the pathname in address.</li>
+<li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.</li>
+<li><strong>ENAMETOOLONG</strong>: A component of a pathname exceeded <strong>NAME_MAX</strong> characters, or an entire pathname exceeded <strong>PATH_MAX</strong> characters.</li>
+<li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.</li>
+<li><strong>ENOENT</strong>: A component of the pathname does not name an existing file or the pathname is an empty string.</li>
+<li><strong>ENOMEM</strong>: Not enough memory.</li>
+<li><strong>ENOTDIR</strong>: A component of the path prefix of the pathname in address is not a directory.</li>
+<li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = ipc_connect(<span class="st">&quot;/tmp/test.ipc&quot;</span>, <span class="dv">-1</span>);
+bsend(s, <span class="st">&quot;ABC&quot;</span>, <span class="dv">3</span>, <span class="dv">-1</span>);
+<span class="dt">char</span> buf[<span class="dv">3</span>];
+brecv(s, buf, <span class="kw">sizeof</span>(buf), <span class="dv">-1</span>);
+ipc_close(s);</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>brecv</strong>(3) <strong>brecvl</strong>(3) <strong>bsend</strong>(3) <strong>bsendl</strong>(3) <strong>hclose</strong>(3) <strong>ipc_accept</strong>(3) <strong>ipc_accept_mem</strong>(3) <strong>ipc_close</strong>(3) <strong>ipc_connect</strong>(3) <strong>ipc_done</strong>(3) <strong>ipc_fromfd</strong>(3) <strong>ipc_fromfd_mem</strong>(3) <strong>ipc_listen</strong>(3) <strong>ipc_listen_mem</strong>(3) <strong>ipc_listener_fromfd</strong>(3) <strong>ipc_listener_fromfd_mem</strong>(3) <strong>ipc_pair</strong>(3) <strong>ipc_pair_mem</strong>(3) <strong>now</strong>(3)</p>
+</body>

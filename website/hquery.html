@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>hquery - gets an opaque pointer associated with a handle and a type</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdillimpl.h&gt;</span>
+
+<span class="dt">void</span>* hquery(
+    <span class="dt">int</span> h);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>Returns an opaque pointer associated with the passed handle and type. This function is a fundamental construct for building APIs on top of handles.</p>
+<p>The type argument is not interpreted in any way. It is used only as an unique ID. A unique ID can be created, for instance, like this:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> foobar_placeholder = <span class="dv">0</span>;
+<span class="dt">const</span> <span class="dt">void</span> *foobar_type = &amp;foobar_placeholder;</code></pre></div>
+<p>The return value has no specified semantics. It is an opaque pointer. One typical use case for it is to return a pointer to a table of function pointers. These function pointers can then be used to access the handle's functionality (see the example).</p>
+<p>Pointers returned by <strong>hquery</strong> are meant to be cachable. In other words, if you call hquery on the same handle with the same type multiple times, the result should be the same.</p>
+<p><strong>h</strong>: The handle.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns opaque pointer. In case of error it returns NULL and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EBADF</strong>: Invalid handle.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> quux_vfs {
+    <span class="dt">int</span> (*foo)(<span class="kw">struct</span> quux_vfs *vfs, <span class="dt">int</span> a, <span class="dt">int</span> b);
+    <span class="dt">void</span> (*bar)(<span class="kw">struct</span> quux_vfs *vfs, <span class="dt">char</span> *c);
+};
+
+<span class="dt">int</span> quux_foo(<span class="dt">int</span> h, <span class="dt">int</span> a, <span class="dt">int</span> b) {
+    <span class="kw">struct</span> foobar_vfs *vfs = hquery(h, foobar_type);
+    <span class="cf">if</span>(!vfs) <span class="cf">return</span> <span class="dv">-1</span>;
+    <span class="cf">return</span> vfs-&gt;foo(vfs, a, b);
+}
+
+<span class="dt">void</span> quux_bar(<span class="dt">int</span> h, <span class="dt">char</span> *c) {
+    <span class="kw">struct</span> foobar_vfs *vfs = hquery(h, foobar_type);
+    <span class="cf">if</span>(!vfs) <span class="cf">return</span> <span class="dv">-1</span>;
+    vfs-&gt;bar(vfs, c);
+}</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>hclose</strong>(3) <strong>hmake</strong>(3) <strong>hown</strong>(3)</p>
+</body>

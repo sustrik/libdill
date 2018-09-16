@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<p>Libdill is a C library that makes writing <a href="structured-concurrency.html">structured concurrent programs</a> easy.</p>
+<p>The following example launches two concurrent worker functions that print &quot;Hello!&quot; or &quot;World!&quot;, respectively, at random intervals. The program runs for five seconds and then it shuts down.</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;stdio.h&gt;</span>
+<span class="pp">#include </span><span class="im">&lt;stdlib.h&gt;</span>
+
+coroutine <span class="dt">void</span> worker(<span class="dt">const</span> <span class="dt">char</span> *text) {
+    <span class="cf">while</span>(<span class="dv">1</span>) {
+        printf(<span class="st">&quot;%s</span><span class="sc">\n</span><span class="st">&quot;</span>, text);
+        msleep(now() + random() % <span class="dv">500</span>);
+    }
+}
+
+<span class="dt">int</span> main() {
+    go(worker(<span class="st">&quot;Hello!&quot;</span>));
+    go(worker(<span class="st">&quot;World!&quot;</span>));
+    msleep(now() + <span class="dv">5000</span>);
+    <span class="cf">return</span> <span class="dv">0</span>;
+}</code></pre></div>
+<p>Code dependent on libdill is compiled like any other C code. The only extra requirement is that it be linked with libdill library:</p>
+<pre><code>$ cc -ldill -o hello hello.c</code></pre>
+<p>Libdill is licensed under the MIT/X11 license.</p>
+</body>

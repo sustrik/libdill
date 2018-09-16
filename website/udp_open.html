@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>udp_open - opens an UDP socket</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int</span> udp_open(
+    <span class="kw">struct</span> ipaddr* local,
+    <span class="kw">struct</span> ipaddr* remote);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>UDP is an unreliable message-based protocol defined in RFC 768. The size of the message is limited. The protocol has no initial or terminal handshake. A single socket can be used to different destinations.</p>
+<p>This function creates an UDP socket.</p>
+<p><strong>local</strong>: IP address to be used to set source IP address in outgoing packets. Also, the socket will receive packets sent to this address. If port in the address is set to zero an ephemeral port will be chosen and filled into the local address.</p>
+<p><strong>remote</strong>: IP address used as default destination for outbound packets. It is used when destination address in <strong>udp_send</strong> function is set to <strong>NULL</strong>. It is also used by <strong>msend</strong> and <strong>mrecv</strong> functions which don't allow to specify the destination address explicitly. Furthermore, if remote address is set, all the packets arriving from different addresses will be silently dropped.</p>
+<p>To close this socket use <strong>hclose</strong> function.</p>
+<p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns newly created socket handle. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EADDRINUSE</strong>: The local address is already in use.</li>
+<li><strong>EADDRNOTAVAIL</strong>: The specified address is not available from the local machine.</li>
+<li><strong>EINVAL</strong>: Invalid argument.</li>
+<li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.</li>
+<li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.</li>
+<li><strong>ENOMEM</strong>: Not enough memory.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> ipaddr local;
+ipaddr_local(&amp;local, NULL, <span class="dv">5555</span>, <span class="dv">0</span>);
+<span class="kw">struct</span> ipaddr remote;
+ipaddr_remote(&amp;remote, <span class="st">&quot;server.example.org&quot;</span>, <span class="dv">5555</span>, <span class="dv">0</span>, <span class="dv">-1</span>);
+<span class="dt">int</span> s = udp_open(&amp;local, &amp;remote);
+udp_send(s1, NULL, <span class="st">&quot;ABC&quot;</span>, <span class="dv">3</span>);
+<span class="dt">char</span> buf[<span class="dv">2000</span>];
+<span class="dt">ssize_t</span> sz = udp_recv(s, NULL, buf, <span class="kw">sizeof</span>(buf), <span class="dv">-1</span>);
+hclose(s);</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>hclose</strong>(3) <strong>mrecv</strong>(3) <strong>mrecvl</strong>(3) <strong>msend</strong>(3) <strong>msendl</strong>(3) <strong>udp_open_mem</strong>(3) <strong>udp_recv</strong>(3) <strong>udp_recvl</strong>(3) <strong>udp_send</strong>(3) <strong>udp_sendl</strong>(3)</p>
+</body>

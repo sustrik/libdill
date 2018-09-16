@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>choose - performs one of multiple channel operations</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="kw">struct</span> chclause {
+    <span class="dt">int</span> op;
+    <span class="dt">int</span> ch;
+    <span class="dt">void</span> *val;
+    <span class="dt">size_t</span> len;
+};
+
+<span class="dt">int</span> choose(
+    <span class="kw">struct</span> chclause* clauses,
+    <span class="dt">int</span> nclauses,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>Accepts a list of channel operations. Performs one that can be done first. If multiple operations can be done immediately, the one that comes earlier in the array is executed.</p>
+<p><strong>clauses</strong>: Operations to choose from. See below.</p>
+<p><strong>nclauses</strong>: Number of clauses.</p>
+<p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
+<p>The fields in <strong>chclause</strong> structure are as follows:</p>
+<ul>
+<li><strong>op</strong>: Operation to perform. Either <strong>CHSEND</strong> or <strong>CHRECV</strong>.</li>
+<li><strong>ch</strong>: The channel to perform the operation on.</li>
+<li><strong>val</strong>: Buffer containing the value to send or receive.</li>
+<li><strong>len</strong>: Size of the buffer.</li>
+</ul>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns index of the clause that caused the function to exit. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<p>Even if an index is returned, <strong>errno</strong> may still be set to an error value. The operation was successfull only if <strong>errno</strong> is set to zero.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
+<li><strong>EINVAL</strong>: Invalid argument.</li>
+<li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
+</ul>
+<p>Additionally, if the function returns an index it can set <strong>errno</strong> to one of the following values:</p>
+<ul>
+<li><strong>0</strong>: Operation was completed successfully.</li>
+<li><strong>EBADF</strong>: Invalid handle.</li>
+<li><strong>EINVAL</strong>: Invalid parameter.</li>
+<li><strong>EMSGSIZE</strong>: The peer expected a message with different size.</li>
+<li><strong>ENOTSUP</strong>: Operation not supported. Presumably, the handle isn't a channel.</li>
+<li><strong>EPIPE</strong>: Channel has been closed with <strong>chdone</strong>.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> val1 = <span class="dv">0</span>;
+<span class="dt">int</span> val2;
+<span class="kw">struct</span> chclause clauses[] = {
+    {CHSEND, ch, &amp;val1, <span class="kw">sizeof</span>(val1)},
+    {CHRECV, ch, &amp;val2, <span class="kw">sizeof</span>(val2)}
+};
+<span class="dt">int</span> rc = choose(clauses, <span class="dv">2</span>, now() + <span class="dv">1000</span>);
+<span class="cf">if</span>(rc == <span class="dv">-1</span>) {
+    perror(<span class="st">&quot;Choose failed&quot;</span>);
+    exit(<span class="dv">1</span>);
+}
+<span class="cf">if</span>(rc == <span class="dv">0</span>) {
+    printf(<span class="st">&quot;Value %d sent.</span><span class="sc">\n</span><span class="st">&quot;</span>, val1);
+}
+<span class="cf">if</span>(rc == <span class="dv">1</span>) {
+    printf(<span class="st">&quot;Value %d received.</span><span class="sc">\n</span><span class="st">&quot;</span>, val2);
+}</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>chdone</strong>(3) <strong>chmake</strong>(3) <strong>chmake_mem</strong>(3) <strong>chrecv</strong>(3) <strong>chsend</strong>(3) <strong>now</strong>(3)</p>
+</body>

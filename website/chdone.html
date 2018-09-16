@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>chdone - half-closes a channel</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int</span> chdone(
+    <span class="dt">int</span> ch);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>Closes an outbound half of the channel. When the peer receives all the messages sent prior to the calling <strong>chdone</strong> all its subsequent attempts to receive will fail with <strong>EPIPE</strong> error.</p>
+<p><strong>ch</strong>: The channel.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns 0. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EBADF</strong>: Invalid handle.</li>
+<li><strong>ENOTSUP</strong>: The handle does not support this operation.</li>
+<li><strong>EPIPE</strong>: chdone was already called on this channel.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> ch[<span class="dv">2</span>];
+chmake(ch);
+chsend(ch, <span class="st">&quot;ABC&quot;</span>, <span class="dv">3</span>, <span class="dv">-1</span>);
+chdone(ch);</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>chmake</strong>(3) <strong>chmake_mem</strong>(3) <strong>choose</strong>(3) <strong>chrecv</strong>(3) <strong>chsend</strong>(3)</p>
+</body>

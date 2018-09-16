@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>ipaddr_remote - resolve the address of a remote IP endpoint</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int</span> ipaddr_remote(
+    <span class="kw">struct</span> ipaddr* addr,
+    <span class="dt">const</span> <span class="dt">char</span>* name,
+    <span class="dt">int</span> port,
+    <span class="dt">int</span> mode,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>Converts an IP address in human-readable format, or a name of a remote host into an <strong>ipaddr</strong> structure.</p>
+<p>Mode specifies which kind of addresses should be returned. Possible values are:</p>
+<ul>
+<li><strong>IPADDR_IPV4</strong>: Get IPv4 address.</li>
+<li><strong>IPADDR_IPV6</strong>: Get IPv6 address.</li>
+<li><strong>IPADDR_PREF_IPV4</strong>: Get IPv4 address if possible, IPv6 address otherwise.</li>
+<li><strong>IPADDR_PREF_IPV6</strong>: Get IPv6 address if possible, IPv4 address otherwise.</li>
+</ul>
+<p>Setting the argument to zero invokes default behaviour, which, at the present, is <strong>IPADDR_PREF_IPV4</strong>. However, in the future when IPv6 becomes more common it may be switched to <strong>IPADDR_PREF_IPV6</strong>.</p>
+<p><strong>addr</strong>: Out parameter, The IP address object.</p>
+<p><strong>name</strong>: Name of the remote IP endpoint, such as &quot;www.example.org&quot; or &quot;192.168.0.111&quot;.</p>
+<p><strong>port</strong>: Port number. Valid values are 1-65535.</p>
+<p><strong>mode</strong>: What kind of address to return. See above.</p>
+<p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
+<p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns 0. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EADDRNOTAVAIL</strong>: The name of the remote host cannot be resolved to an address of the specified type.</li>
+<li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
+<li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">ipaddr addr;
+ipaddr_remote(&amp;addr, <span class="st">&quot;www.example.org&quot;</span>, <span class="dv">80</span>, <span class="dv">0</span>, <span class="dv">-1</span>);
+<span class="dt">int</span> s = socket(ipaddr_family(addr), SOCK_STREAM, <span class="dv">0</span>);
+connect(s, ipaddr_sockaddr(&amp;addr), ipaddr_len(&amp;addr));</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>ipaddr_equal</strong>(3) <strong>ipaddr_family</strong>(3) <strong>ipaddr_len</strong>(3) <strong>ipaddr_local</strong>(3) <strong>ipaddr_port</strong>(3) <strong>ipaddr_setport</strong>(3) <strong>ipaddr_sockaddr</strong>(3) <strong>ipaddr_str</strong>(3) <strong>now</strong>(3)</p>
+</body>

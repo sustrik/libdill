@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="past-versions">Past versions</h1>
+<p><strong>Jul 20th, 2018 <a href="http://libdill.org/libdill-2.9.tar.gz" class="uri">http://libdill.org/libdill-2.9.tar.gz</a></strong></p>
+<ul>
+<li>&quot;fromfd&quot; functions added allowing to wrap native OS sockets into lidill's socket classes.</li>
+<li>Couple of bug fixes.</li>
+</ul>
+<p><strong>Apr 27th, 2018 <a href="http://libdill.org/libdill-2.8.tar.gz" class="uri">http://libdill.org/libdill-2.8.tar.gz</a></strong></p>
+<ul>
+<li>hdone() function was removed and replaced by type-specific done functions (e.g. &quot;chdone&quot;, &quot;tcp_done&quot;).</li>
+<li>hdup() was replaced by hown() with different semantics (transfer of ownership).</li>
+<li>PFX protocol renamed to PREFIX.</li>
+<li>CRLF protocol renamed to SUFFIX, allows to sepcify arbitrary delimiter, not just CRLF.</li>
+<li>Terminal handshake removed from PREFIX and SUFFIX protocols.</li>
+<li>New protocol TERM added. It does terminal handshakes.</li>
+<li>EBUSY error if a socket is used from multiple coroutines in parallel.</li>
+<li>All the symbols exported from the library have &quot;dill&quot; prefix.</li>
+<li>Macros to expand raw names to dill-prefixed names (chsend -&gt; dill_chsend).</li>
+<li>DILL_DISABLE_RAW_NAMES disables the raw name macros, prevents name clashes with different libraries.</li>
+<li>Funcion ipaddr_equal() added. Compares two IP addresses.</li>
+<li>Handle numbers are reused much more rarely.</li>
+<li>Many bugfixes.</li>
+</ul>
+<p><strong>Apr 1st, 2018 <a href="http://libdill.org/libdill-2.7.tar.gz" class="uri">http://libdill.org/libdill-2.7.tar.gz</a></strong></p>
+<ul>
+<li>All mem functions take a structure instead of a raw byte buffer
+<ul>
+<li>More compile-time safety checks</li>
+<li>Alignment done by compiler rather than left to the user</li>
+</ul></li>
+<li>PFX protocol is parametrized
+<ul>
+<li>Customizable size of the 'size' field</li>
+<li>Customizable endianness of the field</li>
+</ul></li>
+<li>Several bug fixes.</li>
+</ul>
+<p><strong>Mar 23rd, 2018 <a href="http://libdill.org/libdill-2.6.tar.gz" class="uri">http://libdill.org/libdill-2.6.tar.gz</a></strong></p>
+<ul>
+<li>Experimental support for WebSockets added</li>
+</ul>
+<p><strong>Mar 3rd, 2018 <a href="http://libdill.org/libdill-2.5.tar.gz" class="uri">http://libdill.org/libdill-2.5.tar.gz</a></strong></p>
+<ul>
+<li>Bug in TLS protocol solved</li>
+<li>Function budle_wait added</li>
+<li>Brand new man pages</li>
+</ul>
+<p><strong>Feb 17th, 2018 <a href="http://libdill.org/libdill-2.4.tar.gz" class="uri">http://libdill.org/libdill-2.4.tar.gz</a></strong></p>
+<ul>
+<li>Experimental TLS protocol</li>
+<li>Experimental HTTP protocol</li>
+</ul>
+<p><strong>Feb 10th, 2018 <a href="http://libdill.org/libdill-2.3.tar.gz" class="uri">http://libdill.org/libdill-2.3.tar.gz</a></strong></p>
+<ul>
+<li>tcp_listen_mem</li>
+<li>tcp_accept_mem</li>
+<li>tcp_connect_mem</li>
+<li>ipc_listen_mem</li>
+<li>ipc_accept_mem</li>
+<li>ipc_connect_mem</li>
+<li>ipc_pair_mem</li>
+<li>crlf_attach_mem</li>
+<li>pfx_attach_mem</li>
+<li>udp_open_mem</li>
+</ul>
+<p><strong>Feb 4th, 2018 <a href="http://libdill.org/libdill-2.2.tar.gz" class="uri">http://libdill.org/libdill-2.2.tar.gz</a></strong></p>
+<ul>
+<li>hdone() can be called on a bundle to wait for coroutines to finish</li>
+</ul>
+<p><strong>Feb 1st, 2018 <a href="http://libdill.org/libdill-2.1.tar.gz" class="uri">http://libdill.org/libdill-2.1.tar.gz</a></strong></p>
+<ul>
+<li>Coroutine bundles added</li>
+<li>struct chmem replaced by CHSIZE macro</li>
+<li>hctrl removed</li>
+</ul>
+<p><strong>Jan 15th, 2018 <a href="http://libdill.org/libdill-2.0.tar.gz" class="uri">http://libdill.org/libdill-2.0.tar.gz</a></strong></p>
+<ul>
+<li>Channels are untyped</li>
+<li>Channels are bidirectional</li>
+<li>A control channel is associated with each coroutine</li>
+</ul>
+<p><strong>Dec 28th, 2017 <a href="http://libdill.org/libdill-1.7.tar.gz" class="uri">http://libdill.org/libdill-1.7.tar.gz</a></strong></p>
+<ul>
+<li>UDP sockets added</li>
+<li>Minor bug fixes</li>
+</ul>
+<p><strong>Apr 8th, 2017 <a href="http://libdill.org/libdill-1.6.tar.gz" class="uri">http://libdill.org/libdill-1.6.tar.gz</a></strong></p>
+<ul>
+<li>Bug fix release.</li>
+</ul>
+<p><strong>Mar 17th, 2017 <a href="http://libdill.org/libdill-1.5.tar.gz" class="uri">http://libdill.org/libdill-1.5.tar.gz</a></strong></p>
+<ul>
+<li>Two simple framing protocols added (CRLF and PFX).</li>
+<li>hdone() function has deadline parameter.</li>
+<li>Support for gcov added.</li>
+</ul>
+<p><strong>Mar 11th, 2017 <a href="http://libdill.org/libdill-1.4.tar.gz" class="uri">http://libdill.org/libdill-1.4.tar.gz</a></strong></p>
+<ul>
+<li>TCP and IPC (AF_UNIX) support added.</li>
+<li>libdillimpl.h created for stuff needed by protocol implementors.</li>
+<li>hmake() and hquery() functions moved to libdillimpl.h</li>
+</ul>
+<p><strong>Feb 25th, 2017 <a href="http://libdill.org/libdill-1.3.tar.gz" class="uri">http://libdill.org/libdill-1.3.tar.gz</a></strong></p>
+<ul>
+<li>DNS resolution functions added.</li>
+<li>hdone() added.</li>
+<li>Bug fixes.</li>
+<li>Performance improvements.</li>
+</ul>
+<p><strong>Feb 5th, 2017 <a href="http://libdill.org/libdill-1.2.tar.gz" class="uri">http://libdill.org/libdill-1.2.tar.gz</a></strong></p>
+<ul>
+<li>If the CPU is at 100%, external events, such as those from file descriptors, are checked once per second.</li>
+<li>Multiple optimizations.</li>
+<li>Multiple bug fixes.</li>
+</ul>
+<p><strong>Jan 1st, 2017 <a href="http://libdill.org/libdill-1.1.tar.gz" class="uri">http://libdill.org/libdill-1.1.tar.gz</a></strong></p>
+<ul>
+<li>Multiple bugfixes.</li>
+<li>Multiple performance enhancements.</li>
+<li>fdclean() returns EBUSY error if file descriptor is being waited for by a different coroutine.</li>
+</ul>
+<p><strong>Dec 16th, 2016 <a href="http://libdill.org/libdill-1.0.tar.gz" class="uri">http://libdill.org/libdill-1.0.tar.gz</a></strong></p>
+<ul>
+<li>Final API cleanup before the first official release
+<ul>
+<li><code>channel</code> renamed to <code>chmake</code></li>
+<li><code>go_stack</code> renamed to <code>go_mem</code></li>
+</ul></li>
+<li>Simplification of channel semantics
+<ul>
+<li>Channels are always unbuffered</li>
+<li><code>choose</code> has deterministic behavior</li>
+</ul></li>
+<li><p><code>chmake_mem</code> function added</p></li>
+<li><p>Man pages added to the package</p></li>
+<li><p>Some bug fixes</p></li>
+</ul>
+<p><strong>Dec 6th, 2016 <a href="http://libdill.org/libdill-0.11-beta.tar.gz" class="uri">http://libdill.org/libdill-0.11-beta.tar.gz</a></strong></p>
+<ul>
+<li>Make the library <a href="threads.html">thread-friendly</a>.</li>
+</ul>
+<p><strong>Nov 27, 2016 <a href="http://libdill.org/libdill-0.10-beta.tar.gz" class="uri">http://libdill.org/libdill-0.10-beta.tar.gz</a></strong></p>
+<ul>
+<li>Rename hcreate() to hmake(). hcreate() clashes with the POSIX function of the same name.</li>
+</ul>
+<p><strong>Nov 19, 2016 <a href="http://libdill.org/libdill-0.9-beta.tar.gz" class="uri">http://libdill.org/libdill-0.9-beta.tar.gz</a></strong></p>
+<ul>
+<li><p>A lot of optimizations. A context switch has been seen to execute in 6ns, coroutine creation in 26ns and passing a message through a channel in 40ns.</p></li>
+<li><p>The new <code>go_stack()</code> construct allows running coroutines on a user-allocated stack.</p></li>
+<li><p>The New <code>--enable-census</code> option monitors coroutines' stack usage and prints statistics on process shutdown.</p></li>
+<li><p>Mutliple bug fixes.</p></li>
+</ul>
+<p><strong>Oct 16, 2016 <a href="http://libdill.org/libdill-0.8-beta.tar.gz" class="uri">http://libdill.org/libdill-0.8-beta.tar.gz</a></strong><br />
+<strong>Oct 13, 2016 <a href="http://libdill.org/libdill-0.7-beta.tar.gz" class="uri">http://libdill.org/libdill-0.7-beta.tar.gz</a></strong><br />
+<strong>Sep 07, 2016 <a href="http://libdill.org/libdill-0.6-beta.tar.gz" class="uri">http://libdill.org/libdill-0.6-beta.tar.gz</a></strong><br />
+<strong>Jun 03, 2016 <a href="http://libdill.org/libdill-0.5-beta.tar.gz" class="uri">http://libdill.org/libdill-0.5-beta.tar.gz</a></strong><br />
+<strong>May 22, 2016 <a href="http://libdill.org/libdill-0.4-beta.tar.gz" class="uri">http://libdill.org/libdill-0.4-beta.tar.gz</a></strong><br />
+<strong>May 15, 2016 <a href="http://libdill.org/libdill-0.3-beta.tar.gz" class="uri">http://libdill.org/libdill-0.3-beta.tar.gz</a></strong></p>
+</body>

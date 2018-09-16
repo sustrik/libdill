@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>now - get current time</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int64_t</span> now(<span class="dt">void</span>);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>Returns current time, in milliseconds.</p>
+<p>The function is meant for creating deadlines. For example, a point of time one second from now can be expressed as <strong>now() + 1000</strong>.</p>
+<p>The following values have special meaning and cannot be returned by the function:</p>
+<ul>
+<li>0: Immediate deadline.</li>
+<li>-1: Infinite deadline.</li>
+</ul>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>Current time.</p>
+<h1 id="errors">ERRORS</h1>
+<p>None.</p>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> result = chrecv(ch, &amp;val, <span class="kw">sizeof</span>(val), now() + <span class="dv">1000</span>);
+<span class="cf">if</span>(result == <span class="dv">-1</span> &amp;&amp; errno == ETIMEDOUT) {
+    printf(<span class="st">&quot;One second elapsed without receiving a message.</span><span class="sc">\n</span><span class="st">&quot;</span>);
+}</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>msleep</strong>(3)</p>
+</body>

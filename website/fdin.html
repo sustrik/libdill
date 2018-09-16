@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>fdin - waits on a file descriptor to become readable</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int</span> fdin(
+    <span class="dt">int</span> fd,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>Waits on a file descriptor (true OS file descriptor, not libdill socket handle) to either become readable or get into an error state. Either case leads to a successful return from the function. To distinguish the two outcomes, follow up with a read operation on the file descriptor.</p>
+<p><strong>fd</strong>: file descriptor (OS-level one, not a libdill handle)</p>
+<p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns 0. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EBADF</strong>: Not a file descriptor.</li>
+<li><strong>EBUSY</strong>: Another coroutine already blocked on <strong>fdin</strong> with this file descriptor.</li>
+<li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
+<li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> result = fcntl(fd, F_SETFL, O_NONBLOCK);
+assert(result == <span class="dv">0</span>);
+<span class="cf">while</span>(<span class="dv">1</span>) {
+    result = fdin(fd, <span class="dv">-1</span>);
+    assert(result == <span class="dv">0</span>);
+    <span class="dt">char</span> buf[<span class="dv">1024</span>];
+    <span class="dt">ssize_t</span> len = recv(fd, buf, <span class="kw">sizeof</span>(buf), <span class="dv">0</span>);
+    assert(len &gt; <span class="dv">0</span>);
+    process_input(buf, len);
+}</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>fdclean</strong>(3) <strong>fdout</strong>(3) <strong>now</strong>(3)</p>
+</body>

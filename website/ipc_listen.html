@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>ipc_listen - starts listening for incoming IPC connections</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int</span> ipc_listen(
+    <span class="dt">const</span> <span class="dt">char</span>* addr,
+    <span class="dt">int</span> backlog);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>IPC protocol is a bytestream protocol for transporting data among processes on the same machine. It is an equivalent to POSIX <strong>AF_LOCAL</strong> sockets.</p>
+<p>This function starts listening for incoming IPC connections. The connections can be accepted using <strong>ipc_accept</strong> function.</p>
+<p><strong>addr</strong>: The filename to listen on.</p>
+<p><strong>backlog</strong>: Maximum number of connections that can be kept open without accepting them.</p>
+<p>The socket can be closed either by <strong>hclose</strong> or <strong>ipc_close</strong>. Both ways are equivalent.</p>
+<p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns newly created socket. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EACCES</strong>: The process does not have appropriate privileges.</li>
+<li><strong>EADDRINUSE</strong>: The specified address is already in use.</li>
+<li><strong>EINVAL</strong>: Invalid argument.</li>
+<li><strong>ELOOP</strong>: A loop exists in symbolic links encountered during resolution of the pathname in address.</li>
+<li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.</li>
+<li><strong>ENAMETOOLONG</strong>: A component of a pathname exceeded <strong>NAME_MAX</strong> characters, or an entire pathname exceeded <strong>PATH_MAX</strong> characters.</li>
+<li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.</li>
+<li><strong>ENOENT</strong>: A component of the pathname does not name an existing file or the pathname is an empty string.</li>
+<li><strong>ENOMEM</strong>: Not enough memory.</li>
+<li><strong>ENOTDIR</strong>: A component of the path prefix of the pathname in address is not a directory.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> ls = ipc_listen(<span class="st">&quot;/tmp/test.ipc&quot;</span>, <span class="dv">10</span>);
+<span class="dt">int</span> s = ipc_accept(ls, <span class="dv">-1</span>);
+bsend(s, <span class="st">&quot;ABC&quot;</span>, <span class="dv">3</span>, <span class="dv">-1</span>);
+<span class="dt">char</span> buf[<span class="dv">3</span>];
+brecv(s, buf, <span class="kw">sizeof</span>(buf), <span class="dv">-1</span>);
+ipc_close(s);
+ipc_close(ls);</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>brecv</strong>(3) <strong>brecvl</strong>(3) <strong>bsend</strong>(3) <strong>bsendl</strong>(3) <strong>hclose</strong>(3) <strong>ipc_accept</strong>(3) <strong>ipc_accept_mem</strong>(3) <strong>ipc_close</strong>(3) <strong>ipc_connect</strong>(3) <strong>ipc_connect_mem</strong>(3) <strong>ipc_done</strong>(3) <strong>ipc_fromfd</strong>(3) <strong>ipc_fromfd_mem</strong>(3) <strong>ipc_listen_mem</strong>(3) <strong>ipc_listener_fromfd</strong>(3) <strong>ipc_listener_fromfd_mem</strong>(3) <strong>ipc_pair</strong>(3) <strong>ipc_pair_mem</strong>(3)</p>
+</body>

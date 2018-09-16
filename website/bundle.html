@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>bundle - create an empty coroutine bundle</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int</span> bundle(<span class="dt">void</span>);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>Coroutines are always running in bundles. Even a single coroutine created by <strong>go</strong> gets its own bundle. A bundle is a lifetime control mechanism. When it is closed, all coroutines within the bundle are canceled.</p>
+<p>This function creates an empty bundle. Coroutines can be added to the bundle using the <strong>bundle_go</strong> and <strong>bundle_go_mem</strong> functions.</p>
+<p>To wait until coroutines in the bundle finish use <strong>bundle_wait</strong> function.</p>
+<p>When <strong>hclose()</strong> is called on the bundle, all the coroutines contained in the bundle will be canceled. In other words, all the blocking functions within the coroutine will start failing with an <strong>ECANCELED</strong> error. The <strong>hclose()</strong> function itself won't exit until all the coroutines in the bundle exit.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns handle of the newly create coroutine bundle. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EMFILE</strong>: The maximum number of file descriptors in the process are already open.</li>
+<li><strong>ENFILE</strong>: The maximum number of file descriptors in the system are already open.</li>
+<li><strong>ENOMEM</strong>: Not enough memory.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> b = bundle();
+bundle_go(b, worker());
+bundle_go(b, worker());
+bundle_go(b, worker());
+<span class="co">/* Give wrokers 1 second to finish. */</span>
+bundle_wait(b, now() + <span class="dv">1000</span>);
+<span class="co">/* Cancel any remaining workers. */</span>
+hclose(b);</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>bundle_go</strong>(3) <strong>bundle_go_mem</strong>(3) <strong>bundle_mem</strong>(3) <strong>bundle_wait</strong>(3) <strong>go</strong>(3) <strong>go_mem</strong>(3) <strong>hclose</strong>(3) <strong>yield</strong>(3)</p>
+</body>

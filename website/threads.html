@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="threads">Threads</h1>
+<p>You can use libdill in multi-threaded programs. However, individual threads are strictly separated. You may think of each thread as a separate process.</p>
+<p>In particular, a coroutine created in a thread will be executed in that same thread, and it will never migrate to a different one.</p>
+<p>In a similar manner, a handle, such as a channel or a coroutine handle, created in one thread cannot be used in a different thread.</p>
+</body>

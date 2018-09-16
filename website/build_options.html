@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="libdill-build-options">Libdill build options</h1>
+<p>When including a header file (<code>libdill.h</code> or <code>libdillimpl.h</code>) you can define following macros:</p>
+<ul>
+<li><code>DILL_DISABLE_SOCKETS</code>: Don't declare socket-related symbols.</li>
+<li><code>DILL_DISABLE_RAW_NAMES</code>: Each name in libdill has two variants. One is raw (&quot;go&quot;, &quot;WS_TEXT&quot;, &quot;struct iolist&quot;), another one has a prefix (&quot;dill_go&quot;, &quot;DILL_WS_TEXT&quot;, &quot;struct dill_iolist&quot;). Defining this macro causes raw variants not to be declared. Use this option if you want to avoid name colisions with third party header files.</li>
+</ul>
+<p>When building the library you can pass the following options to <code>./configure</code>:</p>
+<ul>
+<li><code>--disable-shared</code>: Generate only a static library. This option causes tests to be linked with libdill statically, thereby making debugging easier.</li>
+<li><code>--disable-sockets</code>: Don't build libdill's socket library. Build only the core functionality.</li>
+<li><code>--disable-threads</code>: Can be used with single-threaded programs. It will make libdill a little bit faster and make it not depend on the pthread library.</li>
+<li><code>--enable-census</code>: When this option is set, the library keeps track of stack space used by individual coroutines. It prints statistics when the process exits.</li>
+<li><code>--enable-debug</code>: Add debug info to the library.</li>
+<li><code>--enable-gcov</code>: Generate coverage report using gcov.</li>
+<li><code>--enable-tls</code>: Build TLS protocol. To be able to build with this option you need OpenSSL 1.1.0. or later installed on your machine.</li>
+<li><code>--enable-valgrind</code>: Valgrind gets confused by libdill's coroutines. Setting this option helps valgrind make sense of what's going on. It's not 100% foolproof but it helps eliminate many false positives.</li>
+</ul>
+</body>

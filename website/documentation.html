@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="documentation">Documentation</h1>
+<p><a href="build_options.html">Build options</a><br />
+<a href="compatibility.html">Compatibility</a><br />
+<a href="threads.html">Threads</a></p>
+<h4 id="coroutines">Coroutines</h4>
+<ul>
+<li><a href="bundle.html">bundle(3)</a></li>
+<li><a href="bundle_go.html">bundle_go(3)</a></li>
+<li><a href="bundle_go_mem.html">bundle_go_mem(3)</a></li>
+<li><a href="bundle_mem.html">bundle_mem(3)</a></li>
+<li><a href="bundle_wait.html">bundle_wait(3)</a></li>
+<li><a href="go.html">go(3)</a></li>
+<li><a href="go_mem.html">go_mem(3)</a></li>
+<li><a href="yield.html">yield(3)</a></li>
+</ul>
+<h4 id="deadlines">Deadlines</h4>
+<ul>
+<li><a href="msleep.html">msleep(3)</a></li>
+<li><a href="now.html">now(3)</a></li>
+</ul>
+<h4 id="channels">Channels</h4>
+<ul>
+<li><a href="chdone.html">chdone(3)</a></li>
+<li><a href="chmake.html">chmake(3)</a></li>
+<li><a href="chmake_mem.html">chmake_mem(3)</a></li>
+<li><a href="choose.html">choose(3)</a></li>
+<li><a href="chrecv.html">chrecv(3)</a></li>
+<li><a href="chsend.html">chsend(3)</a></li>
+</ul>
+<h4 id="handles">Handles</h4>
+<ul>
+<li><a href="hclose.html">hclose(3)</a></li>
+<li><a href="hmake.html">hmake(3)</a></li>
+<li><a href="hown.html">hown(3)</a></li>
+<li><a href="hquery.html">hquery(3)</a></li>
+</ul>
+<h4 id="file-descriptors">File descriptors</h4>
+<ul>
+<li><a href="fdclean.html">fdclean(3)</a></li>
+<li><a href="fdin.html">fdin(3)</a></li>
+<li><a href="fdout.html">fdout(3)</a></li>
+</ul>
+<h4 id="bytestream-sockets">Bytestream sockets</h4>
+<ul>
+<li><a href="brecv.html">brecv(3)</a></li>
+<li><a href="brecvl.html">brecvl(3)</a></li>
+<li><a href="bsend.html">bsend(3)</a></li>
+<li><a href="bsendl.html">bsendl(3)</a></li>
+</ul>
+<h4 id="message-sockets">Message sockets</h4>
+<ul>
+<li><a href="mrecv.html">mrecv(3)</a></li>
+<li><a href="mrecvl.html">mrecvl(3)</a></li>
+<li><a href="msend.html">msend(3)</a></li>
+<li><a href="msendl.html">msendl(3)</a></li>
+</ul>
+<h4 id="ip-addresses">IP addresses</h4>
+<ul>
+<li><a href="ipaddr_equal.html">ipaddr_equal(3)</a></li>
+<li><a href="ipaddr_family.html">ipaddr_family(3)</a></li>
+<li><a href="ipaddr_len.html">ipaddr_len(3)</a></li>
+<li><a href="ipaddr_local.html">ipaddr_local(3)</a></li>
+<li><a href="ipaddr_port.html">ipaddr_port(3)</a></li>
+<li><a href="ipaddr_remote.html">ipaddr_remote(3)</a></li>
+<li><a href="ipaddr_setport.html">ipaddr_setport(3)</a></li>
+<li><a href="ipaddr_sockaddr.html">ipaddr_sockaddr(3)</a></li>
+<li><a href="ipaddr_str.html">ipaddr_str(3)</a></li>
+</ul>
+<h4 id="http-protocol">HTTP protocol</h4>
+<ul>
+<li><a href="http_attach.html">http_attach(3)</a></li>
+<li><a href="http_attach_mem.html">http_attach_mem(3)</a></li>
+<li><a href="http_detach.html">http_detach(3)</a></li>
+<li><a href="http_done.html">http_done(3)</a></li>
+<li><a href="http_recvfield.html">http_recvfield(3)</a></li>
+<li><a href="http_recvrequest.html">http_recvrequest(3)</a></li>
+<li><a href="http_recvstatus.html">http_recvstatus(3)</a></li>
+<li><a href="http_sendfield.html">http_sendfield(3)</a></li>
+<li><a href="http_sendrequest.html">http_sendrequest(3)</a></li>
+<li><a href="http_sendstatus.html">http_sendstatus(3)</a></li>
+</ul>
+<h4 id="ipc-protocol">IPC protocol</h4>
+<ul>
+<li><a href="ipc_accept.html">ipc_accept(3)</a></li>
+<li><a href="ipc_accept_mem.html">ipc_accept_mem(3)</a></li>
+<li><a href="ipc_close.html">ipc_close(3)</a></li>
+<li><a href="ipc_connect.html">ipc_connect(3)</a></li>
+<li><a href="ipc_connect_mem.html">ipc_connect_mem(3)</a></li>
+<li><a href="ipc_done.html">ipc_done(3)</a></li>
+<li><a href="ipc_fromfd.html">ipc_fromfd(3)</a></li>
+<li><a href="ipc_fromfd_mem.html">ipc_fromfd_mem(3)</a></li>
+<li><a href="ipc_listen.html">ipc_listen(3)</a></li>
+<li><a href="ipc_listen_mem.html">ipc_listen_mem(3)</a></li>
+<li><a href="ipc_listener_fromfd.html">ipc_listener_fromfd(3)</a></li>
+<li><a href="ipc_listener_fromfd_mem.html">ipc_listener_fromfd_mem(3)</a></li>
+<li><a href="ipc_pair.html">ipc_pair(3)</a></li>
+<li><a href="ipc_pair_mem.html">ipc_pair_mem(3)</a></li>
+</ul>
+<h4 id="prefix-protocol">PREFIX protocol</h4>
+<ul>
+<li><a href="prefix_attach.html">prefix_attach(3)</a></li>
+<li><a href="prefix_attach_mem.html">prefix_attach_mem(3)</a></li>
+<li><a href="prefix_detach.html">prefix_detach(3)</a></li>
+</ul>
+<h4 id="suffix-protocol">SUFFIX protocol</h4>
+<ul>
+<li><a href="suffix_attach.html">suffix_attach(3)</a></li>
+<li><a href="suffix_attach_mem.html">suffix_attach_mem(3)</a></li>
+<li><a href="suffix_detach.html">suffix_detach(3)</a></li>
+</ul>
+<h4 id="tcp-protocol">TCP protocol</h4>
+<ul>
+<li><a href="tcp_accept.html">tcp_accept(3)</a></li>
+<li><a href="tcp_accept_mem.html">tcp_accept_mem(3)</a></li>
+<li><a href="tcp_close.html">tcp_close(3)</a></li>
+<li><a href="tcp_connect.html">tcp_connect(3)</a></li>
+<li><a href="tcp_connect_mem.html">tcp_connect_mem(3)</a></li>
+<li><a href="tcp_done.html">tcp_done(3)</a></li>
+<li><a href="tcp_fromfd.html">tcp_fromfd(3)</a></li>
+<li><a href="tcp_fromfd_mem.html">tcp_fromfd_mem(3)</a></li>
+<li><a href="tcp_listen.html">tcp_listen(3)</a></li>
+<li><a href="tcp_listen_mem.html">tcp_listen_mem(3)</a></li>
+<li><a href="tcp_listener_fromfd.html">tcp_listener_fromfd(3)</a></li>
+<li><a href="tcp_listener_fromfd_mem.html">tcp_listener_fromfd_mem(3)</a></li>
+</ul>
+<h4 id="term-protocol">TERM protocol</h4>
+<ul>
+<li><a href="term_attach.html">term_attach(3)</a></li>
+<li><a href="term_attach_mem.html">term_attach_mem(3)</a></li>
+<li><a href="term_detach.html">term_detach(3)</a></li>
+<li><a href="term_done.html">term_done(3)</a></li>
+</ul>
+<h4 id="tls-protocol">TLS protocol</h4>
+<ul>
+<li><a href="tls_attach_client.html">tls_attach_client(3)</a></li>
+<li><a href="tls_attach_client_mem.html">tls_attach_client_mem(3)</a></li>
+<li><a href="tls_attach_server.html">tls_attach_server(3)</a></li>
+<li><a href="tls_attach_server_mem.html">tls_attach_server_mem(3)</a></li>
+<li><a href="tls_detach.html">tls_detach(3)</a></li>
+<li><a href="tls_done.html">tls_done(3)</a></li>
+</ul>
+<h4 id="udp-protocol">UDP protocol</h4>
+<ul>
+<li><a href="udp_open.html">udp_open(3)</a></li>
+<li><a href="udp_open_mem.html">udp_open_mem(3)</a></li>
+<li><a href="udp_recv.html">udp_recv(3)</a></li>
+<li><a href="udp_recvl.html">udp_recvl(3)</a></li>
+<li><a href="udp_send.html">udp_send(3)</a></li>
+<li><a href="udp_sendl.html">udp_sendl(3)</a></li>
+</ul>
+<h4 id="websocket-protocol">WebSocket protocol</h4>
+<ul>
+<li><a href="ws_attach_client.html">ws_attach_client(3)</a></li>
+<li><a href="ws_attach_client_mem.html">ws_attach_client_mem(3)</a></li>
+<li><a href="ws_attach_server.html">ws_attach_server(3)</a></li>
+<li><a href="ws_attach_server_mem.html">ws_attach_server_mem(3)</a></li>
+<li><a href="ws_detach.html">ws_detach(3)</a></li>
+<li><a href="ws_done.html">ws_done(3)</a></li>
+<li><a href="ws_recv.html">ws_recv(3)</a></li>
+<li><a href="ws_recvl.html">ws_recvl(3)</a></li>
+<li><a href="ws_request_key.html">ws_request_key(3)</a></li>
+<li><a href="ws_response_key.html">ws_response_key(3)</a></li>
+<li><a href="ws_send.html">ws_send(3)</a></li>
+<li><a href="ws_sendl.html">ws_sendl(3)</a></li>
+<li><a href="ws_status.html">ws_status(3)</a></li>
+</ul>
+</body>

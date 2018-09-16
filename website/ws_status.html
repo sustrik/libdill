@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>ws_status - retrieves the status after protocol termination</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">ssize_t</span> ws_status(
+    <span class="dt">int</span> s,
+    <span class="dt">int</span>* status,
+    <span class="dt">void</span>* buf,
+    <span class="dt">size_t</span> len);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p><strong>WARNING: This is experimental functionality and the API may change in the future.</strong></p>
+<p>WebSocket is a message-based protocol defined in RFC 6455. It can be used as a bidirectional communication channel for communication with a web server.</p>
+<p>When peer shuts down the protocol, receiving functions will start failing with <strong>EPIPE</strong> error. Once that happens <strong>ws_status</strong> function allows to retrieve the status and message sent by the peer when it closed the protocol.</p>
+<p><strong>s</strong>: The socket handle.</p>
+<p><strong>status</strong>: Out parameter. Status number sent by the peer. If zero, there was no status.</p>
+<p><strong>buf</strong>: Buffer to fill the terminal message into. If set to <strong>NULL</strong> the message won't be returned.</p>
+<p><strong>len</strong>: Size of the buffer, in bytes.</p>
+<p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns length of the terminal message. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EAGAIN</strong>: The connection wasn't yet terminated by the peer.</li>
+<li><strong>EBADF</strong>: Invalid handle.</li>
+<li><strong>EINVAL</strong>: Invalid argument.</li>
+<li><strong>EMSGSIZE</strong>: The message doesn't fit in the supplied buffer.</li>
+<li><strong>ENOTSUP</strong>: The handle does not support this operation.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="kw">struct</span> ipaddr addr;
+ipaddr_remote(&amp;addr, <span class="st">&quot;www.example.org&quot;</span>, <span class="dv">80</span>, <span class="dv">0</span>, <span class="dv">-1</span>);
+<span class="dt">int</span> s = tcp_connect(&amp;addr, <span class="dv">-1</span>);
+s = ws_attach_client(s, <span class="st">&quot;/&quot;</span>, <span class="st">&quot;www.example.org&quot;</span>, WS_TEXT, <span class="dv">-1</span>);
+ws_send(s, WS_TEXT, <span class="st">&quot;Hello, world!&quot;</span>, <span class="dv">13</span>, <span class="dv">-1</span>);
+<span class="dt">int</span> flags;
+<span class="dt">char</span> buf[<span class="dv">256</span>];
+<span class="dt">ssize_t</span> sz = ws_recv(s, &amp;flags, buf, <span class="kw">sizeof</span>(buf), <span class="dv">-1</span>);
+assert(flags &amp; WS_TEXT);
+s = ws_detach(s, <span class="dv">-1</span>);
+tcp_close(s, <span class="dv">-1</span>);</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>mrecv</strong>(3) <strong>mrecvl</strong>(3) <strong>msend</strong>(3) <strong>msendl</strong>(3) <strong>ws_attach_client</strong>(3) <strong>ws_attach_client_mem</strong>(3) <strong>ws_attach_server</strong>(3) <strong>ws_attach_server_mem</strong>(3) <strong>ws_detach</strong>(3) <strong>ws_done</strong>(3) <strong>ws_recv</strong>(3) <strong>ws_recvl</strong>(3) <strong>ws_request_key</strong>(3) <strong>ws_response_key</strong>(3) <strong>ws_send</strong>(3) <strong>ws_sendl</strong>(3)</p>
+</body>

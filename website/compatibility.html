@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="compatibility">Compatibility</h1>
+<h3 id="operating-systems">Operating Systems</h3>
+<p>Currently, only modern POSIX systems are supported. The library has been tested mainly on Linux, FreeBSD, and OSX.</p>
+<p>It is likely to work with DragonFlyBSD as well. NetBSD and OpenBSD will probably need <code>DILL_THREAD_FALLBACK</code> to work as they don't have support for thread local storage. If you are using libdill on these platforms, please let us know.</p>
+<p>There is currently no support for Windows. Cygwin is very broken. It doesn't support <code>AF_UNIX</code> properly, and so no further development will be done for this platform.<br />
+Libdill is planned to be ported to Mingw and Windows IOCP instead. Help is welcome.</p>
+<h3 id="compilers">Compilers</h3>
+<p>libdill requires either GCC and Clang. Your mileage with other compilers may vary:</p>
+<ul>
+<li>Intel compilers may work; please send us a message if you find they do</li>
+<li>The MSVC compiler won't work due to the POSIX features and C extensions in use</li>
+</ul>
+<p>The non-standard language features libdill requires are as follows:</p>
+<ul>
+<li>The <a href="https://gcc.gnu.org/onlinedocs/gcc-3.2/gcc/Statement-Exprs.html">statement expressions</a> GCC-extension, which is used in the <code>go</code> macro.</li>
+<li>GCC-style inline assembly.</li>
+</ul>
+<p>Compiler features and incompatibilities:</p>
+<ul>
+<li>On x86 and x86-64 platforms, the <code>DILL_ARCH_FALLBACK</code> option is incompatible with GCC 6.2.1 when <code>-fstack-protector</code> is enabled. Please compile libdill and your application with <code>-fno-stack-protector</code> if you need to use the fallback. Non-x86 platforms have not been tested with GCC 6.2.1. Please report your mileage.</li>
+<li>Address sanitization and other stack checking compiler features are likely to break your <code>libdill</code> build.</li>
+<li>x32 addressing probably doesn't work, this has not been tested yet.</li>
+</ul>
+<h3 id="standard-libraries">Standard Libraries</h3>
+<h4 id="glibc">glibc</h4>
+<p>Incompatibilities:</p>
+<ul>
+<li>Stack fortification is incompatible with libdill. Do not override the default <code>-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0</code> in a libdill build. Using fortification in your libdill application is possible.</li>
+<li>Stack protection doesn't work with the <code>DILL_ARCH_FALLBACK</code> option. To make it work, try using the <code>-fno-stack-protector</code> option.</li>
+</ul>
+<h4 id="musl">musl</h4>
+<p>Compatible.</p>
+</body>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>bundle_go - launches a coroutine within a bundle</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int</span> bundle_go(
+    <span class="dt">int</span> bndl,
+    expression);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>This construct launches a coroutine within the specified bundle. For more information about bundles see <strong>bundle</strong>.</p>
+<p>The coroutine gets a 1MB stack. The stack is guarded by a non-writeable memory page. Therefore, stack overflow will result in a <strong>SEGFAULT</strong> rather than overwriting memory that doesn't belong to it.</p>
+<p><strong>bndl</strong>: Bundle to launch the coroutine in.</p>
+<p><strong>expression</strong>: Expression to evaluate as a coroutine.</p>
+<p>The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller coroutine. The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.</p>
+<p>Any function to be invoked as a coroutine must be declared with the <strong>coroutine</strong> specifier.</p>
+<p>Use <strong>hclose</strong> to cancel the coroutine. When the coroutine is canceled all the blocking calls within the coroutine will start failing with <strong>ECANCELED</strong> error.</p>
+<p><em>WARNING</em>: Coroutines will most likely work even without the coroutine specifier. However, they may fail in random non-deterministic ways, depending on the code in question and the particular combination of compiler and optimization level. Additionally, arguments to a coroutine must not be function calls. If they are, the program may fail non-deterministically. If you need to pass a result of a computation to a coroutine, do the computation first, and then pass the result as an argument. Instead of:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">go(bar(foo(a)));</code></pre></div>
+<p>Do this:</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> a = foo();
+go(bar(a));</code></pre></div>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns 0. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EBADF</strong>: Invalid handle.</li>
+<li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
+<li><strong>ENOMEM</strong>: Not enough memory.</li>
+<li><strong>ENOTSUP</strong>: The handle does not support this operation.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> b = bundle();
+bundle_go(b, worker());
+bundle_go(b, worker());
+bundle_go(b, worker());
+<span class="co">/* Give wrokers 1 second to finish. */</span>
+bundle_wait(b, now() + <span class="dv">1000</span>);
+<span class="co">/* Cancel any remaining workers. */</span>
+hclose(b);</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>bundle</strong>(3) <strong>bundle_go_mem</strong>(3) <strong>bundle_mem</strong>(3) <strong>bundle_wait</strong>(3) <strong>go</strong>(3) <strong>go_mem</strong>(3) <strong>yield</strong>(3)</p>
+</body>

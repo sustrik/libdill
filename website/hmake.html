@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>hmake - creates a handle</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdillimpl.h&gt;</span>
+
+<span class="kw">struct</span> hvfs {
+    <span class="dt">void</span> *(*query)(<span class="kw">struct</span> hvfs *vfs, <span class="dt">const</span> <span class="dt">void</span> *type);
+    <span class="dt">void</span> (*close)(<span class="dt">int</span> h);
+    <span class="dt">int</span> (*done)(<span class="kw">struct</span> hvfs *vfs, <span class="dt">int64_t</span> deadline);
+};
+
+<span class="dt">int</span> hmake(
+    <span class="kw">struct</span> hvfs* hvfs);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p>A handle is the user-space equivalent of a file descriptor. Coroutines and channels are represented by handles.</p>
+<p>Unlike with file descriptors, however, you can use the <strong>hmake</strong> function to create your own type of handle.</p>
+<p>The argument of the function is a virtual-function table of operations associated with the handle.</p>
+<p>When implementing the <strong>close</strong> operation, keep in mind that invoking blocking operations is not allowed, as blocking operations invoked within the context of a <strong>close</strong> operation will fail with an <strong>ECANCELED</strong> error.</p>
+<p>To close a handle, use the <strong>hclose</strong> function.</p>
+<p><strong>hvfs</strong>: virtual-function table of operations associated with the handle</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns newly created handle. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
+<li><strong>EINVAL</strong>: Invalid argument.</li>
+<li><strong>ENOMEM</strong>: Not enough memory.</li>
+</ul>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>hclose</strong>(3) <strong>hown</strong>(3) <strong>hquery</strong>(3)</p>
+</body>
