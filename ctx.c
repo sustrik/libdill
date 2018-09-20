@@ -87,7 +87,7 @@ static int dill_ismain() {
 #error "Cannot determine which thread is the main thread."
 #endif
 
-#if defined __GNUC__ && 0 // !defined DILL_THREAD_FALLBACK
+#if defined __GNUC__ && !defined DILL_THREAD_FALLBACK
 
 __thread struct dill_ctx dill_ctx_ = {0};
 
@@ -132,8 +132,8 @@ struct dill_ctx *dill_ctx_init(void) {
     dill_assert(rc == 0);
     if(dill_ismain()) {
         dill_main = &dill_ctx_;
-        //rc = atexit(dill_ctx_atexit);
-        //dill_assert(rc == 0);
+        rc = atexit(dill_ctx_atexit);
+        dill_assert(rc == 0);
     }
     rc = pthread_setspecific(dill_key, &dill_ctx_);
     dill_assert(rc == 0);
@@ -189,8 +189,8 @@ struct dill_ctx *dill_getctx_(void) {
     dill_assert(rc == 0);
     if(dill_ismain()) {
         dill_main = ctx;
-        //rc = atexit(dill_ctx_atexit);
-        //dill_assert(rc == 0);
+        rc = atexit(dill_ctx_atexit);
+        dill_assert(rc == 0);
     }
     rc = pthread_setspecific(dill_key, ctx);
     dill_assert(rc == 0);
