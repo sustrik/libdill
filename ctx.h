@@ -31,7 +31,7 @@
 #include "stack.h"
 
 struct dill_ctx {
-#if !defined DILL_THREAD_FALLBACK
+#if 0 // !defined DILL_THREAD_FALLBACK
     int initialized;
 #endif
     struct dill_ctx_now now;
@@ -50,7 +50,7 @@ extern struct dill_ctx dill_ctx_;
 #define dill_getctx \
     (dill_fast(dill_ctx_.initialized) ? &dill_ctx_ : dill_ctx_init())
 
-#elif defined __GNUC__ && !defined DILL_THREAD_FALLBACK
+#elif defined __GNUC__ && 0 // !defined DILL_THREAD_FALLBACK
 
 extern __thread struct dill_ctx dill_ctx_;
 #define dill_getctx \

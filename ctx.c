@@ -87,7 +87,7 @@ static int dill_ismain() {
 #error "Cannot determine which thread is the main thread."
 #endif
 
-#if defined __GNUC__ && !defined DILL_THREAD_FALLBACK
+#if defined __GNUC__ && 0 // !defined DILL_THREAD_FALLBACK
 
 __thread struct dill_ctx dill_ctx_ = {0};
 
