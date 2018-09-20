@@ -189,8 +189,8 @@ struct dill_ctx *dill_getctx_(void) {
     dill_assert(rc == 0);
     if(dill_ismain()) {
         dill_main = ctx;
-        rc = atexit(dill_ctx_atexit);
-        dill_assert(rc == 0);
+        //rc = atexit(dill_ctx_atexit);
+        //dill_assert(rc == 0);
     }
     rc = pthread_setspecific(dill_key, ctx);
     dill_assert(rc == 0);
