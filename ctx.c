@@ -49,6 +49,10 @@ static void dill_ctx_term_(struct dill_ctx *ctx) {
 
 #if !defined DILL_THREADS
 
+/* This implementation of context is used when threading is disabled, i.e.
+   when user wishes to have a single-threaded application. Context is stored
+   in a global variable which is deallocated using an atexit() function. */
+
 struct dill_ctx dill_ctx_ = {0};
 
 static void dill_ctx_atexit(void) {
@@ -97,6 +101,13 @@ static int dill_ismain() {
 
 #if defined __GNUC__ && !defined DILL_THREAD_FALLBACK
 
+/* This implementation is used if the compiler supports thread-local variables.
+   The context is stored in a thread-local variable. It uses pthread_key_create
+   to register a destructor function which cleans the context up after thread
+   exits. However, at least on Linux, the destructor is not called for the
+   main thread. Therefore, atexit() function is registered to clean the
+   main thread's context. */
+
 __thread struct dill_ctx dill_ctx_ = {0};
 
 static pthread_key_t dill_key;
@@ -133,6 +144,13 @@ struct dill_ctx *dill_ctx_init(void) {
 }
 
 #else
+
+/* This is an implementation that doesn't need compiler support for thread-local
+   variables. It creates thread-specific data usin POSIX functions.
+   It uses pthread_key_create to register a destructor function which cleans
+   the context up after thread exits. However, at least on Linux, the destructor
+   is not called for the main thread. Therefore, atexit() function is registered
+   to clean the main thread's context. */
 
 static pthread_key_t dill_key;
 static pthread_once_t dill_keyonce = PTHREAD_ONCE_INIT;
