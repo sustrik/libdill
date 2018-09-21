@@ -23,6 +23,7 @@
 #include "ctx.h"
 
 static void dill_ctx_init_(struct dill_ctx *ctx) {
+    dill_assert(ctx->initialized == 0);
     ctx->initialized = 1;
     int rc = dill_ctx_now_init(&ctx->now);
     dill_assert(rc == 0);
@@ -181,7 +182,7 @@ struct dill_ctx *dill_getctx_(void) {
     dill_assert(rc == 0);
     struct dill_ctx *ctx = pthread_getspecific(dill_key);
     if(dill_fast(ctx)) return ctx;
-    ctx = malloc(sizeof(struct dill_ctx));
+    ctx = calloc(1, sizeof(struct dill_ctx));
     dill_assert(ctx);
     dill_ctx_init_(ctx);
     if(dill_ismain()) {
