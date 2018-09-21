@@ -102,7 +102,7 @@ static int dill_ismain() {
 #error "Cannot determine which thread is the main thread."
 #endif
 
-#if defined __GNUC__ && !defined DILL_THREAD_FALLBACK
+#if defined __GNUC__ && !defined __APPLE__ && !defined DILL_THREAD_FALLBACK
 
 /* This implementation is used if the compiler supports thread-local variables.
    The context is stored in a thread-local variable. It uses pthread_key_create
