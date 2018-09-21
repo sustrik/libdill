@@ -39,12 +39,14 @@ static void dill_ctx_init_(struct dill_ctx *ctx) {
 }
 
 static void dill_ctx_term_(struct dill_ctx *ctx) {
+    dill_assert(ctx->initialized == 1);
     dill_ctx_fd_term(&ctx->fd);
     dill_ctx_pollset_term(&ctx->pollset);
     dill_ctx_stack_term(&ctx->stack);
     dill_ctx_handle_term(&ctx->handle);
     dill_ctx_cr_term(&ctx->cr);
     dill_ctx_now_term(&ctx->now);
+    ctx->initialized = 0;
 }
 
 #if !defined DILL_THREADS
