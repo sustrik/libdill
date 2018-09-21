@@ -35,7 +35,11 @@ tests/chan
 tests/choose
 tests/example
 tests/fd
-tests/go
+tests/go1
+tests/go2
+tests/go3
+tests/go4
+tests/go5
 tests/sleep
 tests/overload
 tests/signals

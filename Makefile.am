@@ -109,7 +109,11 @@ libdill_la_CFLAGS = \
 
 check_PROGRAMS = \
     tests/example \
-    tests/go \
+    tests/go1 \
+    tests/go2 \
+    tests/go3 \
+    tests/go4 \
+    tests/go5 \
     tests/fd \
     tests/handle \
     tests/chan \
