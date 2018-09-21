@@ -137,8 +137,10 @@ struct dill_ctx *dill_ctx_init(void) {
     dill_assert(rc == 0);
     if(dill_ismain()) {
         dill_main = &dill_ctx_;
+#if !defined __APPLE__
         rc = atexit(dill_ctx_atexit);
         dill_assert(rc == 0);
+#endif
     }
     rc = pthread_setspecific(dill_key, &dill_ctx_);
     dill_assert(rc == 0);
@@ -184,8 +186,10 @@ struct dill_ctx *dill_getctx_(void) {
     dill_ctx_init_(ctx);
     if(dill_ismain()) {
         dill_main = ctx;
+#if !defined __APPLE__
         rc = atexit(dill_ctx_atexit);
         dill_assert(rc == 0);
+#endif
     }
     rc = pthread_setspecific(dill_key, ctx);
     dill_assert(rc == 0);
