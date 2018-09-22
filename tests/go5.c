@@ -35,17 +35,19 @@ coroutine void dummy(void) {
 }
 
 int main() {
-    /* Test go_mem. */
-    char *stack = malloc(65536);
-    assert(stack);
-    int cr = go_mem(dummy(), stack, 65536);
-    errno_assert(cr >= 0);
-    int rc = msleep(now() + 100);
-    errno_assert(rc == 0);
-    rc = hclose(cr);
-    errno_assert(rc == 0);
-    free(stack);
-
+    int i;
+    for(i = 0; i != 5; ++i) {
+        /* Test go_mem. */
+        char *stack = malloc(65536);
+        assert(stack);
+        int cr = go_mem(dummy(), stack, 65536);
+        errno_assert(cr >= 0);
+        int rc = msleep(now() + 100);
+        errno_assert(rc == 0);
+        rc = hclose(cr);
+        errno_assert(rc == 0);
+        free(stack);
+    }
     return 0;
 }
 
