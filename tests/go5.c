@@ -36,9 +36,9 @@ coroutine void dummy(void) {
 
 int main() {
     /* Test go_mem. */
-    char *stack = malloc(4096);
+    char *stack = malloc(65536);
     assert(stack);
-    int cr = go_mem(dummy(), stack, 4096);
+    int cr = go_mem(dummy(), stack, 65536);
     errno_assert(cr >= 0);
     int rc = msleep(now() + 100);
     errno_assert(rc == 0);
