@@ -1,6 +1,10 @@
 
 # Past versions
 
+**Sept 23th, 2018 <http://libdill.org/libdill-2.11.tar.gz>**
+
+* Couple of OSX bugs fixed
+
 **Sept 16th, 2018 <http://libdill.org/libdill-2.10.tar.gz>**
 
 * C++ guards added to libdill.h
