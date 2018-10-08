@@ -296,7 +296,7 @@ static int dill_tls_bsendl(struct dill_bsock_vfs *bvfs,
     while(1) {
         uint8_t *base = it->iol_base;
         size_t len = it->iol_len;
-        while(1) {
+        while(len > 0) {
             ERR_clear_error();
             int rc = SSL_write(self->ssl, base, len);
             if(dill_tls_followup(self, rc, deadline)) {
@@ -304,7 +304,6 @@ static int dill_tls_bsendl(struct dill_bsock_vfs *bvfs,
                     self->outerr = 1;
                     return -1;
                 }
-                if(rc == len) break;
                 base += rc;
                 len -= rc;
             }
@@ -479,4 +478,3 @@ static void dill_tls_init(void) {
         init = 1;
     }
 }
-
