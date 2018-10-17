@@ -968,6 +968,29 @@ DILL_EXPORT int dill_ws_response_key(
 #endif
 
 /******************************************************************************/
+/*  SOCKS5                                                                    */
+/******************************************************************************/
+
+struct dill_socks5_storage {char _[1200];};
+
+DILL_EXPORT int dill_socks5_attach_client(
+    int s, const char *username, const char *password, int64_t deadline);
+DILL_EXPORT int dill_socks5_attach_client_mem(
+    int s, const char *username, const char *password,
+    struct dill_socks5_storage *mem, int64_t deadline);
+DILL_EXPORT int dill_socks5_connect(
+    int s, char *addr, int port, int64_t deadline);
+DILL_EXPORT int dill_socks5_close(
+    int s, int64_t deadline);
+
+#if !defined DILL_DISABLE_RAW_NAMES
+#define socks5_attach_client dill_socks5_attach_client
+#define socks5_attach_client_mem dill_socks5_attach_client_mem
+#define socks5_connect dill_socks5_connect
+#define socks5_close dill_socks5_close
+#endif
+
+/******************************************************************************/
 /*  TERM protocol.                                                            */
 /*  Implementes terminal handshake on the top of any message-based protocol.  */
 /******************************************************************************/

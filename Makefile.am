@@ -53,6 +53,7 @@ libdill_la_SOURCES = \
     rbtree.h \
     rbtree.c \
     slist.h \
+    socks5.c \
     stack.h \
     stack.c \
     ctx.h \
@@ -187,7 +188,8 @@ noinst_PROGRAMS += \
     tutorial/sockets/step1 \
     tutorial/sockets/step2 \
     tutorial/sockets/step3 \
-    tutorial/sockets/step4
+    tutorial/sockets/step4 \
+    tutorial/sockets/step5
 endif
 endif
 
