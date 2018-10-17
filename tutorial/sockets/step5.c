@@ -84,6 +84,9 @@ int main(int argc, char *argv[]) {
             perror("Error connecting to remote host via SOCKS5 proxy");
             return 1;
         }
+        
+        s = socks5_detach(s, -1);
+        assert(s > 0);
     }
 
     if(port == 443) {
@@ -133,16 +136,9 @@ int main(int argc, char *argv[]) {
         assert(s >= 0);
     }
 
-    if (argc == 4) {
-        rc = tcp_close(s, -1);
-        if (rc != 0) {
-            assert(errno == ECONNRESET);
-        }
-    } else {
-        rc = socks5_close(s, -1);
-        if (rc != 0) {
-            assert(errno == ECONNRESET);
-        }
+    rc = tcp_close(s, -1);
+    if (rc != 0) {
+        assert(errno == ECONNRESET);
     }
 
     return 0;

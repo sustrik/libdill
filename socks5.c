@@ -38,16 +38,20 @@ dill_unique_id(dill_socks5_type);
 
 static void *dill_socks5_hquery(struct dill_hvfs *hvfs, const void *type);
 static void dill_socks5_hclose(struct dill_hvfs *hvfs);
+#if 0
 static int dill_socks5_bsendl(struct dill_bsock_vfs *bvfs,
     struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
 static int dill_socks5_brecvl(struct dill_bsock_vfs *bvfs,
     struct dill_iolist *first, struct dill_iolist *last, int64_t deadline);
+#endif
 
 // SOCKS5 as defined in RFC 1928
 
 struct dill_socks5_sock {
     struct dill_hvfs hvfs;
+#if 0
     struct dill_bsock_vfs bvfs;
+#endif
     int u;
     unsigned int mem : 1;
     unsigned int server : 1;
@@ -62,7 +66,9 @@ DILL_CHECK_STORAGE(dill_socks5_sock, dill_socks5_storage)
 static void *dill_socks5_hquery(struct dill_hvfs *hvfs, const void *type) {
     struct dill_socks5_sock *obj = (struct dill_socks5_sock*)hvfs;
     if(type == dill_socks5_type) return obj;
+#if 0
     if(type == dill_bsock_type) return &obj->bvfs;
+#endif
     errno = ENOTSUP;
     return NULL;
 }
@@ -157,8 +163,10 @@ int dill_socks5_attach_client_mem(int s, const char *username,
     /* Create the object. */
     obj->hvfs.query = dill_socks5_hquery;
     obj->hvfs.close = dill_socks5_hclose;
+#if 0
     obj->bvfs.bsendl = dill_socks5_bsendl;
     obj->bvfs.brecvl = dill_socks5_brecvl;
+#endif
     obj->u = s;
     obj->mem = 1;
     obj->server = 0;
@@ -295,10 +303,12 @@ int dill_socks5_connect(int s, char *addr, int port, int64_t deadline) {
     return -1;
 }
 
-int dill_socks5_close(int s, int64_t deadline) {
+int dill_socks5_detach(int s, int64_t deadline) {
     struct dill_socks5_sock *obj = dill_hquery(s, dill_socks5_type);
     if(dill_slow(!obj)) return -1;
-    return dill_tcp_close(obj->u, deadline);
+    int u = obj->u;
+    if(!obj->mem) free(obj);
+    return u;
 }
 
 static void dill_socks5_hclose(struct dill_hvfs *hvfs) {
@@ -310,6 +320,7 @@ static void dill_socks5_hclose(struct dill_hvfs *hvfs) {
     if(!obj->mem) free(obj);
 }
 
+#if 0
 // if connected, pass send through to underlying transport
 static int dill_socks5_bsendl(struct dill_bsock_vfs *bvfs,
       struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
@@ -325,3 +336,4 @@ static int dill_socks5_brecvl(struct dill_bsock_vfs *bvfs,
     if(dill_slow(!obj->connect)) {errno = ENOENT; return -1;}
     return dill_brecvl(obj->u, first, last, deadline);
 }
+#endif
