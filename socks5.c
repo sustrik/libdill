@@ -201,68 +201,58 @@ error1:
     return -1;
 }
 
-int dill_socks5_connect(int s, char *addr, int port, int64_t deadline) {
-    // validate socket type
+// convenience functions for handling socks5 address types
+
+#define S5ADDR_IPV4 (1)
+#define S5ADDR_IPV6 (4)
+#define S5ADDR_NAME (3)
+
+typedef struct {
+    uint8_t atyp;
+    uint8_t addr[256];
+    size_t  alen;
+    int     port;
+} _socks5_addr;
+
+static void _s5_ipaddr_to_s5_addr(_socks5_addr *s5, struct dill_ipaddr *addr) {
+    if(dill_ipaddr_family(addr) == AF_INET) {
+        struct sockaddr_in *ipv4 = (struct sockaddr_in*)addr;
+        s5->atyp = S5ADDR_IPV4;
+        s5->alen = sizeof(ipv4->sin_addr);
+        s5->port = dill_ipaddr_port(addr);
+        dill_assert(s5->alen == 4);
+        memcpy((void *)s5->addr, (void *)&ipv4->sin_addr, s5->alen);
+    } else {
+        struct sockaddr_in6 *ipv6 = (struct sockaddr_in6*)addr;
+        s5->atyp = S5ADDR_IPV6;
+        s5->alen = sizeof(ipv6->sin6_addr);
+        s5->port = dill_ipaddr_port(addr);
+        dill_assert(s5->alen == 16);
+        memcpy((void *)s5->addr, (void *)&ipv6->sin6_addr, s5->alen);
+    }
+}
+
+static int _s5_handle_connection_response(int s, int64_t deadline) {
     struct dill_socks5_sock *obj = dill_hquery(s, dill_socks5_type);
-    if(dill_slow(!obj)) return -1;
-    if(dill_slow(obj->server)) {errno = EPROTO; return -1;}
-    if(dill_slow(obj->connect)) {errno = EISCONN; return -1;}
-    // validate input
-    if(dill_slow(!addr)) {errno = EINVAL; return -1;}
-    if(dill_slow(strlen(addr) > 255)) {errno = EINVAL; return -1;}
-    if((port <= 0) || (port>65535)) {errno = EINVAL; return -1;}
     // largest possible connect request = 255 chars for name + 7 bytes for
     // VER, CMD, RSV, ATYP, ALEN, PORT[2]
     uint8_t conn[262];
-    size_t conn_len;
-    conn[0] = 0x05; // VER = 5
-    conn[1] = 0x01; // CMD = CONNECT
-    conn[2] = 0x00; // RSV
-    struct in_addr ina4;
-    struct in6_addr ina6;
-    if(inet_pton(AF_INET, addr, &ina4) == 1) {
-        // IPv4 Address, now stored in ina4, Network Byte Order
-        conn[3] = 0x01; // ATYP = IPV4
-        memcpy((void *)(conn + 4), (void *)&ina4, 4);
-        conn[8] = port >> 8;
-        conn[9] = port & 0xFF;
-        conn_len = 10;
-    } else if(inet_pton(AF_INET6, addr, &ina6) == 1) {
-        // IPv6 Address, now stored in ina6, Network Byte Order
-        conn[3] = 0x04; // ATYP = IPV6
-        memcpy((void *)(conn + 4), (void *)&ina6, 16);
-        conn[20] = port >> 8;
-        conn[21] = port & 0xFF;
-        conn_len = 22;
-   } else {
-        // assume a resolvable domain name
-        // previously validate to be 0 < x <= 255 bytes
-        uint8_t alen = (uint8_t)strlen(addr);
-        conn[3] = 0x03; // ATYP = DOMAINNAME
-        conn[4] = alen;
-        memcpy((void *)(conn+ 5), (void *)addr, alen);
-        conn[5+alen] = port >> 8;
-        conn[6+alen] = port & 0xFF;
-        conn_len = 7 + alen;
-    }
-    int err = dill_bsend(obj->u, conn, conn_len, deadline);
-    if(dill_slow(err)) {return -1;}
     // reply has the same form/length limit, reuse request as reply buffer
     // read first 4 octets (through ATYP) to determine how much more to read
-    err = dill_brecv(obj->u, conn, 4, deadline);
+    int err = dill_brecv(obj->u, conn, 4, deadline);
     if(dill_slow(err)) {return -1;}
     switch (conn[3]) {
-        case 0x01:
+        case S5ADDR_IPV4:
             // IPv4, read 4 byte IP + 2 bytes port
             err = dill_brecv(obj->u, conn + 4, 6, deadline);
             if(dill_slow(err)) {return -1;}
             break;
-        case 0x03:
+        case S5ADDR_IPV6:
             // IPv6, read 16 bytes IP + 2 bytes port
             err = dill_brecv(obj->u, conn + 4, 18, deadline);
             if(dill_slow(err)) {return -1;}
             break;
-        case 0x04:
+        case S5ADDR_NAME:
             // Domain name, first byte is length of string
             err = dill_brecv(obj->u, conn + 4, 1, deadline);
             if(dill_slow(err)) {return -1;}
@@ -279,7 +269,6 @@ int dill_socks5_connect(int s, char *addr, int port, int64_t deadline) {
         obj->connect = 1;
         return 0;
     }
-    // failed, it's just a matter of deciding which error code to return
     switch (conn[1]) {
         case 0x01: // general SOCKS server failure
             errno = EIO; break;
@@ -301,6 +290,82 @@ int dill_socks5_connect(int s, char *addr, int port, int64_t deadline) {
             errno = EPROTO;
     }
     return -1;
+}
+
+int dill_socks5_connectbyname(int s, char *hostname, int port, int64_t deadline) {
+    // validate socket type
+    struct dill_socks5_sock *obj = dill_hquery(s, dill_socks5_type);
+    if(dill_slow(!obj)) return -1;
+    if(dill_slow(obj->server)) {errno = EPROTO; return -1;}
+    if(dill_slow(obj->connect)) {errno = EISCONN; return -1;}
+    // validate input
+    if(dill_slow(!hostname)) {errno = EINVAL; return -1;}
+    if(dill_slow(strlen(hostname) > 255)) {errno = EINVAL; return -1;}
+    if((port <= 0) || (port>65535)) {errno = EINVAL; return -1;}
+    // largest possible connect request = 255 chars for name + 7 bytes for
+    // VER, CMD, RSV, ATYP, ALEN, PORT[2]
+    uint8_t conn[262];
+    size_t conn_len;
+    conn[0] = 0x05; // VER = 5
+    conn[1] = 0x01; // CMD = CONNECT
+    conn[2] = 0x00; // RSV
+    struct in_addr ina4;
+    struct in6_addr ina6;
+    // if "hostname" is actually an IPV4/IPV6 literal, convert for proxy
+    if(inet_pton(AF_INET, hostname, &ina4) == 1) {
+        // IPv4 Address, now stored in ina4, Network Byte Order
+        conn[3] = 0x01; // ATYP = IPV4
+        memcpy((void *)(conn + 4), (void *)&ina4, 4);
+        conn[8] = port >> 8;
+        conn[9] = port & 0xFF;
+        conn_len = 10;
+    } else if(inet_pton(AF_INET6, hostname, &ina6) == 1) {
+        // IPv6 Address, now stored in ina6, Network Byte Order
+        conn[3] = 0x04; // ATYP = IPV6
+        memcpy((void *)(conn + 4), (void *)&ina6, 16);
+        conn[20] = port >> 8;
+        conn[21] = port & 0xFF;
+        conn_len = 22;
+   } else {
+        // assume a resolvable domain name
+        // previously validate to be 0 < x <= 255 bytes
+        uint8_t alen = (uint8_t)strlen(hostname);
+        conn[3] = 0x03; // ATYP = DOMAINNAME
+        conn[4] = alen;
+        memcpy((void *)(conn+ 5), (void *)hostname, alen);
+        conn[5+alen] = port >> 8;
+        conn[6+alen] = port & 0xFF;
+        conn_len = 7 + alen;
+    }
+    int err = dill_bsend(obj->u, conn, conn_len, deadline);
+    if(dill_slow(err)) {return -1;}
+    return _s5_handle_connection_response(s, deadline);
+}
+
+int dill_socks5_connect(int s, struct dill_ipaddr *ipaddr, int64_t deadline) {
+    // validate socket type
+    struct dill_socks5_sock *obj = dill_hquery(s, dill_socks5_type);
+    if(dill_slow(!obj)) return -1;
+    if(dill_slow(obj->server)) {errno = EPROTO; return -1;}
+    if(dill_slow(obj->connect)) {errno = EISCONN; return -1;}
+    // validate input
+    if(dill_slow(!ipaddr)) {errno = EINVAL; return -1;}
+    // largest possible connect request = 255 chars for name + 7 bytes for
+    // VER, CMD, RSV, ATYP, ALEN, PORT[2]
+    uint8_t conn[262];
+    conn[0] = 0x05; // VER = 5
+    conn[1] = 0x01; // CMD = CONNECT
+    conn[2] = 0x00; // RSV
+    _socks5_addr s5addr;
+    _s5_ipaddr_to_s5_addr(&s5addr, ipaddr);
+    conn[3] = s5addr.atyp; // ATYP;
+    int alen = s5addr.alen;
+    memcpy((void *)&conn[4], (void *)s5addr.addr, alen);
+    conn[4+alen] = s5addr.port >> 8;
+    conn[5+alen] = s5addr.port & 0xFF;
+    int err = dill_bsend(obj->u, conn, alen+6, deadline);
+    if(dill_slow(err)) {return -1;}
+    return _s5_handle_connection_response(s, deadline);
 }
 
 int dill_socks5_detach(int s, int64_t deadline) {

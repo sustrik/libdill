@@ -978,14 +978,17 @@ DILL_EXPORT int dill_socks5_attach_client(
 DILL_EXPORT int dill_socks5_attach_client_mem(
     int s, const char *username, const char *password,
     struct dill_socks5_storage *mem, int64_t deadline);
+DILL_EXPORT int dill_socks5_connectbyname(
+    int s, char *hostname, int port, int64_t deadline);
 DILL_EXPORT int dill_socks5_connect(
-    int s, char *addr, int port, int64_t deadline);
+    int s, struct dill_ipaddr *addr, int64_t deadline);
 DILL_EXPORT int dill_socks5_detach(
     int s, int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define socks5_attach_client dill_socks5_attach_client
 #define socks5_attach_client_mem dill_socks5_attach_client_mem
+#define socks5_connectbyname dill_socks5_connectbyname
 #define socks5_connect dill_socks5_connect
 #define socks5_detach dill_socks5_detach
 #endif

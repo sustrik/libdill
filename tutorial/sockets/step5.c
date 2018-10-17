@@ -1,4 +1,5 @@
 
+#include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
@@ -73,18 +74,38 @@ int main(int argc, char *argv[]) {
             username = argv[6];
             password = argv[7];
         }
+
         s = socks5_attach_client(s, username, password, -1);
         if (s < 0) {
             perror("Cannot attach to SOCKS5 proxy");
             return 1;
         }
         
-        rc = socks5_connect(s, argv[2], port, -1);
-        if (rc != 0) {
-            perror("Error connecting to remote host via SOCKS5 proxy");
-            return 1;
+        // if the address is a IPV4 or IPV6 literal, then
+        // pass it as a struct ipaddr, otherwise 
+        struct in_addr ina4;
+        struct in6_addr ina6;
+        if((inet_pton(AF_INET, argv[2], &ina4) == 1) || 
+            (inet_pton(AF_INET6, argv[2], &ina6) == 1)) {
+            rc = ipaddr_remote(&addr, argv[2], port, 0, -1);
+            if(rc != 0) {
+                perror("Cannot resolve SOCKS5 proxy address");
+                return 1;
+            }
+
+            rc = socks5_connect(s, &addr, -1);
+            if (rc != 0) {
+                perror("Error connecting to remote host via SOCKS5 proxy");
+                return 1;
+            }
+        } else {
+            rc = socks5_connectbyname(s, argv[2], port, -1);
+            if (rc != 0) {
+                perror("Error connecting to remote host via SOCKS5 proxy");
+                return 1;
+            }
         }
-        
+
         s = socks5_detach(s, -1);
         assert(s > 0);
     }
