@@ -971,26 +971,17 @@ DILL_EXPORT int dill_ws_response_key(
 /*  SOCKS5                                                                    */
 /******************************************************************************/
 
-struct dill_socks5_storage {char _[1200];};
-
-DILL_EXPORT int dill_socks5_attach_client(
-    int s, const char *username, const char *password, int64_t deadline);
-DILL_EXPORT int dill_socks5_attach_client_mem(
+DILL_EXPORT int dill_socks5_client_connect(
     int s, const char *username, const char *password,
-    struct dill_socks5_storage *mem, int64_t deadline);
-DILL_EXPORT int dill_socks5_connectbyname(
-    int s, char *hostname, int port, int64_t deadline);
-DILL_EXPORT int dill_socks5_connect(
-    int s, struct dill_ipaddr *addr, int64_t deadline);
-DILL_EXPORT int dill_socks5_detach(
-    int s, int64_t deadline);
+    struct dill_ipaddr *addr, int64_t deadline);
+
+DILL_EXPORT int dill_socks5_client_connectbyname(
+    int s, const char *username, const char *password, const char *hostname,
+    int port, int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
-#define socks5_attach_client dill_socks5_attach_client
-#define socks5_attach_client_mem dill_socks5_attach_client_mem
-#define socks5_connectbyname dill_socks5_connectbyname
-#define socks5_connect dill_socks5_connect
-#define socks5_detach dill_socks5_detach
+#define socks5_client_connect dill_socks5_client_connect
+#define socks5_client_connectbyname dill_socks5_client_connectbyname
 #endif
 
 /******************************************************************************/

@@ -75,12 +75,6 @@ int main(int argc, char *argv[]) {
             password = argv[7];
         }
 
-        s = socks5_attach_client(s, username, password, -1);
-        if (s < 0) {
-            perror("Cannot attach to SOCKS5 proxy");
-            return 1;
-        }
-        
         // if the address is a IPV4 or IPV6 literal, then
         // pass it as a struct ipaddr, otherwise 
         struct in_addr ina4;
@@ -93,21 +87,18 @@ int main(int argc, char *argv[]) {
                 return 1;
             }
 
-            rc = socks5_connect(s, &addr, -1);
+            rc = socks5_client_connect(s, username, password, &addr, -1);
             if (rc != 0) {
                 perror("Error connecting to remote host via SOCKS5 proxy");
                 return 1;
             }
         } else {
-            rc = socks5_connectbyname(s, argv[2], port, -1);
+            rc = socks5_client_connectbyname(s, username, password, argv[2], port, -1);
             if (rc != 0) {
                 perror("Error connecting to remote host via SOCKS5 proxy");
                 return 1;
             }
         }
-
-        s = socks5_detach(s, -1);
-        assert(s > 0);
     }
 
     if(port == 443) {
