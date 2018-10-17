@@ -318,6 +318,6 @@ static void dill_http_hclose(struct dill_hvfs *hvfs) {
         int rc = dill_hclose(obj->u);
         dill_assert(rc == 0);
     }
-    if(obj->mem) free(obj);
+    if(!obj->mem) free(obj);
 }
 
