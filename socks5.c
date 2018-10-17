@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2018 Joseph deBlaquiere, Martin Sustrik
+  Copyright (c) 2018 Joseph deBlaquiere
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -48,7 +48,6 @@ static int dill_socks5_brecvl(struct dill_bsock_vfs *bvfs,
 struct dill_socks5_sock {
     struct dill_hvfs hvfs;
     struct dill_bsock_vfs bvfs;
-    /* Underlying SUFFIX socket. */
     int u;
     unsigned int mem : 1;
     unsigned int server : 1;
@@ -74,11 +73,11 @@ static int dill_socks5_clientauth(int s, const char *username, const char *passw
     struct dill_socks5_sock *obj = dill_hquery(s, dill_socks5_type);
     if(dill_slow(!obj)) return -1;
     // validate input, specifically user and pass, which may be NULL
-    if (username) {
-        if (strlen(username) > 255) {errno = EINVAL; return -1;}
+    if(username) {
+        if(strlen(username) > 255) {errno = EINVAL; return -1;}
     }
-    if (password) {
-        if (strlen(password) > 255) {errno = EINVAL; return -1;}
+    if(password) {
+        if(strlen(password) > 255) {errno = EINVAL; return -1;}
     }
     // version identifier/method selection request
     // client passes list of desired auth methods
@@ -89,7 +88,7 @@ static int dill_socks5_clientauth(int s, const char *username, const char *passw
     vims[3] = 0x02; // METHOD = USERNAME/PASSWORD
     // TODO: Add support for GSSAPI Auth
     // if we don't have both username and password only request NO AUTH
-    if ((!username) || (!password)) {
+    if((!username) || (!password)) {
         vims[1] = 0x01; // NMETHODS = 1 (NO AUTH)
         vims_len = 3;
     } else {
@@ -98,44 +97,49 @@ static int dill_socks5_clientauth(int s, const char *username, const char *passw
     }
     //for (int i = 0; i < vims_len; i++) {printf("%02X ", vims[i]);} printf(">\n");
     int err = dill_bsend(obj->u, (void *)vims, vims_len, deadline);
-    if (dill_slow(err)) {return -1;}
+    if(dill_slow(err)) {return -1;}
     // version identifier/method response
     // server responds with chosen auth method (or error)
     uint8_t vimr[2];
     err = dill_brecv(obj->u, (void *)vimr, 2, deadline);
-    if (dill_slow(err)) {return -1;}
+    if(dill_slow(err)) {return -1;}
     //for (int i = 0; i < 2; i++) {printf("%02X ", vimr[i]);} printf("<\n");
     // validate VER in response
-    if (dill_slow(vimr[0] != 0x05)) {errno = EPROTO; return -1;}
-    // if proxy accepted NO AUTH REQ'D, we're done
-    if (vimr[1] == 0x00) {return 0;}
-    if (vimr[1] == 0x02) {
-        dill_assert(!!username);
-        dill_assert(!!password);
-        // USER/PASS AUTH - per RFC 1929
-        // max USER, PASS is 255 bytes (plus 3 bytes for VER, ULEN, PLEN)
-        uint8_t upauth[513];
-        // previously range checked, safe to cast to uint8_t
-        uint8_t ulen = (uint8_t)strlen(username);
-        uint8_t plen = (uint8_t)strlen(password);
-        upauth[0] = 0x01; // VER = 1
-        upauth[1] = ulen; // ULEN
-        strncpy((char *)(upauth + 2), username, ulen); // UNAME
-        upauth[2 + ulen] = plen; // PLEN
-        strncpy((char *)(upauth + 3 + ulen), password, plen); // PASSWD
-        //for (int i = 0; i < 3+ulen+plen; i++) {printf("%02X ", upauth[i]);} printf(">\n");
-        err = dill_bsend(obj->u, (void *)upauth, 3 + ulen + plen, deadline);
-        if (dill_slow(err)) {return -1;}
-        uint8_t upauthr[2];
-        err = dill_brecv(obj->u, (void *)upauthr, 2, deadline);
-        if (dill_slow(err)) {return -1;}
-        //for (int i = 0; i < 2; i++) {printf("%02X ", upauthr[i]);} printf("<\n");
-        if (dill_slow(upauthr[0] != 0x01)) {errno = EPROTO; return -1;}
-        if (dill_slow(upauthr[1] != 0x00)) {errno = EACCES; return -1;}
-        return 0;
+    if(dill_slow(vimr[0] != 0x05)) {errno = EPROTO; return -1;}
+    switch(vimr[1]) {
+        case 0x00:
+            // proxy accepted NO AUTH REQ'D, so we're done
+            return 0;
+        case 0x02:
+            dill_assert(!!username);
+            dill_assert(!!password);
+            // USER/PASS AUTH - per RFC 1929
+            // max USER, PASS is 255 bytes (plus 3 bytes for VER, ULEN, PLEN)
+            uint8_t upauth[513];
+            // previously range checked, safe to cast to uint8_t
+            uint8_t ulen = (uint8_t)strlen(username);
+            uint8_t plen = (uint8_t)strlen(password);
+            upauth[0] = 0x01; // VER = 1
+            upauth[1] = ulen; // ULEN
+            strncpy((char *)(upauth + 2), username, ulen); // UNAME
+            upauth[2 + ulen] = plen; // PLEN
+            strncpy((char *)(upauth + 3 + ulen), password, plen); // PASSWD
+            //for (int i = 0; i < 3+ulen+plen; i++) {printf("%02X ", upauth[i]);} printf(">\n");
+            err = dill_bsend(obj->u, (void *)upauth, 3 + ulen + plen, deadline);
+            if(dill_slow(err)) {return -1;}
+            uint8_t upauthr[2];
+            err = dill_brecv(obj->u, (void *)upauthr, 2, deadline);
+            if(dill_slow(err)) {return -1;}
+            //for (int i = 0; i < 2; i++) {printf("%02X ", upauthr[i]);} printf("<\n");
+            if(dill_slow(upauthr[0] != 0x01)) {errno = EPROTO; return -1;}
+            if(dill_slow(upauthr[1] != 0x00)) {errno = EACCES; return -1;}
+            return 0;
+        case 0xFF:
+            errno = EACCES; return -1;
+        default:
+            // something is fishy as the proxy accepted something not requested
+            dill_assert(0);
     }
-    if (vimr[1] == 0xFF) {errno = EACCES; return -1;}
-    dill_assert((vimr[1] == 0x00) || (vimr[1] == 0x02) || (vimr[1] == 0xFF));
     return -1;
 }
 
@@ -163,7 +167,7 @@ int dill_socks5_attach_client_mem(int s, const char *username,
     int h = dill_hmake(&obj->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error;}
     err = dill_socks5_clientauth(h, username, password, deadline);
-    if (err) {s = h; err = errno; goto error;}
+    if(err) {s = h; err = errno; goto error;}
     return h;
 error:
     if(s >= 0) dill_hclose(s);
@@ -208,14 +212,14 @@ int dill_socks5_connect(int s, char *addr, int port, int64_t deadline) {
     conn[2] = 0x00; // RSV
     struct in_addr ina4;
     struct in6_addr ina6;
-    if (inet_pton(AF_INET, addr, &ina4) == 1) {
+    if(inet_pton(AF_INET, addr, &ina4) == 1) {
         // IPv4 Address, now stored in ina4, Network Byte Order
         conn[3] = 0x01; // ATYP = IPV4
         memcpy((void *)(conn + 4), (void *)&ina4, 4);
         conn[8] = port >> 8;
         conn[9] = port & 0xFF;
         conn_len = 10;
-    } else if (inet_pton(AF_INET6, addr, &ina6) == 1) {
+    } else if(inet_pton(AF_INET6, addr, &ina6) == 1) {
         // IPv6 Address, now stored in ina6, Network Byte Order
         conn[3] = 0x04; // ATYP = IPV6
         memcpy((void *)(conn + 4), (void *)&ina6, 16);
@@ -234,72 +238,58 @@ int dill_socks5_connect(int s, char *addr, int port, int64_t deadline) {
         conn_len = 7 + alen;
     }
     int err = dill_bsend(obj->u, conn, conn_len, deadline);
-    if (dill_slow(err)) {return -1;}
+    if(dill_slow(err)) {return -1;}
     // reply has the same form/length limit, reuse request as reply buffer
-    // read first 5 octets (through ATYP) to determine how much more to read
-    err = dill_brecv(obj->u, conn, 5, deadline);
-    if (dill_slow(err)) {return -1;}
+    // read first 4 octets (through ATYP) to determine how much more to read
+    err = dill_brecv(obj->u, conn, 4, deadline);
+    if(dill_slow(err)) {return -1;}
     switch (conn[3]) {
         case 0x01:
-            // IPv4, already read 1 bytes, read remaining 3 and port
-            err = dill_brecv(obj->u, conn + 5, 5, deadline);
-            if (dill_slow(err)) {return -1;}
+            // IPv4, read 4 byte IP + 2 bytes port
+            err = dill_brecv(obj->u, conn + 4, 6, deadline);
+            if(dill_slow(err)) {return -1;}
             break;
         case 0x03:
-            // IPv4, already read 1 bytes, read remaining 15 and port
-            err = dill_brecv(obj->u, conn + 5, 17, deadline);
-            if (dill_slow(err)) {return -1;}
+            // IPv6, read 16 bytes IP + 2 bytes port
+            err = dill_brecv(obj->u, conn + 4, 18, deadline);
+            if(dill_slow(err)) {return -1;}
             break;
         case 0x04:
-            // IPv4, already read 1 bytes, read ALEN-1 add + 2 for port
-            err = dill_brecv(obj->u, conn + 5, conn[4] + 1, deadline);
-            if (dill_slow(err)) {return -1;}
+            // Domain name, first byte is length of string
+            err = dill_brecv(obj->u, conn + 4, 1, deadline);
+            if(dill_slow(err)) {return -1;}
+            // Read string + 2 bytes for port
+            err = dill_brecv(obj->u, conn + 5, conn[4] + 2, deadline);
+            if(dill_slow(err)) {return -1;}
             break;
         default:
             errno = EPROTO;
             return -1;
     }
-    if (conn[1] == 0x00) {
+    if(conn[1] == 0x00) {
         // success - from here on should treat as if attached via tcp_connect
         obj->connect = 1;
         return 0;
     }
     // failed, it's just a matter of deciding which error code to return
     switch (conn[1]) {
-        case 0x01:
-            // general SOCKS server failure
-            errno = EIO;
-            break;
-        case 0x02:
-            // connection not allowed by ruleset
-            errno = EACCES;
-            break;
-        case 0x03:
-            // Network unreachable
-            errno = ENETUNREACH;
-            break;
-        case 0x04:
-            // Host unreachable
-            errno = EHOSTUNREACH;
-            break;
-        case 0x05:
-            // Connection Refused
-            errno = ECONNREFUSED;
-            break;
-        case 0x06:
-            // TTL expired
-            errno = ETIMEDOUT;
-            break;
-        case 0x07:
-            // Command not supported
-            errno = EOPNOTSUPP;
-            break;
-        case 0x08:
-            // Address type not supported
-            errno = EAFNOSUPPORT;
-            break;
-        default:
-            // Unknown error code
+        case 0x01: // general SOCKS server failure
+            errno = EIO; break;
+        case 0x02: // connection not allowed by ruleset
+            errno = EACCES; break;
+        case 0x03: // Network unreachable
+            errno = ENETUNREACH; break;
+        case 0x04: // Host unreachable
+            errno = EHOSTUNREACH; break;
+        case 0x05: // Connection Refused
+            errno = ECONNREFUSED; break;
+        case 0x06: // TTL expired
+            errno = ETIMEDOUT; break;
+        case 0x07: // Command not supported
+            errno = EOPNOTSUPP; break;
+        case 0x08: // Address type not supported
+            errno = EAFNOSUPPORT; break;
+        default: // Unknown error code
             errno = EPROTO;
     }
     return -1;
