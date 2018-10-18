@@ -1,6 +1,11 @@
 
 # Past versions
 
+**Oct 18th, 2018 <http://libdill.org/libdill-2.12.tar.gz>**
+
+* A bug in TLS protocol fixed.
+* A memory leak in HTTP protocol fixed.
+
 **Sept 23th, 2018 <http://libdill.org/libdill-2.11.tar.gz>**
 
 * Couple of OSX bugs fixed
