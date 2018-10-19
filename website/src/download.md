@@ -1,12 +1,12 @@
 
 # Download
 
-<http://libdill.org/libdill-2.11.tar.gz> 
+<http://libdill.org/libdill-2.12.tar.gz> 
 
 ```
-$ wget http://libdill.org/libdill-2.11.tar.gz
-$ tar -xzf libdill-2.11.tar.gz 
-$ cd libdill-2.11
+$ wget http://libdill.org/libdill-2.12.tar.gz
+$ tar -xzf libdill-2.12.tar.gz 
+$ cd libdill-2.12
 $ ./configure
 $ make
 $ sudo make install
