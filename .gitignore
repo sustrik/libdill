@@ -60,6 +60,7 @@ tests/http
 tests/ws
 tests/term
 tests/dtls
+tests/socks5
 perf/.dirstamp
 perf/chan
 perf/ctxswitch

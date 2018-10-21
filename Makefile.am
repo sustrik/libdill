@@ -53,7 +53,6 @@ libdill_la_SOURCES = \
     rbtree.h \
     rbtree.c \
     slist.h \
-    socks5.c \
     stack.h \
     stack.c \
     ctx.h \
@@ -73,6 +72,7 @@ libdill_la_SOURCES += \
     ipaddr.c \
     msock.c \
     prefix.c \
+    socks5.c \
     suffix.c \
     tcp.c \
     term.c \
@@ -138,6 +138,7 @@ check_PROGRAMS += \
     tests/tcp \
     tests/ipc \
     tests/prefix \
+    tests/socks5 \
     tests/suffix \
     tests/udp \
     tests/http \
@@ -252,4 +253,3 @@ CLEANFILES = *.gcno *.gcda dns/*.gcno dns/*.gcda tests/*.gcno tests/*.gcda
 
 distclean-local:
 	-rm -f config.h
-
