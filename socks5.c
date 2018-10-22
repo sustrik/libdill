@@ -87,7 +87,6 @@ static int s5_client_auth(int s, const char *username, const char *password,
         vims[1] = 2; // NMETHODS = 2 (NO AUTH or USER/PASS)
         vims_len = 4;
     }
-    //for (int i = 0; i < vims_len; i++) {printf("%02X ", vims[i]);} printf(">\n");
     int err = dill_bsend(s, (void *)vims, vims_len, deadline);
     if(dill_slow(err)) return -1;
     // version identifier/method response
@@ -95,7 +94,6 @@ static int s5_client_auth(int s, const char *username, const char *password,
     uint8_t vimr[2];
     err = dill_brecv(s, (void *)vimr, 2, deadline);
     if(dill_slow(err)) return -1;
-    //for (int i = 0; i < 2; i++) {printf("%02X ", vimr[i]);} printf("<\n");
     // validate VER in response
     if(dill_slow(vimr[0] != RFC1928_VER)) {errno = EPROTO; return -1;}
     switch(vimr[1]) {
@@ -116,13 +114,11 @@ static int s5_client_auth(int s, const char *username, const char *password,
             strncpy((char *)(upauth + 2), username, ulen); // UNAME
             upauth[2 + ulen] = plen; // PLEN
             strncpy((char *)(upauth + 3 + ulen), password, plen); // PASSWD
-            //for (int i = 0; i < 3+ulen+plen; i++) {printf("%02X ", upauth[i]);} printf(">\n");
             err = dill_bsend(s, (void *)upauth, 3 + ulen + plen, deadline);
             if(dill_slow(err)) return -1;
             uint8_t upauthr[2];
             err = dill_brecv(s, (void *)upauthr, 2, deadline);
             if(dill_slow(err)) return -1;
-            //for (int i = 0; i < 2; i++) {printf("%02X ", upauthr[i]);} printf("<\n");
             if(dill_slow(upauthr[0] != RFC1929_VER)) {errno = EPROTO; return -1;}
             if(dill_slow(upauthr[1] != S5AUTH_SUCCESS)) {errno = EACCES; return -1;}
             return 0;
@@ -153,7 +149,6 @@ int dill_socks5_proxy_auth(int s, dill_socks5_auth_function *auth_fn,
     int req_up = 0;
     int req_na = 0;
     for (int i = 0; i < vims[1]; i++) {
-        //printf("ameth = %d\n", vims[2+i]);
         switch(vims[2+i]) {
             case S5METH_NOAUTHREQ:
                 req_na = 1; break;
@@ -163,7 +158,6 @@ int dill_socks5_proxy_auth(int s, dill_socks5_auth_function *auth_fn,
                 // ignore methods which aren't supported by this implementation
         }
     }
-    //printf("na=%d, up=%d\n", req_na, req_up);
     if(req_na) {
         if(!auth_fn) {
             goto accept_noauth;
@@ -174,36 +168,29 @@ int dill_socks5_proxy_auth(int s, dill_socks5_auth_function *auth_fn,
         resp[1] = S5METH_USERPASS;
         err = dill_bsend(s, (void *)resp, 2, deadline);
         if(dill_slow(err)) return -1;
-        //printf("u/p auth method sent\n");
         // max size 513 (plus 1 for terminating null)
         uint8_t authr[514];
         // read 2 octets of RFC 1929 auth request, VER, ULEN
         err = dill_brecv(s, (void *)authr, 2, deadline);
         if(dill_slow(err)) return -1;
-        //printf("u/p auth req rcv'd incl UNAME len\n");
         // VER for U/P auth is 0x01
         if(dill_slow(authr[0] != RFC1929_VER)) {errno = EPROTO; return -1;}
-        //printf("u/p auth req VER valid\n");
         int ulen = authr[1];
         // read UNAME
         err = dill_brecv(s, (void *)&(authr[2]), ulen, deadline);
         if(dill_slow(err)) return -1;
-        //printf("u/p auth req read UNAME\n");
         // read PLEN
         err = dill_brecv(s, (void *)&(authr[2+ulen]), 1, deadline);
         if(dill_slow(err)) return -1;
-        //printf("u/p auth req read PASSWD len\n");
         int plen = authr[2+ulen];
         // read PASSWD
         err = dill_brecv(s, (void *)&(authr[3+ulen]), plen, deadline);
         if(dill_slow(err)) return -1;
-        //printf("u/p auth req read PASSWD\n");
         // add null terminators in place
         authr[2+ulen] = 0x00;
         authr[3+ulen+plen] = 0x00;
         char *uname = (char *)&authr[2];
         char *passwd = (char *)&authr[3+ulen];
-        //printf("u/p auth: (\"%s\", \"%s\")\n", uname, passwd);
         // attempt to determine source address
         if((*auth_fn)(uname, passwd)) {
             // auth accepted based on uname, passwd, ipaddr
