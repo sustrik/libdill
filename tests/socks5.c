@@ -43,7 +43,7 @@ int auth_fn(const char *user, const char* pass) {
 }
 
 coroutine void client(int s, char *user, char* pass) {
-    int err = socks5_client_connectbyname(s, user, pass, "libdill.org", 80, -1);
+    int err = socks5_client_connectbyname(s, user, pass, "libdill.org", 80, now() + 1000);
     assert(err == 0);
 }
 
@@ -64,21 +64,21 @@ coroutine void proxy(int s, char *user, char* pass) {
 
     int err;
     if((!user) || (!pass)){
-        err = socks5_proxy_auth(s, NULL, -1);
+        err = socks5_proxy_auth(s, NULL, now() + 1000);
     } else {
-        err = socks5_proxy_auth(s, auth_fn, -1);
+        err = socks5_proxy_auth(s, auth_fn, now() + 1000);
     }
     assert(err == 0);
 
     struct ipaddr addr;
-    int cmd = socks5_proxy_recvcommand(s, &addr, -1);
+    int cmd = socks5_proxy_recvcommand(s, &addr, now() + 1000);
     assert(cmd > 0);
     assert(cmd == SOCKS5_CONNECT);
 
     err = ipaddr_remote(&addr, "0.0.0.0", 0, IPADDR_IPV4, -1);
     assert(err == 0);
 
-    err = socks5_proxy_sendreply(s, SOCKS5_SUCCESS, &addr, -1);
+    err = socks5_proxy_sendreply(s, SOCKS5_SUCCESS, &addr, now() + 1000);
     assert(err == 0);
 }
 
@@ -99,16 +99,16 @@ coroutine void proxy_byname(int s, char *user, char* pass) {
 
     int err;
     if((!user) || (!pass)){
-        err = socks5_proxy_auth(s, NULL, -1);
+        err = socks5_proxy_auth(s, NULL, now() + 1000);
     } else {
-        err = socks5_proxy_auth(s, auth_fn, -1);
+        err = socks5_proxy_auth(s, auth_fn, now() + 1000);
     }
     assert(err == 0);
 
     struct ipaddr addr;
     char r_name[256];
     int r_port;
-    int cmd = socks5_proxy_recvcommandbyname(s, r_name, &r_port, -1);
+    int cmd = socks5_proxy_recvcommandbyname(s, r_name, &r_port, now() + 1000);
     assert(cmd > 0);
     assert(cmd == SOCKS5_CONNECT);
     assert(strcmp(r_name, "libdill.org") == 0);
@@ -117,7 +117,7 @@ coroutine void proxy_byname(int s, char *user, char* pass) {
     err = ipaddr_remote(&addr, "0.0.0.0", 0, IPADDR_IPV4, -1);
     assert(err == 0);
 
-    err = socks5_proxy_sendreply(s, SOCKS5_SUCCESS, &addr, -1);
+    err = socks5_proxy_sendreply(s, SOCKS5_SUCCESS, &addr, now() + 1000);
     assert(err == 0);
 }
 
@@ -125,7 +125,7 @@ int main(void) {
     int h[2];
     int rc = ipc_pair(h);
     assert(rc == 0);
-    printf("testing IP, NO AUTH");
+    printf("testing IP, NO AUTH\n");
     int b = bundle();
     assert(b >= 0);
     rc = bundle_go(b, proxy(h[0], NULL, NULL));
@@ -143,7 +143,7 @@ int main(void) {
     assert(rc == 0);
     rc = bundle_wait(b, -1);
     assert(rc == 0);
-    printf("testing name, NO AUTH");
+    printf("testing name, NO AUTH\n");
     rc = bundle_go(b, proxy_byname(h[0], NULL, NULL));
     assert(rc == 0);
     rc = bundle_go(b, client(h[1], NULL, NULL));
