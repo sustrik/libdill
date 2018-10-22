@@ -999,22 +999,22 @@ DILL_EXPORT int dill_socks5_client_connectbyname(
     int s, const char *username, const char *password, const char *hostname,
     int port, int64_t deadline);
 
-DILL_EXPORT int dill_socks5_server_auth(
+DILL_EXPORT int dill_socks5_proxy_auth(
     int s, dill_socks5_auth_function *auth_fn, int64_t deadline);
 
-DILL_EXPORT int dill_socks5_server_recv_command(
+DILL_EXPORT int dill_socks5_proxy_recvcommand(
     int s, struct dill_ipaddr *ipaddr, int64_t deadline);
 
-DILL_EXPORT int dill_socks5_server_send_reply(
+DILL_EXPORT int dill_socks5_proxy_sendreply(
     int s, int reply, struct dill_ipaddr *ipaddr, int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 
 #define socks5_client_connect dill_socks5_client_connect
 #define socks5_client_connectbyname dill_socks5_client_connectbyname
-#define socks5_server_auth dill_socks5_server_auth
-#define socks5_server_recv_command dill_socks5_server_recv_command
-#define socks5_server_send_reply dill_socks5_server_send_reply
+#define socks5_proxy_auth dill_socks5_proxy_auth
+#define socks5_proxy_recvcommand dill_socks5_proxy_recvcommand
+#define socks5_proxy_sendreply dill_socks5_proxy_sendreply
 
 #define SOCKS5_CONNECT DILL_SOCKS5_CONNECT
 #define SOCKS5_BIND DILL_SOCKS5_BIND

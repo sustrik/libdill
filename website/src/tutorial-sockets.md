@@ -254,3 +254,49 @@ Once again, notice how the `EPIPE` error code is used to indicate that the proto
 
 Compile the program and try to use it to download webpages from different sites!
 
+## Step 5: Connection via a proxy.
+
+If your client cannot connect directly to the remote host it is often required
+that the connection is made via a proxy service. In the case of a SOCKS5 proxy
+the initial connection is made to the proxy (via proxy hostname/ip and port)
+and then a request is passed to the proxy to connect out to the remote host.
+
+Authentication to the proxy and connection through the proxy to the remote host
+is via a single call to `socks5_client_connectbyname`. If `username` and
+`password` are set then the call will allow for basic authentication. If not,
+the client will attempt to connect without authentication.
+
+Note that once the connection to the proxy is made there is no additional proxy
+protocol. The proxy becomes transparent and all bytes sent to the proxy are
+forwarded to the remote host. Any protocol compatible with a bytestream (e.g.
+tls, http) can then be initiated and will be passed through the proxy.
+
+Also, regardless of the type of connection from the client to the proxy, the
+connection from the proxy to the remote host is a (plaintext) TCP connection.
+If the connection should be encrypted through to the remote host then
+'tls_attach_client' should be called after 'sock5_client_connectbyname'.
+
+```c
+char *host = argv[2];
+char *proxy_host = argv[4];
+int proxy_port;
+sscanf(argv[5], "%d", &proxy_port);
+
+rc = ipaddr_remote(&addr, proxy_host, proxy_port, 0, -1);
+if(rc != 0) {
+    perror("Cannot resolve SOCKS5 proxy address");
+    return 1;
+}
+
+s = tcp_connect(&addr, -1);
+if(s < 0) {
+    perror("Cannot connect to the SOCKS5 proxy");
+    return 1;
+}
+
+rc = socks5_client_connectbyname(s, username, password, host, port, -1);
+if (rc != 0) {
+    perror("Error connecting to remote host via SOCKS5 proxy");
+    return 1;
+}
+```

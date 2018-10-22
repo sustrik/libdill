@@ -45,7 +45,7 @@ coroutine void client(int s, char *user, char* pass) {
     assert(err == 0);
 }
 
-coroutine void server(int s, char *user, char* pass) {
+coroutine void proxy(int s, char *user, char* pass) {
     // set up auth
     if(auth_user) {free(auth_user); auth_user = NULL;}
     if(auth_pass) {free(auth_pass); auth_pass = NULL;}
@@ -62,21 +62,21 @@ coroutine void server(int s, char *user, char* pass) {
 
     int err;
     if((!user) || (!pass)){
-        err = socks5_server_auth(s, NULL, -1);
+        err = socks5_proxy_auth(s, NULL, -1);
     } else {
-        err = socks5_server_auth(s, auth_fn, -1);
+        err = socks5_proxy_auth(s, auth_fn, -1);
     }
     assert(err == 0);
 
     struct ipaddr addr;
-    int cmd = socks5_server_recv_command(s, &addr, -1);
+    int cmd = socks5_proxy_recvcommand(s, &addr, -1);
     assert(cmd > 0);
     assert(cmd == SOCKS5_CONNECT);
 
     err = ipaddr_remote(&addr, "0.0.0.0", 0, IPADDR_IPV4, -1);
     assert(err == 0);
 
-    err = socks5_server_send_reply(s, SOCKS5_SUCCESS, &addr, -1);
+    err = socks5_proxy_sendreply(s, SOCKS5_SUCCESS, &addr, -1);
     assert(err == 0);
 }
 
@@ -87,7 +87,7 @@ int main(void) {
     printf("testing NO AUTH");
     int b = bundle();
     assert(b >= 0);
-    rc = bundle_go(b, server(h[0], NULL, NULL));
+    rc = bundle_go(b, proxy(h[0], NULL, NULL));
     assert(rc == 0);
     rc = bundle_go(b, client(h[1], NULL, NULL));
     assert(rc == 0);
@@ -96,7 +96,7 @@ int main(void) {
     printf("testing USERNAME/PASSWORD\n");
     b = bundle();
     assert(b >= 0);
-    rc = bundle_go(b, server(h[0], "user", "pass"));
+    rc = bundle_go(b, proxy(h[0], "user", "pass"));
     assert(rc == 0);
     rc = bundle_go(b, client(h[1], "user", "pass"));
     assert(rc == 0);

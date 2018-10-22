@@ -135,7 +135,7 @@ static int s5_client_auth(int s, const char *username, const char *password,
     return -1;
 }
 
-int dill_socks5_server_auth(int s, dill_socks5_auth_function *auth_fn,
+int dill_socks5_proxy_auth(int s, dill_socks5_auth_function *auth_fn,
       int64_t deadline) {
     // all responses are 2 octets
     uint8_t resp[2];
@@ -435,7 +435,7 @@ static int s5_client_connect(int s, struct dill_ipaddr *ipaddr, int64_t deadline
     return s5_handle_connection_response(s, deadline);
 }
 
-int dill_socks5_server_recv_command(int s, struct dill_ipaddr *ipaddr,
+int dill_socks5_proxy_recvcommand(int s, struct dill_ipaddr *ipaddr,
       int64_t deadline) {
     // largest possible connect request = 255 chars for name + 7 bytes for
     // VER, CMD, RSV, ATYP, ALEN, PORT[2]
@@ -474,7 +474,7 @@ int dill_socks5_server_recv_command(int s, struct dill_ipaddr *ipaddr,
     return conn[1];
 }
 
-int dill_socks5_server_send_reply(int s, int reply, struct dill_ipaddr *ipaddr,
+int dill_socks5_proxy_sendreply(int s, int reply, struct dill_ipaddr *ipaddr,
       int64_t deadline) {
     if(dill_slow((reply < S5REPLY_MIN) || (reply > S5REPLY_MAX))) {
         errno = EINVAL; return -1;

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>libdill</title>
+  <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+<body>
+
+<h1>libdill: Structured Concurrency for C</h1>
+
+<ul id='toplist'>
+<li><a href="index.html">Home</a></li>
+<li><a href="download.html">Download</a></li>
+<li><a href="documentation.html">Documentation</a></li>
+<li><a href="tutorial.html">Tutorials</a></li>
+<li><a href="faq.html">FAQ</a></li>
+</ul>
+<h1 id="name">NAME</h1>
+<p>socks5_client_connect - Establish a TCP connection to remote address via proxy</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
+
+<span class="dt">int</span> socks5_client_connect(
+    <span class="dt">int</span> s,
+    <span class="dt">char</span> * username,
+    <span class="dt">int</span> password,
+    <span class="kw">struct</span> ipaddr * addr,
+    <span class="dt">int64_t</span> deadline);</code></pre></div>
+<h1 id="description">DESCRIPTION</h1>
+<p><strong>WARNING: This is experimental functionality and the API may change in the future.</strong></p>
+<p>SOCKS5 is an application-level protocol described in RFC 1928. SOCKS5 protocol is used to negotiate a connection via a proxy server. The underlying transport must be a bytestream.</p>
+<p>This function establishes an outbound TCP connection via the proxy.</p>
+<p><strong>s</strong>: Handle of the underlying socket. It must be a bytestream protocol.</p>
+<p><strong>username</strong>: Username for authentication. If username is NULL the client requests an unauthenticated connection</p>
+<p><strong>password</strong>: Password for authentication. If password is NULL the client requests an unauthenticated connection</p>
+<p><strong>addr</strong>: Remote TCP endpoint address to connect to via proxy</p>
+<p><strong>deadline</strong>: A point in time when the operation should time out, in milliseconds. Use the <strong>now</strong> function to get your current point in time. 0 means immediate timeout, i.e., perform the operation if possible or return without blocking if not. -1 means no deadline, i.e., the call will block forever if the operation cannot be performed.</p>
+<p>No socket is created.</p>
+<p>This function is not available if libdill is compiled with <strong>--disable-sockets</strong> option.</p>
+<h1 id="return-value">RETURN VALUE</h1>
+<p>In case of success the function returns 0. In case of error it returns -1 and sets <strong>errno</strong> to one of the values below.</p>
+<h1 id="errors">ERRORS</h1>
+<ul>
+<li><strong>EACCES</strong>: The client is not authorized to connect.</li>
+<li><strong>EAFNOSUPPORT</strong>: The proxy cannot connect to that address family.</li>
+<li><strong>EBADF</strong>: Invalid handle.</li>
+<li><strong>ECANCELED</strong>: Current coroutine was canceled.</li>
+<li><strong>ECONNREFUSED</strong>: The remote host refused the connection from the proxy.</li>
+<li><strong>ECONNRESET</strong>: Broken connection.</li>
+<li><strong>EHOSTUNREACH</strong>: The proxy cannot connect to the remote host.</li>
+<li><strong>EIO</strong>: General internal failure in the proxy.</li>
+<li><strong>ENETUNREACH</strong>: The proxy cannot connect to the remote network.</li>
+<li><strong>ENOTSUP</strong>: The handle does not support this operation.</li>
+<li><strong>EOPNOTSUPP</strong>: The proxy does not support CONNECT requests.</li>
+<li><strong>EPROTO</strong>: Error in the client &lt;-&gt; proxy protocol.</li>
+<li><strong>ETIMEDOUT</strong>: The connection from the proxy to the remote host timed out.</li>
+</ul>
+<h1 id="example">EXAMPLE</h1>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = tcp_connect(&amp;proxy_addr, <span class="dv">-1</span>);
+<span class="dt">int</span> err = socks5_client_connect(s, &amp;uname, &amp;passwd, &amp;remote_addr, <span class="dv">-1</span>);
+<span class="cf">if</span>(err) <span class="cf">return</span> <span class="dv">-1</span>;
+bsend(s, <span class="st">&quot;ABC&quot;</span>, <span class="dv">3</span>, <span class="dv">-1</span>);
+<span class="dt">char</span> buf[<span class="dv">3</span>];
+brecv(s, buf, <span class="kw">sizeof</span>(buf), <span class="dv">-1</span>);
+tcp_close(s);</code></pre></div>
+<h1 id="see-also">SEE ALSO</h1>
+<p><strong>now</strong>(3) <strong>socks5_client_connectbyname</strong>(3) <strong>socks5_proxy_auth</strong>(3) <strong>socks5_proxy_recvcommand</strong>(3) <strong>socks5_proxy_sendreply</strong>(3)</p>
+</body>

@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
 
     int s;
     int rc;
-    
+
     if (argc == 4) {
         // connect directly
         struct ipaddr addr;
@@ -50,13 +50,15 @@ int main(int argc, char *argv[]) {
     } else {
         // connect via SOCKS5 proxy
         struct ipaddr addr;
-        int sport;
-        sscanf(argv[5], "%d", &sport);
-        if ((sport < 1) || (sport > 65535)) {
-            fprintf(stderr, "Invalid socks5_port port number = %d\n", sport);
+        char *host = argv[2];
+        char *proxy_host = argv[4];
+        int proxy_port;
+        sscanf(argv[5], "%d", &proxy_port);
+        if ((proxy_port < 1) || (proxy_port > 65535)) {
+            fprintf(stderr, "Invalid socks5_port port number = %d\n", proxy_port);
             return 1;
         }
-        rc = ipaddr_remote(&addr, argv[4], sport, 0, -1);
+        rc = ipaddr_remote(&addr, proxy_host, proxy_port, 0, -1);
         if(rc != 0) {
             perror("Cannot resolve SOCKS5 proxy address");
             return 1;
@@ -67,7 +69,7 @@ int main(int argc, char *argv[]) {
             perror("Cannot connect to the SOCKS5 proxy");
             return 1;
         }
-        
+
         char *username = NULL;
         char *password = NULL;
         if (argc == 8) {
@@ -76,12 +78,12 @@ int main(int argc, char *argv[]) {
         }
 
         // if the address is a IPV4 or IPV6 literal, then
-        // pass it as a struct ipaddr, otherwise 
+        // pass it as a struct ipaddr, otherwise
         struct in_addr ina4;
         struct in6_addr ina6;
-        if((inet_pton(AF_INET, argv[2], &ina4) == 1) || 
-            (inet_pton(AF_INET6, argv[2], &ina6) == 1)) {
-            rc = ipaddr_remote(&addr, argv[2], port, 0, -1);
+        if((inet_pton(AF_INET, host, &ina4) == 1) ||
+            (inet_pton(AF_INET6, host, &ina6) == 1)) {
+            rc = ipaddr_remote(&addr, host, port, 0, -1);
             if(rc != 0) {
                 perror("Cannot resolve SOCKS5 proxy address");
                 return 1;
@@ -93,7 +95,7 @@ int main(int argc, char *argv[]) {
                 return 1;
             }
         } else {
-            rc = socks5_client_connectbyname(s, username, password, argv[2], port, -1);
+            rc = socks5_client_connectbyname(s, username, password, host, port, -1);
             if (rc != 0) {
                 perror("Error connecting to remote host via SOCKS5 proxy");
                 return 1;
@@ -155,4 +157,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
