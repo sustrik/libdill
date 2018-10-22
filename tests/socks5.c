@@ -22,8 +22,10 @@
 
 */
 
-#include "assert.h"
+#include <assert.h>
 #include "../libdill.h"
+#include <stdio.h>
+#include <string.h>
 
 static char *auth_user = NULL;
 static char *auth_pass = NULL;
