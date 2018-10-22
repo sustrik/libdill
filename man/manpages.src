@@ -2019,8 +2019,55 @@ fxs = [
            },
            {
                name: "addr",
-               type: "strict ipaddr *",
+               type: "struct ipaddr *",
                info: "Out parameter, the address portion of the client " +
+               "command request.",
+           },
+        ],
+        protocol: socks5_protocol,
+        prologue: `
+            This function interprets the incoming client command request.
+            The request may be one of SOCKS5_CONNECT, SOCKS5_BIND, or
+            SOCKS5_UDP_ASSOCIATE.
+        `,
+        epilogue: `
+            No socket is created.
+        `,
+        has_handle_argument: true,
+        has_deadline: true,
+        uses_connection: true,
+
+        custom_errors: {
+            EPROTO: "Error in the client <-> proxy protocol.",
+        },
+    },
+    {
+        name: "socks5_proxy_recvcommandbyname",
+        info: "Receive and validate incoming command to proxy. Do not resolve" +
+              " the name to an address (this allows application-specific " +
+              "resolution).",
+        result: {
+            type: "int",
+            success: "command",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
+           },
+           {
+               name: "name",
+               type: "char *",
+               info: "Out parameter, the name requested by the client " +
+               "command request. Must allow for length up to 256 characters.",
+           },
+           {
+               name: "port",
+               type: "int *",
+               info: "Out parameter, the port requested by the client " +
                "command request.",
            },
         ],
@@ -2068,7 +2115,7 @@ fxs = [
            },
            {
                name: "addr",
-               type: "strict ipaddr *",
+               type: "struct ipaddr *",
                info: "The address portion of the client command response.",
            },
         ],

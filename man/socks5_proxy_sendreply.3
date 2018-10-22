@@ -14,7 +14,7 @@ socks5_proxy_sendreply \- Reply to client command request
 int\ socks5_proxy_sendreply(
 \ \ \ \ int\ s,
 \ \ \ \ int\ reply,
-\ \ \ \ strict\ ipaddr\ *\ addr,
+\ \ \ \ struct\ ipaddr\ *\ addr,
 \ \ \ \ int64_t\ deadline);
 \f[]
 .fi
@@ -89,3 +89,4 @@ tcp_close(s);
 \f[B]now\f[](3) \f[B]socks5_client_connect\f[](3)
 \f[B]socks5_client_connectbyname\f[](3) \f[B]socks5_proxy_auth\f[](3)
 \f[B]socks5_proxy_recvcommand\f[](3)
+\f[B]socks5_proxy_recvcommandbyname\f[](3)

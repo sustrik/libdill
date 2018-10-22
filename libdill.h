@@ -1005,6 +1005,9 @@ DILL_EXPORT int dill_socks5_proxy_auth(
 DILL_EXPORT int dill_socks5_proxy_recvcommand(
     int s, struct dill_ipaddr *ipaddr, int64_t deadline);
 
+DILL_EXPORT int dill_socks5_proxy_recvcommandbyname(
+    int s, char *host, int *port, int64_t deadline);
+
 DILL_EXPORT int dill_socks5_proxy_sendreply(
     int s, int reply, struct dill_ipaddr *ipaddr, int64_t deadline);
 
@@ -1014,6 +1017,7 @@ DILL_EXPORT int dill_socks5_proxy_sendreply(
 #define socks5_client_connectbyname dill_socks5_client_connectbyname
 #define socks5_proxy_auth dill_socks5_proxy_auth
 #define socks5_proxy_recvcommand dill_socks5_proxy_recvcommand
+#define socks5_proxy_recvcommandbyname dill_socks5_proxy_recvcommandbyname
 #define socks5_proxy_sendreply dill_socks5_proxy_sendreply
 
 #define SOCKS5_CONNECT DILL_SOCKS5_CONNECT

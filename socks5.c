@@ -474,6 +474,43 @@ int dill_socks5_proxy_recvcommand(int s, struct dill_ipaddr *ipaddr,
     return conn[1];
 }
 
+int dill_socks5_proxy_recvcommandbyname(int s, char *host, int *port,
+      int64_t deadline) {
+    // largest possible connect request = 255 chars for name + 7 bytes for
+    // VER, CMD, RSV, ATYP, ALEN, PORT[2]
+    uint8_t conn[262];
+    int err = s5_recv_command_request_response(s, conn, deadline);
+    if(err) return -1;
+    if((conn[1] < DILL_SOCKS5_CONNECT) || (conn[1] > DILL_SOCKS5_UDP_ASSOCIATE)) {
+        errno = EPROTO ; return -1;
+    }
+    _socks5_addr s5addr;
+    s5addr.atyp = conn[3];
+    uint16_t *s5port;
+    switch(s5addr.atyp) {
+        case S5ADDR_IPV4:
+            inet_ntop(AF_INET, (void *)&(conn[4]), host, 256);
+            s5addr.alen = S5ADDR_IPV4_SZ;
+            s5port = (uint16_t *)&(conn[4 + S5ADDR_IPV4_SZ]);
+            break;
+        case S5ADDR_IPV6:
+            inet_ntop(AF_INET6, (void *)&(conn[4]), host, 256);
+            s5addr.alen = S5ADDR_IPV6_SZ;
+            s5port = (uint16_t *)&(conn[4 + S5ADDR_IPV6_SZ]);
+            break;
+        case S5ADDR_NAME:
+            // first octet is len
+            memcpy((void *)host, (void *)&(conn[5]), conn[4]);
+            // add null terminator
+            s5addr.addr[conn[4]] = '\x00';
+            s5addr.alen = conn[4];
+            s5port = (uint16_t *)&(conn[4 + 1 + conn[4]]);
+            break;
+    }
+    *port = (int)ntohs(*s5port);
+    return conn[1];
+}
+
 int dill_socks5_proxy_sendreply(int s, int reply, struct dill_ipaddr *ipaddr,
       int64_t deadline) {
     if(dill_slow((reply < S5REPLY_MIN) || (reply > S5REPLY_MAX))) {

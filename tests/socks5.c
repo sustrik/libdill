@@ -80,11 +80,50 @@ coroutine void proxy(int s, char *user, char* pass) {
     assert(err == 0);
 }
 
+coroutine void proxy_byname(int s, char *user, char* pass) {
+    // set up auth
+    if(auth_user) {free(auth_user); auth_user = NULL;}
+    if(auth_pass) {free(auth_pass); auth_pass = NULL;}
+    if(user) {
+        auth_user = malloc(strlen(user)+1); strcpy(auth_user, user);
+    } else {
+        auth_user = NULL;
+    }
+    if(pass) {
+        auth_pass = malloc(strlen(pass)+1); strcpy(auth_pass, pass);
+    } else {
+        auth_pass = NULL;
+    }
+
+    int err;
+    if((!user) || (!pass)){
+        err = socks5_proxy_auth(s, NULL, -1);
+    } else {
+        err = socks5_proxy_auth(s, auth_fn, -1);
+    }
+    assert(err == 0);
+
+    struct ipaddr addr;
+    char r_name[256];
+    int r_port;
+    int cmd = socks5_proxy_recvcommandbyname(s, r_name, &r_port, -1);
+    assert(cmd > 0);
+    assert(cmd == SOCKS5_CONNECT);
+    assert(strcmp(r_name, "libdill.org") == 0);
+    assert(r_port == 80);
+
+    err = ipaddr_remote(&addr, "0.0.0.0", 0, IPADDR_IPV4, -1);
+    assert(err == 0);
+
+    err = socks5_proxy_sendreply(s, SOCKS5_SUCCESS, &addr, -1);
+    assert(err == 0);
+}
+
 int main(void) {
     int h[2];
     int rc = ipc_pair(h);
     assert(rc == 0);
-    printf("testing NO AUTH");
+    printf("testing IP, NO AUTH");
     int b = bundle();
     assert(b >= 0);
     rc = bundle_go(b, proxy(h[0], NULL, NULL));
@@ -93,10 +132,26 @@ int main(void) {
     assert(rc == 0);
     rc = bundle_wait(b, -1);
     assert(rc == 0);
-    printf("testing USERNAME/PASSWORD\n");
+    printf("testing IP, USERNAME/PASSWORD\n");
     b = bundle();
     assert(b >= 0);
     rc = bundle_go(b, proxy(h[0], "user", "pass"));
+    assert(rc == 0);
+    rc = bundle_go(b, client(h[1], "user", "pass"));
+    assert(rc == 0);
+    rc = bundle_wait(b, -1);
+    assert(rc == 0);
+    printf("testing name, NO AUTH");
+    rc = bundle_go(b, proxy_byname(h[0], NULL, NULL));
+    assert(rc == 0);
+    rc = bundle_go(b, client(h[1], NULL, NULL));
+    assert(rc == 0);
+    rc = bundle_wait(b, -1);
+    assert(rc == 0);
+    printf("testing name, USERNAME/PASSWORD\n");
+    b = bundle();
+    assert(b >= 0);
+    rc = bundle_go(b, proxy_byname(h[0], "user", "pass"));
     assert(rc == 0);
     rc = bundle_go(b, client(h[1], "user", "pass"));
     assert(rc == 0);

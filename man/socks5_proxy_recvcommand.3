@@ -14,7 +14,7 @@ proxy
 
 int\ socks5_proxy_recvcommand(
 \ \ \ \ int\ s,
-\ \ \ \ strict\ ipaddr\ *\ addr,
+\ \ \ \ struct\ ipaddr\ *\ addr,
 \ \ \ \ int64_t\ deadline);
 \f[]
 .fi
@@ -84,4 +84,5 @@ tcp_close(s);
 .PP
 \f[B]now\f[](3) \f[B]socks5_client_connect\f[](3)
 \f[B]socks5_client_connectbyname\f[](3) \f[B]socks5_proxy_auth\f[](3)
+\f[B]socks5_proxy_recvcommandbyname\f[](3)
 \f[B]socks5_proxy_sendreply\f[](3)
