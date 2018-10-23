@@ -68,9 +68,6 @@ coroutine void do_proxy(int s) {
     int cmd = socks5_proxy_recvcommand(s, &addr, -1);
     if(cmd != SOCKS5_CONNECT) goto in_close;
 
-    char addr_str[IPADDR_MAXSTRLEN];
-    ipaddr_str(&addr, addr_str);
-
     int s_rem = tcp_connect(&addr, -1);
     if(s_rem < 0) goto in_close;
 
