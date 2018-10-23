@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
         char name[256];
         char value[256];
         rc = http_recvfield(s, name, sizeof(name), value, sizeof(value), -1);
-        if(rc == -1 && errno == EPIPE) break;
+        if(rc == -1 && ((errno == EPIPE) || (ECONNRESET))) break;
         assert(rc == 0);
         fprintf(stderr, "%s: %s\n", name, value);
     }
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
     while(1) {
         unsigned char c;
         rc = brecv(s, &c, 1, -1);
-        if(rc == -1 && errno == EPIPE) break;
+        if(rc == -1 && ((errno == EPIPE) || (ECONNRESET))) break;
         fprintf(stdout, "%c", c);
     }
     fprintf(stderr, "\n");
