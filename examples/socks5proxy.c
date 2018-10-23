@@ -75,10 +75,10 @@ coroutine void do_proxy(int s) {
     if(s_rem < 0) goto in_close;
 
     err = ipaddr_remote(&addr, "0.0.0.0", 0, IPADDR_IPV4, -1);
-    if(err) goto in_close;
+    if(err) goto both_close;
 
     err = socks5_proxy_sendreply(s, SOCKS5_SUCCESS, &addr, -1);
-    if(err) goto in_close;
+    if(err) goto both_close;
 
     // channels for outboud, inbound to signal done (to close connection)
     int och[2], ich[2];
