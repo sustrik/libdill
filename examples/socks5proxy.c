@@ -98,16 +98,20 @@ coroutine void do_proxy(int s) {
         case 0:
             err = bundle_wait(ob, -1);
             if(err) break;
-            msleep(now()+100);
-            hclose(ib);
-            bundle_wait(ib, -1);
+            tcp_done(s, -1);
+            tcp_done(s_rem, -1);
+            err = bundle_wait(ib, -1);
+            if(err) break;
+            //tcp_close(s_rem, -1);
             break;
         case 1:
             err = bundle_wait(ib, -1);
             if(err) break;
-            msleep(now()+100);
-            hclose(ob);
-            bundle_wait(ob, -1);
+            tcp_done(s_rem, -1);
+            tcp_done(s, -1);
+            err = bundle_wait(ob, -1);
+            if(err) break;
+            //tcp_close(s, -1);
             break;
         case -1:
             // error
