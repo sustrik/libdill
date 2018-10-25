@@ -179,6 +179,7 @@ const char *dill_ipaddr_str(const struct dill_ipaddr *addr, char *ipstr) {
 
 int dill_ipaddr_local(struct dill_ipaddr *addr, const char *name, int port,
       int mode) {
+    if(mode == 0) mode = DILL_IPADDR_PREF_IPV4;
     memset(addr, 0, sizeof(struct dill_ipaddr));
     if(!name) 
         return dill_ipaddr_ipany(addr, port, mode);
@@ -257,11 +258,66 @@ int dill_ipaddr_local(struct dill_ipaddr *addr, const char *name, int port,
 
 int dill_ipaddr_remote(struct dill_ipaddr *addr, const char *name, int port,
       int mode, int64_t deadline) {
-    memset(addr, 0, sizeof(struct dill_ipaddr));
-    int rc = dill_ipaddr_literal(addr, name, port, mode);
-    if(rc == 0)
-       return 0;
-    /* Load DNS config files, unless they are already chached. */
+    int rc = dill_ipaddr_remotes(addr, 1, name, port, mode, deadline);
+    if(dill_slow(rc < 0)) return -1;
+    if(rc == 0) {errno = EADDRNOTAVAIL; return -1;}
+    return 0;
+}
+
+int dill_ipaddr_remotes(struct dill_ipaddr *addrs, int naddrs,
+      const char *name, int port, int mode, int64_t deadline) {
+    /* Check the arguments. */
+    if(dill_slow(!addrs || naddrs <= 0 || !name)) {errno = EINVAL; return -1;}
+    switch(mode) {
+    case 0:
+        mode = DILL_IPADDR_PREF_IPV4;
+        break;
+    case DILL_IPADDR_IPV4:
+    case DILL_IPADDR_IPV6:
+    case DILL_IPADDR_PREF_IPV4:
+    case DILL_IPADDR_PREF_IPV6:
+        break;
+    default:
+        errno = EINVAL;
+        return -1;
+    }
+    /* Name may be a IP address literal. */
+    memset(addrs, 0, sizeof(struct dill_ipaddr));
+    int rc = dill_ipaddr_literal(addrs, name, port, mode);
+    if(rc == 0) {
+        if(dill_slow(mode == DILL_IPADDR_IPV6 &&
+              dill_ipaddr_family(addrs) == AF_INET)) return 0;
+        if(dill_slow(mode == DILL_IPADDR_IPV4 &&
+              dill_ipaddr_family(addrs) == AF_INET6)) return 0;
+        return 1;
+    }
+    /* PREF modes are done in recursive fashion. */
+    if(mode == DILL_IPADDR_PREF_IPV4) {
+        int rc1 = dill_ipaddr_remotes(addrs, naddrs, name, port,
+            DILL_IPADDR_IPV4, deadline);
+        if(dill_slow(rc1 < 0)) return -1;
+        int rc2 = 0;
+        if(naddrs - rc1 > 0) {
+            rc2 = dill_ipaddr_remotes(addrs + rc1, naddrs - rc1, name, port,
+                DILL_IPADDR_IPV6, deadline);
+            if(dill_slow(rc2 < 0)) return -1;
+        }
+        return rc1 + rc2;
+    }
+    if(mode == DILL_IPADDR_PREF_IPV6) {
+        int rc1 = dill_ipaddr_remotes(addrs, naddrs, name, port,
+            DILL_IPADDR_IPV6, deadline);
+        if(dill_slow(rc1 < 0)) return -1;
+        int rc2 = 0;
+        if(naddrs - rc1 > 0) {
+            rc2 = dill_ipaddr_remotes(addrs + rc1, naddrs - rc1, name, port,
+                DILL_IPADDR_IPV4, deadline);
+            if(dill_slow(rc2 < 0)) return -1;
+        }
+        return rc1 + rc2;
+    }
+    /* We are going to do a DNS query here so load DNS config files,
+       unless they are already chached. */
     if(dill_slow(!dill_dns_conf)) {
         /* TODO: Maybe re-read the configuration once in a while? */
         dill_dns_conf = dns_resconf_local(&rc);
@@ -274,7 +330,7 @@ int dill_ipaddr_remote(struct dill_ipaddr *addr, const char *name, int port,
         dill_dns_hints = dns_hints_local(dill_dns_conf, &rc);
         dill_assert(dill_dns_hints);
     }
-    /* Let's do asynchronous DNS query here. */
+    /* Launch the actual DNS query. */
     struct dns_resolver *resolver = dns_res_open(dill_dns_conf,
         dill_dns_hosts, dill_dns_hints, NULL, dns_opts(), &rc);
     if(!resolver) {
@@ -289,12 +345,13 @@ int dill_ipaddr_remote(struct dill_ipaddr *addr, const char *name, int port,
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = PF_UNSPEC;
-    struct dns_addrinfo *ai = dns_ai_open(name, portstr, DNS_T_A, &hints,
+    struct dns_addrinfo *ai = dns_ai_open(name, portstr,
+        mode == DILL_IPADDR_IPV4 ? DNS_T_A : DNS_T_AAAA, &hints,
         resolver, &rc);
     dill_assert(ai);
     dns_res_close(resolver);
-    struct addrinfo *ipv4 = NULL;
-    struct addrinfo *ipv6 = NULL;
+    /* Wait for the results. */
+    int nresults = 0;
     struct addrinfo *it = NULL;
     while(1) {
         rc = dns_ai_nextent(&it, ai);
@@ -316,66 +373,27 @@ int dill_ipaddr_remote(struct dill_ipaddr *addr, const char *name, int port,
             }
             continue;
         }
-        if(rc == ENOENT || (rc >= DNS_EBASE && rc <= DNS_ELAST))
-            break;
-        if(!ipv4 && it && it->ai_family == AF_INET) {
-            ipv4 = it;
-            it = NULL;
+        if(rc == ENOENT || (rc >= DNS_EBASE && rc <= DNS_ELAST)) break;
+        if(naddrs && mode == DILL_IPADDR_IPV4 && it->ai_family == AF_INET) {
+            struct sockaddr_in *inaddr = (struct sockaddr_in*)addrs;
+            memcpy(inaddr, it->ai_addr, sizeof (struct sockaddr_in));
+            inaddr->sin_port = htons(port);
+            addrs++;
+            naddrs--;
+            nresults++;
         }
-        if(!ipv6 && it && it->ai_family == AF_INET6) {
-            ipv6 = it;
-            it = NULL;
+        if(naddrs && mode == DILL_IPADDR_IPV6 && it->ai_family == AF_INET6) {
+            struct sockaddr_in6 *inaddr = (struct sockaddr_in6*)addrs;
+            memcpy(inaddr, it->ai_addr, sizeof (struct sockaddr_in6));
+            inaddr->sin6_port = htons(port);
+            addrs++;
+            naddrs--;
+            nresults++;
         }
-        free(it); /* Ended up useless */
-        if(ipv4 && ipv6)
-            break;
-    }
-    switch(mode) {
-    case DILL_IPADDR_IPV4:
-        free(ipv6);
-        ipv6 = NULL;
-        break;
-    case DILL_IPADDR_IPV6:
-        free(ipv4);
-        ipv4 = NULL;
-        break;
-    case 0:
-    case DILL_IPADDR_PREF_IPV4:
-        if(ipv4) {
-            free(ipv6);
-            ipv6 = NULL;
-        }
-        break;
-    case DILL_IPADDR_PREF_IPV6:
-        if(ipv6) {
-            free(ipv4);
-            ipv4 = NULL;
-        }
-        break;
-    default:
-        dill_assert(0);
-    }
-    if(ipv4) {
-        struct sockaddr_in *inaddr = (struct sockaddr_in*)addr;
-        memcpy(inaddr, ipv4->ai_addr, sizeof (struct sockaddr_in));
-        inaddr->sin_port = htons(port);
-        free(ipv4);
-        free(ipv6);
-        dns_ai_close(ai);
-        return 0;
-    }
-    if(ipv6) {
-        struct sockaddr_in6 *inaddr = (struct sockaddr_in6*)addr;
-        memcpy(inaddr, ipv6->ai_addr, sizeof (struct sockaddr_in6));
-        inaddr->sin6_port = htons(port);
-        free(ipv4);
-        free(ipv6);
-        dns_ai_close(ai);
-        return 0;
+        free(it);
     }
     dns_ai_close(ai);
-    errno = EADDRNOTAVAIL;
-    return -1;
+    return nresults;
 }
 
 int dill_ipaddr_equal(const struct dill_ipaddr *addr1,

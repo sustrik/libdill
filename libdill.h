@@ -423,6 +423,13 @@ DILL_EXPORT int dill_ipaddr_remote(
     int port,
     int mode,
     int64_t deadline);
+DILL_EXPORT int dill_ipaddr_remotes(
+    struct dill_ipaddr *addrs,
+    int naddrs,
+    const char *name,
+    int port,
+    int mode,
+    int64_t deadline);
 DILL_EXPORT const char *dill_ipaddr_str(
     const struct dill_ipaddr *addr,
     char *ipstr);
@@ -451,6 +458,7 @@ DILL_EXPORT int dill_ipaddr_equal(
 #define ipaddr dill_ipaddr
 #define ipaddr_local dill_ipaddr_local
 #define ipaddr_remote dill_ipaddr_remote
+#define ipaddr_remotes dill_ipaddr_remotes
 #define ipaddr_str dill_ipaddr_str
 #define ipaddr_family dill_ipaddr_family
 #define ipaddr_sockaddr dill_ipaddr_sockaddr
