@@ -65,6 +65,7 @@ libdill_la_SOURCES += \
     bsock.c \
     fd.h \
     fd.c \
+    happyeyeballs.c \
     http.c \
     iol.h \
     iol.c \

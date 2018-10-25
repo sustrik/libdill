@@ -1006,6 +1006,17 @@ DILL_EXPORT int dill_term_detach(
 #define term_detach dill_term_detach
 #endif
 
+/******************************************************************************/
+/* Happy Eyeballs (RFC 8305).                                                 */
+/* Implements concurrent TCP connecting to the remote endpoint.               */
+/******************************************************************************/
+
+int dill_happyeyeballs_connect(const char *name, int port, int64_t deadline);
+
+#if !defined DILL_DISABLE_RAW_NAMES
+#define happyeyeballs_connect dill_happyeyeballs_connect
+#endif
+
 #endif
 
 #ifdef __cplusplus
