@@ -61,6 +61,7 @@ tests/ws
 tests/term
 tests/dtls
 tests/socks5
+tests/happyeyeballs
 perf/.dirstamp
 perf/chan
 perf/ctxswitch

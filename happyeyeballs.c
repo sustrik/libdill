@@ -47,7 +47,7 @@ static dill_coroutine void dill_happyeyeballs_dnsquery(const char *name,
        have to deal with closed channels. Instead we'll send 0.0.0.0 address
        to mark the end of the results. */
     struct dill_ipaddr addr;
-    int rc = dill_ipaddr_local(&addr, "0.0.0.0", 0, 0);
+    int rc = dill_ipaddr_local(&addr, "0.0.0.0", 0, DILL_IPADDR_IPV4);
     dill_assert(rc == 0);
     rc = dill_chsend(ch, &addr, sizeof(struct dill_ipaddr), -1);
     dill_assert(rc == 0 || errno == ECANCELED);
@@ -69,7 +69,7 @@ static dill_coroutine void dill_happyeyeballs_attempt(struct dill_ipaddr addr,
 static dill_coroutine void dill_happyeyeballs_coordinator(
       const char *name, int port, int ch) {
     struct dill_ipaddr nulladdr;
-    int rc = dill_ipaddr_local(&nulladdr, "0.0.0.0", 0, 0);
+    int rc = dill_ipaddr_local(&nulladdr, "0.0.0.0", 0, DILL_IPADDR_IPV4);
     dill_assert(rc == 0);
     /* According to the RFC, IPv4 and IPv6 DNS queries should be done in
        parallel. Create two coroutines and two channels to pass
@@ -101,11 +101,16 @@ static dill_coroutine void dill_happyeyeballs_coordinator(
         dill_now() + 50);
     if(dill_slow(rc < 0 && errno == ECANCELED)) goto cancel;
     int idx;
-    if(dill_fast(rc == 0)) {idx = 0; goto use_address;}
+    int64_t nw;
+    if(dill_fast(rc == 0)) {
+        idx = 0;
+        nw = dill_now();
+        goto use_address;
+    }
     dill_assert(errno == ETIMEDOUT);
     /* From now we can use any address. */
-    int64_t nw = dill_now();
     while(1) {
+        nw = dill_now();
         idx = dill_choose(cls, 2, -1);
         if(dill_slow(idx < 0 && errno == ECANCELED)) goto cancel;
         dill_assert(idx >= 0 && errno == 0);
@@ -117,14 +122,15 @@ use_address:
         if(dill_slow(rc < 0 && errno == ECANCELED)) goto cancel;
         dill_assert(rc == 0);
         /* Alternate between IPv4 and IPv6 addresses. */
-        int tmp = cls[0].ch;
-        cls[0].ch = cls[1].ch;
-        cls[1].ch = tmp;
+        if(idx == 0) {
+            int tmp = cls[0].ch;
+            cls[0].ch = cls[1].ch;
+            cls[1].ch = tmp;
+        }
         /* Wait for 300ms before launching next connection attempt. */
         rc = dill_msleep(nw + 300);
         if(dill_slow(rc < 0 && errno == ECANCELED)) goto cancel;
         dill_assert(rc == 0);
-        nw = dill_now();
     }
 cancel:
     rc = dill_hclose(bndl);

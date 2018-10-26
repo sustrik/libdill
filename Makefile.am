@@ -144,7 +144,8 @@ check_PROGRAMS += \
     tests/udp \
     tests/http \
     tests/ws \
-    tests/term
+    tests/term \
+    tests/happyeyeballs
 endif
 
 if DILL_SOCKETS
