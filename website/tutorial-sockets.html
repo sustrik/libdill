@@ -157,4 +157,43 @@ fprintf(stderr, <span class="st">&quot;</span><span class="sc">\n</span><span cl
 fprintf(stderr, <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>);</code></pre></div>
 <p>Once again, notice how the <code>EPIPE</code> error code is used to indicate that the protocol was terminated by the peer. In this particular case, the TCP connection was closed by the server.</p>
 <p>Compile the program and try to use it to download webpages from different sites!</p>
+<h2 id="step-5-connection-via-a-proxy.">Step 5: Connection via a proxy.</h2>
+<p>If your client cannot connect directly to the remote host it is often required<br />
+that the connection is made via a proxy service. In the case of a SOCKS5 proxy<br />
+the initial connection is made to the proxy (via proxy hostname/ip and port)<br />
+and then a request is passed to the proxy to connect out to the remote host.</p>
+<p>Authentication to the proxy and connection through the proxy to the remote host<br />
+is via a single call to <code>socks5_client_connectbyname</code>. If <code>username</code> and<br />
+<code>password</code> are set then the call will allow for basic authentication. If not,<br />
+the client will attempt to connect without authentication.</p>
+<p>Note that once the connection to the proxy is made there is no additional proxy<br />
+protocol. The proxy becomes transparent and all bytes sent to the proxy are<br />
+forwarded to the remote host. Any protocol compatible with a bytestream (e.g.<br />
+tls, http) can then be initiated and will be passed through the proxy.</p>
+<p>Also, regardless of the type of connection from the client to the proxy, the<br />
+connection from the proxy to the remote host is a (plaintext) TCP connection.<br />
+If the connection should be encrypted through to the remote host then<br />
+'tls_attach_client' should be called after 'sock5_client_connectbyname'.</p>
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">char</span> *host = argv[<span class="dv">2</span>];
+<span class="dt">char</span> *proxy_host = argv[<span class="dv">4</span>];
+<span class="dt">int</span> proxy_port;
+sscanf(argv[<span class="dv">5</span>], <span class="st">&quot;%d&quot;</span>, &amp;proxy_port);
+
+rc = ipaddr_remote(&amp;addr, proxy_host, proxy_port, <span class="dv">0</span>, <span class="dv">-1</span>);
+<span class="cf">if</span>(rc != <span class="dv">0</span>) {
+    perror(<span class="st">&quot;Cannot resolve SOCKS5 proxy address&quot;</span>);
+    <span class="cf">return</span> <span class="dv">1</span>;
+}
+
+s = tcp_connect(&amp;addr, <span class="dv">-1</span>);
+<span class="cf">if</span>(s &lt; <span class="dv">0</span>) {
+    perror(<span class="st">&quot;Cannot connect to the SOCKS5 proxy&quot;</span>);
+    <span class="cf">return</span> <span class="dv">1</span>;
+}
+
+rc = socks5_client_connectbyname(s, username, password, host, port, <span class="dv">-1</span>);
+<span class="cf">if</span> (rc != <span class="dv">0</span>) {
+    perror(<span class="st">&quot;Error connecting to remote host via SOCKS5 proxy&quot;</span>);
+    <span class="cf">return</span> <span class="dv">1</span>;
+}</code></pre></div>
 </body>

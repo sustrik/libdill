@@ -60,6 +60,7 @@ tests/http
 tests/ws
 tests/term
 tests/dtls
+tests/socks5
 perf/.dirstamp
 perf/chan
 perf/ctxswitch
@@ -97,7 +98,9 @@ tutorial/sockets/step1
 tutorial/sockets/step2
 tutorial/sockets/step3
 tutorial/sockets/step4
+tutorial/sockets/step5
 tutorial/sockets/.dirstamp
 examples/.dirstamp
+examples/socks5proxy
 examples/webapp
 build/

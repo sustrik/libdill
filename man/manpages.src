@@ -219,6 +219,26 @@ http_server_example = `
     tcp_close(s);
 `
 
+socks5_protocol = {
+    section: "SOCKS5 protocol",
+    type: "application",
+    info: `
+        SOCKS5 is an application-level protocol described in RFC 1928. SOCKS5
+        protocol is used to negotiate a connection via a proxy server. The
+        underlying transport must be a bytestream.
+    `,
+    example: `
+        int s = tcp_connect(&proxy_addr, -1);
+        int err = socks5_client_connect(s, &uname, &passwd, &remote_addr, -1);
+        if(err) return -1;
+        bsend(s, "ABC", 3, -1);
+        char buf[3];
+        brecv(s, buf, sizeof(buf), -1);
+        tcp_close(s);
+    `,
+    experimental: true,
+}
+
 ipc_protocol = {
     section: "IPC protocol",
     type: "bytestream",
@@ -1822,6 +1842,297 @@ fxs = [
         errors: ["EINVAL"],
 
         example: http_server_example,
+    },
+    {
+        name: "socks5_client_connect",
+        info: "Establish a TCP connection to remote address via proxy",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
+           },
+           {
+               name: "username",
+               type: "char *",
+               info: "Username for authentication. If username is NULL " +
+                     "the client requests an unauthenticated connection",
+           },
+           {
+               name: "password",
+               type: "int",
+               info: "Password for authentication. If password is NULL " +
+                     "the client requests an unauthenticated connection",
+           },
+           {
+               name: "addr",
+               type: "struct ipaddr *",
+               info: "Remote TCP endpoint address to connect to via proxy",
+           },
+        ],
+        protocol: socks5_protocol,
+        prologue: `
+            This function establishes an outbound TCP connection via the proxy.
+        `,
+        epilogue: `
+            No socket is created.
+        `,
+        has_handle_argument: true,
+        has_deadline: true,
+        uses_connection: true,
+
+        custom_errors: {
+            EACCES: "The client is not authorized to connect.",
+            EIO: "General internal failure in the proxy.",
+            ENETUNREACH: "The proxy cannot connect to the remote network.",
+            EHOSTUNREACH: "The proxy cannot connect to the remote host.",
+            ECONNREFUSED: "The remote host refused the connection from the proxy.",
+            ETIMEDOUT: "The connection from the proxy to the remote host timed out.",
+            EOPNOTSUPP: "The proxy does not support CONNECT requests.",
+            EAFNOSUPPORT: "The proxy cannot connect to that address family.",
+            EPROTO: "Error in the client <-> proxy protocol.",
+        },
+    },
+    {
+        name: "socks5_client_connectbyname",
+        info: "Establish a TCP connection to remote address via proxy",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
+           },
+           {
+               name: "username",
+               type: "char *",
+               info: "Username for authentication. If username is NULL " +
+                     "the client requests an unauthenticated connection",
+           },
+           {
+               name: "password",
+               type: "int",
+               info: "Password for authentication. If password is NULL " +
+                     "the client requests an unauthenticated connection",
+           },
+           {
+               name: "hostname",
+               type: "char *",
+               info: "Remote TCP endpoint hostname to connect to via proxy",
+           },
+           {
+               name: "port",
+               type: "int",
+               info: "Remote TCP endpoint port to connect to via proxy",
+           },
+        ],
+        protocol: socks5_protocol,
+        prologue: `
+            This function establishes an outbound TCP connection via the proxy.
+            Name resolution occurs within the proxy.
+        `,
+        epilogue: `
+            No socket is created.
+        `,
+        has_handle_argument: true,
+        has_deadline: true,
+        uses_connection: true,
+
+        custom_errors: {
+            EACCES: "The client is not authorized to connect.",
+            EIO: "General internal failure in the proxy.",
+            ENETUNREACH: "The proxy cannot connect to the remote network.",
+            EHOSTUNREACH: "The proxy cannot connect to the remote host.",
+            ECONNREFUSED: "The remote host refused the connection from the proxy.",
+            ETIMEDOUT: "The connection from the proxy to the remote host timed out.",
+            EOPNOTSUPP: "The proxy does not support CONNECT requests.",
+            EAFNOSUPPORT: "The proxy cannot connect to that address family.",
+            EPROTO: "Error in the client <-> proxy protocol.",
+        },
+    },
+    {
+        name: "socks5_proxy_auth",
+        info: "Authenticate an incoming client proxy connection request",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
+           },
+           {
+               name: "auth_function",
+               type: "int (*)(const char *username, const char *password)",
+               info: "authorization callback function to validate usernate " +
+               "and password. If auth_function is NULL, clients may connect " +
+               "without authentication.",
+           },
+        ],
+        protocol: socks5_protocol,
+        prologue: `
+            This function listens for an incoming client authentication
+            request, negotiates an authentication method and authenticates
+            the client.
+        `,
+        epilogue: `
+            No socket is created.
+        `,
+        has_handle_argument: true,
+        has_deadline: true,
+        uses_connection: true,
+
+        custom_errors: {
+            EACCES: "The client is not authorized to connect.",
+            EPROTO: "Error in the client <-> proxy protocol.",
+        },
+    },
+    {
+        name: "socks5_proxy_recvcommand",
+        info: "Receive and validate incoming command to proxy",
+        result: {
+            type: "int",
+            success: "command",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
+           },
+           {
+               name: "addr",
+               type: "struct ipaddr *",
+               info: "Out parameter, the address portion of the client " +
+               "command request.",
+           },
+        ],
+        protocol: socks5_protocol,
+        prologue: `
+            This function interprets the incoming client command request.
+            The request may be one of SOCKS5_CONNECT, SOCKS5_BIND, or
+            SOCKS5_UDP_ASSOCIATE.
+        `,
+        epilogue: `
+            No socket is created.
+        `,
+        has_handle_argument: true,
+        has_deadline: true,
+        uses_connection: true,
+
+        custom_errors: {
+            EPROTO: "Error in the client <-> proxy protocol.",
+        },
+    },
+    {
+        name: "socks5_proxy_recvcommandbyname",
+        info: "Receive and validate incoming command to proxy. Do not resolve" +
+              " the name to an address (this allows application-specific " +
+              "resolution).",
+        result: {
+            type: "int",
+            success: "command",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
+           },
+           {
+               name: "name",
+               type: "char *",
+               info: "Out parameter, the name requested by the client " +
+               "command request. Must allow for length up to 256 characters.",
+           },
+           {
+               name: "port",
+               type: "int *",
+               info: "Out parameter, the port requested by the client " +
+               "command request.",
+           },
+        ],
+        protocol: socks5_protocol,
+        prologue: `
+            This function interprets the incoming client command request.
+            The request may be one of SOCKS5_CONNECT, SOCKS5_BIND, or
+            SOCKS5_UDP_ASSOCIATE.
+        `,
+        epilogue: `
+            No socket is created.
+        `,
+        has_handle_argument: true,
+        has_deadline: true,
+        uses_connection: true,
+
+        custom_errors: {
+            EPROTO: "Error in the client <-> proxy protocol.",
+        },
+    },
+    {
+        name: "socks5_proxy_sendreply",
+        info: "Reply to client command request",
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+        args: [
+           {
+               name: "s",
+               type: "int",
+               info: "Handle of the underlying socket. It must be a " +
+                     "bytestream protocol.",
+           },
+           {
+               name: "reply",
+               type: "int",
+               info: "Reply to client, may be any of SOCKS5_SUCCESS, " +
+               "SOCKS5_GENERAL_FAILURE, SOCKS5_CONNECTION_NOT_ALLOWED, " +
+               "SOCKS5_NETWORK_UNREACHABLE, SOCKS5_HOST_UNREACHABLE, " +
+               "SOCKS5_CONNECTION_REFUSED, SOCKS5_TTL_EXPIRED, " +
+               "SOCKS5_COMMAND_NOT_SUPPORTED, or " +
+               "SOCKS5_ADDRESS_TYPE_NOT_SUPPORTED.",
+           },
+           {
+               name: "addr",
+               type: "struct ipaddr *",
+               info: "The address portion of the client command response.",
+           },
+        ],
+        protocol: socks5_protocol,
+        prologue: `
+            This function acknowledges the client command request. The .
+        `,
+        epilogue: `
+            No socket is created.
+        `,
+        has_handle_argument: true,
+        has_deadline: true,
+        uses_connection: true,
+
+        custom_errors: {
+            EPROTO: "Error in the client <-> proxy protocol.",
+        },
     },
     {
         name: "ipaddr_equal",
@@ -4356,6 +4667,7 @@ t += generate_section("IP addresses", sections)
 t += generate_section("HTTP protocol", sections)
 t += generate_section("IPC protocol", sections)
 t += generate_section("PREFIX protocol", sections)
+t += generate_section("SOCKS5 protocol", sections)
 t += generate_section("SUFFIX protocol", sections)
 t += generate_section("TCP protocol", sections)
 t += generate_section("TERM protocol", sections)

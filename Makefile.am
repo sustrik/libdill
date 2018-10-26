@@ -73,6 +73,7 @@ libdill_la_SOURCES += \
     ipaddr.c \
     msock.c \
     prefix.c \
+    socks5.c \
     suffix.c \
     tcp.c \
     term.c \
@@ -138,6 +139,7 @@ check_PROGRAMS += \
     tests/tcp \
     tests/ipc \
     tests/prefix \
+    tests/socks5 \
     tests/suffix \
     tests/udp \
     tests/http \
@@ -188,7 +190,8 @@ noinst_PROGRAMS += \
     tutorial/sockets/step1 \
     tutorial/sockets/step2 \
     tutorial/sockets/step3 \
-    tutorial/sockets/step4
+    tutorial/sockets/step4 \
+    tutorial/sockets/step5
 endif
 endif
 
@@ -198,6 +201,7 @@ endif
 
 if DILL_SOCKETS
 noinst_PROGRAMS += \
+    examples/socks5proxy \
     examples/webapp
 endif
 
@@ -251,4 +255,3 @@ CLEANFILES = *.gcno *.gcda dns/*.gcno dns/*.gcda tests/*.gcno tests/*.gcda
 
 distclean-local:
 	-rm -f config.h
-

@@ -84,6 +84,11 @@ man3_MANS = \
     prefix_attach.3 \
     prefix_attach_mem.3 \
     prefix_detach.3 \
+    socks5_client_connect.3 \
+    socks5_client_connectbyname.3 \
+    socks5_proxy_auth.3 \
+    socks5_proxy_recvcommand.3 \
+    socks5_proxy_sendreply.3 \
     suffix_attach.3 \
     suffix_attach_mem.3 \
     suffix_detach.3 \

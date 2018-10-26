@@ -976,6 +976,75 @@ DILL_EXPORT int dill_ws_response_key(
 #endif
 
 /******************************************************************************/
+/*  SOCKS5                                                                    */
+/******************************************************************************/
+
+// SOCKS5 client commands
+#define DILL_SOCKS5_CONNECT (0x01)
+#define DILL_SOCKS5_BIND (0x02)
+#define DILL_SOCKS5_UDP_ASSOCIATE (0x03)
+
+// SOCKS5 server reply codes
+#define DILL_SOCKS5_SUCCESS (0x00)
+#define DILL_SOCKS5_GENERAL_FAILURE (0x01)
+#define DILL_SOCKS5_CONNECTION_NOT_ALLOWED (0x02)
+#define DILL_SOCKS5_NETWORK_UNREACHABLE (0x03)
+#define DILL_SOCKS5_HOST_UNREACHABLE (0x04)
+#define DILL_SOCKS5_CONNECTION_REFUSED (0x05)
+#define DILL_SOCKS5_TTL_EXPIRED (0x06)
+#define DILL_SOCKS5_COMMAND_NOT_SUPPORTED (0x07)
+#define DILL_SOCKS5_ADDRESS_TYPE_NOT_SUPPORTED (0x08)
+
+
+typedef int dill_socks5_auth_function(const char *username,
+    const char *password);
+
+DILL_EXPORT int dill_socks5_client_connect(
+    int s, const char *username, const char *password,
+    struct dill_ipaddr *addr, int64_t deadline);
+
+DILL_EXPORT int dill_socks5_client_connectbyname(
+    int s, const char *username, const char *password, const char *hostname,
+    int port, int64_t deadline);
+
+DILL_EXPORT int dill_socks5_proxy_auth(
+    int s, dill_socks5_auth_function *auth_fn, int64_t deadline);
+
+DILL_EXPORT int dill_socks5_proxy_recvcommand(
+    int s, struct dill_ipaddr *ipaddr, int64_t deadline);
+
+DILL_EXPORT int dill_socks5_proxy_recvcommandbyname(
+    int s, char *host, int *port, int64_t deadline);
+
+DILL_EXPORT int dill_socks5_proxy_sendreply(
+    int s, int reply, struct dill_ipaddr *ipaddr, int64_t deadline);
+
+#if !defined DILL_DISABLE_RAW_NAMES
+
+#define socks5_client_connect dill_socks5_client_connect
+#define socks5_client_connectbyname dill_socks5_client_connectbyname
+#define socks5_proxy_auth dill_socks5_proxy_auth
+#define socks5_proxy_recvcommand dill_socks5_proxy_recvcommand
+#define socks5_proxy_recvcommandbyname dill_socks5_proxy_recvcommandbyname
+#define socks5_proxy_sendreply dill_socks5_proxy_sendreply
+
+#define SOCKS5_CONNECT DILL_SOCKS5_CONNECT
+#define SOCKS5_BIND DILL_SOCKS5_BIND
+#define SOCKS5_UDP_ASSOCIATE DILL_SOCKS5_UDP_ASSOCIATE
+
+#define SOCKS5_SUCCESS DILL_SOCKS5_SUCCESS
+#define SOCKS5_GENERAL_FAILURE DILL_SOCKS5_GENERAL_FAILURE
+#define SOCKS5_CONNECTION_NOT_ALLOWED DILL_SOCKS5_CONNECTION_NOT_ALLOWED
+#define SOCKS5_NETWORK_UNREACHABLE DILL_SOCKS5_NETWORK_UNREACHABLE
+#define SOCKS5_HOST_UNREACHABLE DILL_SOCKS5_HOST_UNREACHABLE
+#define SOCKS5_CONNECTION_REFUSED DILL_SOCKS5_CONNECTION_REFUSED
+#define SOCKS5_TTL_EXPIRED DILL_SOCKS5_TTL_EXPIRED
+#define SOCKS5_COMMAND_NOT_SUPPORTED DILL_SOCKS5_COMMAND_NOT_SUPPORTED
+#define SOCKS5_ADDRESS_TYPE_NOT_SUPPORTED DILL_SOCKS5_ADDRESS_TYPE_NOT_SUPPORTED
+
+#endif /* !defined DILL_DISABLE_RAW_NAMES */
+
+/******************************************************************************/
 /*  TERM protocol.                                                            */
 /*  Implementes terminal handshake on the top of any message-based protocol.  */
 /******************************************************************************/
