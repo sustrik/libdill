@@ -71,9 +71,9 @@ static dill_coroutine void dill_happyeyeballs_coordinator(
     struct dill_ipaddr nulladdr;
     int rc = dill_ipaddr_local(&nulladdr, "0.0.0.0", 0, 0);
     dill_assert(rc == 0);
-   /* According to the RFC, IPv4 and IPv6 DNS queries should be done in
-      parallel. Create two coroutines here and two channels to get the addresses
-      from them. */
+    /* According to the RFC, IPv4 and IPv6 DNS queries should be done in
+       parallel. Create two coroutines and two channels to pass
+       the addresses from them. */
     int chipv6[2];
     rc = dill_chmake(chipv6);
     dill_assert(rc == 0);
@@ -93,7 +93,7 @@ static dill_coroutine void dill_happyeyeballs_coordinator(
     /* RFC says to wait for 50ms for IPv6 result irrespective of whether
        IPv4 address arrives. */
     struct dill_ipaddr addr;
-    struct chclause cls[2] = {
+    struct dill_chclause cls[2] = {
         {DILL_CHRECV, chipv6[0], &addr, sizeof(struct dill_ipaddr)},
         {DILL_CHRECV, chipv4[0], &addr, sizeof(struct dill_ipaddr)}
     };

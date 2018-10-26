@@ -53,7 +53,7 @@ struct dill_halfchan {
 };
 
 /* Channel clause. */
-struct dill_chclause {
+struct dill_chanclause {
     struct dill_clause cl;
     /* An item in either the dill_halfchan::in or dill_halfchan::out list. */
     struct dill_list item;
@@ -142,13 +142,13 @@ static void dill_halfchan_term(struct dill_halfchan *ch) {
     /* Resume any remaining senders and receivers on the channel
        with the EPIPE error. */
     while(!dill_list_empty(&ch->in)) {
-        struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->in),
-            struct dill_chclause, item);
+        struct dill_chanclause *chcl = dill_cont(dill_list_next(&ch->in),
+            struct dill_chanclause, item);
         dill_trigger(&chcl->cl, EPIPE);
     }
     while(!dill_list_empty(&ch->out)) {
-        struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->out),
-            struct dill_chclause, item);
+        struct dill_chanclause *chcl = dill_cont(dill_list_next(&ch->out),
+            struct dill_chanclause, item);
         dill_trigger(&chcl->cl, EPIPE);
     }
 }
@@ -172,7 +172,7 @@ static void dill_halfchan_close(struct dill_hvfs *vfs) {
 /******************************************************************************/
 
 static void dill_chcancel(struct dill_clause *cl) {
-    struct dill_chclause *chcl = dill_cont(cl, struct dill_chclause, cl);
+    struct dill_chanclause *chcl = dill_cont(cl, struct dill_chanclause, cl);
     dill_list_erase(&chcl->item);
 }
 
@@ -188,8 +188,8 @@ int dill_chsend(int h, const void *val, size_t len, int64_t deadline) {
     if(dill_slow(ch->done)) {errno = EPIPE; return -1;}
     /* Copy the message directly to the waiting receiver, if any. */
     if(!dill_list_empty(&ch->in)) {
-        struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->in),
-            struct dill_chclause, item);
+        struct dill_chanclause *chcl = dill_cont(dill_list_next(&ch->in),
+            struct dill_chanclause, item);
         if(dill_slow(len != chcl->len)) {
             dill_trigger(&chcl->cl, EMSGSIZE);
             errno = EMSGSIZE;
@@ -202,7 +202,7 @@ int dill_chsend(int h, const void *val, size_t len, int64_t deadline) {
     /* The clause is not available immediately. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
-    struct dill_chclause chcl;
+    struct dill_chanclause chcl;
     dill_list_insert(&chcl.item, &ch->out);
     chcl.val = (void*)val;
     chcl.len = len;
@@ -227,8 +227,8 @@ int dill_chrecv(int h, void *val, size_t len, int64_t deadline) {
     /* If there's a sender waiting, copy the message directly
        from the sender. */
     if(!dill_list_empty(&ch->out)) {
-        struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->out),
-            struct dill_chclause, item);
+        struct dill_chanclause *chcl = dill_cont(dill_list_next(&ch->out),
+            struct dill_chanclause, item);
         if(dill_slow(len != chcl->len)) {
             dill_trigger(&chcl->cl, EMSGSIZE);
             errno = EMSGSIZE;
@@ -241,7 +241,7 @@ int dill_chrecv(int h, void *val, size_t len, int64_t deadline) {
     /* The clause is not immediately available. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
-    struct dill_chclause chcl;
+    struct dill_chanclause chcl;
     dill_list_insert(&chcl.item, &ch->in);
     chcl.val = val;
     chcl.len = len;
@@ -265,37 +265,37 @@ int dill_chdone(int h) {
     /* Resume any remaining senders and receivers on the channel
        with the EPIPE error. */
     while(!dill_list_empty(&ch->in)) {
-        struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->in),
-            struct dill_chclause, item);
+        struct dill_chanclause *chcl = dill_cont(dill_list_next(&ch->in),
+            struct dill_chanclause, item);
         dill_trigger(&chcl->cl, EPIPE);
     }
     while(!dill_list_empty(&ch->out)) {
-        struct dill_chclause *chcl = dill_cont(dill_list_next(&ch->out),
-            struct dill_chclause, item);
+        struct dill_chanclause *chcl = dill_cont(dill_list_next(&ch->out),
+            struct dill_chanclause, item);
         dill_trigger(&chcl->cl, EPIPE);
     }
     return 0;
 }
 
-int dill_choose(struct chclause *clauses, int nclauses, int64_t deadline) {
+int dill_choose(struct dill_chclause *clauses, int nclauses, int64_t deadline) {
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     if(dill_slow(nclauses < 0 || (nclauses != 0 && !clauses))) {
         errno = EINVAL; return -1;}
     int i;
     for(i = 0; i != nclauses; ++i) {
-        struct chclause *cl = &clauses[i];
+        struct dill_chclause *cl = &clauses[i];
         struct dill_halfchan *ch = dill_hquery(cl->ch, dill_halfchan_type);
         if(dill_slow(!ch)) return i;
         if(dill_slow(cl->len > 0 && !cl->val)) {errno = EINVAL; return i;}
-        struct dill_chclause *chcl;
+        struct dill_chanclause *chcl;
         switch(cl->op) {
         case DILL_CHSEND:
             ch = dill_halfchan_other(ch);
             if(dill_slow(ch->done)) {errno = EPIPE; return i;}
             if(dill_list_empty(&ch->in)) break;
             chcl = dill_cont(dill_list_next(&ch->in),
-                struct dill_chclause, item);
+                struct dill_chanclause, item);
             if(dill_slow(cl->len != chcl->len)) {
                 dill_trigger(&chcl->cl, EMSGSIZE);
                 errno = EMSGSIZE;
@@ -309,7 +309,7 @@ int dill_choose(struct chclause *clauses, int nclauses, int64_t deadline) {
             if(dill_slow(ch->done)) {errno = EPIPE; return i;}
             if(dill_list_empty(&ch->out)) break;
             chcl = dill_cont(dill_list_next(&ch->out),
-                struct dill_chclause, item);
+                struct dill_chanclause, item);
             if(dill_slow(cl->len != chcl->len)) {
                 dill_trigger(&chcl->cl, EMSGSIZE);
                 errno = EMSGSIZE;
@@ -327,7 +327,7 @@ int dill_choose(struct chclause *clauses, int nclauses, int64_t deadline) {
     /* There are no clauses immediately available. */
     if(dill_slow(deadline == 0)) {errno = ETIMEDOUT; return -1;}
     /* Let's wait. */
-    struct dill_chclause chcls[nclauses];
+    struct dill_chanclause chcls[nclauses];
     for(i = 0; i != nclauses; ++i) {
         struct dill_halfchan *ch = dill_hquery(clauses[i].ch,
             dill_halfchan_type);

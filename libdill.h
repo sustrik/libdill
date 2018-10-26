@@ -274,7 +274,7 @@ DILL_EXPORT int dill_yield(void);
 #define DILL_CHSEND 1
 #define DILL_CHRECV 2
 
-struct chclause {
+struct dill_chclause {
     int op;
     int ch;
     void *val;
@@ -301,13 +301,14 @@ DILL_EXPORT int dill_chrecv(
 DILL_EXPORT int dill_chdone(
     int ch);
 DILL_EXPORT int dill_choose(
-    struct chclause *clauses,
+    struct dill_chclause *clauses,
     int nclauses,
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define CHSEND DILL_CHSEND
 #define CHRECV DILL_CHRECV
+#define chclause dill_chclause
 #define chstorage dill_chstorage
 #define chmake dill_chmake
 #define chmake_mem dill_chmake_mem
