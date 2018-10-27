@@ -275,8 +275,8 @@ static int s5_s5addr_to_ipaddr(struct dill_ipaddr *addr, _socks5_addr *s5,
         case S5ADDR_NAME:
             // It's a name... look it up.
             // addr is sized to always have room for a null terminator
-            err = dill_ipaddr_remote(addr, &(s5->addr[0]), s5->port,
-                DILL_IPADDR_PREF_IPV4, deadline);
+            err = dill_ipaddr_remote(addr, (const char*)&(s5->addr[0]),
+                s5->port, DILL_IPADDR_PREF_IPV4, deadline);
             if(err) return -1;
         break;
     }

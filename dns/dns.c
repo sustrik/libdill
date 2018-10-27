@@ -23,6 +23,10 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  * ==========================================================================
  */
+
+#pragma clang diagnostic ignored "-W#warnings"
+#pragma clang diagnostic ignored "-Wexpansion-to-defined"
+
 #ifdef  HAVE_CONFIG_H
 #include "config.h"
 #endif
