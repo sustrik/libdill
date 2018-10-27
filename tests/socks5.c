@@ -43,7 +43,8 @@ int auth_fn(const char *user, const char* pass) {
 }
 
 coroutine void client(int s, char *user, char* pass) {
-    int err = socks5_client_connectbyname(s, user, pass, "libdill.org", 80, now() + 1000);
+    int err = socks5_client_connectbyname(s, user, pass, "libdill.org", 80,
+        now() + 5000);
     if(err) perror("Error connecting to libdill.org:80");
     assert(err == 0);
 }
