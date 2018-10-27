@@ -24,6 +24,7 @@
  * ==========================================================================
  */
 
+#pragma GCC diagnostic ignored "-Wcpp"
 #pragma clang diagnostic ignored "-W#warnings"
 #pragma clang diagnostic ignored "-Wexpansion-to-defined"
 
