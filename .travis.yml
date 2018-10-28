@@ -54,7 +54,10 @@ matrix:
     env: NOTHREADS=1
   - os: osx
     compiler: clang
-    env: STATIC=1 NOTHREADS=1
+    env:
+      - MATRIX_EVAL="CC=gcc-7"
+      - STATIC=1
+      -NOTHREADS=1
   - os: linux
     compiler: gcc
     env: DIST=1
@@ -65,7 +68,9 @@ matrix:
       - sudo apt-get install -y pandoc
   - os: linux
     compiler: gcc
-    env: POLL=1
+    env:
+      - MATRIX_EVAL="CC=gcc-7"
+      - POLL=1
     addons:
       apt:
         sources:
@@ -74,7 +79,9 @@ matrix:
           - gcc-7
   - os: linux
     compiler: gcc
-    env: NOTHREADS=1
+    env:
+      - MATRIX_EVAL="CC=gcc-7"
+      - NOTHREADS=1
     addons:
       apt:
         sources:
@@ -83,7 +90,9 @@ matrix:
           - gcc-7
   - os: linux
     compiler: gcc
-    env: CENSUS=1
+    env:
+      - MATRIX_EVAL="CC=gcc-7"
+      - CENSUS=1
     addons:
       apt:
         sources:
@@ -92,36 +101,9 @@ matrix:
           - gcc-7
   - os: linux
     compiler: gcc
-    env: VALGRIND=1
-    addons:
-      apt:
-        sources:
-          - ubuntu-toolchain-r-test
-        packages:
-          - gcc-7
-          - valgrind
-  - os: linux
-    compiler: gcc
-    env: STATIC=1 VALGRIND=1
-    addons:
-      apt:
-        sources:
-          - ubuntu-toolchain-r-test
-        packages:
-          - gcc-7
-          - valgrind
-  - os: linux
-    compiler: gcc
-    env: NOTHREADS=1
-    addons:
-      apt:
-        sources:
-          - ubuntu-toolchain-r-test
-        packages:
-          - gcc-7
-  - os: linux
-    compiler: gcc
-    env: VALGRIND=1 NOTHREADS=1
+    env:
+      - MATRIX_EVAL="CC=gcc-7"
+      - VALGRIND=1
     addons:
       apt:
         sources:
@@ -131,7 +113,22 @@ matrix:
           - valgrind
   - os: linux
     compiler: gcc
-    env: POLL=1 NOTHREADS=1
+    env:
+      - MATRIX_EVAL="CC=gcc-7"
+      - STATIC=1
+      - VALGRIND=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-7
+          - valgrind
+  - os: linux
+    compiler: gcc
+    env:
+      - MATRIX_EVAL="CC=gcc-7"
+      - NOTHREADS=1
     addons:
       apt:
         sources:
@@ -140,7 +137,23 @@ matrix:
           - gcc-7
   - os: linux
     compiler: gcc
-    env: STATIC=1 NOTHREADS=1
+    env:
+      - MATRIX_EVAL="CC=gcc-7"
+      - VALGRIND=1 
+      - NOTHREADS=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-7
+          - valgrind
+  - os: linux
+    compiler: gcc
+    env:
+      - MATRIX_EVAL="CC=gcc-7"
+      - POLL=1
+      - NOTHREADS=1
     addons:
       apt:
         sources:
@@ -149,7 +162,21 @@ matrix:
           - gcc-7
   - os: linux
     compiler: gcc
-    env: ARCH_FALLBACK=1
+    env:
+      - MATRIX_EVAL="CC=gcc-7"
+      - STATIC=1
+      - NOTHREADS=1
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-7
+  - os: linux
+    compiler: gcc
+    env:
+      - MATRIX_EVAL="CC=gcc-7" 
+      - ARCH_FALLBACK=1
     addons:
       apt:
         sources:
@@ -167,7 +194,9 @@ matrix:
           - clang
   - os: linux
     compiler: gcc
-    env: THREAD_FALLBACK=1
+    env:
+      - MATRIX_EVAL="CC=gcc-7"
+      - THREAD_FALLBACK=1
     addons:
       apt:
         sources:
