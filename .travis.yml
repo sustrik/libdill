@@ -195,6 +195,9 @@ branches:
   except:
     - gh-pages
 
+before_install:
+    - eval "${MATRIX_EVAL}"
+
 install:
   - ./autogen.sh
   - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census} ${TLS+--enable-tls} ${NOTHREADS+--disable-threads} CFLAGS="-O3 ${POLL+-DDILL_POLL} ${ARCH_FALLBACK+-DDILL_ARCH_FALLBACK} ${THREAD_FALLBACK+-DDILL_THREAD_FALLBACK} -DDILL_SLOW_TESTS"
