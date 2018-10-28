@@ -55,7 +55,6 @@ matrix:
   - os: osx
     compiler: clang
     env:
-      - MATRIX_EVAL="CC=gcc-7"
       - STATIC=1
       - NOTHREADS=1
   - os: linux
