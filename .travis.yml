@@ -25,7 +25,9 @@ matrix:
           - clang
   - os: linux
     compiler: gcc
-    env: STATIC=1
+    env:
+      - MATRIX_EVAL="CC=gcc-7"
+      - STATIC=1
     addons:
       apt:
         sources:
