@@ -6,7 +6,8 @@ matrix:
   include:
   - os: linux
     compiler: gcc
-    env: 
+    env:
+      - MATRIX_EVAL="CC=gcc-7"
     addons:
       apt:
         sources:
