@@ -175,8 +175,8 @@ int main(void) {
 
     /* Check whether IPv6 DNS query is properly canceled. */
     struct step test4[] = {
-        {OP_REMOTES, DILL_IPADDR_IPV6, NULL, 100, 1, 0, 0},
-        {OP_REMOTES, DILL_IPADDR_IPV4, NULL, 10,  0, 0, 1},
+        {OP_REMOTES, DILL_IPADDR_IPV6, NULL, 1000, 1, 0, 0},
+        {OP_REMOTES, DILL_IPADDR_IPV4, NULL, 10,   0, 0, 1},
         {OP_CONNECT, 0, "192.168.0.1", 10, 0, 0, 5},
         {OP_END}
     };
