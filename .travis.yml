@@ -57,7 +57,7 @@ matrix:
     env:
       - MATRIX_EVAL="CC=gcc-7"
       - STATIC=1
-      -NOTHREADS=1
+      - NOTHREADS=1
   - os: linux
     compiler: gcc
     env: DIST=1
