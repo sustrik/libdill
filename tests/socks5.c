@@ -124,6 +124,7 @@ coroutine void proxy_byname(int s, char *user, char* pass) {
 }
 
 int main(void) {
+#if 0
     int h[2];
     int rc = ipc_pair(h);
     assert(rc == 0);
@@ -161,5 +162,6 @@ int main(void) {
     assert(rc == 0);
     rc = bundle_wait(b, -1);
     assert(rc == 0);
+#endif
     return 0;
 }
