@@ -128,7 +128,8 @@ int main(void) {
     int h[2];
     int rc = ipc_pair(h);
     assert(rc == 0);
-    printf("testing IP, NO AUTH\n");
+
+    /* Testing IPv4, NO AUTH. */
     int b = bundle();
     assert(b >= 0);
     rc = bundle_go(b, proxy(h[0], NULL, NULL));
@@ -137,7 +138,8 @@ int main(void) {
     assert(rc == 0);
     rc = bundle_wait(b, -1);
     assert(rc == 0);
-    printf("testing IP, USERNAME/PASSWORD\n");
+
+    /* Testing IP, USERNAME/PASSWORD. */
     b = bundle();
     assert(b >= 0);
     rc = bundle_go(b, proxy(h[0], "user", "pass"));
@@ -146,14 +148,16 @@ int main(void) {
     assert(rc == 0);
     rc = bundle_wait(b, -1);
     assert(rc == 0);
-    printf("testing name, NO AUTH\n");
+
+    /* Testing name, NO AUTH. */
     rc = bundle_go(b, proxy_byname(h[0], NULL, NULL));
     assert(rc == 0);
     rc = bundle_go(b, client(h[1], NULL, NULL));
     assert(rc == 0);
     rc = bundle_wait(b, -1);
     assert(rc == 0);
-    printf("testing name, USERNAME/PASSWORD\n");
+
+    /* Testing name, USERNAME/PASSWORD. */
     b = bundle();
     assert(b >= 0);
     rc = bundle_go(b, proxy_byname(h[0], "user", "pass"));
@@ -163,5 +167,6 @@ int main(void) {
     rc = bundle_wait(b, -1);
     assert(rc == 0);
 #endif
+
     return 0;
 }
