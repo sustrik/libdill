@@ -113,9 +113,9 @@ static int s5_client_auth(int s, const char *username, const char *password,
             uint8_t plen = (uint8_t)strlen(password);
             upauth[0] = RFC1929_VER; // VER = 1
             upauth[1] = ulen; // ULEN
-            strncpy((char *)(upauth + 2), username, ulen); // UNAME
+            strcpy((char *)(upauth + 2), username); // UNAME
             upauth[2 + ulen] = plen; // PLEN
-            strncpy((char *)(upauth + 3 + ulen), password, plen); // PASSWD
+            strcpy((char *)(upauth + 3 + ulen), password); // PASSWD
             err = dill_bsend(s, (void *)upauth, 3 + ulen + plen, deadline);
             if(dill_slow(err)) return -1;
             uint8_t upauthr[2];
