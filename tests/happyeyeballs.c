@@ -87,7 +87,7 @@ int mock_ipaddr_remotes(struct dill_ipaddr *addrs, int naddrs,
         step->done = 1;
         return -1;
     }
-    assert(rc == 0);
+    errno_assert(rc == 0);
     /* Generate some mock IP addresses. */
     const char *fmt = (mode == DILL_IPADDR_IPV4 ?
         "192.168.0.%d" : "2001::%d");
@@ -98,7 +98,7 @@ int mock_ipaddr_remotes(struct dill_ipaddr *addrs, int naddrs,
         char buf[DILL_IPADDR_MAXSTRLEN];
         snprintf(buf, sizeof(buf), fmt, i + 1);
         rc = dill_ipaddr_local(&addrs[i], buf, 80, 0);
-        assert(rc == 0);
+        errno_assert(rc == 0);
     }
     assert(!step->cancel);
     errno = step->err;
@@ -117,7 +117,7 @@ int mock_tcp_connect(const struct dill_ipaddr *addr, int64_t deadline) {
     assert(step->op == OP_CONNECT);
     struct dill_ipaddr expected_addr;
     int rc = dill_ipaddr_local(&expected_addr, step->addr, 80, 0);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     assert(dill_ipaddr_equal(addr, &expected_addr, 0));
     rc = dill_msleep(dill_now() + step->delay);
     if(rc < 0 && errno == ECANCELED) {
@@ -126,7 +126,7 @@ int mock_tcp_connect(const struct dill_ipaddr *addr, int64_t deadline) {
         step->done = 1;
         return -1;
     }
-    assert(rc == 0);
+    errno_assert(rc == 0);
     assert(!step->cancel);
     errno = step->err;
     int res = step->res;
