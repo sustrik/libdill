@@ -155,25 +155,6 @@ ws_flags = `
             of protocols (e.g. HTML and WebSocket).
 `
 
-suffix_protocol = {
-    section: "SUFFIX protocol",
-    type: "message",
-    info: `
-        SUFFIX is a message-based protocol that delimits messages by specific
-        byte sequences. For example, many protocols are line-based, with
-        individual messages separated by CR+LF sequence.
-    `,
-    example: `
-        int s = tcp_connect(&addr, -1);
-        s = suffix_attach(s, "\r\n", 2);
-        msend(s, "ABC", 3, -1);
-        char buf[256];
-        ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
-        s = suffix_detach(s, -1);
-        tcp_close(s);
-    `,
-}
-
 http_protocol = {
     section: "HTTP protocol",
     type: "application",
@@ -255,6 +236,25 @@ prefix_protocol = {
         s = prefix_detach(s, -1);
         tcp_close(s);
     `
+}
+
+suffix_protocol = {
+    section: "SUFFIX protocol",
+    type: "message",
+    info: `
+        SUFFIX is a message-based protocol that delimits messages by specific
+        byte sequences. For example, many protocols are line-based, with
+        individual messages separated by CR+LF sequence.
+    `,
+    example: `
+        int s = tcp_connect(&addr, -1);
+        s = suffix_attach(s, "\r\n", 2);
+        msend(s, "ABC", 3, -1);
+        char buf[256];
+        ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
+        s = suffix_detach(s, -1);
+        tcp_close(s);
+    `,
 }
 
 tcp_protocol = {
@@ -1277,6 +1277,56 @@ fxs = [
               char mem[16384];
               int h = go_mem(add(1, 2), mem, sizeof(mem));
         `,
+    },
+    {
+        name: "happy_eyeballs_connect",
+        section: "Happy Eyeballs protocol",
+        info: "creates a TCP connection using Happy Eyeballs algorithm",
+
+        result: {
+            type: "int",
+            success: "newly created TCP connection",
+            error: "-1",
+        },
+        args: [
+            {
+                name: "name",
+                type: "const char*",
+                info: "Name of the host to connect to.",
+            },
+            {
+                name: "port",
+                type: "int",
+                info: "Port to connect to.",
+            }
+        ],
+        has_deadline: true,
+
+        prologue: `
+            Happy Eyeballs protocol (RFC 8305) is a way to create a TCP
+            connection to a remote endpoint even if some of the IP addresses
+            associated with the endpoint are not accessible.
+
+            First, DNS queries to IPv4 and IPv6 addresses are launched in
+            parallel. Then a connection is attempted to the first address, with
+            IPv6 address being preferred. If the connection attempt doesn't
+            succeed in 300ms connection to next address is attempted,
+            alternating between IPv4 and IPv6 addresses. However, the first
+            connection attempt isn't caneled. If, in the next 300ms, none of the
+            previous attempts succeeds connection to the next address is
+            attempted, and so on. First successful connection attempt will
+            cancel all other connection attemps.
+
+            This function executes the above protocol and returns the newly
+            created TCP connection.
+        `,
+
+        errors: ["EINVAL", "EMFILE", "ENFILE", "ENOMEM", "ECANCELED"],
+
+        example: `
+            int s = happy_eyeballs_connect("www.example.org", 80, -1);
+            int rc = bsend(s, "GET / HTTP/1.1", 14, -1);
+        `
     },
     {
         name: "hclose",
@@ -4353,6 +4403,7 @@ t += generate_section("File descriptors", sections)
 t += generate_section("Bytestream sockets", sections)
 t += generate_section("Message sockets", sections)
 t += generate_section("IP addresses", sections)
+t += generate_section("Happy Eyeballs protocol", sections)
 t += generate_section("HTTP protocol", sections)
 t += generate_section("IPC protocol", sections)
 t += generate_section("PREFIX protocol", sections)
