@@ -1,6 +1,12 @@
 
 # Past versions
 
+**Oct 29th, 2018 <http://libdill.org/libdill-2.13.tar.gz>**
+
+* An implementation of Happy Eyeballs protocol (RFC 8305) added.
+* Function ipaddr_remotes() added.
+* A bug in resolving IPv6 addresses fixed.
+
 **Oct 18th, 2018 <http://libdill.org/libdill-2.12.tar.gz>**
 
 * A bug in TLS protocol fixed.
