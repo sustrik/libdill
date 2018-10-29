@@ -254,7 +254,7 @@ int main(void) {
         {OP_END}
     };
     start_test(test10, "test10");
-    rc = dill_happyeyeballs_connect("www.example.org", 80, dill_now() + 700);
+    rc = dill_happyeyeballs_connect("www.example.org", 80, dill_now() + 900);
     assert(rc == -1 && errno == ETIMEDOUT);
     end_test();
 
