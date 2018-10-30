@@ -75,12 +75,15 @@ static dill_coroutine void dill_happyeyeballs_coordinator(
        parallel. Create two coroutines and two channels to pass
        the addresses from them. */
     int chipv6[2];
-    rc = dill_chmake(chipv6);
+    struct dill_chstorage chipv6_storage;
+    rc = dill_chmake_mem(&chipv6_storage, chipv6);
     dill_assert(rc == 0);
     int chipv4[2];
-    rc = dill_chmake(chipv4);
+    struct dill_chstorage chipv4_storage;
+    rc = dill_chmake_mem(&chipv4_storage, chipv4);
     dill_assert(rc == 0);
-    int bndl = dill_bundle();
+    struct dill_bundle_storage bndl_storage;
+    int bndl = dill_bundle_mem(&bndl_storage);
     dill_assert(bndl >= 0);
     rc = dill_bundle_go(bndl, dill_happyeyeballs_dnsquery(name, port,
         DILL_IPADDR_IPV6, chipv6[1]));
@@ -150,19 +153,17 @@ int dill_happyeyeballs_connect(const char *name, int port, int64_t deadline) {
     int err = 0;
     if(dill_slow(!name || port <= 0)) {err = EINVAL; goto exit1;}
     int chconns[2];
-    int rc = dill_chmake(chconns);
+    struct dill_chstorage chconns_storage;
+    int rc = dill_chmake_mem(&chconns_storage, chconns);
     if(dill_slow(rc < 0)) {err = errno; goto exit1;}
-    int bndl = dill_bundle();
-    if(dill_slow(bndl < 0)) {err = errno; goto exit2;}
-    rc = dill_bundle_go(bndl, dill_happyeyeballs_coordinator(name, port,
-        chconns[1]));
-    if(dill_slow(rc < 0)) {err = errno; goto exit3;}
+    int coord = dill_go(dill_happyeyeballs_coordinator(name, port, chconns[1]));
+    if(dill_slow(coord < 0)) {err = errno; goto exit2;}
     int conn;
     rc = dill_chrecv(chconns[0], &conn, sizeof(int), deadline);
     if(dill_slow(rc < 0)) {err = errno; goto exit3;}
     res = conn;
 exit3:
-    rc = dill_hclose(bndl);
+    rc = dill_hclose(coord);
     dill_assert(rc == 0);
 exit2:
     rc = dill_hclose(chconns[0]);
