@@ -44,13 +44,13 @@ int auth_fn(const char *user, const char* pass) {
 
 void client_sayhello(int s) {
     uint8_t buf[16];
-    strcpy(buf, "hello");
+    strcpy((char *)buf, "hello");
     int err = bsend(s, buf, 5, now() + 5000);
     assert(!err);
     err = brecv(s, buf, 5, now() + 5000);
     assert(!err);
     buf[5] = '\x00';
-    assert(strcmp(buf,"olleh") == 0);
+    assert(strcmp((char *)buf,"olleh") == 0);
     return;
 }
 
@@ -93,8 +93,8 @@ void server(int s) {
     int err = brecv(s, buf, 5, now() + 5000);
     assert(!err);
     buf[5] = '\x00';
-    assert(strcmp(buf,"hello") == 0);
-    strcpy(buf, "olleh");
+    assert(strcmp((char *)buf,"hello") == 0);
+    strcpy((char *)buf, "olleh");
     err = bsend(s, buf, 5, now() + 5000);
     assert(!err);
     return;
@@ -189,11 +189,11 @@ int main(void) {
     int rc = ipc_pair(h);
     assert(rc == 0);
     up_t up[] = {{NULL, NULL}, {"user", "pass"}};
-    test_fn *ctest[] = {clientbyaddr, clientbyipstring, clientbyname};
+    test_fn *ctest[] = {clientbyaddr, clientbyipstring};
     test_fn *ptest[] = {proxy_byaddr, proxy_byname};
 
     for (int pi = 0; pi < 2; pi++) {
-        for (int ci = 0; ci < 3; ci++) {
+        for (int ci = 0; ci < 2; ci++) {
             for (int ui = 0; ui < 2; ui++) {
                 printf("testing up[%d], ctest[%d], ptest[%d]\n", ui, ci, pi);
                 int b = bundle();
