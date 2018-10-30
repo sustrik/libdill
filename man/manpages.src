@@ -1279,7 +1279,7 @@ fxs = [
         `,
     },
     {
-        name: "happy_eyeballs_connect",
+        name: "happyeyeballs_connect",
         section: "Happy Eyeballs protocol",
         info: "creates a TCP connection using Happy Eyeballs algorithm",
 
@@ -1324,7 +1324,7 @@ fxs = [
         errors: ["EINVAL", "EMFILE", "ENFILE", "ENOMEM", "ECANCELED"],
 
         example: `
-            int s = happy_eyeballs_connect("www.example.org", 80, -1);
+            int s = happyeyeballs_connect("www.example.org", 80, -1);
             int rc = bsend(s, "GET / HTTP/1.1", 14, -1);
         `
     },
