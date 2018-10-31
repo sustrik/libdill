@@ -392,6 +392,10 @@ static void dill_cr_close(struct dill_hvfs *vfs) {
            should get control back pretty quickly. */
         cr->closer = ctx->r;
         int rc = dill_wait();
+        /* This assertion triggers when coroutine tries to close a bundle that
+           it is part of. There's no sane way to handle that so let's just
+           crash the process. */
+        dill_assert(!(rc == -1 && errno == ECANCELED));
         dill_assert(rc == -1 && errno == 0);
     }
 #if defined DILL_CENSUS
