@@ -42,14 +42,65 @@ int auth_fn(const char *user, const char* pass) {
     return 1;
 }
 
-coroutine void client(int s, char *user, char* pass) {
-    int err = socks5_client_connectbyname(s, user, pass, "libdill.org", 80,
-        now() + 5000);
-    if(err) perror("Error connecting to libdill.org:80");
-    assert(err == 0);
+void client_sayhello(int s) {
+    uint8_t buf[16];
+    strcpy((char *)buf, "hello");
+    int err = bsend(s, buf, 5, now() + 5000);
+    assert(!err);
+    err = brecv(s, buf, 5, now() + 5000);
+    assert(!err);
+    buf[5] = '\x00';
+    assert(strcmp((char *)buf,"olleh") == 0);
+    return;
 }
 
-coroutine void proxy(int s, char *user, char* pass) {
+coroutine void clientbyaddr(int s, char *user, char* pass) {
+    struct ipaddr addr;
+    int rc = ipaddr_remote(&addr, "127.0.0.1", 5555, 0, -1);
+    assert(rc == 0);
+    int err = socks5_client_connect(s, user, pass, &addr,
+        now() + 5000);
+    if(err) perror("Error connecting to addr=127.0.0.1:5555");
+    assert(err == 0);
+    client_sayhello(s);
+    tcp_close(s, now() + 5000);
+    return;
+}
+
+coroutine void clientbyipstring(int s, char *user, char* pass) {
+    int err = socks5_client_connectbyname(s, user, pass, "127.0.0.1", 5555,
+        now() + 5000);
+    if(err) perror("Error connecting to \"127.0.0.1:5555\"");
+    assert(err == 0);
+    client_sayhello(s);
+    tcp_close(s, now() + 5000);
+    return;
+}
+
+coroutine void clientbyname(int s, char *user, char* pass) {
+    int err = socks5_client_connectbyname(s, user, pass, "localhost", 5555,
+        now() + 5000);
+    if(err) perror("Error connecting to \"localhost:80\"");
+    assert(err == 0);
+    client_sayhello(s);
+    tcp_close(s, now() + 5000);
+    return;
+}
+
+void server(int s) {
+    uint8_t buf[16];
+    // impersonate server
+    int err = brecv(s, buf, 5, now() + 5000);
+    assert(!err);
+    buf[5] = '\x00';
+    assert(strcmp((char *)buf,"hello") == 0);
+    strcpy((char *)buf, "olleh");
+    err = bsend(s, buf, 5, now() + 5000);
+    assert(!err);
+    return;
+}
+
+coroutine void proxy_byaddr(int s, char *user, char* pass) {
     // set up auth
     if(auth_user) {free(auth_user); auth_user = NULL;}
     if(auth_pass) {free(auth_pass); auth_pass = NULL;}
@@ -82,6 +133,9 @@ coroutine void proxy(int s, char *user, char* pass) {
 
     err = socks5_proxy_sendreply(s, SOCKS5_SUCCESS, &addr, now() + 1000);
     assert(err == 0);
+
+    server(s);
+    return;
 }
 
 coroutine void proxy_byname(int s, char *user, char* pass) {
@@ -113,60 +167,46 @@ coroutine void proxy_byname(int s, char *user, char* pass) {
     int cmd = socks5_proxy_recvcommandbyname(s, r_name, &r_port, now() + 1000);
     assert(cmd > 0);
     assert(cmd == SOCKS5_CONNECT);
-    assert(strcmp(r_name, "libdill.org") == 0);
-    assert(r_port == 80);
+    assert((strcmp(r_name, "127.0.0.1") == 0) ||
+           (strcmp(r_name, "localhost") == 0));
+    assert(r_port == 5555);
 
     err = ipaddr_remote(&addr, "0.0.0.0", 0, IPADDR_IPV4, -1);
     assert(err == 0);
 
     err = socks5_proxy_sendreply(s, SOCKS5_SUCCESS, &addr, now() + 1000);
     assert(err == 0);
+
+    server(s);
+    return;
 }
 
+typedef char *up_t[2];
+typedef void test_fn(int s, char *user, char* pass);
+
 int main(void) {
-#if 0
     int h[2];
     int rc = ipc_pair(h);
     assert(rc == 0);
+    up_t up[] = {{NULL, NULL}, {"user", "pass"}};
+    test_fn *ctest[] = {clientbyaddr, clientbyipstring};
+    test_fn *ptest[] = {proxy_byaddr, proxy_byname};
 
-    /* Testing IPv4, NO AUTH. */
-    int b = bundle();
-    assert(b >= 0);
-    rc = bundle_go(b, proxy(h[0], NULL, NULL));
-    assert(rc == 0);
-    rc = bundle_go(b, client(h[1], NULL, NULL));
-    assert(rc == 0);
-    rc = bundle_wait(b, -1);
-    assert(rc == 0);
-
-    /* Testing IP, USERNAME/PASSWORD. */
-    b = bundle();
-    assert(b >= 0);
-    rc = bundle_go(b, proxy(h[0], "user", "pass"));
-    assert(rc == 0);
-    rc = bundle_go(b, client(h[1], "user", "pass"));
-    assert(rc == 0);
-    rc = bundle_wait(b, -1);
-    assert(rc == 0);
-
-    /* Testing name, NO AUTH. */
-    rc = bundle_go(b, proxy_byname(h[0], NULL, NULL));
-    assert(rc == 0);
-    rc = bundle_go(b, client(h[1], NULL, NULL));
-    assert(rc == 0);
-    rc = bundle_wait(b, -1);
-    assert(rc == 0);
-
-    /* Testing name, USERNAME/PASSWORD. */
-    b = bundle();
-    assert(b >= 0);
-    rc = bundle_go(b, proxy_byname(h[0], "user", "pass"));
-    assert(rc == 0);
-    rc = bundle_go(b, client(h[1], "user", "pass"));
-    assert(rc == 0);
-    rc = bundle_wait(b, -1);
-    assert(rc == 0);
-#endif
+    for (int pi = 0; pi < 2; pi++) {
+        for (int ci = 0; ci < 2; ci++) {
+            for (int ui = 0; ui < 2; ui++) {
+                printf("testing up[%d], ctest[%d], ptest[%d]\n", ui, ci, pi);
+                int b = bundle();
+                assert(b >= 0);
+                rc = bundle_go(b, (ptest[pi])(h[0], up[ui][0], up[ui][1]));
+                assert(rc == 0);
+                rc = bundle_go(b, (ctest[ci])(h[1], up[ui][0], up[ui][1]));
+                assert(rc == 0);
+                rc = bundle_wait(b, -1);
+                assert(rc == 0);
+            }
+        }
+    }
 
     return 0;
 }
