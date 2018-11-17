@@ -358,6 +358,21 @@ static void dill_tls_hclose(struct dill_hvfs *hvfs) {
 /*  Helpers.                                                                  */
 /******************************************************************************/
 
+/* OpenSSL has huge amount of underspecified errors. It's hard to deal
+   with them in a consistent manner. Morever, you can get multiple of
+   them at the same time. There's nothing better to do than to print them to
+   the stderr and return generic EFAULT error instead. */
+static void dill_tls_process_errors(void) {
+    char errstr[512];
+    while(1) {
+        int err = ERR_get_error();
+        if(err == 0) break;
+        ERR_error_string_n(err, errstr, sizeof(errstr));
+        fprintf(stderr, "SSL error: %s\n", errstr);
+    }
+    errno = EFAULT;
+}
+
 /* Do the follow up work after calling a SSL function.
    Returns 0 if the SSL function has to be restarted, 1 is we are done.
    In the latter case, error code is in errno.
@@ -380,19 +395,18 @@ static int dill_tls_followup(struct dill_tls_sock *self, int rc) {
         dill_assert(rc == -1);
         if(errno == 0) return 0;
         return 1;
-	  case SSL_ERROR_SSL:
-        /* SSL errors. Not clear how to convert them into errnos. */
-        err = ERR_get_error();
-        ERR_error_string(err, errstr);
-        fprintf(stderr, "SSL error: %s\n", errstr);
-        errno = EFAULT;
+    case SSL_ERROR_SSL:        
+        dill_tls_process_errors();
         return 1;
-	  case SSL_ERROR_WANT_READ:
+    case SSL_ERROR_WANT_READ:
     case SSL_ERROR_WANT_WRITE:
         /* These two should never happen -- our custom BIO is blocking. */
         dill_assert(0);
     default:
-        fprintf(stderr, "SSL error %d\n", code);
+        /* Unexpected error. Let's at least print out current error queue
+           for debugging purposes. */
+        fprintf(stderr, "SSL error code: %d\n", code);
+        dill_tls_process_errors();
         dill_assert(0);
     }
 }
