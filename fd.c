@@ -319,33 +319,33 @@ int dill_fd_recv(int s, struct dill_fd_rxbuf *rxbuf, struct dill_iolist *first,
         struct dill_iolist *end = curr.iol_next ? last : &curr;
         struct dill_iolist *it = begin;
         while(1) {
+            if(dill_slow(!it->iol_len)) {
+                /* No buffer space available. Move on to the next buffer. */
+                dill_assert(it == begin);
+                goto next;
+            }
             if(dill_slow(!it->iol_base)) {
+                /* Skip specified number of bytes. */
                 dill_assert(it == begin);
                 int rc = dill_fd_skip(s, it->iol_len, deadline);
-                if(it == end) return 0;
-                it = it->iol_next;
-                begin = it;
-                continue;
-            }
-            if(dill_slow(!it->iol_len)) {
-                dill_assert(it == begin);
-                if(it == end) return 0;
-                it = it->iol_next;
-                begin = it;
-                continue;
+                goto next;
             }
             if(it == end || !it->iol_next->iol_base || !it->iol_next->iol_len) {
+                /* Do the actual recv syscall. */
                 struct dill_iolist *tmp = it->iol_next;
                 it->iol_next = NULL;
                 int rc = dill_fd_recv_(s, begin, it, deadline);
                 it->iol_next = tmp;
                 if(dill_slow(rc < 0)) return -1;
-                if(it == end) return 0;
-                it = it->iol_next;
-                begin = it;
-                continue;
+                goto next;
             }
+            /* Accumlate multiple buffers into a single syscall. */
             it = it->iol_next;
+            continue;
+next:
+            if(it == end) return 0;
+            it = it->iol_next;
+            begin = it;
         }
     }
     /* If small amount of data is requested use rx buffer. */
