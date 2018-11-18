@@ -286,12 +286,14 @@ int dill_fd_recv(int s, struct dill_fd_rxbuf *rxbuf, struct dill_iolist *first,
     /* Skip all data until error occurs. */
     if(dill_slow(!first && !last)) return dill_fd_skip(s, -1, deadline);
     /* Fill in data from the rxbuf. */
-    size_t sz;
-    while(1) {
-        sz = dill_fd_copy(rxbuf, first);
-        if(sz < first->iol_len) break;
-        first = first->iol_next;
-        if(!first) return 0;
+    size_t sz = 0;
+    if(dill_fast(rxbuf)) {
+        while(1) {
+            sz = dill_fd_copy(rxbuf, first);
+            if(sz < first->iol_len) break;
+            first = first->iol_next;
+            if(!first) return 0;
+        }
     }
     /* Copy the current iolist element so that we can modify it without
        changing the original list. */
@@ -309,8 +311,43 @@ int dill_fd_recv(int s, struct dill_fd_rxbuf *rxbuf, struct dill_iolist *first,
     }
     /* If requested amount of data is larger than rx buffer avoid the copy
        and read it directly into user's buffer. */
-    if(miss > DILL_FD_BUFSIZE)
-        return dill_fd_recv_(s, &curr, curr.iol_next ? last : &curr, deadline);
+    if(!rxbuf || miss > DILL_FD_BUFSIZE) {
+        // There may be NULL bufers in the list. These can't be passed to
+        // recv_(). We have to split the list and call recv_() and skip()
+        // respectively.
+        struct dill_iolist *begin = &curr;
+        struct dill_iolist *end = curr.iol_next ? last : &curr;
+        struct dill_iolist *it = begin;
+        while(1) {
+            if(dill_slow(!it->iol_base)) {
+                dill_assert(it == begin);
+                int rc = dill_fd_skip(s, it->iol_len, deadline);
+                if(it == end) return 0;
+                it = it->iol_next;
+                begin = it;
+                continue;
+            }
+            if(dill_slow(!it->iol_len)) {
+                dill_assert(it == begin);
+                if(it == end) return 0;
+                it = it->iol_next;
+                begin = it;
+                continue;
+            }
+            if(it == end || !it->iol_next->iol_base || !it->iol_next->iol_len) {
+                struct dill_iolist *tmp = it->iol_next;
+                it->iol_next = NULL;
+                int rc = dill_fd_recv_(s, begin, it, deadline);
+                it->iol_next = tmp;
+                if(dill_slow(rc < 0)) return -1;
+                if(it == end) return 0;
+                it = it->iol_next;
+                begin = it;
+                continue;
+            }
+            it = it->iol_next;
+        }
+    }
     /* If small amount of data is requested use rx buffer. */
     while(1) {
         /* Read as much data as possible to the buffer to avoid extra
