@@ -23,7 +23,9 @@
 */
 
 #include <string.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include "assert.h"
@@ -210,6 +212,35 @@ int main() {
     errno_assert(rc == 0);
     assert(bufx[0] == 'A' && bufx[1] == 'B' && bufx[2] == 'C');
     assert(bufy[0] == 'G' && bufy[1] == 'H' && bufy[2] == 'I');
+    rc = hclose(s[0]);
+    errno_assert(rc == 0);
+    rc = hclose(s[1]);
+    errno_assert(rc == 0);
+
+    /* Transport a file descriptor via SCM_RIGHTS. */
+    rc = ipc_pair(s);
+    errno_assert(rc == 0);
+    int sp[2];
+    rc = socketpair(AF_UNIX, SOCK_STREAM, 0, sp);
+    errno_assert(rc == 0);
+    rc = ipc_sendfd(s[0], sp[0], -1);
+    errno_assert(rc == 0);
+    int rfd = ipc_recvfd(s[1], -1);
+    errno_assert(rfd >= 0);
+    uint8_t c = 0x55;
+    sz = send(rfd, &c, sizeof(c), 0);
+    errno_assert(sz > 0);
+    assert(sz == 1);
+    c = 0;
+    sz = recv(sp[1], &c, sizeof(c), 0);
+    errno_assert(sz > 0);
+    assert(sz == 1 && c == 0x55);
+    rc = close(rfd);
+    errno_assert(rc == 0);
+    rc = close(sp[0]);
+    errno_assert(rc == 0);
+    rc = close(sp[1]);
+    errno_assert(rc == 0);    
     rc = hclose(s[0]);
     errno_assert(rc == 0);
     rc = hclose(s[1]);

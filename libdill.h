@@ -565,6 +565,13 @@ DILL_EXPORT int dill_ipc_connect_mem(
     const char *addr,
     struct dill_ipc_storage *mem,
     int64_t deadline);
+DILL_EXPORT int dill_ipc_sendfd(
+    int s,
+    int fd,
+    int64_t deadline);
+DILL_EXPORT int dill_ipc_recvfd(
+    int s,
+    int64_t deadline);
 DILL_EXPORT int dill_ipc_done(
     int s,
     int64_t deadline);
@@ -597,6 +604,8 @@ DILL_EXPORT int dill_ipc_pair_mem(
 #define ipc_accept_mem dill_ipc_accept_mem
 #define ipc_connect dill_ipc_connect
 #define ipc_connect_mem dill_ipc_connect_mem
+#define ipc_sendfd dill_ipc_sendfd
+#define ipc_recvfd dill_ipc_recvfd
 #define ipc_done dill_ipc_done
 #define ipc_close dill_ipc_close
 #define ipc_listener_fromfd dill_ipc_listener_fromfd

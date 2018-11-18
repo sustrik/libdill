@@ -54,6 +54,7 @@ struct dill_ipc_conn {
     struct dill_bsock_vfs bvfs;
     int fd;
     struct dill_fd_rxbuf rxbuf;
+    unsigned int scm_rights : 1;
     unsigned int rbusy : 1;
     unsigned int sbusy : 1;
     unsigned int indone : 1;
@@ -74,6 +75,7 @@ static int dill_ipc_makeconn(int fd, void *mem) {
     self->bvfs.brecvl = dill_ipc_brecvl;
     self->fd = fd;
     dill_fd_initrxbuf(&self->rxbuf);
+    self->scm_rights = 1;
     self->rbusy = 0;
     self->sbusy = 0;
     self->indone = 0;
@@ -194,12 +196,91 @@ static int dill_ipc_brecvl(struct dill_bsock_vfs *bvfs,
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
     self->rbusy = 1;
-    int rc = dill_fd_recv(self->fd, &self->rxbuf, first, last, deadline);
+    /* If we want to use SCM_RIGHTS we can't do rx buffering. */
+    int rc = dill_fd_recv(self->fd, self->scm_rights ? NULL : &self->rxbuf,
+        first, last, deadline);
     self->rbusy = 0;
     if(dill_fast(rc == 0)) return 0;
     if(errno == EPIPE) self->indone = 1;
     else self->inerr = 1;
     return -1;
+}
+
+int dill_ipc_sendfd(int s, int fd, int64_t deadline) {
+    struct dill_ipc_conn *self = dill_hquery(s, dill_ipc_type);
+    if(dill_slow(!self)) return -1;
+    if(dill_slow(!self->scm_rights)) {errno = ENOTSUP; return -1;}
+    if(dill_slow(fd < 0)) {errno = EINVAL; return -1;}
+    if(dill_slow(self->sbusy)) {errno = EBUSY; return -1;}
+    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
+    struct iovec iov;
+    unsigned char buf[] = {0xcc};
+    iov.iov_base = buf;
+    iov.iov_len = 1;
+    struct msghdr msg;
+    memset(&msg, 0, sizeof (msg));
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+    char control [sizeof(struct cmsghdr) + 10];
+    msg.msg_control = control;
+    msg.msg_controllen = sizeof(control);
+    struct cmsghdr *cmsg;
+    cmsg = CMSG_FIRSTHDR(&msg);
+    cmsg->cmsg_level = SOL_SOCKET;
+    cmsg->cmsg_type = SCM_RIGHTS;
+    cmsg->cmsg_len = CMSG_LEN(sizeof(fd));
+    *((int*)CMSG_DATA(cmsg)) = fd;
+    msg.msg_controllen = cmsg->cmsg_len;
+    int rc = dill_fdout(self->fd, deadline);
+    if(dill_slow(rc < 0)) return -1;
+    ssize_t sz = sendmsg(self->fd, &msg, 0);
+    if(dill_slow(sz == 0)) {self->outdone = 1; errno = EPIPE; return -1;}
+    if(dill_slow(sz < 0)) {
+       if(errno == ECONNRESET) {self->outerr = 1; return -1;}
+       dill_assert(0);
+    }
+    return 0;
+}
+
+int dill_ipc_recvfd(int s, int64_t deadline) {
+    struct dill_ipc_conn *self = dill_hquery(s, dill_ipc_type);
+    if(dill_slow(!self)) return -1;
+    if(dill_slow(!self->scm_rights)) {errno = ENOTSUP; return -1;}
+    if(dill_slow(self->rbusy)) {errno = EBUSY; return -1;}
+    if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
+    char buf[1];
+    struct iovec iov;
+    iov.iov_base = buf;
+    iov.iov_len = sizeof(buf);
+    struct msghdr msg;
+    memset(&msg, 0, sizeof(msg));
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+    unsigned char control[1024];
+    msg.msg_control = control;
+    msg.msg_controllen = sizeof(control);
+    int rc = dill_fdin(self->fd, deadline);
+    if(dill_slow(rc < 0)) return -1;
+    ssize_t sz = recvmsg(self->fd, &msg, 0);
+    if(dill_slow(sz == 0)) {self->indone = 1; errno = EPIPE; return -1;}
+    if(dill_slow(sz < 0)) {
+       if(errno == ECONNRESET) {self->outerr = 1; return -1;}
+       dill_assert(0);
+    }
+    /* Loop over the auxiliary data to find the embedded file descriptor. */
+    int fd = -1;
+    struct cmsghdr *cmsg = CMSG_FIRSTHDR(&msg);
+    while(cmsg) {
+        if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type  == SCM_RIGHTS) {
+            fd = *(int*)CMSG_DATA(cmsg);
+            break;
+        }
+        cmsg = CMSG_NXTHDR(&msg, cmsg);
+    }
+    if(dill_slow(fd < 0)) {self->inerr = 1; errno = EPROTO; return -1;}
+    return fd;
 }
 
 int dill_ipc_done(int s, int64_t deadline) {
