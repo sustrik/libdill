@@ -480,7 +480,7 @@ struct dill_tcp_opts {
     unsigned int nodelay : 1;
 };
 
-extern const struct dill_tcp_opts dill_tcp_defaults;
+DILL_EXPORT extern const struct dill_tcp_opts dill_tcp_defaults;
 
 struct dill_tcp_listener_storage {char _[56];};
 
@@ -535,7 +535,7 @@ struct dill_ipc_opts {
     unsigned int rx_buffering : 1;
 };
 
-extern const struct dill_ipc_opts dill_ipc_defaults;
+DILL_EXPORT extern const struct dill_ipc_opts dill_ipc_defaults;
 
 struct dill_ipc_listener_storage {char _[24];};
 
@@ -605,7 +605,7 @@ struct dill_prefix_opts {
     unsigned int little_endian : 1;
 };
 
-extern const struct dill_prefix_opts dill_prefix_defaults;
+DILL_EXPORT extern const struct dill_prefix_opts dill_prefix_defaults;
 
 struct dill_prefix_storage {char _[56];};
 
