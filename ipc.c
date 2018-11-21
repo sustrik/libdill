@@ -75,7 +75,7 @@ DILL_CHECK_STORAGE(dill_ipc_conn, dill_ipc_storage)
 static int dill_ipc_makeconn(int fd, const struct dill_ipc_opts *opts) {
     int err;
     /* Create the object. */
-    struct dill_ipc_conn *self = (struct dill_ipc_conn*)opts->mem;
+    struct dill_ipc_conn *self = opts->mem;
     if(!self) {
         self = malloc(sizeof(struct dill_ipc_conn));
         if(dill_slow(!self)) {err = ENOMEM; goto error1;}

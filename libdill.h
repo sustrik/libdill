@@ -473,32 +473,30 @@ DILL_EXPORT int dill_ipaddr_equal(
 /*  TCP protocol.                                                             */
 /******************************************************************************/
 
+struct dill_tcp_opts {
+    void *mem;
+    int backlog;
+    unsigned int rx_buffering : 1;
+    unsigned int nodelay : 1;
+};
+
+extern const struct dill_tcp_opts dill_tcp_defaults;
+
 struct dill_tcp_listener_storage {char _[56];};
 
 struct dill_tcp_storage {char _[72];};
 
 DILL_EXPORT int dill_tcp_listen(
     struct dill_ipaddr *addr,
-    int backlog);
-DILL_EXPORT int dill_tcp_listen_mem(
-    struct dill_ipaddr *addr,
-    int backlog,
-    struct dill_tcp_listener_storage *mem);
+    const struct dill_tcp_opts *opts);
 DILL_EXPORT int dill_tcp_accept(
     int s,
+    const struct dill_tcp_opts *opts,
     struct dill_ipaddr *addr,
-    int64_t deadline);
-DILL_EXPORT int dill_tcp_accept_mem(
-    int s,
-    struct dill_ipaddr *addr,
-    struct dill_tcp_storage *mem,
     int64_t deadline);
 DILL_EXPORT int dill_tcp_connect(
     const struct dill_ipaddr *addr,
-    int64_t deadline);
-DILL_EXPORT int dill_tcp_connect_mem(
-    const struct dill_ipaddr *addr,
-    struct dill_tcp_storage *mem,
+    const struct dill_tcp_opts *opts,
     int64_t deadline);
 DILL_EXPORT int dill_tcp_done(
     int s,
@@ -507,31 +505,24 @@ DILL_EXPORT int dill_tcp_close(
     int s,
     int64_t deadline);
 DILL_EXPORT int dill_tcp_listener_fromfd(
-    int fd);
-DILL_EXPORT int dill_tcp_listener_fromfd_mem(
     int fd,
-    struct dill_tcp_listener_storage *mem);
+    const struct dill_tcp_opts *opts);
 DILL_EXPORT int dill_tcp_fromfd(
-    int fd);
-DILL_EXPORT int dill_tcp_fromfd_mem(
     int fd,
-    struct dill_tcp_storage *mem);
+    const struct dill_tcp_opts *opts);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define tcp_opts dill_tcp_opts
+#define tcp_defaults dill_tcp_defaults
 #define tcp_listener_storage dill_tcp_listener_storage
 #define tcp_storage dill_tcp_storage
 #define tcp_listen dill_tcp_listen
-#define tcp_listen_mem dill_tcp_listen_mem
 #define tcp_accept dill_tcp_accept
-#define tcp_accept_mem dill_tcp_accept_mem
 #define tcp_connect dill_tcp_connect
-#define tcp_connect_mem dill_tcp_connect_mem
 #define tcp_done dill_tcp_done
 #define tcp_close dill_tcp_close
 #define tcp_listener_fromfd dill_tcp_listener_fromfd
-#define tcp_listener_fromfd_mem dill_tcp_listener_fromfd_mem
 #define tcp_fromfd dill_tcp_fromfd
-#define tcp_fromfd_mem dill_tcp_fromfd_mem
 #endif
 
 /******************************************************************************/
@@ -1078,7 +1069,8 @@ DILL_EXPORT int dill_term_detach(
 /* Implements concurrent TCP connecting to the remote endpoint.               */
 /******************************************************************************/
 
-int dill_happyeyeballs_connect(const char *name, int port, int64_t deadline);
+int dill_happyeyeballs_connect(const char *name, int port,
+    const struct dill_tcp_opts *opts, int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define happyeyeballs_connect dill_happyeyeballs_connect

@@ -31,7 +31,7 @@ coroutine void client(void) {
     struct ipaddr addr;
     int rc = ipaddr_remote(&addr, "127.0.0.1", 5555, 0, -1);
     errno_assert(rc == 0);
-    int s = tcp_connect(&addr, -1);
+    int s = tcp_connect(&addr, NULL, -1);
     errno_assert(s >= 0);
 
     int cs = prefix_attach(s, 8, 0);
@@ -54,10 +54,10 @@ int main(void) {
     struct ipaddr addr;
     int rc = ipaddr_local(&addr, NULL, 5555, 0);
     errno_assert(rc == 0);
-    int ls = tcp_listen(&addr, 10);
+    int ls = tcp_listen(&addr, NULL);
     errno_assert(ls >= 0);
     int clh = go(client());
-    int as = tcp_accept(ls, NULL, -1);
+    int as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(as >= 0);
 
     int cs = prefix_attach(as, 8, 0);

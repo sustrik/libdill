@@ -54,8 +54,8 @@ static dill_coroutine void dill_happyeyeballs_dnsquery(const char *name,
 }
 
 static dill_coroutine void dill_happyeyeballs_attempt(struct dill_ipaddr addr,
-      int ch) {
-    int conn = dill_tcp_connect(&addr, -1);
+      const struct dill_tcp_opts *opts, int ch) {
+    int conn = dill_tcp_connect(&addr, opts, -1);
     if(dill_slow(conn < 0)) return;
     int rc = dill_chsend(ch, &conn, sizeof(int), -1);
     if(dill_slow(rc < 0 && errno == ECANCELED)) {
@@ -67,7 +67,7 @@ static dill_coroutine void dill_happyeyeballs_attempt(struct dill_ipaddr addr,
 }
 
 static dill_coroutine void dill_happyeyeballs_coordinator(
-      const char *name, int port, int ch) {
+      const char *name, int port, const struct dill_tcp_opts *opts, int ch) {
     struct dill_ipaddr nulladdr;
     int rc = dill_ipaddr_local(&nulladdr, "0.0.0.0", 0, DILL_IPADDR_IPV4);
     dill_assert(rc == 0);
@@ -121,7 +121,7 @@ use_address:
         /* Ignore 0.0.0.0 addresses. */
         if(dill_ipaddr_equal(&addr, &nulladdr, 0)) continue;
         /* Launch the connect attempt. */
-        rc = dill_bundle_go(bndl, dill_happyeyeballs_attempt(addr, ch));
+        rc = dill_bundle_go(bndl, dill_happyeyeballs_attempt(addr, opts, ch));
         if(dill_slow(rc < 0 && errno == ECANCELED)) goto cancel;
         dill_assert(rc == 0);
         /* Alternate between IPv4 and IPv6 addresses. */
@@ -148,15 +148,20 @@ cancel:
     dill_assert(rc == 0);
 }
 
-int dill_happyeyeballs_connect(const char *name, int port, int64_t deadline) {
+int dill_happyeyeballs_connect(const char *name, int port,
+      const struct dill_tcp_opts *opts, int64_t deadline) {
     int res = -1;
     int err = 0;
     if(dill_slow(!name || port <= 0)) {err = EINVAL; goto exit1;}
+    if(!opts) opts = &dill_tcp_defaults;
+    struct dill_tcp_opts op = *opts;
+    op.mem = NULL;
     int chconns[2];
     struct dill_chstorage chconns_storage;
     int rc = dill_chmake_mem(&chconns_storage, chconns);
     if(dill_slow(rc < 0)) {err = errno; goto exit1;}
-    int coord = dill_go(dill_happyeyeballs_coordinator(name, port, chconns[1]));
+    int coord = dill_go(dill_happyeyeballs_coordinator(name, port, &op,
+        chconns[1]));
     if(dill_slow(coord < 0)) {err = errno; goto exit2;}
     int conn;
     rc = dill_chrecv(chconns[0], &conn, sizeof(int), deadline);

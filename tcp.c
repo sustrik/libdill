@@ -31,6 +31,12 @@
 #include "fd.h"
 #include "utils.h"
 
+const struct dill_tcp_opts dill_tcp_defaults = {
+    NULL,  /* mem */
+    10,    /* backlog */
+    1      /* rx_buffering */
+};
+
 dill_unique_id(dill_tcp_type);
 dill_unique_id(dill_tcp_listener_type);
 
@@ -50,6 +56,7 @@ struct dill_tcp_conn {
     struct dill_bsock_vfs bvfs;
     int fd;
     struct dill_fd_rxbuf rxbuf;
+    unsigned int rx_buffering : 1;
     unsigned int rbusy : 1;
     unsigned int sbusy : 1;
     unsigned int indone : 1;
@@ -69,29 +76,43 @@ static void *dill_tcp_hquery(struct dill_hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-static int dill_tcp_makeconn(int fd, void *mem) {
+static int dill_tcp_makeconn(int fd, const struct dill_tcp_opts *opts) {
+    int err;
     /* Create the object. */
-    struct dill_tcp_conn *self = (struct dill_tcp_conn*)mem;
+    struct dill_tcp_conn *self = opts->mem;
+    if(!self) {
+        self = malloc(sizeof(struct dill_tcp_conn));
+        if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    }
     self->hvfs.query = dill_tcp_hquery;
     self->hvfs.close = dill_tcp_hclose;
     self->bvfs.bsendl = dill_tcp_bsendl;
     self->bvfs.brecvl = dill_tcp_brecvl;
     self->fd = fd;
-    dill_fd_initrxbuf(&self->rxbuf);
+    self->rx_buffering = opts->rx_buffering;
+    if(self->rx_buffering) dill_fd_initrxbuf(&self->rxbuf);
     self->rbusy = 0;
     self->sbusy = 0;
     self->indone = 0;
     self->outdone = 0;
     self->inerr = 0;
     self->outerr = 0;
-    self->mem = 1;
+    self->mem = !!opts->mem;
     /* Create the handle. */
-    return dill_hmake(&self->hvfs);
+    int h = dill_hmake(&self->hvfs);
+    if(dill_slow(h < 0)) {err = errno; goto error2;}
+    return h;
+error2:
+    if(!opts->mem) free(self);
+error1:
+    errno = err;
+    return -1;
 }
 
-int dill_tcp_fromfd_mem(int fd, struct dill_tcp_storage *mem) {
+int dill_tcp_fromfd(int fd, const struct dill_tcp_opts *opts) {
     int err;
-    if(dill_slow(!mem || fd < 0)) {err = EINVAL; goto error1;}
+    if(dill_slow(fd < 0)) {err = EINVAL; goto error1;}
+    if(!opts) opts = &dill_tcp_defaults;
     /* Make sure that the supplied file descriptor is of correct type. */
     int rc = dill_fd_check(fd, SOCK_STREAM, AF_INET, AF_INET6, 0);
     if(dill_slow(rc < 0)) {err = errno; goto error1;}
@@ -102,7 +123,7 @@ int dill_tcp_fromfd_mem(int fd, struct dill_tcp_storage *mem) {
     rc = dill_fd_unblock(fd);
     if(dill_slow(rc < 0)) {err = errno; goto error1;}
     /* Create the handle */
-    int h = dill_tcp_makeconn(fd, mem);
+    int h = dill_tcp_makeconn(fd, opts);
     if(dill_slow(h < 0)) {err = errno; goto error1;}
     /* Return the handle */
     return h;
@@ -111,25 +132,10 @@ error1:
     return -1;
 }
 
-int dill_tcp_fromfd(int fd) {
+int dill_tcp_connect(const struct dill_ipaddr *addr,
+      const struct dill_tcp_opts *opts, int64_t deadline) {
     int err;
-    struct dill_tcp_conn *obj = malloc(sizeof(struct dill_tcp_conn));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int s = dill_tcp_fromfd_mem(fd, (struct dill_tcp_storage*)obj);
-    if (dill_slow(s < 0)) {err = errno; goto error2;}
-    obj->mem = 0;
-    return s;
-error2:
-    free(obj);
-error1:
-    errno = err;
-    return -1;
-}
-
-int dill_tcp_connect_mem(const struct dill_ipaddr *addr,
-        struct dill_tcp_storage *mem, int64_t deadline) {
-    int err;
-    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
+    if(!opts) opts = &dill_tcp_defaults;
     /* Open a socket. */
     int s = socket(dill_ipaddr_family(addr), SOCK_STREAM, 0);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
@@ -141,7 +147,7 @@ int dill_tcp_connect_mem(const struct dill_ipaddr *addr,
         deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
-    int h = dill_tcp_makeconn(s, mem);
+    int h = dill_tcp_makeconn(s, opts);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
@@ -149,22 +155,6 @@ error2:
 error1:
     errno = err;
     return -1;
-}
-
-int dill_tcp_connect(const struct dill_ipaddr *addr, int64_t deadline) {
-    int err;
-    struct dill_tcp_conn *obj = malloc(sizeof(struct dill_tcp_conn));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int s = dill_tcp_connect_mem(addr, (struct dill_tcp_storage*)obj, deadline);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
-    obj->mem = 0;
-    return s;
-error2:
-    free(obj);
-error1:
-    errno = err;
-    return -1;
-
 }
 
 static int dill_tcp_bsendl(struct dill_bsock_vfs *bvfs,
@@ -188,7 +178,8 @@ static int dill_tcp_brecvl(struct dill_bsock_vfs *bvfs,
     if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
     self->rbusy = 1;
-    int rc = dill_fd_recv(self->fd, &self->rxbuf, first, last, deadline);
+    int rc = dill_fd_recv(self->fd, self->rx_buffering ? &self->rxbuf : NULL,
+        first, last, deadline);
     self->rbusy = 0;
     if(dill_fast(rc == 0)) return 0;
     if(errno == EPIPE) self->indone = 1;
@@ -244,7 +235,7 @@ error:
 static void dill_tcp_hclose(struct dill_hvfs *hvfs) {
     struct dill_tcp_conn *self = (struct dill_tcp_conn*)hvfs;
     dill_fd_close(self->fd);
-    dill_fd_termrxbuf(&self->rxbuf);
+    if(self->rx_buffering) dill_fd_termrxbuf(&self->rxbuf);
     if(!self->mem) free(self);
 }
 
@@ -264,15 +255,27 @@ struct dill_tcp_listener {
 
 DILL_CHECK_STORAGE(dill_tcp_listener, dill_tcp_listener_storage)
 
-static int dill_tcp_makelistener(int fd, void *mem) {
+static int dill_tcp_makelistener(int fd, const struct dill_tcp_opts *opts) {
+    int err;
     /* Create the object. */
-    struct dill_tcp_listener *self = (struct dill_tcp_listener*)mem;
+    struct dill_tcp_listener *self = opts->mem;
+    if(!self) {
+        self = malloc(sizeof(struct dill_tcp_listener));
+        if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    }
     self->hvfs.query = dill_tcp_listener_hquery;
     self->hvfs.close = dill_tcp_listener_hclose;
     self->fd = fd;
-    self->mem = 1;
+    self->mem = !!opts->mem;
     /* Create the handle. */
-    return dill_hmake(&self->hvfs);
+    int h = dill_hmake(&self->hvfs);
+    if(dill_slow(h < 0)) {err = errno; goto error2;}
+    return h;
+error2:
+    if(!opts->mem) free(self);
+error1:
+    errno = err;
+    return -1;
 }
 
 static void *dill_tcp_listener_hquery(struct dill_hvfs *hvfs,
@@ -283,26 +286,10 @@ static void *dill_tcp_listener_hquery(struct dill_hvfs *hvfs,
     return NULL;
 }
 
-int dill_tcp_listener_fromfd(int fd) {
+int dill_tcp_listener_fromfd(int fd, const struct dill_tcp_opts *opts) {
     int err;
-    struct dill_tcp_listener *obj = malloc(sizeof(struct dill_tcp_listener));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int s = dill_tcp_listener_fromfd_mem(fd,
-        (struct dill_tcp_listener_storage*)obj);
-    if (dill_slow(s < 0)) {err = errno; goto error2;}
-    obj->mem = 0;
-    return s;
-error2:
-    free(obj);
-error1:
-    errno = err;
-    return -1;
-}
-
-int dill_tcp_listener_fromfd_mem(int fd,
-      struct dill_tcp_listener_storage *mem) {
-    int err;
-    if(dill_slow(!mem || fd < 0)) {err = EINVAL; goto error1;}
+    if(dill_slow(fd < 0)) {err = EINVAL; goto error1;}
+    if(!opts) opts = &dill_tcp_defaults;
     /* Make sure that the supplied file descriptor is of correct type. */
     int rc = dill_fd_check(fd, SOCK_STREAM, AF_INET, AF_INET6, 1);
     if(dill_slow(rc < 0)) {err = errno; goto error1;}
@@ -313,7 +300,7 @@ int dill_tcp_listener_fromfd_mem(int fd,
     rc = dill_fd_unblock(fd);
     if(dill_slow(rc < 0)) {err = errno; goto error1;}
     /* Create the handle */
-    int h = dill_tcp_makelistener(fd, mem);
+    int h = dill_tcp_makelistener(fd, opts);
     if(dill_slow(h < 0)) {err = errno; goto error1;}
     /* Return the handle */
     return h;
@@ -322,10 +309,10 @@ error1:
     return -1;
 }
 
-int dill_tcp_listen_mem(struct dill_ipaddr *addr, int backlog,
-      struct dill_tcp_listener_storage *mem) {
+int dill_tcp_listen(struct dill_ipaddr *addr,
+      const struct dill_tcp_opts *opts) {
     int err;
-    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
+    if(!opts) opts = &dill_tcp_defaults;
     /* Open the listening socket. */
     int s = socket(dill_ipaddr_family(addr), SOCK_STREAM, 0);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
@@ -335,7 +322,7 @@ int dill_tcp_listen_mem(struct dill_ipaddr *addr, int backlog,
     /* Start listening for incoming connections. */
     rc = bind(s, dill_ipaddr_sockaddr(addr), dill_ipaddr_len(addr));
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
-    rc = listen(s, backlog);
+    rc = listen(s, opts->backlog);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* If the user requested an ephemeral port,
        retrieve the port number assigned by the OS. */
@@ -346,7 +333,7 @@ int dill_tcp_listen_mem(struct dill_ipaddr *addr, int backlog,
         if(rc < 0) {err = errno; goto error2;}
         dill_ipaddr_setport(addr, dill_ipaddr_port(&baddr));
     }
-    int h = dill_tcp_makelistener(s, mem);
+    int h = dill_tcp_makelistener(s, opts);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
@@ -356,26 +343,10 @@ error1:
     return -1;
 }
 
-int dill_tcp_listen(struct dill_ipaddr *addr, int backlog) {
+int dill_tcp_accept(int s, const struct dill_tcp_opts *opts,
+      struct dill_ipaddr *addr, int64_t deadline) {
     int err;
-    struct dill_tcp_listener *obj = malloc(sizeof(struct dill_tcp_listener));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int ls = dill_tcp_listen_mem(addr, backlog,
-        (struct dill_tcp_listener_storage*)obj);
-    if(dill_slow(ls < 0)) {err = errno; goto error2;}
-    obj->mem = 0;
-    return ls;
-error2:
-    free(obj);
-error1:
-    errno = err;
-    return -1;
-}
-
-int dill_tcp_accept_mem(int s, struct dill_ipaddr *addr,
-        struct dill_tcp_storage *mem, int64_t deadline) {
-    int err;
-    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
+    if(!opts) opts = &dill_tcp_defaults;
     /* Retrieve the listener object. */
     struct dill_tcp_listener *lst = dill_hquery(s, dill_tcp_listener_type);
     if(dill_slow(!lst)) {err = errno; goto error1;}
@@ -388,27 +359,11 @@ int dill_tcp_accept_mem(int s, struct dill_ipaddr *addr,
     int rc = dill_fd_unblock(as);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
-    int h = dill_tcp_makeconn(as, mem);
+    int h = dill_tcp_makeconn(as, opts);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
     dill_fd_close(as);
-error1:
-    errno = err;
-    return -1;
-}
-
-int dill_tcp_accept(int s, struct dill_ipaddr *addr, int64_t deadline) {
-    int err;
-    struct dill_tcp_conn *obj = malloc(sizeof(struct dill_tcp_conn));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int as = dill_tcp_accept_mem(s, addr, (struct dill_tcp_storage*)obj,
-        deadline);
-    if(dill_slow(as < 0)) {err = errno; goto error2;}
-    obj->mem = 0;
-    return as;
-error2:
-    free(obj);
 error1:
     errno = err;
     return -1;

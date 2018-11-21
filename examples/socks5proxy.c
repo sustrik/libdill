@@ -67,7 +67,7 @@ coroutine void do_proxy(int s) {
         goto in_close;
     }
 
-    int s_rem = tcp_connect(&addr, -1);
+    int s_rem = tcp_connect(&addr, NULL, -1);
     if(s_rem < 0) goto in_close;
 
     if(ipaddr_remote(&addr, "0.0.0.0", 0, IPADDR_IPV4, -1)) goto both_close;
@@ -122,12 +122,12 @@ int main(int argc, char** argv) {
     struct ipaddr addr;
     int rc = ipaddr_local(&addr, NULL, 1080, 0);
     assert(rc == 0);
-    int ls = tcp_listen(&addr, 10);
+    int ls = tcp_listen(&addr, NULL);
     assert(ls >= 0);
     printf("SOCKS5 proxy listening on :1080\n");
     while(1) {
         struct ipaddr caddr;
-        int s = tcp_accept(ls, &caddr, -1);
+        int s = tcp_accept(ls, NULL, &caddr, -1);
         assert(s >= 0);
         rc = bundle_go(workers, do_proxy(s));
         assert(rc == 0);

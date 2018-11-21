@@ -39,14 +39,14 @@ int main(int argc, char *argv[]) {
     struct ipaddr addr;
     int rc = ipaddr_local(&addr, NULL, port, 0);
     assert(rc == 0);
-    int ls = tcp_listen(&addr, 10);
+    int ls = tcp_listen(&addr, NULL);
     if(ls < 0) {
         perror("Can't open listening socket");
         return 1;
     }
 
     while(1) {
-        int s = tcp_accept(ls, NULL, -1);
+        int s = tcp_accept(ls, NULL, NULL, -1);
         assert(s >= 0);
         s = suffix_attach(s, "\r\n", 2);
         assert(s >= 0);

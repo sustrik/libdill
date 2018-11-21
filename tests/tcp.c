@@ -44,7 +44,7 @@ coroutine void client(int port) {
     struct ipaddr addr;
     int rc = ipaddr_remote(&addr, "127.0.0.1", port, 0, -1);
     errno_assert(rc == 0);
-    int cs = tcp_connect(&addr, -1);
+    int cs = tcp_connect(&addr, NULL, -1);
     errno_assert(cs >= 0);
     rc = msleep(-1);
     errno_assert(rc == -1 && errno == ECANCELED);
@@ -56,7 +56,7 @@ coroutine void client2(int port) {
     struct ipaddr addr;
     int rc = ipaddr_remote(&addr, "127.0.0.1", port, 0, -1);
     errno_assert(rc == 0);
-    int cs = tcp_connect(&addr, -1);
+    int cs = tcp_connect(&addr, NULL, -1);
     errno_assert(cs >= 0);
     char buf[3];
     rc = brecv(cs, buf, sizeof(buf), -1);
@@ -74,7 +74,7 @@ coroutine void client3(int port) {
     struct ipaddr addr;
     int rc = ipaddr_remote(&addr, "127.0.0.1", port, 0, -1);
     errno_assert(rc == 0);
-    int cs = tcp_connect(&addr, -1);
+    int cs = tcp_connect(&addr, NULL, -1);
     errno_assert(cs >= 0);
     char buf[3];
     rc = brecv(cs, buf, sizeof(buf), -1);
@@ -92,7 +92,7 @@ coroutine void client4(int port) {
     struct ipaddr addr;
     int rc = ipaddr_remote(&addr, "127.0.0.1", port, 0, -1);
     errno_assert(rc == 0);
-    int cs = tcp_connect(&addr, -1);
+    int cs = tcp_connect(&addr, NULL, -1);
     errno_assert(cs >= 0);
     /* This line should make us hit TCP pushback. */
     rc = msleep(now() + 100);
@@ -130,6 +130,7 @@ coroutine void tcp_proxy(int s1, int s2) {
     struct chclause cc[] = {{CHRECV, u_ch[0], &r, sizeof(int)},
                            {CHRECV, d_ch[0], &r, sizeof(int)}};
     int i=choose(cc, 2, -1);
+    if(i < 0 && errno == ECANCELED) return;
     assert(errno == 0);
     if(i == 0) {
         err = bundle_wait(up, -1);
@@ -156,53 +157,6 @@ coroutine void tcp_echo(int s) {
     return;
 }
 
-coroutine void middle_segment(void) {
-    struct ipaddr laddr, raddr;
-    int rc = ipaddr_local(&laddr, NULL, 5678, 0);
-    errno_assert(rc == 0);
-    rc = ipaddr_local(&raddr, NULL, 8765, 0);
-    errno_assert(rc == 0);
-
-    int rl = tcp_listen(&raddr, 10);
-    errno_assert(rl >- 0);
-    int ll = tcp_listen(&laddr, 10);
-    errno_assert(ll >- 0);
-
-    int ls = tcp_accept(ll, NULL, -1);
-    errno_assert(ls >= 0);
-    int rs = tcp_accept(rl, NULL, -1);
-    errno_assert(rs >= 0);
-
-    tcp_proxy(ls, rs);
-    tcp_close(ls, -1);
-    tcp_close(rs, -1);
-    return;
-}
-
-coroutine void end_segment(void) {
-    struct ipaddr addr;
-    int rc = ipaddr_local(&addr, NULL, 8765, 0);
-    errno_assert(rc == 0);
-    
-    int ls = tcp_connect(&addr, -1);
-    errno_assert(ls >= 0);
-    
-    tcp_echo(ls);
-    
-    return;
-}
-
-coroutine void middle_and_end_segments(void) {
-    int b = bundle();
-    int err = bundle_go(b, middle_segment());
-    errno_assert(!err);
-    msleep(now()+250);
-    err = bundle_go(b, end_segment());
-    errno_assert(!err);
-    err = bundle_wait(b, -1);
-    return;
-}
-
 coroutine void send10k(int s) {
     for (int i = 0; i < 10000; i++) {
         int err = bsend(s, &i, sizeof(i), -1);
@@ -219,29 +173,6 @@ coroutine void recv10k(int s) {
     return;
 }
 
-static void tcp_concurrency_test(void) {
-    int b1 = bundle();
-    errno_assert(b1 >= 0);
-    int err = bundle_go(b1, middle_and_end_segments());
-    errno_assert(!err);
-    msleep(now() + 500);
-    
-    struct ipaddr addr;
-    int rc = ipaddr_local(&addr, NULL, 5678, 0);
-    errno_assert(rc == 0);
-    int s = tcp_connect(&addr, -1);
-    errno_assert(s >= 0);
-    int b2 = bundle();
-    errno_assert(b2 >= 0);
-    err = bundle_go(b2, recv10k(s));
-    errno_assert(!err);
-    err = bundle_go(b2, send10k(s));
-    errno_assert(!err);
-    err = bundle_wait(b2, -1);
-    errno_assert(!err);
-    hclose(b1);
-}
-
 static void move_lots_of_data(size_t nbytes, size_t buffer_size);
 static void test_fromfd();
 
@@ -255,11 +186,13 @@ int main(void) {
     /* Test deadline. */
     
     struct tcp_listener_storage mem;
-    int ls = tcp_listen_mem(&addr, 10, &mem);
+    struct tcp_opts opts = tcp_defaults;
+    opts.mem = &mem;
+    int ls = tcp_listen(&addr, &opts);
     errno_assert(ls >= 0);
     int cr = go(client(5555));
     errno_assert(cr >= 0);
-    int as = tcp_accept(ls, NULL, -1);
+    int as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(as >= 0);
     rc = mrecv(as, buf, sizeof(buf), -1);
     errno_assert(rc == -1 && errno == ENOTSUP);
@@ -281,11 +214,11 @@ int main(void) {
     errno_assert(rc == 0);
 
     /* Test simple data exchange. */
-    ls = tcp_listen(&addr, 10);
+    ls = tcp_listen(&addr, NULL);
     errno_assert(ls >= 0);
     cr = go(client2(5555));
     errno_assert(cr >= 0);
-    as = tcp_accept(ls, NULL, -1);
+    as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(as >= 0);
     rc = bsend(as, "ABC", 3, -1);
     errno_assert(rc == 0);
@@ -302,11 +235,11 @@ int main(void) {
     errno_assert(rc == 0);
 
     /* Manual termination handshake. */
-    ls = tcp_listen(&addr, 10);
+    ls = tcp_listen(&addr, NULL);
     errno_assert(ls >= 0);
     cr = go(client3(5555));
     errno_assert(cr >= 0);
-    as = tcp_accept(ls, NULL, -1);
+    as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(as >= 0);
     rc = bsend(as, "ABC", 3, -1);
     errno_assert(rc == 0);
@@ -325,10 +258,10 @@ int main(void) {
     errno_assert(rc == 0);    
 
     /* Emulate a DoS attack. */
-    ls = tcp_listen(&addr, 10);
+    ls = tcp_listen(&addr, NULL);
     cr = go(client4(5555));
     errno_assert(cr >= 0);
-    as = tcp_accept(ls, NULL, -1);
+    as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(as >= 0);
     char buffer[2048];
     memset(buffer, 0, sizeof(buffer));
@@ -347,7 +280,7 @@ int main(void) {
     /* Test ephemeral ports. */
     rc = ipaddr_local(&addr, NULL, 0, 0);
     errno_assert(rc == 0);
-    ls = tcp_listen(&addr, 10);
+    ls = tcp_listen(&addr, NULL);
     errno_assert(ls >= 0);
     int port = ipaddr_port(&addr);
     assert(port > 0);
@@ -362,15 +295,12 @@ int main(void) {
     move_lots_of_data(5000, 3000);
 
     test_fromfd();
-    
-    /* test concurrency in TCP */
-    tcp_concurrency_test();
 
     return 0;
 }
 
 static coroutine void async_accept_routine(int listen_fd, int ch) {
-    int fd = tcp_accept(listen_fd, NULL, -1);
+    int fd = tcp_accept(listen_fd, NULL, NULL, -1);
     assert(fd != -1);
     int rc = chsend(ch, &fd, sizeof(fd), -1);
     assert(rc != -1);
@@ -383,7 +313,7 @@ static int tcp_socketpair(int fd[2]) {
 
     int rc = ipaddr_local(&server_addr, "127.0.0.1", 0, 0);
     errno_assert(rc == 0);
-    int listen_fd = tcp_listen(&server_addr, 1);
+    int listen_fd = tcp_listen(&server_addr, NULL);
     assert(listen_fd != -1);
     int port = ipaddr_port(&server_addr);
     assert(port > 0);
@@ -394,7 +324,7 @@ static int tcp_socketpair(int fd[2]) {
     int h = go(async_accept_routine(listen_fd, ch[0]));
     errno_assert(h >= 0);
 
-    int client_fd = tcp_connect(&server_addr, now() + 1000);
+    int client_fd = tcp_connect(&server_addr, NULL, now() + 1000);
     errno_assert(client_fd >= 0);
 
     int server_fd;
@@ -476,17 +406,17 @@ static void test_fromfd() {
     struct ipaddr addr;
     int rc = ipaddr_local(&addr, "127.0.0.1", 5555, 0);
     errno_assert(rc == 0);
-    int ls = tcp_listen(&addr, 10);
+    int ls = tcp_listen(&addr, NULL);
     assert(ls != -1);
 
     int fd = socket(ipaddr_family(&addr), SOCK_STREAM, 0);
     errno_assert(fd >= 0);
     rc = connect(fd, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
     errno_assert(rc == 0);
-    int s = tcp_fromfd(fd);
+    int s = tcp_fromfd(fd, NULL);
     errno_assert(s >= 0);
   
-    int as = tcp_accept(ls, NULL, -1);
+    int as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(s >= 0);
 
     rc = bsend(as, "ABC", 3, -1);

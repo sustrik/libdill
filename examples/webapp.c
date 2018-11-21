@@ -125,12 +125,12 @@ coroutine void ws_listener(void) {
     struct ipaddr addr;
     int rc = ipaddr_local(&addr, NULL, 8081, 0);
     assert(rc == 0);
-    int ls = tcp_listen(&addr, 10);
+    int ls = tcp_listen(&addr, NULL);
     assert(ls >= 0);
     int workers = bundle();
     assert(workers >= 0);
     while(1) {
-        int s = tcp_accept(ls, NULL, -1);
+        int s = tcp_accept(ls, NULL, NULL, -1);
         assert(s >= 0);
         rc = bundle_go(workers, ws_worker(s));
         assert(rc == 0);
@@ -152,10 +152,10 @@ int main(void) {
     struct ipaddr addr;
     rc = ipaddr_local(&addr, NULL, 8080, 0);
     assert(rc == 0);
-    int ls = tcp_listen(&addr, 10);
+    int ls = tcp_listen(&addr, NULL);
     assert(ls >= 0);
     while(1) {
-        int s = tcp_accept(ls, NULL, -1);
+        int s = tcp_accept(ls, NULL, NULL, -1);
         assert(s >= 0);
         rc = bundle_go(workers, html_worker(s));
         assert(rc == 0);
