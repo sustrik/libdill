@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2017 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -600,29 +600,27 @@ DILL_EXPORT int dill_ipc_pair(
 /*  Messages are prefixed by size.                                            */
 /******************************************************************************/
 
-struct dill_prefix_storage {char _[56];};
+struct dill_prefix_opts {
+    void *mem;
+    unsigned int little_endian : 1;
+};
 
-#define DILL_PREFIX_BIG_ENDIAN 0
-#define DILL_PREFIX_LITTLE_ENDIAN 1
+extern const struct dill_prefix_opts dill_prefix_defaults;
+
+struct dill_prefix_storage {char _[56];};
 
 DILL_EXPORT int dill_prefix_attach(
     int s,
     size_t prefixlen,
-    int flags);
-DILL_EXPORT int dill_prefix_attach_mem(
-    int s,
-    size_t prefixlen,
-    int flags,
-    struct dill_prefix_storage *mem);
+    const struct dill_prefix_opts *opts);
 DILL_EXPORT int dill_prefix_detach(
     int s);
 
 #if !defined DILL_DISABLE_RAW_NAMES
-#define PREFIX_BIG_ENDIAN DILL_PREFIX_BIG_ENDIAN
-#define PREFIX_LITTLE_ENDIAN DILL_PREFIX_LITTLE_ENDIAN
+#define prefix_opts dill_prefix_opts
+#define prefix_defaults dill_prefix_defaults
 #define prefix_storage dill_prefix_storage
 #define prefix_attach dill_prefix_attach
-#define prefix_attach_mem dill_prefix_attach_mem
 #define prefix_detach dill_prefix_detach
 #endif
 

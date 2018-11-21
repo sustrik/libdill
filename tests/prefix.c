@@ -83,10 +83,13 @@ int main(void) {
     int h[2];
     rc = ipc_pair(h, NULL);
     errno_assert(rc == 0);
-    int s0 = prefix_attach(h[0], 3, PREFIX_LITTLE_ENDIAN);
+    struct prefix_opts opts = prefix_defaults;
+    opts.little_endian = 1;
+    int s0 = prefix_attach(h[0], 3, &opts);
     errno_assert(s0 >= 0);
     struct prefix_storage mem;
-    int s1 = prefix_attach_mem(h[1], 3, PREFIX_LITTLE_ENDIAN, &mem);
+    opts.mem = &mem;
+    int s1 = prefix_attach(h[1], 3, &opts);
     errno_assert(s1 >= 0);
     rc = msend(s0, "First", 5, -1);
     errno_assert(rc == 0);

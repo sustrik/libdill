@@ -31,6 +31,11 @@
 #include "libdillimpl.h"
 #include "utils.h"
 
+const struct dill_prefix_opts dill_prefix_defaults = {
+    NULL,  /* mem */
+    0      /* little_endian */
+};
+
 dill_unique_id(dill_prefix_type);
 
 static void *dill_prefix_hquery(struct dill_hvfs *hvfs, const void *type);
@@ -44,8 +49,8 @@ struct dill_prefix_sock {
     struct dill_hvfs hvfs;
     struct dill_msock_vfs mvfs;
     int u;
-    size_t hdrlen;
-    unsigned int bigendian : 1;
+    size_t prefixlen;
+    unsigned int little_endian : 1;
     unsigned int inerr : 1;
     unsigned int outerr : 1;
     unsigned int mem : 1;
@@ -61,50 +66,40 @@ static void *dill_prefix_hquery(struct dill_hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int dill_prefix_attach_mem(int s, size_t hdrlen, int flags,
-      struct dill_prefix_storage *mem) {
+int dill_prefix_attach(int s, size_t prefixlen,
+      const struct dill_prefix_opts *opts) {
     int err;
-    if(dill_slow(!mem || hdrlen == 0)) {err = EINVAL; goto error;}
+    if(dill_slow(prefixlen == 0)) {err = EINVAL; goto error1;}
+    if(!opts) opts = &dill_prefix_defaults;
     /* Take ownership of the underlying socket. */
     s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error;}
+    if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Check whether underlying socket is a bytestream. */
     void *q = dill_hquery(s, dill_bsock_type);
-    if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error;}
-    if(dill_slow(!q)) {err = errno; goto error;}
+    if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
+    if(dill_slow(!q)) {err = errno; goto error1;}
     /* Create the object. */
-    struct dill_prefix_sock *self = (struct dill_prefix_sock*)mem;
+    struct dill_prefix_sock *self = opts->mem;
+    if(!self) {
+        self = malloc(sizeof(struct dill_prefix_sock));
+        if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    }
     self->hvfs.query = dill_prefix_hquery;
     self->hvfs.close = dill_prefix_hclose;
     self->mvfs.msendl = dill_prefix_msendl;
     self->mvfs.mrecvl = dill_prefix_mrecvl;
     self->u = s;
-    self->hdrlen = hdrlen;
-    self->bigendian = !(flags & DILL_PREFIX_LITTLE_ENDIAN);
+    self->prefixlen = prefixlen;
+    self->little_endian = opts->little_endian;
     self->inerr = 0;
     self->outerr = 0;
-    self->mem = 1;
+    self->mem = !!opts->mem;
     /* Create the handle. */
     int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error;}
+    if(dill_slow(h < 0)) {int err = errno; goto error2;}
     return h;
-error:
-    if(s >= 0) dill_hclose(s);
-    errno = err;
-    return -1;
-}
-
-int dill_prefix_attach(int s, size_t hdrlen, int flags) {
-    int err;
-    struct dill_prefix_sock *obj = malloc(sizeof(struct dill_prefix_sock));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    s = dill_prefix_attach_mem(s, hdrlen, flags,
-        (struct dill_prefix_storage*)obj);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
-    obj->mem = 0;
-    return s;
 error2:
-    free(obj);
+    if(!opts->mem) free(self); 
 error1:
     if(s >= 0) dill_hclose(s);
     errno = err;
@@ -130,14 +125,14 @@ static int dill_prefix_msendl(struct dill_msock_vfs *mvfs,
     struct dill_prefix_sock *self = dill_cont(mvfs, struct dill_prefix_sock,
         mvfs);
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
-    uint8_t szbuf[self->hdrlen];
+    uint8_t szbuf[self->prefixlen];
     size_t sz = 0;
     struct dill_iolist *it;
     for(it = first; it; it = it->iol_next)
         sz += it->iol_len;
     int i;
-    for(i = 0; i != self->hdrlen; ++i) {
-        szbuf[self->bigendian ? (self->hdrlen - i - 1) : i] = sz & 0xff;
+    for(i = 0; i != self->prefixlen; ++i) {
+        szbuf[self->little_endian ? i : (self->prefixlen - i - 1)] = sz & 0xff;
         sz >>= 8;
     }
     struct dill_iolist hdr = {szbuf, sizeof(szbuf), first, 0};
@@ -151,13 +146,13 @@ static ssize_t dill_prefix_mrecvl(struct dill_msock_vfs *mvfs,
     struct dill_prefix_sock *self = dill_cont(mvfs, struct dill_prefix_sock,
         mvfs);
     if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
-    uint8_t szbuf[self->hdrlen];
-    int rc = dill_brecv(self->u, szbuf, self->hdrlen, deadline);
+    uint8_t szbuf[self->prefixlen];
+    int rc = dill_brecv(self->u, szbuf, self->prefixlen, deadline);
     if(dill_slow(rc < 0)) {self->inerr = 1; return -1;}
     uint64_t sz = 0;
     int i;
-    for(i = 0; i != self->hdrlen; ++i) {
-        uint8_t c = szbuf[self->bigendian ? i : (self->hdrlen - i - 1)];
+    for(i = 0; i != self->prefixlen; ++i) {
+        uint8_t c = szbuf[self->little_endian ? (self->prefixlen - i - 1) : i];
         sz <<= 8;
         sz |= c;
     }

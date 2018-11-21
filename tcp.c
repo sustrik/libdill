@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2017 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
