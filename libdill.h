@@ -607,11 +607,11 @@ struct dill_prefix_storage {char _[56];};
 
 DILL_EXPORT int dill_prefix_attach(
     int s,
-    size_t hdrlen,
+    size_t prefixlen,
     int flags);
 DILL_EXPORT int dill_prefix_attach_mem(
     int s,
-    size_t hdrlen,
+    size_t prefixlen,
     int flags,
     struct dill_prefix_storage *mem);
 DILL_EXPORT int dill_prefix_detach(
@@ -807,47 +807,6 @@ DILL_EXPORT int dill_tls_detach(
 #define tls_attach_client_mem dill_tls_attach_client_mem
 #define tls_done dill_tls_done
 #define tls_detach dill_tls_detach
-#endif
-
-/******************************************************************************/
-/*  DTLS protocol.                                                            */
-/******************************************************************************/
-
-struct dill_dtls_storage {char _[88];};
-
-DILL_EXPORT int dill_dtls_attach_server(
-    int s,
-    const char *cert,
-    const char *pkey,
-    int64_t deadline);
-DILL_EXPORT int dill_dtls_attach_server_mem(
-    int s,
-    const char *cert,
-    const char *pkey,
-    struct dill_dtls_storage *mem,
-    int64_t deadline);
-DILL_EXPORT int dill_dtls_attach_client(
-    int s,
-    int64_t deadline);
-DILL_EXPORT int dill_dtls_attach_client_mem(
-    int s,
-    struct dill_dtls_storage *mem,
-    int64_t deadline);
-DILL_EXPORT int dill_dtls_done(
-    int s,
-    int64_t deadline);
-DILL_EXPORT int dill_dtls_detach(
-    int s,
-    int64_t deadline);
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define dtls_storage dill_dtls_storage
-#define dtls_attach_server dill_dtls_attach_server
-#define dtls_attach_server_mem dill_dtls_attach_server_mem
-#define dtls_attach_client dill_dtls_attach_client
-#define dtls_attach_client_mem dill_dtls_attach_client_mem
-#define dtls_done dill_dtls_done
-#define dtls_detach dill_dtls_detach
 #endif
 
 #endif
