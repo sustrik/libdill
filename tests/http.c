@@ -27,7 +27,7 @@
 
 int main(void) {
     int h[2];
-    int rc = ipc_pair(h);
+    int rc = ipc_pair(h, NULL);
     assert(rc == 0);
     int s0 = http_attach(h[0]);
     assert(s0 >= 0);

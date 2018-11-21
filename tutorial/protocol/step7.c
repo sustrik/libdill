@@ -156,7 +156,7 @@ coroutine void client(int s) {
 
 int main(void) {
     int ss[2];
-    int rc = ipc_pair(ss);
+    int rc = ipc_pair(ss, NULL);
     assert(rc == 0);
     go(client(ss[0]));
     int q = quux_attach(ss[1]);

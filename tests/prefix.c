@@ -81,7 +81,7 @@ int main(void) {
     errno_assert(rc == 0);
 
     int h[2];
-    rc = ipc_pair(h);
+    rc = ipc_pair(h, NULL);
     errno_assert(rc == 0);
     int s0 = prefix_attach(h[0], 3, PREFIX_LITTLE_ENDIAN);
     errno_assert(s0 >= 0);

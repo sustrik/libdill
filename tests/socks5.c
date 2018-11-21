@@ -186,7 +186,7 @@ typedef void test_fn(int s, char *user, char* pass);
 
 int main(void) {
     int h[2];
-    int rc = ipc_pair(h);
+    int rc = ipc_pair(h, NULL);
     assert(rc == 0);
     up_t up[] = {{NULL, NULL}, {"user", "pass"}};
     test_fn *ctest[] = {clientbyaddr, clientbyipstring};

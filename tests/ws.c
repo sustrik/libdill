@@ -76,7 +76,7 @@ coroutine void http_client(int s) {
 
 int main(void) {
     int p[2];
-    int rc = ipc_pair(p);
+    int rc = ipc_pair(p, NULL);
     errno_assert(rc == 0);
     int cr = go(nohttp_client(p[1]));
     errno_assert(cr >= 0);
@@ -96,7 +96,7 @@ int main(void) {
     rc = hclose(cr);
     errno_assert(rc == 0);
 
-    rc = ipc_pair(p);
+    rc = ipc_pair(p, NULL);
     errno_assert(rc == 0);
     cr = go(http_client(p[1]));
     errno_assert(cr >= 0);

@@ -34,7 +34,7 @@
 #define TESTADDR "ipc.test"
 
 coroutine void client(void) {
-    int cs = ipc_connect(TESTADDR, -1);
+    int cs = ipc_connect(TESTADDR, NULL, -1);
     errno_assert(cs >= 0);
     int rc = msleep(-1);
     errno_assert(rc == -1 && errno == ECANCELED);
@@ -83,12 +83,14 @@ int main() {
     struct stat st;
     int rc = stat(TESTADDR, &st);
     if(rc == 0) errno_assert(unlink(TESTADDR) == 0);
-    int ls = ipc_listen(TESTADDR, 10);
+    int ls = ipc_listen(TESTADDR, NULL);
     errno_assert(ls >= 0);
     int cr = go(client());
     errno_assert(cr >= 0);
     struct ipc_storage mem;
-    int as = ipc_accept_mem(ls, &mem, -1);
+    struct ipc_opts opts = ipc_defaults;
+    opts.mem = &mem;
+    int as = ipc_accept(ls, &opts, -1);
     errno_assert(as >= 0);
     int64_t deadline = now() + 30;
     ssize_t sz = sizeof(buf);
@@ -107,7 +109,7 @@ int main() {
 
     /* Test simple data exchange. */
     int s[2];
-    rc = ipc_pair(s);
+    rc = ipc_pair(s, NULL);
     errno_assert(rc == 0);
     cr = go(client2(s[1]));
     errno_assert(cr >= 0);
@@ -124,7 +126,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Manual termination handshake. */
-    rc = ipc_pair(s);
+    rc = ipc_pair(s, NULL);
     errno_assert(rc == 0);
     cr = go(client3(s[1]));
     errno_assert(cr >= 0);
@@ -143,7 +145,7 @@ int main() {
     errno_assert(rc == 0);    
 
     /* Emulate a DoS attack. */
-    rc = ipc_pair(s);
+    rc = ipc_pair(s, NULL);
     errno_assert(rc == 0);
     cr = go(client4(s[1]));
     errno_assert(cr >= 0);
@@ -161,7 +163,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Try some invalid inputs. */
-    rc = ipc_pair(s);
+    rc = ipc_pair(s, NULL);
     errno_assert(rc == 0);
     rc = bsendl(s[0], NULL, NULL, -1);
     errno_assert(rc == -1 && errno == EINVAL);
@@ -181,7 +183,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Try skipping some data. */
-    rc = ipc_pair(s);
+    rc = ipc_pair(s, NULL);
     errno_assert(rc == 0);
     rc = bsend(s[0], "ABCDEFGHIJ", 10, -1);
     errno_assert(rc == 0);
@@ -199,7 +201,7 @@ int main() {
     errno_assert(rc == 0);
 
     /* Try skipping some data using an iolist. */
-    rc = ipc_pair(s);
+    rc = ipc_pair(s, NULL);
     errno_assert(rc == 0);
     rc = bsend(s[0], "ABCDEFGHIJ", 10, -1);
     errno_assert(rc == 0);
@@ -218,7 +220,9 @@ int main() {
     errno_assert(rc == 0);
 
     /* Transport a file descriptor via SCM_RIGHTS. */
-    rc = ipc_pair(s);
+    opts = ipc_defaults;
+    opts.rx_buffering = 0;
+    rc = ipc_pair(s, &opts);
     errno_assert(rc == 0);
     int sp[2];
     rc = socketpair(AF_UNIX, SOCK_STREAM, 0, sp);

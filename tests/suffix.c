@@ -77,7 +77,7 @@ int main() {
     errno_assert(rc == 0);
 
     int h[2];
-    rc = ipc_pair(h);
+    rc = ipc_pair(h, NULL);
     errno_assert(rc == 0);
     int s0 = suffix_attach(h[0], "1234567890", 10);
     errno_assert(s0 >= 0);

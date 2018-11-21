@@ -59,7 +59,7 @@ coroutine void client(int s) {
 
 int main() {
     int ss[2];
-    int rc = ipc_pair(ss);
+    int rc = ipc_pair(ss, NULL);
     errno_assert(rc == 0);
     int cr = go(client(ss[1]));
     errno_assert(cr >= 0);

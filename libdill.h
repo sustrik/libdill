@@ -538,6 +538,14 @@ DILL_EXPORT int dill_tcp_fromfd_mem(
 /*  IPC protocol.                                                            */
 /******************************************************************************/
 
+struct dill_ipc_opts {
+    void *mem;
+    int backlog;
+    unsigned int rx_buffering : 1;
+};
+
+extern const struct dill_ipc_opts dill_ipc_defaults;
+
 struct dill_ipc_listener_storage {char _[24];};
 
 struct dill_ipc_storage {char _[72];};
@@ -546,24 +554,14 @@ struct dill_ipc_pair_storage {char _[144];};
 
 DILL_EXPORT int dill_ipc_listen(
     const char *addr,
-    int backlog);
-DILL_EXPORT int dill_ipc_listen_mem(
-    const char *addr,
-    int backlog,
-    struct dill_ipc_listener_storage *mem);
+    const struct dill_ipc_opts *opts);
 DILL_EXPORT int dill_ipc_accept(
     int s,
-    int64_t deadline);
-DILL_EXPORT int dill_ipc_accept_mem(
-    int s,
-    struct dill_ipc_storage *mem,
+    const struct dill_ipc_opts *opts,
     int64_t deadline);
 DILL_EXPORT int dill_ipc_connect(
     const char *addr,
-    int64_t deadline);
-DILL_EXPORT int dill_ipc_connect_mem(
-    const char *addr,
-    struct dill_ipc_storage *mem,
+    const struct dill_ipc_opts *opts,
     int64_t deadline);
 DILL_EXPORT int dill_ipc_sendfd(
     int s,
@@ -579,41 +577,31 @@ DILL_EXPORT int dill_ipc_close(
     int s,
     int64_t deadline);
 DILL_EXPORT int dill_ipc_listener_fromfd(
-    int fd);
-DILL_EXPORT int dill_ipc_listener_fromfd_mem(
     int fd,
-    struct dill_ipc_listener_storage *mem);
+    const struct dill_ipc_opts *opts);
 DILL_EXPORT int dill_ipc_fromfd(
-    int fd);
-DILL_EXPORT int dill_ipc_fromfd_mem(
     int fd,
-    struct dill_ipc_storage *mem);
+    const struct dill_ipc_opts *opts);
 DILL_EXPORT int dill_ipc_pair(
-    int s[2]);
-DILL_EXPORT int dill_ipc_pair_mem(
-    struct dill_ipc_pair_storage *mem,
-    int s[2]);
+    int s[2],
+    const struct dill_ipc_opts *opts);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define ipc_opts dill_ipc_opts
+#define ipc_defaults dill_ipc_defaults
 #define ipc_listener_storage dill_ipc_listener_storage
 #define ipc_storage dill_ipc_storage
 #define ipc_pair_storage dill_ipc_pair_storage
 #define ipc_listen dill_ipc_listen
-#define ipc_listen_mem dill_ipc_listen_mem
 #define ipc_accept dill_ipc_accept
-#define ipc_accept_mem dill_ipc_accept_mem
 #define ipc_connect dill_ipc_connect
-#define ipc_connect_mem dill_ipc_connect_mem
 #define ipc_sendfd dill_ipc_sendfd
 #define ipc_recvfd dill_ipc_recvfd
 #define ipc_done dill_ipc_done
 #define ipc_close dill_ipc_close
 #define ipc_listener_fromfd dill_ipc_listener_fromfd
-#define ipc_listener_fromfd_mem dill_ipc_listener_fromfd_mem
 #define ipc_fromfd dill_ipc_fromfd
-#define ipc_fromfd_mem dill_ipc_fromfd_mem
 #define ipc_pair dill_ipc_pair
-#define ipc_pair_mem dill_ipc_pair_mem
 #endif
 
 /******************************************************************************/
