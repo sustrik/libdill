@@ -53,9 +53,9 @@ const char *html =
 
 /* Handle individual HTML connection. */
 coroutine void html_worker(int s) {
-    /* Start HTTP protocol. Client will as for a particular resource, but let's
-       ignore that for now. */
-    s = http_attach(s);
+    /* Start HTTP protocol. Client will ask for a particular resource,
+       but let's ignore that for now. */
+    s = http_attach(s, NULL);
     assert(s >= 0);
     char command[256];
     char resource[256];

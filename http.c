@@ -33,6 +33,10 @@
 #include "libdillimpl.h"
 #include "utils.h"
 
+const struct dill_http_opts dill_http_defaults = {
+    NULL  /* mem */
+};
+
 dill_unique_id(dill_http_type);
 
 static void *dill_http_hquery(struct dill_hvfs *hvfs, const void *type);
@@ -57,47 +61,37 @@ static void *dill_http_hquery(struct dill_hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int dill_http_attach_mem(int s, struct dill_http_storage *mem) {
+int dill_http_attach(int s, const struct dill_http_opts *opts) {
     int err;
-    struct dill_http_sock *obj = (struct dill_http_sock*)mem;
-    if(dill_slow(!mem)) {err = EINVAL; goto error;}
+    if(!opts) opts = &dill_http_defaults;
     /* Check whether underlying socket is a bytestream. */
-    if(dill_slow(!dill_hquery(s, dill_bsock_type))) {err = errno; goto error;}
+    if(dill_slow(!dill_hquery(s, dill_bsock_type))) {err = errno; goto error1;}
     /* Take the ownership of the underlying socket. */
     s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error;}
+    if(dill_slow(s < 0)) {err = errno; goto error1;}
+    /* Create the object. */
+    struct dill_http_sock *obj = opts->mem;
+    if(!obj) {
+        obj = malloc(sizeof(struct dill_http_sock));
+        if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
+    }
     /* Wrap the underlying socket into SUFFIX and TERM protocol. */
     struct dill_suffix_opts sopts = dill_suffix_defaults;
     sopts.mem = &obj->suffix_mem;
     s = dill_suffix_attach(s, "\r\n", 2, &sopts);
-    if(dill_slow(s < 0)) {err = errno; goto error;}
+    if(dill_slow(s < 0)) {err = errno; goto error2;}
     s = dill_term_attach_mem(s, NULL, 0, &obj->term_mem);
-    if(dill_slow(s < 0)) {err = errno; goto error;}
-    /* Create the object. */
+    if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->hvfs.query = dill_http_hquery;
     obj->hvfs.close = dill_http_hclose;
     obj->u = s;
-    obj->mem = 1;
+    obj->mem = !!opts->mem;
     /* Create the handle. */
     int h = dill_hmake(&obj->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error;}
+    if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
-error:
-    if(s >= 0) dill_hclose(s);
-    errno = err;
-    return -1;
-}
-
-int dill_http_attach(int s) {
-    int err;
-    struct dill_http_sock *obj = malloc(sizeof(struct dill_http_sock));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    s = dill_http_attach_mem(s, (struct dill_http_storage*)obj);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
-    obj->mem = 0;
-    return s;
 error2:
-    free(obj);
+    if(!opts->mem) free(obj);
 error1:
     if(s >= 0) dill_hclose(s);
     errno = err;

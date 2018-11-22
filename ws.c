@@ -93,7 +93,9 @@ int dill_ws_attach_client_mem(int s, int flags, const char *resource,
     }
     if(dill_slow(!resource || !host)) {err = EINVAL; goto error;}
     struct dill_http_storage http_mem;
-    s = dill_http_attach_mem(s, &http_mem);
+    struct dill_http_opts http_opts = dill_http_defaults;
+    http_opts.mem = &http_mem;
+    s = dill_http_attach(s, &http_opts);
     if(dill_slow(s < 0)) {err = errno; goto error;}
     /* Send HTTP request. */
     int rc = dill_http_sendrequest(s, "GET", resource, deadline);
@@ -214,7 +216,9 @@ int dill_ws_attach_server_mem(int s, int flags,
         return h;
     }
     struct dill_http_storage http_mem;
-    s = dill_http_attach_mem(s, &http_mem);
+    struct dill_http_opts http_opts = dill_http_defaults;
+    http_opts.mem = &http_mem;
+    s = dill_http_attach(s, &http_opts);
     if(dill_slow(s < 0)) {err = errno; goto error;}
     /* Receive the HTTP request from the client. */
     char command[32];

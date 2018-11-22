@@ -709,13 +709,17 @@ DILL_EXPORT ssize_t dill_udp_recvl(
 /*  HTTP                                                                      */
 /******************************************************************************/
 
+struct dill_http_opts {
+    void *mem;
+};
+
+DILL_EXPORT extern const struct dill_http_opts dill_http_defaults;
+
 struct dill_http_storage {char _[1296];};
 
 DILL_EXPORT int dill_http_attach(
-    int s);
-DILL_EXPORT int dill_http_attach_mem(
     int s,
-    struct dill_http_storage *mem);
+    const struct dill_http_opts *opts);
 DILL_EXPORT int dill_http_done(
     int s,
     int64_t deadline);
@@ -758,9 +762,10 @@ DILL_EXPORT int dill_http_recvfield(
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define http_opts dill_http_opts
+#define http_defaults dill_http_defaults
 #define http_storage dill_http_storage
 #define http_attach dill_http_attach
-#define http_attach_mem dill_http_attach_mem
 #define http_done dill_http_done
 #define http_detach dill_http_detach
 #define http_sendrequest dill_http_sendrequest
