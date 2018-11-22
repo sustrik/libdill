@@ -629,25 +629,28 @@ DILL_EXPORT int dill_prefix_detach(
 /*  Messages are suffixed by specified string of bytes.                       */
 /******************************************************************************/
 
+struct dill_suffix_opts {
+    void *mem;
+};
+
+DILL_EXPORT extern const struct dill_suffix_opts dill_suffix_defaults;
+
 struct dill_suffix_storage {char _[128];};
 
 DILL_EXPORT int dill_suffix_attach(
     int s,
     const void *suffix,
-    size_t suffixlen);
-DILL_EXPORT int dill_suffix_attach_mem(
-    int s,
-    const void *suffix,
     size_t suffixlen,
-    struct dill_suffix_storage *mem);
+    const struct dill_suffix_opts *opts);
 DILL_EXPORT int dill_suffix_detach(
     int s,
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define suffix_opts dill_suffix_opts
+#define suffix_defaults dill_suffix_defaults
 #define suffix_storage dill_suffix_storage
 #define suffix_attach dill_suffix_attach
-#define suffix_attach_mem dill_suffix_attach_mem
 #define suffix_detach dill_suffix_detach
 #endif
 

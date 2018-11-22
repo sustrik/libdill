@@ -28,7 +28,7 @@
 #include "../libdill.h"
 
 coroutine void client(int s) {
-    s = suffix_attach(s, "\r\n", 2);
+    s = suffix_attach(s, "\r\n", 2, NULL);
     errno_assert(s >= 0);
     s = term_attach(s, "STOP", 4);
     errno_assert(s >= 0);
@@ -51,7 +51,7 @@ int main(void) {
     errno_assert(rc == 0);
     int cr = go(client(p[0]));
     errno_assert(cr >= 0);
-    int s = suffix_attach(p[1], "\r\n", 2);
+    int s = suffix_attach(p[1], "\r\n", 2, NULL);
     errno_assert(s >= 0);
     s = term_attach(s, "STOP", 4);
     errno_assert(s >= 0);

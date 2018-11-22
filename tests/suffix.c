@@ -34,7 +34,7 @@ coroutine void client(void) {
     int s = tcp_connect(&addr, NULL, -1);
     errno_assert(s >= 0);
 
-    cs = suffix_attach(s, "\r\n", 2);
+    cs = suffix_attach(s, "\r\n", 2, NULL);
     errno_assert(cs >= 0);
     rc = msend(cs, "ABC", 3, -1);
     errno_assert(rc == 0);
@@ -60,7 +60,7 @@ int main() {
     int as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(as >= 0);
 
-    int cs = suffix_attach(as, "\r\n", 2);
+    int cs = suffix_attach(as, "\r\n", 2, NULL);
     errno_assert(cs >= 0);
     char buf[16];
     ssize_t sz = mrecv(cs, buf, sizeof(buf), -1);
@@ -79,10 +79,12 @@ int main() {
     int h[2];
     rc = ipc_pair(h, NULL);
     errno_assert(rc == 0);
-    int s0 = suffix_attach(h[0], "1234567890", 10);
+    int s0 = suffix_attach(h[0], "1234567890", 10, NULL);
     errno_assert(s0 >= 0);
     struct suffix_storage mem;
-    int s1 = suffix_attach_mem(h[1], "1234567890", 10, &mem);
+    struct suffix_opts opts = suffix_defaults;
+    opts.mem = &mem;
+    int s1 = suffix_attach(h[1], "1234567890", 10, &opts);
     errno_assert(s1 >= 0);
     rc = msend(s0, "First", 5, -1);
     errno_assert(rc == 0);

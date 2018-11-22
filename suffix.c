@@ -31,6 +31,10 @@
 #include "libdillimpl.h"
 #include "utils.h"
 
+const struct dill_suffix_opts dill_suffix_defaults = {
+    NULL  /* mem */
+};
+
 dill_unique_id(dill_suffix_type);
 
 static void *dill_suffix_hquery(struct dill_hvfs *hvfs, const void *type);
@@ -65,50 +69,40 @@ static void *dill_suffix_hquery(struct dill_hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int dill_suffix_attach_mem(int s, const void *suffix, size_t suffixlen,
-      struct dill_suffix_storage *mem) {
+int dill_suffix_attach(int s, const void *suffix, size_t suffixlen,
+      const struct dill_suffix_opts *opts) {
     int err;
-    if(dill_slow(!mem || !suffix || suffixlen == 0 || suffixlen > 32)) {
-        err = EINVAL; goto error;}
+    if(dill_slow(!suffix || suffixlen == 0 || suffixlen > 32)) {
+        err = EINVAL; goto error1;}
+    if(!opts) opts = &dill_suffix_defaults;
     /* Take ownership of the underlying socket. */
     s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error;}
+    if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Create the object. */
-    struct dill_suffix_sock *self = (struct dill_suffix_sock*)mem;
+    struct dill_suffix_sock *self = opts->mem;
+    if(!self) {
+        self = malloc(sizeof(struct dill_suffix_sock));
+        if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    }
     self->hvfs.query = dill_suffix_hquery;
     self->hvfs.close = dill_suffix_hclose;
     self->mvfs.msendl = dill_suffix_msendl;
     self->mvfs.mrecvl = dill_suffix_mrecvl;
     self->u = s;
     self->uvfs = dill_hquery(s, dill_bsock_type);
-    if(dill_slow(!self->uvfs && errno == ENOTSUP)) {err = EPROTO; goto error;}
-    if(dill_slow(!self->uvfs)) {err = errno; goto error;}
+    if(dill_slow(!self->uvfs && errno == ENOTSUP)) {err = EPROTO; goto error2;}
+    if(dill_slow(!self->uvfs)) {err = errno; goto error2;}
     memcpy(self->suffix, suffix, suffixlen);
     self->suffixlen = suffixlen;
     self->inerr = 0;
     self->outerr = 0;
-    self->mem = 1;
+    self->mem = !!opts->mem;
     /* Create the handle. */
     int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error;}
+    if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
-error:
-    if(s >= 0) dill_hclose(s);
-    errno = err;
-    return -1;
-}
-
-int dill_suffix_attach(int s, const void *suffix, size_t suffixlen) {
-    int err;
-    struct dill_suffix_sock *obj = malloc(sizeof(struct dill_suffix_sock));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    s = dill_suffix_attach_mem(s, suffix, suffixlen,
-        (struct dill_suffix_storage*)obj);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
-    obj->mem = 0;
-    return s;
 error2:
-    free(obj);
+    if(!opts->mem) free(self);
 error1:
     if(s >= 0) dill_hclose(s);
     errno = err;
