@@ -26,18 +26,18 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    int s = tcp_connect(&addr, -1);
+    int s = tcp_connect(&addr, NULL, -1);
     if(s < 0) {
         perror("Cannot connect to the remote server");
         return 1;
     }
 
     if(port == 443) {
-       s = tls_attach_client(s, -1);
+       s = tls_attach_client(s, NULL, -1);
        assert(s >= 0);
     }
 
-    s = http_attach(s);
+    s = http_attach(s, NULL);
     assert(s >= 0);
 
     rc = http_sendrequest(s, "GET", argv[3], -1);

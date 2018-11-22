@@ -782,25 +782,23 @@ DILL_EXPORT int dill_http_recvfield(
 /*  TLS protocol.                                                             */
 /******************************************************************************/
 
+struct dill_tls_opts {
+    void *mem;
+};
+
+DILL_EXPORT extern const struct dill_tls_opts dill_tls_defaults;
+
 struct dill_tls_storage {char _[72];};
 
 DILL_EXPORT int dill_tls_attach_server(
     int s,
     const char *cert,
     const char *pkey,
-    int64_t deadline);
-DILL_EXPORT int dill_tls_attach_server_mem(
-    int s,
-    const char *cert,
-    const char *pkey,
-    struct dill_tls_storage *mem,
+    const struct dill_tls_opts *opts,
     int64_t deadline);
 DILL_EXPORT int dill_tls_attach_client(
     int s,
-    int64_t deadline);
-DILL_EXPORT int dill_tls_attach_client_mem(
-    int s,
-    struct dill_tls_storage *mem,
+    const struct dill_tls_opts *opts,
     int64_t deadline);
 DILL_EXPORT int dill_tls_done(
     int s,
@@ -810,11 +808,11 @@ DILL_EXPORT int dill_tls_detach(
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define tls_opts dill_tls_opts
+#define tls_defaults dill_tls_defaults
 #define tls_storage dill_tls_storage
 #define tls_attach_server dill_tls_attach_server
-#define tls_attach_server_mem dill_tls_attach_server_mem
 #define tls_attach_client dill_tls_attach_client
-#define tls_attach_client_mem dill_tls_attach_client_mem
 #define tls_done dill_tls_done
 #define tls_detach dill_tls_detach
 #endif

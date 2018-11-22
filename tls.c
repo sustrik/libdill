@@ -33,7 +33,9 @@
 #include "libdillimpl.h"
 #include "utils.h"
 
-#define DILL_TLS_BUFSIZE 2048
+const struct dill_tls_opts dill_tls_defaults = {
+    NULL  /* mem */
+};
 
 dill_unique_id(dill_tls_type);
 
@@ -72,33 +74,37 @@ static void *dill_tls_hquery(struct dill_hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int dill_tls_attach_client_mem(int s, struct dill_tls_storage *mem,
+int dill_tls_attach_client(int s, const struct dill_tls_opts *opts,
       int64_t deadline) {
     int err;
-    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
+    if(!opts) opts = &dill_tls_defaults;
     /* Check whether underlying socket is a bytestream. */
     void *q = dill_hquery(s, dill_bsock_type);
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
     if(dill_slow(!q)) {err = errno; goto error1;}
+    /* Create the object. */
+    struct dill_tls_sock *self = opts->mem;
+    if(!self) {
+        self = malloc(sizeof(struct dill_tls_sock));
+        if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    }
     /* Create OpenSSL connection context. */
     dill_tls_init();
     const SSL_METHOD *method = SSLv23_method();
-    if(dill_slow(!method)) {err = EFAULT; goto error1;}
+    if(dill_slow(!method)) {err = EFAULT; goto error2;}
     SSL_CTX *ctx = SSL_CTX_new(method);
-    if(dill_slow(!ctx)) {err = EFAULT; goto error1;}
+    if(dill_slow(!ctx)) {err = EFAULT; goto error2;}
     /* Create OpenSSL connection object. */
     SSL *ssl = SSL_new(ctx);
-    if(dill_slow(!ssl)) {err = EFAULT; goto error2;}
+    if(dill_slow(!ssl)) {err = EFAULT; goto error3;}
 	  SSL_set_connect_state(ssl);
     /* Create a BIO and attach it to the connection. */
-    BIO *bio = dill_tls_new_cbio(mem);
-    if(dill_slow(!bio)) {err = errno; goto error3;}
+    BIO *bio = dill_tls_new_cbio(self);
+    if(dill_slow(!bio)) {err = errno; goto error4;}
 	  SSL_set_bio(ssl, bio, bio);
     /* Take ownership of the underlying socket. */
     s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error1;}
-    /* Create the object. */
-    struct dill_tls_sock *self = (struct dill_tls_sock*)mem;
+    if(dill_slow(s < 0)) {err = errno; goto error5;}
     self->hvfs.query = dill_tls_hquery;
     self->hvfs.close = dill_tls_hclose;
     self->bvfs.bsendl = dill_tls_bsendl;
@@ -111,110 +117,26 @@ int dill_tls_attach_client_mem(int s, struct dill_tls_storage *mem,
     self->outdone = 0;
     self->inerr = 0;
     self->outerr = 0;
-    self->mem = 1;
+    self->mem = !!opts->mem;
     /* Initial handshaking. */
     while(1) {
         ERR_clear_error();
         int rc = SSL_connect(ssl);
         if(dill_tls_followup(self, rc)) break;
-        if(dill_slow(errno != 0)) {err = errno; goto error4;}
+        if(dill_slow(errno != 0)) {err = errno; goto error5;}
     }
     /* Create the handle. */
     int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error4;}
+    if(dill_slow(h < 0)) {int err = errno; goto error5;}
     return h;
-error4:
+error5:
     BIO_vfree(bio);
-error3:
-    SSL_free(ssl);
-error2:
-    SSL_CTX_free(ctx);
-error1:
-    if(s >= 0) dill_hclose(s);
-    errno = err;
-    return -1;
-}
-
-int dill_tls_attach_client(int s, int64_t deadline) {
-    int err;
-    struct dill_tls_sock *obj = malloc(sizeof(struct dill_tls_sock));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    s = dill_tls_attach_client_mem(s, (struct dill_tls_storage*)obj,
-        deadline);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
-    obj->mem = 0;
-    return s;
-error2:
-    free(obj);
-error1:
-    if(s >= 0) dill_hclose(s);
-    errno = err;
-    return -1;
-}
-
-int dill_tls_attach_server_mem(int s, const char *cert, const char *pkey,
-      struct dill_tls_storage *mem, int64_t deadline) {
-    int err;
-    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
-    /* Check whether underlying socket is a bytestream. */
-    void *q = dill_hquery(s, dill_bsock_type);
-    if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
-    if(dill_slow(!q)) {err = errno; goto error1;}
-    /* Create OpenSSL connection context. */
-    dill_tls_init();
-    const SSL_METHOD *method = SSLv23_server_method();
-    if(dill_slow(!method)) {err = EFAULT; goto error1;}
-    SSL_CTX *ctx = SSL_CTX_new(method);
-    if(dill_slow(!ctx)) {err = EFAULT; goto error1;}
-    int rc = SSL_CTX_set_ecdh_auto(ctx, 1);
-    if(dill_slow(rc != 1)) {err = EFAULT; goto error2;}
-    rc = SSL_CTX_use_certificate_file(ctx, cert, SSL_FILETYPE_PEM);
-    if(dill_slow(rc <= 0)) {err = EFAULT; goto error2;}
-    rc = SSL_CTX_use_PrivateKey_file(ctx, pkey, SSL_FILETYPE_PEM);
-    if(dill_slow(rc <= 0 )) {err = EFAULT; goto error2;}
-    /* Create OpenSSL connection object. */
-    SSL *ssl = SSL_new(ctx);
-    if(dill_slow(!ssl)) {err = EFAULT; goto error2;}
-	  SSL_set_accept_state(ssl);
-    /* Create a BIO and attach it to the connection. */
-    BIO *bio = dill_tls_new_cbio(mem);
-    if(dill_slow(!bio)) {err = errno; goto error3;}
-	  SSL_set_bio(ssl, bio, bio);
-    /* Take ownership of the underlying socket. */
-    s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error1;}
-    /* Create the object. */
-    struct dill_tls_sock *self = (struct dill_tls_sock*)mem;
-    self->hvfs.query = dill_tls_hquery;
-    self->hvfs.close = dill_tls_hclose;
-    self->bvfs.bsendl = dill_tls_bsendl;
-    self->bvfs.brecvl = dill_tls_brecvl;
-    self->ctx = ctx;
-    self->ssl = ssl;
-    self->u = s;
-    self->deadline = -1;
-    self->indone = 0;
-    self->outdone = 0;
-    self->inerr = 0;
-    self->outerr = 0;
-    self->mem = 1;
-    /* Initial handshaking. */
-    while(1) {
-        ERR_clear_error();
-        rc = SSL_accept(ssl);
-        if(dill_tls_followup(self, rc)) break;
-        if(dill_slow(errno != 0)) {err = errno; goto error4;}
-    }
-    /* Create the handle. */
-    int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error4;}
-    return h;
 error4:
-    BIO_vfree(bio);
-error3:
     SSL_free(ssl);
-error2:
+error3:
     SSL_CTX_free(ctx);
+error2:
+    if(!opts->mem) free(self);
 error1:
     if(s >= 0) dill_hclose(s);
     errno = err;
@@ -222,17 +144,74 @@ error1:
 }
 
 int dill_tls_attach_server(int s, const char *cert, const char *pkey,
-      int64_t deadline) {
+      const struct dill_tls_opts *opts, int64_t deadline) {
     int err;
-    struct dill_tls_sock *obj = malloc(sizeof(struct dill_tls_sock));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    s = dill_tls_attach_server_mem(s, cert, pkey,
-        (struct dill_tls_storage*)obj, deadline);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
-    obj->mem = 0;
-    return s;
+    if(!opts) opts = &dill_tls_defaults;
+    /* Check whether underlying socket is a bytestream. */
+    void *q = dill_hquery(s, dill_bsock_type);
+    if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
+    if(dill_slow(!q)) {err = errno; goto error1;}
+    /* Create the object. */
+    struct dill_tls_sock *self = opts->mem;
+    if(!self) {
+        self = malloc(sizeof(struct dill_tls_sock));
+        if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    }
+    /* Create OpenSSL connection context. */
+    dill_tls_init();
+    const SSL_METHOD *method = SSLv23_server_method();
+    if(dill_slow(!method)) {err = EFAULT; goto error2;}
+    SSL_CTX *ctx = SSL_CTX_new(method);
+    if(dill_slow(!ctx)) {err = EFAULT; goto error2;}
+    int rc = SSL_CTX_set_ecdh_auto(ctx, 1);
+    if(dill_slow(rc != 1)) {err = EFAULT; goto error3;}
+    rc = SSL_CTX_use_certificate_file(ctx, cert, SSL_FILETYPE_PEM);
+    if(dill_slow(rc <= 0)) {err = EFAULT; goto error3;}
+    rc = SSL_CTX_use_PrivateKey_file(ctx, pkey, SSL_FILETYPE_PEM);
+    if(dill_slow(rc <= 0 )) {err = EFAULT; goto error3;}
+    /* Create OpenSSL connection object. */
+    SSL *ssl = SSL_new(ctx);
+    if(dill_slow(!ssl)) {err = EFAULT; goto error3;}
+	  SSL_set_accept_state(ssl);
+    /* Create a BIO and attach it to the connection. */
+    BIO *bio = dill_tls_new_cbio(self);
+    if(dill_slow(!bio)) {err = errno; goto error4;}
+	  SSL_set_bio(ssl, bio, bio);
+    /* Take ownership of the underlying socket. */
+    s = dill_hown(s);
+    if(dill_slow(s < 0)) {err = errno; goto error5;}
+    self->hvfs.query = dill_tls_hquery;
+    self->hvfs.close = dill_tls_hclose;
+    self->bvfs.bsendl = dill_tls_bsendl;
+    self->bvfs.brecvl = dill_tls_brecvl;
+    self->ctx = ctx;
+    self->ssl = ssl;
+    self->u = s;
+    self->deadline = -1;
+    self->indone = 0;
+    self->outdone = 0;
+    self->inerr = 0;
+    self->outerr = 0;
+    self->mem = !!opts->mem;
+    /* Initial handshaking. */
+    while(1) {
+        ERR_clear_error();
+        rc = SSL_accept(ssl);
+        if(dill_tls_followup(self, rc)) break;
+        if(dill_slow(errno != 0)) {err = errno; goto error5;}
+    }
+    /* Create the handle. */
+    int h = dill_hmake(&self->hvfs);
+    if(dill_slow(h < 0)) {int err = errno; goto error5;}
+    return h;
+error5:
+    BIO_vfree(bio);
+error4:
+    SSL_free(ssl);
+error3:
+    SSL_CTX_free(ctx);
 error2:
-    free(obj);
+    if(!opts->mem) free(self);
 error1:
     if(s >= 0) dill_hclose(s);
     errno = err;

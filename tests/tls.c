@@ -28,7 +28,7 @@
 #include "../libdill.h"
 
 coroutine void client1(int u) {
-    int s = tls_attach_client(u, -1);
+    int s = tls_attach_client(u, NULL, -1);
     errno_assert(s >= 0);
     int rc = bsend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
@@ -45,7 +45,7 @@ coroutine void client1(int u) {
 }
 
 coroutine void client2(int u) {
-    int s = tls_attach_client(u, -1);
+    int s = tls_attach_client(u, NULL, -1);
     errno_assert(s >= 0);
     int rc = bsend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
@@ -58,7 +58,7 @@ coroutine void client2(int u) {
 }
 
 coroutine void client3(int u) {
-    int s = tls_attach_client(u, -1);
+    int s = tls_attach_client(u, NULL, -1);
     errno_assert(s >= 0);
     uint8_t c = 0;
     uint8_t b[2777];
@@ -83,11 +83,12 @@ int main(void) {
 
     /* Test simple data exchange, with explicit handshake. */
     int u[2];
-    int rc = ipc_pair(u);
+    int rc = ipc_pair(u, NULL);
     errno_assert(rc == 0);
     int cr = go(client1(u[1]));
     errno_assert(cr >= 0);
-    int s = tls_attach_server(u[0], "tests/cert.pem", "tests/key.pem", -1);
+    int s = tls_attach_server(u[0], "tests/cert.pem", "tests/key.pem",
+        NULL, -1);
     errno_assert(s >= 0);
     rc = brecv(s, buf, 3, -1);
     errno_assert(rc == 0);
@@ -109,11 +110,11 @@ int main(void) {
 
     /* Test simple data transfer, terminated by tls_detach().
        Then send some data over undelying IPC connection. */
-    rc = ipc_pair(u);
+    rc = ipc_pair(u, NULL);
     errno_assert(rc == 0);
     cr = go(client2(u[1]));
     errno_assert(cr >= 0);
-    s = tls_attach_server(u[0], "tests/cert.pem", "tests/key.pem", -1);
+    s = tls_attach_server(u[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
     errno_assert(s >= 0);
     rc = brecv(s, buf, 3, -1);
     errno_assert(rc == 0);
@@ -131,11 +132,11 @@ int main(void) {
     errno_assert(rc == 0);
 
     /* Transfer large amount of data. */
-    rc = ipc_pair(u);
+    rc = ipc_pair(u, NULL);
     errno_assert(rc == 0);
     cr = go(client3(u[1]));
     errno_assert(cr >= 0);
-    s = tls_attach_server(u[0], "tests/cert.pem", "tests/key.pem", -1);
+    s = tls_attach_server(u[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
     errno_assert(s >= 0);
     uint8_t c = 0;
     int i;

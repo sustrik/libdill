@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    int s = tcp_connect(&addr, -1);
+    int s = tcp_connect(&addr, NULL, -1);
     if(s < 0) {
         perror("Cannot connect to the remote server");
         return 1;
