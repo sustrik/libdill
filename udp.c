@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2017 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -33,6 +33,10 @@
 #include "iol.h"
 #include "utils.h"
 
+const struct dill_udp_opts dill_udp_defaults = {
+    NULL  /* mem */
+};
+
 dill_unique_id(dill_udp_type);
 
 static void *dill_udp_hquery(struct dill_hvfs *hvfs, const void *type);
@@ -62,14 +66,14 @@ static void *dill_udp_hquery(struct dill_hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int dill_udp_open_mem(struct dill_ipaddr *local,
-      const struct dill_ipaddr *remote, struct dill_udp_storage *mem) {
+int dill_udp_open(struct dill_ipaddr *local,
+      const struct dill_ipaddr *remote, const struct dill_udp_opts *opts) {
     int err;
     /* Sanity checking. */
-    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
     if(dill_slow(local && remote &&
           dill_ipaddr_family(local) != dill_ipaddr_family(remote))) {
         err = EINVAL; goto error1;}
+    if(!opts) opts = &dill_udp_defaults;
     /* Open the listening socket. */
     int family = AF_INET;
     if(local) family = dill_ipaddr_family(local);
@@ -93,7 +97,11 @@ int dill_udp_open_mem(struct dill_ipaddr *local,
         }
     }
     /* Create the object. */
-    struct dill_udp_sock *obj = (struct dill_udp_sock*)mem;
+    struct dill_udp_sock *obj = opts->mem;
+    if(!obj) {
+        obj = malloc(sizeof(struct dill_udp_sock));
+        if(dill_slow(!obj)) {err = ENOMEM; goto error2;}
+    }
     obj->hvfs.query = dill_udp_hquery;
     obj->hvfs.close = dill_udp_hclose;
     obj->mvfs.msendl = dill_udp_msendl;
@@ -101,29 +109,16 @@ int dill_udp_open_mem(struct dill_ipaddr *local,
     obj->fd = s;
     obj->busy = 0;
     obj->hasremote = remote ? 1 : 0;
-    obj->mem = 1;
+    obj->mem = !!opts->mem;
     if(remote) obj->remote = *remote;
     /* Create the handle. */
     int h = dill_hmake(&obj->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error2;}
+    if(dill_slow(h < 0)) {err = errno; goto error3;}
     return h;
+error3:
+    if(!opts->mem) free(obj);
 error2:
     dill_fd_close(s);
-error1:
-    errno = err;
-    return -1;
-}
-
-int dill_udp_open(struct dill_ipaddr *local, const struct dill_ipaddr *remote) {
-    int err;
-    struct dill_udp_sock *obj = malloc(sizeof(struct dill_udp_sock));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    int s = dill_udp_open_mem(local, remote, (struct dill_udp_storage*)obj);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
-    obj->mem = 0;
-    return s;
-error2:
-    free(obj);
 error1:
     errno = err;
     return -1;

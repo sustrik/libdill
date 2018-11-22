@@ -659,15 +659,18 @@ DILL_EXPORT int dill_suffix_detach(
 /*  Each UDP packet is treated as a separate message.                         */
 /******************************************************************************/
 
+struct dill_udp_opts {
+    void *mem;
+};
+
+DILL_EXPORT extern const struct dill_udp_opts dill_udp_defaults;
+
 struct dill_udp_storage {char _[72];};
 
 DILL_EXPORT int dill_udp_open(
     struct dill_ipaddr *local,
-    const struct dill_ipaddr *remote);
-DILL_EXPORT int dill_udp_open_mem(
-    struct dill_ipaddr *local,
     const struct dill_ipaddr *remote,
-    struct dill_udp_storage *mem);
+    const struct dill_udp_opts *opts);
 DILL_EXPORT int dill_udp_send(
     int s,
     const struct dill_ipaddr *addr,
@@ -692,9 +695,10 @@ DILL_EXPORT ssize_t dill_udp_recvl(
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define udp_opts dill_udp_opts
+#define udp_defaults dill_udp_defaults
 #define udp_storage dill_udp_storage
 #define udp_open dill_udp_open
-#define udp_open_mem dill_udp_open_mem
 #define udp_send dill_udp_send
 #define udp_recv dill_udp_recv
 #define udp_sendl dill_udp_sendl
