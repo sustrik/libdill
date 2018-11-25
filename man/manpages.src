@@ -1499,6 +1499,10 @@ fxs = [
 
         errors: ["EBADF"],
 
+        custom_errors: {
+            ENOTSUP: "The object doesn't support the supplied type.",
+        },
+
         example: `
             struct quux_vfs {
                 int (*foo)(struct quux_vfs *vfs, int a, int b);
