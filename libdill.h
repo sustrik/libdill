@@ -562,6 +562,8 @@ DILL_EXPORT int dill_ipc_done(
 DILL_EXPORT int dill_ipc_close(
     int s,
     int64_t deadline);
+DILL_EXPORT int dill_ipc_detach(
+    int s);
 DILL_EXPORT int dill_ipc_pair(
     const struct dill_ipc_opts *opts1,
     const struct dill_ipc_opts *opts2,
@@ -580,6 +582,7 @@ DILL_EXPORT int dill_ipc_pair(
 #define ipc_recvfd dill_ipc_recvfd
 #define ipc_done dill_ipc_done
 #define ipc_close dill_ipc_close
+#define ipc_detach dill_ipc_detach
 #define ipc_pair dill_ipc_pair
 #endif
 

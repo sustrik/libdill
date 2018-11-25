@@ -472,6 +472,28 @@ error1:
     return -1;
 }
 
+int dill_ipc_detach(int s) {
+    int err;
+    struct dill_ipc_conn *conn = dill_hquery(s, dill_ipc_type);
+    if(!conn && errno == ENOTSUP) goto listener;
+    if(dill_slow(!conn)) {err = errno; goto error1;}
+    int res = conn->fd;
+    conn->fd = -1;
+    dill_ipc_hclose(&conn->hvfs);
+    return res;
+listener:;
+    struct dill_ipc_listener *lst = dill_hquery(s, dill_ipc_listener_type);
+    if(dill_slow(!lst)) {err = errno; goto error1;}
+    res = lst->fd;
+    lst->fd = -1;
+    dill_ipc_listener_hclose(&lst->hvfs);
+    return res;
+error1:
+    dill_hclose(s);
+    errno = err;
+    return -1;
+}
+
 /******************************************************************************/
 /*  Helpers                                                                   */
 /******************************************************************************/

@@ -218,7 +218,7 @@ error:
 
 static void dill_tcp_hclose(struct dill_hvfs *hvfs) {
     struct dill_tcp_conn *self = (struct dill_tcp_conn*)hvfs;
-    dill_fd_close(self->fd);
+    if(self->fd > 0) dill_fd_close(self->fd);
     if(self->rx_buffering) dill_fd_termrxbuf(&self->rxbuf);
     if(!self->mem) free(self);
 }
@@ -363,6 +363,28 @@ int dill_tcp_attach(int fd, const struct dill_tcp_opts *opts) {
     if(dill_slow(h < 0)) {err = errno; goto error1;}
     return h;
 error1:
+    errno = err;
+    return -1;
+}
+
+int dill_tcp_detach(int s) {
+    int err;
+    struct dill_tcp_conn *conn = dill_hquery(s, dill_tcp_type);
+    if(!conn && errno == ENOTSUP) goto listener;
+    if(dill_slow(!conn)) {err = errno; goto error1;}
+    int res = conn->fd;
+    conn->fd = -1;
+    dill_tcp_hclose(&conn->hvfs);
+    return res;
+listener:;
+    struct dill_tcp_listener *lst = dill_hquery(s, dill_tcp_listener_type);
+    if(dill_slow(!lst)) {err = errno; goto error1;}
+    res = lst->fd;
+    lst->fd = -1;
+    dill_tcp_listener_hclose(&lst->hvfs);
+    return res;
+error1:
+    dill_hclose(s);
     errno = err;
     return -1;
 }
