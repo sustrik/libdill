@@ -23,6 +23,7 @@
 */
 
 #include <errno.h>
+#include <netinet/tcp.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -78,6 +79,12 @@ static void *dill_tcp_hquery(struct dill_hvfs *hvfs, const void *type) {
 
 static int dill_tcp_makeconn(int fd, const struct dill_tcp_opts *opts) {
     int err;
+    /* Switch off Nagle's algorithm, if requested. */
+    if(opts->nodelay) {
+        int val = 1;
+        int rc = setsockopt(fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
+        if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    }
     /* Create the object. */
     struct dill_tcp_conn *self = (struct dill_tcp_conn*)opts->mem;
     if(!self) {
