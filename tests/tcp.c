@@ -174,7 +174,7 @@ coroutine void recv10k(int s) {
 }
 
 static void move_lots_of_data(size_t nbytes, size_t buffer_size);
-static void test_fromfd();
+static void test_attach();
 
 int main(void) {
     char buf[16];
@@ -294,7 +294,7 @@ int main(void) {
     move_lots_of_data(5000, 2001);    /* This and below will fail */
     move_lots_of_data(5000, 3000);
 
-    test_fromfd();
+    test_attach();
 
     return 0;
 }
@@ -402,7 +402,7 @@ static void move_lots_of_data(size_t nbytes, size_t buf_size) {
     hclose(pp[1]);
 }
 
-static void test_fromfd() {
+static void test_attach() {
     struct ipaddr addr;
     int rc = ipaddr_local(&addr, "127.0.0.1", 5555, 0);
     errno_assert(rc == 0);
@@ -413,7 +413,7 @@ static void test_fromfd() {
     errno_assert(fd >= 0);
     rc = connect(fd, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
     errno_assert(rc == 0);
-    int s = tcp_fromfd(fd, NULL);
+    int s = tcp_attach(fd, NULL);
     errno_assert(s >= 0);
   
     int as = tcp_accept(ls, NULL, NULL, -1);

@@ -113,29 +113,6 @@ static void *dill_ipc_hquery(struct dill_hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int dill_ipc_fromfd(int fd, const struct dill_ipc_opts *opts) {
-    int err;
-    if(dill_slow(fd < 0)) {err = EINVAL; goto error1;}
-    if(!opts) opts = &dill_ipc_defaults;
-    /* Make sure that the supplied file descriptor is of correct type. */
-    int rc = dill_fd_check(fd, SOCK_STREAM, AF_UNIX, -1, 0);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    /* Take ownership of the file descriptor. */
-    fd = dill_fd_own(fd);
-    if(dill_slow(fd < 0)) {err = errno; goto error1;}
-    /* Set the socket to non-blocking mode */
-    rc = dill_fd_unblock(fd);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    /* Create the handle */
-    int h = dill_ipc_makeconn(fd, opts);
-    if(dill_slow(h < 0)) {err = errno; goto error1;}
-    /* Return the handle */
-    return h;
-error1:
-    errno = err;
-    return -1;
-}
-
 int dill_ipc_connect(const char *addr, const struct dill_ipc_opts *opts,
       int64_t deadline) {
     int err;
@@ -370,29 +347,6 @@ error1:
     return -1;
 }
 
-int dill_ipc_listener_fromfd(int fd, const struct dill_ipc_opts *opts) {
-    int err;
-    if(dill_slow(fd < 0)) {err = EINVAL; goto error1;}
-    if(!opts) opts = &dill_ipc_defaults;
-    /* Make sure that the supplied file descriptor is of correct type. */
-    int rc = dill_fd_check(fd, SOCK_STREAM, AF_UNIX, -1, 1);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    /* Take ownership of the file descriptor. */
-    fd = dill_fd_own(fd);
-    if(dill_slow(fd < 0)) {err = errno; goto error1;}
-    /* Set the socket to non-blocking mode */
-    rc = dill_fd_unblock(fd);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
-    /* Create the handle */
-    int h = dill_ipc_makelistener(fd, opts);
-    if(dill_slow(h < 0)) {err = errno; goto error1;}
-    /* Return the handle */
-    return h;
-error1:
-    errno = err;
-    return -1;
-}
-
 int dill_ipc_listen(const char *addr, const struct dill_ipc_opts *opts) {
     int err;
     if(!opts) opts = &dill_ipc_defaults;
@@ -482,6 +436,37 @@ error3:
     dill_fd_close(fds[0]);
 error2:
     dill_fd_close(fds[1]);
+error1:
+    errno = err;
+    return -1;
+}
+
+/******************************************************************************/
+/*  Attach/detach.                                                            */
+/******************************************************************************/
+
+int dill_ipc_attach(int fd, const struct dill_ipc_opts *opts) {
+    int err;
+    if(!opts) opts = &dill_ipc_defaults;
+    /* Make sure that the supplied file descriptor is of correct type. */
+    int rc = dill_fd_check(fd, SOCK_STREAM, AF_INET, AF_INET6);
+    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    if(dill_slow(rc == 0)) {err = EINVAL; goto error1;}
+    /* Take ownership of the file descriptor. */
+    fd = dill_fd_own(fd);
+    if(dill_slow(fd < 0)) {err = errno; goto error1;}
+    /* Set the socket to non-blocking mode */
+    rc = dill_fd_unblock(fd);
+    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    /* Find out whther it's a listening socket. */
+    int listener = dill_fd_listening(fd);
+    if(dill_slow(listener < 0)) {err = errno; goto error1;}
+    /* Create the object. */
+    int h;
+    if(listener) h = dill_ipc_makelistener(fd, opts);
+    else h = dill_ipc_makeconn(fd, opts);
+    if(dill_slow(h < 0)) {err = errno; goto error1;}
+    return h;
 error1:
     errno = err;
     return -1;

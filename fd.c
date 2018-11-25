@@ -405,25 +405,32 @@ int dill_fd_own(int s) {
     return n;
 }
 
-int dill_fd_check(int s, int type, int family1, int family2, int listening) {
-    /* Check type. E.g. SOCK_STREAM vs. SOCK_DGRAM. */
+/* Returns 1 if s is a listening socket, 0 otherwise. */
+int dill_fd_listening(int s) {
+    int val;
+    socklen_t valsz = sizeof(val);
+    int rc = getsockopt(s, SOL_SOCKET, SO_ACCEPTCONN, &val, &valsz);
+    /* This call returns ENOPROTOOPT on OSX. We'll assume it's a connected
+       socket (people are more likely to attach those). It sucks but if an OS
+       doesn't implement POSIX it's pretty hard to care. */
+    if(dill_slow(rc < 0 && errno != ENOPROTOOPT)) return 0;
+    if(dill_slow(rc < 0)) return -1;
+    return val == 0 ? 0 : 1;
+}
+
+/* Check whether s has particular type (e.g. SOCK_STREAM vs. SOCK_DGRAM) and
+   address family. Returns 1 if the socket matches, zero otherwise. */ 
+int dill_fd_check(int s, int type, int family1, int family2) {
     int val;
     socklen_t valsz = sizeof(val);
     int rc = getsockopt(s, SOL_SOCKET, SO_TYPE, &val, &valsz);
     if(dill_slow(rc < 0)) return -1;
-    if(dill_slow(val != type)) {errno = EINVAL; return -1;}
-    /* Check whether the socket is in listening mode.
-       Returns ENOPROTOOPT on OSX. */
-    rc = getsockopt(s, SOL_SOCKET, SO_ACCEPTCONN, &val, &valsz);
-    if(dill_slow(rc < 0 && errno != ENOPROTOOPT)) return -1;
-    if(dill_slow(rc >= 0 && val != listening)) {errno = EINVAL; return -1;}
-    /* Check family. E.g. AF_INET vs. AF_UNIX. */
+    if(dill_slow(val != type)) return 0;
     struct sockaddr_storage ss;
     socklen_t sssz = sizeof(ss);
     rc = getsockname(s, (struct sockaddr*)&ss, &sssz);
     if(dill_slow(rc < 0)) return -1;
-    if(dill_slow(ss.ss_family != family1 && ss.ss_family != family2)) {
-        errno = EINVAL; return -1;}
-    return 0;
+    if(dill_slow(ss.ss_family != family1 && ss.ss_family != family2)) return 0;
+    return 1;
 }
 

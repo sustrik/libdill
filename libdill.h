@@ -484,6 +484,9 @@ struct dill_tcp_opts {
 
 DILL_EXPORT extern const struct dill_tcp_opts dill_tcp_defaults;
 
+DILL_EXPORT int dill_tcp_attach(
+    int fd,
+    const struct dill_tcp_opts *opts);
 DILL_EXPORT int dill_tcp_listen(
     struct dill_ipaddr *addr,
     const struct dill_tcp_opts *opts);
@@ -502,24 +505,20 @@ DILL_EXPORT int dill_tcp_done(
 DILL_EXPORT int dill_tcp_close(
     int s,
     int64_t deadline);
-DILL_EXPORT int dill_tcp_listener_fromfd(
-    int fd,
-    const struct dill_tcp_opts *opts);
-DILL_EXPORT int dill_tcp_fromfd(
-    int fd,
-    const struct dill_tcp_opts *opts);
+DILL_EXPORT int dill_tcp_detach(
+    int s);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define tcp_opts dill_tcp_opts
 #define tcp_defaults dill_tcp_defaults
 #define tcp_storage dill_tcp_storage
+#define tcp_attach dill_tcp_attach
 #define tcp_listen dill_tcp_listen
 #define tcp_accept dill_tcp_accept
 #define tcp_connect dill_tcp_connect
 #define tcp_done dill_tcp_done
 #define tcp_close dill_tcp_close
-#define tcp_listener_fromfd dill_tcp_listener_fromfd
-#define tcp_fromfd dill_tcp_fromfd
+#define tcp_detach dill_tcp_detach
 #endif
 
 /******************************************************************************/
@@ -536,6 +535,9 @@ struct dill_ipc_opts {
 
 DILL_EXPORT extern const struct dill_ipc_opts dill_ipc_defaults;
 
+DILL_EXPORT int dill_ipc_attach(
+    int fd,
+    const struct dill_ipc_opts *opts);
 DILL_EXPORT int dill_ipc_listen(
     const char *addr,
     const struct dill_ipc_opts *opts);
@@ -560,12 +562,6 @@ DILL_EXPORT int dill_ipc_done(
 DILL_EXPORT int dill_ipc_close(
     int s,
     int64_t deadline);
-DILL_EXPORT int dill_ipc_listener_fromfd(
-    int fd,
-    const struct dill_ipc_opts *opts);
-DILL_EXPORT int dill_ipc_fromfd(
-    int fd,
-    const struct dill_ipc_opts *opts);
 DILL_EXPORT int dill_ipc_pair(
     const struct dill_ipc_opts *opts1,
     const struct dill_ipc_opts *opts2,
@@ -576,6 +572,7 @@ DILL_EXPORT int dill_ipc_pair(
 #define ipc_opts dill_ipc_opts
 #define ipc_defaults dill_ipc_defaults
 #define ipc_storage dill_ipc_storage
+#define ipc_attach dill_ipc_attach
 #define ipc_listen dill_ipc_listen
 #define ipc_accept dill_ipc_accept
 #define ipc_connect dill_ipc_connect
@@ -583,8 +580,6 @@ DILL_EXPORT int dill_ipc_pair(
 #define ipc_recvfd dill_ipc_recvfd
 #define ipc_done dill_ipc_done
 #define ipc_close dill_ipc_close
-#define ipc_listener_fromfd dill_ipc_listener_fromfd
-#define ipc_fromfd dill_ipc_fromfd
 #define ipc_pair dill_ipc_pair
 #endif
 
