@@ -253,7 +253,7 @@ struct dill_tcp_listener {
     unsigned int mem : 1;
 };
 
-DILL_CHECK_STORAGE(dill_tcp_listener, dill_tcp_listener_storage)
+DILL_CHECK_STORAGE(dill_tcp_listener, dill_tcp_storage)
 
 static int dill_tcp_makelistener(int fd, const struct dill_tcp_opts *opts) {
     int err;

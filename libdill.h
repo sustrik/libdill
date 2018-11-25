@@ -476,13 +476,11 @@ DILL_EXPORT int dill_ipaddr_equal(
 struct dill_tcp_opts {
     void *mem;
     int backlog;
-    unsigned int rx_buffering : 1;
+    unsigned int rx_buffering : 1; /* TODO: Make this the size of the buffer. */
     unsigned int nodelay : 1;
 };
 
 DILL_EXPORT extern const struct dill_tcp_opts dill_tcp_defaults;
-
-struct dill_tcp_listener_storage {char _[56];};
 
 struct dill_tcp_storage {char _[72];};
 
@@ -514,7 +512,6 @@ DILL_EXPORT int dill_tcp_fromfd(
 #if !defined DILL_DISABLE_RAW_NAMES
 #define tcp_opts dill_tcp_opts
 #define tcp_defaults dill_tcp_defaults
-#define tcp_listener_storage dill_tcp_listener_storage
 #define tcp_storage dill_tcp_storage
 #define tcp_listen dill_tcp_listen
 #define tcp_accept dill_tcp_accept
@@ -536,8 +533,6 @@ struct dill_ipc_opts {
 };
 
 DILL_EXPORT extern const struct dill_ipc_opts dill_ipc_defaults;
-
-struct dill_ipc_listener_storage {char _[24];};
 
 struct dill_ipc_storage {char _[72];};
 

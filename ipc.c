@@ -337,7 +337,7 @@ struct dill_ipc_listener {
     unsigned int mem : 1;
 };
 
-DILL_CHECK_STORAGE(dill_ipc_listener, dill_ipc_listener_storage)
+DILL_CHECK_STORAGE(dill_ipc_listener, dill_ipc_storage)
 
 static void *dill_ipc_listener_hquery(struct dill_hvfs *hvfs,
       const void *type) {

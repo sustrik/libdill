@@ -185,7 +185,7 @@ int main(void) {
 
     /* Test deadline. */
     
-    struct tcp_listener_storage mem;
+    struct tcp_storage mem;
     struct tcp_opts opts = tcp_defaults;
     opts.mem = &mem;
     int ls = tcp_listen(&addr, &opts);
