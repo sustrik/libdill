@@ -76,15 +76,15 @@ int main() {
     rc = hclose(ts);
     errno_assert(rc == 0);
 
-    int h[2];
-    rc = ipc_pair(h, NULL);
+    int h1, h2;
+    rc = ipc_pair(NULL, NULL, &h1, &h2);
     errno_assert(rc == 0);
-    int s0 = suffix_attach(h[0], "1234567890", 10, NULL);
+    int s0 = suffix_attach(h1, "1234567890", 10, NULL);
     errno_assert(s0 >= 0);
     struct suffix_storage mem;
     struct suffix_opts opts = suffix_defaults;
     opts.mem = &mem;
-    int s1 = suffix_attach(h[1], "1234567890", 10, &opts);
+    int s1 = suffix_attach(h2, "1234567890", 10, &opts);
     errno_assert(s1 >= 0);
     rc = msend(s0, "First", 5, -1);
     errno_assert(rc == 0);

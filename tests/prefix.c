@@ -80,16 +80,16 @@ int main(void) {
     rc = hclose(clh);
     errno_assert(rc == 0);
 
-    int h[2];
-    rc = ipc_pair(h, NULL);
+    int h1, h2;
+    rc = ipc_pair(NULL, NULL, &h1, &h2);
     errno_assert(rc == 0);
     struct prefix_opts opts = prefix_defaults;
     opts.little_endian = 1;
-    int s0 = prefix_attach(h[0], 3, &opts);
+    int s0 = prefix_attach(h1, 3, &opts);
     errno_assert(s0 >= 0);
     struct prefix_storage mem;
     opts.mem = &mem;
-    int s1 = prefix_attach(h[1], 3, &opts);
+    int s1 = prefix_attach(h2, 3, &opts);
     errno_assert(s1 >= 0);
     rc = msend(s0, "First", 5, -1);
     errno_assert(rc == 0);

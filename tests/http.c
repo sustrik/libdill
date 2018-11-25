@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2017 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -26,12 +26,12 @@
 #include "../libdill.h"
 
 int main(void) {
-    int h[2];
-    int rc = ipc_pair(h, NULL);
+    int h1, h2;
+    int rc = ipc_pair(NULL, NULL, &h1, &h2);
     assert(rc == 0);
-    int s0 = http_attach(h[0], NULL);
+    int s0 = http_attach(h1, NULL);
     assert(s0 >= 0);
-    int s1 = http_attach(h[1], NULL);
+    int s1 = http_attach(h2, NULL);
     /* Send request. */
     rc = http_sendrequest(s0, "GET", "/a/b/c", -1);
     errno_assert(rc == 0);
@@ -115,13 +115,13 @@ int main(void) {
     rc = http_recvfield(s0, name, sizeof(name), value, sizeof(value), -1);
     assert(rc < 0 && errno == EPIPE);
     /* Close the sockets. */
-    h[0] = http_detach(s1, -1);
-    assert(h[0] >= 0);
-    h[1] = http_detach(s0, -1);
-    errno_assert(h[1] >= 0);
-    rc = hclose(h[1]);
+    h1 = http_detach(s1, -1);
+    assert(h1 >= 0);
+    h2 = http_detach(s0, -1);
+    errno_assert(h2 >= 0);
+    rc = hclose(h2);
     errno_assert(rc == 0);
-    rc = hclose(h[0]);
+    rc = hclose(h1);
     errno_assert(rc == 0);
     return 0;
 }

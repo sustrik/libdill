@@ -46,12 +46,12 @@ coroutine void client(int s) {
 } 
 
 int main(void) {
-    int p[2];
-    int rc = ipc_pair(p, NULL);
+    int p1, p2;
+    int rc = ipc_pair(NULL, NULL, &p1, &p2);
     errno_assert(rc == 0);
-    int cr = go(client(p[0]));
+    int cr = go(client(p1));
     errno_assert(cr >= 0);
-    int s = suffix_attach(p[1], "\r\n", 2, NULL);
+    int s = suffix_attach(p2, "\r\n", 2, NULL);
     errno_assert(s >= 0);
     s = term_attach(s, "STOP", 4, NULL);
     errno_assert(s >= 0);

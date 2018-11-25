@@ -82,12 +82,12 @@ int main(void) {
     char buf[16];
 
     /* Test simple data exchange, with explicit handshake. */
-    int u[2];
-    int rc = ipc_pair(u, NULL);
+    int u1, u2;
+    int rc = ipc_pair(NULL, NULL, &u1, &u2);
     errno_assert(rc == 0);
-    int cr = go(client1(u[1]));
+    int cr = go(client1(u2));
     errno_assert(cr >= 0);
-    int s = tls_attach_server(u[0], "tests/cert.pem", "tests/key.pem",
+    int s = tls_attach_server(u1, "tests/cert.pem", "tests/key.pem",
         NULL, -1);
     errno_assert(s >= 0);
     rc = brecv(s, buf, 3, -1);
@@ -99,9 +99,9 @@ int main(void) {
     errno_assert(rc == 0);
     rc = tls_done(s, -1);
     errno_assert(rc == 0);
-    u[0] = tls_detach(s, -1);
-    errno_assert(u[0] >= 0);
-    rc = hclose(u[0]);
+    u1 = tls_detach(s, -1);
+    errno_assert(u1 >= 0);
+    rc = hclose(u1);
     errno_assert(rc == 0);
     rc = bundle_wait(cr, -1);
     errno_assert(rc == 0);
@@ -110,21 +110,21 @@ int main(void) {
 
     /* Test simple data transfer, terminated by tls_detach().
        Then send some data over undelying IPC connection. */
-    rc = ipc_pair(u, NULL);
+    rc = ipc_pair(NULL, NULL, &u1, &u2);
     errno_assert(rc == 0);
-    cr = go(client2(u[1]));
+    cr = go(client2(u2));
     errno_assert(cr >= 0);
-    s = tls_attach_server(u[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
+    s = tls_attach_server(u1, "tests/cert.pem", "tests/key.pem", NULL, -1);
     errno_assert(s >= 0);
     rc = brecv(s, buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    u[0] = tls_detach(s, -1);
-    errno_assert(u[0] >= 0);
-    rc = brecv(u[0], buf, 3, -1);
+    u1 = tls_detach(s, -1);
+    errno_assert(u1 >= 0);
+    rc = brecv(u1, buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    rc = ipc_close(u[0], -1);
+    rc = ipc_close(u1, -1);
     errno_assert(rc == 0);
     rc = bundle_wait(cr, -1);
     errno_assert(rc == 0);
@@ -132,11 +132,11 @@ int main(void) {
     errno_assert(rc == 0);
 
     /* Transfer large amount of data. */
-    rc = ipc_pair(u, NULL);
+    rc = ipc_pair(NULL, NULL, &u1, &u2);
     errno_assert(rc == 0);
-    cr = go(client3(u[1]));
+    cr = go(client3(u2));
     errno_assert(cr >= 0);
-    s = tls_attach_server(u[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
+    s = tls_attach_server(u1, "tests/cert.pem", "tests/key.pem", NULL, -1);
     errno_assert(s >= 0);
     uint8_t c = 0;
     int i;
@@ -150,13 +150,13 @@ int main(void) {
             c++;
         }
     }
-    u[0] = tls_detach(s, -1);
-    errno_assert(u[0] >= 0);
+    u1 = tls_detach(s, -1);
+    errno_assert(u1 >= 0);
     rc = bundle_wait(cr, -1);
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
-    rc = hclose(u[0]);
+    rc = hclose(u1);
     errno_assert(rc == 0);
     
     return 0;

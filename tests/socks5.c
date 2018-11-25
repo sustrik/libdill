@@ -185,8 +185,8 @@ typedef char *up_t[2];
 typedef void test_fn(int s, char *user, char* pass);
 
 int main(void) {
-    int h[2];
-    int rc = ipc_pair(h, NULL);
+    int h1, h2;
+    int rc = ipc_pair(NULL, NULL, &h1, &h2);
     assert(rc == 0);
     up_t up[] = {{NULL, NULL}, {"user", "pass"}};
     test_fn *ctest[] = {clientbyaddr, clientbyipstring};
@@ -198,9 +198,9 @@ int main(void) {
                 printf("testing up[%d], ctest[%d], ptest[%d]\n", ui, ci, pi);
                 int b = bundle();
                 assert(b >= 0);
-                rc = bundle_go(b, (ptest[pi])(h[0], up[ui][0], up[ui][1]));
+                rc = bundle_go(b, (ptest[pi])(h1, up[ui][0], up[ui][1]));
                 assert(rc == 0);
-                rc = bundle_go(b, (ctest[ci])(h[1], up[ui][0], up[ui][1]));
+                rc = bundle_go(b, (ctest[ci])(h2, up[ui][0], up[ui][1]));
                 assert(rc == 0);
                 rc = bundle_wait(b, -1);
                 assert(rc == 0);

@@ -79,14 +79,14 @@ coroutine void http_client(int s) {
 }
 
 int main(void) {
-    int p[2];
-    int rc = ipc_pair(p, NULL);
+    int p1, p2;
+    int rc = ipc_pair(NULL, NULL, &p1, &p2);
     errno_assert(rc == 0);
-    int cr = go(nohttp_client(p[1]));
+    int cr = go(nohttp_client(p2));
     errno_assert(cr >= 0);
     struct ws_opts opts = ws_defaults;
     opts.http = 0;
-    int s = ws_attach_server(p[0], &opts, NULL, 0, NULL, 0, -1);
+    int s = ws_attach_server(p1, &opts, NULL, 0, NULL, 0, -1);
     errno_assert(s >= 0);
     char buf[3];
     ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
@@ -102,15 +102,15 @@ int main(void) {
     rc = hclose(cr);
     errno_assert(rc == 0);
 
-    rc = ipc_pair(p, NULL);
+    rc = ipc_pair(NULL, NULL, &p1, &p2);
     errno_assert(rc == 0);
-    cr = go(http_client(p[1]));
+    cr = go(http_client(p2));
     errno_assert(cr >= 0);
     char resource[256];
     char host[256];
     opts = ws_defaults;
     opts.text = 0;
-    s = ws_attach_server(p[0], &opts, resource, sizeof(resource),
+    s = ws_attach_server(p1, &opts, resource, sizeof(resource),
         host, sizeof(host), -1);
     errno_assert(s >= 0);
     assert(strcmp(resource, "/") == 0);

@@ -58,10 +58,10 @@ coroutine void client(int s) {
 }
 
 int main() {
-    int ss[2];
-    int rc = ipc_pair(ss, NULL);
+    int s1, s2;
+    int rc = ipc_pair(NULL, NULL, &s1, &s2);
     errno_assert(rc == 0);
-    int cr = go(client(ss[1]));
+    int cr = go(client(s2));
     errno_assert(cr >= 0);
     char bufs[5][256];
     struct iolist iol[5];
@@ -79,7 +79,7 @@ int main() {
            iol[i].iol_rsvd = 0;
         }
         iol[4].iol_next = NULL;
-        rc = brecvl(ss[0], &iol[0], &iol[4], -1);
+        rc = brecvl(s1, &iol[0], &iol[4], -1);
         if(rc < 0 && errno == EPIPE) break;
         errno_assert(rc == 0);
         for(it = &iol[0]; it; it = it->iol_next) {
@@ -91,7 +91,7 @@ int main() {
             }
         }
     }
-    rc = ipc_close(ss[0], -1);
+    rc = ipc_close(s1, -1);
     errno_assert(rc == 0);
     rc = bundle_wait(cr, -1);
     errno_assert(rc == 0);

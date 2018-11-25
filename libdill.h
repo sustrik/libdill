@@ -526,17 +526,15 @@ DILL_EXPORT int dill_tcp_fromfd(
 /*  IPC protocol.                                                            */
 /******************************************************************************/
 
+struct dill_ipc_storage {char _[72];};
+
 struct dill_ipc_opts {
-    void *mem;
+    struct dill_ipc_storage *mem;
     int backlog;
     unsigned int rx_buffering : 1;
 };
 
 DILL_EXPORT extern const struct dill_ipc_opts dill_ipc_defaults;
-
-struct dill_ipc_storage {char _[72];};
-
-struct dill_ipc_pair_storage {char _[144];};
 
 DILL_EXPORT int dill_ipc_listen(
     const char *addr,
@@ -569,15 +567,15 @@ DILL_EXPORT int dill_ipc_fromfd(
     int fd,
     const struct dill_ipc_opts *opts);
 DILL_EXPORT int dill_ipc_pair(
-    int s[2],
-    const struct dill_ipc_opts *opts);
+    const struct dill_ipc_opts *opts1,
+    const struct dill_ipc_opts *opts2,
+    int *s1,
+    int *s2);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define ipc_opts dill_ipc_opts
 #define ipc_defaults dill_ipc_defaults
-#define ipc_listener_storage dill_ipc_listener_storage
 #define ipc_storage dill_ipc_storage
-#define ipc_pair_storage dill_ipc_pair_storage
 #define ipc_listen dill_ipc_listen
 #define ipc_accept dill_ipc_accept
 #define ipc_connect dill_ipc_connect

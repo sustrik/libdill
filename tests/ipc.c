@@ -108,137 +108,137 @@ int main() {
     errno_assert(rc == 0);
 
     /* Test simple data exchange. */
-    int s[2];
-    rc = ipc_pair(s, NULL);
+    int s1, s2;
+    rc = ipc_pair(NULL, NULL, &s1, &s2);
     errno_assert(rc == 0);
-    cr = go(client2(s[1]));
+    cr = go(client2(s2));
     errno_assert(cr >= 0);
-    rc = bsend(s[0], "ABC", 3, -1);
+    rc = bsend(s1, "ABC", 3, -1);
     errno_assert(rc == 0);
-    rc = brecv(s[0], buf, 3, -1);
+    rc = brecv(s1, buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    rc = brecv(s[0], buf, sizeof(buf), -1);
+    rc = brecv(s1, buf, sizeof(buf), -1);
     errno_assert(rc == -1 && errno == EPIPE);
-    rc = ipc_close(s[0], -1);
+    rc = ipc_close(s1, -1);
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
 
     /* Manual termination handshake. */
-    rc = ipc_pair(s, NULL);
+    rc = ipc_pair(NULL, NULL, &s1, &s2);
     errno_assert(rc == 0);
-    cr = go(client3(s[1]));
+    cr = go(client3(s2));
     errno_assert(cr >= 0);
-    rc = bsend(s[0], "ABC", 3, -1);
+    rc = bsend(s1, "ABC", 3, -1);
     errno_assert(rc == 0);
-    rc = ipc_done(s[0], -1);
+    rc = ipc_done(s1, -1);
     errno_assert(rc == 0);
-    rc = brecv(s[0], buf, 3, -1);
+    rc = brecv(s1, buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    rc = brecv(s[0], buf, sizeof(buf), -1);
+    rc = brecv(s1, buf, sizeof(buf), -1);
     errno_assert(rc == -1 && errno == EPIPE);
-    rc = hclose(s[0]);
+    rc = hclose(s1);
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);    
 
     /* Emulate a DoS attack. */
-    rc = ipc_pair(s, NULL);
+    rc = ipc_pair(NULL, NULL, &s1, &s2);
     errno_assert(rc == 0);
-    cr = go(client4(s[1]));
+    cr = go(client4(s2));
     errno_assert(cr >= 0);
     char buffer[2048];
     memset(buffer, 0, sizeof(buffer));
     while(1) {
-        rc = bsend(s[0], buffer, 2048, -1);
+        rc = bsend(s1, buffer, 2048, -1);
         if(rc == -1 && errno == ECONNRESET)
             break;
         errno_assert(rc == 0);
     }
-    rc = ipc_close(s[0], -1);
+    rc = ipc_close(s1, -1);
     errno_assert(rc == -1 && errno == ECONNRESET);
     rc = hclose(cr);
     errno_assert(rc == 0);
 
     /* Try some invalid inputs. */
-    rc = ipc_pair(s, NULL);
+    rc = ipc_pair(NULL, NULL, &s1, &s2);
     errno_assert(rc == 0);
-    rc = bsendl(s[0], NULL, NULL, -1);
+    rc = bsendl(s1, NULL, NULL, -1);
     errno_assert(rc == -1 && errno == EINVAL);
     struct iolist iol1 = {(void*)"ABC", 3, NULL, 0};
     struct iolist iol2 = {(void*)"DEF", 3, NULL, 0};
-    rc = bsendl(s[0], &iol1, &iol2, -1);
+    rc = bsendl(s1, &iol1, &iol2, -1);
     errno_assert(rc == -1 && errno == EINVAL);
     iol1.iol_next = &iol2;
     iol2.iol_next = &iol1;
-    rc = bsendl(s[0], &iol1, &iol2, -1);
+    rc = bsendl(s1, &iol1, &iol2, -1);
     errno_assert(rc == -1 && errno == EINVAL);
     assert(iol1.iol_rsvd == 0);
     assert(iol2.iol_rsvd == 0);
-    rc = hclose(s[0]);
+    rc = hclose(s1);
     errno_assert(rc == 0);
-    rc = hclose(s[1]);
+    rc = hclose(s2);
     errno_assert(rc == 0);
 
     /* Try skipping some data. */
-    rc = ipc_pair(s, NULL);
+    rc = ipc_pair(NULL, NULL, &s1, &s2);
     errno_assert(rc == 0);
-    rc = bsend(s[0], "ABCDEFGHIJ", 10, -1);
+    rc = bsend(s1, "ABCDEFGHIJ", 10, -1);
     errno_assert(rc == 0);
-    rc = brecv(s[1], buf, 3, -1);
+    rc = brecv(s2, buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    rc = brecv(s[1], NULL, 3, -1);
+    rc = brecv(s2, NULL, 3, -1);
     errno_assert(rc == 0);
-    rc = brecv(s[1], buf, 3, -1);
+    rc = brecv(s2, buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'G' && buf[1] == 'H' && buf[2] == 'I');
-    rc = hclose(s[0]);
+    rc = hclose(s1);
     errno_assert(rc == 0);
-    rc = hclose(s[1]);
+    rc = hclose(s2);
     errno_assert(rc == 0);
 
     /* Try skipping some data using an iolist. */
-    rc = ipc_pair(s, NULL);
+    rc = ipc_pair(NULL, NULL, &s1, &s2);
     errno_assert(rc == 0);
-    rc = bsend(s[0], "ABCDEFGHIJ", 10, -1);
+    rc = bsend(s1, "ABCDEFGHIJ", 10, -1);
     errno_assert(rc == 0);
     char bufx[3];
     char bufy[3];
     struct iolist iolx3 = {bufy, sizeof(bufy), NULL, 0};
     struct iolist iolx2 = {NULL, 3, &iolx3, 0};
     struct iolist iolx1 = {bufx, sizeof(bufx), &iolx2, 0};
-    rc = brecvl(s[1], &iolx1, &iolx3, -1);
+    rc = brecvl(s2, &iolx1, &iolx3, -1);
     errno_assert(rc == 0);
     assert(bufx[0] == 'A' && bufx[1] == 'B' && bufx[2] == 'C');
     assert(bufy[0] == 'G' && bufy[1] == 'H' && bufy[2] == 'I');
-    rc = hclose(s[0]);
+    rc = hclose(s1);
     errno_assert(rc == 0);
-    rc = hclose(s[1]);
+    rc = hclose(s2);
     errno_assert(rc == 0);
 
     /* Transport a file descriptor via SCM_RIGHTS. */
     opts = ipc_defaults;
     opts.rx_buffering = 0;
-    rc = ipc_pair(s, &opts);
+    rc = ipc_pair(&opts, &opts, &s1, &s2);
     errno_assert(rc == 0);
     int sp[2];
     rc = socketpair(AF_UNIX, SOCK_STREAM, 0, sp);
     errno_assert(rc == 0);
-    rc = bsend(s[0], "ABC", 3, -1);
+    rc = bsend(s1, "ABC", 3, -1);
     errno_assert(rc == 0);
-    rc = ipc_sendfd(s[0], sp[0], -1);
+    rc = ipc_sendfd(s1, sp[0], -1);
     errno_assert(rc == 0);
-    rc = bsend(s[0], "DEF", 3, -1);
+    rc = bsend(s1, "DEF", 3, -1);
     errno_assert(rc == 0);
-    rc = brecv(s[1], buf, 3, -1);
+    rc = brecv(s2, buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    int rfd = ipc_recvfd(s[1], -1);
+    int rfd = ipc_recvfd(s2, -1);
     errno_assert(rfd >= 0);
-    rc = brecv(s[1], buf, 3, -1);
+    rc = brecv(s2, buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
     uint8_t c = 0x55;
@@ -255,9 +255,9 @@ int main() {
     errno_assert(rc == 0);
     rc = close(sp[1]);
     errno_assert(rc == 0);    
-    rc = hclose(s[0]);
+    rc = hclose(s1);
     errno_assert(rc == 0);
-    rc = hclose(s[1]);
+    rc = hclose(s2);
     errno_assert(rc == 0);
 
     return 0;
