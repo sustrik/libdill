@@ -990,17 +990,19 @@ DILL_EXPORT int dill_socks5_proxy_sendreply(
 /*  Implementes terminal handshake on the top of any message-based protocol.  */
 /******************************************************************************/
 
+struct dill_term_opts {
+    void *mem;
+};
+
+DILL_EXPORT extern const struct dill_term_opts dill_term_defaults;
+
 struct dill_term_storage {char _[88];};
 
 DILL_EXPORT int dill_term_attach(
     int s,
     const void *buf,
-    size_t len);
-DILL_EXPORT int dill_term_attach_mem(
-    int s,
-    const void *buf,
     size_t len,
-    struct dill_term_storage *mem);
+    const struct dill_term_opts *opts);
 DILL_EXPORT int dill_term_done(
     int s,
     int64_t deadline);
@@ -1009,9 +1011,10 @@ DILL_EXPORT int dill_term_detach(
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define term_opts dill_term_opts
+#define term_defaults dill_term_defaults
 #define term_storage dill_term_storage
 #define term_attach dill_term_attach
-#define term_attach_mem dill_term_attach_mem
 #define term_done dill_term_done
 #define term_detach dill_term_detach
 #endif

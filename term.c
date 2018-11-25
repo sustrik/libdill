@@ -34,6 +34,10 @@
 
 #define DILL_MAX_TERMINATOR_LENGTH 32
 
+const struct dill_term_opts dill_term_defaults = {
+    NULL   /* mem */
+};
+
 dill_unique_id(dill_term_type);
 
 static void *dill_term_hquery(struct dill_hvfs *hvfs, const void *type);
@@ -64,21 +68,25 @@ static void *dill_term_hquery(struct dill_hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int dill_term_attach_mem(int s, const void *buf, size_t len,
-      struct dill_term_storage *mem) {
+int dill_term_attach(int s, const void *buf, size_t len,
+      const struct dill_term_opts *opts) {
     int err;
-    if(dill_slow(!mem && len > DILL_MAX_TERMINATOR_LENGTH)) {
-        err = EINVAL; goto error;}
-    if(dill_slow(len > 0 && !buf)) {err = EINVAL; goto error;}
+    if(dill_slow(len > DILL_MAX_TERMINATOR_LENGTH)) {err = EINVAL; goto error1;}
+    if(dill_slow(len > 0 && !buf)) {err = EINVAL; goto error1;}
+    if(!opts) opts = &dill_term_defaults;
     /* Take ownership of the underlying socket. */
     s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error;}
+    if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Check whether underlying socket is message-based. */
     void *q = dill_hquery(s, dill_msock_type);
-    if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error;}
-    if(dill_slow(!q)) {err = errno; goto error;}
+    if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
+    if(dill_slow(!q)) {err = errno; goto error1;}
     /* Create the object. */
-    struct dill_term_sock *self = (struct dill_term_sock*)mem;
+    struct dill_term_sock *self = opts->mem;
+    if(!self) {
+        self = malloc(sizeof(struct dill_term_sock));
+        if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    }
     self->hvfs.query = dill_term_hquery;
     self->hvfs.close = dill_term_hclose;
     self->mvfs.msendl = dill_term_msendl;
@@ -91,24 +99,10 @@ int dill_term_attach_mem(int s, const void *buf, size_t len,
     self->mem = 1;
     /* Create the handle. */
     int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error;}
+    if(dill_slow(h < 0)) {int err = errno; goto error2;}
     return h;
-error:
-    if(s >= 0) dill_hclose(s);
-    errno = err;
-    return -1;
-}
-
-int dill_term_attach(int s, const void *buf, size_t len) {
-    int err;
-    struct dill_term_sock *obj = malloc(sizeof(struct dill_term_sock));
-    if(dill_slow(!obj)) {err = ENOMEM; goto error1;}
-    s = dill_term_attach_mem(s, buf, len, (struct dill_term_storage*)obj);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
-    obj->mem = 0;
-    return s;
 error2:
-    free(obj);
+    if(!opts->mem) free(self);
 error1:
     if(s >= 0) dill_hclose(s);
     errno = err;

@@ -80,7 +80,9 @@ int dill_http_attach(int s, const struct dill_http_opts *opts) {
     sopts.mem = &obj->suffix_mem;
     s = dill_suffix_attach(s, "\r\n", 2, &sopts);
     if(dill_slow(s < 0)) {err = errno; goto error2;}
-    s = dill_term_attach_mem(s, NULL, 0, &obj->term_mem);
+    struct dill_term_opts topts = dill_term_defaults;
+    topts.mem = &obj->term_mem;
+    s = dill_term_attach(s, NULL, 0, &topts);
     if(dill_slow(s < 0)) {err = errno; goto error2;}
     obj->hvfs.query = dill_http_hquery;
     obj->hvfs.close = dill_http_hclose;
