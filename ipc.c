@@ -477,6 +477,7 @@ int dill_ipc_detach(int s) {
     struct dill_ipc_conn *conn = dill_hquery(s, dill_ipc_type);
     if(!conn && errno == ENOTSUP) goto listener;
     if(dill_slow(!conn)) {err = errno; goto error1;}
+    if(dill_slow(conn->rx_buffering)) {err = ENOTSUP; goto error1;}
     int res = conn->fd;
     conn->fd = -1;
     dill_ipc_hclose(&conn->hvfs);

@@ -372,6 +372,7 @@ int dill_tcp_detach(int s) {
     struct dill_tcp_conn *conn = dill_hquery(s, dill_tcp_type);
     if(!conn && errno == ENOTSUP) goto listener;
     if(dill_slow(!conn)) {err = errno; goto error1;}
+    if(dill_slow(conn->rx_buffering)) {err = ENOTSUP; goto error1;}
     int res = conn->fd;
     conn->fd = -1;
     dill_tcp_hclose(&conn->hvfs);
