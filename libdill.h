@@ -823,63 +823,51 @@ DILL_EXPORT int dill_tls_detach(
 /*  WebSockets protocol.                                                      */
 /******************************************************************************/
 
-struct dill_ws_storage {char _[176];};
+struct dill_ws_opts {
+    void *mem;
+    unsigned int http : 1;
+    unsigned int text : 1;
+};
 
-#define DILL_WS_BINARY 0
-#define DILL_WS_TEXT 1
-#define DILL_WS_NOHTTP 2
+DILL_EXPORT extern const struct dill_ws_opts dill_ws_defaults;
+
+struct dill_ws_storage {char _[176];};
 
 DILL_EXPORT int dill_ws_attach_client(
     int s,
-    int flags,
     const char *resource,
     const char *host,
-    int64_t deadline);
-DILL_EXPORT int dill_ws_attach_client_mem(
-    int s,
-    int flags,
-    const char *resource,
-    const char *host,
-    struct dill_ws_storage *mem,
+    const struct dill_ws_opts *opts,
     int64_t deadline);
 DILL_EXPORT int dill_ws_attach_server(
     int s,
-    int flags,
+    const struct dill_ws_opts *opts,
     char *resource,
     size_t resourcelen,
     char *host,
     size_t hostlen,
-    int64_t deadline);
-DILL_EXPORT int dill_ws_attach_server_mem(
-    int s,
-    int flags,
-    char *resource,
-    size_t resourcelen,
-    char *host,
-    size_t hostlen,
-    struct dill_ws_storage *mem,
     int64_t deadline);
 DILL_EXPORT int dill_ws_send(
     int s,
-    int flags,
+    int text,
     const void *buf,
     size_t len,
     int64_t deadline);
 DILL_EXPORT ssize_t dill_ws_recv(
     int s,
-    int *flags,
+    int *text,
     void *buf,
     size_t len,
     int64_t deadline);
 DILL_EXPORT int dill_ws_sendl(
     int s,
-    int flags,
+    int text,
     struct dill_iolist *first,
     struct dill_iolist *last,
     int64_t deadline);
 DILL_EXPORT ssize_t dill_ws_recvl(
     int s,
-    int *flags,
+    int *text,
     struct dill_iolist *first,
     struct dill_iolist *last,
     int64_t deadline);
@@ -912,14 +900,11 @@ DILL_EXPORT int dill_ws_response_key(
     char *response_key);
 
 #if !defined DILL_DISABLE_RAW_NAMES
-#define WS_BINARY DILL_WS_BINARY
-#define WS_TEXT DILL_WS_TEXT
-#define WS_NOHTTP DILL_WS_NOHTTP
+#define ws_opts dill_ws_opts
+#define ws_defaults dill_ws_defaults
 #define ws_storage dill_ws_storage
 #define ws_attach_server dill_ws_attach_server
-#define ws_attach_server_mem dill_ws_attach_server_mem
 #define ws_attach_client dill_ws_attach_client
-#define ws_attach_client_mem dill_ws_attach_client_mem
 #define ws_send dill_ws_send
 #define ws_recv dill_ws_recv
 #define ws_sendl dill_ws_sendl

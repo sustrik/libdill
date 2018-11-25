@@ -96,7 +96,7 @@ coroutine void ws_worker(int s) {
        ignore that for now. */
     char resource[256];
     char host[256];
-    s = ws_attach_server(s, WS_TEXT, resource, sizeof(resource),
+    s = ws_attach_server(s, NULL, resource, sizeof(resource),
         host, sizeof(host), -1);
     assert(s >= 0);
 

@@ -28,7 +28,9 @@
 #include "../libdill.h"
 
 coroutine void nohttp_client(int s) {
-    s = ws_attach_client(s, WS_NOHTTP | WS_TEXT, NULL, NULL, -1);
+    struct ws_opts opts = ws_defaults;
+    opts.http = 0;
+    s = ws_attach_client(s, NULL, NULL, &opts, -1);
     errno_assert(s >= 0);
     int rc = msend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
@@ -52,7 +54,9 @@ coroutine void nohttp_client(int s) {
 }
 
 coroutine void http_client(int s) {
-    s = ws_attach_client(s, WS_BINARY, "/", "www.example.org", -1);
+    struct ws_opts opts = ws_defaults;
+    opts.text = 0;
+    s = ws_attach_client(s, "/", "www.example.org", &opts, -1);
     errno_assert(s >= 0);
     int rc = msend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
@@ -80,7 +84,9 @@ int main(void) {
     errno_assert(rc == 0);
     int cr = go(nohttp_client(p[1]));
     errno_assert(cr >= 0);
-    int s = ws_attach_server(p[0], WS_NOHTTP | WS_TEXT, NULL, 0, NULL, 0, -1);
+    struct ws_opts opts = ws_defaults;
+    opts.http = 0;
+    int s = ws_attach_server(p[0], &opts, NULL, 0, NULL, 0, -1);
     errno_assert(s >= 0);
     char buf[3];
     ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
@@ -102,7 +108,9 @@ int main(void) {
     errno_assert(cr >= 0);
     char resource[256];
     char host[256];
-    s = ws_attach_server(p[0], WS_BINARY, resource, sizeof(resource),
+    opts = ws_defaults;
+    opts.text = 0;
+    s = ws_attach_server(p[0], &opts, resource, sizeof(resource),
         host, sizeof(host), -1);
     errno_assert(s >= 0);
     assert(strcmp(resource, "/") == 0);
