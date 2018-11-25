@@ -79,7 +79,7 @@ int dill_suffix_attach(int s, const void *suffix, size_t suffixlen,
     s = dill_hown(s);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Create the object. */
-    struct dill_suffix_sock *self = opts->mem;
+    struct dill_suffix_sock *self = (struct dill_suffix_sock*)opts->mem;
     if(!self) {
         self = malloc(sizeof(struct dill_suffix_sock));
         if(dill_slow(!self)) {err = ENOMEM; goto error1;}

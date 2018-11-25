@@ -97,7 +97,7 @@ int dill_udp_open(struct dill_ipaddr *local,
         }
     }
     /* Create the object. */
-    struct dill_udp_sock *obj = opts->mem;
+    struct dill_udp_sock *obj = (struct dill_udp_sock*)opts->mem;
     if(!obj) {
         obj = malloc(sizeof(struct dill_udp_sock));
         if(dill_slow(!obj)) {err = ENOMEM; goto error2;}

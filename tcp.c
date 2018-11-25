@@ -79,7 +79,7 @@ static void *dill_tcp_hquery(struct dill_hvfs *hvfs, const void *type) {
 static int dill_tcp_makeconn(int fd, const struct dill_tcp_opts *opts) {
     int err;
     /* Create the object. */
-    struct dill_tcp_conn *self = opts->mem;
+    struct dill_tcp_conn *self = (struct dill_tcp_conn*)opts->mem;
     if(!self) {
         self = malloc(sizeof(struct dill_tcp_conn));
         if(dill_slow(!self)) {err = ENOMEM; goto error1;}
@@ -258,7 +258,7 @@ DILL_CHECK_STORAGE(dill_tcp_listener, dill_tcp_storage)
 static int dill_tcp_makelistener(int fd, const struct dill_tcp_opts *opts) {
     int err;
     /* Create the object. */
-    struct dill_tcp_listener *self = opts->mem;
+    struct dill_tcp_listener *self = (struct dill_tcp_listener*)opts->mem;
     if(!self) {
         self = malloc(sizeof(struct dill_tcp_listener));
         if(dill_slow(!self)) {err = ENOMEM; goto error1;}

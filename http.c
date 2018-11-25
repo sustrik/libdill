@@ -70,7 +70,7 @@ int dill_http_attach(int s, const struct dill_http_opts *opts) {
     s = dill_hown(s);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Create the object. */
-    struct dill_http_sock *obj = opts->mem;
+    struct dill_http_sock *obj = (struct dill_http_sock*)opts->mem;
     if(!obj) {
         obj = malloc(sizeof(struct dill_http_sock));
         if(dill_slow(!obj)) {err = ENOMEM; goto error1;}

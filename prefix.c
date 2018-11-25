@@ -79,7 +79,7 @@ int dill_prefix_attach(int s, size_t prefixlen,
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
     if(dill_slow(!q)) {err = errno; goto error1;}
     /* Create the object. */
-    struct dill_prefix_sock *self = opts->mem;
+    struct dill_prefix_sock *self = (struct dill_prefix_sock*)opts->mem;
     if(!self) {
         self = malloc(sizeof(struct dill_prefix_sock));
         if(dill_slow(!self)) {err = ENOMEM; goto error1;}

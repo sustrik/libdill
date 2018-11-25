@@ -82,7 +82,7 @@ int dill_term_attach(int s, const void *buf, size_t len,
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
     if(dill_slow(!q)) {err = errno; goto error1;}
     /* Create the object. */
-    struct dill_term_sock *self = opts->mem;
+    struct dill_term_sock *self = (struct dill_term_sock*)opts->mem;
     if(!self) {
         self = malloc(sizeof(struct dill_term_sock));
         if(dill_slow(!self)) {err = ENOMEM; goto error1;}

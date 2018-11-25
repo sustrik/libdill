@@ -473,16 +473,16 @@ DILL_EXPORT int dill_ipaddr_equal(
 /*  TCP protocol.                                                             */
 /******************************************************************************/
 
+struct dill_tcp_storage {char _[72];};
+
 struct dill_tcp_opts {
-    void *mem;
+    struct dill_tcp_storage *mem;
     int backlog;
     unsigned int rx_buffering : 1; /* TODO: Make this the size of the buffer. */
     unsigned int nodelay : 1;
 };
 
 DILL_EXPORT extern const struct dill_tcp_opts dill_tcp_defaults;
-
-struct dill_tcp_storage {char _[72];};
 
 DILL_EXPORT int dill_tcp_listen(
     struct dill_ipaddr *addr,
@@ -595,14 +595,14 @@ DILL_EXPORT int dill_ipc_pair(
 /*  Messages are prefixed by size.                                            */
 /******************************************************************************/
 
+struct dill_prefix_storage {char _[56];};
+
 struct dill_prefix_opts {
-    void *mem;
+    struct dill_prefix_storage *mem;
     unsigned int little_endian : 1;
 };
 
 DILL_EXPORT extern const struct dill_prefix_opts dill_prefix_defaults;
-
-struct dill_prefix_storage {char _[56];};
 
 DILL_EXPORT int dill_prefix_attach(
     int s,
@@ -624,13 +624,13 @@ DILL_EXPORT int dill_prefix_detach(
 /*  Messages are suffixed by specified string of bytes.                       */
 /******************************************************************************/
 
+struct dill_suffix_storage {char _[128];};
+
 struct dill_suffix_opts {
-    void *mem;
+    struct dill_suffix_storage *mem;
 };
 
 DILL_EXPORT extern const struct dill_suffix_opts dill_suffix_defaults;
-
-struct dill_suffix_storage {char _[128];};
 
 DILL_EXPORT int dill_suffix_attach(
     int s,
@@ -654,13 +654,13 @@ DILL_EXPORT int dill_suffix_detach(
 /*  Each UDP packet is treated as a separate message.                         */
 /******************************************************************************/
 
+struct dill_udp_storage {char _[72];};
+
 struct dill_udp_opts {
-    void *mem;
+    struct dill_udp_storage *mem;
 };
 
 DILL_EXPORT extern const struct dill_udp_opts dill_udp_defaults;
-
-struct dill_udp_storage {char _[72];};
 
 DILL_EXPORT int dill_udp_open(
     struct dill_ipaddr *local,
@@ -704,13 +704,13 @@ DILL_EXPORT ssize_t dill_udp_recvl(
 /*  HTTP                                                                      */
 /******************************************************************************/
 
+struct dill_http_storage {char _[1296];};
+
 struct dill_http_opts {
-    void *mem;
+    struct dill_http_storage *mem;
 };
 
 DILL_EXPORT extern const struct dill_http_opts dill_http_defaults;
-
-struct dill_http_storage {char _[1296];};
 
 DILL_EXPORT int dill_http_attach(
     int s,
@@ -777,13 +777,13 @@ DILL_EXPORT int dill_http_recvfield(
 /*  TLS protocol.                                                             */
 /******************************************************************************/
 
+struct dill_tls_storage {char _[72];};
+
 struct dill_tls_opts {
-    void *mem;
+    struct dill_tls_storage *mem;
 };
 
 DILL_EXPORT extern const struct dill_tls_opts dill_tls_defaults;
-
-struct dill_tls_storage {char _[72];};
 
 DILL_EXPORT int dill_tls_attach_server(
     int s,
@@ -818,15 +818,15 @@ DILL_EXPORT int dill_tls_detach(
 /*  WebSockets protocol.                                                      */
 /******************************************************************************/
 
+struct dill_ws_storage {char _[176];};
+
 struct dill_ws_opts {
-    void *mem;
+    struct dill_ws_storage *mem;
     unsigned int http : 1;
     unsigned int text : 1;
 };
 
 DILL_EXPORT extern const struct dill_ws_opts dill_ws_defaults;
-
-struct dill_ws_storage {char _[176];};
 
 DILL_EXPORT int dill_ws_attach_client(
     int s,
@@ -985,13 +985,13 @@ DILL_EXPORT int dill_socks5_proxy_sendreply(
 /*  Implementes terminal handshake on the top of any message-based protocol.  */
 /******************************************************************************/
 
+struct dill_term_storage {char _[88];};
+
 struct dill_term_opts {
-    void *mem;
+    struct dill_term_storage *mem;
 };
 
 DILL_EXPORT extern const struct dill_term_opts dill_term_defaults;
-
-struct dill_term_storage {char _[88];};
 
 DILL_EXPORT int dill_term_attach(
     int s,

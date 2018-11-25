@@ -83,7 +83,7 @@ int dill_tls_attach_client(int s, const struct dill_tls_opts *opts,
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
     if(dill_slow(!q)) {err = errno; goto error1;}
     /* Create the object. */
-    struct dill_tls_sock *self = opts->mem;
+    struct dill_tls_sock *self = (struct dill_tls_sock*)opts->mem;
     if(!self) {
         self = malloc(sizeof(struct dill_tls_sock));
         if(dill_slow(!self)) {err = ENOMEM; goto error1;}
@@ -152,7 +152,7 @@ int dill_tls_attach_server(int s, const char *cert, const char *pkey,
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
     if(dill_slow(!q)) {err = errno; goto error1;}
     /* Create the object. */
-    struct dill_tls_sock *self = opts->mem;
+    struct dill_tls_sock *self = (struct dill_tls_sock*)opts->mem;
     if(!self) {
         self = malloc(sizeof(struct dill_tls_sock));
         if(dill_slow(!self)) {err = ENOMEM; goto error1;}

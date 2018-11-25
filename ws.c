@@ -80,7 +80,7 @@ int dill_ws_attach_client(int s, const char *resource,
     s = dill_hown(s);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Create the object. */
-    struct dill_ws_sock *self = opts->mem;
+    struct dill_ws_sock *self = (struct dill_ws_sock*)opts->mem;
     if(!self) {
         self = malloc(sizeof(struct dill_ws_sock));
         if(dill_slow(!self)) {err = ENOMEM; goto error1;}
@@ -192,7 +192,7 @@ int dill_ws_attach_server(int s, const struct dill_ws_opts *opts,
     s = dill_hown(s);
     if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Create the object. */
-    struct dill_ws_sock *self = opts->mem;
+    struct dill_ws_sock *self = (struct dill_ws_sock*)opts->mem;
     if(!self) {
         self = malloc(sizeof(struct dill_ws_sock));
         if(dill_slow(!self)) {err = ENOMEM; goto error1;}
