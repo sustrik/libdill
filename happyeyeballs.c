@@ -154,13 +154,12 @@ int dill_happyeyeballs_connect(const char *name, int port,
     int err = 0;
     if(dill_slow(!name || port <= 0)) {err = EINVAL; goto exit1;}
     if(!opts) opts = &dill_tcp_defaults;
-    struct dill_tcp_opts op = *opts;
-    op.mem = NULL;
+    if(dill_slow(opts->mem)) {err = EOPNOTSUPP; goto exit1;}
     int chconns[2];
     struct dill_chstorage chconns_storage;
     int rc = dill_chmake_mem(&chconns_storage, chconns);
     if(dill_slow(rc < 0)) {err = errno; goto exit1;}
-    int coord = dill_go(dill_happyeyeballs_coordinator(name, port, &op,
+    int coord = dill_go(dill_happyeyeballs_coordinator(name, port, opts,
         chconns[1]));
     if(dill_slow(coord < 0)) {err = errno; goto exit2;}
     int conn;
