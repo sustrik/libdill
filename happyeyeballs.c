@@ -83,7 +83,9 @@ static dill_coroutine void dill_happyeyeballs_coordinator(
     rc = dill_chmake_mem(&chipv4_storage, chipv4);
     dill_assert(rc == 0);
     struct dill_bundle_storage bndl_storage;
-    int bndl = dill_bundle_mem(&bndl_storage);
+    struct dill_bundle_opts bndl_opts = dill_bundle_defaults;
+    bndl_opts.mem = &bndl_storage;
+    int bndl = dill_bundle(&bndl_opts);
     dill_assert(bndl >= 0);
     rc = dill_bundle_go(bndl, dill_happyeyeballs_dnsquery(name, port,
         DILL_IPADDR_IPV6, chipv6[1]));

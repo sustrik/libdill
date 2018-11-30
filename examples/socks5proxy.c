@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
         auth_user = argv[1];
         auth_pass = argv[2];
     }
-    int workers = bundle();
+    int workers = bundle(NULL);
     struct ipaddr addr;
     int rc = ipaddr_local(&addr, NULL, 1080, 0);
     assert(rc == 0);

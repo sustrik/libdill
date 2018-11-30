@@ -39,19 +39,19 @@ coroutine void worker3(int delay) {
 }
 
 int main(void) {
-    int hndl1 = bundle();
+    int hndl1 = bundle(NULL);
     errno_assert(hndl1 >= 0);
     int rc = hclose(hndl1);
     errno_assert(rc == 0);
 
-    int hndl2 = bundle();
+    int hndl2 = bundle(NULL);
     errno_assert(hndl2 >= 0);
     rc = bundle_go(hndl2, worker1());
     errno_assert(rc == 0);
     rc = hclose(hndl2);
     errno_assert(rc == 0);
 
-    int hndl3 = bundle();
+    int hndl3 = bundle(NULL);
     errno_assert(hndl3 >= 0);
     rc = bundle_go(hndl3, worker1());
     errno_assert(rc == 0);
@@ -60,7 +60,7 @@ int main(void) {
     rc = hclose(hndl3);
     errno_assert(rc == 0);
 
-    int hndl4 = bundle();
+    int hndl4 = bundle(NULL);
     errno_assert(hndl4 >= 0);
     rc = bundle_go(hndl4, worker2());
     errno_assert(rc == 0);
@@ -69,7 +69,7 @@ int main(void) {
     rc = hclose(hndl4);
     errno_assert(rc == 0);
 
-    int hndl5 = bundle();
+    int hndl5 = bundle(NULL);
     errno_assert(hndl5 >= 0);
     rc = bundle_go(hndl5, worker3(50));
     errno_assert(rc == 0);
@@ -80,7 +80,7 @@ int main(void) {
     rc = hclose(hndl5);
     errno_assert(rc == 0);
 
-    int hndl6 = bundle();
+    int hndl6 = bundle(NULL);
     errno_assert(hndl6 >= 0);
     rc = bundle_go(hndl6, worker2());
     errno_assert(rc == 0);
@@ -91,7 +91,7 @@ int main(void) {
     rc = hclose(hndl6);
     errno_assert(rc == 0);
 
-    int hndl7 = bundle();
+    int hndl7 = bundle(NULL);
     errno_assert(hndl7 >= 0);
     char stk[4096];
     rc = bundle_go_mem(hndl7, worker1(), stk, sizeof(stk));
@@ -110,7 +110,7 @@ int main(void) {
     errno_assert(rc == 0);
 
     /* Test waiting on empty bundle. */
-    int hndl9 = bundle();
+    int hndl9 = bundle(NULL);
     errno_assert(hndl9 >= 0);
     rc = bundle_wait(hndl9, -1);
     errno_assert(rc == 0);
@@ -126,7 +126,7 @@ int main(void) {
     errno_assert(rc == 0);
 
     /* Test waiting on bundle with two coroutines. */
-    int hndl11 = bundle();
+    int hndl11 = bundle(NULL);
     errno_assert(hndl11 >= 0);
     rc = bundle_go(hndl11, worker3(50));
     errno_assert(rc == 0);

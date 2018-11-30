@@ -196,7 +196,7 @@ int main(void) {
         for (int ci = 0; ci < 2; ci++) {
             for (int ui = 0; ui < 2; ui++) {
                 printf("testing up[%d], ctest[%d], ptest[%d]\n", ui, ci, pi);
-                int b = bundle();
+                int b = bundle(NULL);
                 assert(b >= 0);
                 rc = bundle_go(b, (ptest[pi])(h1, up[ui][0], up[ui][1]));
                 assert(rc == 0);

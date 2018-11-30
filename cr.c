@@ -64,6 +64,10 @@ static void dill_cr_close(struct dill_hvfs *vfs);
 /*  Bundle.                                                                   */
 /******************************************************************************/
 
+const struct dill_bundle_opts dill_bundle_defaults = {
+    NULL  /* mem */
+};
+
 static const int dill_bundle_type_placeholder = 0;
 const void *dill_bundle_type = &dill_bundle_type_placeholder;
 static void *dill_bundle_query(struct dill_hvfs *vfs, const void *type);
@@ -84,28 +88,24 @@ struct dill_bundle {
 DILL_CT_ASSERT(sizeof(struct dill_bundle_storage) >=
     sizeof(struct dill_bundle));
 
-int dill_bundle_mem(struct dill_bundle_storage *mem) {
+int dill_bundle(const struct dill_bundle_opts *opts) {
     int err;
-    if(dill_slow(!mem)) {err = EINVAL; return -1;}
-    struct dill_bundle *b = (struct dill_bundle*)mem;
-    b->vfs.query = dill_bundle_query;
-    b->vfs.close = dill_bundle_close;
-    dill_list_init(&b->crs);
-    b->waiter = NULL;
-    b->mem = 1;
-    return dill_hmake(&b->vfs);
-}
-
-int dill_bundle(void) {
-    int err;
-    struct dill_bundle *b = malloc(sizeof(struct dill_bundle));
-    if(dill_slow(!b)) {err = ENOMEM; goto error1;}
-    int h = dill_bundle_mem((struct dill_bundle_storage*)b);
+    if(!opts) opts = &dill_bundle_defaults;
+    struct dill_bundle *self = (struct dill_bundle*)opts->mem;
+    if(!self) {
+        self = malloc(sizeof(struct dill_bundle));
+        if(dill_slow(!self)) {err = ENOMEM; goto error1;}
+    }
+    self->vfs.query = dill_bundle_query;
+    self->vfs.close = dill_bundle_close;
+    dill_list_init(&self->crs);
+    self->waiter = NULL;
+    self->mem = 1;
+    int h = dill_hmake(&self->vfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
-    b->mem = 0;
     return h;
 error2:
-    free(b);
+    if(!opts->mem) free(self);
 error1:
     errno = err;
     return -1;
@@ -250,12 +250,14 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
     int new_bundle = bndl < 0;
     if(new_bundle) {
         if(*ptr) {
-            bndl = dill_bundle_mem(*ptr);
+            struct dill_bundle_opts opts = dill_bundle_defaults;
+            opts.mem = *ptr;
+            bndl = dill_bundle(&opts);
             *ptr = ((uint8_t*)*ptr) + sizeof(struct dill_bundle_storage);
             len -= sizeof(struct dill_bundle_storage);
         }
         else {
-            bndl = dill_bundle();
+            bndl = dill_bundle(NULL);
         }
         if(dill_slow(bndl < 0)) {err = errno; goto error1;}
     }

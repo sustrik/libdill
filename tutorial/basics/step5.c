@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    int b = bundle();
+    int b = bundle(NULL);
     assert(b >= 0);
 
     int i;

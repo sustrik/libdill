@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
     int cr = go(statistics(ch[0]));
     assert(cr >= 0);
 
-    int b = bundle();
+    int b = bundle(NULL);
     assert(b >= 0);
 
     int i;

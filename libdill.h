@@ -249,8 +249,13 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 
 struct dill_bundle_storage {char _[64];};
 
-DILL_EXPORT int dill_bundle(void);
-DILL_EXPORT int dill_bundle_mem(struct dill_bundle_storage *mem);
+struct dill_bundle_opts {
+    struct dill_bundle_storage *mem;
+};
+
+DILL_EXPORT extern const struct dill_bundle_opts dill_bundle_defaults;
+
+DILL_EXPORT int dill_bundle(const struct dill_bundle_opts *opts);
 DILL_EXPORT int dill_bundle_wait(int h, int64_t deadline);
 DILL_EXPORT int dill_yield(void);
 
@@ -261,8 +266,9 @@ DILL_EXPORT int dill_yield(void);
 #define bundle_go dill_bundle_go
 #define bundle_go_mem dill_bundle_go_mem
 #define bundle_storage dill_bundle_storage
+#define bundle_opts dill_bundle_opts
+#define bundle_defaults dill_bundle_defaults
 #define bundle dill_bundle
-#define bundle_mem dill_bundle_mem
 #define bundle_wait dill_bundle_wait
 #define yield dill_yield
 #endif

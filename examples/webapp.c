@@ -127,7 +127,7 @@ coroutine void ws_listener(void) {
     assert(rc == 0);
     int ls = tcp_listen(&addr, NULL);
     assert(ls >= 0);
-    int workers = bundle();
+    int workers = bundle(NULL);
     assert(workers >= 0);
     while(1) {
         int s = tcp_accept(ls, NULL, NULL, -1);
@@ -139,7 +139,7 @@ coroutine void ws_listener(void) {
 
 int main(void) {
     /* This will take care of deallocating finished coroutines cleanly. */
-    int workers = bundle();
+    int workers = bundle(NULL);
     assert(workers >= 0);
 
     /* Start listening for WebSocket connections. */
