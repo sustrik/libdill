@@ -166,7 +166,7 @@ static ssize_t dill_suffix_mrecvl(struct dill_msock_vfs *mvfs,
             it = *it.iol_next;
         }
         /* Move one character to the user's iolist. */
-        if(it.iol_base) {
+        if(it.iol_base && it.iol_len > 0) {
             ((uint8_t*)it.iol_base)[0] = self->buf[0];
             it.iol_base = ((uint8_t*)it.iol_base) + 1;
             it.iol_len--;
