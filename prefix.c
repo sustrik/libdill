@@ -96,7 +96,7 @@ int dill_prefix_attach(int s, size_t prefixlen,
     self->mem = !!opts->mem;
     /* Create the handle. */
     int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error2;}
+    if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
 error2:
     if(!opts->mem) free(self); 

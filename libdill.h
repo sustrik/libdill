@@ -1022,6 +1022,44 @@ int dill_happyeyeballs_connect(const char *name, int port,
 #define happyeyeballs_connect dill_happyeyeballs_connect
 #endif
 
+/******************************************************************************/
+/* TCPMUX (RFC 1078).                                                         */
+/* Allows to multiplex different services on a single TCP port.               */
+/******************************************************************************/
+
+struct dill_tcpmux_storage {char _[1000];};
+
+struct dill_tcpmux_opts {
+    struct dill_tcpmux_storage *mem;
+    const char *addr;
+};
+
+DILL_EXPORT extern const struct dill_tcpmux_opts dill_tcpmux_defaults;
+
+DILL_EXPORT int dill_tcpmux_listen(
+    const char *service,
+    const struct dill_tcpmux_opts *opts,
+    int64_t deadline);
+DILL_EXPORT int dill_tcpmux_accept(
+    int s,
+    const struct dill_tcp_opts *opts,
+    struct dill_ipaddr *addr,
+    int64_t deadline);
+DILL_EXPORT int dill_tcpmux_connect(
+    const struct dill_ipaddr *addr,
+    const char *service,
+    const struct dill_tcp_opts *opts,
+    int64_t deadline);
+
+#if !defined DILL_DISABLE_RAW_NAMES
+#define tcpmux_storage dill_tcpmux_storage
+#define tcpmux_opts dill_tcpmux_opts
+#define tcpmux_defaults dill_tcpmux_defaults
+#define tcpmux_listen dill_tcpmux_listen
+#define tcpmux_accept dill_tcpmux_accept
+#define tcpmux_connect dill_tcpmux_connect
+#endif
+
 #endif
 
 #ifdef __cplusplus

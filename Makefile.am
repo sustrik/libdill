@@ -76,6 +76,7 @@ libdill_la_SOURCES += \
     socks5.c \
     suffix.c \
     tcp.c \
+    tcpmux.c \
     term.c \
     udp.c \
     ws.c \
@@ -144,7 +145,8 @@ check_PROGRAMS += \
     tests/http \
     tests/ws \
     tests/term \
-    tests/happyeyeballs
+    tests/happyeyeballs \
+    tests/tcpmux
 endif
 
 if DILL_SOCKETS
@@ -201,6 +203,7 @@ endif
 if DILL_SOCKETS
 noinst_PROGRAMS += \
     examples/socks5proxy \
+    examples/tcpmuxd \
     examples/webapp
 endif
 
