@@ -288,7 +288,7 @@ In the second scenario, there are still some children running when deadline is r
 
 Consider the previous use case except that the child coroutines are doing work in an infinite loop. Giving them grace period to finish doesn't make sense. They are not going to finish on their own, ever.
 
-What we would like to do instead is to boradcast a "shutdown" signal to all of them. Once they receive the signal they would finish whatever it is they are doing and exit the infinite loop. The parent will give them grace period to do so. After grace period is over it will forefully cancel all children that are still running.
+What we would like to do instead is to broadcast a "shutdown" signal to all of them. Once they receive the signal they would finish whatever it is they are doing and exit the infinite loop. The parent will give them grace period to do so. After grace period is over it will forefully cancel all children that are still running.
 
 Generally speaking, libdill channels are not capable of broadcasting messages. However, they can broadcast a simple signal. If `chdone()` is called on one end of a channel, any subsequent attempt to read a message from the other end is going to fail with `EPIPE` error. If there are multiple coroutines receiving from the channel, they are all going to get `EPIPE` error. This is, for all practical purposes, equivalent to broadcasting a signal. 
 
