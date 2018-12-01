@@ -35,6 +35,10 @@
 #define DILL_DISABLE_RAW_NAMES
 #include "libdillimpl.h"
 
+const struct dill_chopts dill_chdefaults = {
+    NULL  /* mem */
+};
+
 struct dill_halfchan {
     /* Table of virtual functions. */
     struct dill_hvfs vfs;
@@ -46,7 +50,7 @@ struct dill_halfchan {
     unsigned int index : 1;
     /* 1 if chdone() has been called on this channel. 0 otherwise. */
     unsigned int done : 1;
-    /* 1 if the object was created with chmake_mem(). */
+    /* 1 if the object was created with mem option. */
     unsigned int mem : 1;
     /* 1 if hclose() was already called for this half-channel. */
     unsigned int closed : 1;
@@ -96,37 +100,27 @@ static void dill_halfchan_init(struct dill_halfchan *ch, int index) {
     ch->closed = 0;
 }
 
-int dill_chmake_mem(struct dill_chstorage *mem, int chv[2]) {
+int dill_chmake(int s[2], const struct dill_chopts *opts) {
     int err;
-    if(dill_slow(!mem)) {err = EINVAL; goto error1;}
-    struct dill_halfchan *ch = (struct dill_halfchan*)mem;
+    if(!opts) opts = &dill_chdefaults;
+    struct dill_halfchan *ch = (struct dill_halfchan*)opts->mem;
+    if(!ch) {
+        ch = malloc(sizeof(struct dill_chstorage));
+        if(dill_slow(!ch)) {err = ENOMEM; goto error1;}
+    }
     dill_halfchan_init(&ch[0], 0);
     dill_halfchan_init(&ch[1], 1);
-    chv[0] = dill_hmake(&ch[0].vfs);
-    if(dill_slow(chv[0] < 0)) {err = errno; goto error1;}
-    chv[1] = dill_hmake(&ch[1].vfs);
-    if(dill_slow(chv[1] < 0)) {err = errno; goto error2;}
+    s[0] = dill_hmake(&ch[0].vfs);
+    if(dill_slow(s[0] < 0)) {err = errno; goto error2;}
+    s[1] = dill_hmake(&ch[1].vfs);
+    if(dill_slow(s[1] < 0)) {err = errno; goto error3;}
     return 0;
-error2:
+error3:
     /* This closes the handle but leaves everything else alone given
        that the second handle wasn't event created. */
-    dill_hclose(chv[0]);
-error1:
-    errno = err;
-    return -1;
-}
-
-int dill_chmake(int chv[2]) {
-    int err;
-    struct dill_chstorage *ch = malloc(sizeof(struct dill_chstorage));
-    if(dill_slow(!ch)) {err = ENOMEM; goto error1;}
-    int h = dill_chmake_mem(ch, chv);
-    if(dill_slow(h < 0)) {err = errno; goto error2;}
-    ((struct dill_halfchan*)ch)[0].mem = 0;
-    ((struct dill_halfchan*)ch)[1].mem = 0;
-    return h;
+    dill_hclose(s[0]);
 error2:
-    free(ch);
+    if(!opts->mem) free(ch);
 error1:
     errno = err;
     return -1;

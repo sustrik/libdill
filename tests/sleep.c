@@ -55,7 +55,7 @@ int main() {
 
     /* msleep-sort */
     int ch[2];
-    rc = chmake(ch);
+    rc = chmake(ch, NULL);
     errno_assert(rc == 0);
     int hndls[4];
     hndls[0] = go(delay(30, ch[0]));

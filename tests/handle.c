@@ -56,7 +56,7 @@ int main(void) {
     assert(status == 2);
 
     int ch[2];
-    rc = chmake(ch);
+    rc = chmake(ch, NULL);
     errno_assert(rc == 0);
     ch[0] = hown(ch[0]);
     errno_assert(ch[0] >= 0);

@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     long count = atol(argv[1]) * 1000000;
 
     int ch[2];
-    chmake(ch);
+    chmake(ch, NULL);
 
     int64_t start = now();
     go(worker(ch[0]));

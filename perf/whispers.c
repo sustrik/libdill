@@ -48,13 +48,13 @@ int main(int argc, char *argv[]) {
 
     int left[2];
     int right[2];
-    chmake(left);
+    chmake(left, NULL);
     right[0] = left[0];
     right[1] = left[1];
     int leftmost = left[0];
     long i;
     for (i = 0; i < count; ++i) {
-        chmake(right);
+        chmake(right, NULL);
         go(whisper(left[1], right[0]));
         left[0] = right[0];
         left[1] = right[1];

@@ -119,9 +119,9 @@ coroutine void tcp_proxy(int s1, int s2) {
     int d_ch[2];
     int r;
     
-    int err = chmake(u_ch);
+    int err = chmake(u_ch, NULL);
     if(err) return;
-    err = chmake(d_ch);
+    err = chmake(d_ch, NULL);
     if(err) return;
     int up = go(tcp_forward(s1, s2, u_ch[1]));
     if(up < 0) return;
@@ -319,7 +319,7 @@ static int tcp_socketpair(int fd[2]) {
     assert(port > 0);
 
     int ch[2];
-    rc = chmake(ch);
+    rc = chmake(ch, NULL);
     errno_assert(rc == 0);
     int h = go(async_accept_routine(listen_fd, ch[0]));
     errno_assert(h >= 0);
@@ -371,7 +371,7 @@ static void move_lots_of_data(size_t nbytes, size_t buf_size) {
     int rc = tcp_socketpair(pp);
     errno_assert(rc == 0);
     int done_ch[2];
-    rc = chmake(done_ch);
+    rc = chmake(done_ch, NULL);
     errno_assert(rc == 0);
     int rcv_hdl = go(receiver(pp[0], nbytes, buf_size, done_ch[0]));
     errno_assert(rcv_hdl);

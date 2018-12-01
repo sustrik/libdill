@@ -76,8 +76,8 @@ coroutine void do_proxy(int s) {
 
     // channels for outboud, inbound to signal done (to close connection)
     int och[2], ich[2];
-    if(chmake(och)) goto both_close;
-    if(chmake(ich)) goto both_close;
+    if(chmake(och, NULL)) goto both_close;
+    if(chmake(ich, NULL)) goto both_close;
 
     // start coroutines to handle inbound and outbound forwarding
     int ob = go(forward(s, s_rem, och[1]));

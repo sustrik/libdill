@@ -289,11 +289,15 @@ struct dill_chclause {
 
 struct dill_chstorage {char _[144];};
 
+struct dill_chopts {
+    struct dill_chstorage *mem;
+};
+
+DILL_EXPORT extern const struct dill_chopts dill_chdefaults;
+
 DILL_EXPORT int dill_chmake(
-    int chv[2]);
-DILL_EXPORT int dill_chmake_mem(
-    struct dill_chstorage *mem,
-    int chv[2]);
+    int s[2],
+    const struct dill_chopts *opts);
 DILL_EXPORT int dill_chsend(
     int ch,
     const void *val,
@@ -316,8 +320,9 @@ DILL_EXPORT int dill_choose(
 #define CHRECV DILL_CHRECV
 #define chclause dill_chclause
 #define chstorage dill_chstorage
+#define chopts dill_chopts
+#define chdefaults dill_chdefaults
 #define chmake dill_chmake
-#define chmake_mem dill_chmake_mem
 #define chsend dill_chsend
 #define chrecv dill_chrecv
 #define chdone dill_chdone

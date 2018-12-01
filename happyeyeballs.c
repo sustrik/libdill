@@ -76,11 +76,15 @@ static dill_coroutine void dill_happyeyeballs_coordinator(
        the addresses from them. */
     int chipv6[2];
     struct dill_chstorage chipv6_storage;
-    rc = dill_chmake_mem(&chipv6_storage, chipv6);
+    struct dill_chopts chipv6_opts = dill_chdefaults;
+    chipv6_opts.mem = &chipv6_storage;
+    rc = dill_chmake(chipv6, &chipv6_opts);
     dill_assert(rc == 0);
     int chipv4[2];
     struct dill_chstorage chipv4_storage;
-    rc = dill_chmake_mem(&chipv4_storage, chipv4);
+    struct dill_chopts chipv4_opts = dill_chdefaults;
+    chipv4_opts.mem = &chipv4_storage;
+    rc = dill_chmake(chipv4, &chipv4_opts);
     dill_assert(rc == 0);
     struct dill_bundle_storage bndl_storage;
     struct dill_bundle_opts bndl_opts = dill_bundle_defaults;
@@ -159,7 +163,9 @@ int dill_happyeyeballs_connect(const char *name, int port,
     if(dill_slow(opts->mem)) {err = EOPNOTSUPP; goto exit1;}
     int chconns[2];
     struct dill_chstorage chconns_storage;
-    int rc = dill_chmake_mem(&chconns_storage, chconns);
+    struct dill_chopts chconns_opts = dill_chdefaults;
+    chconns_opts.mem = &chconns_storage;
+    int rc = dill_chmake(chconns, &chconns_opts);
     if(dill_slow(rc < 0)) {err = errno; goto exit1;}
     int coord = dill_go(dill_happyeyeballs_coordinator(name, port, opts,
         chconns[1]));

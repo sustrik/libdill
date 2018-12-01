@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
     long i;
     for(i = 0; i != count; ++i) {
         int ch[2];
-        chmake(ch);
+        chmake(ch, NULL);
         int h = go(worker(ch[0]));
         chdone(ch[1]);
         hclose(h);

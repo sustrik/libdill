@@ -95,7 +95,7 @@ int main() {
 
     /* Non-blocking receiver case. */
     int ch1[2];
-    rc = chmake(ch1);
+    rc = chmake(ch1, NULL);
     errno_assert(rc == 0);
     int hndl1 = go(sender1(ch1[0], 555));
     errno_assert(hndl1 >= 0);
@@ -112,7 +112,7 @@ int main() {
 
     /* Blocking receiver case. */
     int ch2[2];
-    rc = chmake(ch2);
+    rc = chmake(ch2, NULL);
     errno_assert(rc == 0);
     int hndl2 = go(sender2(ch2[0], 666));
     errno_assert(hndl2 >= 0);
@@ -129,7 +129,7 @@ int main() {
 
     /* Non-blocking sender case. */
     int ch3[2];
-    rc = chmake(ch3);
+    rc = chmake(ch3, NULL);
     errno_assert(rc == 0);
     int hndl3 = go(receiver1(ch3[0], 777));
     errno_assert(hndl3 >= 0);
@@ -146,7 +146,7 @@ int main() {
 
     /* Blocking sender case. */
     int ch4[2];
-    rc = chmake(ch4);
+    rc = chmake(ch4, NULL);
     errno_assert(rc == 0);
     int hndl4 = go(receiver2(ch4[0], 888));
     errno_assert(hndl4 >= 0);
@@ -165,9 +165,9 @@ int main() {
     int hndl5[2];
     int ch5[2];
     int ch6[2];
-    rc = chmake(ch5);
+    rc = chmake(ch5, NULL);
     errno_assert(rc == 0);
-    rc = chmake(ch6);
+    rc = chmake(ch6, NULL);
     errno_assert(rc == 0);
     hndl5[0] = go(sender1(ch6[0], 555));
     errno_assert(hndl5 >= 0);
@@ -198,7 +198,7 @@ int main() {
 
     /* Test immediate timeout. */
     int ch9[2];
-    rc = chmake(ch9);
+    rc = chmake(ch9, NULL);
     errno_assert(rc == 0);
     struct chclause cls7[] = {{CHRECV, ch9[0], &val, sizeof(val)}};
     rc = choose(cls7, 1, 0);
@@ -214,7 +214,7 @@ int main() {
 
     /* Test two simultaneous senders vs. choose statement. */
     int ch10[2];
-    rc = chmake(ch10);
+    rc = chmake(ch10, NULL);
     errno_assert(rc == 0);
     int hndl7[2];
     hndl7[0] = go(sender1(ch10[0], 888));
@@ -241,7 +241,7 @@ int main() {
 
     /* Test two simultaneous receivers vs. choose statement. */
     int ch11[2];
-    rc = chmake(ch11);
+    rc = chmake(ch11, NULL);
     errno_assert(rc == 0);
     int hndl8[2];
     hndl8[0] = go(receiver1(ch11[0], 333));
@@ -266,7 +266,7 @@ int main() {
 
     /* Choose vs. choose. */
     int ch12[2];
-    rc = chmake(ch12);
+    rc = chmake(ch12, NULL);
     errno_assert(rc == 0);
     int hndl9 = go(choosesender(ch12[0], 111));
     errno_assert(hndl9 >= 0);
@@ -283,7 +283,7 @@ int main() {
 
     /* Test transferring a large object. */
     int ch17[2];
-    rc = chmake(ch17);
+    rc = chmake(ch17, NULL);
     errno_assert(rc == 0);
     int hndl10 = go(sender4(ch17[0]));
     errno_assert(hndl9 >= 0);
@@ -302,7 +302,7 @@ int main() {
 
     /* Test that 'in' on done-with channel fires. */
     int ch18[2];
-    rc = chmake(ch18);
+    rc = chmake(ch18, NULL);
     errno_assert(rc == 0);
     rc = chdone(ch18[0]);
     errno_assert(rc == 0);
@@ -316,7 +316,7 @@ int main() {
 
     /* Test expiration of 'deadline' clause. */
     int ch21[2];
-    rc = chmake(ch21);
+    rc = chmake(ch21, NULL);
     errno_assert(rc == 0);
     int64_t start = now();
     struct chclause cls17[] = {{CHRECV, ch21[1], &val, sizeof(val)}};
@@ -331,7 +331,7 @@ int main() {
 
     /* Test unexpired 'deadline' clause. */
     int ch22[2];
-    rc = chmake(ch22);
+    rc = chmake(ch22, NULL);
     errno_assert(rc == 0);
     start = now();
     int hndl11 = go(sender3(ch22[0], 4444, start + 50));
@@ -351,10 +351,10 @@ int main() {
 
     /* Test that first channel in the array is prioritized. */
     int ch23[2];
-    rc = chmake(ch23);
+    rc = chmake(ch23, NULL);
     errno_assert(rc == 0);
     int ch24[2];
-    rc = chmake(ch24);
+    rc = chmake(ch24, NULL);
     errno_assert(rc == 0);
     int hndl12 = go(sender1(ch23[0], 0));
     errno_assert(hndl12 >= 0);
@@ -384,7 +384,7 @@ int main() {
     /* Try adding the same channel to choose twice. Doing so is pointless,
        but it shouldn't crash the application. */
     int ch25[2];
-    rc = chmake(ch25);
+    rc = chmake(ch25, NULL);
     errno_assert(rc == 0);
     struct chclause cls20[] = {
         {CHRECV, ch25[1], &val, sizeof(val)},

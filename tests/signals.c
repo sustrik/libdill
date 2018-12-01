@@ -69,10 +69,10 @@ int main() {
     signal(SIGNAL, signal_intr);
 
     int sendch[2];
-    int rc = chmake(sendch);
+    int rc = chmake(sendch, NULL);
     errno_assert(rc == 0);
     int recvch[2];
-    rc = chmake(recvch);
+    rc = chmake(recvch, NULL);
     errno_assert(rc == 0);
 
     int i;

@@ -105,7 +105,7 @@ int main() {
 
     /* Receiver waits for sender. */
     int ch1[2];
-    rc = chmake(ch1);
+    rc = chmake(ch1, NULL);
     errno_assert(rc == 0);
     assert(ch1[0] >= 0);
     assert(ch1[1] >= 0);
@@ -123,7 +123,7 @@ int main() {
 
     /* Sender waits for receiver. */
     int ch2[2];
-    rc = chmake(ch2);
+    rc = chmake(ch2, NULL);
     errno_assert(rc == 0);
     int hndl2 = go(sender(ch2[0], 0, 444));
     errno_assert(hndl2 >= 0);
@@ -139,7 +139,7 @@ int main() {
 
     /* Test two simultaneous senders. */
     int ch3[2];
-    rc = chmake(ch3);
+    rc = chmake(ch3, NULL);
     errno_assert(rc == 0);
     int hndl3[2];
     hndl3[0] = go(sender(ch3[0], 0, 888));
@@ -165,7 +165,7 @@ int main() {
 
     /* Test two simultaneous receivers. */
     int ch4[2];
-    rc = chmake(ch4);
+    rc = chmake(ch4, NULL);
     errno_assert(rc == 0);
     int hndl4[2];
     hndl4[0] = go(receiver(ch4[0], 333));
@@ -189,7 +189,7 @@ int main() {
 
     /* Test simple chdone() scenario. */
     int ch8[2];
-    rc = chmake(ch8);
+    rc = chmake(ch8, NULL);
     errno_assert(rc == 0);
     rc = chdone(ch8[0]);
     errno_assert(rc == 0);
@@ -206,7 +206,7 @@ int main() {
 
     /* Test whether chdone() unblocks all receivers. */
     int ch12[2];
-    rc = chmake(ch12);
+    rc = chmake(ch12, NULL);
     errno_assert(rc == 0);
     int hndl6[2];
     hndl6[0] = go(receiver2(ch12[0]));
@@ -232,7 +232,7 @@ int main() {
 
     /* Test whether chdone() unblocks blocked senders. */
     int ch15[2];
-    rc = chmake(ch15);
+    rc = chmake(ch15, NULL);
     errno_assert(rc == 0);
     int hndl8[3];
     hndl8[0] = go(sender2(ch15[0]));
@@ -258,7 +258,7 @@ int main() {
 
     /* Test whether hclose() unblocks blocked senders and receivers. */
     int ch16[2];
-    rc = chmake(ch16);
+    rc = chmake(ch16, NULL);
     errno_assert(rc == 0);
     int hndl9[2];
     hndl9[0] = go(receiver3(ch16[0]));
@@ -278,7 +278,7 @@ int main() {
 
     /* Test cancelation. */
     int ch17[2];
-    rc = chmake(ch17);
+    rc = chmake(ch17, NULL);
     errno_assert(rc == 0);
     int hndl10 = go(cancel(ch17[0]));
     errno_assert(hndl10 >= 0);
@@ -291,7 +291,7 @@ int main() {
 
     /* Receiver waits for sender (zero-byte message). */
     int ch18[2];
-    rc = chmake(ch18);
+    rc = chmake(ch18, NULL);
     errno_assert(rc == 0);
     int hndl11 = go(sender3(ch18[0], 1));
     errno_assert(hndl11 >= 0);
@@ -306,7 +306,7 @@ int main() {
 
     /* Sender waits for receiver (zero-byte message). */
     int ch19[2];
-    rc = chmake(ch19);
+    rc = chmake(ch19, NULL);
     errno_assert(rc == 0);
     int hndl12 = go(sender3(ch19[0], 0));
     errno_assert(hndl12 >= 0);
@@ -321,8 +321,10 @@ int main() {
 
     /* Channel with user-supplied storage. */
     struct chstorage mem;
+    struct chopts opts = chdefaults;
+    opts.mem = &mem;
     int ch20[2];
-    rc = chmake_mem(&mem, ch20);
+    rc = chmake(ch20, &opts);
     errno_assert(rc == 0);
     rc = chrecv(ch20[0], NULL, 0, now() + 50);
     errno_assert(rc == -1 && errno == ETIMEDOUT);
