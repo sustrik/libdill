@@ -576,10 +576,9 @@ DILL_EXPORT int dill_ipc_close(
 DILL_EXPORT int dill_ipc_detach(
     int s);
 DILL_EXPORT int dill_ipc_pair(
+    int s[2],
     const struct dill_ipc_opts *opts1,
-    const struct dill_ipc_opts *opts2,
-    int *s1,
-    int *s2);
+    const struct dill_ipc_opts *opts2);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define ipc_opts dill_ipc_opts

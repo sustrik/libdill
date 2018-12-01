@@ -408,10 +408,9 @@ static void dill_ipc_listener_hclose(struct dill_hvfs *hvfs) {
 /*  UNIX pair                                                                 */
 /******************************************************************************/
 
-int dill_ipc_pair(const struct dill_ipc_opts *opts1,
-      const struct dill_ipc_opts *opts2, int *s1, int *s2) {
+int dill_ipc_pair(int s[2], const struct dill_ipc_opts *opts1,
+      const struct dill_ipc_opts *opts2) {
     int err;
-    if(dill_slow(!s1 || !s2)) {err = EINVAL; goto error1;}
     if(!opts1) opts1 = &dill_ipc_defaults;
     if(!opts2) opts2 = &dill_ipc_defaults;
     /* Create the pair. */
@@ -424,13 +423,13 @@ int dill_ipc_pair(const struct dill_ipc_opts *opts1,
     rc = dill_fd_unblock(fds[1]);
     if(dill_slow(rc < 0)) {err = errno; goto error3;}
     /* Create the handles. */
-    *s1 = dill_ipc_makeconn(fds[0], opts1);
-    if(dill_slow(*s1 < 0)) {err = errno; goto error3;}
-    *s2 = dill_ipc_makeconn(fds[1], opts2);
-    if(dill_slow(*s2 < 0)) {err = errno; goto error4;}
+    s[0] = dill_ipc_makeconn(fds[0], opts1);
+    if(dill_slow(s[0] < 0)) {err = errno; goto error3;}
+    s[1] = dill_ipc_makeconn(fds[1], opts2);
+    if(dill_slow(s[1] < 0)) {err = errno; goto error4;}
     return 0;
 error4:
-    rc = dill_hclose(*s1);
+    rc = dill_hclose(s[0]);
     goto error2;
 error3:
     dill_fd_close(fds[0]);

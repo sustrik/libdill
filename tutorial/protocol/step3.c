@@ -89,11 +89,11 @@ coroutine void client(int s) {
 }
 
 int main(void) {
-    int s1, s2;
-    int rc = ipc_pair(NULL, NULL, &s1, &s2);
+    int p[2];
+    int rc = ipc_pair(p, NULL, NULL);
     assert(rc == 0);
-    go(client(s1));
-    int q = quux_attach(s2);
+    go(client(p[0]));
+    int q = quux_attach(p[1]);
     assert(q >= 0);
     /* Do something useful here! */
     int s = quux_detach(q);

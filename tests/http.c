@@ -26,12 +26,12 @@
 #include "../libdill.h"
 
 int main(void) {
-    int h1, h2;
-    int rc = ipc_pair(NULL, NULL, &h1, &h2);
+    int p[2];
+    int rc = ipc_pair(p, NULL, NULL);
     assert(rc == 0);
-    int s0 = http_attach(h1, NULL);
+    int s0 = http_attach(p[0], NULL);
     assert(s0 >= 0);
-    int s1 = http_attach(h2, NULL);
+    int s1 = http_attach(p[1], NULL);
     /* Send request. */
     rc = http_sendrequest(s0, "GET", "/a/b/c", -1);
     errno_assert(rc == 0);
@@ -115,13 +115,13 @@ int main(void) {
     rc = http_recvfield(s0, name, sizeof(name), value, sizeof(value), -1);
     assert(rc < 0 && errno == EPIPE);
     /* Close the sockets. */
-    h1 = http_detach(s1, -1);
-    assert(h1 >= 0);
-    h2 = http_detach(s0, -1);
-    errno_assert(h2 >= 0);
-    rc = hclose(h2);
+    p[0] = http_detach(s1, -1);
+    assert(p[0] >= 0);
+    p[1] = http_detach(s0, -1);
+    errno_assert(p[1] >= 0);
+    rc = hclose(p[1]);
     errno_assert(rc == 0);
-    rc = hclose(h1);
+    rc = hclose(p[0]);
     errno_assert(rc == 0);
     return 0;
 }

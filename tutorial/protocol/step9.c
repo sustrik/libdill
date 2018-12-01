@@ -199,11 +199,11 @@ coroutine void client(int s) {
 }
 
 int main(void) {
-    int s1, s2;
-    int rc = ipc_pair(NULL, NULL, &s1, &s2);
+    int p[2];
+    int rc = ipc_pair(p, NULL, NULL);
     assert(rc == 0);
-    go(client(s1));
-    int q = quux_attach(s2, -1);
+    go(client(p[0]));
+    int q = quux_attach(p[1], -1);
     assert(q >= 0);
     char buf[256];
     ssize_t sz = mrecv(q, buf, sizeof(buf), -1);
