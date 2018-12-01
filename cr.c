@@ -100,7 +100,7 @@ int dill_bundle(const struct dill_bundle_opts *opts) {
     self->vfs.close = dill_bundle_close;
     dill_list_init(&self->crs);
     self->waiter = NULL;
-    self->mem = 1;
+    self->mem = !!opts->mem;
     int h = dill_hmake(&self->vfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
     return h;
