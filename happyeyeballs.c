@@ -28,7 +28,7 @@
 #include "libdill.h"
 #include "utils.h"
 
-static dill_coroutine void dill_happyeyeballs_dnsquery(const char *name,
+static dill_coroutine void dill_tcp_happy_eyeballs_dnsquery(const char *name,
       int port, int mode, int ch) {
     /* Do the DNS query. Let's be reasonable and limit the number of addresses
        to 10 per IP version. */
@@ -53,8 +53,8 @@ static dill_coroutine void dill_happyeyeballs_dnsquery(const char *name,
     dill_assert(rc == 0 || errno == ECANCELED);
 }
 
-static dill_coroutine void dill_happyeyeballs_attempt(struct dill_ipaddr addr,
-      const struct dill_tcp_opts *opts, int ch) {
+static dill_coroutine void dill_tcp_happy_eyeballs_attempt(
+      struct dill_ipaddr addr, const struct dill_tcp_opts *opts, int ch) {
     int conn = dill_tcp_connect(&addr, opts, -1);
     if(dill_slow(conn < 0)) return;
     int rc = dill_chsend(ch, &conn, sizeof(int), -1);
@@ -66,7 +66,7 @@ static dill_coroutine void dill_happyeyeballs_attempt(struct dill_ipaddr addr,
     dill_assert(rc == 0);
 }
 
-static dill_coroutine void dill_happyeyeballs_coordinator(
+static dill_coroutine void dill_tcp_happy_eyeballs_coordinator(
       const char *name, int port, const struct dill_tcp_opts *opts, int ch) {
     struct dill_ipaddr nulladdr;
     int rc = dill_ipaddr_local(&nulladdr, "0.0.0.0", 0, DILL_IPADDR_IPV4);
@@ -91,11 +91,11 @@ static dill_coroutine void dill_happyeyeballs_coordinator(
     bndl_opts.mem = &bndl_storage;
     int bndl = dill_bundle(&bndl_opts);
     dill_assert(bndl >= 0);
-    rc = dill_bundle_go(bndl, dill_happyeyeballs_dnsquery(name, port,
+    rc = dill_bundle_go(bndl, dill_tcp_happy_eyeballs_dnsquery(name, port,
         DILL_IPADDR_IPV6, chipv6[1]));
     if(dill_slow(rc < 0 && errno == ECANCELED)) goto cancel;
     dill_assert(rc == 0);
-    rc = dill_bundle_go(bndl, dill_happyeyeballs_dnsquery(name, port,
+    rc = dill_bundle_go(bndl, dill_tcp_happy_eyeballs_dnsquery(name, port,
         DILL_IPADDR_IPV4, chipv4[1]));
     if(dill_slow(rc < 0 && errno == ECANCELED)) goto cancel;
     dill_assert(rc == 0);
@@ -127,7 +127,8 @@ use_address:
         /* Ignore 0.0.0.0 addresses. */
         if(dill_ipaddr_equal(&addr, &nulladdr, 0)) continue;
         /* Launch the connect attempt. */
-        rc = dill_bundle_go(bndl, dill_happyeyeballs_attempt(addr, opts, ch));
+        rc = dill_bundle_go(bndl,
+            dill_tcp_happy_eyeballs_attempt(addr, opts, ch));
         if(dill_slow(rc < 0 && errno == ECANCELED)) goto cancel;
         dill_assert(rc == 0);
         /* Alternate between IPv4 and IPv6 addresses. */
@@ -154,7 +155,7 @@ cancel:
     dill_assert(rc == 0);
 }
 
-int dill_happyeyeballs_connect(const char *name, int port,
+int dill_tcp_happy_eyeballs_connect(const char *name, int port,
       const struct dill_tcp_opts *opts, int64_t deadline) {
     int res = -1;
     int err = 0;
@@ -167,7 +168,7 @@ int dill_happyeyeballs_connect(const char *name, int port,
     chconns_opts.mem = &chconns_storage;
     int rc = dill_chmake(chconns, &chconns_opts);
     if(dill_slow(rc < 0)) {err = errno; goto exit1;}
-    int coord = dill_go(dill_happyeyeballs_coordinator(name, port, opts,
+    int coord = dill_go(dill_tcp_happy_eyeballs_coordinator(name, port, opts,
         chconns[1]));
     if(dill_slow(coord < 0)) {err = errno; goto exit2;}
     int conn;

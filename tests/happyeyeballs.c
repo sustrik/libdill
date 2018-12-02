@@ -28,9 +28,10 @@
 
 #define dill_ipaddr_remotes mock_ipaddr_remotes
 #define dill_tcp_connect mock_tcp_connect
-#define dill_happyeyeballs_connect mock_happyeyeballs_connect
+#define dill_tcp_connect_happy_eyeballs mock_connect_happy_eyeballs_connect
 
 #include "assert.h"
+#define DILL_DISABLE_RAW_NAMES
 #include "../happyeyeballs.c"
 
 #define OP_REMOTES 1
@@ -146,7 +147,7 @@ int main(void) {
         {OP_END}
     };
     start_test(test1, "test1");
-    int rc = dill_happyeyeballs_connect("www.example.org", 80, NULL, -1);
+    int rc = dill_tcp_happy_eyeballs_connect("www.example.org", 80, NULL, -1);
     assert(rc == 5);
     end_test();
 
@@ -158,7 +159,7 @@ int main(void) {
         {OP_END}
     };
     start_test(test2, "test2");
-    rc = dill_happyeyeballs_connect("www.example.org", 80, NULL, -1);
+    rc = dill_tcp_happy_eyeballs_connect("www.example.org", 80, NULL, -1);
     assert(rc == 5);
     end_test();
 
@@ -170,7 +171,7 @@ int main(void) {
         {OP_END}
     };
     start_test(test3, "test3");
-    rc = dill_happyeyeballs_connect("www.example.org", 80, NULL, -1);
+    rc = dill_tcp_happy_eyeballs_connect("www.example.org", 80, NULL, -1);
     assert(rc == 5);
     end_test();
 
@@ -182,7 +183,7 @@ int main(void) {
         {OP_END}
     };
     start_test(test4, "test4");
-    rc = dill_happyeyeballs_connect("www.example.org", 80, NULL, -1);
+    rc = dill_tcp_happy_eyeballs_connect("www.example.org", 80, NULL, -1);
     assert(rc == 5);
     end_test();
 
@@ -194,7 +195,7 @@ int main(void) {
         {OP_END}
     };
     start_test(test5, "test5");
-    rc = dill_happyeyeballs_connect("www.example.org", 80, NULL, -1);
+    rc = dill_tcp_happy_eyeballs_connect("www.example.org", 80, NULL, -1);
     assert(rc == 5);
     end_test();
 
@@ -206,7 +207,7 @@ int main(void) {
         {OP_END}
     };
     start_test(test6, "test6");
-    rc = dill_happyeyeballs_connect("www.example.org", 80, NULL, -1);
+    rc = dill_tcp_happy_eyeballs_connect("www.example.org", 80, NULL, -1);
     assert(rc == 5);
     end_test();
 
@@ -218,7 +219,7 @@ int main(void) {
         {OP_END}
     };
     start_test(test7, "test7");
-    rc = dill_happyeyeballs_connect("www.example.org", 80, NULL, -1);
+    rc = dill_tcp_happy_eyeballs_connect("www.example.org", 80, NULL, -1);
     assert(rc == 5);
     end_test();
 
@@ -229,7 +230,7 @@ int main(void) {
         {OP_END}
     };
     start_test(test8, "test8");
-    rc = dill_happyeyeballs_connect("www.example.org", 80, NULL,
+    rc = dill_tcp_happy_eyeballs_connect("www.example.org", 80, NULL,
         dill_now() + 30);
     assert(rc == -1 && errno == ETIMEDOUT);
     end_test();
@@ -241,7 +242,7 @@ int main(void) {
         {OP_END}
     };
     start_test(test9, "test9");
-    rc = dill_happyeyeballs_connect("www.example.org", 80, NULL,
+    rc = dill_tcp_happy_eyeballs_connect("www.example.org", 80, NULL,
         dill_now() + 100);
     assert(rc == -1 && errno == ETIMEDOUT);
     end_test();
@@ -257,7 +258,7 @@ int main(void) {
         {OP_END}
     };
     start_test(test10, "test10");
-    rc = dill_happyeyeballs_connect("www.example.org", 80, NULL,
+    rc = dill_tcp_happy_eyeballs_connect("www.example.org", 80, NULL,
         dill_now() + 900);
     assert(rc == -1 && errno == ETIMEDOUT);
     end_test();
@@ -274,7 +275,7 @@ int main(void) {
         {OP_END}
     };
     start_test(test11, "test11");
-    rc = dill_happyeyeballs_connect("www.example.org", 80, NULL, -1);
+    rc = dill_tcp_happy_eyeballs_connect("www.example.org", 80, NULL, -1);
     assert(rc == 5);
     end_test();
 
@@ -289,7 +290,7 @@ int main(void) {
         {OP_END}
     };
     start_test(test12, "test12");
-    rc = dill_happyeyeballs_connect("www.example.org", 80, NULL, -1);
+    rc = dill_tcp_happy_eyeballs_connect("www.example.org", 80, NULL, -1);
     assert(rc == 5);
     end_test();
 

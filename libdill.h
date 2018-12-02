@@ -510,6 +510,11 @@ DILL_EXPORT int dill_tcp_connect(
     const struct dill_ipaddr *addr,
     const struct dill_tcp_opts *opts,
     int64_t deadline);
+DILL_EXPORT int dill_tcp_connect_happy_eyeballs(
+    const char *name,
+    int port,
+    const struct dill_tcp_opts *opts,
+    int64_t deadline);
 DILL_EXPORT int dill_tcp_done(
     int s,
     int64_t deadline);
@@ -527,6 +532,7 @@ DILL_EXPORT int dill_tcp_detach(
 #define tcp_listen dill_tcp_listen
 #define tcp_accept dill_tcp_accept
 #define tcp_connect dill_tcp_connect
+#define tcp_connect_happy_eyeballs dill_tcp_connect_happy_eyeballs
 #define tcp_done dill_tcp_done
 #define tcp_close dill_tcp_close
 #define tcp_detach dill_tcp_detach
@@ -1018,18 +1024,6 @@ DILL_EXPORT int dill_term_detach(
 #define term_attach dill_term_attach
 #define term_done dill_term_done
 #define term_detach dill_term_detach
-#endif
-
-/******************************************************************************/
-/* Happy Eyeballs (RFC 8305).                                                 */
-/* Implements concurrent TCP connecting to the remote endpoint.               */
-/******************************************************************************/
-
-int dill_happyeyeballs_connect(const char *name, int port,
-    const struct dill_tcp_opts *opts, int64_t deadline);
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define happyeyeballs_connect dill_happyeyeballs_connect
 #endif
 
 /******************************************************************************/
