@@ -1049,10 +1049,9 @@ DILL_EXPORT int dill_tcpmux_accept(
     const struct dill_tcp_opts *opts,
     struct dill_ipaddr *addr,
     int64_t deadline);
-DILL_EXPORT int dill_tcpmux_connect(
-    const struct dill_ipaddr *addr,
+DILL_EXPORT int dill_tcpmux_switch(
+    int s,
     const char *service,
-    const struct dill_tcp_opts *opts,
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
@@ -1061,7 +1060,7 @@ DILL_EXPORT int dill_tcpmux_connect(
 #define tcpmux_defaults dill_tcpmux_defaults
 #define tcpmux_listen dill_tcpmux_listen
 #define tcpmux_accept dill_tcpmux_accept
-#define tcpmux_connect dill_tcpmux_connect
+#define tcpmux_switch dill_tcpmux_switch
 #endif
 
 #endif

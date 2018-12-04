@@ -29,16 +29,41 @@ coroutine void client(void) {
     struct ipaddr addr;
     int rc = ipaddr_local(&addr, "127.0.0.1", 10001, 0);
     errno_assert(rc == 0);
-    int s = tcpmux_connect(&addr, "foo", NULL, -1);
-    errno_assert(s >= 0);
+    while(1) {
+        int s = tcp_connect(&addr, NULL, -1);
+        if(s < 0 && errno == ECONNREFUSED) {
+            msleep(now() + 5000);
+            continue;
+        }
+        errno_assert(s >= 0);
+        rc = tcpmux_switch(s, "foo", -1);
+        if(rc != 0 && errno == ECONNREFUSED) {
+            msleep(now() + 5000);
+            continue;
+        }
+        errno_assert(rc == 0);
+        printf("connected\n");
+
+        rc = hclose(s);
+        errno_assert(rc == 0);
+
+        //s = tcp_detach(s);
+        //errno_assert(s >= 0);
+        //close(s);
+
+        msleep(now() + 5000);
+    }
 }
 
 int main(void) {
     int lst = tcpmux_listen("foo", NULL, -1);
     errno_assert(lst >= 0);
     go(client());
-    int s = tcpmux_accept(lst, NULL, NULL, -1);
-    errno_assert(s >= 0);
-
+    while(1) {
+        int s = tcpmux_accept(lst, NULL, NULL, -1);
+        errno_assert(s >= 0);
+        printf("accepted\n");
+        hclose(s);
+    }
     return 0;
 }

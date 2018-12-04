@@ -68,11 +68,11 @@ coroutine void tcp_handler(int s) {
     }
     int success = it != &services;
     /* Reply to the TCP peer. */
-    const char *reply = success ? "-Service not found" : "+";
-    printf("service %s %s\n", name, success ? "found" : "not found");
+    const char *reply = success ? "+" : "-Service not found";
     int rc = msend(s, reply, strlen(reply), deadline);
     assert(rc == 0);
     if(!success) {
+        fprintf(stderr, "%s: not found\n", name);
         rc = hclose(s);
         assert(rc == 0);
         return;
@@ -84,10 +84,7 @@ coroutine void tcp_handler(int s) {
     assert(s >= 0);
     rc = ipc_sendfd(svc->s, s, deadline);
     assert(rc == 0);
-    /* Put the entry to the end of the list to implement simple load balancing
-       for non-exclusive registrations. */
-    dill_list_erase(&svc->item);
-    dill_list_insert(&svc->item, &services);
+    fprintf(stderr, "%s: connection created\n", svc->name);
 }
 
 coroutine void ipc_handler(int s) {
@@ -103,13 +100,23 @@ coroutine void ipc_handler(int s) {
     assert(rc == 0);
     svc->name[val] = 0;
     svc->s = s;
-    printf("registering service %s\n", svc->name);
     /* Check whether the service already exists. */
     struct dill_list *it;
     for(it = dill_list_next(&services); it != &services;
           it = dill_list_next(it)) {
         struct service *svc_it = dill_cont(it, struct service, item);
         if(strcmp(svc->name, svc_it->name) == 0) {
+            /* Check whether the service provider is still connected. */
+            rc = brecv(svc_it->s, &val, 1, 0);
+            if(rc < 0 && (errno == ECONNRESET || errno == EPIPE)) {
+                fprintf(stderr, "%s: unregistered\n", svc_it->name);
+                rc = hclose(svc_it->s);
+                assert(rc == 0);
+                dill_list_erase(it);
+                free(svc_it);
+                break;
+            }
+            assert(rc == 0);
             val = 0;
             rc = bsend(s, &val, 1, deadline);
             assert(rc == 0);
@@ -120,6 +127,7 @@ coroutine void ipc_handler(int s) {
     }
     /* Store the registration record. */
     dill_list_insert(&svc->item, &services);
+    fprintf(stderr, "%s: registered\n", svc->name);
     /* Report success to the application. */
     val = 1;
     rc = bsend(s, &val, 1, deadline);
@@ -163,7 +171,7 @@ coroutine void ipc_listener(int lst) {
 int main(int argc, char *argv[]) {
     /* Parse command-line arguments. */
     if(argc > 3) {
-        printf("usage: tcpmuxd [<port> [<filename>]]\n"
+        fprintf(stderr, "usage: tcpmuxd [<port> [<filename>]]\n"
             "default port: 10001\n"
             "default filename: /tmp/tcpmux\n");
         return 1;
