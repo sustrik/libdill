@@ -114,6 +114,13 @@ DILL_EXPORT int dill_hclose(int h);
 
 #define dill_coroutine __attribute__((noinline))
 
+struct dill_coroutine_opts {
+    void *stack;
+    size_t stacklen;
+};
+
+DILL_EXPORT extern const struct dill_coroutine_opts dill_coroutine_defaults;
+
 DILL_EXPORT extern volatile void *dill_unoptimisable;
 
 DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
@@ -225,11 +232,12 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
    outer scope and a local variable in this macro causes the variable to
    get weird values. To avoid that, we use fancy names (dill_*__). */ 
 
-#define dill_go_(fn, ptr, len, bndl) \
+#define dill_go_(fn, opts, bndl) \
     ({\
         sigjmp_buf *dill_ctx__;\
-        void *dill_stk__ = (ptr);\
-        int dill_handle__ = dill_prologue(&dill_ctx__, &dill_stk__, (len),\
+        void *dill_stk__ = (opts) ? (opts)->stack : NULL;\
+        int dill_handle__ = dill_prologue(&dill_ctx__, \
+            &dill_stk__, (opts) ? (opts)->stacklen : 0,\
             (bndl), __FILE__, __LINE__);\
         if(dill_handle__ >= 0) {\
             if(!dill_setjmp(*dill_ctx__)) {\
@@ -241,11 +249,12 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
         dill_handle__;\
     })
 
-#define dill_go(fn) dill_go_(fn, NULL, 0, -1)
-#define dill_go_mem(fn, ptr, len) dill_go_(fn, ptr, len, -1)
+#define dill_go(fn) dill_go_(fn, ((struct dill_coroutine_opts*)NULL), -1)
+#define dill_go_opts(fn, opts) dill_go_(fn, opts, -1)
 
-#define dill_bundle_go(bndl, fn) dill_go_(fn, NULL, 0, bndl)
-#define dill_bundle_go_mem(bndl, fn, ptr, len) dill_go_(fn, ptr, len, bndl)
+#define dill_bundle_go(bndl, fn) dill_go_(fn, \
+    ((struct dill_coroutine_opts*)NULL), bndl)
+#define dill_bundle_go_opts(bndl, fn, opts) dill_go_(fn, opts, bndl)
 
 struct dill_bundle_storage {char _[64];};
 
@@ -261,10 +270,12 @@ DILL_EXPORT int dill_yield(void);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define coroutine dill_coroutine
+#define coroutine_opts dill_coroutine_opts
+#define coroutine_defaults dill_coroutine_defaults
 #define go dill_go
-#define go_mem dill_go_mem
+#define go_opts dill_go_opts
 #define bundle_go dill_bundle_go
-#define bundle_go_mem dill_bundle_go_mem
+#define bundle_go_opts dill_bundle_go_opts
 #define bundle_storage dill_bundle_storage
 #define bundle_opts dill_bundle_opts
 #define bundle_defaults dill_bundle_defaults

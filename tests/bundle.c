@@ -94,7 +94,10 @@ int main(void) {
     int hndl7 = bundle(NULL);
     errno_assert(hndl7 >= 0);
     char stk[4096];
-    rc = bundle_go_mem(hndl7, worker1(), stk, sizeof(stk));
+    struct coroutine_opts opts = coroutine_defaults;
+    opts.stack = stk;
+    opts.stacklen = sizeof(stk);
+    rc = bundle_go_opts(hndl7, worker1(), &opts);
     errno_assert(rc == 0);
     rc = hclose(hndl7);
     errno_assert(rc == 0);

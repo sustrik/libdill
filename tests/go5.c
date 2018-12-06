@@ -40,7 +40,10 @@ int main() {
         /* Test go_mem. */
         char *stack = malloc(65536);
         assert(stack);
-        int cr = go_mem(dummy(), stack, 65536);
+        struct coroutine_opts opts = coroutine_defaults;
+        opts.stack = stack;
+        opts.stacklen = 65536;
+        int cr = go_opts(dummy(), &opts);
         errno_assert(cr >= 0);
         int rc = msleep(now() + 100);
         errno_assert(rc == 0);

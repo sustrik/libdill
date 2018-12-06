@@ -48,6 +48,11 @@ struct dill_census_item {
 
 #endif
 
+const struct dill_coroutine_opts dill_coroutine_defaults = {
+    NULL,  /* stack */
+    0      /* stacklen */
+};
+
 /* Storage for the constant used by the go() macro. */
 volatile void *dill_unoptimisable = NULL;
 
