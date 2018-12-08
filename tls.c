@@ -102,22 +102,20 @@ int dill_tls_attach_client(int s, const struct dill_tls_opts *opts,
     BIO *bio = dill_tls_new_cbio(self);
     if(dill_slow(!bio)) {err = errno; goto error4;}
 	  SSL_set_bio(ssl, bio, bio);
-    /* Take ownership of the underlying socket. */
-    s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error5;}
     self->hvfs.query = dill_tls_hquery;
     self->hvfs.close = dill_tls_hclose;
     self->bvfs.bsendl = dill_tls_bsendl;
     self->bvfs.brecvl = dill_tls_brecvl;
     self->ctx = ctx;
     self->ssl = ssl;
-    self->u = s;
     self->deadline = -1;
     self->indone = 0;
     self->outdone = 0;
     self->inerr = 0;
     self->outerr = 0;
     self->mem = !!opts->mem;
+    self->u = dill_hattach(s, &self->hvfs);
+    if(dill_slow(self->u < 0)) {err = errno; goto error5;}
     /* Initial handshaking. */
     while(1) {
         ERR_clear_error();
@@ -125,10 +123,7 @@ int dill_tls_attach_client(int s, const struct dill_tls_opts *opts,
         if(dill_tls_followup(self, rc)) break;
         if(dill_slow(errno != 0)) {err = errno; goto error5;}
     }
-    /* Create the handle. */
-    int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error5;}
-    return h;
+    return 0;
 error5:
     BIO_vfree(bio);
 error4:
@@ -177,22 +172,20 @@ int dill_tls_attach_server(int s, const char *cert, const char *pkey,
     BIO *bio = dill_tls_new_cbio(self);
     if(dill_slow(!bio)) {err = errno; goto error4;}
 	  SSL_set_bio(ssl, bio, bio);
-    /* Take ownership of the underlying socket. */
-    s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error5;}
     self->hvfs.query = dill_tls_hquery;
     self->hvfs.close = dill_tls_hclose;
     self->bvfs.bsendl = dill_tls_bsendl;
     self->bvfs.brecvl = dill_tls_brecvl;
     self->ctx = ctx;
     self->ssl = ssl;
-    self->u = s;
     self->deadline = -1;
     self->indone = 0;
     self->outdone = 0;
     self->inerr = 0;
     self->outerr = 0;
     self->mem = !!opts->mem;
+    self->u = dill_hattach(s, &self->hvfs);
+    if(dill_slow(self->u < 0)) {err = errno; goto error5;}
     /* Initial handshaking. */
     while(1) {
         ERR_clear_error();
@@ -200,10 +193,7 @@ int dill_tls_attach_server(int s, const char *cert, const char *pkey,
         if(dill_tls_followup(self, rc)) break;
         if(dill_slow(errno != 0)) {err = errno; goto error5;}
     }
-    /* Create the handle. */
-    int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error5;}
-    return h;
+    return 0;
 error5:
     BIO_vfree(bio);
 error4:
@@ -255,10 +245,11 @@ int dill_tls_detach(int s, int64_t deadline) {
             if(dill_tls_followup(self, rc)) {err = errno; goto error;}
         }
     }
-    int u = self->u;
+    int rc = dill_hdetach(s, self->u);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     self->u = -1;
     dill_tls_hclose(&self->hvfs);
-    return u;
+    return 0;
 error:
     dill_tls_hclose(&self->hvfs);
     errno = err;

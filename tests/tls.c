@@ -27,10 +27,10 @@
 #include "assert.h"
 #include "../libdill.h"
 
-coroutine void client1(int u) {
-    int s = tls_attach_client(u, NULL, -1);
-    errno_assert(s >= 0);
-    int rc = bsend(s, "ABC", 3, -1);
+coroutine void client1(int s) {
+    int rc = tls_attach_client(s, NULL, -1);
+    errno_assert(rc == 0);
+    rc = bsend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
     rc = tls_done(s, -1);
     errno_assert(rc == 0);
@@ -38,28 +38,28 @@ coroutine void client1(int u) {
     rc = brecv(s, buf, sizeof(buf), -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    u = tls_detach(s, -1);
-    errno_assert(u >= 0);
-    rc = hclose(u);
+    rc = tls_detach(s, -1);
+    errno_assert(rc == 0);
+    rc = hclose(s);
     errno_assert(rc == 0);
 }
 
-coroutine void client2(int u) {
-    int s = tls_attach_client(u, NULL, -1);
-    errno_assert(s >= 0);
-    int rc = bsend(s, "ABC", 3, -1);
+coroutine void client2(int s) {
+    int rc = tls_attach_client(s, NULL, -1);
     errno_assert(rc == 0);
-    u = tls_detach(s, -1);
-    errno_assert(u >= 0);
-    rc = bsend(u, "DEF", 3, -1);
+    rc = bsend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
-    rc = ipc_close(u, -1);
+    rc = tls_detach(s, -1);
+    errno_assert(rc == 0);
+    rc = bsend(s, "DEF", 3, -1);
+    errno_assert(rc == 0);
+    rc = ipc_close(s, -1);
     errno_assert(rc == 0);
 }
 
-coroutine void client3(int u) {
-    int s = tls_attach_client(u, NULL, -1);
-    errno_assert(s >= 0);
+coroutine void client3(int s) {
+    int rc = tls_attach_client(s, NULL, -1);
+    errno_assert(rc == 0);
     uint8_t c = 0;
     uint8_t b[2777];
     int i;
@@ -72,9 +72,9 @@ coroutine void client3(int u) {
         int rc = bsend(s, b, sizeof(b), -1);
         errno_assert(rc == 0);
     }
-    u = tls_detach(s, -1);
-    errno_assert(u >= 0);
-    int rc = hclose(u);
+    rc = tls_detach(s, -1);
+    errno_assert(rc == 0);
+    rc = hclose(s);
     errno_assert(rc == 0);
 }
 
@@ -87,20 +87,19 @@ int main(void) {
     errno_assert(rc == 0);
     int cr = go(client1(p[1]));
     errno_assert(cr >= 0);
-    int s = tls_attach_server(p[0], "tests/cert.pem", "tests/key.pem",
-        NULL, -1);
-    errno_assert(s >= 0);
-    rc = brecv(s, buf, 3, -1);
+    rc = tls_attach_server(p[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
+    errno_assert(rc == 0);
+    rc = brecv(p[0], buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    rc = brecv(s, buf, 3, -1);
+    rc = brecv(p[0], buf, 3, -1);
     errno_assert(rc == -1 && errno == EPIPE);
-    rc = bsend(s, "DEF", 3, -1);
+    rc = bsend(p[0], "DEF", 3, -1);
     errno_assert(rc == 0);
-    rc = tls_done(s, -1);
+    rc = tls_done(p[0], -1);
     errno_assert(rc == 0);
-    p[0] = tls_detach(s, -1);
-    errno_assert(p[0] >= 0);
+    rc = tls_detach(p[0], -1);
+    errno_assert(rc == 0);
     rc = hclose(p[0]);
     errno_assert(rc == 0);
     rc = bundle_wait(cr, -1);
@@ -114,13 +113,13 @@ int main(void) {
     errno_assert(rc == 0);
     cr = go(client2(p[1]));
     errno_assert(cr >= 0);
-    s = tls_attach_server(p[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
-    errno_assert(s >= 0);
-    rc = brecv(s, buf, 3, -1);
+    rc = tls_attach_server(p[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
+    errno_assert(rc == 0);
+    rc = brecv(p[0], buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    p[0] = tls_detach(s, -1);
-    errno_assert(p[0] >= 0);
+    rc = tls_detach(p[0], -1);
+    errno_assert(rc == 0);
     rc = brecv(p[0], buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
@@ -136,13 +135,13 @@ int main(void) {
     errno_assert(rc == 0);
     cr = go(client3(p[1]));
     errno_assert(cr >= 0);
-    s = tls_attach_server(p[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
-    errno_assert(s >= 0);
+    rc = tls_attach_server(p[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
+    errno_assert(rc == 0);
     uint8_t c = 0;
     int i;
     for(i = 0; i != 2777; ++i) {
         uint8_t b[257];
-        rc = brecv(s, b, sizeof(b), -1);
+        rc = brecv(p[0], b, sizeof(b), -1);
         errno_assert(rc == 0);
         int j;
         for(j = 0; j != sizeof(b); ++j) {
@@ -150,8 +149,8 @@ int main(void) {
             c++;
         }
     }
-    p[0] = tls_detach(s, -1);
-    errno_assert(p[0] >= 0);
+    rc = tls_detach(p[0], -1);
+    errno_assert(rc == 0);
     rc = bundle_wait(cr, -1);
     errno_assert(rc == 0);
     rc = hclose(cr);

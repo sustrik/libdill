@@ -111,8 +111,8 @@ int main(int argc, char *argv[]) {
     }
 
     if(port == 443) {
-       s = tls_attach_client(s, NULL, -1);
-       assert(s >= 0);
+       rc = tls_attach_client(s, NULL, -1);
+       assert(rc == 0);
     }
 
     rc = http_attach(s, NULL);
@@ -153,8 +153,8 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "\n");
 
     if(port == 443) {
-        s = tls_detach(s, -1);
-        assert(s >= 0);
+        rc = tls_detach(s, -1);
+        assert(rc == 0);
     }
 
     rc = tcp_close(s, -1);
