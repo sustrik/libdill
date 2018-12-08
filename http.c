@@ -78,8 +78,8 @@ int dill_http_attach(int s, const struct dill_http_opts *opts) {
     /* Wrap the underlying socket into SUFFIX and TERM protocol. */
     struct dill_suffix_opts sopts = dill_suffix_defaults;
     sopts.mem = &obj->suffix_mem;
-    s = dill_suffix_attach(s, "\r\n", 2, &sopts);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
+    int rc = dill_suffix_attachx(s, "\r\n", 2, &sopts);
+    if(dill_slow(rc < 0)) {err = errno; goto error2;}
     struct dill_term_opts topts = dill_term_defaults;
     topts.mem = &obj->term_mem;
     s = dill_term_attach(s, NULL, 0, &topts);
@@ -110,14 +110,17 @@ int dill_http_detach(int s, int64_t deadline) {
     int err;
     struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
-    int u = dill_term_detach(obj->u, deadline);
-    if(dill_slow(u < 0)) {err = errno; goto error;}
-    u = dill_suffix_detach(u);
-    if(dill_slow(u < 0)) {err = errno; goto error;}
-error:
+    obj->u = dill_term_detach(obj->u, deadline);
+    if(dill_slow(obj->u < 0)) {err = errno; goto error;}
+    int rc = dill_suffix_detachx(obj->u);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
+    int u = obj->u;
     if(!obj->mem) free(obj);
-    errno = err;
     return u;
+error:
+    if(s >= 0) dill_hclose(s);
+    errno = err;
+    return -1;
 }
 
 int dill_http_sendrequest(int s, const char *command, const char *resource,

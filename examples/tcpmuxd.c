@@ -45,8 +45,8 @@ coroutine void tcp_handler(int s) {
     struct suffix_storage mem;
     struct suffix_opts opts = suffix_defaults;
     opts.mem = &mem;
-    s = suffix_attach(s, "\r\n", 2, &opts);
-    assert(s >= 0);
+    int rc = suffix_attachx(s, "\r\n", 2, &opts);
+    assert(rc == 0);
     /* Read the requested service name. */
     char name[256];
     ssize_t sz = mrecv(s, name, sizeof(name), deadline);
@@ -69,7 +69,7 @@ coroutine void tcp_handler(int s) {
     int success = it != &services;
     /* Reply to the TCP peer. */
     const char *reply = success ? "+" : "-Service not found";
-    int rc = msend(s, reply, strlen(reply), deadline);
+    rc = msend(s, reply, strlen(reply), deadline);
     assert(rc == 0);
     if(!success) {
         fprintf(stderr, "%s: not found\n", name);
@@ -78,8 +78,8 @@ coroutine void tcp_handler(int s) {
         return;
     }
     /* Send the raw fd to the process implementing the service. */
-    s = suffix_detach(s);
-    assert(s >= 0);
+    rc = suffix_detachx(s);
+    assert(rc == 0);
     s = tcp_detach(s);
     assert(s >= 0);
     rc = ipc_sendfd(svc->s, s, deadline);

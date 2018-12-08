@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2017 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -90,7 +90,6 @@ int dill_prefix_attach(int s, size_t prefixlen,
     self->inerr = 0;
     self->outerr = 0;
     self->mem = !!opts->mem;
-    /* Create the handle. */
     self->u = dill_hattach(s, &self->hvfs);
     if(dill_slow(self->u < 0)) {err = errno; goto error2;}
     return 0;

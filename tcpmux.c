@@ -158,11 +158,11 @@ int dill_tcpmux_switch(int s, const char *service, int64_t deadline) {
     struct dill_suffix_storage sfxmem;
     struct dill_suffix_opts sfxopts = dill_suffix_defaults;
     sfxopts.mem = &sfxmem;
-    s = dill_suffix_attach(s, "\r\n", 2, &sfxopts);
-    dill_assert(s >= 0);
+    int rc = dill_suffix_attachx(s, "\r\n", 2, &sfxopts);
+    dill_assert(rc == 0);
     /* Send request to tcpmuxd asking it to pass the connection to the server
        implementing specified service. */
-    int rc = dill_msend(s, service, servicelen, deadline);
+    rc = dill_msend(s, service, servicelen, deadline);
     dill_assert(rc == 0);
     /* Process reply from tcpmuxd. */
     char buf[1]; 
@@ -172,8 +172,8 @@ int dill_tcpmux_switch(int s, const char *service, int64_t deadline) {
     if(dill_slow(buf[0] != '+' && buf[0] != '-')) {err = EPROTO; goto error2;}
     if(dill_slow(buf[0] == '-')) {err = ECONNREFUSED; goto error2;}
     /* Terminate the CRLF layer. */
-    s = dill_suffix_detach(s);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
+    rc = dill_suffix_detachx(s);
+    if(dill_slow(rc < 0)) {err = errno; goto error2;}
     return 0;
 error2:
     rc = dill_hclose(s);

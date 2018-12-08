@@ -69,15 +69,12 @@ static void *dill_suffix_hquery(struct dill_hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int dill_suffix_attach(int s, const void *suffix, size_t suffixlen,
+int dill_suffix_attachx(int s, const void *suffix, size_t suffixlen,
       const struct dill_suffix_opts *opts) {
     int err;
     if(dill_slow(!suffix || suffixlen == 0 || suffixlen > 32)) {
         err = EINVAL; goto error1;}
     if(!opts) opts = &dill_suffix_defaults;
-    /* Take ownership of the underlying socket. */
-    s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Create the object. */
     struct dill_suffix_sock *self = (struct dill_suffix_sock*)opts->mem;
     if(!self) {
@@ -88,7 +85,6 @@ int dill_suffix_attach(int s, const void *suffix, size_t suffixlen,
     self->hvfs.close = dill_suffix_hclose;
     self->mvfs.msendl = dill_suffix_msendl;
     self->mvfs.mrecvl = dill_suffix_mrecvl;
-    self->u = s;
     self->uvfs = dill_hquery(s, dill_bsock_type);
     if(dill_slow(!self->uvfs && errno == ENOTSUP)) {err = EPROTO; goto error2;}
     if(dill_slow(!self->uvfs)) {err = errno; goto error2;}
@@ -97,10 +93,9 @@ int dill_suffix_attach(int s, const void *suffix, size_t suffixlen,
     self->inerr = 0;
     self->outerr = 0;
     self->mem = !!opts->mem;
-    /* Create the handle. */
-    int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error2;}
-    return h;
+    self->u = dill_hattach(s, &self->hvfs);
+    if(dill_slow(self->u < 0)) {err = errno; goto error2;}
+    return 0;
 error2:
     if(!opts->mem) free(self);
 error1:
@@ -109,14 +104,15 @@ error1:
     return -1;
 }
 
-int dill_suffix_detach(int s) {
+int dill_suffix_detachx(int s) {
     int err;
     struct dill_suffix_sock *self = dill_hquery(s, dill_suffix_type);
     if(dill_slow(!self)) {err = errno; goto error;}
     if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
-    int u = self->u;
+    int rc = dill_hdetach(s, self->u);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     if(!self->mem) free(self);
-    return u;
+    return 0;
 error:
     if(s >= 0) dill_hclose(s);
     errno = err;

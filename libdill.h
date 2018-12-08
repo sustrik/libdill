@@ -655,20 +655,20 @@ struct dill_suffix_opts {
 
 DILL_EXPORT extern const struct dill_suffix_opts dill_suffix_defaults;
 
-DILL_EXPORT int dill_suffix_attach(
+DILL_EXPORT int dill_suffix_attachx(
     int s,
     const void *suffix,
     size_t suffixlen,
     const struct dill_suffix_opts *opts);
-DILL_EXPORT int dill_suffix_detach(
+DILL_EXPORT int dill_suffix_detachx(
     int s);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define suffix_opts dill_suffix_opts
 #define suffix_defaults dill_suffix_defaults
 #define suffix_storage dill_suffix_storage
-#define suffix_attach dill_suffix_attach
-#define suffix_detach dill_suffix_detach
+#define suffix_attachx dill_suffix_attachx
+#define suffix_detachx dill_suffix_detachx
 #endif
 
 /******************************************************************************/

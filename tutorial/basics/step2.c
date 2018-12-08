@@ -48,8 +48,8 @@ int main(int argc, char *argv[]) {
     while(1) {
         int s = tcp_accept(ls, NULL, NULL, -1);
         assert(s >= 0);
-        s = suffix_attach(s, "\r\n", 2, NULL);
-        assert(s >= 0);
+        int rc = suffix_attachx(s, "\r\n", 2, NULL);
+        assert(rc == 0);
         rc = msend(s, "What's your name?", 17, -1);
         if(rc != 0) goto cleanup;
         char inbuf[256];
