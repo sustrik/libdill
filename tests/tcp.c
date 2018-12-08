@@ -413,7 +413,7 @@ static void test_attach() {
     errno_assert(fd >= 0);
     rc = connect(fd, ipaddr_sockaddr(&addr), ipaddr_len(&addr));
     errno_assert(rc == 0);
-    int s = tcp_attach(fd, NULL);
+    int s = tcp_fromfd(fd, NULL);
     errno_assert(s >= 0);
   
     int as = tcp_accept(ls, NULL, NULL, -1);

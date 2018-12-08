@@ -441,10 +441,10 @@ error1:
 }
 
 /******************************************************************************/
-/*  Attach/detach.                                                            */
+/*  Conversions to/from file descriptors.                                     */
 /******************************************************************************/
 
-int dill_ipc_attach(int fd, const struct dill_ipc_opts *opts) {
+int dill_ipc_fromfd(int fd, const struct dill_ipc_opts *opts) {
     int err;
     if(!opts) opts = &dill_ipc_defaults;
     /* Make sure that the supplied file descriptor is of correct type. */
@@ -471,7 +471,7 @@ error1:
     return -1;
 }
 
-int dill_ipc_detach(int s) {
+int dill_ipc_tofd(int s) {
     int err;
     struct dill_ipc_conn *conn = dill_hquery(s, dill_ipc_type);
     if(!conn && errno == ENOTSUP) goto listener;

@@ -337,10 +337,10 @@ static void dill_tcp_listener_hclose(struct dill_hvfs *hvfs) {
 }
 
 /******************************************************************************/
-/*  Attach/detach.                                                            */
+/*  Conversions to/from file descriptors.                                     */
 /******************************************************************************/
 
-int dill_tcp_attach(int fd, const struct dill_tcp_opts *opts) {
+int dill_tcp_fromfd(int fd, const struct dill_tcp_opts *opts) {
     int err;
     if(!opts) opts = &dill_tcp_defaults;
     /* Make sure that the supplied file descriptor is of correct type. */
@@ -367,7 +367,7 @@ error1:
     return -1;
 }
 
-int dill_tcp_detach(int s) {
+int dill_tcp_tofd(int s) {
     int err;
     struct dill_tcp_conn *conn = dill_hquery(s, dill_tcp_type);
     if(!conn && errno == ENOTSUP) goto listener;

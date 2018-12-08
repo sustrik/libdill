@@ -131,7 +131,7 @@ int dill_tcpmux_accept(int s, const struct dill_tcp_opts *opts,
 recvfd:;
     int as = dill_ipc_recvfd(self->s, deadline);
     if(dill_fast(as >= 0)) {
-        as = dill_tcp_attach(as, opts);
+        as = dill_tcp_fromfd(as, opts);
         dill_assert(as >= 0);
         return as;
     }

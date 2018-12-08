@@ -506,7 +506,7 @@ struct dill_tcp_opts {
 
 DILL_EXPORT extern const struct dill_tcp_opts dill_tcp_defaults;
 
-DILL_EXPORT int dill_tcp_attach(
+DILL_EXPORT int dill_tcp_fromfd(
     int fd,
     const struct dill_tcp_opts *opts);
 DILL_EXPORT int dill_tcp_listen(
@@ -532,21 +532,21 @@ DILL_EXPORT int dill_tcp_done(
 DILL_EXPORT int dill_tcp_close(
     int s,
     int64_t deadline);
-DILL_EXPORT int dill_tcp_detach(
+DILL_EXPORT int dill_tcp_tofd(
     int s);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define tcp_opts dill_tcp_opts
 #define tcp_defaults dill_tcp_defaults
 #define tcp_storage dill_tcp_storage
-#define tcp_attach dill_tcp_attach
+#define tcp_fromfd dill_tcp_fromfd
 #define tcp_listen dill_tcp_listen
 #define tcp_accept dill_tcp_accept
 #define tcp_connect dill_tcp_connect
 #define tcp_connect_happy_eyeballs dill_tcp_connect_happy_eyeballs
 #define tcp_done dill_tcp_done
 #define tcp_close dill_tcp_close
-#define tcp_detach dill_tcp_detach
+#define tcp_tofd dill_tcp_tofd
 #endif
 
 /******************************************************************************/
@@ -563,7 +563,7 @@ struct dill_ipc_opts {
 
 DILL_EXPORT extern const struct dill_ipc_opts dill_ipc_defaults;
 
-DILL_EXPORT int dill_ipc_attach(
+DILL_EXPORT int dill_ipc_fromfd(
     int fd,
     const struct dill_ipc_opts *opts);
 DILL_EXPORT int dill_ipc_listen(
@@ -590,7 +590,7 @@ DILL_EXPORT int dill_ipc_done(
 DILL_EXPORT int dill_ipc_close(
     int s,
     int64_t deadline);
-DILL_EXPORT int dill_ipc_detach(
+DILL_EXPORT int dill_ipc_tofd(
     int s);
 DILL_EXPORT int dill_ipc_pair(
     int s[2],
@@ -601,7 +601,7 @@ DILL_EXPORT int dill_ipc_pair(
 #define ipc_opts dill_ipc_opts
 #define ipc_defaults dill_ipc_defaults
 #define ipc_storage dill_ipc_storage
-#define ipc_attach dill_ipc_attach
+#define ipc_fromfd dill_ipc_fromfd
 #define ipc_listen dill_ipc_listen
 #define ipc_accept dill_ipc_accept
 #define ipc_connect dill_ipc_connect
@@ -609,7 +609,7 @@ DILL_EXPORT int dill_ipc_pair(
 #define ipc_recvfd dill_ipc_recvfd
 #define ipc_done dill_ipc_done
 #define ipc_close dill_ipc_close
-#define ipc_detach dill_ipc_detach
+#define ipc_tofd dill_ipc_tofd
 #define ipc_pair dill_ipc_pair
 #endif
 

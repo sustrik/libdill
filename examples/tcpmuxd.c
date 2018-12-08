@@ -80,7 +80,7 @@ coroutine void tcp_handler(int s) {
     /* Send the raw fd to the process implementing the service. */
     rc = suffix_detach(s);
     assert(rc == 0);
-    s = tcp_detach(s);
+    s = tcp_tofd(s);
     assert(s >= 0);
     rc = ipc_sendfd(svc->s, s, deadline);
     assert(rc == 0);
