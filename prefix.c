@@ -71,9 +71,6 @@ int dill_prefix_attach(int s, size_t prefixlen,
     int err;
     if(dill_slow(prefixlen == 0)) {err = EINVAL; goto error1;}
     if(!opts) opts = &dill_prefix_defaults;
-    /* Take ownership of the underlying socket. */
-    s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Check whether underlying socket is a bytestream. */
     void *q = dill_hquery(s, dill_bsock_type);
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
@@ -88,16 +85,15 @@ int dill_prefix_attach(int s, size_t prefixlen,
     self->hvfs.close = dill_prefix_hclose;
     self->mvfs.msendl = dill_prefix_msendl;
     self->mvfs.mrecvl = dill_prefix_mrecvl;
-    self->u = s;
     self->prefixlen = prefixlen;
     self->little_endian = opts->little_endian;
     self->inerr = 0;
     self->outerr = 0;
     self->mem = !!opts->mem;
     /* Create the handle. */
-    int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error2;}
-    return h;
+    self->u = dill_hattach(s, &self->hvfs);
+    if(dill_slow(self->u < 0)) {err = errno; goto error2;}
+    return 0;
 error2:
     if(!opts->mem) free(self); 
 error1:
@@ -111,9 +107,10 @@ int dill_prefix_detach(int s) {
     struct dill_prefix_sock *self = dill_hquery(s, dill_prefix_type);
     if(dill_slow(!self)) {err = errno; goto error;}
     if(dill_slow(self->inerr || self->outerr)) {err = ECONNRESET; goto error;}
-    int u = self->u;
+    int rc = dill_hdetach(s, self->u);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     if(!self->mem) free(self);
-    return u;
+    return 0;
 error:
     if(s >= 0) dill_hclose(s);
     errno = err;

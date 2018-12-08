@@ -106,6 +106,7 @@ int dill_hmake(struct dill_hvfs *vfs) {
     return h;
 }
 
+/* Obsolete. */
 int dill_hown(int h) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
     DILL_CHECKHANDLE(h, -1);
@@ -126,6 +127,40 @@ int dill_hown(int h) {
     ctx->last = h;
     ctx->nused--;
     return res;
+}
+
+// Make h point to vfs.
+// Return a new handle that points to what h used to point to before.
+int dill_hattach(int h, struct dill_hvfs *vfs) {
+    struct dill_ctx_handle *ctx = &dill_getctx->handle;
+    DILL_CHECKHANDLE(h, -1);
+    int n = dill_hmake(hndl->vfs);
+    if(dill_slow(n < 0)) return -1;
+    hndl->vfs = vfs;
+    hndl->type = NULL;
+    hndl->ptr = NULL;
+    return n;
+}
+
+// Make h point to whatever n pointed to. Invalidate n.
+int dill_hdetach(int h, int n) {
+    struct dill_ctx_handle *ctx = &dill_getctx->handle;
+    DILL_CHECKHANDLE(h, -1);
+    if(dill_slow(n < 0 || n >= ctx->nhandles || ctx->handles[n].next != -2)) {
+        errno = EBADF; return -1;}
+    struct dill_handle *hndln = &ctx->handles[n];
+    hndl->vfs = hndln->vfs;
+    hndl->type = hndln->type;
+    hndl->ptr = hndln->ptr;
+    /* Mark the cache as invalid. */
+    hndln->ptr = NULL;
+    /* Return handle n to the shared pool. */
+    hndln->next = -1;
+    if(ctx->first == -1) ctx->first = n;
+    else ctx->handles[ctx->last].next = n;
+    ctx->last = n;
+    ctx->nused--;
+    return 0;
 }
 
 void *dill_hquery(int h, const void *type) {

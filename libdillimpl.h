@@ -37,6 +37,9 @@ struct dill_hvfs {
 };
 
 DILL_EXPORT int dill_hmake(struct dill_hvfs *vfs);
+DILL_EXPORT int dill_hattach(int h, struct dill_hvfs *vfs);
+DILL_EXPORT int dill_hdetach(int h, int n);
+
 DILL_EXPORT void *dill_hquery(int h, const void *type);
 
 #if !defined DILL_DISABLE_RAW_NAMES
