@@ -82,8 +82,8 @@ int dill_http_attach(int s, const struct dill_http_opts *opts) {
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     struct dill_term_opts topts = dill_term_defaults;
     topts.mem = &obj->term_mem;
-    s = dill_term_attach(s, NULL, 0, &topts);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
+    rc = dill_term_attach(s, NULL, 0, &topts);
+    if(dill_slow(rc < 0)) {err = errno; goto error2;}
     obj->hvfs.query = dill_http_hquery;
     obj->hvfs.close = dill_http_hclose;
     obj->u = s;
@@ -110,9 +110,9 @@ int dill_http_detach(int s, int64_t deadline) {
     int err;
     struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
-    obj->u = dill_term_detach(obj->u, deadline);
-    if(dill_slow(obj->u < 0)) {err = errno; goto error;}
-    int rc = dill_suffix_detach(obj->u);
+    int rc = dill_term_detach(obj->u, deadline);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
+    rc = dill_suffix_detach(obj->u);
     if(dill_slow(rc < 0)) {err = errno; goto error;}
     int u = obj->u;
     if(!obj->mem) free(obj);

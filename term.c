@@ -74,9 +74,6 @@ int dill_term_attach(int s, const void *buf, size_t len,
     if(dill_slow(len > DILL_MAX_TERMINATOR_LENGTH)) {err = EINVAL; goto error1;}
     if(dill_slow(len > 0 && !buf)) {err = EINVAL; goto error1;}
     if(!opts) opts = &dill_term_defaults;
-    /* Take ownership of the underlying socket. */
-    s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Check whether underlying socket is message-based. */
     void *q = dill_hquery(s, dill_msock_type);
     if(dill_slow(!q && errno == ENOTSUP)) {err = EPROTO; goto error1;}
@@ -91,16 +88,14 @@ int dill_term_attach(int s, const void *buf, size_t len,
     self->hvfs.close = dill_term_hclose;
     self->mvfs.msendl = dill_term_msendl;
     self->mvfs.mrecvl = dill_term_mrecvl;
-    self->u = s;
     self->len = len;
     memcpy(self->buf, buf, len);
     self->indone = 0;
     self->outdone = 0;
     self->mem = !!opts->mem;
-    /* Create the handle. */
-    int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error2;}
-    return h;
+    self->u = dill_hattach(s, &self->hvfs);
+    if(dill_slow(self->u < 0)) {err = errno; goto error2;}
+    return 0;
 error2:
     if(!opts->mem) free(self);
 error1:
@@ -138,11 +133,12 @@ int dill_term_detach(int s, int64_t deadline) {
             }
         }
     }
-    int u = self->u;
+    int rc = dill_hdetach(s, self->u);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     if(!self->mem) free(self);
-    return u;
-error:;
-    int rc = dill_hclose(s);
+    return 0;
+error:
+    rc = dill_hclose(s);
     dill_assert(rc == 0);
     errno = err;
     return -1;

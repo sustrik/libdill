@@ -30,8 +30,8 @@
 coroutine void client(int s) {
     int rc = suffix_attach(s, "\r\n", 2, NULL);
     errno_assert(rc == 0);
-    s = term_attach(s, "STOP", 4, NULL);
-    errno_assert(s >= 0);
+    rc = term_attach(s, "STOP", 4, NULL);
+    errno_assert(rc == 0);
     rc = msend(s, "ABC", 3, -1);
     errno_assert(s >= 0);
     char buf[16];
@@ -39,10 +39,10 @@ coroutine void client(int s) {
     errno_assert(sz >= 0);
     assert(sz == 3);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    s = term_detach(s, -1);
-    errno_assert(s >= 0);
+    rc = term_detach(s, -1);
+    errno_assert(rc == 0);
     rc = hclose(s);
-    errno_assert(s >= 0);
+    errno_assert(rc == 0);
 } 
 
 int main(void) {
@@ -53,21 +53,21 @@ int main(void) {
     errno_assert(cr >= 0);
     rc = suffix_attach(p[1], "\r\n", 2, NULL);
     errno_assert(rc == 0);
-    int s = term_attach(p[1], "STOP", 4, NULL);
-    errno_assert(s >= 0);
+    rc = term_attach(p[1], "STOP", 4, NULL);
+    errno_assert(rc == 0);
     char buf[16];
-    ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
+    ssize_t sz = mrecv(p[1], buf, sizeof(buf), -1);
     errno_assert(sz >= 0);
     assert(sz == 3);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    rc = msend(s, "DEF", 3, -1);
+    rc = msend(p[1], "DEF", 3, -1);
     errno_assert(rc == 0);
-    sz = mrecv(s, buf, sizeof(buf), -1);
+    sz = mrecv(p[1], buf, sizeof(buf), -1);
     errno_assert(sz == -1 && errno == EPIPE);
-    s = term_detach(s, -1);
-    errno_assert(s >= 0);
-    rc = hclose(s);
-    errno_assert(s >= 0);
+    rc = term_detach(p[1], -1);
+    errno_assert(rc == 0);
+    rc = hclose(p[1]);
+    errno_assert(rc == 0);
     rc = bundle_wait(cr, -1);
     errno_assert(rc == 0);
     rc = hclose(cr);
