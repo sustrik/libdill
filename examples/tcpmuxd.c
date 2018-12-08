@@ -78,7 +78,7 @@ coroutine void tcp_handler(int s) {
         return;
     }
     /* Send the raw fd to the process implementing the service. */
-    s = suffix_detach(s, deadline);
+    s = suffix_detach(s);
     assert(s >= 0);
     s = tcp_detach(s);
     assert(s >= 0);

@@ -661,8 +661,7 @@ DILL_EXPORT int dill_suffix_attach(
     size_t suffixlen,
     const struct dill_suffix_opts *opts);
 DILL_EXPORT int dill_suffix_detach(
-    int s,
-    int64_t deadline);
+    int s);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define suffix_opts dill_suffix_opts

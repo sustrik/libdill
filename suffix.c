@@ -109,7 +109,7 @@ error1:
     return -1;
 }
 
-int dill_suffix_detach(int s, int64_t deadline) {
+int dill_suffix_detach(int s) {
     int err;
     struct dill_suffix_sock *self = dill_hquery(s, dill_suffix_type);
     if(dill_slow(!self)) {err = errno; goto error;}

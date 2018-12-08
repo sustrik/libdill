@@ -112,7 +112,7 @@ int dill_http_detach(int s, int64_t deadline) {
     if(dill_slow(!obj)) return -1;
     int u = dill_term_detach(obj->u, deadline);
     if(dill_slow(u < 0)) {err = errno; goto error;}
-    u = dill_suffix_detach(u, deadline);
+    u = dill_suffix_detach(u);
     if(dill_slow(u < 0)) {err = errno; goto error;}
 error:
     if(!obj->mem) free(obj);

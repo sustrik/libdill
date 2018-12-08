@@ -172,7 +172,7 @@ int dill_tcpmux_switch(int s, const char *service, int64_t deadline) {
     if(dill_slow(buf[0] != '+' && buf[0] != '-')) {err = EPROTO; goto error2;}
     if(dill_slow(buf[0] == '-')) {err = ECONNREFUSED; goto error2;}
     /* Terminate the CRLF layer. */
-    s = dill_suffix_detach(s, deadline);
+    s = dill_suffix_detach(s);
     if(dill_slow(s < 0)) {err = errno; goto error2;}
     return 0;
 error2:
