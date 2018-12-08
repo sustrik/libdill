@@ -66,9 +66,6 @@ int dill_http_attach(int s, const struct dill_http_opts *opts) {
     if(!opts) opts = &dill_http_defaults;
     /* Check whether underlying socket is a bytestream. */
     if(dill_slow(!dill_hquery(s, dill_bsock_type))) {err = errno; goto error1;}
-    /* Take the ownership of the underlying socket. */
-    s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Create the object. */
     struct dill_http_sock *obj = (struct dill_http_sock*)opts->mem;
     if(!obj) {
@@ -86,12 +83,10 @@ int dill_http_attach(int s, const struct dill_http_opts *opts) {
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     obj->hvfs.query = dill_http_hquery;
     obj->hvfs.close = dill_http_hclose;
-    obj->u = s;
     obj->mem = !!opts->mem;
-    /* Create the handle. */
-    int h = dill_hmake(&obj->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error2;}
-    return h;
+    obj->u = dill_hattach(s, &obj->hvfs);
+    if(dill_slow(obj->u < 0)) {err = errno; goto error2;}
+    return 0;
 error2:
     if(!opts->mem) free(obj);
 error1:
@@ -114,9 +109,10 @@ int dill_http_detach(int s, int64_t deadline) {
     if(dill_slow(rc < 0)) {err = errno; goto error;}
     rc = dill_suffix_detach(obj->u);
     if(dill_slow(rc < 0)) {err = errno; goto error;}
-    int u = obj->u;
+    rc = dill_hdetach(s, obj->u);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     if(!obj->mem) free(obj);
-    return u;
+    return 0;
 error:
     if(s >= 0) dill_hclose(s);
     errno = err;

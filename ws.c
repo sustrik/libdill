@@ -106,10 +106,10 @@ int dill_ws_attach_client(int s, const char *resource,
     struct dill_http_storage http_mem;
     struct dill_http_opts http_opts = dill_http_defaults;
     http_opts.mem = &http_mem;
-    s = dill_http_attach(s, &http_opts);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
+    int rc = dill_http_attach(s, &http_opts);
+    if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Send HTTP request. */
-    int rc = dill_http_sendrequest(s, "GET", resource, deadline);
+    rc = dill_http_sendrequest(s, "GET", resource, deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     rc = dill_http_sendfield(s, "Host", host, deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
@@ -168,8 +168,8 @@ int dill_ws_attach_client(int s, const char *resource,
     }
     if(!has_upgrade || !has_connection || !has_key) {err = EPROTO; goto error2;}
 
-    s = dill_http_detach(s, deadline);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
+    rc = dill_http_detach(s, deadline);
+    if(dill_slow(rc < 0)) {err = errno; goto error2;}
     self->u = s;
     int h = dill_hmake(&self->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}
@@ -217,11 +217,11 @@ int dill_ws_attach_server(int s, const struct dill_ws_opts *opts,
     struct dill_http_storage http_mem;
     struct dill_http_opts http_opts = dill_http_defaults;
     http_opts.mem = &http_mem;
-    s = dill_http_attach(s, &http_opts);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
+    int rc = dill_http_attach(s, &http_opts);
+    if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Receive the HTTP request from the client. */
     char command[32];
-    int rc = dill_http_recvrequest(s, command, sizeof(command),
+    rc = dill_http_recvrequest(s, command, sizeof(command),
         resource, resourcelen, deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     if(dill_slow(strcmp(command, "GET") != 0)) {err = EPROTO; goto error2;}
@@ -288,8 +288,8 @@ int dill_ws_attach_server(int s, const struct dill_ws_opts *opts,
     rc = dill_http_sendfield(s, "Sec-WebSocket-Accept", response_key, deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
 
-    s = dill_http_detach(s, deadline);
-    if(dill_slow(s < 0)) {err = errno; goto error2;}
+    rc = dill_http_detach(s, deadline);
+    if(dill_slow(rc < 0)) {err = errno; goto error2;}
     self->u = s;
     int h = dill_hmake(&self->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error2;}

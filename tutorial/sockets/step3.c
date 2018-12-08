@@ -37,8 +37,8 @@ int main(int argc, char *argv[]) {
        assert(s >= 0);
     }
 
-    s = http_attach(s, NULL);
-    assert(s >= 0);
+    rc = http_attach(s, NULL);
+    assert(rc == 0);
 
     rc = http_sendrequest(s, "GET", argv[3], -1);
     assert(rc == 0);
@@ -63,8 +63,8 @@ int main(int argc, char *argv[]) {
     }
     fprintf(stderr, "\n");
 
-    s = http_detach(s, -1);
-    assert(s >= 0);
+    rc = http_detach(s, -1);
+    assert(rc == 0);
 
     if(port == 443) {
         s = tls_detach(s, -1);

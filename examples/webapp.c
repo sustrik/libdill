@@ -55,11 +55,11 @@ const char *html =
 coroutine void html_worker(int s) {
     /* Start HTTP protocol. Client will ask for a particular resource,
        but let's ignore that for now. */
-    s = http_attach(s, NULL);
-    assert(s >= 0);
+    int rc = http_attach(s, NULL);
+    assert(rc == 0);
     char command[256];
     char resource[256];
-    int rc = http_recvrequest(s, command, sizeof(command),
+    rc = http_recvrequest(s, command, sizeof(command),
         resource, sizeof(resource), -1);
     assert(strcmp(command, "GET") == 0);
     assert(rc == 0);
@@ -78,8 +78,8 @@ coroutine void html_worker(int s) {
     assert(rc == 0);
 
     /* Perform HTTP terminal handshake. */
-    s = http_detach(s, -1);
-    assert(s >= 0);
+    rc = http_detach(s, -1);
+    assert(rc == 0);
 
     /* Send the HTML to the browser. */
     rc = bsend(s, html, strlen(html), -1);

@@ -29,16 +29,17 @@ int main(void) {
     int p[2];
     int rc = ipc_pair(p, NULL, NULL);
     assert(rc == 0);
-    int s0 = http_attach(p[0], NULL);
-    assert(s0 >= 0);
-    int s1 = http_attach(p[1], NULL);
+    rc = http_attach(p[0], NULL);
+    assert(rc == 0);
+    rc = http_attach(p[1], NULL);
+    assert(rc == 0);
     /* Send request. */
-    rc = http_sendrequest(s0, "GET", "/a/b/c", -1);
+    rc = http_sendrequest(p[0], "GET", "/a/b/c", -1);
     errno_assert(rc == 0);
     /* Receive request. */
     char cmd[16];
     char url[16];
-    rc = http_recvrequest(s1, cmd, sizeof(cmd), url, sizeof(url), -1);
+    rc = http_recvrequest(p[1], cmd, sizeof(cmd), url, sizeof(url), -1);
     errno_assert(rc == 0);
     assert(strcmp(cmd, "GET") == 0);
     assert(strcmp(url, "/a/b/c") == 0);
@@ -46,83 +47,84 @@ int main(void) {
     /* Test fields. */
     char name[32];
     char value[32];
-    rc = http_sendfield(s0, "foo", "bar", -1);
+    rc = http_sendfield(p[0], "foo", "bar", -1);
     errno_assert(rc == 0);
-    rc = http_recvfield(s1, name, sizeof(name), value, sizeof(value), -1);
+    rc = http_recvfield(p[1], name, sizeof(name), value, sizeof(value), -1);
     errno_assert(rc == 0);
     assert(strcmp(name, "foo") == 0);
     assert(strcmp(value, "bar") == 0);
 
-    rc = http_sendfield(s0, "baz", "quux", -1);
+    rc = http_sendfield(p[0], "baz", "quux", -1);
     errno_assert(rc == 0);
-    rc = http_recvfield(s1, name, sizeof(name), value, sizeof(value), -1);
+    rc = http_recvfield(p[1], name, sizeof(name), value, sizeof(value), -1);
     errno_assert(rc == 0);
     assert(strcmp(name, "baz") == 0);
     assert(strcmp(value, "quux") == 0);
 
-    rc = http_sendfield(s0, "Date", "Tue, 15 Nov 1994 08:12:31 GMT", -1);
+    rc = http_sendfield(p[0], "Date", "Tue, 15 Nov 1994 08:12:31 GMT", -1);
     errno_assert(rc == 0);
-    rc = http_recvfield(s1, name, sizeof(name), value, sizeof(value), -1);
+    rc = http_recvfield(p[1], name, sizeof(name), value, sizeof(value), -1);
     errno_assert(rc == 0);
     assert(strcmp(name, "Date") == 0);
     assert(strcmp(value, "Tue, 15 Nov 1994 08:12:31 GMT") == 0);
 
-    rc = http_sendfield(s0, "invalid field name ", "bar", -1);
+    rc = http_sendfield(p[0], "invalid field name ", "bar", -1);
     assert(rc == -1 && errno == EINVAL);
 
-    rc = http_sendfield(s0, "valid-field-name", "  rpad", -1);
+    rc = http_sendfield(p[0], "valid-field-name", "  rpad", -1);
     errno_assert(rc == 0);
-    rc = http_recvfield(s1, name, sizeof(name), value, sizeof(value), -1);
+    rc = http_recvfield(p[1], name, sizeof(name), value, sizeof(value), -1);
     errno_assert(rc == 0);
     assert(strcmp(name, "valid-field-name") == 0);
     assert(strcmp(value, "rpad") == 0);
 
-    rc = http_sendfield(s0, "valid-field-name", "lpad  ", -1);
+    rc = http_sendfield(p[0], "valid-field-name", "lpad  ", -1);
     errno_assert(rc == 0);
-    rc = http_recvfield(s1, name, sizeof(name), value, sizeof(value), -1);
+    rc = http_recvfield(p[1], name, sizeof(name), value, sizeof(value), -1);
     errno_assert(rc == 0);
     assert(strcmp(name, "valid-field-name") == 0);
     assert(strcmp(value, "lpad") == 0);
 
-    rc = http_sendfield(s0, "valid-field-name", "  both pad  ", -1);
+    rc = http_sendfield(p[0], "valid-field-name", "  both pad  ", -1);
     errno_assert(rc == 0);
-    rc = http_recvfield(s1, name, sizeof(name), value, sizeof(value), -1);
+    rc = http_recvfield(p[1], name, sizeof(name), value, sizeof(value), -1);
     errno_assert(rc == 0);
     assert(strcmp(name, "valid-field-name") == 0);
     assert(strcmp(value, "both pad") == 0);
 
-    rc = http_done(s0, -1);
+    rc = http_done(p[0], -1);
     errno_assert(rc == 0);
-    rc = http_recvfield(s1, name, sizeof(name), value, sizeof(value), -1);
+    rc = http_recvfield(p[1], name, sizeof(name), value, sizeof(value), -1);
     assert(rc < 0 && errno == EPIPE);
 
     /* Send response. */
-    rc = http_sendstatus(s1, 200, "OK", -1);
+    rc = http_sendstatus(p[1], 200, "OK", -1);
     errno_assert(rc == 0);
-    rc = http_sendfield(s1, "one", "two", -1);
+    rc = http_sendfield(p[1], "one", "two", -1);
     errno_assert(rc == 0);
-    rc = http_done(s1, -1);
+    rc = http_done(p[1], -1);
     errno_assert(rc == 0);
     /* Receive response. */
     char reason[16];
-    rc = http_recvstatus(s0, reason, sizeof(reason), -1);
+    rc = http_recvstatus(p[0], reason, sizeof(reason), -1);
     assert(rc == 200);
     assert(strcmp(reason, "OK") == 0);
-    rc = http_recvfield(s0, name, sizeof(name), value, sizeof(value), -1);
+    rc = http_recvfield(p[0], name, sizeof(name), value, sizeof(value), -1);
     errno_assert(rc == 0);
     assert(strcmp(name, "one") == 0);
     assert(strcmp(value, "two") == 0);
-    rc = http_recvfield(s0, name, sizeof(name), value, sizeof(value), -1);
+    rc = http_recvfield(p[0], name, sizeof(name), value, sizeof(value), -1);
     assert(rc < 0 && errno == EPIPE);
     /* Close the sockets. */
-    p[0] = http_detach(s1, -1);
-    assert(p[0] >= 0);
-    p[1] = http_detach(s0, -1);
-    errno_assert(p[1] >= 0);
+    rc = http_detach(p[1], -1);
+    assert(rc == 0);
+    rc = http_detach(p[0], -1);
+    errno_assert(rc == 0);
     rc = hclose(p[1]);
     errno_assert(rc == 0);
     rc = hclose(p[0]);
     errno_assert(rc == 0);
+
     return 0;
 }
 
