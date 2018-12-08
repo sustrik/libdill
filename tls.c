@@ -223,6 +223,7 @@ int dill_tls_done(int s, int64_t deadline) {
     if(dill_slow(!self)) return -1;
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    self->deadline = deadline;
     while(1) {
         ERR_clear_error();
         int rc = SSL_shutdown(self->ssl);
