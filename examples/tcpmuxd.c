@@ -45,7 +45,7 @@ coroutine void tcp_handler(int s) {
     struct suffix_storage mem;
     struct suffix_opts opts = suffix_defaults;
     opts.mem = &mem;
-    int rc = suffix_attachx(s, "\r\n", 2, &opts);
+    int rc = suffix_attach(s, "\r\n", 2, &opts);
     assert(rc == 0);
     /* Read the requested service name. */
     char name[256];
@@ -78,7 +78,7 @@ coroutine void tcp_handler(int s) {
         return;
     }
     /* Send the raw fd to the process implementing the service. */
-    rc = suffix_detachx(s);
+    rc = suffix_detach(s);
     assert(rc == 0);
     s = tcp_detach(s);
     assert(s >= 0);

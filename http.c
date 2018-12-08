@@ -78,7 +78,7 @@ int dill_http_attach(int s, const struct dill_http_opts *opts) {
     /* Wrap the underlying socket into SUFFIX and TERM protocol. */
     struct dill_suffix_opts sopts = dill_suffix_defaults;
     sopts.mem = &obj->suffix_mem;
-    int rc = dill_suffix_attachx(s, "\r\n", 2, &sopts);
+    int rc = dill_suffix_attach(s, "\r\n", 2, &sopts);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     struct dill_term_opts topts = dill_term_defaults;
     topts.mem = &obj->term_mem;
@@ -112,7 +112,7 @@ int dill_http_detach(int s, int64_t deadline) {
     if(dill_slow(!obj)) return -1;
     obj->u = dill_term_detach(obj->u, deadline);
     if(dill_slow(obj->u < 0)) {err = errno; goto error;}
-    int rc = dill_suffix_detachx(obj->u);
+    int rc = dill_suffix_detach(obj->u);
     if(dill_slow(rc < 0)) {err = errno; goto error;}
     int u = obj->u;
     if(!obj->mem) free(obj);

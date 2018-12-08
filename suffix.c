@@ -69,7 +69,7 @@ static void *dill_suffix_hquery(struct dill_hvfs *hvfs, const void *type) {
     return NULL;
 }
 
-int dill_suffix_attachx(int s, const void *suffix, size_t suffixlen,
+int dill_suffix_attach(int s, const void *suffix, size_t suffixlen,
       const struct dill_suffix_opts *opts) {
     int err;
     if(dill_slow(!suffix || suffixlen == 0 || suffixlen > 32)) {
@@ -104,7 +104,7 @@ error1:
     return -1;
 }
 
-int dill_suffix_detachx(int s) {
+int dill_suffix_detach(int s) {
     int err;
     struct dill_suffix_sock *self = dill_hquery(s, dill_suffix_type);
     if(dill_slow(!self)) {err = errno; goto error;}

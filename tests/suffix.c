@@ -33,7 +33,7 @@ coroutine void client(void) {
     errno_assert(rc == 0);
     int s = tcp_connect(&addr, NULL, -1);
     errno_assert(s >= 0);
-    rc = suffix_attachx(s, "\r\n", 2, NULL);
+    rc = suffix_attach(s, "\r\n", 2, NULL);
     errno_assert(rc == 0);
     rc = msend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
@@ -43,7 +43,7 @@ coroutine void client(void) {
     assert(buf[0] == 'G' && buf[1] == 'H' && buf[2] == 'I');
     rc = msend(s, "DEF", 3, -1);
     errno_assert(rc == 0);
-    rc = suffix_detachx(s);
+    rc = suffix_detach(s);
     errno_assert(rc == 0);
     rc = hclose(s);
     errno_assert(rc == 0);
@@ -59,7 +59,7 @@ int main() {
     int as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(as >= 0);
 
-    rc = suffix_attachx(as, "\r\n", 2, NULL);
+    rc = suffix_attach(as, "\r\n", 2, NULL);
     errno_assert(rc == 0);
     char buf[16];
     ssize_t sz = mrecv(as, buf, sizeof(buf), -1);
@@ -70,7 +70,7 @@ int main() {
     sz = mrecv(as, buf, sizeof(buf), -1);
     errno_assert(sz == 3);
     assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    rc = suffix_detachx(as);
+    rc = suffix_detach(as);
     errno_assert(rc == 0);
     rc = hclose(as);
     errno_assert(rc == 0);
@@ -78,12 +78,12 @@ int main() {
     int p[2];
     rc = ipc_pair(p, NULL, NULL);
     errno_assert(rc == 0);
-    rc = suffix_attachx(p[0], "1234567890", 10, NULL);
+    rc = suffix_attach(p[0], "1234567890", 10, NULL);
     errno_assert(rc == 0);
     struct suffix_storage mem;
     struct suffix_opts opts = suffix_defaults;
     opts.mem = &mem;
-    rc = suffix_attachx(p[1], "1234567890", 10, &opts);
+    rc = suffix_attach(p[1], "1234567890", 10, &opts);
     errno_assert(rc == 0);
     rc = msend(p[0], "First", 5, -1);
     errno_assert(rc == 0);
@@ -104,13 +104,13 @@ int main() {
     errno_assert(rc == 0);
     rc = msend(p[1], "Blue", 4, -1);
     errno_assert(rc == 0);
-    rc = suffix_detachx(p[1]);
+    rc = suffix_detach(p[1]);
     errno_assert(rc == 0);
     sz = mrecv(p[0], buf, sizeof(buf), -1);
     errno_assert(sz == 3 && memcmp(buf, "Red", 3) == 0);
     sz = mrecv(p[0], buf, sizeof(buf), -1);
     errno_assert(sz == 4 && memcmp(buf, "Blue", 4) == 0);
-    rc = suffix_detachx(p[0]);
+    rc = suffix_detach(p[0]);
     errno_assert(rc == 0);
     rc = hclose(p[1]);
     errno_assert(rc == 0);
