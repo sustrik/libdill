@@ -76,9 +76,6 @@ int dill_ws_attach_client(int s, const char *resource,
     int err;
     if(!opts) opts = &dill_ws_defaults;
     if(dill_slow(!dill_hquery(s, dill_bsock_type))) {err = errno; goto error1;}
-    /* Take ownership of the underlying socket. */
-    s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Create the object. */
     struct dill_ws_sock *self = (struct dill_ws_sock*)opts->mem;
     if(!self) {
@@ -89,7 +86,6 @@ int dill_ws_attach_client(int s, const char *resource,
     self->hvfs.close = dill_ws_hclose;
     self->mvfs.msendl = dill_ws_msendl;
     self->mvfs.mrecvl = dill_ws_mrecvl;
-    self->u = s;
     self->text = opts->text;
     self->indone = 0;
     self->outdone = 0;
@@ -98,9 +94,9 @@ int dill_ws_attach_client(int s, const char *resource,
     self->status = 0;
     self->msglen = 0;
     if(!opts->http) {
-        int h = dill_hmake(&self->hvfs);
-        if(dill_slow(h < 0)) {err = errno; goto error2;}
-        return h;
+        self->u = dill_hattach(s, &self->hvfs);
+        if(dill_slow(self->u < 0)) {err = errno; goto error2;}
+        return 0;
     }
     if(dill_slow(!resource || !host)) {err = EINVAL; goto error2;}
     struct dill_http_storage http_mem;
@@ -167,13 +163,11 @@ int dill_ws_attach_client(int s, const char *resource,
         }
     }
     if(!has_upgrade || !has_connection || !has_key) {err = EPROTO; goto error2;}
-
     rc = dill_http_detach(s, deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
-    self->u = s;
-    int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error2;}
-    return h;
+    self->u = dill_hattach(s, &self->hvfs);
+    if(dill_slow(self->u < 0)) {err = errno; goto error2;}
+    return 0;
 error2:
     if(!opts->mem) free(self);
 error1:
@@ -188,9 +182,6 @@ int dill_ws_attach_server(int s, const struct dill_ws_opts *opts,
     int err;
     if(!opts) opts = &dill_ws_defaults;
     if(dill_slow(!dill_hquery(s, dill_bsock_type))) {err = errno; goto error1;}
-    /* Take ownership of the underlying socket. */
-    s = dill_hown(s);
-    if(dill_slow(s < 0)) {err = errno; goto error1;}
     /* Create the object. */
     struct dill_ws_sock *self = (struct dill_ws_sock*)opts->mem;
     if(!self) {
@@ -201,7 +192,6 @@ int dill_ws_attach_server(int s, const struct dill_ws_opts *opts,
     self->hvfs.close = dill_ws_hclose;
     self->mvfs.msendl = dill_ws_msendl;
     self->mvfs.mrecvl = dill_ws_mrecvl;
-    self->u = s;
     self->text = opts->text;
     self->indone = 0;
     self->outdone = 0;
@@ -210,9 +200,9 @@ int dill_ws_attach_server(int s, const struct dill_ws_opts *opts,
     self->status = 0;
     self->msglen = 0;
     if(!opts->http) {
-        int h = dill_hmake(&self->hvfs);
-        if(dill_slow(h < 0)) {err = errno; goto error2;}
-        return h;
+        self->u = dill_hattach(s, &self->hvfs);
+        if(dill_slow(self->u < 0)) {err = errno; goto error2;}
+        return 0;
     }
     struct dill_http_storage http_mem;
     struct dill_http_opts http_opts = dill_http_defaults;
@@ -290,10 +280,10 @@ int dill_ws_attach_server(int s, const struct dill_ws_opts *opts,
 
     rc = dill_http_detach(s, deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
-    self->u = s;
-    int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error2;}
-    return h;
+
+    self->u = dill_hattach(s, &self->hvfs);
+    if(dill_slow(self->u < 0)) {err = errno; goto error2;}
+    return 0;
 error2:
     if(!opts->mem) free(self);
 error1:
@@ -528,11 +518,12 @@ int dill_ws_done(int s, int status, const void *buf, size_t len,
 
 int dill_ws_detach(int s, int status, const void *buf, size_t len,
       int64_t deadline) {
+    int err;
     struct dill_ws_sock *self = dill_hquery(s, dill_ws_type);
     if(dill_slow(!self)) return -1;
     if(!self->outdone) {
         int rc = dill_ws_done(s, status, buf, len, deadline);
-        if(dill_slow(rc < 0)) return -1;
+        if(dill_slow(rc < 0)) {err=errno; goto error;}
     }
     while(1) {
         struct dill_iolist iol = {NULL, SIZE_MAX, NULL, 0};
@@ -540,12 +531,19 @@ int dill_ws_detach(int s, int status, const void *buf, size_t len,
             deadline);
         if(sz < 0) {
              if(errno == EPIPE) break;
-             return -1;
+             err = errno;
+             goto error;
         }
     }
-    int u = self->u;
+
+    int rc = dill_hdetach(s, self->u);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
     if(!self->mem) free(self);
-    return u;
+    return 0;
+error:
+    if(s >= 0) dill_hclose(s);
+    errno = err;
+    return -1;
 }
 
 static void dill_ws_hclose(struct dill_hvfs *hvfs) {

@@ -96,9 +96,9 @@ coroutine void ws_worker(int s) {
        ignore that for now. */
     char resource[256];
     char host[256];
-    s = ws_attach_server(s, NULL, resource, sizeof(resource),
+    int rc = ws_attach_server(s, NULL, resource, sizeof(resource),
         host, sizeof(host), -1);
-    assert(s >= 0);
+    assert(rc == 0);
 
     /* Send some messages to the browser. */
     int c;
@@ -108,12 +108,12 @@ coroutine void ws_worker(int s) {
         rc = msleep(now() + 1000);
         assert(rc == 0);
     }
-    int rc = msend(s, "Boom!", 5, -1);
+    rc = msend(s, "Boom!", 5, -1);
     assert(rc == 0);
 
     /* Perform the final WebSocket handshake. */
-    s = ws_detach(s, 1000, "OK", 2, -1);
-    assert(s >= 0);
+    rc = ws_detach(s, 1000, "OK", 2, -1);
+    assert(rc == 0);
 
     /* Close the TCP connection. */
     rc = tcp_close(s, -1);

@@ -30,9 +30,9 @@
 coroutine void nohttp_client(int s) {
     struct ws_opts opts = ws_defaults;
     opts.http = 0;
-    s = ws_attach_client(s, NULL, NULL, &opts, -1);
-    errno_assert(s >= 0);
-    int rc = msend(s, "ABC", 3, -1);
+    int rc = ws_attach_client(s, NULL, NULL, &opts, -1);
+    errno_assert(rc == 0);
+    rc = msend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
     char buf[3];
     ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
@@ -47,8 +47,8 @@ coroutine void nohttp_client(int s) {
     assert(status == 1000);
     assert(sz == 2);
     assert(buf[0] == 'O' && buf[1] == 'K');
-    s = ws_detach(s, 0, NULL, 0, -1);
-    errno_assert(s >= 0);
+    rc = ws_detach(s, 0, NULL, 0, -1);
+    errno_assert(rc == 0);
     rc = hclose(s);
     errno_assert(rc == 0);
 }
@@ -56,9 +56,9 @@ coroutine void nohttp_client(int s) {
 coroutine void http_client(int s) {
     struct ws_opts opts = ws_defaults;
     opts.text = 0;
-    s = ws_attach_client(s, "/", "www.example.org", &opts, -1);
-    errno_assert(s >= 0);
-    int rc = msend(s, "ABC", 3, -1);
+    int rc = ws_attach_client(s, "/", "www.example.org", &opts, -1);
+    errno_assert(rc == 0);
+    rc = msend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
     char buf[3];
     ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
@@ -72,8 +72,8 @@ coroutine void http_client(int s) {
     errno_assert(sz >= 0);
     assert(status == 1000);
     assert(sz == 0);
-    s = ws_detach(s, 0, NULL, 0, -1);
-    errno_assert(s >= 0);
+    rc = ws_detach(s, 0, NULL, 0, -1);
+    errno_assert(rc == 0);
     rc = hclose(s);
     errno_assert(rc == 0);
 }
@@ -86,18 +86,18 @@ int main(void) {
     errno_assert(cr >= 0);
     struct ws_opts opts = ws_defaults;
     opts.http = 0;
-    int s = ws_attach_server(p[0], &opts, NULL, 0, NULL, 0, -1);
-    errno_assert(s >= 0);
+    rc = ws_attach_server(p[0], &opts, NULL, 0, NULL, 0, -1);
+    errno_assert(rc == 0);
     char buf[3];
-    ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
+    ssize_t sz = mrecv(p[0], buf, sizeof(buf), -1);
     errno_assert(sz >= 0);
     assert(sz == 3);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    rc = msend(s, "DEF", 3, -1);
+    rc = msend(p[0], "DEF", 3, -1);
     errno_assert(rc == 0);
-    s = ws_detach(s, 1000, "OK", 2, -1);
-    errno_assert(s >= 0);
-    rc = hclose(s);
+    rc = ws_detach(p[0], 1000, "OK", 2, -1);
+    errno_assert(rc == 0);
+    rc = hclose(p[0]);
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
@@ -110,20 +110,20 @@ int main(void) {
     char host[256];
     opts = ws_defaults;
     opts.text = 0;
-    s = ws_attach_server(p[0], &opts, resource, sizeof(resource),
+    rc = ws_attach_server(p[0], &opts, resource, sizeof(resource),
         host, sizeof(host), -1);
-    errno_assert(s >= 0);
+    errno_assert(rc == 0);
     assert(strcmp(resource, "/") == 0);
     assert(strcmp(host, "www.example.org") == 0);
-    sz = mrecv(s, buf, sizeof(buf), -1);
+    sz = mrecv(p[0], buf, sizeof(buf), -1);
     errno_assert(sz >= 0);
     assert(sz == 3);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    rc = msend(s, "DEF", 3, -1);
+    rc = msend(p[0], "DEF", 3, -1);
     errno_assert(rc == 0);
-    s = ws_detach(s, 1000, NULL, 0, -1);
-    errno_assert(s >= 0);
-    rc = hclose(s);
+    rc = ws_detach(p[0], 1000, NULL, 0, -1);
+    errno_assert(rc == 0);
+    rc = hclose(p[0]);
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
