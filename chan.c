@@ -89,14 +89,14 @@ static void dill_halfchan_close(struct dill_hvfs *vfs);
 /*  Channel creation and deallocation.                                        */
 /******************************************************************************/
 
-static void dill_halfchan_init(struct dill_halfchan *ch, int index) {
+static void dill_halfchan_init(struct dill_halfchan *ch, int index, int mem) {
     ch->vfs.query = dill_halfchan_query;
     ch->vfs.close = dill_halfchan_close;
     dill_list_init(&ch->in);
     dill_list_init(&ch->out);
     ch->index = index;
     ch->done = 0;
-    ch->mem = 1;
+    ch->mem = mem;
     ch->closed = 0;
 }
 
@@ -108,8 +108,8 @@ int dill_chmake(int s[2], const struct dill_chopts *opts) {
         ch = malloc(sizeof(struct dill_chstorage));
         if(dill_slow(!ch)) {err = ENOMEM; goto error1;}
     }
-    dill_halfchan_init(&ch[0], 0);
-    dill_halfchan_init(&ch[1], 1);
+    dill_halfchan_init(&ch[0], 0, !!opts->mem);
+    dill_halfchan_init(&ch[1], 1, !!opts->mem);
     s[0] = dill_hmake(&ch[0].vfs);
     if(dill_slow(s[0] < 0)) {err = errno; goto error2;}
     s[1] = dill_hmake(&ch[1].vfs);
