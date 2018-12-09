@@ -202,7 +202,6 @@ endif
 
 if DILL_SOCKETS
 noinst_PROGRAMS += \
-    examples/socks5proxy \
     examples/tcpmuxd \
     examples/webapp
 endif
