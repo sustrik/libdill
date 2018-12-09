@@ -32,34 +32,73 @@
 dill_unique_id(dill_bsock_type);
 
 int dill_bsend(int s, const void *buf, size_t len, int64_t deadline) {
+    int err;
     struct dill_bsock_vfs *b = dill_hquery(s, dill_bsock_type);
-    if(dill_slow(!b)) return -1;
+    if(dill_slow(!b)) {err = errno; goto error;}
     struct dill_iolist iol = {(void*)buf, len, NULL, 0};
-    return b->bsendl(b, &iol, &iol, deadline);
+    int rc = b->bsendl(b, &iol, &iol, deadline);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
+    return 0;
+error:
+    if(err != EBADF && err != EBUSY && err != EPIPE) {
+        rc = dill_hnullify(s);
+        dill_assert(rc == 0);
+    }
+    errno = err;
+    return -1;
 }
 
 int dill_brecv(int s, void *buf, size_t len, int64_t deadline) {
+    int err;
     struct dill_bsock_vfs *b = dill_hquery(s, dill_bsock_type);
-    if(dill_slow(!b)) return -1;
+    if(dill_slow(!b)) {err = errno; goto error;}
     struct dill_iolist iol = {buf, len, NULL, 0};
-    return b->brecvl(b, &iol, &iol, deadline);
+    int rc = b->brecvl(b, &iol, &iol, deadline);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
+    return 0;
+error:
+    if(err != EBADF && err != EBUSY && err != EPIPE) {
+        rc = dill_hnullify(s);
+        dill_assert(rc == 0);
+    }
+    errno = err;
+    return -1;
 }
 
 int dill_bsendl(int s, struct dill_iolist *first, struct dill_iolist *last,
       int64_t deadline) {
+    int err;
     struct dill_bsock_vfs *b = dill_hquery(s, dill_bsock_type);
-    if(dill_slow(!b)) return -1;
-    if(dill_slow(!first || !last || last->iol_next)) {
-        errno = EINVAL; return -1;}
-    return b->bsendl(b, first, last, deadline);
+    if(dill_slow(!b)) {err = errno; goto error;}
+    if(dill_slow(!first || !last || last->iol_next)) {err = EINVAL; goto error;}
+    int rc = b->bsendl(b, first, last, deadline);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
+    return 0;
+error:
+    if(err != EBADF && err != EBUSY && err != EPIPE) {
+        rc = dill_hnullify(s);
+        dill_assert(rc == 0);
+    }
+    errno = err;
+    return -1;
 }
 
 int dill_brecvl(int s, struct dill_iolist *first, struct dill_iolist *last,
       int64_t deadline) {
+    int err;
     struct dill_bsock_vfs *b = dill_hquery(s, dill_bsock_type);
-    if(dill_slow(!b)) return -1;
+    if(dill_slow(!b)) {err = errno; goto error;}
     if(dill_slow((first && !last) || (!first && last) || last->iol_next)) {
-        errno = EINVAL; return -1;}
-    return b->brecvl(b, first, last, deadline);
+        err = EINVAL; goto error;}
+    int rc = b->brecvl(b, first, last, deadline);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
+    return 0;
+error:
+    if(err != EBADF && err != EBUSY && err != EPIPE) {
+        rc = dill_hnullify(s);
+        dill_assert(rc == 0);
+    }
+    errno = err;
+    return -1;
 }
 

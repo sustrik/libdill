@@ -205,7 +205,7 @@ int main(void) {
     int64_t diff = now() - deadline;
     time_assert(diff, 0);
     rc = brecv(as, buf, sizeof(buf), deadline);
-    errno_assert(rc == -1 && errno == ECONNRESET);
+    errno_assert(rc == -1 && errno == ENOTSUP);
     rc = hclose(as);
     errno_assert(rc == 0);
     rc = hclose(ls);
@@ -270,8 +270,10 @@ int main(void) {
         if(rc == -1 && errno == ECONNRESET) break;
         errno_assert(rc == 0);
     }
-    rc = tcp_close(as, -1);
-    errno_assert(rc == -1 && errno == ECONNRESET);
+    rc = bsend(as, "A", 1, -1);
+    errno_assert(rc == -1 && errno == ENOTSUP);
+    rc = hclose(as);
+    errno_assert(rc == 0);
     rc = hclose(ls);
     errno_assert(rc == 0);
     rc = hclose(cr);

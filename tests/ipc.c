@@ -99,7 +99,7 @@ int main() {
     int64_t diff = now() - deadline;
     time_assert(diff, 0);
     rc = brecv(as, buf, sizeof(buf), deadline);
-    errno_assert(rc == -1 && errno == ECONNRESET);
+    errno_assert(rc == -1 && errno == ENOTSUP);
     rc = hclose(as);
     errno_assert(rc == 0);
     rc = hclose(ls);
@@ -157,8 +157,10 @@ int main() {
             break;
         errno_assert(rc == 0);
     }
-    rc = ipc_close(p[0], -1);
-    errno_assert(rc == -1 && errno == ECONNRESET);
+    rc = bsend(p[0], "A", 1, -1);
+    errno_assert(rc == -1 && errno == ENOTSUP);
+    rc = hclose(p[0]);
+    errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
 
@@ -167,12 +169,28 @@ int main() {
     errno_assert(rc == 0);
     rc = bsendl(p[0], NULL, NULL, -1);
     errno_assert(rc == -1 && errno == EINVAL);
+    rc = hclose(p[0]);
+    errno_assert(rc == 0);
+    rc = hclose(p[1]);
+    errno_assert(rc == 0);
+
+    /* More invalid inputs. */
+    rc = ipc_pair(p, NULL, NULL);
+    errno_assert(rc == 0);
     struct iolist iol1 = {(void*)"ABC", 3, NULL, 0};
     struct iolist iol2 = {(void*)"DEF", 3, NULL, 0};
     rc = bsendl(p[0], &iol1, &iol2, -1);
     errno_assert(rc == -1 && errno == EINVAL);
     iol1.iol_next = &iol2;
     iol2.iol_next = &iol1;
+    rc = hclose(p[0]);
+    errno_assert(rc == 0);
+    rc = hclose(p[1]);
+    errno_assert(rc == 0);
+
+    /* Yet more invalid inputs. */
+    rc = ipc_pair(p, NULL, NULL);
+    errno_assert(rc == 0);
     rc = bsendl(p[0], &iol1, &iol2, -1);
     errno_assert(rc == -1 && errno == EINVAL);
     assert(iol1.iol_rsvd == 0);
