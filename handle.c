@@ -106,29 +106,6 @@ int dill_hmake(struct dill_hvfs *vfs) {
     return h;
 }
 
-/* Obsolete. */
-int dill_hown(int h) {
-    struct dill_ctx_handle *ctx = &dill_getctx->handle;
-    DILL_CHECKHANDLE(h, -1);
-    /* Create a new handle for the same object. */
-    int res = dill_hmake(hndl->vfs);
-    if(dill_slow(res < 0)) {
-        int rc = dill_hclose(h);
-        dill_assert(rc == 0);
-        return -1;
-    }
-    /* In case handle array was reallocated we have to recompute the pointer. */
-    hndl = &ctx->handles[h];
-    /* Return a handle to the shared pool. */
-    hndl->ptr = NULL;
-    hndl->next = -1;
-    if(ctx->first == -1) ctx->first = h;
-    else ctx->handles[ctx->last].next = h;
-    ctx->last = h;
-    ctx->nused--;
-    return res;
-}
-
 // Make h point to vfs.
 // Return a new handle that points to what h used to point to before.
 int dill_hattach(int h, struct dill_hvfs *vfs) {

@@ -100,11 +100,9 @@ DILL_EXPORT int dill_msleep(int64_t deadline);
 /*  Handles                                                                   */
 /******************************************************************************/
 
-DILL_EXPORT int dill_hown(int h); /* Obsolete. */
 DILL_EXPORT int dill_hclose(int h);
 
 #if !defined DILL_DISABLE_RAW_NAMES
-#define hown dill_hown
 #define hclose dill_hclose
 #endif
 

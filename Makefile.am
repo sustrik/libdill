@@ -176,16 +176,7 @@ noinst_PROGRAMS += \
     tutorial/basics/step3 \
     tutorial/basics/step4 \
     tutorial/basics/step5 \
-    tutorial/basics/step6 \
-    tutorial/protocol/step1 \
-    tutorial/protocol/step2 \
-    tutorial/protocol/step3 \
-    tutorial/protocol/step4 \
-    tutorial/protocol/step5 \
-    tutorial/protocol/step6 \
-    tutorial/protocol/step7 \
-    tutorial/protocol/step8 \
-    tutorial/protocol/step9
+    tutorial/basics/step6
 if HAVE_TLS
 noinst_PROGRAMS += \
     tutorial/sockets/step1 \

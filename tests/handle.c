@@ -55,18 +55,6 @@ int main(void) {
     errno_assert(rc == 0);
     assert(status == 2);
 
-    int ch[2];
-    rc = chmake(ch, NULL);
-    errno_assert(rc == 0);
-    ch[0] = hown(ch[0]);
-    errno_assert(ch[0] >= 0);
-    ch[1] = hown(ch[1]);
-    errno_assert(ch[1] >= 0);
-    rc = hclose(ch[0]);
-    errno_assert(rc == 0);
-    rc = hclose(ch[1]);
-    errno_assert(rc == 0);
-
     return 0;
 }
 
