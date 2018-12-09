@@ -48,6 +48,16 @@ struct dill_handle {
     void *ptr;
 };
 
+static void *dill_null_query(struct dill_hvfs *hvfs, const void *type) {
+    errno = ENOTSUP;
+    return NULL;
+}
+
+static void dill_null_close(struct dill_hvfs *hvfs) {
+}
+
+static struct dill_hvfs dill_null = {dill_null_query, dill_null_close};
+
 #define DILL_CHECKHANDLE(h, err) \
     if(dill_slow((h) < 0 || (h) >= ctx->nhandles ||\
           ctx->handles[(h)].next != -2)) {\
@@ -160,6 +170,20 @@ void *dill_hquery(int h, const void *type) {
 int dill_hclose(int h) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
     DILL_CHECKHANDLE(h, -1);
+    int rc = dill_hnullify(h);
+    if(dill_slow(rc < 0)) return -1;
+    /* Return a handle to the shared pool. */
+    hndl->next = -1;
+    if(ctx->first == -1) ctx->first = h;
+    else ctx->handles[ctx->last].next = h;
+    ctx->last = h;
+    ctx->nused--;
+    return 0;
+}
+
+int dill_hnullify(int h) {
+    struct dill_ctx_handle *ctx = &dill_getctx->handle;
+    DILL_CHECKHANDLE(h, -1);
     /* This will guarantee that blocking functions cannot be called anywhere
        inside the context of the close. */
     int old = dill_no_blocking(1);
@@ -167,14 +191,10 @@ int dill_hclose(int h) {
     hndl->vfs->close(hndl->vfs);
     /* Restore the previous state. */
     dill_no_blocking(old);
-    /* Mark the cache as invalid. */
+    /* Make the handle point to the null object. */
+    hndl->vfs = &dill_null;
+    hndl->type = NULL;
     hndl->ptr = NULL;
-    /* Return a handle to the shared pool. */
-    hndl->next = -1;
-    if(ctx->first == -1) ctx->first = h;
-    else ctx->handles[ctx->last].next = h;
-    ctx->last = h;
-    ctx->nused--;
     return 0;
 }
 
