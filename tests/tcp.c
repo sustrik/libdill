@@ -194,10 +194,6 @@ int main(void) {
     errno_assert(cr >= 0);
     int as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(as >= 0);
-    rc = mrecv(as, buf, sizeof(buf), -1);
-    errno_assert(rc == -1 && errno == ENOTSUP);
-    rc = msend(as, buf, sizeof(buf), -1);
-    errno_assert(rc == -1 && errno == ENOTSUP);
     int64_t deadline = now() + 30;
     ssize_t sz = sizeof(buf);
     rc = brecv(as, buf, sizeof(buf), deadline);

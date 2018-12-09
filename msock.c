@@ -32,36 +32,76 @@
 dill_unique_id(dill_msock_type);
 
 int dill_msend(int s, const void *buf, size_t len, int64_t deadline) {
+    int err;
     struct dill_msock_vfs *m = dill_hquery(s, dill_msock_type);
-    if(dill_slow(!m)) return -1;
+    if(dill_slow(!m)) {err = errno; goto error;}
     struct dill_iolist iol = {(void*)buf, len, NULL, 0};
-    return m->msendl(m, &iol, &iol, deadline);
+    int rc = m->msendl(m, &iol, &iol, deadline);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
+    return 0;
+error:
+    if(err != EBADF && err != EBUSY && err != EPIPE) {
+        rc = dill_hnullify(s);
+        dill_assert(rc == 0);
+    }
+    errno = err;
+    return -1;
 }
 
 ssize_t dill_mrecv(int s, void *buf, size_t len, int64_t deadline) {
+    int err;
     struct dill_msock_vfs *m = dill_hquery(s, dill_msock_type);
-    if(dill_slow(!m)) return -1;
+    if(dill_slow(!m)) {err = errno; goto error;}
     struct dill_iolist iol = {buf, len, NULL, 0};
-    return m->mrecvl(m, &iol, &iol, deadline);
+    ssize_t sz = m->mrecvl(m, &iol, &iol, deadline);
+    if(dill_slow(sz < 0)) {err = errno; goto error;}
+    return sz;
+error:
+    if(err != EBADF && err != EBUSY && err != EPIPE) {
+        int rc = dill_hnullify(s);
+        dill_assert(rc == 0);
+    }
+    errno = err;
+    return -1;
 }
 
 int dill_msendl(int s, struct dill_iolist *first, struct dill_iolist *last,
       int64_t deadline) {
+    int err;
     struct dill_msock_vfs *m = dill_hquery(s, dill_msock_type);
-    if(dill_slow(!m)) return -1;
+    if(dill_slow(!m)) {err = errno; goto error;}
     if(dill_slow(!first || !last || last->iol_next)) {
-        errno = EINVAL; return -1;}
-    return m->msendl(m, first, last, deadline);
+        err = EINVAL; goto error;}
+    int rc = m->msendl(m, first, last, deadline);
+    if(dill_slow(rc < 0)) {err = errno; goto error;}
+    return 0;
+error:
+    if(err != EBADF && err != EBUSY && err != EPIPE) {
+        rc = dill_hnullify(s);
+        dill_assert(rc == 0);
+    }
+    errno = err;
+    return -1;
 }
 
 ssize_t dill_mrecvl(int s, struct dill_iolist *first, struct dill_iolist *last,
       int64_t deadline) {
+    int err;
     struct dill_msock_vfs *m = dill_hquery(s, dill_msock_type);
-    if(dill_slow(!m)) return -1;
+    if(dill_slow(!m)) {err = errno; goto error;}
     if(dill_slow((last && last->iol_next) ||
           (!first && last) ||
           (first && !last))) {
-        errno = EINVAL; return -1;}
-    return m->mrecvl(m, first, last, deadline);
+        err = EINVAL; goto error;}
+    ssize_t sz = m->mrecvl(m, first, last, deadline);
+    if(dill_slow(sz < 0)) {err = errno; goto error;}
+    return sz; 
+error:
+    if(err != EBADF && err != EBUSY && err != EPIPE) {
+        int rc = dill_hnullify(s);
+        dill_assert(rc == 0);
+    }
+    errno = err;
+    return -1;
 }
 
