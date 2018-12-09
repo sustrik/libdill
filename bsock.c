@@ -33,10 +33,10 @@ dill_unique_id(dill_bsock_type);
 
 int dill_bsend(int s, const void *buf, size_t len, int64_t deadline) {
     int err;
-    struct dill_bsock_vfs *b = dill_hquery(s, dill_bsock_type);
-    if(dill_slow(!b)) {err = errno; goto error;}
+    struct dill_bsock_vfs *self = dill_hquery(s, dill_bsock_type);
+    if(dill_slow(!self)) {err = errno; goto error;}
     struct dill_iolist iol = {(void*)buf, len, NULL, 0};
-    int rc = b->bsendl(b, &iol, &iol, deadline);
+    int rc = self->bsendl(self, &iol, &iol, deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error;}
     return 0;
 error:
@@ -50,10 +50,10 @@ error:
 
 int dill_brecv(int s, void *buf, size_t len, int64_t deadline) {
     int err;
-    struct dill_bsock_vfs *b = dill_hquery(s, dill_bsock_type);
-    if(dill_slow(!b)) {err = errno; goto error;}
+    struct dill_bsock_vfs *self = dill_hquery(s, dill_bsock_type);
+    if(dill_slow(!self)) {err = errno; goto error;}
     struct dill_iolist iol = {buf, len, NULL, 0};
-    int rc = b->brecvl(b, &iol, &iol, deadline);
+    int rc = self->brecvl(self, &iol, &iol, deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error;}
     return 0;
 error:
@@ -68,10 +68,10 @@ error:
 int dill_bsendl(int s, struct dill_iolist *first, struct dill_iolist *last,
       int64_t deadline) {
     int err;
-    struct dill_bsock_vfs *b = dill_hquery(s, dill_bsock_type);
-    if(dill_slow(!b)) {err = errno; goto error;}
+    struct dill_bsock_vfs *self = dill_hquery(s, dill_bsock_type);
+    if(dill_slow(!self)) {err = errno; goto error;}
     if(dill_slow(!first || !last || last->iol_next)) {err = EINVAL; goto error;}
-    int rc = b->bsendl(b, first, last, deadline);
+    int rc = self->bsendl(self, first, last, deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error;}
     return 0;
 error:
@@ -86,11 +86,11 @@ error:
 int dill_brecvl(int s, struct dill_iolist *first, struct dill_iolist *last,
       int64_t deadline) {
     int err;
-    struct dill_bsock_vfs *b = dill_hquery(s, dill_bsock_type);
-    if(dill_slow(!b)) {err = errno; goto error;}
+    struct dill_bsock_vfs *self = dill_hquery(s, dill_bsock_type);
+    if(dill_slow(!self)) {err = errno; goto error;}
     if(dill_slow((first && !last) || (!first && last) || last->iol_next)) {
         err = EINVAL; goto error;}
-    int rc = b->brecvl(b, first, last, deadline);
+    int rc = self->brecvl(self, first, last, deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error;}
     return 0;
 error:

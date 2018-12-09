@@ -52,8 +52,8 @@ struct dill_tcpmux_sock {
 DILL_CHECK_STORAGE(dill_tcpmux_sock, dill_tcpmux_storage)
 
 static void *dill_tcpmux_hquery(struct dill_hvfs *hvfs, const void *type) {
-    struct dill_tcpmux_sock *obj = (struct dill_tcpmux_sock*)hvfs;
-    if(type == dill_tcpmux_type) return obj;
+    struct dill_tcpmux_sock *self = (struct dill_tcpmux_sock*)hvfs;
+    if(type == dill_tcpmux_type) return self;
     errno = ENOTSUP;
     return NULL;
 }

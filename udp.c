@@ -59,9 +59,9 @@ struct dill_udp_sock {
 DILL_CHECK_STORAGE(dill_udp_sock, dill_udp_storage)
 
 static void *dill_udp_hquery(struct dill_hvfs *hvfs, const void *type) {
-    struct dill_udp_sock *obj = (struct dill_udp_sock*)hvfs;
-    if(type == dill_msock_type) return &obj->mvfs;
-    if(type == dill_udp_type) return obj;
+    struct dill_udp_sock *self = (struct dill_udp_sock*)hvfs;
+    if(type == dill_msock_type) return &self->mvfs;
+    if(type == dill_udp_type) return self;
     errno = ENOTSUP;
     return NULL;
 }
@@ -97,26 +97,26 @@ int dill_udp_open(struct dill_ipaddr *local,
         }
     }
     /* Create the object. */
-    struct dill_udp_sock *obj = (struct dill_udp_sock*)opts->mem;
-    if(!obj) {
-        obj = malloc(sizeof(struct dill_udp_sock));
-        if(dill_slow(!obj)) {err = ENOMEM; goto error2;}
+    struct dill_udp_sock *self = (struct dill_udp_sock*)opts->mem;
+    if(!self) {
+        self = malloc(sizeof(struct dill_udp_sock));
+        if(dill_slow(!self)) {err = ENOMEM; goto error2;}
     }
-    obj->hvfs.query = dill_udp_hquery;
-    obj->hvfs.close = dill_udp_hclose;
-    obj->mvfs.msendl = dill_udp_msendl;
-    obj->mvfs.mrecvl = dill_udp_mrecvl;
-    obj->fd = s;
-    obj->busy = 0;
-    obj->hasremote = remote ? 1 : 0;
-    obj->mem = !!opts->mem;
-    if(remote) obj->remote = *remote;
+    self->hvfs.query = dill_udp_hquery;
+    self->hvfs.close = dill_udp_hclose;
+    self->mvfs.msendl = dill_udp_msendl;
+    self->mvfs.mrecvl = dill_udp_mrecvl;
+    self->fd = s;
+    self->busy = 0;
+    self->hasremote = remote ? 1 : 0;
+    self->mem = !!opts->mem;
+    if(remote) self->remote = *remote;
     /* Create the handle. */
-    int h = dill_hmake(&obj->hvfs);
+    int h = dill_hmake(&self->hvfs);
     if(dill_slow(h < 0)) {err = errno; goto error3;}
     return h;
 error3:
-    if(!opts->mem) free(obj);
+    if(!opts->mem) free(self);
 error2:
     dill_fd_close(s);
 error1:
@@ -127,13 +127,13 @@ error1:
 static int dill_udp_sendl_(struct dill_msock_vfs *mvfs,
       const struct dill_ipaddr *addr,
       struct dill_iolist *first, struct dill_iolist *last) {
-    struct dill_udp_sock *obj = dill_cont(mvfs, struct dill_udp_sock, mvfs);
-    if(dill_slow(obj->busy)) {errno = EBUSY; return -1;}
+    struct dill_udp_sock *self = dill_cont(mvfs, struct dill_udp_sock, mvfs);
+    if(dill_slow(self->busy)) {errno = EBUSY; return -1;}
     /* If no destination IP address is provided, fall back to the stored one. */
     const struct dill_ipaddr *dstaddr = addr;
     if(!dstaddr) {
-        if(dill_slow(!obj->hasremote)) {errno = EINVAL; return -1;}
-        dstaddr = &obj->remote;
+        if(dill_slow(!self->hasremote)) {errno = EINVAL; return -1;}
+        dstaddr = &self->remote;
     }
     struct msghdr hdr;
     memset(&hdr, 0, sizeof(hdr));
@@ -149,7 +149,7 @@ static int dill_udp_sendl_(struct dill_msock_vfs *mvfs,
     dill_ioltoiov(first, iov);
     hdr.msg_iov = (struct iovec*)iov;
     hdr.msg_iovlen = niov;
-    ssize_t sz = sendmsg(obj->fd, &hdr, 0);
+    ssize_t sz = sendmsg(self->fd, &hdr, 0);
     if(dill_fast(sz >= 0)) return 0;
     if(errno == EAGAIN || errno == EWOULDBLOCK) return 0;
     return -1;
@@ -158,8 +158,8 @@ static int dill_udp_sendl_(struct dill_msock_vfs *mvfs,
 static ssize_t dill_udp_recvl_(struct dill_msock_vfs *mvfs,
       struct dill_ipaddr *addr,
       struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
-    struct dill_udp_sock *obj = dill_cont(mvfs, struct dill_udp_sock, mvfs);
-    if(dill_slow(obj->busy)) {errno = EBUSY; return -1;}
+    struct dill_udp_sock *self = dill_cont(mvfs, struct dill_udp_sock, mvfs);
+    if(dill_slow(self->busy)) {errno = EBUSY; return -1;}
     struct msghdr hdr;
     struct dill_ipaddr raddr;
     memset(&hdr, 0, sizeof(hdr));
@@ -176,19 +176,19 @@ static ssize_t dill_udp_recvl_(struct dill_msock_vfs *mvfs,
     hdr.msg_iov = (struct iovec*)iov;
     hdr.msg_iovlen = niov;
     while(1) {
-        ssize_t sz = recvmsg(obj->fd, &hdr, 0);
+        ssize_t sz = recvmsg(self->fd, &hdr, 0);
         if(sz >= 0) {
             /* If remote IP address is specified we'll silently drop all
                packets coming from different addresses. */
-            if(obj->hasremote && !dill_ipaddr_equal(&raddr, &obj->remote, 0))
+            if(self->hasremote && !dill_ipaddr_equal(&raddr, &self->remote, 0))
                 continue;
             if(addr) *addr = raddr;
             return sz;
         }
         if(errno != EAGAIN && errno != EWOULDBLOCK) return -1;
-        obj->busy = 1;
-        rc = dill_fdin(obj->fd, deadline);
-        obj->busy = 0;
+        self->busy = 1;
+        rc = dill_fdin(self->fd, deadline);
+        self->busy = 0;
         if(dill_slow(rc < 0)) return -1;
     }
 }
@@ -234,14 +234,14 @@ static ssize_t dill_udp_mrecvl(struct dill_msock_vfs *mvfs,
 }
 
 static void dill_udp_hclose(struct dill_hvfs *hvfs) {
-    struct dill_udp_sock *obj = (struct dill_udp_sock*)hvfs;
+    struct dill_udp_sock *self = (struct dill_udp_sock*)hvfs;
     /* We do not switch off linger here because if UDP socket was fully
        implemented in user space, msend() would block until the packet
        was flushed into network, thus providing some basic reliability.
        Kernel-space implementation here, on the other hand, may queue
        outgoing packets rather than flushing them. The effect is balanced
        out by lingering when closing the socket. */
-    dill_fd_close(obj->fd);
-    if(!obj->mem) free(obj);
+    dill_fd_close(self->fd);
+    if(!self->mem) free(self);
 }
 

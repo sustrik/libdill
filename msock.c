@@ -33,10 +33,10 @@ dill_unique_id(dill_msock_type);
 
 int dill_msend(int s, const void *buf, size_t len, int64_t deadline) {
     int err;
-    struct dill_msock_vfs *m = dill_hquery(s, dill_msock_type);
-    if(dill_slow(!m)) {err = errno; goto error;}
+    struct dill_msock_vfs *self = dill_hquery(s, dill_msock_type);
+    if(dill_slow(!self)) {err = errno; goto error;}
     struct dill_iolist iol = {(void*)buf, len, NULL, 0};
-    int rc = m->msendl(m, &iol, &iol, deadline);
+    int rc = self->msendl(self, &iol, &iol, deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error;}
     return 0;
 error:
@@ -50,10 +50,10 @@ error:
 
 ssize_t dill_mrecv(int s, void *buf, size_t len, int64_t deadline) {
     int err;
-    struct dill_msock_vfs *m = dill_hquery(s, dill_msock_type);
-    if(dill_slow(!m)) {err = errno; goto error;}
+    struct dill_msock_vfs *self = dill_hquery(s, dill_msock_type);
+    if(dill_slow(!self)) {err = errno; goto error;}
     struct dill_iolist iol = {buf, len, NULL, 0};
-    ssize_t sz = m->mrecvl(m, &iol, &iol, deadline);
+    ssize_t sz = self->mrecvl(self, &iol, &iol, deadline);
     if(dill_slow(sz < 0)) {err = errno; goto error;}
     return sz;
 error:
@@ -68,11 +68,11 @@ error:
 int dill_msendl(int s, struct dill_iolist *first, struct dill_iolist *last,
       int64_t deadline) {
     int err;
-    struct dill_msock_vfs *m = dill_hquery(s, dill_msock_type);
-    if(dill_slow(!m)) {err = errno; goto error;}
+    struct dill_msock_vfs *self = dill_hquery(s, dill_msock_type);
+    if(dill_slow(!self)) {err = errno; goto error;}
     if(dill_slow(!first || !last || last->iol_next)) {
         err = EINVAL; goto error;}
-    int rc = m->msendl(m, first, last, deadline);
+    int rc = self->msendl(self, first, last, deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error;}
     return 0;
 error:
@@ -87,13 +87,13 @@ error:
 ssize_t dill_mrecvl(int s, struct dill_iolist *first, struct dill_iolist *last,
       int64_t deadline) {
     int err;
-    struct dill_msock_vfs *m = dill_hquery(s, dill_msock_type);
-    if(dill_slow(!m)) {err = errno; goto error;}
+    struct dill_msock_vfs *self = dill_hquery(s, dill_msock_type);
+    if(dill_slow(!self)) {err = errno; goto error;}
     if(dill_slow((last && last->iol_next) ||
           (!first && last) ||
           (first && !last))) {
         err = EINVAL; goto error;}
-    ssize_t sz = m->mrecvl(m, first, last, deadline);
+    ssize_t sz = self->mrecvl(self, first, last, deadline);
     if(dill_slow(sz < 0)) {err = errno; goto error;}
     return sz; 
 error:
