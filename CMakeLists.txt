@@ -1,3 +1,6 @@
+# CMake build system is not officially supported.
+# If you find out it's not working fix it and send a pull request.
+
 cmake_minimum_required(VERSION 3.1)
 project(libdill VERSION 1.6 LANGUAGES C)
 
@@ -14,8 +17,8 @@ list(APPEND CMAKE_REQUIRED_LIBRARIES pthread)
 target_link_libraries(dill pthread)
 
 # add openssl # requires libssl-dev on ubuntu
-list(APPEND CMAKE_REQUIRED_LIBRARIES ssl)
-target_link_libraries(dill ssl)
+list(APPEND CMAKE_REQUIRED_LIBRARIES ssl crypto)
+target_link_libraries(dill ssl crypto)
 
 # check and enable rt if available
 list(APPEND CMAKE_REQUIRED_LIBRARIES rt)
@@ -104,6 +107,8 @@ list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
 set(CMAKE_REQUIRED_LIBRARIES )
 set(CMAKE_REQUIRED_DEFINITIONS )
 
+add_definitions(-DDILL_THREADS)
+
 check_function_exists(mprotect HAVE_MPROTECT)
 if(HAVE_MPROTECT)
   add_definitions(-DHAVE_MPROTECT)
@@ -119,12 +124,19 @@ include(CTest)
 if(BUILD_TESTING)
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
     set(test_files
+        tests/bundle.c
         tests/chan.c
         tests/choose.c
         tests/example.c
         tests/fd.c
-        tests/go.c
+        tests/go1.c
+        tests/go2.c
+        tests/go3.c
+        tests/go4.c
+        tests/go5.c
         tests/handle.c
+        tests/happyeyeballs.c
+        tests/http.c
         tests/iol.c
         tests/ipaddr.c
         tests/ipc.c
@@ -133,10 +145,14 @@ if(BUILD_TESTING)
         tests/rbtree.c
         tests/signals.c
         tests/sleep.c
+        tests/socks5.c
         tests/suffix.c
         tests/tcp.c
         tests/threads.c
-        tests/threads2.c)
+        tests/threads2.c
+        tests/tls.c
+        tests/udp.c
+        tests/ws.c)
     foreach(test_file IN LISTS test_files)
       get_filename_component(test_name ${test_file} NAME_WE)
       add_executable(test_${test_name} ${test_file})
