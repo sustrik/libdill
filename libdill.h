@@ -433,25 +433,31 @@ struct sockaddr;
 #define DILL_IPADDR_PREF_IPV6 4
 #define DILL_IPADDR_MAXSTRLEN 46
 
+struct dill_ipaddr_opts {
+    int mode;
+};
+
+DILL_EXPORT extern const struct dill_ipaddr_opts dill_ipaddr_defaults;
+
 struct dill_ipaddr {char _[32];};
 
 DILL_EXPORT int dill_ipaddr_local(
     struct dill_ipaddr *addr,
     const char *name,
     int port,
-    int mode);
+    const struct dill_ipaddr_opts *opts);
 DILL_EXPORT int dill_ipaddr_remote(
     struct dill_ipaddr *addr,
     const char *name,
     int port,
-    int mode,
+    const struct dill_ipaddr_opts *opts,
     int64_t deadline);
 DILL_EXPORT int dill_ipaddr_remotes(
     struct dill_ipaddr *addrs,
     int naddrs,
     const char *name,
     int port,
-    int mode,
+    const struct dill_ipaddr_opts *opts,
     int64_t deadline);
 DILL_EXPORT const char *dill_ipaddr_str(
     const struct dill_ipaddr *addr,
@@ -478,6 +484,8 @@ DILL_EXPORT int dill_ipaddr_equal(
 #define IPADDR_PREF_IPV4 DILL_IPADDR_PREF_IPV4 
 #define IPADDR_PREF_IPV6 DILL_IPADDR_PREF_IPV6
 #define IPADDR_MAXSTRLEN DILL_IPADDR_MAXSTRLEN
+#define ipaddr_opts dill_ipaddr_opts
+#define ipaddr_defaults dill_ipaddr_defaults
 #define ipaddr dill_ipaddr
 #define ipaddr_local dill_ipaddr_local
 #define ipaddr_remote dill_ipaddr_remote

@@ -33,7 +33,9 @@ static dill_coroutine void dill_tcp_happy_eyeballs_dnsquery(const char *name,
     /* Do the DNS query. Let's be reasonable and limit the number of addresses
        to 10 per IP version. */
     struct dill_ipaddr addrs[10];
-    int count = dill_ipaddr_remotes(addrs, 10, name, port, mode, -1);
+    struct dill_ipaddr_opts opts = dill_ipaddr_defaults;
+    opts.mode = mode;
+    int count = dill_ipaddr_remotes(addrs, 10, name, port, &opts, -1);
     if(count > 0) {
         /* Send the results of the query to the main fuction. */
         int i;
@@ -47,7 +49,7 @@ static dill_coroutine void dill_tcp_happy_eyeballs_dnsquery(const char *name,
        have to deal with closed channels. Instead we'll send 0.0.0.0 address
        to mark the end of the results. */
     struct dill_ipaddr addr;
-    int rc = dill_ipaddr_local(&addr, "0.0.0.0", 0, DILL_IPADDR_IPV4);
+    int rc = dill_ipaddr_local(&addr, "0.0.0.0", 0, NULL);
     dill_assert(rc == 0);
     rc = dill_chsend(ch, &addr, sizeof(struct dill_ipaddr), -1);
     dill_assert(rc == 0 || errno == ECANCELED);
@@ -69,7 +71,7 @@ static dill_coroutine void dill_tcp_happy_eyeballs_attempt(
 static dill_coroutine void dill_tcp_happy_eyeballs_coordinator(
       const char *name, int port, const struct dill_tcp_opts *opts, int ch) {
     struct dill_ipaddr nulladdr;
-    int rc = dill_ipaddr_local(&nulladdr, "0.0.0.0", 0, DILL_IPADDR_IPV4);
+    int rc = dill_ipaddr_local(&nulladdr, "0.0.0.0", 0, NULL);
     dill_assert(rc == 0);
     /* According to the RFC, IPv4 and IPv6 DNS queries should be done in
        parallel. Create two coroutines and two channels to pass

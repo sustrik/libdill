@@ -128,7 +128,7 @@ coroutine void proxy_byaddr(int s, char *user, char* pass) {
     assert(cmd > 0);
     assert(cmd == SOCKS5_CONNECT);
 
-    err = ipaddr_remote(&addr, "0.0.0.0", 0, IPADDR_IPV4, -1);
+    err = ipaddr_remote(&addr, "0.0.0.0", 0, NULL, -1);
     assert(err == 0);
 
     err = socks5_proxy_sendreply(s, SOCKS5_SUCCESS, &addr, now() + 1000);
@@ -171,7 +171,7 @@ coroutine void proxy_byname(int s, char *user, char* pass) {
            (strcmp(r_name, "localhost") == 0));
     assert(r_port == 5555);
 
-    err = ipaddr_remote(&addr, "0.0.0.0", 0, IPADDR_IPV4, -1);
+    err = ipaddr_remote(&addr, "0.0.0.0", 0, NULL, -1);
     assert(err == 0);
 
     err = socks5_proxy_sendreply(s, SOCKS5_SUCCESS, &addr, now() + 1000);

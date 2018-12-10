@@ -51,14 +51,19 @@
 DILL_CT_ASSERT(sizeof(struct dill_ipaddr) >= sizeof(struct sockaddr_in));
 DILL_CT_ASSERT(sizeof(struct dill_ipaddr) >= sizeof(struct sockaddr_in6));
 
+const struct dill_ipaddr_opts dill_ipaddr_defaults = {
+    DILL_IPADDR_PREF_IPV4    /* mode  */
+};
+
 static struct dns_resolv_conf *dill_dns_conf = NULL;
 static struct dns_hosts *dill_dns_hosts = NULL;
 static struct dns_hints *dill_dns_hints = NULL;
 
-static int dill_ipaddr_ipany(struct dill_ipaddr *addr, int port, int mode)
-{
+static int dill_ipaddr_ipany(struct dill_ipaddr *addr, int port,
+      const struct dill_ipaddr_opts *opts) {
     if(dill_slow(port < 0 || port > 0xffff)) {errno = EINVAL; return -1;}
-    if (mode == 0 || mode == DILL_IPADDR_IPV4 || mode == DILL_IPADDR_PREF_IPV4) {
+    if (opts->mode == DILL_IPADDR_IPV4 ||
+          opts->mode == DILL_IPADDR_PREF_IPV4) {
         struct sockaddr_in *ipv4 = (struct sockaddr_in*)addr;
         ipv4->sin_family = AF_INET;
         ipv4->sin_addr.s_addr = htonl(INADDR_ANY);
@@ -111,14 +116,14 @@ static int dill_ipaddr_ipv6_literal(struct dill_ipaddr *addr, const char *name,
 }
 
 /* Convert literal IPv4 or IPv6 address to a binary one. */
-static int dill_ipaddr_literal(struct dill_ipaddr *addr, const char *name, int port,
-      int mode) {
+static int dill_ipaddr_literal(struct dill_ipaddr *addr, const char *name,
+      int port, const struct dill_ipaddr_opts *opts) {
     if(dill_slow(!addr || port < 0 || port > 0xffff)) {
         errno = EINVAL;
         return -1;
     }
     int rc;
-    switch(mode) {
+    switch(opts->mode) {
     case DILL_IPADDR_IPV4:
         return dill_ipaddr_ipv4_literal(addr, name, port);
     case DILL_IPADDR_IPV6:
@@ -178,12 +183,13 @@ const char *dill_ipaddr_str(const struct dill_ipaddr *addr, char *ipstr) {
 }
 
 int dill_ipaddr_local(struct dill_ipaddr *addr, const char *name, int port,
-      int mode) {
-    if(mode == 0) mode = DILL_IPADDR_PREF_IPV4;
+      const struct dill_ipaddr_opts *opts) {
+    if(!opts) opts = &dill_ipaddr_defaults;
+    if(dill_slow(opts->mode < 1 || opts->mode > 4)) {errno = EINVAL; return -1;}
     memset(addr, 0, sizeof(struct dill_ipaddr));
     if(!name) 
-        return dill_ipaddr_ipany(addr, port, mode);
-    int rc = dill_ipaddr_literal(addr, name, port, mode);
+        return dill_ipaddr_ipany(addr, port, opts);
+    int rc = dill_ipaddr_literal(addr, name, port, opts);
 #if defined __sun
     return rc;
 #else
@@ -217,7 +223,7 @@ int dill_ipaddr_local(struct dill_ipaddr *addr, const char *name, int port,
             break;
     }
     /* Choose the correct address family based on mode. */
-    switch(mode) {
+    switch(opts->mode) {
     case DILL_IPADDR_IPV4:
         ipv6 = NULL;
         break;
@@ -257,21 +263,20 @@ int dill_ipaddr_local(struct dill_ipaddr *addr, const char *name, int port,
 }
 
 int dill_ipaddr_remote(struct dill_ipaddr *addr, const char *name, int port,
-      int mode, int64_t deadline) {
-    int rc = dill_ipaddr_remotes(addr, 1, name, port, mode, deadline);
+      const struct dill_ipaddr_opts *opts, int64_t deadline) {
+    int rc = dill_ipaddr_remotes(addr, 1, name, port, opts, deadline);
     if(dill_slow(rc < 0)) return -1;
     if(rc == 0) {errno = EADDRNOTAVAIL; return -1;}
     return 0;
 }
 
 int dill_ipaddr_remotes(struct dill_ipaddr *addrs, int naddrs,
-      const char *name, int port, int mode, int64_t deadline) {
+      const char *name, int port, const struct dill_ipaddr_opts *opts,
+      int64_t deadline) {
     /* Check the arguments. */
+    if(!opts) opts = &dill_ipaddr_defaults;
     if(dill_slow(!addrs || naddrs <= 0 || !name)) {errno = EINVAL; return -1;}
-    switch(mode) {
-    case 0:
-        mode = DILL_IPADDR_PREF_IPV4;
-        break;
+    switch(opts->mode) {
     case DILL_IPADDR_IPV4:
     case DILL_IPADDR_IPV6:
     case DILL_IPADDR_PREF_IPV4:
@@ -283,35 +288,41 @@ int dill_ipaddr_remotes(struct dill_ipaddr *addrs, int naddrs,
     }
     /* Name may be a IP address literal. */
     memset(addrs, 0, sizeof(struct dill_ipaddr));
-    int rc = dill_ipaddr_literal(addrs, name, port, mode);
+    int rc = dill_ipaddr_literal(addrs, name, port, opts);
     if(rc == 0) {
-        if(dill_slow(mode == DILL_IPADDR_IPV6 &&
+        if(dill_slow(opts->mode == DILL_IPADDR_IPV6 &&
               dill_ipaddr_family(addrs) == AF_INET)) return 0;
-        if(dill_slow(mode == DILL_IPADDR_IPV4 &&
+        if(dill_slow(opts->mode == DILL_IPADDR_IPV4 &&
               dill_ipaddr_family(addrs) == AF_INET6)) return 0;
         return 1;
     }
     /* PREF modes are done in recursive fashion. */
-    if(mode == DILL_IPADDR_PREF_IPV4) {
-        int rc1 = dill_ipaddr_remotes(addrs, naddrs, name, port,
-            DILL_IPADDR_IPV4, deadline);
+    if(opts->mode == DILL_IPADDR_PREF_IPV4) {
+        struct dill_ipaddr_opts ropts = *opts;
+        ropts.mode = DILL_IPADDR_IPV4;
+        int rc1 = dill_ipaddr_remotes(addrs, naddrs, name, port, &ropts,
+            deadline);
         if(dill_slow(rc1 < 0)) return -1;
         int rc2 = 0;
         if(naddrs - rc1 > 0) {
+            ropts.mode = DILL_IPADDR_IPV6;
             rc2 = dill_ipaddr_remotes(addrs + rc1, naddrs - rc1, name, port,
-                DILL_IPADDR_IPV6, deadline);
+                &ropts, deadline);
             if(dill_slow(rc2 < 0)) return -1;
         }
         return rc1 + rc2;
     }
-    if(mode == DILL_IPADDR_PREF_IPV6) {
-        int rc1 = dill_ipaddr_remotes(addrs, naddrs, name, port,
-            DILL_IPADDR_IPV6, deadline);
+    if(opts->mode == DILL_IPADDR_PREF_IPV6) {
+        struct dill_ipaddr_opts ropts = *opts;
+        ropts.mode = DILL_IPADDR_IPV6;
+        int rc1 = dill_ipaddr_remotes(addrs, naddrs, name, port, &ropts,
+            deadline);
         if(dill_slow(rc1 < 0)) return -1;
         int rc2 = 0;
         if(naddrs - rc1 > 0) {
+            ropts.mode = DILL_IPADDR_IPV4;
             rc2 = dill_ipaddr_remotes(addrs + rc1, naddrs - rc1, name, port,
-                DILL_IPADDR_IPV4, deadline);
+                &ropts, deadline);
             if(dill_slow(rc2 < 0)) return -1;
         }
         return rc1 + rc2;
@@ -346,7 +357,7 @@ int dill_ipaddr_remotes(struct dill_ipaddr *addrs, int naddrs,
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = PF_UNSPEC;
     struct dns_addrinfo *ai = dns_ai_open(name, portstr,
-        mode == DILL_IPADDR_IPV4 ? DNS_T_A : DNS_T_AAAA, &hints,
+        opts->mode == DILL_IPADDR_IPV4 ? DNS_T_A : DNS_T_AAAA, &hints,
         resolver, &rc);
     dill_assert(ai);
     dns_res_close(resolver);
@@ -374,7 +385,8 @@ int dill_ipaddr_remotes(struct dill_ipaddr *addrs, int naddrs,
             continue;
         }
         if(rc == ENOENT || (rc >= DNS_EBASE && rc <= DNS_ELAST)) break;
-        if(naddrs && mode == DILL_IPADDR_IPV4 && it->ai_family == AF_INET) {
+        if(naddrs && opts->mode == DILL_IPADDR_IPV4 &&
+              it->ai_family == AF_INET) {
             struct sockaddr_in *inaddr = (struct sockaddr_in*)addrs;
             memcpy(inaddr, it->ai_addr, sizeof (struct sockaddr_in));
             inaddr->sin_port = htons(port);
@@ -382,7 +394,8 @@ int dill_ipaddr_remotes(struct dill_ipaddr *addrs, int naddrs,
             naddrs--;
             nresults++;
         }
-        if(naddrs && mode == DILL_IPADDR_IPV6 && it->ai_family == AF_INET6) {
+        if(naddrs && opts->mode == DILL_IPADDR_IPV6 &&
+              it->ai_family == AF_INET6) {
             struct sockaddr_in6 *inaddr = (struct sockaddr_in6*)addrs;
             memcpy(inaddr, it->ai_addr, sizeof (struct sockaddr_in6));
             inaddr->sin6_port = htons(port);

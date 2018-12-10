@@ -255,11 +255,13 @@ static int s5_s5addr_to_ipaddr(struct dill_ipaddr *addr, _socks5_addr *s5,
       int64_t deadline) {
     int err;
     if((s5->port < 0) || (s5->port > 65535)) {errno = EINVAL; return -1;}
+    struct dill_ipaddr_opts opts = dill_ipaddr_defaults;
     switch(s5->atyp){
         case S5ADDR_IPV4:
             // create with generic IPV4
+            opts.mode = DILL_IPADDR_IPV4;
             err = dill_ipaddr_remote(addr, "127.0.0.1", s5->port,
-                DILL_IPADDR_IPV4, deadline);
+                &opts, deadline);
             if(err) return -1;
             // overwrite with actual IPV4
             struct sockaddr_in *ipv4 = (struct sockaddr_in*)addr;
@@ -267,8 +269,9 @@ static int s5_s5addr_to_ipaddr(struct dill_ipaddr *addr, _socks5_addr *s5,
             break;
         case S5ADDR_IPV6:
             // create with generic IPV6
+            opts.mode = DILL_IPADDR_IPV6;
             err = dill_ipaddr_remote(addr, "::1", s5->port,
-                DILL_IPADDR_IPV6, deadline);
+                &opts, deadline);
             if(err) return -1;
             // overwrite with actual IPV4
             struct sockaddr_in6 *ipv6 = (struct sockaddr_in6*)addr;
@@ -278,7 +281,7 @@ static int s5_s5addr_to_ipaddr(struct dill_ipaddr *addr, _socks5_addr *s5,
             // It's a name... look it up.
             // addr is sized to always have room for a null terminator
             err = dill_ipaddr_remote(addr, (const char*)&(s5->addr[0]),
-                s5->port, DILL_IPADDR_PREF_IPV4, deadline);
+                s5->port, NULL, deadline);
             if(err) return -1;
         break;
     }

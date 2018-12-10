@@ -74,13 +74,14 @@ void end_test(void) {
 }
 
 int mock_ipaddr_remotes(struct dill_ipaddr *addrs, int naddrs,
-      const char *name, int port, int mode, int64_t deadline) {
+      const char *name, int port, const struct dill_ipaddr_opts *opts,
+      int64_t deadline) {
     int this_step = next_step++;
     struct step *step = &steps[this_step];
     printf("step %d: ipaddr_remotes(\"%s\", %d, %s)\n", this_step, name, port,
-        mode == DILL_IPADDR_IPV4 ? "IPADDR_IPV4" : "IPADDR_IPV6");
+        opts->mode == DILL_IPADDR_IPV4 ? "IPADDR_IPV4" : "IPADDR_IPV6");
     assert(step->op == OP_REMOTES);
-    assert(mode = step->mode);
+    assert(opts->mode == step->mode);
     int rc = dill_msleep(dill_now() + step->delay);
     if(rc < 0 && errno == ECANCELED) {
         printf("step %d: canceled\n", this_step);
@@ -90,7 +91,7 @@ int mock_ipaddr_remotes(struct dill_ipaddr *addrs, int naddrs,
     }
     errno_assert(rc == 0);
     /* Generate some mock IP addresses. */
-    const char *fmt = (mode == DILL_IPADDR_IPV4 ?
+    const char *fmt = (opts->mode == DILL_IPADDR_IPV4 ?
         "192.168.0.%d" : "2001::%d");
     int cnt = step->res >= 0 ? step->res : 0;
     if(naddrs < cnt) cnt = naddrs;
