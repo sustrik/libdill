@@ -289,7 +289,7 @@ int dill_tcp_listen(struct dill_ipaddr *addr,
         struct dill_ipaddr baddr;
         socklen_t len = sizeof(struct dill_ipaddr);
         rc = getsockname(s, (struct sockaddr*)&baddr, &len);
-        if(rc < 0) {err = errno; goto error2;}
+        if(dill_slow(rc < 0)) {err = errno; goto error2;}
         dill_ipaddr_setport(addr, dill_ipaddr_port(&baddr));
     }
     int h = dill_tcp_makelistener(s, opts);
@@ -361,6 +361,7 @@ int dill_tcp_fromfd(int fd, const struct dill_tcp_opts *opts) {
     if(dill_slow(h < 0)) {err = errno; goto error1;}
     return h;
 error1:
+    if(err != EBADF) close(fd);
     errno = err;
     return -1;
 }

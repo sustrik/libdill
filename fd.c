@@ -392,9 +392,10 @@ void dill_fd_close(int s) {
     lng.l_onoff=1;
     lng.l_linger=0;
     setsockopt(s, SOL_SOCKET, SO_LINGER, (void*)&lng, sizeof(lng));
-    /* We are not checking the error here. close() has inconsistent behaviour
-       and leaking a file descriptor is better than crashing the entire
-       program. */
+    /* We are not checking the error here. close() has inconsistent behaviour.
+       For example, if the call failes with EINTR on HP-UX the socket it not
+       closed. However, it's closed in almost all cases and even if it's not
+       leaking a file descriptor is better than crashing the entire program. */
     close(s);
 }
 
