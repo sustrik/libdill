@@ -1054,6 +1054,7 @@ struct dill_tcpmux_storage {char _[1000];};
 struct dill_tcpmux_opts {
     struct dill_tcpmux_storage *mem;
     const char *addr;
+    int port;
 };
 
 DILL_EXPORT extern const struct dill_tcpmux_opts dill_tcpmux_defaults;
@@ -1071,6 +1072,8 @@ DILL_EXPORT int dill_tcpmux_switch(
     int s,
     const char *service,
     int64_t deadline);
+DILL_EXPORT int tcpmux_daemon(
+    const struct dill_tcpmux_opts *opts);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define tcpmux_storage dill_tcpmux_storage
@@ -1079,6 +1082,7 @@ DILL_EXPORT int dill_tcpmux_switch(
 #define tcpmux_listen dill_tcpmux_listen
 #define tcpmux_accept dill_tcpmux_accept
 #define tcpmux_switch dill_tcpmux_switch
+#define tpcmux_daemon dill_tcpmux_daemon
 #endif
 
 #endif

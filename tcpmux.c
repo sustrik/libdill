@@ -22,17 +22,21 @@
 
 */
 
+#include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define DILL_DISABLE_RAW_NAMES
 #include "libdillimpl.h"
+#include "list.h"
 #include "utils.h"
 
 const struct dill_tcpmux_opts dill_tcpmux_defaults = {
     NULL,           /* mem */
     "/tmp/tcpmux",  /* addr */
+    10001,          /* port - RFC1078 specifies port 1, however, superpowers
+                       are needed to listen on port 1 so use port 10001. */
 };
 
 dill_unique_id(dill_tcpmux_type);
@@ -128,24 +132,27 @@ int dill_tcpmux_accept(int s, const struct dill_tcp_opts *opts,
     struct dill_tcpmux_sock *self = dill_hquery(s, dill_tcpmux_type);
     if(dill_slow(!self)) return -1;
     if(!opts) opts = &dill_tcp_defaults;
-recvfd:;
-    int as = dill_ipc_recvfd(self->s, deadline);
-    if(dill_fast(as >= 0)) {
-        as = dill_tcp_fromfd(as, opts);
-        dill_assert(as >= 0);
-        return as;
+    while(1) {
+        int as = dill_ipc_recvfd(self->s, deadline);
+        if(dill_fast(as >= 0)) {
+            as = dill_tcp_fromfd(as, opts);
+            dill_assert(as >= 0);
+            return as;
+        }
+        if(dill_slow(errno != ECONNRESET && errno != EPIPE)) return -1;
+        int rc = dill_hclose(self->s);
+        dill_assert(rc == 0);
+        /* Connection to tcpmuxd broken. Try reestablishing it once a second. */
+        while(1) {
+            rc = dill_tcpmux_register(self, deadline);
+            if(dill_fast(rc == 0)) break;
+            if(dill_slow(errno != ECONNREFUSED)) return -1;
+            int64_t onesec = dill_now () + 1000;
+            rc = dill_msleep(
+                (deadline < 0 || onesec < deadline) ? onesec : deadline);
+            if(dill_slow(rc < 0)) return -1;
+        }
     }
-    if(dill_slow(errno != ECONNRESET && errno != EPIPE)) return -1;
-    int rc = dill_hclose(self->s);
-    dill_assert(rc == 0);
-register_with_tcpmuxd:
-    rc = dill_tcpmux_register(self, deadline);
-    if(dill_fast(rc == 0)) goto recvfd;
-    if(dill_slow(errno != ECONNREFUSED)) return -1;
-    int64_t onesec = dill_now () + 1000;
-    rc = dill_msleep(deadline < 0 || onesec < deadline ? onesec : deadline);
-    if(dill_slow(rc < 0)) return -1;
-    goto register_with_tcpmuxd;
 }
 
 int dill_tcpmux_switch(int s, const char *service, int64_t deadline) {
@@ -177,6 +184,197 @@ int dill_tcpmux_switch(int s, const char *service, int64_t deadline) {
     return 0;
 error2:
     rc = dill_hclose(s);
+    dill_assert(rc == 0);
+error1:
+    errno = err;
+    return -1;
+}
+
+/******************************************************************************/
+/* The TCPMUX daemon.                                                         */
+/******************************************************************************/
+
+struct dill_tcpmuxd_service {
+    struct dill_list item;
+    char name[256];
+    int s;
+};
+
+static dill_coroutine void dill_tcpmuxd_tcp_handler(int s,
+      struct dill_list *services) {
+    int err;
+    int64_t deadline = dill_now() + 10000;
+    struct dill_suffix_storage mem;
+    struct dill_suffix_opts opts = dill_suffix_defaults;
+    opts.mem = &mem;
+    int rc = dill_suffix_attach(s, "\r\n", 2, &opts);
+    if(dill_slow(rc != 0)) {err = errno; goto error1;}
+    /* Read the requested service name. */
+    char name[256];
+    ssize_t sz = dill_mrecv(s, name, sizeof(name), deadline);
+    if(dill_slow(sz < 0)) {err = errno; goto error1;}
+    if(dill_slow(sz > 255)) {err = ENAMETOOLONG; goto error1;}
+    name[sz] = 0;
+    /* Service names are case-insensitive. */
+    int i;
+    for(i = 0; i != sz; ++i) name[i] = (char)tolower(name[i]);
+    /* Find the registered service. */
+    struct dill_list *it;
+    struct dill_tcpmuxd_service *svc;
+    for(it = dill_list_next(services); it != services;
+          it = dill_list_next(it)) {
+         svc = dill_cont(it, struct dill_tcpmuxd_service, item);
+         if(strcmp(svc->name, name) == 0) break;
+    }
+    int success = (it != services);
+    /* Reply to the TCP peer. */
+    const char *reply = success ? "+" : "-Service not found";
+    rc = dill_msend(s, reply, strlen(reply), deadline);
+    if(dill_slow(rc != 0)) {err = errno; goto error1;}
+    if(!success) {
+        fprintf(stderr, "%s: not found\n", name);
+        err = EADDRNOTAVAIL;
+        goto error1;
+    }
+    /* Send the raw fd to the process implementing the service. */
+    rc = dill_suffix_detach(s);
+    if(dill_slow(rc != 0)) {err = errno; goto error1;}
+    int fd = dill_tcp_tofd(s);
+    if(dill_slow(rc != 0)) {err = errno; goto error1;}
+    s = -1; // ???
+    rc = dill_ipc_sendfd(svc->s, fd, deadline);
+    if(dill_slow(rc != 0)) {err = errno; goto error1;}
+    fprintf(stderr, "%s: connection created\n", svc->name);
+    return;
+error1:
+    if(s >= 0) {
+        rc = dill_hclose(s);
+        dill_assert(rc == 0);
+    }
+}
+
+static dill_coroutine void dill_tcpmuxd_tcp_listener(int tcps,
+      struct dill_list *services) {
+    int err;
+    struct dill_tcp_opts opts = dill_tcp_defaults;
+    opts.rx_buffering = 0;
+    int tcpb = dill_bundle(NULL);
+    if(dill_slow(tcpb < 0)) {err = errno; goto error1;}
+    while(1) {
+        int s = dill_tcp_accept(tcps, &opts, NULL, -1);
+        if(dill_slow(s < 0)) {err = errno; goto error2;}
+        int rc = dill_bundle_go(tcpb, dill_tcpmuxd_tcp_handler(s, services));
+        if(dill_slow(s < 0)) {err = errno; goto error2;}
+    }
+error2:;
+    int rc = dill_hclose(tcpb);
+    dill_assert(rc == 0);
+error1:;
+}
+
+static dill_coroutine void dill_tcpmuxd_ipc_handler(int s,
+      struct dill_list *services) {
+    int err;
+    /* Get the service registration details. */
+    int64_t deadline = dill_now() + 10000;
+    struct dill_tcpmuxd_service *svc =
+        malloc(sizeof(struct dill_tcpmuxd_service));
+    if(dill_slow(!svc)) {err = ENOMEM; goto error1;}
+    memset(svc, 0, sizeof(struct dill_tcpmuxd_service));
+    uint8_t svclen;
+    int rc = dill_brecv(s, &svclen, 1, deadline);
+    if(dill_slow(rc != 0)) {err = errno; goto error2;}
+    rc = dill_brecv(s, svc->name, svclen, deadline);
+    if(dill_slow(rc != 0)) {err = errno; goto error2;}
+    svc->name[svclen] = 0;
+    svc->s = s;
+    /* Service names are case-insensitive. */
+    int i;
+    for(i = 0; i != svclen; ++i) svc->name[i] = (char)tolower(svc->name[i]);
+    /* Check whether the service already exists. */
+    struct dill_list *it;
+    for(it = dill_list_next(services); it != services;
+          it = dill_list_next(it)) {
+        struct dill_tcpmuxd_service *svc_it = dill_cont(it,
+            struct dill_tcpmuxd_service, item);
+        if(strcmp(svc->name, svc_it->name) == 0) {
+            /* Check whether the old service provider is still connected. */
+            rc = dill_brecv(svc_it->s, NULL, 1, 0);
+            if(rc < 0 && (errno == ECONNRESET || errno == EPIPE)) {
+                fprintf(stderr, "%s: unregistered\n", svc_it->name);
+                rc = dill_hclose(svc_it->s);
+                if(dill_slow(rc != 0)) {err = errno; goto error2;}
+                dill_list_erase(it);
+                free(svc_it);
+                break;
+            }
+            if(dill_slow(rc != 0)) {err = errno; goto error2;}
+            int result = 0;
+            rc = dill_bsend(s, &result, 1, deadline);
+            if(dill_slow(rc != 0)) {err = errno; goto error2;}
+            err = EADDRINUSE;
+            goto error2;
+        }
+    }
+    /* Store the registration record. */
+    dill_list_insert(&svc->item, services);
+    fprintf(stderr, "%s: registered\n", svc->name);
+    /* Report success to the application. */
+    int result = 1;
+    rc = dill_bsend(s, &result, 1, deadline);
+    if(dill_slow(rc != 0)) {err = errno; goto error3;}
+    return;
+error3:
+    dill_list_erase(&svc->item);
+error2:
+    free(svc);
+error1:
+    rc = dill_hclose(s);
+    dill_assert(rc == 0);
+}
+
+int tcpmux_daemon(const struct dill_tcpmux_opts *opts) {
+    int err;
+    if(!opts) opts = &dill_tcpmux_defaults;
+    /* Get rid of the file from failed previous run. This is a known POSIX
+       race condition. If there's another TCPMUX daemon running we delete the
+       file nonetheless. */
+    unlink(opts->addr);
+    /* List of all registered services. */
+    struct dill_list services;
+    dill_list_init(&services);
+    /* Start listening for incoming TCP connections. */
+    struct dill_ipaddr addr;
+    int rc = dill_ipaddr_local(&addr, NULL, opts->port, 0);
+    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    int tcps = dill_tcp_listen(&addr, NULL);
+    if(dill_slow(tcps < 0)) {err = errno; goto error1;}
+    int tcph = dill_go(dill_tcpmuxd_tcp_listener(tcps, &services));
+    if(dill_slow(tcph < 0)) {err = errno; goto error2;}    
+    /* Start listening for incoming IPC connections. */
+    int ipcs = dill_ipc_listen(opts->addr, NULL);
+    if(dill_slow(ipcs < 0)) {err = errno; goto error3;}
+    struct dill_ipc_opts iopts = dill_ipc_defaults;
+    iopts.rx_buffering = 0;
+    int ipcb = dill_bundle(NULL);
+    if(dill_slow(ipcb < 0)) {err = errno; goto error4;}
+    while(1) {
+        int s = dill_ipc_accept(ipcs, &iopts, -1);
+        if(dill_slow(s < 0)) {err = errno; goto error5;}
+        int rc = dill_bundle_go(ipcb, dill_tcpmuxd_ipc_handler(s, &services));
+        if(dill_slow(s < 0)) {err = errno; goto error5;}
+    }
+error5:
+    rc = dill_hclose(ipcb);
+    dill_assert(rc == 0);
+error4:
+    rc = dill_hclose(ipcs);
+    dill_assert(rc == 0);
+error3:
+    rc = dill_hclose(tcph);
+    dill_assert(rc == 0);
+error2:
+    rc = dill_hclose(tcps);
     dill_assert(rc == 0);
 error1:
     errno = err;

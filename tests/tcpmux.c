@@ -45,16 +45,23 @@ coroutine void client(void) {
         errno_assert(rc == 0);
         printf("connected\n");
 
-        //rc = hclose(s);
-        //errno_assert(rc == 0);
-
-        //s = tcp_detach(s);
-        //errno_assert(s >= 0);
-        //close(s);
+        rc = hclose(s);
+        errno_assert(rc == 0);
     }
 }
 
+coroutine void run_daemon(void) {
+    int rc = tcpmux_daemon(NULL);
+    errno_assert(rc == -1 && errno == ECANCELED);
+}
+
 int main(void) {
+    int dmn = go(run_daemon());
+    errno_assert(dmn >= 0);
+
+    int rc = msleep(now() + 100);
+    errno_assert(rc == 0);
+
     int lst = tcpmux_listen("foo", NULL, -1);
     errno_assert(lst >= 0);
     go(client());
@@ -65,5 +72,9 @@ int main(void) {
         printf("accepted\n");
         hclose(s);
     }
+
+    rc = hclose(dmn);
+    errno_assert(rc == 0);
+
     return 0;
 }
