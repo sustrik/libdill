@@ -203,6 +203,6 @@ fi
 
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_OUTPUT([Makefile examples/Makefile man/Makefile libdill.pc])
+AC_OUTPUT([Makefile perf/Makefile examples/Makefile man/Makefile libdill.pc])
 cp confdefs.h config.h
 
