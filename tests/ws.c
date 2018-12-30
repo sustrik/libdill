@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "assert.h"
+#include "protocol.h"
 #include "../libdill.h"
 
 coroutine void nohttp_client(int s) {
@@ -58,6 +59,7 @@ coroutine void http_client(int s) {
     opts.text = 0;
     int rc = ws_attach_client(s, "/", "www.example.org", &opts, -1);
     errno_assert(rc == 0);
+    protocol_check_msock(s);
     rc = msend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
     char buf[3];
@@ -88,6 +90,7 @@ int main(void) {
     opts.http = 0;
     rc = ws_attach_server(p[0], &opts, NULL, 0, NULL, 0, -1);
     errno_assert(rc == 0);
+    protocol_check_msock(p[0]);
     char buf[3];
     ssize_t sz = mrecv(p[0], buf, sizeof(buf), -1);
     errno_assert(sz >= 0);
@@ -112,6 +115,7 @@ int main(void) {
     opts.text = 0;
     rc = ws_attach_server(p[0], &opts, resource, sizeof(resource),
         host, sizeof(host), -1);
+    protocol_check_msock(p[0]);
     errno_assert(rc == 0);
     assert(strcmp(resource, "/") == 0);
     assert(strcmp(host, "www.example.org") == 0);

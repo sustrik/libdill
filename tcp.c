@@ -170,9 +170,10 @@ static int dill_tcp_brecvl(struct dill_bsock_vfs *bvfs,
 }
 
 int dill_tcp_done(int s, int64_t deadline) {
+    int err;
     struct dill_tcp_conn *self = dill_hquery(s, dill_tcp_type);
     if(dill_slow(!self)) return -1;
-    if(dill_slow(self->outdone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->outdone)) {errno = EPIPE; goto error;}
     if(dill_slow(self->outerr)) {errno = ECONNRESET; return -1;}
     /* Flushing the tx buffer is done asynchronously on kernel level. */
     int rc = shutdown(self->fd, SHUT_WR);
@@ -183,6 +184,13 @@ int dill_tcp_done(int s, int64_t deadline) {
     }
     self->outdone = 1;
     return 0;
+error:
+    if(err != EBADF && err != EBUSY && err != EPIPE) {
+        rc = dill_hnullify(s);
+        dill_assert(rc == 0);
+    }
+    errno = err;
+    return -1;
 }
 
 int dill_tcp_close(int s, int64_t deadline) {

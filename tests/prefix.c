@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2017 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "assert.h"
+#include "protocol.h"
 #include "../libdill.h"
 
 coroutine void client(void) {
@@ -36,6 +37,7 @@ coroutine void client(void) {
 
     rc = prefix_attach(s, 8, 0);
     errno_assert(rc == 0);
+    protocol_check_msock(s);
     rc = msend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
     char buf[3];
@@ -62,6 +64,7 @@ int main(void) {
 
     rc = prefix_attach(as, 8, 0);
     errno_assert(rc == 0);
+    protocol_check_msock(as);
     char buf[16];
     ssize_t sz = mrecv(as, buf, sizeof(buf), -1);
     errno_assert(sz == 3);
@@ -87,10 +90,12 @@ int main(void) {
     opts.little_endian = 1;
     rc = prefix_attach(p[0], 3, &opts);
     errno_assert(rc == 0);
+    protocol_check_msock(p[0]);
     struct prefix_storage mem;
     opts.mem = &mem;
     rc = prefix_attach(p[1], 3, &opts);
     errno_assert(rc == 0);
+    protocol_check_msock(p[1]);
     rc = msend(p[0], "First", 5, -1);
     errno_assert(rc == 0);
     rc = msend(p[0], "Second", 6, -1);

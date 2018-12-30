@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2017 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -29,6 +29,7 @@
 #include <unistd.h>
 
 #include "assert.h"
+#include "protocol.h"
 #include "../libdill.h"
 
 #define TESTADDR "ipc.test"
@@ -36,6 +37,7 @@
 coroutine void client(void) {
     int cs = ipc_connect(TESTADDR, NULL, -1);
     errno_assert(cs >= 0);
+    protocol_check_bsock(cs);
     int rc = msleep(-1);
     errno_assert(rc == -1 && errno == ECANCELED);
     rc = hclose(cs);
@@ -85,6 +87,7 @@ int main() {
     if(rc == 0) errno_assert(unlink(TESTADDR) == 0);
     int ls = ipc_listen(TESTADDR, NULL);
     errno_assert(ls >= 0);
+    protocol_check_nosock(ls);
     int cr = go(client());
     errno_assert(cr >= 0);
     struct ipc_storage mem;
@@ -92,6 +95,7 @@ int main() {
     opts.mem = &mem;
     int as = ipc_accept(ls, &opts, -1);
     errno_assert(as >= 0);
+    protocol_check_bsock(as);
     int64_t deadline = now() + 30;
     ssize_t sz = sizeof(buf);
     rc = brecv(as, buf, sizeof(buf), deadline);

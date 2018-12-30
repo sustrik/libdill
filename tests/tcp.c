@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2017 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -38,6 +38,7 @@
 #include <libdill.h>
 
 #include "assert.h"
+#include "protocol.h"
 #include "../libdill.h"
 
 coroutine void client(int port) {
@@ -46,6 +47,7 @@ coroutine void client(int port) {
     errno_assert(rc == 0);
     int cs = tcp_connect(&addr, NULL, -1);
     errno_assert(cs >= 0);
+    protocol_check_bsock(cs);
     rc = msleep(-1);
     errno_assert(rc == -1 && errno == ECANCELED);
     rc = hclose(cs);
@@ -58,6 +60,7 @@ coroutine void client2(int port) {
     errno_assert(rc == 0);
     int cs = tcp_connect(&addr, NULL, -1);
     errno_assert(cs >= 0);
+    protocol_check_bsock(cs);
     char buf[3];
     rc = brecv(cs, buf, sizeof(buf), -1);
     errno_assert(rc == 0);
@@ -76,6 +79,7 @@ coroutine void client3(int port) {
     errno_assert(rc == 0);
     int cs = tcp_connect(&addr, NULL, -1);
     errno_assert(cs >= 0);
+    protocol_check_bsock(cs);
     char buf[3];
     rc = brecv(cs, buf, sizeof(buf), -1);
     errno_assert(rc == 0);
@@ -94,6 +98,7 @@ coroutine void client4(int port) {
     errno_assert(rc == 0);
     int cs = tcp_connect(&addr, NULL, -1);
     errno_assert(cs >= 0);
+    protocol_check_bsock(cs);
     /* This line should make us hit TCP pushback. */
     rc = msleep(now() + 100);
     errno_assert(rc == 0);
@@ -190,10 +195,12 @@ int main(void) {
     opts.mem = &mem;
     int ls = tcp_listen(&addr, &opts);
     errno_assert(ls >= 0);
+    protocol_check_nosock(ls);
     int cr = go(client(5555));
     errno_assert(cr >= 0);
     int as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(as >= 0);
+    protocol_check_bsock(as);
     int64_t deadline = now() + 30;
     ssize_t sz = sizeof(buf);
     rc = brecv(as, buf, sizeof(buf), deadline);
@@ -212,10 +219,12 @@ int main(void) {
     /* Test simple data exchange. */
     ls = tcp_listen(&addr, NULL);
     errno_assert(ls >= 0);
+    protocol_check_nosock(ls);
     cr = go(client2(5555));
     errno_assert(cr >= 0);
     as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(as >= 0);
+    protocol_check_bsock(as);
     rc = bsend(as, "ABC", 3, -1);
     errno_assert(rc == 0);
     rc = brecv(as, buf, 3, -1);
@@ -233,10 +242,12 @@ int main(void) {
     /* Manual termination handshake. */
     ls = tcp_listen(&addr, NULL);
     errno_assert(ls >= 0);
+    protocol_check_nosock(ls);
     cr = go(client3(5555));
     errno_assert(cr >= 0);
     as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(as >= 0);
+    protocol_check_bsock(as);
     rc = bsend(as, "ABC", 3, -1);
     errno_assert(rc == 0);
     rc = tcp_done(as, -1);
@@ -255,10 +266,13 @@ int main(void) {
 
     /* Emulate a DoS attack. */
     ls = tcp_listen(&addr, NULL);
+    errno_assert(ls >= 0);
+    protocol_check_nosock(ls);
     cr = go(client4(5555));
     errno_assert(cr >= 0);
     as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(as >= 0);
+    protocol_check_bsock(as);
     char buffer[2048];
     memset(buffer, 0, sizeof(buffer));
     while(1) {
@@ -280,6 +294,7 @@ int main(void) {
     errno_assert(rc == 0);
     ls = tcp_listen(&addr, NULL);
     errno_assert(ls >= 0);
+    protocol_check_nosock(ls);
     int port = ipaddr_port(&addr);
     assert(port > 0);
     rc = hclose(ls);
@@ -297,11 +312,12 @@ int main(void) {
     return 0;
 }
 
-static coroutine void async_accept_routine(int listen_fd, int ch) {
-    int fd = tcp_accept(listen_fd, NULL, NULL, -1);
-    assert(fd != -1);
+static coroutine void async_accept_routine(int ls, int ch) {
+    int fd = tcp_accept(ls, NULL, NULL, -1);
+    errno_assert(fd != -1);
+    protocol_check_bsock(fd);
     int rc = chsend(ch, &fd, sizeof(fd), -1);
-    assert(rc != -1);
+    errno_assert(rc != -1);
     rc = hclose(ch);
     errno_assert(rc == 0);
 }
@@ -311,19 +327,21 @@ static int tcp_socketpair(int fd[2]) {
 
     int rc = ipaddr_local(&server_addr, "127.0.0.1", 0, 0);
     errno_assert(rc == 0);
-    int listen_fd = tcp_listen(&server_addr, NULL);
-    assert(listen_fd != -1);
+    int ls = tcp_listen(&server_addr, NULL);
+    assert(ls != -1);
+    protocol_check_nosock(ls);
     int port = ipaddr_port(&server_addr);
     assert(port > 0);
 
     int ch[2];
     rc = chmake(ch, NULL);
     errno_assert(rc == 0);
-    int h = go(async_accept_routine(listen_fd, ch[0]));
+    int h = go(async_accept_routine(ls, ch[0]));
     errno_assert(h >= 0);
 
     int client_fd = tcp_connect(&server_addr, NULL, now() + 1000);
     errno_assert(client_fd >= 0);
+    protocol_check_bsock(client_fd);
 
     int server_fd;
     rc = chrecv(ch[1], &server_fd, sizeof(server_fd), -1);
@@ -333,7 +351,7 @@ static int tcp_socketpair(int fd[2]) {
     errno_assert(rc == 0);
     rc = hclose(ch[1]);
     errno_assert(rc == 0);
-    rc = hclose(listen_fd);
+    rc = hclose(ls);
     errno_assert(rc == 0);
     
     fd[0] = client_fd;
@@ -405,7 +423,8 @@ static void test_attach() {
     int rc = ipaddr_local(&addr, "127.0.0.1", 5555, 0);
     errno_assert(rc == 0);
     int ls = tcp_listen(&addr, NULL);
-    assert(ls != -1);
+    errno_assert(ls >= 0);
+    protocol_check_nosock(ls);
 
     int fd = socket(ipaddr_family(&addr), SOCK_STREAM, 0);
     errno_assert(fd >= 0);
@@ -416,6 +435,7 @@ static void test_attach() {
   
     int as = tcp_accept(ls, NULL, NULL, -1);
     errno_assert(s >= 0);
+    protocol_check_bsock(as);
 
     rc = bsend(as, "ABC", 3, -1);
     errno_assert(rc == 0);

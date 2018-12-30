@@ -1,6 +1,6 @@
 /*
 
-  Copyright (c) 2017 Martin Sustrik
+  Copyright (c) 2018 Martin Sustrik
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"),
@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "assert.h"
+#include "protocol.h"
 #include "../libdill.h"
 
 coroutine void client(void) {
@@ -35,6 +36,7 @@ coroutine void client(void) {
     errno_assert(s >= 0);
     rc = suffix_attach(s, "\r\n", 2, NULL);
     errno_assert(rc == 0);
+    protocol_check_msock(s);
     rc = msend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
     char buf[3];
@@ -61,6 +63,7 @@ int main() {
 
     rc = suffix_attach(as, "\r\n", 2, NULL);
     errno_assert(rc == 0);
+    protocol_check_msock(as);
     char buf[16];
     ssize_t sz = mrecv(as, buf, sizeof(buf), -1);
     errno_assert(sz == 3);
@@ -80,11 +83,13 @@ int main() {
     errno_assert(rc == 0);
     rc = suffix_attach(p[0], "1234567890", 10, NULL);
     errno_assert(rc == 0);
+    protocol_check_msock(p[0]);
     struct suffix_storage mem;
     struct suffix_opts opts = suffix_defaults;
     opts.mem = &mem;
     rc = suffix_attach(p[1], "1234567890", 10, &opts);
     errno_assert(rc == 0);
+    protocol_check_msock(p[1]);
     rc = msend(p[0], "First", 5, -1);
     errno_assert(rc == 0);
     rc = msend(p[0], "Second", 6, -1);

@@ -23,6 +23,7 @@
 */
 
 #include "assert.h"
+#include "protocol.h"
 #include "../libdill.h"
 
 int main(void) {
@@ -31,6 +32,7 @@ int main(void) {
     errno_assert(rc == 0);
     int s1 = udp_open(&addr1, NULL, NULL);
     errno_assert(s1 >= 0);
+    protocol_check_msock(s1);
     struct ipaddr addr2;
     rc = ipaddr_local(&addr2, "127.0.0.1", 5556, 0);
     errno_assert(rc == 0);
@@ -39,6 +41,7 @@ int main(void) {
     opts.mem = &mem;
     int s2 = udp_open(&addr2, &addr1, &opts);
     errno_assert(s2 >= 0);
+    protocol_check_msock(s2);
 
     struct ipaddr dst;
     rc = ipaddr_remote(&dst, "127.0.0.1", 5556, 0, -1);

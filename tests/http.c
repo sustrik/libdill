@@ -23,16 +23,19 @@
 */
 
 #include "assert.h"
+#include "protocol.h"
 #include "../libdill.h"
 
 int main(void) {
     int p[2];
     int rc = ipc_pair(p, NULL, NULL);
-    assert(rc == 0);
+    errno_assert(rc == 0);
     rc = http_attach(p[0], NULL);
-    assert(rc == 0);
+    errno_assert(rc == 0);
+    protocol_check_nosock(p[0]);
     rc = http_attach(p[1], NULL);
-    assert(rc == 0);
+    errno_assert(rc == 0);
+    protocol_check_nosock(p[1]);
     /* Send request. */
     rc = http_sendrequest(p[0], "GET", "/a/b/c", -1);
     errno_assert(rc == 0);

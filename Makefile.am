@@ -157,7 +157,8 @@ endif
 endif
 
 check_HEADERS = \
-    tests/assert.h
+    tests/assert.h \
+    tests/protocol.h
 
 LDADD = libdill.la
 

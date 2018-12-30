@@ -25,11 +25,13 @@
 #include <string.h>
 
 #include "assert.h"
+#include "protocol.h"
 #include "../libdill.h"
 
 coroutine void client1(int s) {
     int rc = tls_attach_client(s, NULL, -1);
     errno_assert(rc == 0);
+    protocol_check_bsock(s);
     rc = bsend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
     rc = tls_done(s, -1);
@@ -47,6 +49,7 @@ coroutine void client1(int s) {
 coroutine void client2(int s) {
     int rc = tls_attach_client(s, NULL, -1);
     errno_assert(rc == 0);
+    protocol_check_bsock(s);
     rc = bsend(s, "ABC", 3, -1);
     errno_assert(rc == 0);
     rc = tls_detach(s, -1);
@@ -60,6 +63,7 @@ coroutine void client2(int s) {
 coroutine void client3(int s) {
     int rc = tls_attach_client(s, NULL, -1);
     errno_assert(rc == 0);
+    protocol_check_bsock(s);
     uint8_t c = 0;
     uint8_t b[2777];
     int i;
@@ -89,6 +93,7 @@ int main(void) {
     errno_assert(cr >= 0);
     rc = tls_attach_server(p[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
     errno_assert(rc == 0);
+    protocol_check_bsock(p[0]);
     rc = brecv(p[0], buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
@@ -115,6 +120,7 @@ int main(void) {
     errno_assert(cr >= 0);
     rc = tls_attach_server(p[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
     errno_assert(rc == 0);
+    protocol_check_bsock(p[0]);
     rc = brecv(p[0], buf, 3, -1);
     errno_assert(rc == 0);
     assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
@@ -137,6 +143,7 @@ int main(void) {
     errno_assert(cr >= 0);
     rc = tls_attach_server(p[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
     errno_assert(rc == 0);
+    protocol_check_bsock(p[0]);
     uint8_t c = 0;
     int i;
     for(i = 0; i != 2777; ++i) {

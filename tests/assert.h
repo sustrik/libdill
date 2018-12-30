@@ -22,6 +22,9 @@
 
 */
 
+#ifndef DILL_TESTS_ASSERT_H_INCLUDED
+#define DILL_TESTS_ASSERT_H_INCLUDED
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -63,4 +66,6 @@
             abort();\
         }\
     } while(0) 
+
+#endif
 

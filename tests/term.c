@@ -25,6 +25,7 @@
 #include <string.h>
 
 #include "assert.h"
+#include "protocol.h"
 #include "../libdill.h"
 
 coroutine void client(int s) {
@@ -32,6 +33,7 @@ coroutine void client(int s) {
     errno_assert(rc == 0);
     rc = term_attach(s, "STOP", 4, NULL);
     errno_assert(rc == 0);
+    protocol_check_msock(s);
     rc = msend(s, "ABC", 3, -1);
     errno_assert(s >= 0);
     char buf[16];
@@ -55,6 +57,7 @@ int main(void) {
     errno_assert(rc == 0);
     rc = term_attach(p[1], "STOP", 4, NULL);
     errno_assert(rc == 0);
+    protocol_check_msock(p[1]);
     char buf[16];
     ssize_t sz = mrecv(p[1], buf, sizeof(buf), -1);
     errno_assert(sz >= 0);
