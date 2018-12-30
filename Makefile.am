@@ -165,36 +165,13 @@ LDADD = libdill.la
 TESTS = $(check_PROGRAMS)
 
 ################################################################################
-#  tutorials                                                                   #
-################################################################################
-
-noinst_PROGRAMS =
-
-if DILL_SOCKETS
-noinst_PROGRAMS += \
-    tutorial/basics/step1 \
-    tutorial/basics/step2 \
-    tutorial/basics/step3 \
-    tutorial/basics/step4 \
-    tutorial/basics/step5 \
-    tutorial/basics/step6
-if HAVE_TLS
-noinst_PROGRAMS += \
-    tutorial/sockets/step1 \
-    tutorial/sockets/step2 \
-    tutorial/sockets/step3 \
-    tutorial/sockets/step4 \
-    tutorial/sockets/step5
-endif
-endif
-
-################################################################################
 #  Recursive makefiles                                                         #
 ################################################################################
 
 SUBDIRS= . \
     perf \
     examples \
+    tutorial \
     man
 
 ################################################################################
