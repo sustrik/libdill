@@ -75,6 +75,18 @@ fi
 #  --enable-valgrind                                                           #
 ################################################################################
 
+# To run tests with valgrind:
+#
+# $ ./configure --enable-valgrind
+# $ make
+# $ make check-valgrind
+
+AX_VALGRIND_DFLT([memcheck], [on])
+AX_VALGRIND_DFLT([helgrind], [off])
+AX_VALGRIND_DFLT([drd], [off])
+AX_VALGRIND_DFLT([sgcheck], [off])
+AX_VALGRIND_CHECK
+
 AC_ARG_ENABLE([valgrind], [AS_HELP_STRING([--enable-valgrind],
     [Provide information about coroutine stacks to valgrind [default=no]])])
 

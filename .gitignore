@@ -25,6 +25,7 @@ libdill.pc
 libtool
 ltmain.sh
 m4/*.m4
+!m4/ax_valgrind_check.m4
 missing
 test-driver
 tests/.deps/

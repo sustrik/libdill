@@ -110,11 +110,11 @@ libdill_la_CFLAGS = \
 ################################################################################
 
 SUBDIRS= . \
-    tests \
     perf \
     examples \
     tutorial \
-    man
+    man \
+    tests
 
 ################################################################################
 #  additional packaging-related stuff                                          #
