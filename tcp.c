@@ -23,6 +23,7 @@
 */
 
 #include <errno.h>
+#include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -81,7 +82,7 @@ static int dill_tcp_makeconn(int fd, const struct dill_tcp_opts *opts) {
     /* Switch off Nagle's algorithm, if requested. */
     if(opts->nodelay) {
         int val = 1;
-        int rc = setsockopt(fd, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
+        int rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
         if(dill_slow(rc < 0)) {err = errno; goto error1;}
     }
     /* Create the object. */
