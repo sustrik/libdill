@@ -235,6 +235,7 @@ install:
 
 script:
   - test ${DIST+x} || make check
+  - test ${VALGRIND+x} || make check-valgrind
 
 after_failure:
   - for f in tests/*.log; do echo; echo "${f}:"; cat $f; done;
