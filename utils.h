@@ -76,9 +76,10 @@ void dill_print_size(char x);
 #define dill_slow(x) (x)
 #endif
 
-/* Define our own assert. This way we are sure that it stays in place even
+/* Define our own asserts. This way we are sure that they stay in place even
    if the standard C assert would be thrown away by the compiler. It also
    allows us to overload it as needed. */
+
 #define dill_assert(x) \
     do {\
         if (dill_slow(!(x))) {\
@@ -88,6 +89,16 @@ void dill_print_size(char x);
             abort();\
         }\
     } while (0)
+
+#define dill_errno_assert(x) \
+    do {\
+        if(dill_slow(!(x))) {\
+            fprintf(stderr, "%s [%d] (%s:%d)\n", strerror(errno),\
+                (int)errno, __FILE__, __LINE__);\
+            fflush(stderr);\
+            abort();\
+        }\
+    } while(0)
 
 /* Workaround missing __rdtsc in Clang < 3.5 (or Clang < 6.0 on Xcode) */
 #if defined(__x86_64__) || defined(__i386__)

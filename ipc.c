@@ -201,7 +201,7 @@ int dill_ipc_sendfd(int s, int fd, int64_t deadline) {
     if(dill_slow(sz == 0)) {self->outdone = 1; errno = EPIPE; return -1;}
     if(dill_slow(sz < 0)) {
        if(errno == ECONNRESET) {self->outerr = 1; return -1;}
-       dill_assert(0);
+       dill_errno_assert(0);
     }
     return 0;
 }
@@ -230,7 +230,7 @@ int dill_ipc_recvfd(int s, int64_t deadline) {
     if(dill_slow(sz == 0)) {self->indone = 1; errno = EPIPE; return -1;}
     if(dill_slow(sz < 0)) {
        if(errno == ECONNRESET) {self->outerr = 1; return -1;}
-       dill_assert(0);
+       dill_errno_assert(0);
     }
     /* Loop over the auxiliary data to find the embedded file descriptor. */
     int fd = -1;
@@ -257,7 +257,7 @@ int dill_ipc_done(int s, int64_t deadline) {
     if(dill_slow(rc < 0)) {
         if(errno == ENOTCONN) {self->outerr = 1; errno = ECONNRESET; return -1;}
         if(errno == ENOBUFS) {self->outerr = 1; errno = ENOMEM; return -1;}
-        dill_assert(0);
+        dill_errno_assert(0);
     }
     self->outdone = 1;
     return 0;

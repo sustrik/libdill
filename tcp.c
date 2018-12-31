@@ -182,14 +182,14 @@ int dill_tcp_done(int s, int64_t deadline) {
     if(dill_slow(rc < 0)) {
         if(errno == ENOTCONN) {self->outerr = 1; errno = ECONNRESET; return -1;}
         if(errno == ENOBUFS) {self->outerr = 1; errno = ENOMEM; return -1;}
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
     }
     self->outdone = 1;
     return 0;
 error:
     if(err != EBADF && err != EBUSY && err != EPIPE) {
         rc = dill_hnullify(s);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
     }
     errno = err;
     return -1;
@@ -214,7 +214,7 @@ int dill_tcp_close(int s, int64_t deadline) {
        stream. That way we can be sure that the peer either received all our
        data or consciously closed the connection without reading all of it. */
     int rc = dill_tcp_brecvl(&self->bvfs, NULL, NULL, deadline);
-    dill_assert(rc < 0);
+    dill_errno_assert(rc < 0);
     if(dill_slow(errno != EPIPE)) {err = errno; goto error;}
     dill_tcp_hclose(&self->hvfs);
     return 0;
