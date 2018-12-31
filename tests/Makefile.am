@@ -51,7 +51,6 @@ check_PROGRAMS += \
     tcp \
     ipc \
     prefix \
-    socks5 \
     suffix \
     udp \
     http \
