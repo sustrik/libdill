@@ -353,22 +353,22 @@ int dill_tcp_fromfd(int fd, const struct dill_tcp_opts *opts) {
     if(!opts) opts = &dill_tcp_defaults;
     /* Make sure that the supplied file descriptor is of correct type. */
     int rc = dill_fd_check(fd, SOCK_STREAM, AF_INET, AF_INET6);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    if(dill_slow(rc < 0)) {err = errno; dill_assert(0); goto error1;}
     if(dill_slow(rc == 0)) {err = EINVAL; goto error1;}
     /* Take ownership of the file descriptor. */
     fd = dill_fd_own(fd);
-    if(dill_slow(fd < 0)) {err = errno; goto error1;}
+    if(dill_slow(fd < 0)) {err = errno; dill_assert(0); goto error1;}
     /* Set the socket to non-blocking mode */
     rc = dill_fd_unblock(fd);
-    if(dill_slow(rc < 0)) {err = errno; goto error1;}
+    if(dill_slow(rc < 0)) {err = errno; dill_assert(0); goto error1;}
     /* Find out whther it's a listening socket. */
     int listener = dill_fd_listening(fd);
-    if(dill_slow(listener < 0)) {err = errno; goto error1;}
+    if(dill_slow(listener < 0)) {err = errno; dill_assert(0); goto error1;}
     /* Create the object. */
     int h;
     if(listener) h = dill_tcp_makelistener(fd, opts);
     else h = dill_tcp_makeconn(fd, opts);
-    if(dill_slow(h < 0)) {err = errno; goto error1;}
+    if(dill_slow(h < 0)) {err = errno; dill_assert(0); goto error1;}
     return h;
 error1:
     if(err != EBADF) close(fd);
