@@ -29,7 +29,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include "assert.h"
+#include "utils.h"
 #include "../libdill.h"
 
 coroutine void cancel(int fd) {

@@ -24,7 +24,7 @@
 
 #include <unistd.h>
 
-#include "assert.h"
+#include "utils.h"
 #include "../libdill.h"
 
 coroutine void relay(int src, int dst) {

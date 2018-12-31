@@ -30,7 +30,7 @@
 #define dill_tcp_connect mock_tcp_connect
 #define dill_tcp_connect_happy_eyeballs mock_connect_happy_eyeballs_connect
 
-#include "assert.h"
+#include "utils.h"
 #define DILL_DISABLE_RAW_NAMES
 #include "../happyeyeballs.c"
 

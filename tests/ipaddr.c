@@ -27,7 +27,7 @@
 #include <sys/socket.h>
 #include <string.h>
 
-#include "assert.h"
+#include "utils.h"
 #include "../libdill.h"
 
 int main(void) {

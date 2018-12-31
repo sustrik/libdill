@@ -21,7 +21,6 @@
   IN THE SOFTWARE.
 
 */
-#include <libdill.h>
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -35,10 +34,8 @@
 #include <unistd.h>
 #include <netdb.h>
 
-#include <libdill.h>
-
-#include "assert.h"
 #include "protocol.h"
+#include "utils.h"
 #include "../libdill.h"
 
 coroutine void client(int port) {

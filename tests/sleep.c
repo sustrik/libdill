@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#include "assert.h"
+#include "utils.h"
 #include "../libdill.h"
 
 coroutine static void delay(int n, int ch) {

@@ -24,8 +24,8 @@
 
 #include <string.h>
 
-#include "assert.h"
 #include "protocol.h"
+#include "utils.h"
 #include "../libdill.h"
 
 coroutine void client(void) {

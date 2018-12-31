@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <pthread.h>
 
-#include "assert.h"
+#include "utils.h"
 #include "../libdill.h"
 
 coroutine void worker(int count, const char *text) {

@@ -22,7 +22,7 @@
 
 */
 
-#include "assert.h"
+#include "utils.h"
 #include "../libdill.h"
 
 coroutine void worker1(void) {

@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "assert.h"
+#include "utils.h"
 #include "../libdill.h"
 
 struct foo {

@@ -24,7 +24,7 @@
 
 #include <pthread.h>
 
-#include "assert.h"
+#include "utils.h"
 #include "../libdill.h"
 
 int main() {

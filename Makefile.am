@@ -106,69 +106,11 @@ libdill_la_CFLAGS = \
     -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0
 
 ################################################################################
-#  automated tests                                                             #
-################################################################################
-
-check_PROGRAMS = \
-    tests/example \
-    tests/go1 \
-    tests/go2 \
-    tests/go3 \
-    tests/go4 \
-    tests/go5 \
-    tests/fd \
-    tests/handle \
-    tests/chan \
-    tests/choose \
-    tests/sleep \
-    tests/signals \
-    tests/overload \
-    tests/rbtree \
-    tests/bundle
-
-if DILL_THREADS
-check_PROGRAMS += \
-    tests/threads \
-    tests/threads2
-endif
-
-if DILL_SOCKETS
-check_PROGRAMS += \
-    tests/ipaddr \
-    tests/iol \
-    tests/tcp \
-    tests/ipc \
-    tests/prefix \
-    tests/socks5 \
-    tests/suffix \
-    tests/udp \
-    tests/http \
-    tests/ws \
-    tests/term \
-    tests/happyeyeballs \
-    tests/tcpmux
-endif
-
-if DILL_SOCKETS
-if HAVE_TLS
-check_PROGRAMS += \
-    tests/tls
-endif
-endif
-
-check_HEADERS = \
-    tests/assert.h \
-    tests/protocol.h
-
-LDADD = libdill.la
-
-TESTS = $(check_PROGRAMS)
-
-################################################################################
 #  Recursive makefiles                                                         #
 ################################################################################
 
 SUBDIRS= . \
+    tests \
     perf \
     examples \
     tutorial \

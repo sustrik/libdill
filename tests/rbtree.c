@@ -22,7 +22,7 @@
 
 */
 
-#include "assert.h"
+#include "utils.h"
 #include "../rbtree.c"
 
 int main(void) {

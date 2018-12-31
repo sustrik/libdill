@@ -27,7 +27,7 @@
 
 #include "../libdillimpl.h"
 
-#include "assert.h"
+#include "utils.h"
 
 void protocol_check_bsock(int s) {
     void *p = hquery(s, bsock_type);

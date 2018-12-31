@@ -22,7 +22,7 @@
 
 */
 
-#include "assert.h"
+#include "utils.h"
 #include "../libdillimpl.h"
 
 static int status = 0;

@@ -24,7 +24,7 @@
 
 #include <stdio.h>
 
-#include "assert.h"
+#include "utils.h"
 #include "../libdill.h"
 
 coroutine void worker(void) {

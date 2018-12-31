@@ -22,7 +22,7 @@
 
 */
 
-#include "assert.h"
+#include "utils.h"
 #include "../libdill.h"
 
 coroutine void client(void) {

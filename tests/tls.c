@@ -24,8 +24,8 @@
 
 #include <string.h>
 
-#include "assert.h"
 #include "protocol.h"
+#include "utils.h"
 #include "../libdill.h"
 
 coroutine void client1(int s) {
@@ -91,7 +91,7 @@ int main(void) {
     errno_assert(rc == 0);
     int cr = go(client1(p[1]));
     errno_assert(cr >= 0);
-    rc = tls_attach_server(p[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
+    rc = tls_attach_server(p[0], "cert.pem", "key.pem", NULL, -1);
     errno_assert(rc == 0);
     protocol_check_bsock(p[0]);
     rc = brecv(p[0], buf, 3, -1);
@@ -118,7 +118,7 @@ int main(void) {
     errno_assert(rc == 0);
     cr = go(client2(p[1]));
     errno_assert(cr >= 0);
-    rc = tls_attach_server(p[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
+    rc = tls_attach_server(p[0], "cert.pem", "key.pem", NULL, -1);
     errno_assert(rc == 0);
     protocol_check_bsock(p[0]);
     rc = brecv(p[0], buf, 3, -1);
@@ -141,7 +141,7 @@ int main(void) {
     errno_assert(rc == 0);
     cr = go(client3(p[1]));
     errno_assert(cr >= 0);
-    rc = tls_attach_server(p[0], "tests/cert.pem", "tests/key.pem", NULL, -1);
+    rc = tls_attach_server(p[0], "cert.pem", "key.pem", NULL, -1);
     errno_assert(rc == 0);
     protocol_check_bsock(p[0]);
     uint8_t c = 0;
