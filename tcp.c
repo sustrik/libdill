@@ -83,7 +83,7 @@ static int dill_tcp_makeconn(int fd, const struct dill_tcp_opts *opts) {
     if(opts->nodelay) {
         int val = 1;
         int rc = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
-        if(dill_slow(rc < 0)) {err = errno; goto error1;}
+        if(dill_slow(rc < 0)) {err = errno; dill_assert(0); goto error1;}
     }
     /* Create the object. */
     struct dill_tcp_conn *self = (struct dill_tcp_conn*)opts->mem;
