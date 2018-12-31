@@ -414,7 +414,7 @@ int dill_fd_listening(int s) {
     /* This call returns ENOPROTOOPT on OSX. We'll assume it's a connected
        socket (people are more likely to attach those). It sucks but if an OS
        doesn't implement POSIX it's pretty hard to care. */
-    if(dill_slow(rc < 0 && errno != ENOPROTOOPT)) return 0;
+    if(dill_slow(rc < 0 && errno == ENOPROTOOPT)) return 0;
     if(dill_slow(rc < 0)) return -1;
     return val == 0 ? 0 : 1;
 }
