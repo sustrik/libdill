@@ -42,7 +42,7 @@ int dill_bsend(int s, const void *buf, size_t len, int64_t deadline) {
 error:
     if(err != EBADF && err != EBUSY && err != EPIPE) {
         rc = dill_hnullify(s);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
     }
     errno = err;
     return -1;
@@ -59,7 +59,7 @@ int dill_brecv(int s, void *buf, size_t len, int64_t deadline) {
 error:
     if(err != EBADF && err != EBUSY && err != EPIPE) {
         rc = dill_hnullify(s);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
     }
     errno = err;
     return -1;
@@ -77,7 +77,7 @@ int dill_bsendl(int s, struct dill_iolist *first, struct dill_iolist *last,
 error:
     if(err != EBADF && err != EBUSY && err != EPIPE) {
         rc = dill_hnullify(s);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
     }
     errno = err;
     return -1;
@@ -96,7 +96,7 @@ int dill_brecvl(int s, struct dill_iolist *first, struct dill_iolist *last,
 error:
     if(err != EBADF && err != EBUSY && err != EPIPE) {
         rc = dill_hnullify(s);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
     }
     errno = err;
     return -1;

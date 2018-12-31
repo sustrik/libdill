@@ -174,7 +174,7 @@ static void dill_suffix_hclose(struct dill_hvfs *hvfs) {
     struct dill_suffix_sock *self = (struct dill_suffix_sock*)hvfs;
     if(dill_fast(self->u >= 0)) {
         int rc = dill_hclose(self->u);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
     }
     if(!self->mem) free(self);
 }

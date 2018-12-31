@@ -26,17 +26,17 @@ static void dill_ctx_init_(struct dill_ctx *ctx) {
     dill_assert(ctx->initialized == 0);
     ctx->initialized = 1;
     int rc = dill_ctx_now_init(&ctx->now);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     rc = dill_ctx_cr_init(&ctx->cr);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     rc = dill_ctx_handle_init(&ctx->handle);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     rc = dill_ctx_stack_init(&ctx->stack);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     rc = dill_ctx_pollset_init(&ctx->pollset);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     rc = dill_ctx_fd_init(&ctx->fd);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
 }
 
 static void dill_ctx_term_(struct dill_ctx *ctx) {

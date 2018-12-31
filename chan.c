@@ -325,7 +325,7 @@ int dill_choose(struct dill_chclause *clauses, int nclauses, int64_t deadline) {
     for(i = 0; i != nclauses; ++i) {
         struct dill_halfchan *ch = dill_hquery(clauses[i].ch,
             dill_halfchan_type);
-        dill_assert(ch);
+        dill_errno_assert(ch);
         dill_list_insert(&chcls[i].item, clauses[i].op == DILL_CHRECV ?
             &ch->in : &dill_halfchan_other(ch)->out);
         chcls[i].val = clauses[i].val;

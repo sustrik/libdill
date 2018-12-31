@@ -341,7 +341,7 @@ int dill_prologue(sigjmp_buf **jb, void **ptr, size_t len, int bndl,
 error2:
     if(new_bundle) {
         rc = dill_hclose(bndl);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
     }
 error1:
     errno = err;

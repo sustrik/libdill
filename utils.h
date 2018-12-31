@@ -25,10 +25,12 @@
 #ifndef DILL_UTILS_H_INCLUDED
 #define DILL_UTILS_H_INCLUDED
 
+#include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define dill_concat(x,y) x##y
 

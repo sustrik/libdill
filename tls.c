@@ -320,7 +320,7 @@ static void dill_tls_hclose(struct dill_hvfs *hvfs) {
     SSL_CTX_free(self->ctx);
     if(dill_fast(self->u >= 0)) {
         int rc = dill_hclose(self->u);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
     }
     if(!self->mem) free(self);
 }

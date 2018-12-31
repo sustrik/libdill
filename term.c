@@ -139,7 +139,7 @@ int dill_term_detach(int s, int64_t deadline) {
     return 0;
 error:
     rc = dill_hclose(s);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     errno = err;
     return -1;
 }
@@ -184,7 +184,7 @@ static void dill_term_hclose(struct dill_hvfs *hvfs) {
     struct dill_term_sock *self = (struct dill_term_sock*)hvfs;
     if(dill_fast(self->u >= 0)) {
         int rc = dill_hclose(self->u);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
     }
     if(!self->mem) free(self);
 }

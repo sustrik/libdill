@@ -54,7 +54,7 @@ int64_t dill_mnow(void) {
 #if !defined DILL_dill_now_FALLBACK
     struct timespec ts;
     int rc = clock_gettime(id, &ts);
-    dill_assert (rc == 0);
+    dill_errno_assert (rc == 0);
     return ((int64_t)ts.tv_sec) * 1000 + (((int64_t)ts.tv_nsec) / 1000000);
 
 /* Implementation using gettimeofday(). This is slow and error-prone
@@ -62,7 +62,7 @@ int64_t dill_mnow(void) {
 #else
     struct timeval tv;
     int rc = gettimeofday(&tv, NULL);
-    dill_assert (rc == 0);
+    dill_errno_assert (rc == 0);
     return ((int64_t)tv.tv_sec) * 1000 + (((int64_t)tv.tv_usec) / 1000);
 #endif
 

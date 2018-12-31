@@ -103,7 +103,7 @@ int dill_fd_unblock(int s) {
         already closed by the peer. */
 #ifdef SO_NOSIGPIPE
     opt = 1;
-    rc = setsockopt (s, SOL_SOCKET, SO_NOSIGPIPE, &opt, sizeof (opt));
+    rc = setsockopt(s, SOL_SOCKET, SO_NOSIGPIPE, &opt, sizeof (opt));
     dill_errno_assert (rc == 0 || errno == EINVAL);
 #endif
     return 0;

@@ -54,7 +54,7 @@ static size_t dill_page_size(void) {
     if(dill_fast(pgsz))
         return (size_t)pgsz;
     pgsz = sysconf(_SC_PAGE_SIZE);
-    dill_assert(pgsz > 0);
+    dill_errno_assert(pgsz >= 0);
     return (size_t)pgsz;
 }
 
@@ -71,7 +71,7 @@ void dill_ctx_stack_term(struct dill_ctx_stack *ctx) {
 #if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD
         void *ptr = ((uint8_t*)(it + 1)) - dill_stack_size - dill_page_size();
         int rc = mprotect(ptr, dill_page_size(), PROT_READ|PROT_WRITE);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
         free(ptr);
 #else
         void *ptr = ((uint8_t*)(it + 1)) - dill_stack_size;
@@ -136,7 +136,7 @@ void dill_freestack(void *stack) {
 #if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD
         void *ptr = ((uint8_t*)(old + 1)) - dill_stack_size - dill_page_size();
         int rc = mprotect(ptr, dill_page_size(), PROT_READ|PROT_WRITE);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
         free(ptr);
 #else
         void *ptr = ((uint8_t*)(old + 1)) - dill_stack_size;

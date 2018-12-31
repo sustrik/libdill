@@ -289,7 +289,7 @@ error2:
 error1:
     if(s >= 0) {
         int rc = dill_hclose(s);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
     }
     errno = err;
     return -1;
@@ -549,7 +549,7 @@ error:
 static void dill_ws_hclose(struct dill_hvfs *hvfs) {
     struct dill_ws_sock *self = (struct dill_ws_sock*)hvfs;
     int rc = dill_hclose(self->u);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     if(!self->mem) free(self);
 }
 

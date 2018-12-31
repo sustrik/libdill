@@ -183,7 +183,7 @@ static void dill_prefix_hclose(struct dill_hvfs *hvfs) {
     struct dill_prefix_sock *self = (struct dill_prefix_sock*)hvfs;
     if(dill_fast(self->u >= 0)) {
         int rc = dill_hclose(self->u);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
     }
     if(!self->mem) free(self);
 }

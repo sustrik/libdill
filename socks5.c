@@ -121,8 +121,10 @@ static int s5_client_auth(int s, const char *username, const char *password,
             uint8_t upauthr[2];
             err = dill_brecv(s, (void *)upauthr, 2, deadline);
             if(dill_slow(err)) return -1;
-            if(dill_slow(upauthr[0] != RFC1929_VER)) {errno = EPROTO; return -1;}
-            if(dill_slow(upauthr[1] != S5AUTH_SUCCESS)) {errno = EACCES; return -1;}
+            if(dill_slow(upauthr[0] != RFC1929_VER)) {
+                errno = EPROTO; return -1;}
+            if(dill_slow(upauthr[1] != S5AUTH_SUCCESS)) {
+                errno = EACCES; return -1;}
             return 0;
         case 0xFF:
             errno = EACCES; return -1;
@@ -290,7 +292,8 @@ static int s5_s5addr_to_ipaddr(struct dill_ipaddr *addr, _socks5_addr *s5,
 
 // command request and response packets have the same
 // variable length structure (and max length = 262)
-static int s5_recv_command_request_response(int s, uint8_t *conn, int64_t deadline) {
+static int s5_recv_command_request_response(int s, uint8_t *conn,
+      int64_t deadline) {
     int err = dill_brecv(s, conn, 4, deadline);
     if(dill_slow(err)) return -1;
     if(conn[0] != RFC1928_VER) {errno = EPROTO; return -1;} // VER
@@ -356,7 +359,8 @@ static int s5_handle_connection_response(int s, int64_t deadline) {
     return -1;
 }
 
-static int s5_client_connectbyname(int s, const char *hostname, int port, int64_t deadline) {
+static int s5_client_connectbyname(int s, const char *hostname, int port,
+      int64_t deadline) {
     // ensure socket is bytesstream
     if(dill_slow(!dill_hquery(s, dill_bsock_type))) return -1;
     // validate input
@@ -403,7 +407,8 @@ static int s5_client_connectbyname(int s, const char *hostname, int port, int64_
     return s5_handle_connection_response(s, deadline);
 }
 
-static int s5_client_connect(int s, struct dill_ipaddr *ipaddr, int64_t deadline) {
+static int s5_client_connect(int s, struct dill_ipaddr *ipaddr,
+      int64_t deadline) {
     // ensure socket is bytesstream
     if(dill_slow(!dill_hquery(s, dill_bsock_type))) return -1;
     // validate input
@@ -434,7 +439,8 @@ int dill_socks5_proxy_recvcommand(int s, struct dill_ipaddr *ipaddr,
     uint8_t conn[262];
     int err = s5_recv_command_request_response(s, conn, deadline);
     if(err) return -1;
-    if((conn[1] < DILL_SOCKS5_CONNECT) || (conn[1] > DILL_SOCKS5_UDP_ASSOCIATE)) {
+    if((conn[1] < DILL_SOCKS5_CONNECT) ||
+          (conn[1] > DILL_SOCKS5_UDP_ASSOCIATE)) {
         errno = EPROTO ; return -1;
     }
     _socks5_addr s5addr;
@@ -473,7 +479,8 @@ int dill_socks5_proxy_recvcommandbyname(int s, char *host, int *port,
     uint8_t conn[262];
     int err = s5_recv_command_request_response(s, conn, deadline);
     if(err) return -1;
-    if((conn[1] < DILL_SOCKS5_CONNECT) || (conn[1] > DILL_SOCKS5_UDP_ASSOCIATE)) {
+    if((conn[1] < DILL_SOCKS5_CONNECT) ||
+          (conn[1] > DILL_SOCKS5_UDP_ASSOCIATE)) {
         errno = EPROTO ; return -1;
     }
     uint16_t *s5port;

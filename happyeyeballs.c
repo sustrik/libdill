@@ -42,7 +42,7 @@ static dill_coroutine void dill_tcp_happy_eyeballs_dnsquery(const char *name,
         for(i = 0; i != count; ++i) {
            int rc = dill_chsend(ch, &addrs[i], sizeof(struct dill_ipaddr), -1);
            if(dill_slow(rc < 0 && errno == ECANCELED)) return;
-           dill_assert(rc == 0);
+           dill_errno_assert(rc == 0);
         }
     }
     /* chdone is deliberately not being called here so that sorter doesn't
@@ -50,9 +50,9 @@ static dill_coroutine void dill_tcp_happy_eyeballs_dnsquery(const char *name,
        to mark the end of the results. */
     struct dill_ipaddr addr;
     int rc = dill_ipaddr_local(&addr, "0.0.0.0", 0, NULL);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     rc = dill_chsend(ch, &addr, sizeof(struct dill_ipaddr), -1);
-    dill_assert(rc == 0 || errno == ECANCELED);
+    dill_errno_assert(rc == 0 || errno == ECANCELED);
 }
 
 static dill_coroutine void dill_tcp_happy_eyeballs_attempt(
@@ -62,17 +62,17 @@ static dill_coroutine void dill_tcp_happy_eyeballs_attempt(
     int rc = dill_chsend(ch, &conn, sizeof(int), -1);
     if(dill_slow(rc < 0 && errno == ECANCELED)) {
         rc = dill_hclose(conn);
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
         return;
     }
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
 }
 
 static dill_coroutine void dill_tcp_happy_eyeballs_coordinator(
       const char *name, int port, const struct dill_tcp_opts *opts, int ch) {
     struct dill_ipaddr nulladdr;
     int rc = dill_ipaddr_local(&nulladdr, "0.0.0.0", 0, NULL);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     /* According to the RFC, IPv4 and IPv6 DNS queries should be done in
        parallel. Create two coroutines and two channels to pass
        the addresses from them. */
@@ -81,26 +81,26 @@ static dill_coroutine void dill_tcp_happy_eyeballs_coordinator(
     struct dill_chopts chipv6_opts = dill_chdefaults;
     chipv6_opts.mem = &chipv6_storage;
     rc = dill_chmake(chipv6, &chipv6_opts);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     int chipv4[2];
     struct dill_chstorage chipv4_storage;
     struct dill_chopts chipv4_opts = dill_chdefaults;
     chipv4_opts.mem = &chipv4_storage;
     rc = dill_chmake(chipv4, &chipv4_opts);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     struct dill_bundle_storage bndl_storage;
     struct dill_bundle_opts bndl_opts = dill_bundle_defaults;
     bndl_opts.mem = &bndl_storage;
     int bndl = dill_bundle(&bndl_opts);
-    dill_assert(bndl >= 0);
+    dill_errno_assert(bndl >= 0);
     rc = dill_bundle_go(bndl, dill_tcp_happy_eyeballs_dnsquery(name, port,
         DILL_IPADDR_IPV6, chipv6[1]));
     if(dill_slow(rc < 0 && errno == ECANCELED)) goto cancel;
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     rc = dill_bundle_go(bndl, dill_tcp_happy_eyeballs_dnsquery(name, port,
         DILL_IPADDR_IPV4, chipv4[1]));
     if(dill_slow(rc < 0 && errno == ECANCELED)) goto cancel;
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     /* RFC says to wait for 50ms for IPv6 result irrespective of whether
        IPv4 address arrives. */
     struct dill_ipaddr addr;
@@ -118,7 +118,7 @@ static dill_coroutine void dill_tcp_happy_eyeballs_coordinator(
         nw = dill_now();
         goto use_address;
     }
-    dill_assert(errno == ETIMEDOUT);
+    dill_errno_assert(errno == ETIMEDOUT);
     /* From now we can use any address. */
     while(1) {
         nw = dill_now();
@@ -132,7 +132,7 @@ use_address:
         rc = dill_bundle_go(bndl,
             dill_tcp_happy_eyeballs_attempt(addr, opts, ch));
         if(dill_slow(rc < 0 && errno == ECANCELED)) goto cancel;
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
         /* Alternate between IPv4 and IPv6 addresses. */
         if(idx == 0) {
             int tmp = cls[0].ch;
@@ -142,19 +142,19 @@ use_address:
         /* Wait for 300ms before launching next connection attempt. */
         rc = dill_msleep(nw + 300);
         if(dill_slow(rc < 0 && errno == ECANCELED)) goto cancel;
-        dill_assert(rc == 0);
+        dill_errno_assert(rc == 0);
     }
 cancel:
     rc = dill_hclose(bndl);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     rc = dill_hclose(chipv4[0]);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     rc = dill_hclose(chipv4[1]);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     rc = dill_hclose(chipv6[0]);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     rc = dill_hclose(chipv6[1]);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
 }
 
 int dill_tcp_happy_eyeballs_connect(const char *name, int port,
@@ -179,12 +179,12 @@ int dill_tcp_happy_eyeballs_connect(const char *name, int port,
     res = conn;
 exit3:
     rc = dill_hclose(coord);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
 exit2:
     rc = dill_hclose(chconns[0]);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     rc = dill_hclose(chconns[1]);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
 exit1:
     errno = err;
     return res;

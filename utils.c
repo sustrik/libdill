@@ -41,7 +41,7 @@ int dill_maxfds(void) {
     /* Get the maximum number of file descriptors. */
     struct rlimit rlim;
     int rc = getrlimit(RLIMIT_NOFILE, &rlim);
-    dill_assert(rc == 0);
+    dill_errno_assert(rc == 0);
     int maxfds = rlim.rlim_max;
 #if defined BSD
     /* On newer versions of OSX, the above behaves weirdly and returns -1, 
@@ -113,7 +113,7 @@ int dill_random(uint8_t *buf, size_t len) {
     static int fd = -1;
     if(dill_slow(fd < 0)) {
         fd = open("/dev/urandom", O_RDONLY);
-        dill_assert(fd >= 0);
+        dill_errno_assert(fd >= 0);
     }
     ssize_t sz = read(fd, buf, len);
     if(dill_slow(sz < 0)) return -1;
