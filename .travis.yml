@@ -232,6 +232,8 @@ install:
   - ./autogen.sh
   - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census} ${TLS+--enable-tls} ${NOTHREADS+--disable-threads} CFLAGS="-O3 ${POLL+-DDILL_POLL} ${ARCH_FALLBACK+-DDILL_ARCH_FALLBACK} ${THREAD_FALLBACK+-DDILL_THREAD_FALLBACK} -DDILL_SLOW_TESTS"
   - make V=1 ${DIST+dist}
+  - cat config.log
+  - valgrind --version
 
 script:
   - test ${DIST+x} || make check
