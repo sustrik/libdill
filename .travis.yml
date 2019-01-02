@@ -231,13 +231,11 @@ before_install:
 install:
   - ./autogen.sh
   - ./configure ${STATIC+--disable-shared} ${DEBUG+--enable-debug} ${VALGRIND+--enable-valgrind} ${CENSUS+--enable-census} ${TLS+--enable-tls} ${NOTHREADS+--disable-threads} CFLAGS="-O3 ${POLL+-DDILL_POLL} ${ARCH_FALLBACK+-DDILL_ARCH_FALLBACK} ${THREAD_FALLBACK+-DDILL_THREAD_FALLBACK} -DDILL_SLOW_TESTS"
-  - make V=1 ${DIST+dist}
   - cat config.log
-  - valgrind --version
+  - make V=1 ${DIST+dist}
 
 script:
   - test ${DIST+x} || make check
-  - test ${VALGRIND+x} || make check-valgrind
 
 after_failure:
   - for f in tests/*.log; do echo; echo "${f}:"; cat $f; done;
