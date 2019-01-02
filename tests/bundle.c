@@ -22,6 +22,8 @@
 
 */
 
+#include <stdlib.h>
+
 #include "utils.h"
 #include "../libdill.h"
 
@@ -93,14 +95,16 @@ int main(void) {
 
     int hndl7 = bundle(NULL);
     errno_assert(hndl7 >= 0);
-    char stk[4096];
+    void *stk = malloc(65536);
+    assert(stk);
     struct coroutine_opts opts = coroutine_defaults;
     opts.stack = stk;
-    opts.stacklen = sizeof(stk);
+    opts.stacklen = 65536;
     rc = bundle_go_opts(hndl7, worker1(), &opts);
     errno_assert(rc == 0);
     rc = hclose(hndl7);
     errno_assert(rc == 0);
+    free(stk);
 
     /* Test creating bundle via go() function. */
     int hndl8 = go(worker1());
