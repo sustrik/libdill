@@ -358,12 +358,16 @@ int tcpmux_daemon(const struct dill_tcpmux_opts *opts) {
     iopts.rx_buffering = 0;
     int ipcb = dill_bundle(NULL);
     if(dill_slow(ipcb < 0)) {err = errno; goto error4;}
+    int s;
     while(1) {
-        int s = dill_ipc_accept(ipcs, &iopts, -1);
+        s = dill_ipc_accept(ipcs, &iopts, -1);
         if(dill_slow(s < 0)) {err = errno; goto error5;}
         int rc = dill_bundle_go(ipcb, dill_tcpmuxd_ipc_handler(s, &services));
-        if(dill_slow(s < 0)) {err = errno; goto error5;}
+        if(dill_slow(s < 0)) {err = errno; goto error6;}
     }
+error6:
+    rc = dill_hclose(s);
+    dill_assert(rc == 0);
 error5:
     rc = dill_hclose(ipcb);
     dill_assert(rc == 0);

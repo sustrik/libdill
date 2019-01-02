@@ -64,17 +64,22 @@ int main(void) {
 
     int lst = tcpmux_listen("foo", NULL, -1);
     errno_assert(lst >= 0);
-    go(client());
+    int clnt = go(client());
     int i;
     for(i = 0; i != 10; i++) {
         int s = tcpmux_accept(lst, NULL, NULL, -1);
         errno_assert(s >= 0);
         printf("accepted\n");
-        hclose(s);
+        rc = hclose(s);
+        errno_assert(rc == 0);
     }
 
+    rc = hclose(clnt);
+    errno_assert(rc == 0);
+    rc = hclose(lst);
+    errno_assert(rc == 0);
     rc = hclose(dmn);
     errno_assert(rc == 0);
-
+ 
     return 0;
 }
