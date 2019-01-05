@@ -34,6 +34,11 @@
 
 #define TESTADDR "ipc.test"
 
+coroutine void closer(int s) {
+    int rc = ipc_close(s, -1);
+    errno_assert(rc == 0);
+}
+
 coroutine void client(void) {
     int cs = ipc_connect(TESTADDR, NULL, -1);
     errno_assert(cs >= 0);
@@ -42,19 +47,6 @@ coroutine void client(void) {
     errno_assert(rc == -1 && errno == ECANCELED);
     rc = hclose(cs);
     errno_assert(rc == 0);
-}
-
-coroutine void client2(int s) {
-    char buf[3];
-    int rc = brecv(s, buf, sizeof(buf), -1);
-    errno_assert(rc == 0);
-    assert(buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
-    rc = bsend(s, "DEF", 3, -1);
-    errno_assert(rc == 0);
-    rc = ipc_close(s, -1);
-    /* Main coroutine closes this coroutine before it manages to read
-       the pending data from the socket. */
-    errno_assert(rc == -1 && errno == ECANCELED);
 }
 
 coroutine void client3(int s) {
@@ -111,22 +103,18 @@ int main() {
     rc = hclose(cr);
     errno_assert(rc == 0);
 
-    /* Test simple data exchange. */
+    /* Test simple data exchange & ipc_close. */
     int p[2];
     rc = ipc_pair(p, NULL, NULL);
     errno_assert(rc == 0);
-    cr = go(client2(p[1]));
-    errno_assert(cr >= 0);
-    rc = bsend(p[0], "ABC", 3, -1);
-    errno_assert(rc == 0);
-    rc = brecv(p[0], buf, 3, -1);
-    errno_assert(rc == 0);
-    assert(buf[0] == 'D' && buf[1] == 'E' && buf[2] == 'F');
-    rc = brecv(p[0], buf, sizeof(buf), -1);
-    errno_assert(rc == -1 && errno == EPIPE);
+    protocol_btest(p[0], p[1]);
+    int clsr = go(closer(p[1]));
+    errno_assert(clsr >= 0);
     rc = ipc_close(p[0], -1);
     errno_assert(rc == 0);
-    rc = hclose(cr);
+    rc = bundle_wait(clsr, -1);
+    errno_assert(rc == 0);
+    rc = hclose(clsr);
     errno_assert(rc == 0);
 
     /* Manual termination handshake. */
