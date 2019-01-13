@@ -22,21 +22,3 @@
 LDADD = ../libdill.la
 
 noinst_PROGRAMS =
-
-if DILL_SOCKETS
-noinst_PROGRAMS += \
-    basics/step1 \
-    basics/step2 \
-    basics/step3 \
-    basics/step4 \
-    basics/step5 \
-    basics/step6
-if HAVE_TLS
-noinst_PROGRAMS += \
-    sockets/step1 \
-    sockets/step2 \
-    sockets/step3 \
-    sockets/step4 \
-    sockets/step5
-endif
-endif

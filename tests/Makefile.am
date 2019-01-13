@@ -46,18 +46,7 @@ endif
 
 if DILL_SOCKETS
 check_PROGRAMS += \
-    ipaddr \
-    iol \
-    tcp \
-    ipc \
-    prefix \
-    suffix \
-    udp \
-    http \
-    ws \
-    term \
-    happyeyeballs \
-    tcpmux
+    ipaddr
 endif
 
 if DILL_SOCKETS

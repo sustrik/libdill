@@ -22,7 +22,5 @@
 LDADD = ../libdill.la
 
 if DILL_SOCKETS
-noinst_PROGRAMS = \
-    tcpmuxd \
-    webapp
+noinst_PROGRAMS =
 endif

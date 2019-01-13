@@ -63,23 +63,8 @@ libdill_la_SOURCES = \
 if DILL_SOCKETS
 libdill_la_SOURCES += \
     bsock.c \
-    fd.h \
-    fd.c \
-    happyeyeballs.c \
-    http.c \
-    iol.h \
-    iol.c \
-    ipc.c \
     ipaddr.c \
     msock.c \
-    prefix.c \
-    socks5.c \
-    suffix.c \
-    tcp.c \
-    tcpmux.c \
-    term.c \
-    udp.c \
-    ws.c \
     dns/dns.h \
     dns/dns.c
 endif
