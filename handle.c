@@ -58,7 +58,7 @@ static void dill_null_close(struct dill_hvfs *hvfs) {
 
 static struct dill_hvfs dill_null = {dill_null_query, dill_null_close};
 
-#define DILL_CHECKHANDLE(h, err) \
+#define DILL_CHECKHANDLE(h, hndl, err) \
     if(dill_slow((h) < 0 || (h) >= ctx->nhandles ||\
           ctx->handles[(h)].next != -2)) {\
         errno = EBADF; return (err);}\
@@ -116,43 +116,23 @@ int dill_hmake(struct dill_hvfs *vfs) {
     return h;
 }
 
-// Make h point to vfs.
-// Return a new handle that points to what h used to point to before.
-int dill_hattach(int h, struct dill_hvfs *vfs) {
+int dill_hswap(int h1, int h2) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
-    DILL_CHECKHANDLE(h, -1);
-    int n = dill_hmake(hndl->vfs);
-    if(dill_slow(n < 0)) return -1;
-    hndl->vfs = vfs;
-    hndl->type = NULL;
-    hndl->ptr = NULL;
-    return n;
-}
-
-// Make h point to whatever n pointed to. Invalidate n.
-int dill_hdetach(int h, int n) {
-    struct dill_ctx_handle *ctx = &dill_getctx->handle;
-    DILL_CHECKHANDLE(h, -1);
-    if(dill_slow(n < 0 || n >= ctx->nhandles || ctx->handles[n].next != -2)) {
-        errno = EBADF; return -1;}
-    struct dill_handle *hndln = &ctx->handles[n];
-    hndl->vfs = hndln->vfs;
-    hndl->type = hndln->type;
-    hndl->ptr = hndln->ptr;
-    /* Mark the cache as invalid. */
-    hndln->ptr = NULL;
-    /* Return handle n to the shared pool. */
-    hndln->next = -1;
-    if(ctx->first == -1) ctx->first = n;
-    else ctx->handles[ctx->last].next = n;
-    ctx->last = n;
-    ctx->nused--;
+    DILL_CHECKHANDLE(h1, hndl1, -1);
+    DILL_CHECKHANDLE(h2, hndl2, -1);
+    struct dill_handle tmp = *hndl1;
+    hndl1->vfs = hndl2->vfs;
+    hndl1->type = hndl2->type;
+    hndl1->ptr = hndl2->ptr;
+    hndl2->vfs = tmp.vfs;
+    hndl2->type = tmp.type;
+    hndl2->ptr = tmp.ptr;
     return 0;
 }
 
 void *dill_hquery(int h, const void *type) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
-    DILL_CHECKHANDLE(h, NULL);
+    DILL_CHECKHANDLE(h, hndl, NULL);
     /* Try and use the cached pointer first; otherwise do the expensive virtual
        call.*/
     if(dill_fast(hndl->ptr != NULL && hndl->type == type))
@@ -169,7 +149,7 @@ void *dill_hquery(int h, const void *type) {
 
 int dill_hclose(int h) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
-    DILL_CHECKHANDLE(h, -1);
+    DILL_CHECKHANDLE(h, hndl, -1);
     int rc = dill_hnullify(h);
     if(dill_slow(rc < 0)) return -1;
     /* Return a handle to the shared pool. */
@@ -181,9 +161,11 @@ int dill_hclose(int h) {
     return 0;
 }
 
+// This function will close the object pointed to by h and make h point
+// to "null" object. 
 int dill_hnullify(int h) {
     struct dill_ctx_handle *ctx = &dill_getctx->handle;
-    DILL_CHECKHANDLE(h, -1);
+    DILL_CHECKHANDLE(h, hndl, -1);
     /* This will guarantee that blocking functions cannot be called anywhere
        inside the context of the close. */
     int old = dill_no_blocking(1);
