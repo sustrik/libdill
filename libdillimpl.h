@@ -38,12 +38,14 @@ struct dill_hvfs {
 
 DILL_EXPORT int dill_hmake(struct dill_hvfs *vfs);
 DILL_EXPORT int dill_hswap(int h1, int h2);
+DILL_EXPORT int dill_hnullify(int h);
 DILL_EXPORT void *dill_hquery(int h, const void *type);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define hvfs dill_hvfs
 #define hmake dill_hmake
 #define hswap dill_hswap
+#define hnullify dill_hnullify
 #define hquery dill_hquery
 #endif
 

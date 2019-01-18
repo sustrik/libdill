@@ -101,11 +101,9 @@ DILL_EXPORT int dill_msleep(int64_t deadline);
 /******************************************************************************/
 
 DILL_EXPORT int dill_hclose(int h);
-DILL_EXPORT int dill_hnullify(int h);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define hclose dill_hclose
-#define hnullify dill_hnullify
 #endif
 
 /******************************************************************************/
