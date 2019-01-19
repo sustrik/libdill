@@ -29,7 +29,7 @@
 #include "libdillimpl.h"
 #include "utils.h"
 
-dill_unique_id(dill_msock_type);
+DILL_UNIQUE_ID(dill_msock_type)
 
 int dill_msend(int s, const void *buf, size_t len, int64_t deadline) {
     int err;

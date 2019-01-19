@@ -32,13 +32,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define dill_concat(x,y) x##y
+#define DILL_CONCAT(x,y) x##y
 
 /* Defines a unique identifier of type const void*. */
-#define dill_unique_id(name) \
-    static const int dill_concat(name, ___) = 0;\
-    const void *name = & dill_concat(name, ___);
-#define DILL_UNIQUE_ID dill_unique_id
+#define DILL_UNIQUE_ID(name) \
+    static const int DILL_CONCAT(name, ___) = 0;\
+    const void *name = & DILL_CONCAT(name, ___);
 
 /*  Takes a pointer to a member variable and computes pointer to the structure
     that contains it. 'type' is type of the structure, not the member. */

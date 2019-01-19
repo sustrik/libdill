@@ -48,20 +48,20 @@ struct dill_census_item {
 
 #endif
 
+/* Storage for the constant used by the go() macro. */
+volatile void *dill_unoptimisable = NULL;
+
+/******************************************************************************/
+/*  Coroutine handle implementation.                                          */
+/******************************************************************************/
+
+DILL_UNIQUE_ID(dill_cr_type)
+
 const struct dill_coroutine_opts dill_coroutine_defaults = {
     NULL,  /* stack */
     0      /* stacklen */
 };
 
-/* Storage for the constant used by the go() macro. */
-volatile void *dill_unoptimisable = NULL;
-
-/******************************************************************************/
-/*  Handle implementation.                                                    */
-/******************************************************************************/
-
-static const int dill_cr_type_placeholder = 0;
-static const void *dill_cr_type = &dill_cr_type_placeholder;
 static void *dill_cr_query(struct dill_hvfs *vfs, const void *type);
 static void dill_cr_close(struct dill_hvfs *vfs);
 
@@ -69,12 +69,12 @@ static void dill_cr_close(struct dill_hvfs *vfs);
 /*  Bundle.                                                                   */
 /******************************************************************************/
 
+DILL_UNIQUE_ID(dill_bundle_type)
+
 const struct dill_bundle_opts dill_bundle_defaults = {
     NULL  /* mem */
 };
 
-static const int dill_bundle_type_placeholder = 0;
-const void *dill_bundle_type = &dill_bundle_type_placeholder;
 static void *dill_bundle_query(struct dill_hvfs *vfs, const void *type);
 static void dill_bundle_close(struct dill_hvfs *vfs);
 

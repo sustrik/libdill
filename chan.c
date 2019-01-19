@@ -73,8 +73,8 @@ DILL_CT_ASSERT(sizeof(struct dill_chstorage) >=
 /*  Handle implementation.                                                    */
 /******************************************************************************/
 
-static const int dill_halfchan_type_placeholder = 0;
-const void *dill_halfchan_type = &dill_halfchan_type_placeholder;
+DILL_UNIQUE_ID(dill_halfchan_type)
+
 static void *dill_halfchan_query(struct dill_hvfs *vfs, const void *type);
 static void dill_halfchan_close(struct dill_hvfs *vfs);
 
