@@ -254,7 +254,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
     ((struct dill_coroutine_opts*)NULL), bndl)
 #define dill_bundle_go_opts(bndl, fn, opts) dill_go_(fn, opts, bndl)
 
-struct dill_bundle_storage {char _[64];};
+struct dill_bundle_storage {uint8_t _[64];};
 
 struct dill_bundle_opts {
     struct dill_bundle_storage *mem;
@@ -296,7 +296,7 @@ struct dill_chclause {
     size_t len;
 };
 
-struct dill_chstorage {char _[144];};
+struct dill_chstorage {uint8_t _[144];};
 
 struct dill_chopts {
     struct dill_chstorage *mem;
@@ -437,7 +437,7 @@ struct dill_ipaddr_opts {
 
 DILL_EXPORT extern const struct dill_ipaddr_opts dill_ipaddr_defaults;
 
-struct dill_ipaddr {char _[32];};
+struct dill_ipaddr {uint8_t _[32];};
 
 DILL_EXPORT int dill_ipaddr_local(
     struct dill_ipaddr *addr,
@@ -495,6 +495,99 @@ DILL_EXPORT int dill_ipaddr_equal(
 #define ipaddr_port dill_ipaddr_port
 #define ipaddr_setport dill_ipaddr_setport
 #define ipaddr_equal dill_ipaddr_equal
+#endif
+
+/******************************************************************************/
+/*  TCP listener.                                                             */
+/******************************************************************************/
+
+struct dill_tcp_listener_storage {uint8_t _[40];};
+
+struct dill_tcp_listener_opts {
+    struct dill_tcp_listener_storage *mem;
+    int backlog;
+};
+
+DILL_EXPORT extern const struct dill_tcp_listener_opts
+    dill_tcp_listener_defaults;
+
+DILL_EXPORT int dill_tcp_listener_make(
+    struct dill_ipaddr *addr,
+    const struct dill_tcp_listener_opts *opts);
+DILL_EXPORT int dill_tcp_listener_acceptfd(
+    int s,
+    struct dill_ipaddr *addr,
+    int64_t deadline);
+DILL_EXPORT int dill_tcp_listener_fromfd(
+    int fd,
+    const struct dill_tcp_listener_opts *opts);
+DILL_EXPORT int dill_tcp_tofd(
+    int s);
+
+#define dill_tcp_listen dill_tcp_listener_make
+
+#if !defined DILL_DISABLE_RAW_NAMES
+#define tcp_listener_storage dill_tcp_listener_storage
+#define tcp_listener_opts dill_tcp_listener_opts
+#define tcp_listener_defaults dill_tcp_listener_defaults
+#define tcp_listener_make dill_tcp_listener_make
+#define tcp_listener_acceptfd dill_tcp_listener_acceptfd
+#define tcp_listener_fromfd dill_tcp_listener_fromfd
+#define tcp_listener_tofd dill_tcp_listener_tofd
+#define tcp_listen dill_tcp_listen
+#endif
+
+/******************************************************************************/
+/*  TCP connection.                                                           */
+/******************************************************************************/
+
+struct dill_tcp_storage {uint8_t _[1];};
+
+struct dill_tcp_opts {
+    struct dill_tcp_storage *mem;
+    size_t rx_buffer;
+    unsigned int nodelay : 1;
+};
+
+DILL_EXPORT extern const struct dill_tcp_opts dill_tcp_defaults;
+
+DILL_EXPORT int dill_tcp_accept(
+    int s,
+    const struct dill_tcp_opts *opts,
+    struct dill_ipaddr *addr,
+    int64_t deadline);
+DILL_EXPORT int dill_tcp_connect(
+    const struct dill_ipaddr *addr,
+    const struct dill_tcp_opts *opts,
+    int64_t deadline);
+DILL_EXPORT int dill_tcp_connect_he(
+    const char *name,
+    int port,
+    const struct dill_tcp_opts *opts,
+    int64_t deadline);
+DILL_EXPORT int dill_tcp_done(
+    int s,
+    int64_t deadline);
+DILL_EXPORT int dill_tcp_close(
+    int s,
+    int64_t deadline);
+DILL_EXPORT int dill_tcp_fromfd(
+    int fd,
+    const struct dill_tcp_opts *opts);
+DILL_EXPORT int dill_tcp_tofd(
+    int s);
+
+#if !defined DILL_DISABLE_RAW_NAMES
+#define tcp_storage dill_tcp_storage
+#define tcp_opts dill_tcp_opts
+#define tcp_defaults dill_tcp_defaults
+#define tcp_accept dill_tcp_accept
+#define tcp_connect dill_tcp_connect
+#define tcp_connect_he dill_tcp_connect_he
+#define tcp_done dill_tcp_done
+#define tcp_close dill_tcp_close
+#define tcp_fromfd dill_tcp_fromfd
+#define tcp_tofd dill_tcp_tofd
 #endif
 
 #endif

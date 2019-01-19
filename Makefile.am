@@ -63,16 +63,19 @@ libdill_la_SOURCES = \
 if DILL_SOCKETS
 libdill_la_SOURCES += \
     bsock.c \
+    fd.h \
+    fd.c \
     ipaddr.c \
     msock.c \
+    tcp.c \
+    tcp_listener.c \
     dns/dns.h \
     dns/dns.c
 endif
 
 if DILL_SOCKETS
 if HAVE_TLS
-libdill_la_SOURCES += \
-    tls.c
+libdill_la_SOURCES +=
 endif
 endif
 
