@@ -341,21 +341,6 @@ DILL_EXPORT int dill_choose(
 #if !defined DILL_DISABLE_SOCKETS
 
 /******************************************************************************/
-/*  Gather/scatter list.                                                      */
-/******************************************************************************/
-
-struct dill_iolist {
-    void *iol_base;
-    size_t iol_len;
-    struct dill_iolist *iol_next;
-    int iol_rsvd;
-};
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define iolist dill_iolist
-#endif
-
-/******************************************************************************/
 /*  Bytestream sockets.                                                       */
 /******************************************************************************/
 
@@ -369,22 +354,10 @@ DILL_EXPORT int dill_brecv(
     void *buf,
     size_t len,
     int64_t deadline);
-DILL_EXPORT int dill_bsendl(
-    int s,
-    struct dill_iolist *first,
-    struct dill_iolist *last,
-    int64_t deadline);
-DILL_EXPORT int dill_brecvl(
-    int s,
-    struct dill_iolist *first,
-    struct dill_iolist *last,
-    int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define bsend dill_bsend
 #define brecv dill_brecv
-#define bsendl dill_bsendl
-#define brecvl dill_brecvl
 #endif
 
 /******************************************************************************/
@@ -401,22 +374,10 @@ DILL_EXPORT ssize_t dill_mrecv(
     void *buf,
     size_t len,
     int64_t deadline);
-DILL_EXPORT int dill_msendl(
-    int s,
-    struct dill_iolist *first,
-    struct dill_iolist *last,
-    int64_t deadline);
-DILL_EXPORT ssize_t dill_mrecvl(
-    int s,
-    struct dill_iolist *first,
-    struct dill_iolist *last,
-    int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define msend dill_msend
 #define mrecv dill_mrecv
-#define msendl dill_msendl
-#define mrecvl dill_mrecvl
 #endif
 
 /******************************************************************************/

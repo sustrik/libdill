@@ -68,13 +68,13 @@ static void dill_tcp_hclose(struct dill_hvfs *hvfs) {
     if(!self->opts.mem) free(self);
 }
 
-static int dill_tcp_bsendl(struct dill_bsock_vfs *bvfs,
-      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
+static int dill_tcp_bsend(struct dill_bsock_vfs *bvfs,
+      const void *buf, size_t len, int64_t deadline) {
     dill_assert(0);
 }
 
-static int dill_tcp_brecvl(struct dill_bsock_vfs *bvfs,
-      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
+static int dill_tcp_brecv(struct dill_bsock_vfs *bvfs,
+      void *buf, size_t len, int64_t deadline) {
     dill_assert(0);
 }
 
@@ -93,8 +93,8 @@ static int dill_tcp_create(int fd, const struct dill_tcp_opts *opts) {
     }
     self->hvfs.query = dill_tcp_hquery;
     self->hvfs.close = dill_tcp_hclose;
-    self->bvfs.bsendl = dill_tcp_bsendl;
-    self->bvfs.brecvl = dill_tcp_brecvl;
+    self->bvfs.bsend = dill_tcp_bsend;
+    self->bvfs.brecv = dill_tcp_brecv;
     self->opts = *opts;
     self->fd = fd;
     self->busy = 0;
