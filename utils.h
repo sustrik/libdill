@@ -102,7 +102,7 @@ void dill_print_size(char x);
         }\
     } while(0)
 
-/* Workaround missing __rdtsc in Clang < 3.5 (or Clang < 6.0 on Xcode) */
+/* Workaround for missing __rdtsc in Clang < 3.5 (or Clang < 6.0 on Xcode) */
 #if defined(__x86_64__) || defined(__i386__)
 #if defined __clang__
 #if (!defined(__apple_build_version__) && \

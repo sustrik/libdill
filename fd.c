@@ -63,7 +63,8 @@ int dill_fd_check(int s, int type, int family1, int family2, int listener) {
        such case. */
     if(dill_slow(rc < 0 && errno == ENOPROTOOPT)) return 1;
     if(dill_slow(rc < 0)) return -1;
-    if(val == 0) return 0;
+    if(listener == 0 && val != 0) return 0;
+    if(listener != 0 && val == 0) return 0;
 
     return 1;
 }
@@ -82,6 +83,24 @@ void dill_fd_close(int s) {
        closed. However, it's closed in almost all cases and even if it's not
        leaking a file descriptor is better than crashing the entire program. */
     close(s);
+}
+
+int dill_fd_connect(int s, const struct sockaddr *addr, socklen_t addrlen,
+      int64_t deadline) {
+    /* Initiate connect. */
+    int rc = connect(s, addr, addrlen);
+    if(rc == 0) return 0;
+    if(dill_slow(errno != EINPROGRESS)) return -1;
+    /* Connect is in progress. Let's wait till it's done. */
+    rc = dill_fdout(s, deadline);
+    if(dill_slow(rc == -1)) return -1;
+    /* Retrieve the error from the socket, if any. */
+    int err = 0;
+    socklen_t errsz = sizeof(err);
+    rc = getsockopt(s, SOL_SOCKET, SO_ERROR, (void*)&err, &errsz);
+    if(dill_slow(rc != 0)) return -1;
+    if(dill_slow(err != 0)) {errno = err; return -1;}
+    return 0;
 }
 
 int dill_fd_own(int s) {

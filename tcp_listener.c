@@ -22,6 +22,11 @@
 
 */
 
+#include <error.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <stdlib.h>
+
 #include "fd.h"
 #include "utils.h"
 

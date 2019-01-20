@@ -541,7 +541,7 @@ DILL_EXPORT int dill_tcp_tofd(
 /*  TCP connection.                                                           */
 /******************************************************************************/
 
-struct dill_tcp_storage {uint8_t _[1];};
+struct dill_tcp_storage {uint8_t _[64];};
 
 struct dill_tcp_opts {
     struct dill_tcp_storage *mem;

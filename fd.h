@@ -52,6 +52,14 @@ int dill_fd_check(
 void dill_fd_close(
     int s);
 
+/* Establish a connection while yeilding the control to other coroutines
+   if it can't be done immediately. */
+int dill_fd_connect(
+    int s,
+    const struct sockaddr *addr,
+    socklen_t addrlen,
+    int64_t deadline);
+
 /* Transfer the ownership of the file descriptor to the owner. This is
    accomplished by closing the file descriptor and returning a different
    one pointing to the same underlying object. */
