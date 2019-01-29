@@ -28,6 +28,12 @@
 #include "fd.h"
 #include "utils.h"
 
+#if defined MSG_NOSIGNAL
+#define DILL_FD_NOSIGNAL MSG_NOSIGNAL
+#else
+#define DILL_FD_NOSIGNAL 0
+#endif
+
 int dill_fd_accept(int s, struct sockaddr *addr, socklen_t *addrlen,
       int64_t deadline) {
     while(1) {
@@ -108,6 +114,44 @@ int dill_fd_own(int s) {
     if(dill_slow(n < 0)) return -1;
     dill_fd_close(s);
     return n;
+}
+
+int dill_fd_recv(int s, void *buf, size_t len, int64_t deadline) {
+    while(1) {
+        ssize_t sz = recv(s, buf, len, 0);
+        if(dill_slow(sz == 0)) {errno = EPIPE; return -1;}
+        if(sz < 0) {
+            if(dill_slow(errno != EWOULDBLOCK && errno != EAGAIN)) {
+                if(errno == EPIPE) errno = ECONNRESET;
+                return -1;
+            }
+            sz = 0;
+        }
+        buf = ((char*)buf) + sz;
+        len -= sz;
+        /* Wait for more data. */
+        int rc = dill_fdin(s, deadline);
+        if(dill_slow(rc < 0)) return -1;
+    }
+}
+
+int dill_fd_send(int s, const void *buf, size_t len, int64_t deadline) {
+    while(1) {
+        ssize_t sz = send(s, buf, len, DILL_FD_NOSIGNAL);
+        dill_errno_assert(sz != 0);
+        if(sz < 0) {
+            if(dill_slow(errno != EWOULDBLOCK && errno != EAGAIN)) {
+                if(errno == EPIPE) errno = ECONNRESET;
+                return -1;
+            }
+            sz = 0;
+        }
+        buf = ((const char*)buf) + sz;
+        len -= sz;
+        /* Wait till more data can be sent. */
+        int rc = dill_fdout(s, deadline);
+        if(dill_slow(rc < 0)) return -1;
+    }
 }
 
 int dill_fd_tune(int s) {

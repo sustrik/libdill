@@ -69,6 +69,8 @@ libdill_la_SOURCES += \
     msock.c \
     tcp.c \
     tcp_listener.c \
+    xbuf.h \
+    xbuf.c \
     dns/dns.h \
     dns/dns.c
 endif

@@ -66,6 +66,22 @@ int dill_fd_connect(
 int dill_fd_own(
     int s);
 
+/* Receive data from a socket but yield to other coroutines if it can't be done
+   immediately. */
+int dill_fd_recv(
+    int s,
+    void *buf,
+    size_t len,
+    int64_t deadline);
+
+/* Send data to socket but yield to other coroutines if it can't be done
+   immediately. */
+int dill_fd_send(
+    int s,
+    const void *buf,
+    size_t len,
+    int64_t deadline);
+
 /* Tune the socket to be usable by libdill. This means putting it into
    non-blocking mode, disabling SIGPIPE signals and similar. */
 int dill_fd_tune(

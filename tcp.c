@@ -29,6 +29,7 @@
 
 #include "fd.h"
 #include "utils.h"
+#include "xbuf.h"
 
 #define DILL_DISABLE_RAW_NAMES
 #include "libdillimpl.h"
@@ -37,6 +38,7 @@ DILL_UNIQUE_ID(dill_tcp_type)
 
 const struct dill_tcp_opts dill_tcp_defaults = {
     NULL,  /* mem */
+    0,     /* tx_buffer */
     0,     /* rx_buffer */
     0      /* nodelay */
 };
@@ -45,7 +47,7 @@ struct dill_tcp {
     struct dill_hvfs hvfs;
     struct dill_bsock_vfs bvfs;
     struct dill_tcp_opts opts;
-    int fd;
+    struct dill_xbuf xbuf;
     unsigned int busy : 1;
     unsigned int indone : 1;
     unsigned int outdone: 1;
@@ -63,8 +65,8 @@ static void *dill_tcp_hquery(struct dill_hvfs *hvfs, const void *type) {
 
 static void dill_tcp_hclose(struct dill_hvfs *hvfs) {
     struct dill_tcp *self = (struct dill_tcp*)hvfs;
-    if(self->fd >= 0) dill_fd_close(self->fd);
-    //if(self->rx_buffering) dill_fd_termrxbuf(&self->rxbuf);
+    int fd = dill_xbuf_term(&self->xbuf);
+    dill_fd_close(fd);
     if(!self->opts.mem) free(self);
 }
 
@@ -96,13 +98,16 @@ static int dill_tcp_create(int fd, const struct dill_tcp_opts *opts) {
     self->bvfs.bsend = dill_tcp_bsend;
     self->bvfs.brecv = dill_tcp_brecv;
     self->opts = *opts;
-    self->fd = fd;
+    int rc = dill_xbuf_init(&self->xbuf, fd, opts->tx_buffer, opts->rx_buffer);
+    if(dill_slow(rc < 0)) {err = errno; goto error2;}
     self->busy = 0;
     self->indone = 0;
     self->outdone = 0;
     int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {err = errno; goto error2;}
+    if(dill_slow(h < 0)) {err = errno; goto error3;}
     return h;
+error3:
+    dill_xbuf_term(&self->xbuf);
 error2:
     if(!opts->mem) free(self);
 error1:
@@ -171,3 +176,4 @@ error1:
     errno = err;
     return -1;
 }
+
