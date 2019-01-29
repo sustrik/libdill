@@ -4,7 +4,7 @@
 
 rm -f *.3
 rm -f *.md
-./manpages.src
+../spec/spec.js
 for f in *.md
 do
     echo "Processing $f"
