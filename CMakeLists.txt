@@ -108,6 +108,7 @@ set(CMAKE_REQUIRED_LIBRARIES )
 set(CMAKE_REQUIRED_DEFINITIONS )
 
 add_definitions(-DDILL_THREADS)
+add_definitions(-DDILL_SOCKETS)
 
 check_function_exists(mprotect HAVE_MPROTECT)
 if(HAVE_MPROTECT)

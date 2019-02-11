@@ -145,6 +145,7 @@ AC_ARG_ENABLE([sockets], [AS_HELP_STRING([--disable-sockets],
 if test "x$enable_sockets" = "xno"; then
     AM_CONDITIONAL([DILL_SOCKETS], false)
 else
+    AC_DEFINE(DILL_SOCKETS)
     AM_CONDITIONAL([DILL_SOCKETS], true)
 fi
 

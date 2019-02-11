@@ -37,7 +37,9 @@ struct dill_ctx {
     struct dill_ctx_handle handle;
     struct dill_ctx_stack stack;
     struct dill_ctx_pollset pollset;
+#if defined DILL_SOCKETS
     struct dill_ctx_fd fd;
+#endif
 };
 
 struct dill_ctx *dill_ctx_init(void);
