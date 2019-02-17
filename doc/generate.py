@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import glob
-from schema import Schema, And, Use, Optional
+from schema import Schema, Optional, Or
 
 def trimrect(s):
     return ""
@@ -22,7 +22,6 @@ for file in files:
         c = f.read()
         exec(c)
 
-# Validate the data.
 schema = Schema([{
     # name of the function
     "name": str,
@@ -62,8 +61,8 @@ schema = Schema([{
     Optional("protocol"): {
         # the section that describes the protocol
         "section": str,
-        # type of the protocol (bytestream or message)
-        "type": str,
+        # type of the protocol
+        "type": Or("bytestream", "message", "application"),
         # description of the protocol
         "info": str,
         # example of usage of the protocol, a piece of C code
@@ -99,4 +98,6 @@ schema = Schema([{
     Optional("example"): str,
 }])
 
-schema.validate(fxs)
+# Check whether the data comply to the schema. Also fills in defaults.
+fxs = schema.validate(fxs)
+
