@@ -180,9 +180,12 @@ for(var i in files) {
 }
 
 fxs = []
+fxnames = {} 
 
 function newFunction(f) {
+    if(f.name in fxnames) throw "duplicate function name: " + f.name
     fxs.push(f)
+    fxnames[f.name] = null
 }
 
 // Add all functions to fxs.
@@ -584,13 +587,13 @@ for(var i = 0; i < fxs.length; i++) {
     fx = fxs[i];
     t = generate_man_page(fx, sections, false)
     t = make_paragraphs(t)
-    fs.writeFileSync("fx.name + ".md", t)
+    fs.writeFileSync(fx.name + ".md", t)
     // Mem functions have no definitions of their own. The docs are generated
     // from the related non-mem function.
     if(fx.mem != undefined) {
         t = generate_man_page(fx, sections, true)
         t = make_paragraphs(t)
-        fs.writeFileSync("fx.name + "_mem.md", t)
+        fs.writeFileSync(fx.name + "_mem.md", t)
     }
  }
 
