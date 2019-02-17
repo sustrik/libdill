@@ -4,7 +4,7 @@ fxs.append(
         "name": "hmake",
         "section": "Handles",
         "info": "creates a handle",
-        "is_in_libdillimpl": True,
+        "header": "libdillimpl.h",
         "add_to_synopsis": """
             struct hvfs {
                 void *(*query)(struct hvfs *vfs, const void *type);

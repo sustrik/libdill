@@ -30,8 +30,8 @@ schema = Schema([{
     Optional("section"): str,
     # short description of the function
     "info": str,
-    # if true, the function is in libdillimpl.h
-    Optional("is_in_libdillimpl"): bool,
+    # which headerfile is the funcion declared in
+    Optional("header", default='libdill.h'): str,
     # arguments of the function
     "args": [{
         # name of the argument

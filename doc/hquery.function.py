@@ -4,7 +4,7 @@ fxs.append(
         "name": "hquery",
         "section": "Handles",
         "info": "gets an opaque pointer associated with a handle and a type",
-        "is_in_libdillimpl": True,
+        "header": "libdillimpl.h",
 
         "result": {
             "type": "void*",
