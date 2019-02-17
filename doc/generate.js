@@ -172,10 +172,10 @@ http_server_example = `
     tcp_close(s);
 `
 
-// Add all protocols.
+// Add all topics.
 var files = fs.readdirSync(".");
 for(var i in files) {
-    if(!files[i].endsWith(".protocol.js")) continue
+    if(!files[i].endsWith(".topic.js")) continue
     eval(fs.readFileSync(files[i]).toString())
 }
 
