@@ -1470,7 +1470,12 @@ fxs = [
                 name: "h",
                 type: "int",
                 info: "The handle.",
-            }
+            },
+            {
+                name: "type",
+                type: "const char*",
+                info: "The opaque ID of the queried type.",
+            },
         ],
 
         prologue: `
