@@ -1,51 +1,29 @@
 
 fxs.append(
     {
-        "name": "bundle_go_mem",
+        "name": "bundle_wait",
         "section": "Coroutines",
-        "info": "launches a coroutine within a bundle",
-
+        "info": "wait while coroutines in the bundle finish",
         "result": {
             "type": "int",
             "success": "0",
             "error": "-1",
         },
-
         "args": [
             {
                 "name": "bndl",
                 "type": "int",
-                "info": "Bundle to launch the coroutine in.",
-            },
-            {
-                "name": "expression",
-                "info": "Expression to evaluate as a coroutine.",
-            },
-            {
-                "name": "mem",
-                "type": "void*",
-                "info": "Buffer to store coroutine's stack.",
-            },
-            {
-                "name": "memlen",
-                "type": "size_t",
-                "info": "Size of th buffer, in bytes.",
+                "info": "Handle of a coroutine bundle.",
             },
         ],
-
-        "prologue": """
-            This construct launches a coroutine within the specified bundle.
-            For more information about bundles see **bundle**.
-
-            The stack for the coroutine is supplied by the user.
-            The stack has no guard page and stack overflow will result in
-            overwriting memory.
-        """,
-        "epilogue": go_info,
-
+        "has_deadline": True,
         "has_handle_argument": True,
 
-        "errors": ["ECANCELED"],
+        "prologue": """
+            If there are no coroutines in the bundle the function will succeed
+            immediately. Otherwise, it will wait until all the coroutines in
+            the bundle finish or until deadline is reached.
+        """,
 
         "example": bundle_example,
     }

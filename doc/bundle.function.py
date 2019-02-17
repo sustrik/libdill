@@ -4,6 +4,7 @@ fxs.append(
         "name": "bundle",
         "section": "Coroutines",
         "info": "create an empty coroutine bundle",
+        "args": [],
         "result": {
             "type": "int",
             "success": "handle of the newly create coroutine bundle",

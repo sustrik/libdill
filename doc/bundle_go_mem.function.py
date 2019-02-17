@@ -1,7 +1,7 @@
 
 fxs.append(
     {
-        "name": "bundle_go",
+        "name": "bundle_go_mem",
         "section": "Coroutines",
         "info": "launches a coroutine within a bundle",
 
@@ -22,22 +22,31 @@ fxs.append(
                 "type": "",
                 "info": "Expression to evaluate as a coroutine.",
             },
+            {
+                "name": "mem",
+                "type": "void*",
+                "info": "Buffer to store coroutine's stack.",
+            },
+            {
+                "name": "memlen",
+                "type": "size_t",
+                "info": "Size of th buffer, in bytes.",
+            },
         ],
 
         "prologue": """
             This construct launches a coroutine within the specified bundle.
             For more information about bundles see **bundle**.
 
-            The coroutine gets a 1MB stack.
-            The stack is guarded by a non-writeable memory page. Therefore,
-            stack overflow will result in a **SEGFAULT** rather than overwriting
-            memory that doesn't belong to it.
+            The stack for the coroutine is supplied by the user.
+            The stack has no guard page and stack overflow will result in
+            overwriting memory.
         """,
         "epilogue": go_info,
 
         "has_handle_argument": True,
 
-        "errors": ["ECANCELED", "ENOMEM"],
+        "errors": ["ECANCELED"],
 
         "example": bundle_example,
     }

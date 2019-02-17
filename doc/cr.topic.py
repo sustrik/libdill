@@ -8,7 +8,7 @@ bundle_example = """
     bundle_wait(b, now() + 1000);
     /* Cancel any remaining workers. */
     hclose(b);
-""",
+"""
 
 go_info = """
     The coroutine is executed concurrently, and its lifetime may exceed the

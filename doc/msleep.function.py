@@ -4,6 +4,7 @@ fxs.append(
         "name": "msleep",
         "section": "Deadlines",
         "info": "waits until deadline expires",
+        "args": [],
         "result": {
             "type": "int",
             "success": "0",
