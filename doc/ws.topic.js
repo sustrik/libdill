@@ -1,3 +1,26 @@
+ws_flags = `
+            The socket can be either text- (**WS_TEXT** flag) or binary-
+            (**WS_BINARY** flag) based. Binary is the default. When sending
+            messages via **msend** or **msendl** these will be typed based on
+            the socket type. When receiving messages via **mrecv** or **mrecvl**
+            encountering a message that doesn't match the socket type results in
+            **EPROTO** error.
+
+            If you want to combine text and binary messages you can do so by
+            using functions such as **ws_send** and **ws_recv**.
+
+            **WS_NOHTTP** flag can be combined with socket type flags. If set,
+            the protocol will skip the initial HTTP handshake. In this case
+            **resource** and **host** arguments won't be used and can be set
+            to **NULL**.
+
+            Skipping HTTP handshake is useful when you want to do the handshake
+            on your own. For example, if you want to implement custom WebSocket
+            extensions or if you want to write a multi-protocol application
+            where initial HTTP handshake can be followed by different kinds
+            of protocols (e.g. HTML and WebSocket).
+`
+
 ws_protocol = {
     section: "WebSocket protocol",
     type: "message",
