@@ -4465,7 +4465,7 @@ t += generate_section("TERM protocol", sections)
 t += generate_section("TLS protocol", sections)
 t += generate_section("UDP protocol", sections)
 t += generate_section("WebSocket protocol", sections)
-fs.writeFile("toc.md", t)
+fs.writeFileSync("toc.md", t)
 
 // Subsequent lines without an empty line between them should be joined
 // to form a single paragraph.
@@ -4519,13 +4519,13 @@ for(var i = 0; i < fxs.length; i++) {
     fx = fxs[i];
     t = generate_man_page(fx, sections, false)
     t = make_paragraphs(t)
-    fs.writeFile(fx.name + ".md", t)
+    fs.writeFileSync(fx.name + ".md", t)
     // Mem functions have no definitions of their own. The docs are generated
     // from the related non-mem function.
     if(fx.mem != undefined) {
         t = generate_man_page(fx, sections, true)
         t = make_paragraphs(t)
-        fs.writeFile(fx.name + "_mem.md", t)
+        fs.writeFileSync(fx.name + "_mem.md", t)
     }
  }
 
