@@ -91,7 +91,7 @@ int dill_term_attach_mem(int s, const void *buf, size_t len,
     self->mem = 1;
     /* Create the handle. */
     int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error;}
+    if(dill_slow(h < 0)) {err = errno; goto error;}
     return h;
 error:
     if(s >= 0) dill_hclose(s);

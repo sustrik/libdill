@@ -121,7 +121,7 @@ int dill_tls_attach_client_mem(int s, struct dill_tls_storage *mem,
     }
     /* Create the handle. */
     int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error4;}
+    if(dill_slow(h < 0)) {err = errno; goto error4;}
     return h;
 error4:
     BIO_vfree(bio);
@@ -207,7 +207,7 @@ int dill_tls_attach_server_mem(int s, const char *cert, const char *pkey,
     }
     /* Create the handle. */
     int h = dill_hmake(&self->hvfs);
-    if(dill_slow(h < 0)) {int err = errno; goto error4;}
+    if(dill_slow(h < 0)) {err = errno; goto error4;}
     return h;
 error4:
     BIO_vfree(bio);

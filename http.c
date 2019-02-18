@@ -109,7 +109,7 @@ int dill_http_done(int s, int64_t deadline) {
 }
 
 int dill_http_detach(int s, int64_t deadline) {
-    int err;
+    int err = 0;
     struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
     int u = dill_term_detach(obj->u, deadline);

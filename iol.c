@@ -36,7 +36,7 @@ int dill_iolcheck(struct iolist *first, struct iolist *last,
     }
     if(dill_slow(!first || !last || last->iol_next)) {
         errno = EINVAL; return -1;}
-    size_t nbf = 0, nbt = 0, res = 0;
+    size_t nbf = 0, nbt = 0;
     struct iolist *it;
     for(it = first; it; it = it->iol_next) {
         if(dill_slow(it->iol_rsvd || (!it->iol_next && it != last)))
