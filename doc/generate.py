@@ -7,6 +7,16 @@ from schema import Schema, Optional, Or
 def trimrect(s):
     return ""
 
+def signature(fx, prefix=""):
+    args = "void"
+    if len(fx["args"]) > 0:
+        args = tiles.joinv(fx["args"], "@{type} @{name}@{suffix}", sep=", ", last=");")
+    return tiles.tile(
+        """
+        @{prefix} @{fx["result"]["type"] if fx["result"] else "void"} @{fx["name"]}(
+            @{args}
+        """)
+
 # Read all topic files.
 files = glob.glob("*.topic.py")
 for file in files:
@@ -121,6 +131,8 @@ for fx in fxs:
     if topic not in topics:
         topics[topic] = []
     topics[topic].append(fx)
+for topic, flist in topics.items():
+    flist.sort(key=lambda f : f["name"])
 
 # Enhance the data.
 for fx in fxs:
@@ -211,21 +223,10 @@ with open("toc.md", 'w') as f:
 
 # Generate manpages for individual functions.
 for fx in fxs:
-
-    args = "void"
-    if len(fx["args"]) > 0:
-        args = tiles.joinv(fx["args"], "@{type} @{name}@{suffix}", sep=", ", last=");")
-
-    signature = tiles.tile(
-        """
-        @{fx["result"]["type"] if fx["result"] else "void"} @{fx["name"]}(
-            @{args}
-        """)
-    
     synopsis = tiles.tile("#include<@{fx['header']}>")
     if fx["add_to_synopsis"]:
         synopsis = tiles.tile('@{synopsis}\n\n@{fx["add_to_synopsis"]}');
-    synopsis = tiles.tile('@{synopsis}\n\n@{signature}')
+    synopsis = tiles.tile('@{synopsis}\n\n@{signature(fx)}')
 
     description = ""
     if fx["experimental"] or (fx["protocol"] and fx["protocol"]["experimental"]):
@@ -389,4 +390,41 @@ for fx in fxs:
 
     with open(fx["name"] + ".md", 'w') as f:
         f.write(tiles.tile("@{page}"))
+
+# Generate header files.
+hdrs = ""
+for topic in topic_order:
+    signatures = ""
+    for fx in topics[topic]:
+        signatures = tiles.tile("@{signatures}\n\n@{signature(fx, prefix='DILL_EXPORT')}")
+    defines = tiles.joinv(topics[topic], "#define @{name} dill_@{name}")
+    signatures = tiles.tile(
+        """
+        @{signatures}
+
+        #if !defined DILL_DISABLE_RAW_NAMES
+        @{defines}
+        #endif
+        """)
+    if fx["protocol"]:
+        signatures = tiles.tile(
+            """
+            #if !defined DILL_DISABLE_SOCKETS
+
+            @{signatures}
+
+            #endif
+            """)
+    if topic == "TLS protocol":
+        signatures = tiles.tile(
+            """
+            #if !defined DILL_DISABLE_TLS
+            @{signatures}
+            #endif
+            """)
+    hdrs = tiles.tile("@{hdrs}\n\n/* @{topic} */\n\n@{signatures}")
+with open("libdill.tile.h", 'r') as f:
+    c = f.read()
+with open("libdill.h", 'w') as f:
+    f.write(tiles.tile(c))
 
