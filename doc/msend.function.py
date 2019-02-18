@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "msend",
-        "section": "Message sockets",
+        "topic": "Message sockets",
         "info": "sends a message",
         "result": {
             "type": "int",

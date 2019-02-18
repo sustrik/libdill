@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "ipaddr_local",
-        "section": "IP addresses",
+        "topic": "IP addresses",
         "info": "resolve the address of a local network interface",
         "result": {
             "type": "int",

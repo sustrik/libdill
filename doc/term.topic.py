@@ -1,6 +1,6 @@
 
 term_protocol = {
-    "section": "TERM protocol",
+    "topic": "TERM protocol",
     "type": "message",
     "info": """
         TERM is a protocol that implements clean terminal handshake between

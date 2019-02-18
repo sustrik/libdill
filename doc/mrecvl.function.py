@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "mrecvl",
-        "section": "Message sockets",
+        "topic": "Message sockets",
         "info": "receives a message",
         "result": {
             "type": "ssize_t",

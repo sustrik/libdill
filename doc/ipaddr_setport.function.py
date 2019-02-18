@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "ipaddr_setport",
-        "section": "IP addresses",
+        "topic": "IP addresses",
         "info": "changes port number of the address",
         "args": [
             {

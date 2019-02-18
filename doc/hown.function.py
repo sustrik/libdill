@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "hown",
-        "section": "Handles",
+        "topic": "Handles",
         "info": "transfer ownership of a handle",
 
         "result": {

@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "choose",
-        "section": "Channels",
+        "topic": "Channels",
         "info": "performs one of multiple channel operations",
 
         "add_to_synopsis": """

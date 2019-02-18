@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "chdone",
-        "section": "Channels",
+        "topic": "Channels",
         "info": "half-closes a channel",
 
         "result": {

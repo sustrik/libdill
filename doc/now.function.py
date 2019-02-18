@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "now",
-        "section": "Deadlines",
+        "topic": "Deadlines",
         "info": "get current time",
         "result": {
             "type": "int64_t",

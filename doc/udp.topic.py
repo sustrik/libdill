@@ -1,5 +1,5 @@
 udp_protocol = {
-    "section": "UDP protocol",
+    "topic": "UDP protocol",
     "type": "message",
     "info": """
         UDP is an unreliable message-based protocol defined in RFC 768. The size

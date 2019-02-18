@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "bundle_wait",
-        "section": "Coroutines",
+        "topic": "Coroutines",
         "info": "wait while coroutines in the bundle finish",
         "result": {
             "type": "int",

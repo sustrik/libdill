@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "ipaddr_str",
-        "section": "IP addresses",
+        "topic": "IP addresses",
         "info": "convert address to a human-readable string",
         "result": {
             "type": "const char*",

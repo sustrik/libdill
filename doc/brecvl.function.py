@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "brecvl",
-        "section": "Bytestream sockets",
+        "topic": "Bytestream sockets",
         "info": "receives data from a bytestream socket",
         "result": {
             "type": "int",

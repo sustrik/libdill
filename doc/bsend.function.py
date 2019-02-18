@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "bsend",
-        "section": "Bytestream sockets",
+        "topic": "Bytestream sockets",
         "info": "sends data to a socket",
         "result": {
             "type": "int",

@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "ipaddr_remotes",
-        "section": "IP addresses",
+        "topic": "IP addresses",
         "info": "resolve the address of a remote IP endpoint",
         "result": {
             "type": "int",

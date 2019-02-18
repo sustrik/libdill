@@ -1,5 +1,5 @@
 prefix_protocol = {
-    "section": "PREFIX protocol",
+    "topic": "PREFIX protocol",
     "type": "message",
     "info": """
         PREFIX  is a message-based protocol to send binary messages prefixed by

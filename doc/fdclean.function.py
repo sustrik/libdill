@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "fdclean",
-        "section": "File descriptors",
+        "topic": "File descriptors",
         "info": "erases cached info about a file descriptor",
       
         "args": [

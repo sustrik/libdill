@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "hquery",
-        "section": "Handles",
+        "topic": "Handles",
         "info": "gets an opaque pointer associated with a handle and a type",
         "header": "libdillimpl.h",
 

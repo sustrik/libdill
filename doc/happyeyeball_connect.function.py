@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "happyeyeballs_connect",
-        "section": "Happy Eyeballs protocol",
+        "topic": "Happy Eyeballs protocol",
         "info": "creates a TCP connection using Happy Eyeballs algorithm",
 
         "result": {

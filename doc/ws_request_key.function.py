@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "ws_request_key",
-        "section": "WebSocket protocol",
+        "topic": "WebSocket protocol",
         "info": "generates an unique value for Sec-WebSocket-Key field",
         "result": {
             "type": "int",

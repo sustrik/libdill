@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "chsend",
-        "section": "Channels",
+        "topic": "Channels",
         "info": "sends a message to a channel",
 
         "result": {

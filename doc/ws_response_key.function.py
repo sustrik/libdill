@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "ws_response_key",
-        "section": "WebSocket protocol",
+        "topic": "WebSocket protocol",
         "info": "generates a WebSocket response key for a given request key",
         "result": {
             "type": "int",

@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "hclose",
-        "section": "Handles",
+        "topic": "Handles",
         "info": "hard-closes a handle",
 
         "result": {

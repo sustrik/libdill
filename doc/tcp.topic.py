@@ -1,5 +1,5 @@
 tcp_protocol = {
-    "section": "TCP protocol",
+    "topic": "TCP protocol",
     "type": "bytestream",
     "info": """
        TCP protocol is a reliable bytestream protocol for transporting data

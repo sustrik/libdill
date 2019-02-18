@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "chmake",
-        "section": "Channels",
+        "topic": "Channels",
         "info": "creates a channel",
 
         "result": {

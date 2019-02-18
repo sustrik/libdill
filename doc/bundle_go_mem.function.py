@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "bundle_go_mem",
-        "section": "Coroutines",
+        "topic": "Coroutines",
         "info": "launches a coroutine within a bundle",
 
         "result": {

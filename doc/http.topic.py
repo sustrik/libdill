@@ -16,7 +16,7 @@ http_server_example = """
 """
 
 http_protocol = {
-    "section": "HTTP protocol",
+    "topic": "HTTP protocol",
     "type": "application",
     "info": """
         HTTP is an application-level protocol described in RFC 7230. This

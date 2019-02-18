@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "go_mem",
-        "section": "Coroutines",
+        "topic": "Coroutines",
         "info": "launches a coroutine",
 
         "result": {

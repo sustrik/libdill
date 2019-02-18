@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "ipaddr_family",
-        "section": "IP addresses",
+        "topic": "IP addresses",
         "info": "returns family of the IP address",
         "result": {
             "type": "int",

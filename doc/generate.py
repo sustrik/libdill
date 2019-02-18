@@ -31,9 +31,9 @@ for fx in fxs:
 schema = Schema([{
     # name of the function
     "name": str,
-    # the name of the section the function belongs to
-    # if omitted, the section is retrieved from the protocol
-    Optional("section", default=None): str,
+    # the name of the section in the docs the function should appear in
+    # if omitted, it will be retrieved from the protocol
+    Optional("topic", default=None): str,
     # short description of the function
     "info": str,
     # which headerfile is the funcion declared in
@@ -65,8 +65,8 @@ schema = Schema([{
     Optional("epilogue", default=None): str,
     # should be present only if the function is related to a network protocol
     Optional("protocol", default=None): {
-        # the section that describes the protocol
-        "section": str,
+        # the section in the docs the protocol belongs to
+        "topic": str,
         # type of the protocol
         "type": Or("bytestream", "message", "application"),
         # description of the protocol
@@ -221,9 +221,9 @@ for fx in fxs:
     description = tiles.tile('@{description}\n\n@{arginfo}')
     if fx["epilogue"]:
         description = tiles.tile('@{description}\n\n@{fx["epilogue"]}')
-    if fx["protocol"] or fx["section"] == "IP addresses":
+    if fx["protocol"] or fx["topic"] == "IP addresses":
         description = tiles.tile('@{description}\n\nThis function is not available if libdill is compiled with **--disable-sockets** option.')
-    if fx["protocol"] and fx["protocol"]["section"] == "TLS protocol":
+    if fx["protocol"] and fx["protocol"]["topic"] == "TLS protocol":
         description = tiles.tile('@{description}\n\nThis function is not available if libdill is compiled without **--enable-tls** option.')
 
     if fx["result"]:

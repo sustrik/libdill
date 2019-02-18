@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "bundle",
-        "section": "Coroutines",
+        "topic": "Coroutines",
         "info": "create an empty coroutine bundle",
         "args": [],
         "result": {

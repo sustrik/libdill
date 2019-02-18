@@ -1,5 +1,5 @@
 tls_protocol = {
-    "section": "TLS protocol",
+    "topic": "TLS protocol",
     "type": "bytestream",
     "info": """
         TLS is a cryptographic protocol to provide secure communication over

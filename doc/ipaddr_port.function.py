@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "ipaddr_port",
-        "section": "IP addresses",
+        "topic": "IP addresses",
         "info": "returns the port part of the address",
         "result": {
             "type": "int",

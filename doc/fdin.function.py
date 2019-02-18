@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "fdin",
-        "section": "File descriptors",
+        "topic": "File descriptors",
         "info": "waits on a file descriptor to become readable",
 
         "result": {

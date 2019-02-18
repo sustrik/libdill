@@ -22,7 +22,7 @@ ws_flags = """
 """
 
 ws_protocol = {
-    "section": "WebSocket protocol",
+    "topic": "WebSocket protocol",
     "type": "message",
     "info": """
         WebSocket is a message-based protocol defined in RFC 6455. It can be

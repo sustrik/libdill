@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "fdout",
-        "section": "File descriptors",
+        "topic": "File descriptors",
         "info": "wait on file descriptor to become writable",
 
         "result": {

@@ -1,5 +1,5 @@
 ipc_protocol = {
-    "section": "IPC protocol",
+    "topic": "IPC protocol",
     "type": "bytestream",
     "info": """
        IPC  protocol is a bytestream protocol for transporting data among

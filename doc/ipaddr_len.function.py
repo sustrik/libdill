@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "ipaddr_len",
-        "section": "IP addresses",
+        "topic": "IP addresses",
         "info": "returns length of the address",
         "result": {
             "type": "int",

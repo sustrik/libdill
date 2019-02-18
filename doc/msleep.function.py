@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "msleep",
-        "section": "Deadlines",
+        "topic": "Deadlines",
         "info": "waits until deadline expires",
         "args": [],
         "result": {

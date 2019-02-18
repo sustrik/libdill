@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "ipaddr_equal",
-        "section": "IP addresses",
+        "topic": "IP addresses",
         "info": "compares two IP address",
         "result": {
             "type": "int",

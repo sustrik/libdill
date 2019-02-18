@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "yield",
-        "section": "Coroutines",
+        "topic": "Coroutines",
         "info": "yields CPU to other coroutines",
         "result": {
             "type": "int",

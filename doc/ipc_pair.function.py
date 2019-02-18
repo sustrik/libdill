@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "ipc_pair",
-        "section": "IPC protocol",
+        "topic": "IPC protocol",
         "info": "creates a pair of mutually connected IPC sockets",
 
         "result": {

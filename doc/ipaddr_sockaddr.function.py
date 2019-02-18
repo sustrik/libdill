@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "ipaddr_sockaddr",
-        "section": "IP addresses",
+        "topic": "IP addresses",
         "info": "returns sockaddr structure corresponding to the IP address",
         "result": {
             "type": "const struct sockaddr*",

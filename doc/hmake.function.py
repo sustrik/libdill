@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "hmake",
-        "section": "Handles",
+        "topic": "Handles",
         "info": "creates a handle",
         "header": "libdillimpl.h",
         "add_to_synopsis": """

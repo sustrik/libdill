@@ -2,7 +2,7 @@
 fxs.append(
     {
         "name": "chrecv",
-        "section": "Channels",
+        "topic": "Channels",
         "info": "receives a message from a channel",
 
         "result": {

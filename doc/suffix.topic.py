@@ -1,5 +1,5 @@
 suffix_protocol = {
-    "section": "SUFFIX protocol",
+    "topic": "SUFFIX protocol",
     "type": "message",
     "info": """
         SUFFIX is a message-based protocol that delimits messages by specific
