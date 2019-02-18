@@ -18,6 +18,7 @@ fxs.append(
             {
                 "name": "addr",
                 "type": "struct ipaddr*",
+                "dill": True,
                 "info": "Out parameter. IP address of the connecting endpoint. Can be **NULL**.",
             },
         ],

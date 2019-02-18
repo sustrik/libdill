@@ -12,11 +12,13 @@ fxs.append(
             {
                 "name": "addr1",
                 "type": "const struct ipaddr*",
+                "dill": True,
                 "info": "First IP address.",
             },
             {
                 "name": "addr2",
                 "type": "const struct ipaddr*",
+                "dill": True,
                 "info": "Second IP address.",
             },
             {

@@ -17,6 +17,7 @@ fxs.append(
            {
                "name": "addr",
                "type": "struct ipaddr*",
+               "dill": True,
                "info": "Out parameter. IP address of the sender of the packet. " +
                      "Can be **NULL**.",
            },

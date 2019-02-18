@@ -21,6 +21,7 @@ fxs.append(
             {
                 "name": "hvfs",
                 "type": "struct hvfs*",
+                "dill": True,
                 "info": "virtual-function table of operations associated with " +
                       "the handle",
             }

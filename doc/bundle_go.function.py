@@ -39,5 +39,7 @@ fxs.append(
         "errors": ["ECANCELED", "ENOMEM"],
 
         "example": bundle_example,
+
+        "signature": False,
     }
 )

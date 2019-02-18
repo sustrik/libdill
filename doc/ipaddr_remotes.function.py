@@ -13,6 +13,7 @@ fxs.append(
             {
                 "name": "addrs",
                 "type": "struct ipaddr*",
+                "dill": True,
                 "info": "Out parameter. Array of resulting IP addresses.",
             },
             {

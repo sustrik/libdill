@@ -17,6 +17,7 @@ fxs.append(
            {
                "name": "addr",
                "type": "const struct ipaddr*",
+               "dill": True,
                "info": "IP address to send the packet to. If set to **NULL** " +
                      "remote address specified in **udp_open** function will " +
                      "be used.",

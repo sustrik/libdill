@@ -21,7 +21,7 @@ fxs.append(
                "info": "Filename of the file contianing the certificate.",
            },
            {
-               "name": "cert",
+               "name": "pkey",
                "type": "const char*",
                "info": "Filename of the file contianing the private key.",
            },

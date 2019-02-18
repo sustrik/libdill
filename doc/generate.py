@@ -4,16 +4,29 @@ import glob
 import tiles
 from schema import Schema, Optional, Or
 
+# TODO: get rid of this
 def trimrect(s):
     return ""
 
-def signature(fx, prefix=""):
-    args = "void"
+# Use dill_ prefix depending on whether the result goes into docs or code.
+def dillify(t, dill, code):
+    if not dill or not code:
+        return t
+    parts = t.split()
+    if len(parts) and parts[0] == "struct":
+        return "struct dill_" + " ".join(parts[1:])
+    elif len(parts) >= 2 and parts[0] == "const" and parts[1] == "struct":
+        return "const struct dill_" + " ".join(parts[2:])
+    else:
+        return "dill_" + t
+
+def signature(fx, prefix="", code=False):
+    args = "void);"
     if len(fx["args"]) > 0:
-        args = tiles.joinv(fx["args"], "@{type} @{name}@{suffix}", sep=", ", last=");")
+        args = tiles.joinv(fx["args"], "@{dillify(type, dill, code)} @{name}@{suffix}", sep=", ", last=");")
     return tiles.tile(
         """
-        @{prefix} @{fx["result"]["type"] if fx["result"] else "void"} @{fx["name"]}(
+        @{prefix} @{fx["result"]["type"] if fx["result"] else "void"} @{"dill_" if code else ""}@{fx["name"]}(
             @{args}
         """)
 
@@ -56,6 +69,8 @@ schema = Schema([{
         Optional("type", default=""): str,
         # part of the type to go after the name (e.g. "[]")
         Optional("suffix", default=""): str,
+        # set to true for dill-specific types
+        Optional("dill", default=False): bool,
         # description of the argument
         "info": str,
     }],
@@ -113,6 +128,10 @@ schema = Schema([{
     Optional("example", default=None): str,
     # if true, the docs will contain a warning about using this function
     Optional("experimental", default=False): bool,
+    # if true, generates function signature into header file
+    Optional("signature", default=True): bool,
+    # if true, generates boiles plate code for the function
+    Optional("boilerplate", default=True): bool,
 }])
 
 # Check whether the data comply to the schema. Also fills in defaults.
@@ -140,12 +159,14 @@ for fx in fxs:
         fx["args"].append({
             "name": "first",
             "type": "struct iolist*",
+            "dill": True,
             "info": "Pointer to the first item of a linked list of I/O buffers.",
             "suffix": "",
         })
         fx["args"].append({
             "name": "last",
             "type": "struct iolist*",
+            "dill": True,
             "info": "Pointer to the last item of a linked list of I/O buffers.",
             "suffix": "",
         })
@@ -154,6 +175,7 @@ for fx in fxs:
         fx["args"].append({
             "name": "deadline",
             "type": "int64_t",
+            "dill": False,
             "info": "A point in time when the operation should time out, in " +
                     "milliseconds. Use the **now** function to get your current" +
                     " point in time. 0 means immediate timeout, i.e., perform " +
@@ -396,7 +418,8 @@ hdrs = ""
 for topic in topic_order:
     signatures = ""
     for fx in topics[topic]:
-        signatures = tiles.tile("@{signatures}\n\n@{signature(fx, prefix='DILL_EXPORT')}")
+        if fx["header"] == "libdill.h" and fx["signature"]:
+            signatures = tiles.tile("@{signatures}\n\n@{signature(fx, prefix='DILL_EXPORT', code=True)}")
     defines = tiles.joinv(topics[topic], "#define @{name} dill_@{name}")
     signatures = tiles.tile(
         """
@@ -425,6 +448,6 @@ for topic in topic_order:
     hdrs = tiles.tile("@{hdrs}\n\n/* @{topic} */\n\n@{signatures}")
 with open("libdill.tile.h", 'r') as f:
     c = f.read()
-with open("libdill.h", 'w') as f:
+with open("../libdill.h", 'w') as f:
     f.write(tiles.tile(c))
 

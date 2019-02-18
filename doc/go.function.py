@@ -40,5 +40,7 @@ fxs.append(
 
             int h = go(add(1, 2));
         """,
+
+        "signature": False,
     }
 )

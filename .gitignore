@@ -51,3 +51,4 @@ tutorial/protocol/.dirstamp
 tutorial/sockets/.dirstamp
 examples/.dirstamp
 build/
+doc/*.md

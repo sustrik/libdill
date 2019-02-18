@@ -29,6 +29,7 @@ fxs.append(
             {
                 "name": "clauses",
                 "type": "struct chclause*",
+                "dill": True,
                 "info": "Operations to choose from. See below."
             },
             {

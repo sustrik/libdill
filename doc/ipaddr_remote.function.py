@@ -13,6 +13,7 @@ fxs.append(
             {
                 "name": "addr",
                 "type": "struct ipaddr*",
+                "dill": True,
                 "info": "Out parameter, The IP address object.",
             },
             {

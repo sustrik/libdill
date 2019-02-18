@@ -12,6 +12,7 @@ fxs.append(
            {
                "name": "local",
                "type": "struct ipaddr*",
+               "dill": True,
                "info": "IP  address to be used to set source IP address in " +
                      "outgoing packets. Also, the socket will receive " +
                      "packets sent to this address. If port in the address " +
@@ -21,6 +22,7 @@ fxs.append(
            {
                "name": "remote",
                "type": "struct ipaddr*",
+               "dill": True,
                "info": "IP address used as default destination for outbound " +
                      "packets. It is used when destination address in " +
                      "**udp_send** function is set to **NULL**. It is also " +
