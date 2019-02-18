@@ -167,6 +167,47 @@ for fx in fxs:
         fx["errors"].append("ECANCELED")
     # TODO: if(fx.mem && !mem) errs.push("ENOMEM")
 
+# Generate table of contents
+toc = ""
+topic_order = [
+    "Coroutines",
+    "Deadlines",
+    "Channels",
+    "Handles",
+    "File descriptors",
+    "Bytestream sockets",
+    "Message sockets",
+    "IP addresses",
+    "Happy Eyeballs protocol",
+    "HTTP protocol",
+    "IPC protocol",
+    "PREFIX protocol",
+    "SUFFIX protocol",
+    "TCP protocol",
+    "TERM protocol",
+    "TLS protocol",
+    "UDP protocol",
+    "WebSocket protocol"]
+for topic in topics:
+    if topic not in topic_order:
+        raise ValueError("Topic %s missing in the topic order" % topic)
+for topic in topic_order:
+    flist = [f["name"] for f in topics[topic]]
+    flist.sort()
+    items = ""
+    for f in flist:
+        items += tiles.tile("[@{f}(3)](@{f}.html)\n")
+    toc = tiles.tile(
+        """
+        @{toc}
+
+        #### @{topic}
+
+        @{items}
+        """)
+
+print(toc)
+
 # Generate manpages for individual functions.
 for fx in fxs:
 
