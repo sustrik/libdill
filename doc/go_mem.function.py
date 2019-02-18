@@ -15,7 +15,6 @@ fxs.append(
         "args": [
             {
                 "name": "expression",
-                "type": "",
                 "info": "Expression to evaluate as a coroutine.",
             },
             {

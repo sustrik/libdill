@@ -19,7 +19,6 @@ fxs.append(
             },
             {
                 "name": "expression",
-                "type": "",
                 "info": "Expression to evaluate as a coroutine.",
             },
         ],
