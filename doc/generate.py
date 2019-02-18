@@ -111,7 +111,16 @@ fxs = schema.validate(fxs)
 # Collect the topics.
 topics = {}
 for fx in fxs:
-    pass
+    if fx["topic"]:
+        topic = fx["topic"]
+    elif fx["protocol"]:
+        topic = fx["protocol"]["topic"]
+        fx["topic"] = topic
+    else:
+        raise ValueError("Missing topic in %s" % fx["name"])
+    if topic not in topics:
+        topics[topic] = []
+    topics[topic].append(fx)
 
 # Enhance the data.
 for fx in fxs:
@@ -302,9 +311,40 @@ for fx in fxs:
             @{example}
             ```
             """)
-        
 
-    print(page)
+    # put all functions from the same topc into "see also" section
+    sa = [f["name"] for f in topics[fx["topic"]] if f["name"] != fx["name"]]
+    # add special items
+    if fx["has_deadline"]:
+        sa.append("now")
+    if fx["allocates_handle"]:
+        sa.append("hclose")
+    if fx["protocol"] and fx["protocol"]["type"] == "bytestream":
+        sa.append("brecv")
+        sa.append("brecvl")
+        sa.append("bsend")
+        sa.append("bsendl")
+    if fx["protocol"] and fx["protocol"]["type"] == "message":
+        sa.append("mrecv")
+        sa.append("mrecvl")
+        sa.append("msend")
+        sa.append("msendl")
+    # remove duplicates, list in alphabetical order
+    sa = list(set(sa))
+    sa.sort()
+    seealso = ""
+    for f in sa:
+        seealso += tiles.tile("**@{f}**(3) ") 
 
+    page = tiles.tile(
+        """
+        @{page}
 
+        # SEE ALSO
+
+        @{seealso}
+        """)        
+
+    with open(fx["name"] + ".md", 'w') as f:
+        f.write(tiles.tile("@{page}"))
 
