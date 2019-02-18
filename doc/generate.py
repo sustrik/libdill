@@ -206,7 +206,8 @@ for topic in topic_order:
         @{items}
         """)
 
-print(toc)
+with open("toc.md", 'w') as f:
+    f.write(tiles.tile("@{toc}"))
 
 # Generate manpages for individual functions.
 for fx in fxs:
