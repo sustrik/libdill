@@ -16,6 +16,12 @@ fxs.append(
                 "info": "Socket created by **tcp_listen**.",
             },
             {
+                "name": "opts",
+                "type": "const struct tcp_opts*",
+                "dill": True,
+                "info": "Options.",
+            },
+            {
                 "name": "addr",
                 "type": "struct ipaddr*",
                 "dill": True,

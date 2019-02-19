@@ -18,6 +18,18 @@ fxs.append(
                 "suffix": "[2]",
                 "info": "Out parameter. Two handles to the opposite ends of the connection."
             },
+            {
+                "name": "opts1",
+                "type": "const struct ipc_opts*",
+                "dill": True,
+                "info": "Options for the first socket."
+            },
+            {
+                "name": "opts2",
+                "type": "const struct ipc_opts*",
+                "dill": True,
+                "info": "Options for the second socket."
+            },
         ],
 
         "prologue": """

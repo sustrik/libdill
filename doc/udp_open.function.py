@@ -21,7 +21,7 @@ fxs.append(
            },
            {
                "name": "remote",
-               "type": "struct ipaddr*",
+               "type": "const struct ipaddr*",
                "dill": True,
                "info": "IP address used as default destination for outbound " +
                      "packets. It is used when destination address in " +
@@ -31,6 +31,12 @@ fxs.append(
                      "Furthermore, if remote address is set, all the " +
                      "packets arriving from different addresses will be " +
                      "silently dropped.",
+           },
+           {
+               "name": "opts",
+               "type": "const struct udp_opts*",
+               "dill": True,
+               "info": "Options.",
            },
         ],
         "protocol": udp_protocol,

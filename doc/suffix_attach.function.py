@@ -25,6 +25,12 @@ fxs.append(
                "type": "size_t",
                "info": "The size of the delimiter, in bytes.",
            },
+           {
+               "name": "opts",
+               "type": "const struct suffix_opts*",
+               "dill": True,
+               "info": "Options.",
+           },
         ],
         "protocol": suffix_protocol,
         "prologue": """

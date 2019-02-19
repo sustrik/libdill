@@ -16,11 +16,6 @@ fxs.append(
                      "bytestream protocol.",
            },
            {
-               "name": "flags",
-               "type": "int",
-               "info": "Flags. See above.",
-           },
-           {
                "name": "resource",
                "type": "const char*",
                "info": "HTTP resource to use.",
@@ -29,6 +24,12 @@ fxs.append(
                "name": "host",
                "type": "const char*",
                "info": "Virtual HTTP host to use.",
+           },
+           {
+               "name": "opts",
+               "type": "const struct ws_opts*",
+               "dill": True,
+               "info": "Options.",
            },
         ],
         "protocol": ws_protocol,

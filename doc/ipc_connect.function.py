@@ -15,6 +15,12 @@ fxs.append(
                 "type": "const char*",
                 "info": "Filename to connect to.",
             },
+            {
+                "name": "opts",
+                "type": "const struct ipc_opts*",
+                "dill": True,
+                "info": "Options.",
+            },
         ],
 
         "has_deadline": True,

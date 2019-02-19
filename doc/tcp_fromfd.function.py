@@ -15,6 +15,12 @@ fxs.append(
                 "type": "int",
                 "info": "File descriptor of a connected TCP socket to wrap.",
             },
+            {
+                "name": "opts",
+                "type": "const struct tcp_opts*",
+                "dill": True,
+                "info": "Options.",
+            },
         ],
 
         "protocol": tcp_protocol,

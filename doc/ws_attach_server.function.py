@@ -16,10 +16,12 @@ fxs.append(
                      "bytestream protocol.",
            },
            {
-               "name": "flags",
-               "type": "int",
-               "info": "Flags. See above.",
+               "name": "opts",
+               "type": "const struct ws_opts*",
+               "dill": True,
+               "info": "Options.",
            },
+
            {
                "name": "resource",
                "type": "char*",

@@ -15,6 +15,12 @@ fxs.append(
                "info": "Handle of the underlying socket. It must be a " +
                      "bytestream protocol.",
            },
+           {
+               "name": "opts",
+               "type": "const struct tls_opts*",
+               "dill": True,
+               "info": "Options.",
+           },
         ],
         "protocol": tls_protocol,
         "prologue": """

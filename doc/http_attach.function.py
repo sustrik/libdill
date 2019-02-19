@@ -15,6 +15,12 @@ fxs.append(
                "info": "Handle of the underlying socket. It must be a " +
                      "bytestream protocol.",
            },
+           {
+               "name": "opts",
+               "type": "const struct http_opts*",
+               "dill": True,
+               "info": "Options.",
+           },
         ],
         "protocol": http_protocol,
         "prologue": """

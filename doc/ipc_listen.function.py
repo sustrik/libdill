@@ -16,10 +16,12 @@ fxs.append(
                 "info": "The filename to listen on.",
             },
             {
-                "name": "backlog",
-                "type": "int",
-                "info": "Maximum number of connections that can be kept open without accepting them.",
+                "name": "opts",
+                "type": "const struct ipc_opts*",
+                "dill": True,
+                "info": "Options.",
             },
+
         ],
 
         "protocol": ipc_protocol,

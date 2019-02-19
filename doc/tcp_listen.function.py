@@ -12,14 +12,15 @@ fxs.append(
         "args": [
             {
                 "name": "addr",
-                "type": "const struct ipaddr*",
+                "type": "struct ipaddr*",
                 "dill": True,
                 "info": "IP address to listen on.",
             },
             {
-                "name": "backlog",
-                "type": "int",
-                "info": "Maximum number of connections that can be kept open without accepting them.",
+                "name": "opts",
+                "type": "const struct tcp_opts*",
+                "dill": True,
+                "info": "Options.",
             },
         ],
 

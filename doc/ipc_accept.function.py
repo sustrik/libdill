@@ -15,6 +15,12 @@ fxs.append(
                 "type": "int",
                 "info": "Socket created by **ipc_listen**.",
             },
+            {
+                "name": "opts",
+                "type": "const struct ipc_opts*",
+                "dill": True,
+                "info": "Options.",
+            },
         ],
 
         "has_deadline": True,

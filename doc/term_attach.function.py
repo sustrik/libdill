@@ -25,6 +25,13 @@ fxs.append(
                "type": "size_t",
                "info": "Size of the terminal message, in bytes.",
            },
+           {
+               "name": "opts",
+               "type": "const struct term_opts*",
+               "dill": True,
+               "info": "Options.",
+           },
+
         ],
         "protocol": term_protocol,
         "prologue": """
@@ -35,7 +42,6 @@ fxs.append(
             The socket can be cleanly shut down using **term_detach** function.
         """,
         "has_handle_argument": True,
-        "has_deadline": True,
         "allocates_handle": True,
 
         "mem": "term_storage",

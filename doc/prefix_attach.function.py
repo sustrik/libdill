@@ -16,18 +16,15 @@ fxs.append(
                      "bytestream protocol.",
            },
            {
-               "name": "hdrlen",
+               "name": "prefixlen",
                "type": "size_t",
                "info": "Size of the length field, in bytes."
            },
            {
-               "name": "flags",
-               "type": "int",
-               "info": "If set to **PREFIX_BIG_ENDIAN** (also known as network " +
-                     "byte order, the default option) the most significant " +
-                     "byte of the size will be sent first on the wire. If " +
-                     "set to **PREFIX_LITTLE_ENDIAN** the least signiticant " +
-                     "byte will come first.",
+               "name": "opts",
+               "type": "const struct prefix_opts*",
+               "dill": True,
+               "info": "Options.",
            },
         ],
         "protocol": prefix_protocol,

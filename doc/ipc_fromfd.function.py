@@ -15,6 +15,12 @@ fxs.append(
                 "type": "int",
                 "info": "File descriptor of a connected UNIX doemain socket to wrap.",
             },
+            {
+                "name": "opts",
+                "type": "const struct ipc_opts*",
+                "dill": True,
+                "info": "Options.",
+            },
         ],
 
         "protocol": ipc_protocol,

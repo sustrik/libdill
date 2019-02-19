@@ -16,6 +16,12 @@ fxs.append(
                 "dill": True,
                 "info": "IP address to connect to.",
             },
+            {
+                "name": "opts",
+                "type": "const struct tcp_opts*",
+                "dill": True,
+                "info": "Options.",
+            },
         ],
 
         "has_deadline": True,

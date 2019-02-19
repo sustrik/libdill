@@ -25,6 +25,12 @@ fxs.append(
                "type": "const char*",
                "info": "Filename of the file contianing the private key.",
            },
+           {
+               "name": "opts",
+               "type": "const struct tls_opts*",
+               "dill": True,
+               "info": "Options.",
+           },
         ],
         "protocol": tls_protocol,
         "prologue": """
