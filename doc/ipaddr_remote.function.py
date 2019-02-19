@@ -27,9 +27,10 @@ fxs.append(
                 "info": "Port number. Valid values are 1-65535.",
             },
             {
-                "name": "mode",
-                "type": "int",
-                "info": "What kind of address to return. See above.",
+                "name": "opts",
+                "type": "const struct ipaddr_opts*",
+                "dill": True,
+                "info": "Options.",
             },
         ],
 

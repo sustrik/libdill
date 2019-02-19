@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import glob
-import tiles
+from tiles import t
 from schema import Schema, Optional, Or
 
 # TODO: get rid of this
@@ -23,12 +23,12 @@ def dillify(t, dill, code):
 def signature(fx, prefix="", code=False):
     args = "void);"
     if len(fx["args"]) > 0:
-        args = tiles.joinv(fx["args"], "@{dillify(type, dill, code)} @{name}@{suffix}", sep=", ", last=");")
-    return tiles.tile(
-        """
-        @{prefix} @{fx["result"]["type"] if fx["result"] else "void"} @{"dill_" if code else ""}@{fx["name"]}(
-            @{args}
-        """)
+        fmt = '@{dillify(arg["type"], arg["dill"], ' + str(code) + ')} @{arg["name"]}@{arg["suffix"]}'
+        args = (t/",").join([t/fmt for arg in fx["args"]], last=t/");")
+    return t/"""
+             @{prefix} @{fx["result"]["type"] if fx["result"] else "void"} @{"dill_" if code else ""}@{fx["name"]}(
+                 @{args}
+             """
 
 # Read all topic files.
 files = glob.glob("*.topic.py")
@@ -228,38 +228,36 @@ for topic in topics:
 for topic in topic_order:
     flist = [f["name"] for f in topics[topic]]
     flist.sort()
-    items = ""
+    items = t/""
     for f in flist:
-        items += tiles.tile("[@{f}(3)](@{f}.html)\n")
-    toc = tiles.tile(
-        """
-        @{toc}
+        items |= t/"[@{f}(3)](@{f}.html)"
+    toc = t/"""
+            @{toc}
 
-        #### @{topic}
+            #### @{topic}
 
-        @{items}
-        """)
+            @{items}
+            """
 
 with open("toc.md", 'w') as f:
-    f.write(tiles.tile("@{toc}"))
+    f.write(str(toc))
 
 # Generate manpages for individual functions.
 for fx in fxs:
-    synopsis = tiles.tile("#include<@{fx['header']}>")
+    synopsis = t/"#include<@{fx['header']}>"
     if fx["add_to_synopsis"]:
-        synopsis = tiles.tile('@{synopsis}\n\n@{fx["add_to_synopsis"]}');
-    synopsis = tiles.tile('@{synopsis}\n\n@{signature(fx)}')
+        synopsis = t/'@{synopsis}\n\n@{fx["add_to_synopsis"]}'
+    synopsis = t/'@{synopsis}\n\n@{signature(fx)}'
 
     description = ""
     if fx["experimental"] or (fx["protocol"] and fx["protocol"]["experimental"]):
         description = "**WARNING: This is experimental functionality and the API may change in the future.**"
     if fx["protocol"]:
-        description = tiles.tile('@{description}\n\n@{fx["protocol"]["info"]}')
+        description = t/'@{description}\n\n@{fx["protocol"]["info"]}'
     if fx["prologue"]:
-        description = tiles.tile('@{description}\n\n@{fx["prologue"]}')
+        description = t/'@{description}\n\n@{fx["prologue"]}'
     if fx["has_iol"]:
-        description = tiles.tile(
-            """
+        description = t/"""
             @{description}
 
             This function accepts a linked list of I/O buffers instead of a
@@ -290,23 +288,23 @@ for fx in fxs:
             modified while the function is in progress. However, once the
             function returns the list is guaranteed to be the same as before
             the call.
-            """)
-    arginfo = tiles.joinv(fx["args"], "**@{name}**: @{info}", sep="\n")
-    description = tiles.tile('@{description}\n\n@{arginfo}')
+            """
+    for arg in fx["args"]:
+        description |= t/'**@{arg["name"]}**: @{arg["info"]}'
     if fx["epilogue"]:
-        description = tiles.tile('@{description}\n\n@{fx["epilogue"]}')
+        description = t/'@{description}\n\n@{fx["epilogue"]}'
     if fx["protocol"] or fx["topic"] == "IP addresses":
-        description = tiles.tile('@{description}\n\nThis function is not available if libdill is compiled with **--disable-sockets** option.')
+        description = t/'@{description}\n\nThis function is not available if libdill is compiled with **--disable-sockets** option.'
     if fx["protocol"] and fx["protocol"]["topic"] == "TLS protocol":
-        description = tiles.tile('@{description}\n\nThis function is not available if libdill is compiled without **--enable-tls** option.')
+        description = t/'@{description}\n\nThis function is not available if libdill is compiled without **--enable-tls** option.'
 
     if fx["result"]:
         retval = ""
         if fx["result"]["success"] and fx["result"]["error"]:
-            retval = tiles.tile('@{retval}\n\nIn case of success the function returns @{fx["result"]["success"]}. ' +
-                'In case of error it returns @{fx["result"]["error"]} and sets **errno** to one of the values below.}')
+            retval = (t/'@{retval}\n\nIn case of success the function returns @{fx["result"]["success"]}. ' +
+                t/'In case of error it returns @{fx["result"]["error"]} and sets **errno** to one of the values below.}')
         if fx["result"]["info"]:
-            retval = tiles.tile('@{retval}\n\n@{fx["result"]["info"]}')
+            retval = t/'@{retval}\n\n@{fx["result"]["info"]}'
     else:
         retval = "None."
 
@@ -329,36 +327,35 @@ for fx in fxs:
     errs.update(fx["custom_errors"])
     errors = "None."
     if len(errs) > 0:
-        errors = ""
+        errors = t/""
         for e, desc in sorted(errs.items()):
-            errors += tiles.tile("* **@{e}**: @{desc}\n")
+            errors += t/"* **@{e}**: @{desc}\n"
     if fx["add_to_errors"]:
-        errors = tiles.tile('@{errors}\n\n@{fx["add_to_errors"]}')
+        errors = t/'@{errors}\n\n@{fx["add_to_errors"]}'
 
-    page = tiles.tile(
-        """
-        # NAME
+    page = t/"""
+             # NAME
 
-        @{fx["name"]} - @{fx["info"]}
+             @{fx["name"]} - @{fx["info"]}
 
-        # SYNOPSIS
+             # SYNOPSIS
 
-        ```c
-        @{synopsis}
-        ```
+             ```c
+             @{synopsis}
+             ```
 
-        # DESCRIPTION
+             # DESCRIPTION
 
-        @{description}
+             @{description}
 
-        # RETURN VALUE
+             # RETURN VALUE
 
-        @{retval}
+             @{retval}
 
-        # ERRORS
+             # ERRORS
 
-        @{errors}
-        """);
+             @{errors}
+             """
 
     example = ""
     if fx["protocol"] and fx["protocol"]["example"]:
@@ -366,16 +363,15 @@ for fx in fxs:
     if fx["example"]:
         example = fx["example"]
     if example:
-        page = tiles.tile(
-            """
-            @{page}
+        page = t/"""
+                 @{page}
 
-            # EXAMPLE
+                 # EXAMPLE
 
-            ```c
-            @{example}
-            ```
-            """)
+                 ```c
+                 @{t/example}
+                 ```
+                 """
 
     # put all functions from the same topc into "see also" section
     sa = [f["name"] for f in topics[fx["topic"]] if f["name"] != fx["name"]]
@@ -397,21 +393,20 @@ for fx in fxs:
     # remove duplicates, list in alphabetical order
     sa = list(set(sa))
     sa.sort()
-    seealso = ""
+    seealso = t/""
     for f in sa:
-        seealso += tiles.tile("**@{f}**(3) ") 
+        seealso += t/"**@{f}**(3) "
 
-    page = tiles.tile(
-        """
-        @{page}
+    page = t/"""
+             @{page}
 
-        # SEE ALSO
+             # SEE ALSO
 
-        @{seealso}
-        """)        
+             @{seealso}
+             """
 
     with open(fx["name"] + ".md", 'w') as f:
-        f.write(tiles.tile("@{page}"))
+        f.write(str(page))
 
 # Generate header files.
 hdrs = ""
@@ -419,35 +414,34 @@ for topic in topic_order:
     signatures = ""
     for fx in topics[topic]:
         if fx["header"] == "libdill.h" and fx["signature"]:
-            signatures = tiles.tile("@{signatures}\n\n@{signature(fx, prefix='DILL_EXPORT', code=True)}")
-    defines = tiles.joinv(topics[topic], "#define @{name} dill_@{name}")
-    signatures = tiles.tile(
-        """
-        @{signatures}
+            signatures = t/"@{signatures}\n\n@{signature(fx, prefix='DILL_EXPORT', code=True)}"
+    defines = t/""
+    for tp in topics[topic]:
+        defines |= t/'#define @{tp["name"]} dill_@{tp["name"]}'
+    signatures = t/"""
+                   @{signatures}
 
-        #if !defined DILL_DISABLE_RAW_NAMES
-        @{defines}
-        #endif
-        """)
+                   #if !defined DILL_DISABLE_RAW_NAMES
+                   @{defines}
+                   #endif
+                   """
     if fx["protocol"]:
-        signatures = tiles.tile(
-            """
-            #if !defined DILL_DISABLE_SOCKETS
+        signatures = t/"""
+                       #if !defined DILL_DISABLE_SOCKETS
 
-            @{signatures}
+                       @{signatures}
 
-            #endif
-            """)
+                       #endif
+                       """
     if topic == "TLS protocol":
-        signatures = tiles.tile(
-            """
-            #if !defined DILL_DISABLE_TLS
-            @{signatures}
-            #endif
-            """)
-    hdrs = tiles.tile("@{hdrs}\n\n/* @{topic} */\n\n@{signatures}")
+        signatures = t/"""
+                       #if !defined DILL_DISABLE_TLS
+                       @{signatures}
+                       #endif
+                       """
+    hdrs = t/"@{hdrs}\n\n/* @{topic} */\n\n@{signatures}"
 with open("libdill.tile.h", 'r') as f:
     c = f.read()
 with open("../libdill.h", 'w') as f:
-    f.write(tiles.tile(c))
+    f.write(str(t/c))
 

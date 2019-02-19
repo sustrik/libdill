@@ -5,6 +5,12 @@ fxs.append(
         "topic": "File descriptors",
         "info": "erases cached info about a file descriptor",
       
+        "result": {
+            "type": "int",
+            "success": "0",
+            "error": "-1",
+        },
+
         "args": [
             {
                 "name": "fd",
@@ -12,6 +18,7 @@ fxs.append(
                 "info": "file descriptor (OS-level one, not a libdill handle)"
             },
         ],
+
 
         "prologue": """
             This function drops any state that libdill associates with a file

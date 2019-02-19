@@ -21,8 +21,8 @@
 from inspect import currentframe
 from itertools import dropwhile
 
-def __trim(t):
-    lns = [ln.rstrip() for ln in t.split("\n")]
+def _trim(t1):
+    lns = [ln.rstrip() for ln in t1]
     lns = [ln for ln in dropwhile(lambda ln: len(ln) == 0, lns)]
     lns = [ln for ln in dropwhile(lambda ln: len(ln) == 0, reversed(lns))]
     lf  = filter(bool, lns)
@@ -30,56 +30,67 @@ def __trim(t):
            min([len(ln) - len(ln.lstrip()) for ln in lf], default=0)
     return [ln[left:] for ln in reversed(lns)]
 
-def __append(t1, t2):
+def _append(t1, t2):
     t1 += [""] * (len(t2) - len(t1))
     w = max([len(s) for s in t1 or [""]])
     for i in range(len(t2)):
         t1[i] = t1[i].ljust(w) + t2[i]
 
-def __merge(x, y):
-    z = x.copy()
-    z.update(y)
-    return z
-
-def tile(s, globals=None, locals=None):
+def _format(s, g, l):
     lns = s.split("\n")
     res = []
     for ln in lns:
         curr = []; end = 0
         while True:
             start = ln.find("@{", end)
-            __append(curr, [ln[end : (len(ln) if start == -1 else start)]])
+            _append(curr, [ln[end : (len(ln) if start == -1 else start)]])
             if start == -1:
                 break
             end = ln.find("}", start) + 1
             if end == 0:
                 raise Exception("unifinished @{} expression")
-            __append(curr, __trim(str(eval(ln[start + 2 : end - 1],
-                globals if globals else currentframe().f_back.f_globals,
-                locals if locals else currentframe().f_back.f_locals))))
+            _append(curr,
+                str(eval(ln[start + 2 : end - 1], g, l)).split("\n"))
         res += curr
-    return "\n".join(res)
-
-def join(lst, s, sep="", last="", globals=None, locals=None):
-    g = globals if globals else currentframe().f_back.f_globals
-    l = locals if locals else currentframe().f_back.f_locals
-    sep = sep.split("\n")
-    last = last.split("\n")
-    res = []
-    for idx, item in enumerate(lst):
-        __append(res, __trim(tile(s, globals=g, locals=__merge(l, item))))
-        __append(res, sep if idx < len(lst) - 1 else last)
-    return "\n".join(res)
-
-def joinv(lst, s, sep="", last="", globals=None, locals=None):
-    g = globals if globals else currentframe().f_back.f_globals
-    l = locals if locals else currentframe().f_back.f_locals
-    sep = sep.split("\n")
-    last = last.split("\n")
-    res = ""
-    for idx, item in enumerate(lst):
-        t = __trim(tile(s, globals=g, locals=__merge(l, item)))
-        __append(t, sep if idx < len(lst) - 1 else last)
-        res += "\n".join(t) + "\n"
     return res
+
+class _tile:
+   def __init__(self, lns):
+       self.lns = lns
+   def __truediv__(self, x):
+       return _tile(_trim(_format(x,
+           currentframe().f_back.f_globals, currentframe().f_back.f_locals)))
+   def __mod__(self, x):
+       return _tile(_format(x,
+           currentframe().f_back.f_globals, currentframe().f_back.f_locals))
+   def __or__(self, x):
+       if not isinstance(x, _tile):
+           raise Exception("argument is not a tile")
+       return _tile(self.lns + x.lns)
+   def __add__(self, x):
+       if not isinstance(x, _tile):
+           raise Exception("argument is not a tile")
+       lns = self.lns.copy()
+       _append(lns, x.lns)
+       return _tile(lns)
+   def join(self, x, last=None):
+       res = t/""
+       for idx, item in enumerate(x):
+           res += item
+           if idx < len(x) - 1:
+               res += self
+       return res + (t/"" if not last else last)
+   def vjoin(self, x, inline=True, last=None):
+       if last == None:
+           last = t/""
+       res = t/""
+       for idx, item in enumerate(x):
+           res |= item + ((self if idx < len(x) - 1 else last) if inline else t/"") 
+           if not inline:
+               res |= (self if idx < len(x) - 1 else last) 
+       return res
+   def __str__(self):
+       return "\n".join(self.lns)
+
+t = _tile([])
 

@@ -4,7 +4,12 @@ fxs.append(
         "name": "bundle",
         "topic": "Coroutines",
         "info": "create an empty coroutine bundle",
-        "args": [],
+        "args": [{
+            "name": "opts",
+            "type": "const struct bundle_opts*",
+            "dill": True,
+            "info": "Options."
+        }],
         "result": {
             "type": "int",
             "success": "handle of the newly create coroutine bundle",

@@ -7,9 +7,14 @@ fxs.append(
         "args": [
             {
                 "name": "addr",
-                "type": "const struct ipaddr*",
+                "type": "struct ipaddr*",
                 "dill": True,
                 "info": "IP address object.",
+            },
+            {
+                "name": "port",
+                "type": "int",
+                "info": "New port number.",
             },
         ],
 

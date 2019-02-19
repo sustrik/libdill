@@ -18,6 +18,12 @@ fxs.append(
                 "suffix": "[2]",
                 "info": "Out parameter. Two handles to the opposite ends of the channel."
             },
+            {
+                "name": "opts",
+                "type": "const struct chopts*",
+                "dill": True,
+                "info": "Options."
+            },
         ],
 
         "prologue": """
