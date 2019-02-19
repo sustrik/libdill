@@ -9,8 +9,8 @@ def trimrect(s):
     return ""
 
 # Use dill_ prefix depending on whether the result goes into docs or code.
-def dillify(t, dill, code):
-    if not dill or not code:
+def dillify(t, dill):
+    if not dill:
         return t
     parts = t.split()
     if len(parts) and parts[0] == "struct":
@@ -23,8 +23,11 @@ def dillify(t, dill, code):
 def signature(fx, prefix="", code=False):
     args = "void);"
     if len(fx["args"]) > 0:
-        fmt = '@{dillify(arg["type"], arg["dill"], ' + str(code) + ')} @{arg["name"]}@{arg["suffix"]}'
-        args = (t/",").join([t/fmt for arg in fx["args"]], last=t/");")
+        if code:
+            fmt = '@{dillify(arg["type"], arg["dill"])} @{arg["name"]}@{arg["suffix"]}'
+        else:
+            fmt = '@{arg["type"]} @{arg["name"]}@{arg["suffix"]}'
+        args = (t/",").vjoin([t/fmt for arg in fx["args"]], last=t/");")
     return t/"""
              @{prefix} @{fx["result"]["type"] if fx["result"] else "void"} @{"dill_" if code else ""}@{fx["name"]}(
                  @{args}
@@ -225,41 +228,33 @@ topic_order = [
 for topic in topics:
     if topic not in topic_order:
         raise ValueError("Topic %s missing in the topic order" % topic)
+toc = t/""
 for topic in topic_order:
     flist = [f["name"] for f in topics[topic]]
     flist.sort()
-    items = t/""
-    for f in flist:
-        items |= t/"[@{f}(3)](@{f}.html)"
-    toc = t/"""
-            @{toc}
-
-            #### @{topic}
-
-            @{items}
-            """
+    items = (t/"").vjoin([t/"[@{f}(3)](@{f}.html)" for f in flist])
+    toc |= t%'#### @{topic}\n' | items | t%''
 
 with open("toc.md", 'w') as f:
     f.write(str(toc))
 
 # Generate manpages for individual functions.
 for fx in fxs:
-    synopsis = t/"#include<@{fx['header']}>"
+
+    # SYNOPSIS section
+    synopsis = t/'#include<@{fx["header"]}>'
     if fx["add_to_synopsis"]:
-        synopsis = t/'@{synopsis}\n\n@{fx["add_to_synopsis"]}'
-    synopsis = t/'@{synopsis}\n\n@{signature(fx)}'
+        synopsis |= t%'' | t/'@{fx["add_to_synopsis"]}'
+    synopsis |= t%'' | t/'@{signature(fx)}'
 
-    description = ""
-    if fx["experimental"] or (fx["protocol"] and fx["protocol"]["experimental"]):
-        description = "**WARNING: This is experimental functionality and the API may change in the future.**"
+    # DESCRIPTION section
+    description = t/'@{fx["prologue"]}'
     if fx["protocol"]:
-        description = t/'@{description}\n\n@{fx["protocol"]["info"]}'
-    if fx["prologue"]:
-        description = t/'@{description}\n\n@{fx["prologue"]}'
+        description = t/'@{fx["protocol"]["info"]}' | t%'' | description
+    if fx["experimental"] or (fx["protocol"] and fx["protocol"]["experimental"]):
+        description = t/'**WARNING: This is experimental functionality and the API may change in the future.**' | t%'' | description
     if fx["has_iol"]:
-        description = t/"""
-            @{description}
-
+        description |= t%'' | t/"""
             This function accepts a linked list of I/O buffers instead of a
             single buffer. Argument **first** points to the first item in the
             list, **last** points to the last buffer in the list. The list
@@ -289,25 +284,28 @@ for fx in fxs:
             function returns the list is guaranteed to be the same as before
             the call.
             """
-    for arg in fx["args"]:
-        description |= t/'**@{arg["name"]}**: @{arg["info"]}'
+    if fx["args"]:
+        description |= t%'' | (t/'').vjoin([t/'**@{arg["name"]}**: @{arg["info"]}' for arg in fx["args"]])
     if fx["epilogue"]:
-        description = t/'@{description}\n\n@{fx["epilogue"]}'
+        description |= t%'' | t/'@{fx["epilogue"]}'
     if fx["protocol"] or fx["topic"] == "IP addresses":
-        description = t/'@{description}\n\nThis function is not available if libdill is compiled with **--disable-sockets** option.'
+        description |= t%'' | t/'This function is not available if libdill is compiled with **--disable-sockets** option.'
     if fx["protocol"] and fx["protocol"]["topic"] == "TLS protocol":
-        description = t/'@{description}\n\nThis function is not available if libdill is compiled without **--enable-tls** option.'
+        description |= t%'' | t/'This function is not available if libdill is compiled without **--enable-tls** option.'
 
+    # RETURN VALUE section
     if fx["result"]:
-        retval = ""
         if fx["result"]["success"] and fx["result"]["error"]:
-            retval = (t/'@{retval}\n\nIn case of success the function returns @{fx["result"]["success"]}. ' +
-                t/'In case of error it returns @{fx["result"]["error"]} and sets **errno** to one of the values below.}')
+            retval = t/"""
+                In case of success the function returns @{fx["result"]["success"]}.
+                'In case of error it returns @{fx["result"]["error"]} and sets **errno** to one of the values below.
+                """
         if fx["result"]["info"]:
-            retval = t/'@{retval}\n\n@{fx["result"]["info"]}'
+            retval = t/'@{fx["result"]["info"]}'
     else:
-        retval = "None."
+        retval = t/"None."
 
+    # ERRORS section
     standard_errors = {
         "EBADF": "Invalid handle.",
         "EBUSY": "The handle is currently being used by a different coroutine.",
@@ -325,14 +323,13 @@ for fx in fxs:
     for e in fx["errors"]:
         errs[e] = standard_errors[e]
     errs.update(fx["custom_errors"])
-    errors = "None."
+    errors = t/"None."
     if len(errs) > 0:
-        errors = t/""
-        for e, desc in sorted(errs.items()):
-            errors += t/"* **@{e}**: @{desc}\n"
+        errors = (t/'').vjoin([t/'* **@{e}**: @{desc}' for e, desc in sorted(errs.items())])
     if fx["add_to_errors"]:
-        errors = t/'@{errors}\n\n@{fx["add_to_errors"]}'
+        errors |= t%'' | t/'@{fx["add_to_errors"]}'
 
+    # Generate the manpage.
     page = t/"""
              # NAME
 
@@ -357,25 +354,25 @@ for fx in fxs:
              @{errors}
              """
 
+    # Add EXAMPLE section, if available.
     example = ""
     if fx["protocol"] and fx["protocol"]["example"]:
-        example = fx["protocol"]["example"]
+        example = t/'@{fx["protocol"]["example"]}'
     if fx["example"]:
-        example = fx["example"]
+        example = t/'@{fx["example"]}'
     if example:
-        page = t/"""
-                 @{page}
+        page |= t%'' | t/"""
+            # EXAMPLE
 
-                 # EXAMPLE
+            ```c
+            @{example}
+            ```
+            """
 
-                 ```c
-                 @{t/example}
-                 ```
-                 """
-
-    # put all functions from the same topc into "see also" section
+    # SEE ALSO section.
+    # It'll contain all funrction from the same topic plus the functions
+    # added manually.
     sa = [f["name"] for f in topics[fx["topic"]] if f["name"] != fx["name"]]
-    # add special items
     if fx["has_deadline"]:
         sa.append("now")
     if fx["allocates_handle"]:
@@ -390,56 +387,52 @@ for fx in fxs:
         sa.append("mrecvl")
         sa.append("msend")
         sa.append("msendl")
-    # remove duplicates, list in alphabetical order
+    # Remove duplicates and list them in alphabetical order.
     sa = list(set(sa))
     sa.sort()
-    seealso = t/""
-    for f in sa:
-        seealso += t/"**@{f}**(3) "
+    #seealso = t/""
+    #for f in sa:
+    #    seealso += t/"**@{f}**(3) "
+    seealso = (t%' ').join([t/'**@{f}**(3)' for f in sa])
+    page |= t%'' | t/"""
+        # SEE ALSO
 
-    page = t/"""
-             @{page}
-
-             # SEE ALSO
-
-             @{seealso}
-             """
+        @{seealso}
+        """
 
     with open(fx["name"] + ".md", 'w') as f:
         f.write(str(page))
 
 # Generate header files.
-hdrs = ""
+hdrs = t/''
 for topic in topic_order:
-    signatures = ""
+    signatures = t/""
     for fx in topics[topic]:
         if fx["header"] == "libdill.h" and fx["signature"]:
-            signatures = t/"@{signatures}\n\n@{signature(fx, prefix='DILL_EXPORT', code=True)}"
-    defines = t/""
-    for tp in topics[topic]:
-        defines |= t/'#define @{tp["name"]} dill_@{tp["name"]}'
+            signatures |= t%'' | t/'@{signature(fx, prefix="DILL_EXPORT", code=True)}'
+    defines = (t/"").vjoin([t/'#define @{tp["name"]} dill_@{tp["name"]}' for tp in topics[topic]])
     signatures = t/"""
-                   @{signatures}
+        @{signatures}
 
-                   #if !defined DILL_DISABLE_RAW_NAMES
-                   @{defines}
-                   #endif
-                   """
+        #if !defined DILL_DISABLE_RAW_NAMES
+        @{defines}
+        #endif
+        """
     if fx["protocol"]:
         signatures = t/"""
-                       #if !defined DILL_DISABLE_SOCKETS
+            #if !defined DILL_DISABLE_SOCKETS
 
-                       @{signatures}
+            @{signatures}
 
-                       #endif
-                       """
+            #endif
+            """
     if topic == "TLS protocol":
         signatures = t/"""
-                       #if !defined DILL_DISABLE_TLS
-                       @{signatures}
-                       #endif
-                       """
-    hdrs = t/"@{hdrs}\n\n/* @{topic} */\n\n@{signatures}"
+            #if !defined DILL_DISABLE_TLS
+            @{signatures}
+            #endif
+            """
+    hdrs |= t%'' | t/'/* @{topic} */' | t%'' | t/'@{signatures}'
 with open("libdill.tile.h", 'r') as f:
     c = f.read()
 with open("../libdill.h", 'w') as f:
