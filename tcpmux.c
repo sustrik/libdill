@@ -333,7 +333,7 @@ error1:
     dill_assert(rc == 0);
 }
 
-int tcpmux_daemon(const struct dill_tcpmux_opts *opts) {
+int dill_tcpmux_daemon(const struct dill_tcpmux_opts *opts) {
     int err;
     if(!opts) opts = &dill_tcpmux_defaults;
     /* Get rid of the file from failed previous run. This is a known POSIX

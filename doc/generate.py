@@ -221,6 +221,7 @@ topic_order = [
     "PREFIX protocol",
     "SUFFIX protocol",
     "TCP protocol",
+    "TCPMUX protocol",
     "TERM protocol",
     "TLS protocol",
     "UDP protocol",

@@ -602,30 +602,10 @@ struct dill_tcpmux_opts {
 
 DILL_EXPORT extern const struct dill_tcpmux_opts dill_tcpmux_defaults;
 
-DILL_EXPORT int dill_tcpmux_listen(
-    const char *service,
-    const struct dill_tcpmux_opts *opts,
-    int64_t deadline);
-DILL_EXPORT int dill_tcpmux_accept(
-    int s,
-    const struct dill_tcp_opts *opts,
-    struct dill_ipaddr *addr,
-    int64_t deadline);
-DILL_EXPORT int dill_tcpmux_switch(
-    int s,
-    const char *service,
-    int64_t deadline);
-DILL_EXPORT int tcpmux_daemon(
-    const struct dill_tcpmux_opts *opts);
-
 #if !defined DILL_DISABLE_RAW_NAMES
 #define tcpmux_storage dill_tcpmux_storage
 #define tcpmux_opts dill_tcpmux_opts
 #define tcpmux_defaults dill_tcpmux_defaults
-#define tcpmux_listen dill_tcpmux_listen
-#define tcpmux_accept dill_tcpmux_accept
-#define tcpmux_switch dill_tcpmux_switch
-#define tpcmux_daemon dill_tcpmux_daemon
 #endif
 
 #endif
@@ -1096,6 +1076,38 @@ DILL_EXPORT int dill_tcp_tofd(
 #define tcp_listen dill_tcp_listen
 #define tcp_listener_fromfd dill_tcp_listener_fromfd
 #define tcp_tofd dill_tcp_tofd
+#endif
+
+#endif
+
+/* TCPMUX protocol */
+
+#if !defined DILL_DISABLE_SOCKETS
+
+DILL_EXPORT int dill_tcpmux_accept(
+    int s,
+    const struct dill_tcp_opts* opts,
+    struct dill_ipaddr* addr,
+    int64_t deadline);
+
+DILL_EXPORT int dill_tcpmux_daemon(
+    const struct dill_tcpmux_opts* opts);
+
+DILL_EXPORT int dill_tcpmux_listen(
+    const char* service,
+    const struct dill_tcpmux_opts* opts,
+    int64_t deadline);
+
+DILL_EXPORT int dill_tcpmux_switch(
+    int s,
+    const char* service,
+    int64_t deadline);
+
+#if !defined DILL_DISABLE_RAW_NAMES
+#define tcpmux_accept dill_tcpmux_accept
+#define tcpmux_daemon dill_tcpmux_daemon
+#define tcpmux_listen dill_tcpmux_listen
+#define tcpmux_switch dill_tcpmux_switch
 #endif
 
 #endif
