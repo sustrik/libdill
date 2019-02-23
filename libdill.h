@@ -129,7 +129,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 
 /* Stack-switching on X86-64. */
 #if defined(__x86_64__) && !defined DILL_ARCH_FALLBACK
-#define dill_setjmp(ctx) ({\
+#define dill_setjmp(ctx) __extension__ ({\
     int ret;\
     asm("lea     LJMPRET%=(%%rip), %%rcx\n\t"\
         "xor     %%rax, %%rax\n\t"\
@@ -173,7 +173,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 
 /* Stack switching on X86. */
 #elif defined(__i386__) && !defined DILL_ARCH_FALLBACK
-#define dill_setjmp(ctx) ({\
+#define dill_setjmp(ctx) __extension__ ({\
     int ret;\
     asm("movl   $LJMPRET%=, %%ecx\n\t"\
         "movl   %%ebx, (%%edx)\n\t"\
@@ -226,7 +226,7 @@ DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
    get weird values. To avoid that, we use fancy names (dill_*__). */ 
 
 #define dill_go_(fn, ptr, len, bndl) \
-    ({\
+    __extension__ ({\
         sigjmp_buf *dill_ctx__;\
         void *dill_stk__ = (ptr);\
         int dill_handle__ = dill_prologue(&dill_ctx__, &dill_stk__, (len),\
