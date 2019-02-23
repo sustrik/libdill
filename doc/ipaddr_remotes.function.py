@@ -41,11 +41,11 @@ fxs.append(
 
         "has_deadline": True,
 
-        "prologue": trimrect("""
+        "prologue": """
             Converts an IP address in human-readable format, or a name of a
             remote host into an array of **ipaddr** structures. If there's no
             associated address, the function succeeds and returns zero.
-        """) + "\n\n" + trimrect(ipaddr_mode),
+        """ + "\n\n" + ipaddr_mode,
 
 
         "example": ipaddr_example,

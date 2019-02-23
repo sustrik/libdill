@@ -4,10 +4,6 @@ import glob
 from tiles import t
 from schema import Schema, Optional, Or
 
-# TODO: get rid of this
-def trimrect(s):
-    return ""
-
 # Use dill_ prefix depending on whether the result goes into docs or code.
 def dillify(t, dill):
     if not dill:

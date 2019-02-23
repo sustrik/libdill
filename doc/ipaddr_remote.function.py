@@ -36,10 +36,10 @@ fxs.append(
 
         "has_deadline": True,
 
-        "prologue": trimrect("""
+        "prologue": """
             Converts an IP address in human-readable format, or a name of a
             remote host into an **ipaddr** structure.
-        """) + "\n\n" + trimrect(ipaddr_mode),
+        """ + "\n\n" + ipaddr_mode,
 
         "custom_errors": {
             "EADDRNOTAVAIL": "The name of the remote host cannot be resolved to an address of the specified type.",

@@ -34,10 +34,10 @@ fxs.append(
             },
         ],
 
-        "prologue": trimrect("""
+        "prologue": """
             Converts an IP address in human-readable format, or a name of a
             local network interface into an **ipaddr** structure.
-        """) + "\n\n" + trimrect(ipaddr_mode),
+        """ + "\n\n" + ipaddr_mode,
 
         "custom_errors": {
             "ENODEV": "Local network interface with the specified name does not exist."
