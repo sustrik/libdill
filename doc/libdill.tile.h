@@ -79,24 +79,6 @@ extern "C" {
 #endif
 
 /******************************************************************************/
-/*  Helpers                                                                   */
-/******************************************************************************/
-
-DILL_EXPORT int dill_fdclean(int fd);
-DILL_EXPORT int dill_fdin(int fd, int64_t deadline);
-DILL_EXPORT int dill_fdout(int fd, int64_t deadline);
-DILL_EXPORT int64_t dill_now(void);
-DILL_EXPORT int dill_msleep(int64_t deadline);
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define fdclean dill_fdclean
-#define fdin dill_fdin
-#define fdout dill_fdout
-#define now dill_now
-#define msleep dill_msleep
-#endif
-
-/******************************************************************************/
 /*  Handles                                                                   */
 /******************************************************************************/
 
@@ -264,10 +246,6 @@ struct dill_bundle_opts {
 
 DILL_EXPORT extern const struct dill_bundle_opts dill_bundle_defaults;
 
-DILL_EXPORT int dill_bundle(const struct dill_bundle_opts *opts);
-DILL_EXPORT int dill_bundle_wait(int h, int64_t deadline);
-DILL_EXPORT int dill_yield(void);
-
 #if !defined DILL_DISABLE_RAW_NAMES
 #define coroutine dill_coroutine
 #define coroutine_opts dill_coroutine_opts
@@ -279,9 +257,6 @@ DILL_EXPORT int dill_yield(void);
 #define bundle_storage dill_bundle_storage
 #define bundle_opts dill_bundle_opts
 #define bundle_defaults dill_bundle_defaults
-#define bundle dill_bundle
-#define bundle_wait dill_bundle_wait
-#define yield dill_yield
 #endif
 
 /******************************************************************************/
@@ -306,26 +281,6 @@ struct dill_chopts {
 
 DILL_EXPORT extern const struct dill_chopts dill_chdefaults;
 
-DILL_EXPORT int dill_chmake(
-    int s[2],
-    const struct dill_chopts *opts);
-DILL_EXPORT int dill_chsend(
-    int ch,
-    const void *val,
-    size_t len,
-    int64_t deadline);
-DILL_EXPORT int dill_chrecv(
-    int ch,
-    void *val,
-    size_t len,
-    int64_t deadline);
-DILL_EXPORT int dill_chdone(
-    int ch);
-DILL_EXPORT int dill_choose(
-    struct dill_chclause *clauses,
-    int nclauses,
-    int64_t deadline);
-
 #if !defined DILL_DISABLE_RAW_NAMES
 #define CHSEND DILL_CHSEND
 #define CHRECV DILL_CHRECV
@@ -333,11 +288,6 @@ DILL_EXPORT int dill_choose(
 #define chstorage dill_chstorage
 #define chopts dill_chopts
 #define chdefaults dill_chdefaults
-#define chmake dill_chmake
-#define chsend dill_chsend
-#define chrecv dill_chrecv
-#define chdone dill_chdone
-#define choose dill_choose
 #endif
 
 #if !defined DILL_DISABLE_SOCKETS
@@ -355,70 +305,6 @@ struct dill_iolist {
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define iolist dill_iolist
-#endif
-
-/******************************************************************************/
-/*  Bytestream sockets.                                                       */
-/******************************************************************************/
-
-DILL_EXPORT int dill_bsend(
-    int s,
-    const void *buf,
-    size_t len,
-    int64_t deadline);
-DILL_EXPORT int dill_brecv(
-    int s,
-    void *buf,
-    size_t len,
-    int64_t deadline);
-DILL_EXPORT int dill_bsendl(
-    int s,
-    struct dill_iolist *first,
-    struct dill_iolist *last,
-    int64_t deadline);
-DILL_EXPORT int dill_brecvl(
-    int s,
-    struct dill_iolist *first,
-    struct dill_iolist *last,
-    int64_t deadline);
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define bsend dill_bsend
-#define brecv dill_brecv
-#define bsendl dill_bsendl
-#define brecvl dill_brecvl
-#endif
-
-/******************************************************************************/
-/*  Message sockets.                                                          */
-/******************************************************************************/
-
-DILL_EXPORT int dill_msend(
-    int s,
-    const void *buf,
-    size_t len,
-    int64_t deadline);
-DILL_EXPORT ssize_t dill_mrecv(
-    int s,
-    void *buf,
-    size_t len,
-    int64_t deadline);
-DILL_EXPORT int dill_msendl(
-    int s,
-    struct dill_iolist *first,
-    struct dill_iolist *last,
-    int64_t deadline);
-DILL_EXPORT ssize_t dill_mrecvl(
-    int s,
-    struct dill_iolist *first,
-    struct dill_iolist *last,
-    int64_t deadline);
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define msend dill_msend
-#define mrecv dill_mrecv
-#define msendl dill_msendl
-#define mrecvl dill_mrecvl
 #endif
 
 /******************************************************************************/
@@ -441,43 +327,6 @@ DILL_EXPORT extern const struct dill_ipaddr_opts dill_ipaddr_defaults;
 
 struct dill_ipaddr {char _[32];};
 
-DILL_EXPORT int dill_ipaddr_local(
-    struct dill_ipaddr *addr,
-    const char *name,
-    int port,
-    const struct dill_ipaddr_opts *opts);
-DILL_EXPORT int dill_ipaddr_remote(
-    struct dill_ipaddr *addr,
-    const char *name,
-    int port,
-    const struct dill_ipaddr_opts *opts,
-    int64_t deadline);
-DILL_EXPORT int dill_ipaddr_remotes(
-    struct dill_ipaddr *addrs,
-    int naddrs,
-    const char *name,
-    int port,
-    const struct dill_ipaddr_opts *opts,
-    int64_t deadline);
-DILL_EXPORT const char *dill_ipaddr_str(
-    const struct dill_ipaddr *addr,
-    char *ipstr);
-DILL_EXPORT int dill_ipaddr_family(
-    const struct dill_ipaddr *addr);
-DILL_EXPORT const struct sockaddr *dill_ipaddr_sockaddr(
-    const struct dill_ipaddr *addr);
-DILL_EXPORT int dill_ipaddr_len(
-    const struct dill_ipaddr *addr);
-DILL_EXPORT int dill_ipaddr_port(
-    const struct dill_ipaddr *addr);
-DILL_EXPORT void dill_ipaddr_setport(
-    struct dill_ipaddr *addr,
-    int port);
-DILL_EXPORT int dill_ipaddr_equal(
-    const struct dill_ipaddr *addr1,
-    const struct dill_ipaddr *addr2,
-    int ignore_port);
-
 #if !defined DILL_DISABLE_RAW_NAMES
 #define IPADDR_IPV4 DILL_IPADDR_IPV4 
 #define IPADDR_IPV6 DILL_IPADDR_IPV6
@@ -487,16 +336,6 @@ DILL_EXPORT int dill_ipaddr_equal(
 #define ipaddr_opts dill_ipaddr_opts
 #define ipaddr_defaults dill_ipaddr_defaults
 #define ipaddr dill_ipaddr
-#define ipaddr_local dill_ipaddr_local
-#define ipaddr_remote dill_ipaddr_remote
-#define ipaddr_remotes dill_ipaddr_remotes
-#define ipaddr_str dill_ipaddr_str
-#define ipaddr_family dill_ipaddr_family
-#define ipaddr_sockaddr dill_ipaddr_sockaddr
-#define ipaddr_len dill_ipaddr_len
-#define ipaddr_port dill_ipaddr_port
-#define ipaddr_setport dill_ipaddr_setport
-#define ipaddr_equal dill_ipaddr_equal
 #endif
 
 /******************************************************************************/
@@ -514,47 +353,10 @@ struct dill_tcp_opts {
 
 DILL_EXPORT extern const struct dill_tcp_opts dill_tcp_defaults;
 
-DILL_EXPORT int dill_tcp_fromfd(
-    int fd,
-    const struct dill_tcp_opts *opts);
-DILL_EXPORT int dill_tcp_listen(
-    struct dill_ipaddr *addr,
-    const struct dill_tcp_opts *opts);
-DILL_EXPORT int dill_tcp_accept(
-    int s,
-    const struct dill_tcp_opts *opts,
-    struct dill_ipaddr *addr,
-    int64_t deadline);
-DILL_EXPORT int dill_tcp_connect(
-    const struct dill_ipaddr *addr,
-    const struct dill_tcp_opts *opts,
-    int64_t deadline);
-DILL_EXPORT int dill_tcp_connect_happy_eyeballs(
-    const char *name,
-    int port,
-    const struct dill_tcp_opts *opts,
-    int64_t deadline);
-DILL_EXPORT int dill_tcp_done(
-    int s,
-    int64_t deadline);
-DILL_EXPORT int dill_tcp_close(
-    int s,
-    int64_t deadline);
-DILL_EXPORT int dill_tcp_tofd(
-    int s);
-
 #if !defined DILL_DISABLE_RAW_NAMES
 #define tcp_opts dill_tcp_opts
 #define tcp_defaults dill_tcp_defaults
 #define tcp_storage dill_tcp_storage
-#define tcp_fromfd dill_tcp_fromfd
-#define tcp_listen dill_tcp_listen
-#define tcp_accept dill_tcp_accept
-#define tcp_connect dill_tcp_connect
-#define tcp_connect_happy_eyeballs dill_tcp_connect_happy_eyeballs
-#define tcp_done dill_tcp_done
-#define tcp_close dill_tcp_close
-#define tcp_tofd dill_tcp_tofd
 #endif
 
 /******************************************************************************/
@@ -571,54 +373,10 @@ struct dill_ipc_opts {
 
 DILL_EXPORT extern const struct dill_ipc_opts dill_ipc_defaults;
 
-DILL_EXPORT int dill_ipc_fromfd(
-    int fd,
-    const struct dill_ipc_opts *opts);
-DILL_EXPORT int dill_ipc_listen(
-    const char *addr,
-    const struct dill_ipc_opts *opts);
-DILL_EXPORT int dill_ipc_accept(
-    int s,
-    const struct dill_ipc_opts *opts,
-    int64_t deadline);
-DILL_EXPORT int dill_ipc_connect(
-    const char *addr,
-    const struct dill_ipc_opts *opts,
-    int64_t deadline);
-DILL_EXPORT int dill_ipc_sendfd(
-    int s,
-    int fd,
-    int64_t deadline);
-DILL_EXPORT int dill_ipc_recvfd(
-    int s,
-    int64_t deadline);
-DILL_EXPORT int dill_ipc_done(
-    int s,
-    int64_t deadline);
-DILL_EXPORT int dill_ipc_close(
-    int s,
-    int64_t deadline);
-DILL_EXPORT int dill_ipc_tofd(
-    int s);
-DILL_EXPORT int dill_ipc_pair(
-    int s[2],
-    const struct dill_ipc_opts *opts1,
-    const struct dill_ipc_opts *opts2);
-
 #if !defined DILL_DISABLE_RAW_NAMES
 #define ipc_opts dill_ipc_opts
 #define ipc_defaults dill_ipc_defaults
 #define ipc_storage dill_ipc_storage
-#define ipc_fromfd dill_ipc_fromfd
-#define ipc_listen dill_ipc_listen
-#define ipc_accept dill_ipc_accept
-#define ipc_connect dill_ipc_connect
-#define ipc_sendfd dill_ipc_sendfd
-#define ipc_recvfd dill_ipc_recvfd
-#define ipc_done dill_ipc_done
-#define ipc_close dill_ipc_close
-#define ipc_tofd dill_ipc_tofd
-#define ipc_pair dill_ipc_pair
 #endif
 
 /******************************************************************************/
@@ -635,19 +393,10 @@ struct dill_prefix_opts {
 
 DILL_EXPORT extern const struct dill_prefix_opts dill_prefix_defaults;
 
-DILL_EXPORT int dill_prefix_attach(
-    int s,
-    size_t prefixlen,
-    const struct dill_prefix_opts *opts);
-DILL_EXPORT int dill_prefix_detach(
-    int s);
-
 #if !defined DILL_DISABLE_RAW_NAMES
 #define prefix_opts dill_prefix_opts
 #define prefix_defaults dill_prefix_defaults
 #define prefix_storage dill_prefix_storage
-#define prefix_attach dill_prefix_attach
-#define prefix_detach dill_prefix_detach
 #endif
 
 /******************************************************************************/
@@ -663,20 +412,10 @@ struct dill_suffix_opts {
 
 DILL_EXPORT extern const struct dill_suffix_opts dill_suffix_defaults;
 
-DILL_EXPORT int dill_suffix_attach(
-    int s,
-    const void *suffix,
-    size_t suffixlen,
-    const struct dill_suffix_opts *opts);
-DILL_EXPORT int dill_suffix_detach(
-    int s);
-
 #if !defined DILL_DISABLE_RAW_NAMES
 #define suffix_opts dill_suffix_opts
 #define suffix_defaults dill_suffix_defaults
 #define suffix_storage dill_suffix_storage
-#define suffix_attach dill_suffix_attach
-#define suffix_detach dill_suffix_detach
 #endif
 
 /******************************************************************************/
@@ -692,42 +431,10 @@ struct dill_udp_opts {
 
 DILL_EXPORT extern const struct dill_udp_opts dill_udp_defaults;
 
-DILL_EXPORT int dill_udp_open(
-    struct dill_ipaddr *local,
-    const struct dill_ipaddr *remote,
-    const struct dill_udp_opts *opts);
-DILL_EXPORT int dill_udp_send(
-    int s,
-    const struct dill_ipaddr *addr,
-    const void *buf,
-    size_t len);
-DILL_EXPORT ssize_t dill_udp_recv(
-    int s,
-    struct dill_ipaddr *addr,
-    void *buf,
-    size_t len,
-    int64_t deadline);
-DILL_EXPORT int dill_udp_sendl(
-    int s,
-    const struct dill_ipaddr *addr,
-    struct dill_iolist *first,
-    struct dill_iolist *last);
-DILL_EXPORT ssize_t dill_udp_recvl(
-    int s,
-    struct dill_ipaddr *addr,
-    struct dill_iolist *first,
-    struct dill_iolist *last,
-    int64_t deadline);
-
 #if !defined DILL_DISABLE_RAW_NAMES
 #define udp_opts dill_udp_opts
 #define udp_defaults dill_udp_defaults
 #define udp_storage dill_udp_storage
-#define udp_open dill_udp_open
-#define udp_send dill_udp_send
-#define udp_recv dill_udp_recv
-#define udp_sendl dill_udp_sendl
-#define udp_recvl dill_udp_recvl
 #endif
 
 /******************************************************************************/
@@ -742,63 +449,10 @@ struct dill_http_opts {
 
 DILL_EXPORT extern const struct dill_http_opts dill_http_defaults;
 
-DILL_EXPORT int dill_http_attach(
-    int s,
-    const struct dill_http_opts *opts);
-DILL_EXPORT int dill_http_done(
-    int s,
-    int64_t deadline);
-DILL_EXPORT int dill_http_detach(
-    int s,
-    int64_t deadline);
-DILL_EXPORT int dill_http_sendrequest(
-    int s,
-    const char *command,
-    const char *resource,
-    int64_t deadline);
-DILL_EXPORT int dill_http_recvrequest(
-    int s,
-    char *command,
-    size_t commandlen,
-    char *resource,
-    size_t resourcelen,
-    int64_t deadline);
-DILL_EXPORT int dill_http_sendstatus(
-    int s,
-    int status,
-    const char *reason,
-    int64_t deadline);
-DILL_EXPORT int dill_http_recvstatus(
-    int s,
-    char *reason,
-    size_t reasonlen,
-    int64_t deadline);
-DILL_EXPORT int dill_http_sendfield(
-    int s,
-    const char *name,
-    const char *value,
-    int64_t deadline);
-DILL_EXPORT int dill_http_recvfield(
-    int s,
-    char *name,
-    size_t namelen,
-    char *value,
-    size_t valuelen,
-    int64_t deadline);
-
 #if !defined DILL_DISABLE_RAW_NAMES
 #define http_opts dill_http_opts
 #define http_defaults dill_http_defaults
 #define http_storage dill_http_storage
-#define http_attach dill_http_attach
-#define http_done dill_http_done
-#define http_detach dill_http_detach
-#define http_sendrequest dill_http_sendrequest
-#define http_recvrequest dill_http_recvrequest
-#define http_sendstatus dill_http_sendstatus
-#define http_recvstatus dill_http_recvstatus
-#define http_sendfield dill_http_sendfield
-#define http_recvfield dill_http_recvfield
 #endif
 
 #if !defined DILL_DISABLE_TLS
@@ -815,31 +469,10 @@ struct dill_tls_opts {
 
 DILL_EXPORT extern const struct dill_tls_opts dill_tls_defaults;
 
-DILL_EXPORT int dill_tls_attach_server(
-    int s,
-    const char *cert,
-    const char *pkey,
-    const struct dill_tls_opts *opts,
-    int64_t deadline);
-DILL_EXPORT int dill_tls_attach_client(
-    int s,
-    const struct dill_tls_opts *opts,
-    int64_t deadline);
-DILL_EXPORT int dill_tls_done(
-    int s,
-    int64_t deadline);
-DILL_EXPORT int dill_tls_detach(
-    int s,
-    int64_t deadline);
-
 #if !defined DILL_DISABLE_RAW_NAMES
 #define tls_opts dill_tls_opts
 #define tls_defaults dill_tls_defaults
 #define tls_storage dill_tls_storage
-#define tls_attach_server dill_tls_attach_server
-#define tls_attach_client dill_tls_attach_client
-#define tls_done dill_tls_done
-#define tls_detach dill_tls_detach
 #endif
 
 #endif
@@ -858,87 +491,12 @@ struct dill_ws_opts {
 
 DILL_EXPORT extern const struct dill_ws_opts dill_ws_defaults;
 
-DILL_EXPORT int dill_ws_attach_client(
-    int s,
-    const char *resource,
-    const char *host,
-    const struct dill_ws_opts *opts,
-    int64_t deadline);
-DILL_EXPORT int dill_ws_attach_server(
-    int s,
-    const struct dill_ws_opts *opts,
-    char *resource,
-    size_t resourcelen,
-    char *host,
-    size_t hostlen,
-    int64_t deadline);
-DILL_EXPORT int dill_ws_send(
-    int s,
-    int text,
-    const void *buf,
-    size_t len,
-    int64_t deadline);
-DILL_EXPORT ssize_t dill_ws_recv(
-    int s,
-    int *text,
-    void *buf,
-    size_t len,
-    int64_t deadline);
-DILL_EXPORT int dill_ws_sendl(
-    int s,
-    int text,
-    struct dill_iolist *first,
-    struct dill_iolist *last,
-    int64_t deadline);
-DILL_EXPORT ssize_t dill_ws_recvl(
-    int s,
-    int *text,
-    struct dill_iolist *first,
-    struct dill_iolist *last,
-    int64_t deadline);
-DILL_EXPORT int dill_ws_done(
-    int s,
-    int status,
-    const void *buf,
-    size_t len,
-    int64_t deadline);
-DILL_EXPORT int dill_ws_detach(
-    int s,
-    int status,
-    const void *buf,
-    size_t len,
-    int64_t deadline);
-DILL_EXPORT ssize_t dill_ws_status(
-    int s,
-    int *status,
-    void *buf,
-    size_t len);
-
-/* Helper functions for those who want to implement HTTP exchange by hand. */
-
 #define WS_KEY_SIZE 32
-
-DILL_EXPORT int dill_ws_request_key(
-    char *request_key);
-DILL_EXPORT int dill_ws_response_key(
-    const char *request_key,
-    char *response_key);
 
 #if !defined DILL_DISABLE_RAW_NAMES
 #define ws_opts dill_ws_opts
 #define ws_defaults dill_ws_defaults
 #define ws_storage dill_ws_storage
-#define ws_attach_server dill_ws_attach_server
-#define ws_attach_client dill_ws_attach_client
-#define ws_send dill_ws_send
-#define ws_recv dill_ws_recv
-#define ws_sendl dill_ws_sendl
-#define ws_recvl dill_ws_recvl
-#define ws_done dill_ws_done
-#define ws_detach dill_ws_detach
-#define ws_status dill_ws_status
-#define ws_request_key dill_ws_request_key
-#define ws_response_key dill_ws_response_key
 #endif
 
 /******************************************************************************/
@@ -1023,25 +581,10 @@ struct dill_term_opts {
 
 DILL_EXPORT extern const struct dill_term_opts dill_term_defaults;
 
-DILL_EXPORT int dill_term_attach(
-    int s,
-    const void *buf,
-    size_t len,
-    const struct dill_term_opts *opts);
-DILL_EXPORT int dill_term_done(
-    int s,
-    int64_t deadline);
-DILL_EXPORT int dill_term_detach(
-    int s,
-    int64_t deadline);
-
 #if !defined DILL_DISABLE_RAW_NAMES
 #define term_opts dill_term_opts
 #define term_defaults dill_term_defaults
 #define term_storage dill_term_storage
-#define term_attach dill_term_attach
-#define term_done dill_term_done
-#define term_detach dill_term_detach
 #endif
 
 /******************************************************************************/
@@ -1087,10 +630,15 @@ DILL_EXPORT int tcpmux_daemon(
 
 #endif
 
+/******************************************************************************/
+/* Generated stuff.                                                           */
+/******************************************************************************/
+
+@{hdrs}
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif
 
-@{hdrs}
