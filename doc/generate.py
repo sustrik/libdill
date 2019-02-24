@@ -29,7 +29,6 @@ def signature(fx, prefix="", code=False):
                  @{args}
              """
 
-# Load the files.
 print("Loading")
 
 topics = {}
@@ -64,7 +63,6 @@ for file in files:
         c = f.read()
         exec(c)
 
-# Check whether the data comply to the schema. Also fills in defaults.
 print("Validating")
 
 fschema = {
@@ -162,277 +160,250 @@ tschema = {
 
 topics = Schema({str: tschema}).validate(topics)
 
-# Link functions to topics.
-for topic in topics:
-    topic["functions"] = []
-for fx in fxs:
-    if fx["topic"]:
-        topic_name = fx["topic"]
-    elif fx["protocol"]:
-        topic_name = fx["protocol"]["topic"]
-    else:
-        raise ValueError("Missing topic in function %s" % fx["name"])
-    
+print("Enriching data")
 
-    topics[topic]["function"].append(fx)
-    fx["topic"] = topics[topic]
-for topic in topics:
-    topics["functions"].sort(key=lambda f : f["name"])
+for _, topic in topics.items():
+    for _, fx in topic["functions"].items():
+        if fx["has_iol"]:
+            fx["args"].append({
+                "name": "first",
+                "type": "struct iolist*",
+                "dill": True,
+                "info": "Pointer to the first item of a linked list of I/O buffers.",
+                "suffix": "",
+            })
+            fx["args"].append({
+                "name": "last",
+                "type": "struct iolist*",
+                "dill": True,
+                "info": "Pointer to the last item of a linked list of I/O buffers.",
+                "suffix": "",
+            })
 
-# Enhance the data.
-for fx in fxs:
-    if fx["has_iol"]:
-        fx["args"].append({
-            "name": "first",
-            "type": "struct iolist*",
-            "dill": True,
-            "info": "Pointer to the first item of a linked list of I/O buffers.",
-            "suffix": "",
-        })
-        fx["args"].append({
-            "name": "last",
-            "type": "struct iolist*",
-            "dill": True,
-            "info": "Pointer to the last item of a linked list of I/O buffers.",
-            "suffix": "",
-        })
+        if fx["has_deadline"]:
+            fx["args"].append({
+                "name": "deadline",
+                "type": "int64_t",
+                "dill": False,
+                "info": "A point in time when the operation should time out, in " +
+                        "milliseconds. Use the **now** function to get your current" +
+                        " point in time. 0 means immediate timeout, i.e., perform " +
+                        "the operation if possible or return without blocking if " +
+                        "not. -1 means no deadline, i.e., the call will block " +
+                        "forever if the operation cannot be performed.",
+                "suffix": "",
+            })
 
-    if fx["has_deadline"]:
-        fx["args"].append({
-            "name": "deadline",
-            "type": "int64_t",
-            "dill": False,
-            "info": "A point in time when the operation should time out, in " +
-                    "milliseconds. Use the **now** function to get your current" +
-                    " point in time. 0 means immediate timeout, i.e., perform " +
-                    "the operation if possible or return without blocking if " +
-                    "not. -1 means no deadline, i.e., the call will block " +
-                    "forever if the operation cannot be performed.",
-            "suffix": "",
-        })
+        if fx["has_handle_argument"]:
+            fx["errors"].append("EBADF")
+            fx["errors"].append("ENOTSUP")
+        if fx["has_deadline"]:
+            fx["errors"].append("ECANCELED")
+            if fx["name"] != "msleep":
+                fx["errors"].append("ETIMEDOUT")
+        if fx["allocates_handle"]:
+            fx["errors"].append("EMFILE")
+            fx["errors"].append("ENFILE")
+            fx["errors"].append("ENOMEM")
+        if fx["uses_connection"]:
+            fx["errors"].append("ECONNRESET")
+            fx["errors"].append("ECANCELED")
+        # TODO: if(fx.mem && !mem) errs.push("ENOMEM")
 
-    if fx["has_handle_argument"]:
-        fx["errors"].append("EBADF")
-        fx["errors"].append("ENOTSUP")
-    if fx["has_deadline"]:
-        fx["errors"].append("ECANCELED")
-        if fx["name"] != "msleep":
-            fx["errors"].append("ETIMEDOUT")
-    if fx["allocates_handle"]:
-        fx["errors"].append("EMFILE")
-        fx["errors"].append("ENFILE")
-        fx["errors"].append("ENOMEM")
-    if fx["uses_connection"]:
-        fx["errors"].append("ECONNRESET")
-        fx["errors"].append("ECANCELED")
-    # TODO: if(fx.mem && !mem) errs.push("ENOMEM")
+print("Generating table of contents")
 
-# Generate table of contents
-toc = ""
-topic_order = [
-    "Coroutines",
-    "Deadlines",
-    "Channels",
-    "Handles",
-    "File descriptors",
-    "Bytestream sockets",
-    "Message sockets",
-    "IP addresses",
-    #
-    "Happy Eyeballs protocol",
-    "HTTP protocol",
-    "IPC protocol",
-    "PREFIX protocol",
-    "SUFFIX protocol",
-    "TCP protocol",
-    "TCPMUX protocol",
-    "TERM protocol",
-    "TLS protocol",
-    "UDP protocol",
-    "WebSocket protocol"]
+# Order the topics. Topic with "order" field go first.
+# Other topics go afterwards, in alphabetical order.
+ordered = [(name, topic["order"]) for name, topic in topics.items() if topic["order"] != None]
+ordered = sorted(ordered, key=lambda x: x[1])
+ordered = [x[0] for x in ordered]
+unordered = [(name, topic["title"]) for name, topic in topics.items() if topic["order"] == None]
+unordered = sorted(unordered, key=lambda x: x[1])
+unordered = [x[0] for x in unordered]
+order = ordered + unordered
+
 toc = t/""
-for topic in topic_order:
-    flist = [f["name"] for f in topic["function"]]
-    flist.sort()
-    items = (t/"").vjoin([t/"[@{f}(3)](@{f}.html)" for f in flist])
-    toc |= t%'#### @{topic}\n' | items | t%''
+for topic in order:
+    toc |= t%'#### @{topics[topic]["title"]}' | t%''
+    for name, _ in sorted(topics[topic]["functions"].items()):
+        toc |= t/"[@{name}(3)](@{name}.html)"
+    toc |= t%''
 
 with open("toc.md", 'w') as f:
     f.write(str(toc))
 
-# Generate manpages for individual functions.
-for fx in fxs:
+print("Generating man pages")
 
-    # SYNOPSIS section
-    synopsis = t/'#include<@{fx["header"]}>'
-    if fx["add_to_synopsis"]:
-        synopsis |= t%'' | t/'@{fx["add_to_synopsis"]}'
-    synopsis |= t%'' | t/'@{signature(fx)}'
+for _, topic in topics.items():
+    for _, fx in topic["functions"].items():
 
-    # DESCRIPTION section
-    description = t/'@{fx["prologue"]}'
-    if fx["protocol"]:
-        description = t/'@{fx["protocol"]["info"]}' | t%'' | description
-    if fx["experimental"] or (fx["protocol"] and fx["protocol"]["experimental"]):
-        description = t/'**WARNING: This is experimental functionality and the API may change in the future.**' | t%'' | description
-    if fx["has_iol"]:
-        description |= t%'' | t/"""
-            This function accepts a linked list of I/O buffers instead of a
-            single buffer. Argument **first** points to the first item in the
-            list, **last** points to the last buffer in the list. The list
-            represents a single, fragmented message, not a list of multiple
-            messages. Structure **iolist** has the following members:
+        # SYNOPSIS section
+        synopsis = t/'#include<@{fx["header"]}>'
+        if fx["add_to_synopsis"]:
+            synopsis |= t%'' | t/'@{fx["add_to_synopsis"]}'
+        synopsis |= t%'' | t/'@{signature(fx)}'
 
-            ```c
-            void *iol_base;          /* Pointer to the buffer. */
-            size_t iol_len;          /* Size of the buffer. */
-            struct iolist *iol_next; /* Next buffer in the list. */
-            int iol_rsvd;            /* Reserved. Must be set to zero. */
-            ```
+        # DESCRIPTION section
+        description = t/'@{fx["prologue"]}'
+        if topic["info"]:
+            description = t/'@{topic["info"]}' | t%'' | description
+        if fx["experimental"] or topic["experimental"]:
+            description = t/'**WARNING: This is experimental functionality and the API may change in the future.**' | t%'' | description
+        if fx["has_iol"]:
+            description |= t%'' | t/"""
+                This function accepts a linked list of I/O buffers instead of a
+                single buffer. Argument **first** points to the first item in the
+                list, **last** points to the last buffer in the list. The list
+                represents a single, fragmented message, not a list of multiple
+                messages. Structure **iolist** has the following members:
 
-            When receiving, **iol_base** equal to NULL means that **iol_len**
-            bytes should be skipped.
+                ```c
+                void *iol_base;          /* Pointer to the buffer. */
+                size_t iol_len;          /* Size of the buffer. */
+                struct iolist *iol_next; /* Next buffer in the list. */
+                int iol_rsvd;            /* Reserved. Must be set to zero. */
+                ```
 
-            The function returns **EINVAL** error in the case the list is
-            malformed:
+                When receiving, **iol_base** equal to NULL means that **iol_len**
+                bytes should be skipped.
 
-            * If **last->iol_next** is not **NULL**.
-            * If **first** and **last** don't belong to the same list.
-            * If there's a loop in the list.
-            * If **iol_rsvd** of any item is non-zero.
+                The function returns **EINVAL** error in the case the list is
+                malformed:
 
-            The list (but not the buffers themselves) can be temporarily
-            modified while the function is in progress. However, once the
-            function returns the list is guaranteed to be the same as before
-            the call.
-            """
-    if fx["args"]:
-        description |= t%'' | (t/'').vjoin([t/'**@{arg["name"]}**: @{arg["info"]}' for arg in fx["args"]])
-    if fx["epilogue"]:
-        description |= t%'' | t/'@{fx["epilogue"]}'
-    if fx["protocol"] or fx["topic"] == "IP addresses":
-        description |= t%'' | t/'This function is not available if libdill is compiled with **--disable-sockets** option.'
-    if fx["protocol"] and fx["protocol"]["topic"] == "TLS protocol":
-        description |= t%'' | t/'This function is not available if libdill is compiled without **--enable-tls** option.'
+                * If **last->iol_next** is not **NULL**.
+                * If **first** and **last** don't belong to the same list.
+                * If there's a loop in the list.
+                * If **iol_rsvd** of any item is non-zero.
 
-    # RETURN VALUE section
-    if fx["result"]:
-        if fx["result"]["success"] and fx["result"]["error"]:
-            retval = t/"""
-                In case of success the function returns @{fx["result"]["success"]}.
-                'In case of error it returns @{fx["result"]["error"]} and sets **errno** to one of the values below.
+                The list (but not the buffers themselves) can be temporarily
+                modified while the function is in progress. However, once the
+                function returns the list is guaranteed to be the same as before
+                the call.
                 """
-        if fx["result"]["info"]:
-            retval = t/'@{fx["result"]["info"]}'
-    else:
-        retval = t/"None."
+        if fx["args"]:
+            description |= t%'' | (t/'').vjoin([t/'**@{arg["name"]}**: @{arg["info"]}' for arg in fx["args"]])
+        if fx["epilogue"]:
+            description |= t%'' | t/'@{fx["epilogue"]}'
+        if topic["protocol"] or topic["name"] == "ipaddr":
+            description |= t%'' | t/'This function is not available if libdill is compiled with **--disable-sockets** option.'
+        if topic["name"] == "tls":
+            description |= t%'' | t/'This function is not available if libdill is compiled without **--enable-tls** option.'
 
-    # ERRORS section
-    standard_errors = {
-        "EBADF": "Invalid handle.",
-        "EBUSY": "The handle is currently being used by a different coroutine.",
-        "ETIMEDOUT": "Deadline was reached.",
-        "ENOMEM": "Not enough memory.",
-        "EMFILE": "The maximum number of file descriptors in the process are already open.",
-        "ENFILE": "The maximum number of file descriptors in the system are already open.",
-        "EINVAL": "Invalid argument.",
-        "EMSGSIZE": "The data won't fit into the supplied buffer.",
-        "ECONNRESET": "Broken connection.",
-        "ECANCELED": "Current coroutine was canceled.",
-        "ENOTSUP": "The handle does not support this operation.",
-    }
-    errs = {}
-    for e in fx["errors"]:
-        errs[e] = standard_errors[e]
-    errs.update(fx["custom_errors"])
-    errors = t/"None."
-    if len(errs) > 0:
-        errors = (t/'').vjoin([t/'* **@{e}**: @{desc}' for e, desc in sorted(errs.items())])
-    if fx["add_to_errors"]:
-        errors |= t%'' | t/'@{fx["add_to_errors"]}'
+        # RETURN VALUE section
+        if fx["result"]:
+            if fx["result"]["success"] and fx["result"]["error"]:
+                retval = t/"""
+                    In case of success the function returns @{fx["result"]["success"]}.
+                    'In case of error it returns @{fx["result"]["error"]} and sets **errno** to one of the values below.
+                    """
+            if fx["result"]["info"]:
+                retval = t/'@{fx["result"]["info"]}'
+        else:
+            retval = t/"None."
 
-    # Generate the manpage.
-    page = t/"""
-             # NAME
+        # ERRORS section
+        standard_errors = {
+            "EBADF": "Invalid handle.",
+            "EBUSY": "The handle is currently being used by a different coroutine.",
+            "ETIMEDOUT": "Deadline was reached.",
+            "ENOMEM": "Not enough memory.",
+            "EMFILE": "The maximum number of file descriptors in the process are already open.",
+            "ENFILE": "The maximum number of file descriptors in the system are already open.",
+            "EINVAL": "Invalid argument.",
+            "EMSGSIZE": "The data won't fit into the supplied buffer.",
+            "ECONNRESET": "Broken connection.",
+            "ECANCELED": "Current coroutine was canceled.",
+            "ENOTSUP": "The handle does not support this operation.",
+        }
+        errs = {}
+        for e in fx["errors"]:
+            errs[e] = standard_errors[e]
+        errs.update(fx["custom_errors"])
+        errors = t/"None."
+        if len(errs) > 0:
+            errors = (t/'').vjoin([t/'* **@{e}**: @{desc}' for e, desc in sorted(errs.items())])
+        if fx["add_to_errors"]:
+            errors |= t%'' | t/'@{fx["add_to_errors"]}'
 
-             @{fx["name"]} - @{fx["info"]}
+        # Generate the manpage.
+        page = t/"""
+                 # NAME
 
-             # SYNOPSIS
+                 @{fx["name"]} - @{fx["info"]}
 
-             ```c
-             @{synopsis}
-             ```
+                 # SYNOPSIS
 
-             # DESCRIPTION
+                 ```c
+                 @{synopsis}
+                 ```
 
-             @{description}
+                 # DESCRIPTION
 
-             # RETURN VALUE
+                 @{description}
 
-             @{retval}
+                 # RETURN VALUE
 
-             # ERRORS
+                 @{retval}
 
-             @{errors}
-             """
+                 # ERRORS
 
-    # Add EXAMPLE section, if available.
-    example = ""
-    if fx["protocol"] and fx["protocol"]["example"]:
-        example = t/'@{fx["protocol"]["example"]}'
-    if fx["example"]:
-        example = t/'@{fx["example"]}'
-    if example:
+                 @{errors}
+                 """
+
+        # Add EXAMPLE section, if available.
+        example = topic["example"]
+        if fx["example"]:
+            example = fx["example"]
+        if example:
+            page |= t%'' | t/"""
+                # EXAMPLE
+
+                ```c
+                @{example}
+                ```
+                """
+
+        # SEE ALSO section.
+        # It'll contain all functions from the same topic plus the functions
+        # added manually.
+        sa = [f for f in topic["functions"] if f != fx["name"]]
+        if fx["has_deadline"]:
+            sa.append("now")
+        if fx["allocates_handle"]:
+            sa.append("hclose")
+        if topic["protocol"] == "bytestream":
+            sa.append("brecv")
+            sa.append("brecvl")
+            sa.append("bsend")
+            sa.append("bsendl")
+        if topic["protocol"] == "message":
+            sa.append("mrecv")
+            sa.append("mrecvl")
+            sa.append("msend")
+            sa.append("msendl")
+        # Remove duplicates and list them in alphabetical order.
+        sa = list(set(sa))
+        sa.sort()
+        seealso = (t%' ').join([t/'**@{f}**(3)' for f in sa])
         page |= t%'' | t/"""
-            # EXAMPLE
+            # SEE ALSO
 
-            ```c
-            @{example}
-            ```
+            @{seealso}
             """
 
-    # SEE ALSO section.
-    # It'll contain all funrction from the same topic plus the functions
-    # added manually.
-    sa = [f["name"] for f in fx["topic"]["functions"] if f["name"] != fx["name"]]
-    if fx["has_deadline"]:
-        sa.append("now")
-    if fx["allocates_handle"]:
-        sa.append("hclose")
-    if fx["protocol"] and fx["protocol"]["type"] == "bytestream":
-        sa.append("brecv")
-        sa.append("brecvl")
-        sa.append("bsend")
-        sa.append("bsendl")
-    if fx["protocol"] and fx["protocol"]["type"] == "message":
-        sa.append("mrecv")
-        sa.append("mrecvl")
-        sa.append("msend")
-        sa.append("msendl")
-    # Remove duplicates and list them in alphabetical order.
-    sa = list(set(sa))
-    sa.sort()
-    #seealso = t/""
-    #for f in sa:
-    #    seealso += t/"**@{f}**(3) "
-    seealso = (t%' ').join([t/'**@{f}**(3)' for f in sa])
-    page |= t%'' | t/"""
-        # SEE ALSO
+        with open(fx["name"] + ".md", 'w') as f:
+            f.write(str(page))
 
-        @{seealso}
-        """
+print("Generating header files")
 
-    with open(fx["name"] + ".md", 'w') as f:
-        f.write(str(page))
-
-# Generate header files.
 hdrs = t/''
-for topic in topic_order:
+for topic in order:
+    fxs = topics[topic]["functions"]
     signatures = t/""
-    for fx in topic_functions[topic]:
+    for _, fx in fxs.items():
         if fx["header"] == "libdill.h" and fx["signature"]:
             signatures |= t%'' | t/'@{signature(fx, prefix="DILL_EXPORT", code=True)}'
-    defines = (t/"").vjoin([t/'#define @{tp["name"]} dill_@{tp["name"]}' for tp in topic_functions[topic]])
+    defines = (t/"").vjoin([t/'#define @{fx["name"]} dill_@{fx["name"]}' for _, fx in fxs.items()])
     signatures = t/"""
         @{signatures}
 
@@ -440,7 +411,7 @@ for topic in topic_order:
         @{defines}
         #endif
         """
-    if fx["protocol"]:
+    if topics[topic]["protocol"]:
         signatures = t/"""
             #if !defined DILL_DISABLE_SOCKETS
 
@@ -448,13 +419,13 @@ for topic in topic_order:
 
             #endif
             """
-    if topic == "TLS protocol":
+    if topics[topic]["name"] == "tls":
         signatures = t/"""
             #if !defined DILL_DISABLE_TLS
             @{signatures}
             #endif
             """
-    hdrs |= t%'' | t/'/* @{topic} */' | t%'' | t/'@{signatures}'
+    hdrs |= t%'' | t/'/* @{topics[topic]["title"]} */' | t%'' | t/'@{signatures}'
 with open("libdill.tile.h", 'r') as f:
     c = f.read()
 with open("../libdill.h", 'w') as f:
