@@ -29,56 +29,45 @@ def signature(fx, prefix="", code=False):
                  @{args}
              """
 
-# Read all topic files.
-topics = []
+# Load the files.
+print("Loading")
+
+topics = {}
 
 def new_topic(topic):
-    topics.append(topic)
+    if topic["name"] in topics:
+        raise Exception("Duplicate topic name: " + topic.name)
+    topics[topic["name"]] = topic
 
 files = glob.glob("*.topic.py")
 for file in files:
+    print("  " + file)
+    with open(file, 'r') as f:
+        c = f.read()
+        exec(c)
+
+for _, topic in topics.items():
+    topic["functions"] = {}
+
+def new_function(fx):
+    if fx["topic"] not in topics:
+        raise Exception("Unknown topic: " + fx["topic"])
+    fxs = topics[fx["topic"]]["functions"]
+    if fx["name"] in fxs:
+        raise Exception("Duplicate function name: " + fx["name"])
+    fxs[fx["name"]] = fx
+
+files = glob.glob("*.function.py")
+for file in files:
+    print("  " + file)
     with open(file, 'r') as f:
         c = f.read()
         exec(c)
 
 # Check whether the data comply to the schema. Also fills in defaults.
-tschema = {
-    # short name of the protocol; typically the function prefix
-    "name": str,
-    # title of the topic as it appears in the ToC
-    "title": str,
-    # topic with smaller order numbers will appear first in the ToC
-    Optional("order", default=None): int,
-    # if the topic is about a protocol, the type of the protocol
-    Optional("protocol", default=None): Or("bytestream", "message", "application"),
-    # this string will be added to the man page of each function in the topic
-    Optional("info", default=None): str,
-    # this example will be used for the functions that don't have example of their own
-    Optional("example", default=None): str,
-    # option types associated with this topic
-    Optional("opts", default=[]): [str],
-    # storage types associated with this topic (value is the size of the structure in bytes)
-    Optional("storage", default={}): {str: int},
-    # true if the functionality is experimental
-    Optional("experimental", default=False): bool,
-}
-topics = Schema([tschema]).validate(topics)
+print("Validating")
 
-# Read all function files.
-fxs = []
-files = glob.glob("*.function.py")
-for file in files:
-    with open(file, 'r') as f:
-        c = f.read()
-        exec(c)
-
-# Check for duplicate functions.
-names = {}
-for fx in fxs:
-    if fx["name"] in names:
-        raise ValueError("Duplicate function name %s" % fx["name"])
-
-schema = {
+fschema = {
     # name of the function
     "name": str,
     # the name of the section in the docs the function should appear in
@@ -115,21 +104,6 @@ schema = {
     # the part of the description of the function to go after the list
     # of arguments
     Optional("epilogue", default=None): str,
-    # should be present only if the function is related to a network protocol
-    Optional("protocol", default=None): {
-        # name of the protocol
-        "name": str,
-        # which topic should the protocol appear in
-        "topic": str,
-        # type of the protocol
-        "type": Or("bytestream", "message", "application"),
-        # description of the protocol
-        "info": str,
-        # example of usage of the protocol, a piece of C code
-        "example": str,
-        # if true, the docs will contain a warning about using this protocol
-        Optional("experimental", default=False): bool,
-    },
     # a piece of code to be added to synopsis, between the include
     # and the function declaration
     Optional("add_to_synopsis", default=None): str,
@@ -163,8 +137,30 @@ schema = {
     Optional("boilerplate", default=True): bool,
 }
 
-# Check whether the data comply to the schema. Also fills in defaults.
-fxs = Schema([schema]).validate(fxs)
+tschema = {
+    # short name of the protocol; typically the function prefix
+    "name": str,
+    # title of the topic as it appears in the ToC
+    "title": str,
+    # topic with smaller order numbers will appear first in the ToC
+    Optional("order", default=None): int,
+    # if the topic is about a protocol, the type of the protocol
+    Optional("protocol", default=None): Or("bytestream", "message", "application"),
+    # this string will be added to the man page of each function in the topic
+    Optional("info", default=None): str,
+    # this example will be used for the functions that don't have example of their own
+    Optional("example", default=None): str,
+    # all functions in the topic
+    "functions": {str: fschema},
+    # option types associated with this topic
+    Optional("opts", default=[]): [str],
+    # storage types associated with this topic (value is the size of the structure in bytes)
+    Optional("storage", default={}): {str: int},
+    # true if the functionality is experimental
+    Optional("experimental", default=False): bool,
+}
+
+topics = Schema({str: tschema}).validate(topics)
 
 # Link functions to topics.
 for topic in topics:

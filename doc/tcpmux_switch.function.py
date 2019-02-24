@@ -34,5 +34,5 @@ tcpmux_switch_function = {
     "errors": [],
 }
 
-new_topic(tcpmux_switch_function)
+new_function(tcpmux_switch_function)
 

@@ -47,5 +47,5 @@ http_sendfield_function = {
     "errors": ["EINVAL"],
 }
 
-new_topic(http_sendfield_function)
+new_function(http_sendfield_function)
 

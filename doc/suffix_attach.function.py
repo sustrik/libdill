@@ -48,5 +48,5 @@ suffix_attach_function = {
     },
 }
 
-new_topic(suffix_attach_function)
+new_function(suffix_attach_function)
 

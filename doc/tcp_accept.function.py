@@ -31,8 +31,6 @@ tcp_accept_function = {
 
     "has_deadline": True,
 
-    "protocol": tcp_protocol,
-
     "prologue": """
         This function accepts an incoming TCP connection.
     """,

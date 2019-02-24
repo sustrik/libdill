@@ -46,5 +46,5 @@ prefix_attach_function = {
     },
 }
 
-new_topic(prefix_attach_function)
+new_function(prefix_attach_function)
 

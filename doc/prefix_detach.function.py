@@ -15,7 +15,7 @@ prefix_detach_function = {
            "info": "Handle of the PREFIX socket.",
        },
     ],
-    "protocol": prefix_protocol,
+
     "prologue": """
         This function does the terminal handshake and returns underlying
         socket to the user. The socket is closed even in the case of error.
@@ -28,5 +28,5 @@ prefix_detach_function = {
     },
 }
 
-new_topic(prefix_detach_function)
+new_function(prefix_detach_function)
 

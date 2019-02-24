@@ -26,4 +26,4 @@ ipaddr_setport_function = {
     """,
 }
 
-new_function(ipaddr_serport_function)
+new_function(ipaddr_setport_function)

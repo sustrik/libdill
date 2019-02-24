@@ -1,5 +1,5 @@
 
-tcp_attach_client_function = {
+tls_attach_client_function = {
     "name": "tls_attach_client",
     "topic": "tls",
     "info": "creates TLS protocol on top of underlying socket",

@@ -19,8 +19,6 @@ tcp_close_function = {
 
     "has_deadline": True,
 
-    "protocol": tcp_protocol,
-
     "prologue": """
         This function closes a TCP socket cleanly. Unlike **hclose** it lets
         the peer know that it is shutting down and waits till the peer

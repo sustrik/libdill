@@ -1,7 +1,7 @@
 
 ipaddr_remotes_function = {
     "name": "ipaddr_remotes",
-    "topic": "IP addresses",
+    "topic": "ipaddr",
     "info": "resolve the address of a remote IP endpoint",
     "result": {
         "type": "int",

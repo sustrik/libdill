@@ -27,5 +27,5 @@ msleep_function = {
     """,
 }
 
-new_function(deadline_function)
+new_function(msleep_function)
 

@@ -52,7 +52,7 @@ udp_open_function = {
         "EADDRNOTAVAIL": "The specified address is not available from the " +
                        "local machine.",
     },
-},
+}
 
 new_function(udp_open_function)
 
