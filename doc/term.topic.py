@@ -1,5 +1,6 @@
 
 term_protocol = {
+    "name": "term",
     "topic": "TERM protocol",
     "type": "message",
     "info": """
@@ -26,4 +27,4 @@ term_protocol = {
     """,
 }
 
-
+protocols.append(term_protocol)

@@ -16,6 +16,7 @@ http_server_example = """
 """
 
 http_protocol = {
+    "name": "http",
     "topic": "HTTP protocol",
     "type": "application",
     "info": """
@@ -43,3 +44,4 @@ http_protocol = {
     "experimental": True,
 }
 
+protocols.append(http_protocol)

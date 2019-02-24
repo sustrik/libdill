@@ -1,4 +1,5 @@
 suffix_protocol = {
+    "name": "suffix",
     "topic": "SUFFIX protocol",
     "type": "message",
     "info": """
@@ -17,3 +18,4 @@ suffix_protocol = {
     """,
 }
 
+protocols.append(suffix_protocol)

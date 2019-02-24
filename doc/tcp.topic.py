@@ -1,4 +1,5 @@
 tcp_protocol = {
+    "name": "tcp",
     "topic": "TCP protocol",
     "type": "bytestream",
     "info": """
@@ -18,3 +19,4 @@ tcp_protocol = {
     """
 }
 
+protocols.append(tcp_protocol)

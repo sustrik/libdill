@@ -1,4 +1,5 @@
 prefix_protocol = {
+    "name": "prefix",
     "topic": "PREFIX protocol",
     "type": "message",
     "info": """
@@ -17,3 +18,4 @@ prefix_protocol = {
     """
 }
 
+protocols.append(prefix_protocol)

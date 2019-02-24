@@ -30,13 +30,32 @@ def signature(fx, prefix="", code=False):
              """
 
 # Read all topic files.
+protocols = []
 files = glob.glob("*.topic.py")
 for file in files:
     with open(file, 'r') as f:
         c = f.read()
         exec(c)
 
-# Read all topic files.
+pschema = {
+    # name of the protocol
+    "name": str,
+    # which topic should the protocol appear in
+    "topic": str,
+    # type of the protocol
+    "type": Or("bytestream", "message", "application"),
+    # description of the protocol
+    "info": str,
+    # example of usage of the protocol, a piece of C code
+    "example": str,
+    # if true, the docs will contain a warning about using this protocol
+    Optional("experimental", default=False): bool,
+}
+
+# Check whether the data comply to the schema. Also fills in defaults.
+protocols = Schema([pschema]).validate(protocols)
+
+# Read all function files.
 fxs = []
 files = glob.glob("*.function.py")
 for file in files:
@@ -50,7 +69,7 @@ for fx in fxs:
     if fx["name"] in names:
         raise ValueError("Duplicate function name %s" % fx["name"])
 
-schema = Schema([{
+schema = {
     # name of the function
     "name": str,
     # the name of the section in the docs the function should appear in
@@ -88,18 +107,7 @@ schema = Schema([{
     # of arguments
     Optional("epilogue", default=None): str,
     # should be present only if the function is related to a network protocol
-    Optional("protocol", default=None): {
-        # the section in the docs the protocol belongs to
-        "topic": str,
-        # type of the protocol
-        "type": Or("bytestream", "message", "application"),
-        # description of the protocol
-        "info": str,
-        # example of usage of the protocol, a piece of C code
-        "example": str,
-        # if true, the docs will contain a warning about using this protocol
-        Optional("experimental", default=False): bool,
-    },
+    Optional("protocol", default=None): pschema,
     # a piece of code to be added to synopsis, between the include
     # and the function declaration
     Optional("add_to_synopsis", default=None): str,
@@ -131,10 +139,10 @@ schema = Schema([{
     Optional("signature", default=True): bool,
     # if true, generates boiles plate code for the function
     Optional("boilerplate", default=True): bool,
-}])
+}
 
 # Check whether the data comply to the schema. Also fills in defaults.
-fxs = schema.validate(fxs)
+fxs = Schema([schema]).validate(fxs)
 
 # Collect the topics.
 topics = {}

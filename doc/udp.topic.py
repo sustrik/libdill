@@ -1,4 +1,5 @@
 udp_protocol = {
+    "name": "udp",
     "topic": "UDP protocol",
     "type": "message",
     "info": """
@@ -19,3 +20,4 @@ udp_protocol = {
     """,
 }
 
+protocols.append(udp_protocol)

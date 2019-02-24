@@ -1,4 +1,5 @@
 tcpmux_protocol = {
+    "name": "tcpmux",
     "topic": "TCPMUX protocol",
     "type": "application",
     "info": """
@@ -12,3 +13,4 @@ tcpmux_protocol = {
     """
 }
 
+protocols.append(tcpmux_protocol)

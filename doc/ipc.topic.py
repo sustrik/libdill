@@ -1,4 +1,5 @@
 ipc_protocol = {
+    "name": "ipc",
     "topic": "IPC protocol",
     "type": "bytestream",
     "info": """
@@ -17,3 +18,4 @@ ipc_protocol = {
     """
 }
 
+protocols.append(ipc_protocol)

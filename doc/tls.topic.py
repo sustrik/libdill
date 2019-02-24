@@ -1,4 +1,5 @@
 tls_protocol = {
+    "name": "tls",
     "topic": "TLS protocol",
     "type": "bytestream",
     "info": """
@@ -17,3 +18,4 @@ tls_protocol = {
     "experimental": True,
 }
 
+protocols.append(tls_protocol)

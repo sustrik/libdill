@@ -22,6 +22,7 @@ ws_flags = """
 """
 
 ws_protocol = {
+    "name": "ws",
     "topic": "WebSocket protocol",
     "type": "message",
     "info": """
@@ -45,4 +46,6 @@ ws_protocol = {
 
     "experimental": True,
 }
+
+protocols.append(ws_protocol)
 
