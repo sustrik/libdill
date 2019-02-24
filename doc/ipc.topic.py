@@ -1,7 +1,8 @@
-ipc_protocol = {
+
+ipc_topic = {
     "name": "ipc",
-    "topic": "IPC protocol",
-    "type": "bytestream",
+    "title": "IPC protocol",
+    "protocol": "bytestream",
     "info": """
        IPC  protocol is a bytestream protocol for transporting data among
        processes on the same machine.  It is an equivalent to POSIX
@@ -18,4 +19,5 @@ ipc_protocol = {
     """
 }
 
-protocols.append(ipc_protocol)
+new_topic(ipc_topic)
+

@@ -1,7 +1,8 @@
-tcp_protocol = {
+
+tcp_topic = {
     "name": "tcp",
-    "topic": "TCP protocol",
-    "type": "bytestream",
+    "title": "TCP protocol",
+    "protocol": "bytestream",
     "info": """
        TCP protocol is a reliable bytestream protocol for transporting data
        over network. It is defined in RFC 793.
@@ -19,4 +20,5 @@ tcp_protocol = {
     """
 }
 
-protocols.append(tcp_protocol)
+new_topic(tcp_topic)
+

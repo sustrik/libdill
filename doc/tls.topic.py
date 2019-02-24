@@ -1,7 +1,8 @@
-tls_protocol = {
+
+tls_topic = {
     "name": "tls",
-    "topic": "TLS protocol",
-    "type": "bytestream",
+    "title": "TLS protocol",
+    "protocol": "bytestream",
     "info": """
         TLS is a cryptographic protocol to provide secure communication over
         the network. It is a bytestream protocol.
@@ -18,4 +19,4 @@ tls_protocol = {
     "experimental": True,
 }
 
-protocols.append(tls_protocol)
+new_topic(tls_topic)

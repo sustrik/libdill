@@ -1,32 +1,33 @@
 
-fxs.append(
-    {
-        "name": "yield",
-        "topic": "Coroutines",
-        "info": "yields CPU to other coroutines",
-        "result": {
-            "type": "int",
-            "success": "0",
-            "error": "-1",
-        },
-        "args": [
-        ],
+yield_function = {
+    "name": "yield",
+    "topic": "cr",
+    "info": "yields CPU to other coroutines",
+    "result": {
+        "type": "int",
+        "success": "0",
+        "error": "-1",
+    },
+    "args": [
+    ],
 
-        "prologue": """
-            By calling this function, you give other coroutines a chance to run.
+    "prologue": """
+        By calling this function, you give other coroutines a chance to run.
 
-            You should consider using **yield** when doing lengthy computations
-            which don't have natural coroutine switching points such as socket
-            or channel operations or msleep.
-        """,
+        You should consider using **yield** when doing lengthy computations
+        which don't have natural coroutine switching points such as socket
+        or channel operations or msleep.
+    """,
 
-        "errors": ["ECANCELED"],
+    "errors": ["ECANCELED"],
 
-        "example": """
-            for(i = 0; i != 1000000; ++i) {
-                expensive_computation();
-                yield(); /* Give other coroutines a chance to run. */
-            }
-        """,
-    }
-)
+    "example": """
+        for(i = 0; i != 1000000; ++i) {
+            expensive_computation();
+            yield(); /* Give other coroutines a chance to run. */
+        }
+    """,
+}
+
+new_function(yield_function)
+

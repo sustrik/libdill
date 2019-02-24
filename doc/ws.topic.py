@@ -1,3 +1,4 @@
+
 ws_flags = """
             The socket can be either text- (**WS_TEXT** flag) or binary-
             (**WS_BINARY** flag) based. Binary is the default. When sending
@@ -21,10 +22,10 @@ ws_flags = """
             of protocols (e.g. HTML and WebSocket).
 """
 
-ws_protocol = {
+ws_topic = {
     "name": "ws",
-    "topic": "WebSocket protocol",
-    "type": "message",
+    "title": "WebSocket protocol",
+    "protocol": "message",
     "info": """
         WebSocket is a message-based protocol defined in RFC 6455. It can be
         used as a bidirectional communication channel for communication with
@@ -43,9 +44,8 @@ ws_protocol = {
         s = ws_detach(s, -1);
         tcp_close(s, -1);
     """,
-
     "experimental": True,
 }
 
-protocols.append(ws_protocol)
+new_topic(ws_topic)
 

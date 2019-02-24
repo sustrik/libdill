@@ -1,3 +1,4 @@
+
 http_server_example = """
     int s = tcp_accept(listener, NULL, -1);
     s = http_attach(s, -1);
@@ -15,10 +16,10 @@ http_server_example = """
     tcp_close(s);
 """
 
-http_protocol = {
+http_topic = {
     "name": "http",
-    "topic": "HTTP protocol",
-    "type": "application",
+    "title": "HTTP protocol",
+    "protocol": "application",
     "info": """
         HTTP is an application-level protocol described in RFC 7230. This
         implementation handles only the request/response exchange. Whatever
@@ -44,4 +45,5 @@ http_protocol = {
     "experimental": True,
 }
 
-protocols.append(http_protocol)
+new_topic(http_topic)
+

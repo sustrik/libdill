@@ -1,7 +1,8 @@
-suffix_protocol = {
+
+suffix_topic = {
     "name": "suffix",
-    "topic": "SUFFIX protocol",
-    "type": "message",
+    "title": "SUFFIX protocol",
+    "protocol": "message",
     "info": """
         SUFFIX is a message-based protocol that delimits messages by specific
         byte sequences. For example, many protocols are line-based, with
@@ -18,4 +19,5 @@ suffix_protocol = {
     """,
 }
 
-protocols.append(suffix_protocol)
+new_topic(suffix_topic)
+

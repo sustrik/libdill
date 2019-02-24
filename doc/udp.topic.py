@@ -1,7 +1,8 @@
-udp_protocol = {
+
+udp_topic = {
     "name": "udp",
-    "topic": "UDP protocol",
-    "type": "message",
+    "title": "UDP protocol",
+    "protocol": "message",
     "info": """
         UDP is an unreliable message-based protocol defined in RFC 768. The size
         of the message is limited. The protocol has no initial or terminal
@@ -20,4 +21,5 @@ udp_protocol = {
     """,
 }
 
-protocols.append(udp_protocol)
+new_topic(udp_topic)
+

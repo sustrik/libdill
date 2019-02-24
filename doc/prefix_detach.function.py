@@ -1,30 +1,32 @@
 
-fxs.append(
-    {
-        "name": "prefix_detach",
-        "info": "terminates PREFIX protocol and returns the underlying socket",
-        "result": {
-            "type": "int",
-            "success": "underlying socket handle",
-            "error": "-1",
-        },
-        "args": [
-           {
-               "name": "s",
-               "type": "int",
-               "info": "Handle of the PREFIX socket.",
-           },
-        ],
-        "protocol": prefix_protocol,
-        "prologue": """
-            This function does the terminal handshake and returns underlying
-            socket to the user. The socket is closed even in the case of error.
-        """,
+prefix_detach_function = {
+    "name": "prefix_detach",
+    "topic": "prefix",
+    "info": "terminates PREFIX protocol and returns the underlying socket",
+    "result": {
+        "type": "int",
+        "success": "underlying socket handle",
+        "error": "-1",
+    },
+    "args": [
+       {
+           "name": "s",
+           "type": "int",
+           "info": "Handle of the PREFIX socket.",
+       },
+    ],
+    "protocol": prefix_protocol,
+    "prologue": """
+        This function does the terminal handshake and returns underlying
+        socket to the user. The socket is closed even in the case of error.
+    """,
 
-        "has_handle_argument": True,
+    "has_handle_argument": True,
 
-        "custom_errors": {
-            "ENOTSUP": "The handle is not a PREFIX protocol handle.",
-        },
-    }
-)
+    "custom_errors": {
+        "ENOTSUP": "The handle is not a PREFIX protocol handle.",
+    },
+}
+
+new_topic(prefix_detach_function)
+

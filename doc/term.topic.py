@@ -1,8 +1,8 @@
 
-term_protocol = {
+term_topic = {
     "name": "term",
-    "topic": "TERM protocol",
-    "type": "message",
+    "title": "TERM protocol",
+    "protocol": "message",
     "info": """
         TERM is a protocol that implements clean terminal handshake between
         peers. When creating the protocol instance user specifies the terminal
@@ -27,4 +27,5 @@ term_protocol = {
     """,
 }
 
-protocols.append(term_protocol)
+new_topic(term_topic)
+

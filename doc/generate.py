@@ -30,30 +30,39 @@ def signature(fx, prefix="", code=False):
              """
 
 # Read all topic files.
-protocols = []
+topics = []
+
+def new_topic(topic):
+    topics.append(topic)
+
 files = glob.glob("*.topic.py")
 for file in files:
     with open(file, 'r') as f:
         c = f.read()
         exec(c)
 
-pschema = {
-    # name of the protocol
+# Check whether the data comply to the schema. Also fills in defaults.
+tschema = {
+    # short name of the protocol; typically the function prefix
     "name": str,
-    # which topic should the protocol appear in
-    "topic": str,
-    # type of the protocol
-    "type": Or("bytestream", "message", "application"),
-    # description of the protocol
-    "info": str,
-    # example of usage of the protocol, a piece of C code
-    "example": str,
-    # if true, the docs will contain a warning about using this protocol
+    # title of the topic as it appears in the ToC
+    "title": str,
+    # topic with smaller order numbers will appear first in the ToC
+    Optional("order", default=None): int,
+    # if the topic is about a protocol, the type of the protocol
+    Optional("protocol", default=None): Or("bytestream", "message", "application"),
+    # this string will be added to the man page of each function in the topic
+    Optional("info", default=None): str,
+    # this example will be used for the functions that don't have example of their own
+    Optional("example", default=None): str,
+    # option types associated with this topic
+    Optional("opts", default=[]): [str],
+    # storage types associated with this topic (value is the size of the structure in bytes)
+    Optional("storage", default={}): {str: int},
+    # true if the functionality is experimental
     Optional("experimental", default=False): bool,
 }
-
-# Check whether the data comply to the schema. Also fills in defaults.
-protocols = Schema([pschema]).validate(protocols)
+topics = Schema([tschema]).validate(topics)
 
 # Read all function files.
 fxs = []
@@ -107,7 +116,20 @@ schema = {
     # of arguments
     Optional("epilogue", default=None): str,
     # should be present only if the function is related to a network protocol
-    Optional("protocol", default=None): pschema,
+    Optional("protocol", default=None): {
+        # name of the protocol
+        "name": str,
+        # which topic should the protocol appear in
+        "topic": str,
+        # type of the protocol
+        "type": Or("bytestream", "message", "application"),
+        # description of the protocol
+        "info": str,
+        # example of usage of the protocol, a piece of C code
+        "example": str,
+        # if true, the docs will contain a warning about using this protocol
+        Optional("experimental", default=False): bool,
+    },
     # a piece of code to be added to synopsis, between the include
     # and the function declaration
     Optional("add_to_synopsis", default=None): str,
@@ -144,21 +166,22 @@ schema = {
 # Check whether the data comply to the schema. Also fills in defaults.
 fxs = Schema([schema]).validate(fxs)
 
-# Collect the topics.
-topics = {}
+# Link functions to topics.
+for topic in topics:
+    topic["functions"] = []
 for fx in fxs:
     if fx["topic"]:
-        topic = fx["topic"]
+        topic_name = fx["topic"]
     elif fx["protocol"]:
-        topic = fx["protocol"]["topic"]
-        fx["topic"] = topic
+        topic_name = fx["protocol"]["topic"]
     else:
-        raise ValueError("Missing topic in %s" % fx["name"])
-    if topic not in topics:
-        topics[topic] = []
-    topics[topic].append(fx)
-for topic, flist in topics.items():
-    flist.sort(key=lambda f : f["name"])
+        raise ValueError("Missing topic in function %s" % fx["name"])
+    
+
+    topics[topic]["function"].append(fx)
+    fx["topic"] = topics[topic]
+for topic in topics:
+    topics["functions"].sort(key=lambda f : f["name"])
 
 # Enhance the data.
 for fx in fxs:
@@ -219,6 +242,7 @@ topic_order = [
     "Bytestream sockets",
     "Message sockets",
     "IP addresses",
+    #
     "Happy Eyeballs protocol",
     "HTTP protocol",
     "IPC protocol",
@@ -230,12 +254,9 @@ topic_order = [
     "TLS protocol",
     "UDP protocol",
     "WebSocket protocol"]
-for topic in topics:
-    if topic not in topic_order:
-        raise ValueError("Topic %s missing in the topic order" % topic)
 toc = t/""
 for topic in topic_order:
-    flist = [f["name"] for f in topics[topic]]
+    flist = [f["name"] for f in topic["function"]]
     flist.sort()
     items = (t/"").vjoin([t/"[@{f}(3)](@{f}.html)" for f in flist])
     toc |= t%'#### @{topic}\n' | items | t%''
@@ -377,7 +398,7 @@ for fx in fxs:
     # SEE ALSO section.
     # It'll contain all funrction from the same topic plus the functions
     # added manually.
-    sa = [f["name"] for f in topics[fx["topic"]] if f["name"] != fx["name"]]
+    sa = [f["name"] for f in fx["topic"]["functions"] if f["name"] != fx["name"]]
     if fx["has_deadline"]:
         sa.append("now")
     if fx["allocates_handle"]:
@@ -412,10 +433,10 @@ for fx in fxs:
 hdrs = t/''
 for topic in topic_order:
     signatures = t/""
-    for fx in topics[topic]:
+    for fx in topic_functions[topic]:
         if fx["header"] == "libdill.h" and fx["signature"]:
             signatures |= t%'' | t/'@{signature(fx, prefix="DILL_EXPORT", code=True)}'
-    defines = (t/"").vjoin([t/'#define @{tp["name"]} dill_@{tp["name"]}' for tp in topics[topic]])
+    defines = (t/"").vjoin([t/'#define @{tp["name"]} dill_@{tp["name"]}' for tp in topic_functions[topic]])
     signatures = t/"""
         @{signatures}
 

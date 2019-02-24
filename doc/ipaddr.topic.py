@@ -1,3 +1,4 @@
+
 ipaddr_example = """
     ipaddr addr;
     ipaddr_remote(&addr, "www.example.org", 80, 0, -1);
@@ -19,3 +20,10 @@ ipaddr_mode = """
     more common it may be switched to **IPADDR_PREF_IPV6**.
 """
 
+ipaddr_topic = {
+    "name": "ipaddr",
+    "title": "IP addresses",
+    "order": 80,
+}
+
+new_topic(ipaddr_topic)

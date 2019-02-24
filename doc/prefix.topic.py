@@ -1,7 +1,8 @@
-prefix_protocol = {
+
+prefix_topic = {
     "name": "prefix",
-    "topic": "PREFIX protocol",
-    "type": "message",
+    "title": "PREFIX protocol",
+    "protocol": "message",
     "info": """
         PREFIX  is a message-based protocol to send binary messages prefixed by
         size. The protocol has no initial handshake. Terminal handshake is
@@ -18,4 +19,5 @@ prefix_protocol = {
     """
 }
 
-protocols.append(prefix_protocol)
+new_topic(prefix_topic)
+

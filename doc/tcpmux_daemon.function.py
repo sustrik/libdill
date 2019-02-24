@@ -1,30 +1,30 @@
 
-fxs.append(
-    {
-        "name": "tcpmux_daemon",
-        "info": "runs TCPMUX daemon",
+tcpmux_daemon_function = {
+    "name": "tcpmux_daemon",
+    "topic": "tcpmux",
+    "info": "runs TCPMUX daemon",
 
-        "result": {
-            "type": "int",
-            "success": "0",
-            "error": "-1",
+    "result": {
+        "type": "int",
+        "success": "0",
+        "error": "-1",
+    },
+    "args": [
+        {
+            "name": "opts",
+            "type": "const struct tcpmux_opts*",
+            "dill": True,
+            "info": "Options.",
         },
-        "args": [
-            {
-                "name": "opts",
-                "type": "const struct tcpmux_opts*",
-                "dill": True,
-                "info": "Options.",
-            },
-        ],
+    ],
 
-        "protocol": tcpmux_protocol,
+    "prologue": """
+        This function starts a TCPMUX daemon. The function doesn't return unless
+        there's an error.
+    """,
 
-        "prologue": """
-            This function starts a TCPMUX daemon. The function doesn't return unless
-            there's an error.
-        """,
+    "errors": [],
+}
 
-        "errors": [],
-    }
-)
+new_function(tcpmux_daemon_function)
+

@@ -1,41 +1,41 @@
 
-fxs.append(
-    {
-        "name": "ipc_accept",
-        "info": "accepts an incoming IPC connection",
+ipc_accept_function = {
+    "name": "ipc_accept",
+    "topic": "ipc",
+    "info": "accepts an incoming IPC connection",
 
-        "result": {
+    "result": {
+        "type": "int",
+        "success": "handle of the new connection",
+        "error": "-1",
+    },
+    "args": [
+        {
+            "name": "s",
             "type": "int",
-            "success": "handle of the new connection",
-            "error": "-1",
+            "info": "Socket created by **ipc_listen**.",
         },
-        "args": [
-            {
-                "name": "s",
-                "type": "int",
-                "info": "Socket created by **ipc_listen**.",
-            },
-            {
-                "name": "opts",
-                "type": "const struct ipc_opts*",
-                "dill": True,
-                "info": "Options.",
-            },
-        ],
+        {
+            "name": "opts",
+            "type": "const struct ipc_opts*",
+            "dill": True,
+            "info": "Options.",
+        },
+    ],
 
-        "has_deadline": True,
+    "has_deadline": True,
 
-        "protocol": ipc_protocol,
+    "prologue": """
+        This function accepts an incoming IPC connection.
+    """,
+    "epilogue": """
+        The socket can be cleanly shut down using **ipc_close** function.
+    """,
 
-        "prologue": """
-            This function accepts an incoming IPC connection.
-        """,
-        "epilogue": """
-            The socket can be cleanly shut down using **ipc_close** function.
-        """,
+    "has_handle_argument": True,
+    "allocates_handle": True,
+    "mem": "ipc_storage",
+}
 
-        "has_handle_argument": True,
-        "allocates_handle": True,
-        "mem": "ipc_storage",
-    }
-)
+new_function(ipc_accept_function)
+

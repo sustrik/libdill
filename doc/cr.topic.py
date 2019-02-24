@@ -42,3 +42,11 @@ go_info = """
     ```
 """
 
+cr_topic = {
+    "name": "cr",
+    "title": "Coroutines",
+    "order": 10,
+}
+
+new_topic(cr_topic)
+

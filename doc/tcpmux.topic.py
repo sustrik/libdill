@@ -1,7 +1,10 @@
-tcpmux_protocol = {
+
+tcpmux_topic = {
     "name": "tcpmux",
-    "topic": "TCPMUX protocol",
-    "type": "application",
+    "title": "TCPMUX protocol",
+    "opts": ["tcpmux"],
+    "storage": {"tcpmux" : 1000},
+    "protocol": "application",
     "info": """
        TCPMUX protocol enables multiplexing TCP connections on a single port.
        The connections made on that port are distributed to different processes
@@ -13,4 +16,5 @@ tcpmux_protocol = {
     """
 }
 
-protocols.append(tcpmux_protocol)
+new_topic(tcpmux_topic)
+
