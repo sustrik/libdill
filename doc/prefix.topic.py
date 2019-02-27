@@ -16,7 +16,26 @@ prefix_topic = {
         ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
         s = prefix_detach(s, -1);
         tcp_close(s);
-    """
+    """,
+    "storage": {"prefix" : 56},
+    "opts": {
+        "prefix": [
+            {
+                "name": "mem",
+                "type": "struct prefix_storage*",
+                "dill": True,
+                "default": "NULL",
+                "info": "Memory to store the object in. If NULL, the memory will be allocated automatically.",
+            },
+            {
+                "name": "little_endian",
+                "type": "unsigned int",
+                "suffix": ":1",
+                "default": "0",
+                "info": "If set to false, size prefix is going to be in network byte order (big-endian). If set to true it will be little-endian.",
+            },
+        ],
+    },
 }
 
 new_topic(prefix_topic)

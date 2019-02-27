@@ -158,6 +158,8 @@ tschema = {
         "type": str,
         # set to true for dill-specific types
         Optional("dill", default=False): bool,
+        # type suffix
+        Optional("suffix", default=""): str,
         # default value of the option
         "default": str,
         # description of the option
@@ -424,7 +426,7 @@ for tname in order:
 
     opts = t/""
     for opt, flist in topic["opts"].items():
-        fields = (t/'').vjoin([t/'@{dillify(f["type"], f["dill"])} @{f["name"]};' for f in flist])
+        fields = (t/'').vjoin([t/'@{dillify(f["type"], f["dill"])} @{f["name"]}@{f["suffix"]};' for f in flist])
         opts |= t/"""
             struct dill_@{opt}_opts {
                 @{fields}

@@ -380,26 +380,6 @@ DILL_EXPORT extern const struct dill_ipc_opts dill_ipc_defaults;
 #endif
 
 /******************************************************************************/
-/*  PREFIX protocol.                                                          */
-/*  Messages are prefixed by size.                                            */
-/******************************************************************************/
-
-struct dill_prefix_storage {char _[56];};
-
-struct dill_prefix_opts {
-    struct dill_prefix_storage *mem;
-    unsigned int little_endian : 1;
-};
-
-DILL_EXPORT extern const struct dill_prefix_opts dill_prefix_defaults;
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define prefix_opts dill_prefix_opts
-#define prefix_defaults dill_prefix_defaults
-#define prefix_storage dill_prefix_storage
-#endif
-
-/******************************************************************************/
 /*  WebSockets protocol.                                                      */
 /******************************************************************************/
 
