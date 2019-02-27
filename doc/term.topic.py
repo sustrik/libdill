@@ -25,6 +25,18 @@ term_topic = {
         }
         s = term_detach(s);
     """,
+    "storage": {"term" : 88},
+    "opts": {
+        "term": [
+            {
+                "name": "mem",
+                "type": "struct term_storage*",
+                "dill": True,
+                "default": "NULL",
+                "info": "Memory to store the object in. If NULL, the memory will be allocated automatically.",
+            },
+        ],
+    },
 }
 
 new_topic(term_topic)

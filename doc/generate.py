@@ -151,7 +151,18 @@ tschema = {
     # all functions in the topic
     "functions": {str: fschema},
     # option types associated with this topic
-    Optional("opts", default=[]): [str],
+    Optional("opts", default={}): {str: [{
+        # name of the option
+        "name": str,
+        # type of the option
+        "type": str,
+        # set to true for dill-specific types
+        Optional("dill", default=False): bool,
+        # default value of the option
+        "default": str,
+        # description of the option
+        "info": str,
+    }]},
     # storage types associated with this topic (value is the size of the structure in bytes)
     Optional("storage", default={}): {str: int},
     # true if the functionality is experimental
@@ -397,21 +408,46 @@ for _, topic in topics.items():
 print("Generating header files")
 
 hdrs = t/''
-for topic in order:
-    fxs = topics[topic]["functions"]
+for tname in order:
+    topic = topics[tname]
+    fxs = topic["functions"]
+
     signatures = t/""
     for _, fx in fxs.items():
         if fx["header"] == "libdill.h" and fx["signature"]:
             signatures |= t%'' | t/'@{signature(fx, prefix="DILL_EXPORT", code=True)}'
+
     defines = (t/"").vjoin([t/'#define @{fx["name"]} dill_@{fx["name"]}' for _, fx in fxs.items()])
+
+    storage = (t/"").vjoin([t/'struct dill_@{name}_storage {char _[@{size}];};' for name, size in topic["storage"].items()])
+    defines = (t/"").vjoin([t/'#define @{name}_storage dill_@{name}_storage' for name, size in topic["storage"].items()]) | defines
+
+    opts = t/""
+    for opt, flist in topic["opts"].items():
+        fields = (t/'').vjoin([t/'@{dillify(f["type"], f["dill"])} @{f["name"]};' for f in flist])
+        opts |= t/"""
+            struct dill_@{opt}_opts {
+                @{fields}
+            };
+
+            DILL_EXPORT extern const struct dill_@{opt}_opts dill_@{opt}_defaults;
+            """
+        defines = (t/'#define @{opt}_opts dill_@{opt}_opts' |
+                   t/'#define @{opt}_defaults dill_@{opt}_defaults' |
+                   defines)
+
     signatures = t/"""
+        @{storage}
+
+        @{opts}
+
         @{signatures}
 
         #if !defined DILL_DISABLE_RAW_NAMES
         @{defines}
         #endif
         """
-    if topics[topic]["protocol"]:
+    if topic["protocol"]:
         signatures = t/"""
             #if !defined DILL_DISABLE_SOCKETS
 
@@ -419,13 +455,14 @@ for topic in order:
 
             #endif
             """
-    if topics[topic]["name"] == "tls":
+    if topic["name"] == "tls":
         signatures = t/"""
             #if !defined DILL_DISABLE_TLS
             @{signatures}
             #endif
             """
-    hdrs |= t%'' | t/'/* @{topics[topic]["title"]} */' | t%'' | t/'@{signatures}'
+    hdrs |= t%'' | t/'/* @{topic["title"]} */' | t%'' | t/'@{signatures}'
+
 with open("libdill.tile.h", 'r') as f:
     c = f.read()
 with open("../libdill.h", 'w') as f:

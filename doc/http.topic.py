@@ -42,6 +42,18 @@ http_topic = {
         s = http_detach(s, -1);
         tcp_close(s);
     """,
+    "storage": {"http" : 1296},
+    "opts": {
+        "http": [
+            {
+                "name": "mem",
+                "type": "struct http_storage*",
+                "dill": True,
+                "default": "NULL",
+                "info": "Memory to store the object in. If NULL, the memory will be allocated automatically.",
+            },
+        ],
+    },
     "experimental": True,
 }
 

@@ -2,8 +2,6 @@
 tcpmux_topic = {
     "name": "tcpmux",
     "title": "TCPMUX protocol",
-    "opts": ["tcpmux"],
-    "storage": {"tcpmux" : 1000},
     "protocol": "application",
     "info": """
        TCPMUX protocol enables multiplexing TCP connections on a single port.
@@ -13,7 +11,31 @@ tcpmux_topic = {
     """,
     "example": """
         TODO
-    """
+    """,
+    "storage": {"tcpmux" : 1000},
+    "opts": {
+        "tcpmux": [
+            {
+                "name": "mem",
+                "type": "struct tcpmux_storage*",
+                "dill": True,
+                "default": "NULL",
+                "info": "Memory to store the object in. If NULL, the memory will be allocated automatically.",
+            },
+            {
+                "name": "addr",
+                "type": "const char*",
+                "default": "/tmp/tcpmux",
+                "info": "TODO",
+            },
+            {
+                "name": "port",
+                "type": "int",
+                "default": "10001",
+                "info": "TODO",
+            },
+        ],
+    },
 }
 
 new_topic(tcpmux_topic)

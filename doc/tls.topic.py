@@ -16,6 +16,18 @@ tls_topic = {
         s = tls_detach(s, -1);
         tcp_close(s);
     """,
+    "storage": {"tls" : 72},
+    "opts": {
+        "tls": [
+            {
+                "name": "mem",
+                "type": "struct tls_storage*",
+                "dill": True,
+                "default": "NULL",
+                "info": "Memory to store the object in. If NULL, the memory will be allocated automatically.",
+            },
+        ],
+    },
     "experimental": True,
 }
 

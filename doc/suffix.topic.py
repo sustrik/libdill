@@ -17,6 +17,18 @@ suffix_topic = {
         s = suffix_detach(s, -1);
         tcp_close(s);
     """,
+    "storage": {"suffix" : 128},
+    "opts": {
+        "suffix": [
+            {
+                "name": "mem",
+                "type": "struct suffix_storage*",
+                "dill": True,
+                "default": "NULL",
+                "info": "Memory to store the object in. If NULL, the memory will be allocated automatically.",
+            },
+        ],
+    },
 }
 
 new_topic(suffix_topic)

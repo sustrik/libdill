@@ -19,6 +19,18 @@ udp_topic = {
         ssize_t sz = udp_recv(s, NULL, buf, sizeof(buf), -1);
         hclose(s);
     """,
+    "storage": {"udp" : 72},
+    "opts": {
+        "udp": [
+            {
+                "name": "mem",
+                "type": "struct udp_storage*",
+                "dill": True,
+                "default": "NULL",
+                "info": "Memory to store the object in. If NULL, the memory will be allocated automatically.",
+            },
+        ],
+    },
 }
 
 new_topic(udp_topic)

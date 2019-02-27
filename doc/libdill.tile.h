@@ -400,84 +400,6 @@ DILL_EXPORT extern const struct dill_prefix_opts dill_prefix_defaults;
 #endif
 
 /******************************************************************************/
-/*  SUFFIX protocol.                                                          */
-/*  Messages are suffixed by specified string of bytes.                       */
-/******************************************************************************/
-
-struct dill_suffix_storage {char _[128];};
-
-struct dill_suffix_opts {
-    struct dill_suffix_storage *mem;
-};
-
-DILL_EXPORT extern const struct dill_suffix_opts dill_suffix_defaults;
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define suffix_opts dill_suffix_opts
-#define suffix_defaults dill_suffix_defaults
-#define suffix_storage dill_suffix_storage
-#endif
-
-/******************************************************************************/
-/*  UDP protocol.                                                             */
-/*  Each UDP packet is treated as a separate message.                         */
-/******************************************************************************/
-
-struct dill_udp_storage {char _[72];};
-
-struct dill_udp_opts {
-    struct dill_udp_storage *mem;
-};
-
-DILL_EXPORT extern const struct dill_udp_opts dill_udp_defaults;
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define udp_opts dill_udp_opts
-#define udp_defaults dill_udp_defaults
-#define udp_storage dill_udp_storage
-#endif
-
-/******************************************************************************/
-/*  HTTP                                                                      */
-/******************************************************************************/
-
-struct dill_http_storage {char _[1296];};
-
-struct dill_http_opts {
-    struct dill_http_storage *mem;
-};
-
-DILL_EXPORT extern const struct dill_http_opts dill_http_defaults;
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define http_opts dill_http_opts
-#define http_defaults dill_http_defaults
-#define http_storage dill_http_storage
-#endif
-
-#if !defined DILL_DISABLE_TLS
-
-/******************************************************************************/
-/*  TLS protocol.                                                             */
-/******************************************************************************/
-
-struct dill_tls_storage {char _[72];};
-
-struct dill_tls_opts {
-    struct dill_tls_storage *mem;
-};
-
-DILL_EXPORT extern const struct dill_tls_opts dill_tls_defaults;
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define tls_opts dill_tls_opts
-#define tls_defaults dill_tls_defaults
-#define tls_storage dill_tls_storage
-#endif
-
-#endif
-
-/******************************************************************************/
 /*  WebSockets protocol.                                                      */
 /******************************************************************************/
 
@@ -518,7 +440,6 @@ DILL_EXPORT extern const struct dill_ws_opts dill_ws_defaults;
 #define DILL_SOCKS5_TTL_EXPIRED (0x06)
 #define DILL_SOCKS5_COMMAND_NOT_SUPPORTED (0x07)
 #define DILL_SOCKS5_ADDRESS_TYPE_NOT_SUPPORTED (0x08)
-
 
 typedef int dill_socks5_auth_function(const char *username,
     const char *password);
@@ -567,46 +488,6 @@ DILL_EXPORT int dill_socks5_proxy_sendreply(
 #define SOCKS5_ADDRESS_TYPE_NOT_SUPPORTED DILL_SOCKS5_ADDRESS_TYPE_NOT_SUPPORTED
 
 #endif /* !defined DILL_DISABLE_RAW_NAMES */
-
-/******************************************************************************/
-/*  TERM protocol.                                                            */
-/*  Implementes terminal handshake on the top of any message-based protocol.  */
-/******************************************************************************/
-
-struct dill_term_storage {char _[88];};
-
-struct dill_term_opts {
-    struct dill_term_storage *mem;
-};
-
-DILL_EXPORT extern const struct dill_term_opts dill_term_defaults;
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define term_opts dill_term_opts
-#define term_defaults dill_term_defaults
-#define term_storage dill_term_storage
-#endif
-
-/******************************************************************************/
-/* TCPMUX (RFC 1078).                                                         */
-/* Allows to multiplex different services on a single TCP port.               */
-/******************************************************************************/
-
-struct dill_tcpmux_storage {char _[1000];};
-
-struct dill_tcpmux_opts {
-    struct dill_tcpmux_storage *mem;
-    const char *addr;
-    int port;
-};
-
-DILL_EXPORT extern const struct dill_tcpmux_opts dill_tcpmux_defaults;
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define tcpmux_storage dill_tcpmux_storage
-#define tcpmux_opts dill_tcpmux_opts
-#define tcpmux_defaults dill_tcpmux_defaults
-#endif
 
 #endif
 
