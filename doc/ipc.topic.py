@@ -16,7 +16,32 @@ ipc_topic = {
         brecv(s, buf, sizeof(buf), -1);
         ipc_close(s);
         ipc_close(ls);
-    """
+    """,
+    "storage": {"ipc" : 72},
+    "opts": {
+        "ipc": [
+            {
+                "name": "mem",
+                "type": "struct ipc_storage*",
+                "dill": True,
+                "default": "NULL",
+                "info": "Memory to store the object in. If NULL, the memory will be allocated automatically.",
+            },
+            {
+                "name": "backlog",
+                "type": "int",
+                "default": "64",
+                "info": "Size of connection backlog. The value is relevant only for listening sockets.",
+            },
+            {
+                "name": "rx_buffering",
+                "type": "unsigned int",
+                "suffix": ":1",
+                "default": "1",
+                "info": "If set to false the connection will do no read-aheads.",
+            },
+        ],
+    },
 }
 
 new_topic(ipc_topic)

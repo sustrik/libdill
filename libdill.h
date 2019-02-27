@@ -339,26 +339,6 @@ struct dill_ipaddr {char _[32];};
 #endif
 
 /******************************************************************************/
-/*  IPC protocol.                                                            */
-/******************************************************************************/
-
-struct dill_ipc_storage {char _[72];};
-
-struct dill_ipc_opts {
-    struct dill_ipc_storage *mem;
-    int backlog;
-    unsigned int rx_buffering : 1;
-};
-
-DILL_EXPORT extern const struct dill_ipc_opts dill_ipc_defaults;
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define ipc_opts dill_ipc_opts
-#define ipc_defaults dill_ipc_defaults
-#define ipc_storage dill_ipc_storage
-#endif
-
-/******************************************************************************/
 /*  WebSockets protocol.                                                      */
 /******************************************************************************/
 
@@ -765,6 +745,17 @@ DILL_EXPORT int dill_http_sendrequest(
 
 #if !defined DILL_DISABLE_SOCKETS
 
+struct dill_ipc_storage {char _[72];};
+
+struct dill_ipc_opts {
+    struct dill_ipc_storage* mem;
+    int backlog;
+    unsigned int rx_buffering:1;
+};
+
+DILL_EXPORT extern const struct dill_ipc_opts dill_ipc_defaults;
+
+
 DILL_EXPORT int dill_ipc_listener_fromfd(
     int fd);
 
@@ -812,6 +803,9 @@ DILL_EXPORT int dill_ipc_close(
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define ipc_opts dill_ipc_opts
+#define ipc_defaults dill_ipc_defaults
+#define ipc_storage dill_ipc_storage
 #define ipc_listener_fromfd dill_ipc_listener_fromfd
 #define ipc_tofd dill_ipc_tofd
 #define ipc_connect dill_ipc_connect
