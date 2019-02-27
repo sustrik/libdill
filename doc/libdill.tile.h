@@ -339,27 +339,6 @@ struct dill_ipaddr {char _[32];};
 #endif
 
 /******************************************************************************/
-/*  TCP protocol.                                                             */
-/******************************************************************************/
-
-struct dill_tcp_storage {char _[72];};
-
-struct dill_tcp_opts {
-    struct dill_tcp_storage *mem;
-    int backlog;
-    unsigned int rx_buffering : 1; /* TODO: Make this the size of the buffer. */
-    unsigned int nodelay : 1;
-};
-
-DILL_EXPORT extern const struct dill_tcp_opts dill_tcp_defaults;
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define tcp_opts dill_tcp_opts
-#define tcp_defaults dill_tcp_defaults
-#define tcp_storage dill_tcp_storage
-#endif
-
-/******************************************************************************/
 /*  IPC protocol.                                                            */
 /******************************************************************************/
 

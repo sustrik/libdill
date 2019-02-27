@@ -17,7 +17,39 @@ tcp_topic = {
         brecv(s, buf, sizeof(buf), -1);
         tcp_close(s);
         tcp_close(ls);
-    """
+    """,
+    "storage": {"tcp" : 72},
+    "opts": {
+        "tcp": [
+            {
+                "name": "mem",
+                "type": "struct tcp_storage*",
+                "dill": True,
+                "default": "NULL",
+                "info": "Memory to store the object in. If NULL, the memory will be allocated automatically.",
+            },
+            {
+                "name": "backlog",
+                "type": "int",
+                "default": "64",
+                "info": "Size of connection backlog. The value is relevant only for listening sockets.",
+            },
+            {
+                "name": "rx_buffering",
+                "type": "unsigned int",
+                "suffix": ":1",
+                "default": "1",
+                "info": "If set to false the connection will do no read-aheads.",
+            },
+            {
+                "name": "nodelay",
+                "type": "int",
+                "suffix": ":1",
+                "default": "0",
+                "info": "If set to true Nagle's algorithm will be switched off.",
+            },
+        ],
+    },
 }
 
 new_topic(tcp_topic)

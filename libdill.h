@@ -339,27 +339,6 @@ struct dill_ipaddr {char _[32];};
 #endif
 
 /******************************************************************************/
-/*  TCP protocol.                                                             */
-/******************************************************************************/
-
-struct dill_tcp_storage {char _[72];};
-
-struct dill_tcp_opts {
-    struct dill_tcp_storage *mem;
-    int backlog;
-    unsigned int rx_buffering : 1; /* TODO: Make this the size of the buffer. */
-    unsigned int nodelay : 1;
-};
-
-DILL_EXPORT extern const struct dill_tcp_opts dill_tcp_defaults;
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define tcp_opts dill_tcp_opts
-#define tcp_defaults dill_tcp_defaults
-#define tcp_storage dill_tcp_storage
-#endif
-
-/******************************************************************************/
 /*  IPC protocol.                                                            */
 /******************************************************************************/
 
@@ -916,6 +895,18 @@ DILL_EXPORT int dill_suffix_attach(
 
 #if !defined DILL_DISABLE_SOCKETS
 
+struct dill_tcp_storage {char _[72];};
+
+struct dill_tcp_opts {
+    struct dill_tcp_storage* mem;
+    int backlog;
+    unsigned int rx_buffering:1;
+    int nodelay:1;
+};
+
+DILL_EXPORT extern const struct dill_tcp_opts dill_tcp_defaults;
+
+
 DILL_EXPORT int dill_happyeyeballs_connect(
     const char* name,
     int port,
@@ -956,6 +947,9 @@ DILL_EXPORT int dill_tcp_listener_fromfd(
     const struct dill_tcp_opts* opts);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define tcp_opts dill_tcp_opts
+#define tcp_defaults dill_tcp_defaults
+#define tcp_storage dill_tcp_storage
 #define happyeyeballs_connect dill_happyeyeballs_connect
 #define tcp_fromfd dill_tcp_fromfd
 #define tcp_done dill_tcp_done
