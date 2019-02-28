@@ -12,7 +12,7 @@ tcpmux_topic = {
     "example": """
         TODO
     """,
-    "storage": {"tcpmux" : 1000},
+    "opaque": {"tcpmux_storage" : 1000},
     "opts": {
         "tcpmux": [
             {

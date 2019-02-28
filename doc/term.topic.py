@@ -25,7 +25,7 @@ term_topic = {
         }
         s = term_detach(s);
     """,
-    "storage": {"term" : 88},
+    "opaque": {"term_storage" : 88},
     "opts": {
         "term": [
             {

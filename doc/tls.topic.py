@@ -16,7 +16,7 @@ tls_topic = {
         s = tls_detach(s, -1);
         tcp_close(s);
     """,
-    "storage": {"tls" : 72},
+    "opaque": {"tls_storage" : 72},
     "opts": {
         "tls": [
             {

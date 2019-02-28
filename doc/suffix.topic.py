@@ -17,7 +17,7 @@ suffix_topic = {
         s = suffix_detach(s, -1);
         tcp_close(s);
     """,
-    "storage": {"suffix" : 128},
+    "opaque": {"suffix_storage" : 128},
     "opts": {
         "suffix": [
             {

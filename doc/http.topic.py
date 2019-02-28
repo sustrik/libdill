@@ -42,7 +42,7 @@ http_topic = {
         s = http_detach(s, -1);
         tcp_close(s);
     """,
-    "storage": {"http" : 1296},
+    "opaque": {"http_storage" : 1296},
     "opts": {
         "http": [
             {

@@ -45,7 +45,7 @@ ws_topic = {
         tcp_close(s, -1);
     """,
     "consts": {"WS_KEY_SIZE": "32"},
-    "storage": {"ws" : 176},
+    "opaque": {"ws_storage" : 176},
     "opts": {
         "ws": [
             {

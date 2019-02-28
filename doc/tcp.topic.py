@@ -18,7 +18,7 @@ tcp_topic = {
         tcp_close(s);
         tcp_close(ls);
     """,
-    "storage": {"tcp" : 72},
+    "opaque": {"tcp_storage" : 72},
     "opts": {
         "tcp": [
             {

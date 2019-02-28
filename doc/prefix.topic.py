@@ -17,7 +17,7 @@ prefix_topic = {
         s = prefix_detach(s, -1);
         tcp_close(s);
     """,
-    "storage": {"prefix" : 56},
+    "opaque": {"prefix_storage" : 56},
     "opts": {
         "prefix": [
             {

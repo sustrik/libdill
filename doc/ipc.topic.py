@@ -17,7 +17,7 @@ ipc_topic = {
         ipc_close(s);
         ipc_close(ls);
     """,
-    "storage": {"ipc" : 72},
+    "opaque": {"ipc_storage" : 72},
     "opts": {
         "ipc": [
             {

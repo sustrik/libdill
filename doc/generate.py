@@ -167,8 +167,9 @@ tschema = {
         # description of the option
         "info": str,
     }]},
-    # storage types associated with this topic (value is the size of the structure in bytes)
-    Optional("storage", default={}): {str: int},
+    # opaque structs associated with this topic
+    # (value is the size of the structure in bytes)
+    Optional("opaque", default={}): {str: int},
     # true if the functionality is experimental
     Optional("experimental", default=False): bool,
 }
@@ -422,8 +423,8 @@ for tname in order:
             signatures |= t%'' | t/'@{signature(fx, prefix="DILL_EXPORT", code=True)}'
 
     defines = (t/"").vjoin([t/'#define @{fx["name"]} dill_@{fx["name"]}' for _, fx in fxs.items()])
-    storage = (t/"").vjoin([t/'struct dill_@{name}_storage {char _[@{size}];};' for name, size in topic["storage"].items()])
-    defines = (t/"").vjoin([t/'#define @{name}_storage dill_@{name}_storage' for name, size in topic["storage"].items()]) | defines
+    opaque = (t/"").vjoin([t/'struct dill_@{name} {char _[@{size}];};' for name, size in topic["opaque"].items()])
+    defines = (t/"").vjoin([t/'#define @{name} dill_@{name}' for name, size in topic["opaque"].items()]) | defines
     consts = (t/"").vjoin([t/'#define DILL_@{name} @{value}' for name, value in topic["consts"].items()])
     defines = (t/"").vjoin([t/'#define @{name} DILL_@{name}' for name, value in topic["consts"].items()]) | defines
 
@@ -444,7 +445,7 @@ for tname in order:
     signatures = t/"""
         @{consts}
 
-        @{storage}
+        @{opaque}
 
         @{opts}
 

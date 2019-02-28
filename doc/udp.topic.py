@@ -19,7 +19,7 @@ udp_topic = {
         ssize_t sz = udp_recv(s, NULL, buf, sizeof(buf), -1);
         hclose(s);
     """,
-    "storage": {"udp" : 72},
+    "opaque": {"udp_storage" : 72},
     "opts": {
         "udp": [
             {
