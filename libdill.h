@@ -339,28 +339,6 @@ struct dill_ipaddr {char _[32];};
 #endif
 
 /******************************************************************************/
-/*  WebSockets protocol.                                                      */
-/******************************************************************************/
-
-struct dill_ws_storage {char _[176];};
-
-struct dill_ws_opts {
-    struct dill_ws_storage *mem;
-    unsigned int http : 1;
-    unsigned int text : 1;
-};
-
-DILL_EXPORT extern const struct dill_ws_opts dill_ws_defaults;
-
-#define WS_KEY_SIZE 32
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define ws_opts dill_ws_opts
-#define ws_defaults dill_ws_defaults
-#define ws_storage dill_ws_storage
-#endif
-
-/******************************************************************************/
 /*  SOCKS5                                                                    */
 /******************************************************************************/
 
@@ -895,7 +873,7 @@ struct dill_tcp_opts {
     struct dill_tcp_storage* mem;
     int backlog;
     unsigned int rx_buffering:1;
-    int nodelay:1;
+    unsigned int nodelay:1;
 };
 
 DILL_EXPORT extern const struct dill_tcp_opts dill_tcp_defaults;
@@ -1149,6 +1127,19 @@ DILL_EXPORT ssize_t dill_udp_recvl(
 
 #if !defined DILL_DISABLE_SOCKETS
 
+#define DILL_WS_KEY_SIZE 32
+
+struct dill_ws_storage {char _[176];};
+
+struct dill_ws_opts {
+    struct dill_ws_storage* mem;
+    unsigned int http:1;
+    unsigned int text:1;
+};
+
+DILL_EXPORT extern const struct dill_ws_opts dill_ws_defaults;
+
+
 DILL_EXPORT int dill_ws_send(
     int s,
     int flags,
@@ -1221,6 +1212,10 @@ DILL_EXPORT int dill_ws_attach_server(
     int64_t deadline);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define ws_opts dill_ws_opts
+#define ws_defaults dill_ws_defaults
+#define WS_KEY_SIZE DILL_WS_KEY_SIZE
+#define ws_storage dill_ws_storage
 #define ws_send dill_ws_send
 #define ws_done dill_ws_done
 #define ws_detach dill_ws_detach

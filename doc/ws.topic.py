@@ -44,6 +44,33 @@ ws_topic = {
         s = ws_detach(s, -1);
         tcp_close(s, -1);
     """,
+    "consts": {"WS_KEY_SIZE": "32"},
+    "storage": {"ws" : 176},
+    "opts": {
+        "ws": [
+            {
+                "name": "mem",
+                "type": "struct ws_storage*",
+                "dill": True,
+                "default": "NULL",
+                "info": "Memory to store the object in. If NULL, the memory will be allocated automatically.",
+            },
+            {
+                "name": "http",
+                "type": "unsigned int",
+                "suffix": ":1",
+                "default": "1",
+                "info": "If true, the socket will perform initial HTTP negotiation. If false, it does not and the user is free to do it themselves.",
+            },
+            {
+                "name": "text",
+                "type": "unsigned int",
+                "suffix": ":1",
+                "default": "1",
+                "info": "If true, messages will be of type TEXT by default. Otherwise, they will be of type BINARY. See RFC 6455, section 5.6.",
+            },
+        ],
+    },
     "experimental": True,
 }
 

@@ -43,7 +43,7 @@ tcp_topic = {
             },
             {
                 "name": "nodelay",
-                "type": "int",
+                "type": "unsigned int",
                 "suffix": ":1",
                 "default": "0",
                 "info": "If set to true Nagle's algorithm will be switched off.",

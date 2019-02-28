@@ -113,7 +113,7 @@ int dill_ws_attach_client(int s, const char *resource,
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     rc = dill_http_sendfield(s, "Connection", "Upgrade", deadline);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
-    char request_key[WS_KEY_SIZE];
+    char request_key[DILL_WS_KEY_SIZE];
     rc = dill_ws_request_key(request_key);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
     rc = dill_http_sendfield(s, "Sec-WebSocket-Key", request_key, deadline);
@@ -153,7 +153,7 @@ int dill_ws_attach_client(int s, const char *resource,
         }
         if(strcasecmp(name, "Sec-WebSocket-Accept") == 0) {
             if(has_key) {err = EPROTO; goto error2;}
-            char response_key[WS_KEY_SIZE];
+            char response_key[DILL_WS_KEY_SIZE];
             rc = dill_ws_response_key(request_key, response_key);
             if(dill_slow(rc < 0)) {err = errno; goto error2;}
             if(dill_slow(strcmp(value, response_key) != 0)) {
@@ -220,7 +220,7 @@ int dill_ws_attach_server(int s, const struct dill_ws_opts *opts,
     int has_connection = 0;
     int has_key = 0;
     int has_version = 0;
-    char response_key[WS_KEY_SIZE];
+    char response_key[DILL_WS_KEY_SIZE];
     while(1) {
         char name[256];
         char value[256];
@@ -575,7 +575,8 @@ int dill_ws_request_key(char *request_key) {
     uint8_t nonce[16];
     int rc = dill_random(nonce, sizeof(nonce));
     if(dill_slow(rc < 0)) return -1;
-    rc = dill_base64_encode(nonce, sizeof(nonce), request_key, WS_KEY_SIZE);
+    rc = dill_base64_encode(nonce, sizeof(nonce), request_key,
+        DILL_WS_KEY_SIZE);
     if(dill_slow(rc < 0)) {errno = EFAULT; return -1;}
     return 0;
 }
@@ -600,7 +601,7 @@ int dill_ws_response_key(const char *request_key, char *response_key) {
     for(i = 0; uuid[i] != 0; ++i) dill_sha1_hashbyte(&sha1, uuid[i]);
     /* Convert the SHA1 to Base64. */
     rc = dill_base64_encode(dill_sha1_result(&sha1), DILL_SHA1_HASH_LEN,
-        response_key, WS_KEY_SIZE);
+        response_key, DILL_WS_KEY_SIZE);
     if(dill_slow(rc < 0)) {errno = EFAULT; return -1;}
     return 0;
 }

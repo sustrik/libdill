@@ -339,28 +339,6 @@ struct dill_ipaddr {char _[32];};
 #endif
 
 /******************************************************************************/
-/*  WebSockets protocol.                                                      */
-/******************************************************************************/
-
-struct dill_ws_storage {char _[176];};
-
-struct dill_ws_opts {
-    struct dill_ws_storage *mem;
-    unsigned int http : 1;
-    unsigned int text : 1;
-};
-
-DILL_EXPORT extern const struct dill_ws_opts dill_ws_defaults;
-
-#define WS_KEY_SIZE 32
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define ws_opts dill_ws_opts
-#define ws_defaults dill_ws_defaults
-#define ws_storage dill_ws_storage
-#endif
-
-/******************************************************************************/
 /*  SOCKS5                                                                    */
 /******************************************************************************/
 
