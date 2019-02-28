@@ -22,7 +22,8 @@
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdillimpl.h&gt;</span>
 
 <span class="dt">void</span>* hquery(
-    <span class="dt">int</span> h);</code></pre></div>
+    <span class="dt">int</span> h,
+    <span class="dt">const</span> <span class="dt">char</span>* type);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>Returns an opaque pointer associated with the passed handle and type. This function is a fundamental construct for building APIs on top of handles.</p>
 <p>The type argument is not interpreted in any way. It is used only as an unique ID. A unique ID can be created, for instance, like this:</p>
@@ -31,6 +32,7 @@
 <p>The return value has no specified semantics. It is an opaque pointer. One typical use case for it is to return a pointer to a table of function pointers. These function pointers can then be used to access the handle's functionality (see the example).</p>
 <p>Pointers returned by <strong>hquery</strong> are meant to be cachable. In other words, if you call hquery on the same handle with the same type multiple times, the result should be the same.</p>
 <p><strong>h</strong>: The handle.</p>
+<p><strong>type</strong>: The opaque ID of the queried type.</p>
 <h1 id="return-value">RETURN VALUE</h1>
 <p>In case of success the function returns opaque pointer. In case of error it returns NULL and sets <strong>errno</strong> to one of the values below.</p>
 <h1 id="errors">ERRORS</h1>

@@ -17,11 +17,11 @@
 <li><a href="faq.html">FAQ</a></li>
 </ul>
 <h1 id="name">NAME</h1>
-<p>happy_eyeballs_connect - creates a TCP connection using Happy Eyeballs algorithm</p>
+<p>happyeyeballs_connect - creates a TCP connection using Happy Eyeballs algorithm</p>
 <h1 id="synopsis">SYNOPSIS</h1>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="pp">#include </span><span class="im">&lt;libdill.h&gt;</span>
 
-<span class="dt">int</span> happy_eyeballs_connect(
+<span class="dt">int</span> happyeyeballs_connect(
     <span class="dt">const</span> <span class="dt">char</span>* name,
     <span class="dt">int</span> port,
     <span class="dt">int64_t</span> deadline);</code></pre></div>
@@ -44,7 +44,7 @@
 <li><strong>ETIMEDOUT</strong>: Deadline was reached.</li>
 </ul>
 <h1 id="example">EXAMPLE</h1>
-<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = happy_eyeballs_connect(<span class="st">&quot;www.example.org&quot;</span>, <span class="dv">80</span>, <span class="dv">-1</span>);
+<div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int</span> s = happyeyeballs_connect(<span class="st">&quot;www.example.org&quot;</span>, <span class="dv">80</span>, <span class="dv">-1</span>);
 <span class="dt">int</span> rc = bsend(s, <span class="st">&quot;GET / HTTP/1.1&quot;</span>, <span class="dv">14</span>, <span class="dv">-1</span>);</code></pre></div>
 <h1 id="see-also">SEE ALSO</h1>
 <p><strong>now</strong>(3)</p>
