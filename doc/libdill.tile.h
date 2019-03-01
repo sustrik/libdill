@@ -290,11 +290,13 @@ DILL_EXPORT extern const struct dill_chopts dill_chdefaults;
 #define chdefaults dill_chdefaults
 #endif
 
-#if !defined DILL_DISABLE_SOCKETS
-
 /******************************************************************************/
 /*  Gather/scatter list.                                                      */
 /******************************************************************************/
+
+#if !defined DILL_DISABLE_SOCKETS
+
+struct sockaddr;
 
 struct dill_iolist {
     void *iol_base;
@@ -307,40 +309,19 @@ struct dill_iolist {
 #define iolist dill_iolist
 #endif
 
-/******************************************************************************/
-/*  IP address resolution.                                                    */
-/******************************************************************************/
-
-struct sockaddr;
-
-#define DILL_IPADDR_IPV4 1
-#define DILL_IPADDR_IPV6 2
-#define DILL_IPADDR_PREF_IPV4 3
-#define DILL_IPADDR_PREF_IPV6 4
-#define DILL_IPADDR_MAXSTRLEN 46
-
-struct dill_ipaddr_opts {
-    int mode;
-};
-
-DILL_EXPORT extern const struct dill_ipaddr_opts dill_ipaddr_defaults;
-
-struct dill_ipaddr {char _[32];};
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define IPADDR_IPV4 DILL_IPADDR_IPV4 
-#define IPADDR_IPV6 DILL_IPADDR_IPV6
-#define IPADDR_PREF_IPV4 DILL_IPADDR_PREF_IPV4 
-#define IPADDR_PREF_IPV6 DILL_IPADDR_PREF_IPV6
-#define IPADDR_MAXSTRLEN DILL_IPADDR_MAXSTRLEN
-#define ipaddr_opts dill_ipaddr_opts
-#define ipaddr_defaults dill_ipaddr_defaults
-#define ipaddr dill_ipaddr
 #endif
+
+/******************************************************************************/
+/* Generated stuff.                                                           */
+/******************************************************************************/
+
+@{hdrs}
 
 /******************************************************************************/
 /*  SOCKS5                                                                    */
 /******************************************************************************/
+
+#if !defined DILL_DISABLE_SOCKETS
 
 // SOCKS5 client commands
 #define DILL_SOCKS5_CONNECT (0x01)
@@ -407,12 +388,6 @@ DILL_EXPORT int dill_socks5_proxy_sendreply(
 #endif /* !defined DILL_DISABLE_RAW_NAMES */
 
 #endif
-
-/******************************************************************************/
-/* Generated stuff.                                                           */
-/******************************************************************************/
-
-@{hdrs}
 
 #ifdef __cplusplus
 }

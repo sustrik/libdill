@@ -290,11 +290,13 @@ DILL_EXPORT extern const struct dill_chopts dill_chdefaults;
 #define chdefaults dill_chdefaults
 #endif
 
-#if !defined DILL_DISABLE_SOCKETS
-
 /******************************************************************************/
 /*  Gather/scatter list.                                                      */
 /******************************************************************************/
+
+#if !defined DILL_DISABLE_SOCKETS
+
+struct sockaddr;
 
 struct dill_iolist {
     void *iol_base;
@@ -306,105 +308,6 @@ struct dill_iolist {
 #if !defined DILL_DISABLE_RAW_NAMES
 #define iolist dill_iolist
 #endif
-
-/******************************************************************************/
-/*  IP address resolution.                                                    */
-/******************************************************************************/
-
-struct sockaddr;
-
-#define DILL_IPADDR_IPV4 1
-#define DILL_IPADDR_IPV6 2
-#define DILL_IPADDR_PREF_IPV4 3
-#define DILL_IPADDR_PREF_IPV6 4
-#define DILL_IPADDR_MAXSTRLEN 46
-
-struct dill_ipaddr_opts {
-    int mode;
-};
-
-DILL_EXPORT extern const struct dill_ipaddr_opts dill_ipaddr_defaults;
-
-struct dill_ipaddr {char _[32];};
-
-#if !defined DILL_DISABLE_RAW_NAMES
-#define IPADDR_IPV4 DILL_IPADDR_IPV4
-#define IPADDR_IPV6 DILL_IPADDR_IPV6
-#define IPADDR_PREF_IPV4 DILL_IPADDR_PREF_IPV4
-#define IPADDR_PREF_IPV6 DILL_IPADDR_PREF_IPV6
-#define IPADDR_MAXSTRLEN DILL_IPADDR_MAXSTRLEN
-#define ipaddr_opts dill_ipaddr_opts
-#define ipaddr_defaults dill_ipaddr_defaults
-#define ipaddr dill_ipaddr
-#endif
-
-/******************************************************************************/
-/*  SOCKS5                                                                    */
-/******************************************************************************/
-
-// SOCKS5 client commands
-#define DILL_SOCKS5_CONNECT (0x01)
-#define DILL_SOCKS5_BIND (0x02)
-#define DILL_SOCKS5_UDP_ASSOCIATE (0x03)
-
-// SOCKS5 server reply codes
-#define DILL_SOCKS5_SUCCESS (0x00)
-#define DILL_SOCKS5_GENERAL_FAILURE (0x01)
-#define DILL_SOCKS5_CONNECTION_NOT_ALLOWED (0x02)
-#define DILL_SOCKS5_NETWORK_UNREACHABLE (0x03)
-#define DILL_SOCKS5_HOST_UNREACHABLE (0x04)
-#define DILL_SOCKS5_CONNECTION_REFUSED (0x05)
-#define DILL_SOCKS5_TTL_EXPIRED (0x06)
-#define DILL_SOCKS5_COMMAND_NOT_SUPPORTED (0x07)
-#define DILL_SOCKS5_ADDRESS_TYPE_NOT_SUPPORTED (0x08)
-
-typedef int dill_socks5_auth_function(const char *username,
-    const char *password);
-
-DILL_EXPORT int dill_socks5_client_connect(
-    int s, const char *username, const char *password,
-    struct dill_ipaddr *addr, int64_t deadline);
-
-DILL_EXPORT int dill_socks5_client_connectbyname(
-    int s, const char *username, const char *password, const char *hostname,
-    int port, int64_t deadline);
-
-DILL_EXPORT int dill_socks5_proxy_auth(
-    int s, dill_socks5_auth_function *auth_fn, int64_t deadline);
-
-DILL_EXPORT int dill_socks5_proxy_recvcommand(
-    int s, struct dill_ipaddr *ipaddr, int64_t deadline);
-
-DILL_EXPORT int dill_socks5_proxy_recvcommandbyname(
-    int s, char *host, int *port, int64_t deadline);
-
-DILL_EXPORT int dill_socks5_proxy_sendreply(
-    int s, int reply, struct dill_ipaddr *ipaddr, int64_t deadline);
-
-#if !defined DILL_DISABLE_RAW_NAMES
-
-#define socks5_client_connect dill_socks5_client_connect
-#define socks5_client_connectbyname dill_socks5_client_connectbyname
-#define socks5_proxy_auth dill_socks5_proxy_auth
-#define socks5_proxy_recvcommand dill_socks5_proxy_recvcommand
-#define socks5_proxy_recvcommandbyname dill_socks5_proxy_recvcommandbyname
-#define socks5_proxy_sendreply dill_socks5_proxy_sendreply
-
-#define SOCKS5_CONNECT DILL_SOCKS5_CONNECT
-#define SOCKS5_BIND DILL_SOCKS5_BIND
-#define SOCKS5_UDP_ASSOCIATE DILL_SOCKS5_UDP_ASSOCIATE
-
-#define SOCKS5_SUCCESS DILL_SOCKS5_SUCCESS
-#define SOCKS5_GENERAL_FAILURE DILL_SOCKS5_GENERAL_FAILURE
-#define SOCKS5_CONNECTION_NOT_ALLOWED DILL_SOCKS5_CONNECTION_NOT_ALLOWED
-#define SOCKS5_NETWORK_UNREACHABLE DILL_SOCKS5_NETWORK_UNREACHABLE
-#define SOCKS5_HOST_UNREACHABLE DILL_SOCKS5_HOST_UNREACHABLE
-#define SOCKS5_CONNECTION_REFUSED DILL_SOCKS5_CONNECTION_REFUSED
-#define SOCKS5_TTL_EXPIRED DILL_SOCKS5_TTL_EXPIRED
-#define SOCKS5_COMMAND_NOT_SUPPORTED DILL_SOCKS5_COMMAND_NOT_SUPPORTED
-#define SOCKS5_ADDRESS_TYPE_NOT_SUPPORTED DILL_SOCKS5_ADDRESS_TYPE_NOT_SUPPORTED
-
-#endif /* !defined DILL_DISABLE_RAW_NAMES */
 
 #endif
 
@@ -578,6 +481,21 @@ DILL_EXPORT int dill_msend(
 
 /* IP addresses */
 
+#define DILL_IPADDR_IPV4 1
+#define DILL_IPADDR_IPV6 2
+#define DILL_IPADDR_PREF_IPV4 3
+#define DILL_IPADDR_PREF_IPV6 4
+#define DILL_IPADDR_MAXSTRLEN 46
+
+struct dill_ipaddr {char _[32];};
+
+struct dill_ipaddr_opts {
+    int mode;
+};
+
+DILL_EXPORT extern const struct dill_ipaddr_opts dill_ipaddr_defaults;
+
+
 DILL_EXPORT void dill_ipaddr_setport(
     struct dill_ipaddr* addr,
     int port);
@@ -625,6 +543,14 @@ DILL_EXPORT int dill_ipaddr_local(
     const struct dill_ipaddr_opts* opts);
 
 #if !defined DILL_DISABLE_RAW_NAMES
+#define ipaddr_opts dill_ipaddr_opts
+#define ipaddr_defaults dill_ipaddr_defaults
+#define IPADDR_IPV4 DILL_IPADDR_IPV4
+#define IPADDR_IPV6 DILL_IPADDR_IPV6
+#define IPADDR_PREF_IPV4 DILL_IPADDR_PREF_IPV4
+#define IPADDR_PREF_IPV6 DILL_IPADDR_PREF_IPV6
+#define IPADDR_MAXSTRLEN DILL_IPADDR_MAXSTRLEN
+#define ipaddr dill_ipaddr
 #define ipaddr_setport dill_ipaddr_setport
 #define ipaddr_remotes dill_ipaddr_remotes
 #define ipaddr_remote dill_ipaddr_remote
@@ -1228,6 +1154,78 @@ DILL_EXPORT int dill_ws_attach_server(
 #define ws_request_key dill_ws_request_key
 #define ws_attach_server dill_ws_attach_server
 #endif
+
+#endif
+
+/******************************************************************************/
+/*  SOCKS5                                                                    */
+/******************************************************************************/
+
+#if !defined DILL_DISABLE_SOCKETS
+
+// SOCKS5 client commands
+#define DILL_SOCKS5_CONNECT (0x01)
+#define DILL_SOCKS5_BIND (0x02)
+#define DILL_SOCKS5_UDP_ASSOCIATE (0x03)
+
+// SOCKS5 server reply codes
+#define DILL_SOCKS5_SUCCESS (0x00)
+#define DILL_SOCKS5_GENERAL_FAILURE (0x01)
+#define DILL_SOCKS5_CONNECTION_NOT_ALLOWED (0x02)
+#define DILL_SOCKS5_NETWORK_UNREACHABLE (0x03)
+#define DILL_SOCKS5_HOST_UNREACHABLE (0x04)
+#define DILL_SOCKS5_CONNECTION_REFUSED (0x05)
+#define DILL_SOCKS5_TTL_EXPIRED (0x06)
+#define DILL_SOCKS5_COMMAND_NOT_SUPPORTED (0x07)
+#define DILL_SOCKS5_ADDRESS_TYPE_NOT_SUPPORTED (0x08)
+
+typedef int dill_socks5_auth_function(const char *username,
+    const char *password);
+
+DILL_EXPORT int dill_socks5_client_connect(
+    int s, const char *username, const char *password,
+    struct dill_ipaddr *addr, int64_t deadline);
+
+DILL_EXPORT int dill_socks5_client_connectbyname(
+    int s, const char *username, const char *password, const char *hostname,
+    int port, int64_t deadline);
+
+DILL_EXPORT int dill_socks5_proxy_auth(
+    int s, dill_socks5_auth_function *auth_fn, int64_t deadline);
+
+DILL_EXPORT int dill_socks5_proxy_recvcommand(
+    int s, struct dill_ipaddr *ipaddr, int64_t deadline);
+
+DILL_EXPORT int dill_socks5_proxy_recvcommandbyname(
+    int s, char *host, int *port, int64_t deadline);
+
+DILL_EXPORT int dill_socks5_proxy_sendreply(
+    int s, int reply, struct dill_ipaddr *ipaddr, int64_t deadline);
+
+#if !defined DILL_DISABLE_RAW_NAMES
+
+#define socks5_client_connect dill_socks5_client_connect
+#define socks5_client_connectbyname dill_socks5_client_connectbyname
+#define socks5_proxy_auth dill_socks5_proxy_auth
+#define socks5_proxy_recvcommand dill_socks5_proxy_recvcommand
+#define socks5_proxy_recvcommandbyname dill_socks5_proxy_recvcommandbyname
+#define socks5_proxy_sendreply dill_socks5_proxy_sendreply
+
+#define SOCKS5_CONNECT DILL_SOCKS5_CONNECT
+#define SOCKS5_BIND DILL_SOCKS5_BIND
+#define SOCKS5_UDP_ASSOCIATE DILL_SOCKS5_UDP_ASSOCIATE
+
+#define SOCKS5_SUCCESS DILL_SOCKS5_SUCCESS
+#define SOCKS5_GENERAL_FAILURE DILL_SOCKS5_GENERAL_FAILURE
+#define SOCKS5_CONNECTION_NOT_ALLOWED DILL_SOCKS5_CONNECTION_NOT_ALLOWED
+#define SOCKS5_NETWORK_UNREACHABLE DILL_SOCKS5_NETWORK_UNREACHABLE
+#define SOCKS5_HOST_UNREACHABLE DILL_SOCKS5_HOST_UNREACHABLE
+#define SOCKS5_CONNECTION_REFUSED DILL_SOCKS5_CONNECTION_REFUSED
+#define SOCKS5_TTL_EXPIRED DILL_SOCKS5_TTL_EXPIRED
+#define SOCKS5_COMMAND_NOT_SUPPORTED DILL_SOCKS5_COMMAND_NOT_SUPPORTED
+#define SOCKS5_ADDRESS_TYPE_NOT_SUPPORTED DILL_SOCKS5_ADDRESS_TYPE_NOT_SUPPORTED
+
+#endif /* !defined DILL_DISABLE_RAW_NAMES */
 
 #endif
 

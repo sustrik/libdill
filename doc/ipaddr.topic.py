@@ -24,6 +24,24 @@ ipaddr_topic = {
     "name": "ipaddr",
     "title": "IP addresses",
     "order": 80,
+    "consts": {
+        "IPADDR_IPV4": "1",
+        "IPADDR_IPV6": "2",
+        "IPADDR_PREF_IPV4": "3",
+        "IPADDR_PREF_IPV6": "4",
+        "IPADDR_MAXSTRLEN": "46",
+    },
+    "opaque": {"ipaddr": 32},
+    "opts": {
+        "ipaddr": [
+            {
+                "name": "mode",
+                "type": "int",
+                "default": "DILL_IPADDR_PREF_IPV4",
+                "info": "What kind of addresses to return.",
+            },
+        ],
+    },
 }
 
 new_topic(ipaddr_topic)
