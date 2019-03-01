@@ -18,7 +18,7 @@ tls_topic = {
     """,
     "opaque": {"tls_storage" : 72},
     "opts": {
-        "tls": [
+        "tls_": [
             {
                 "name": "mem",
                 "type": "struct tls_storage*",

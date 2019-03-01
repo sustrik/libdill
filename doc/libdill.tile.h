@@ -263,9 +263,6 @@ DILL_EXPORT extern const struct dill_bundle_opts dill_bundle_defaults;
 /*  Channels                                                                  */
 /******************************************************************************/
 
-#define DILL_CHSEND 1
-#define DILL_CHRECV 2
-
 struct dill_chclause {
     int op;
     int ch;
@@ -273,21 +270,8 @@ struct dill_chclause {
     size_t len;
 };
 
-struct dill_chstorage {char _[144];};
-
-struct dill_chopts {
-    struct dill_chstorage *mem;
-};
-
-DILL_EXPORT extern const struct dill_chopts dill_chdefaults;
-
 #if !defined DILL_DISABLE_RAW_NAMES
-#define CHSEND DILL_CHSEND
-#define CHRECV DILL_CHRECV
 #define chclause dill_chclause
-#define chstorage dill_chstorage
-#define chopts dill_chopts
-#define chdefaults dill_chdefaults
 #endif
 
 /******************************************************************************/

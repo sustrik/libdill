@@ -14,7 +14,7 @@ tcpmux_topic = {
     """,
     "opaque": {"tcpmux_storage" : 1000},
     "opts": {
-        "tcpmux": [
+        "tcpmux_": [
             {
                 "name": "mem",
                 "type": "struct tcpmux_storage*",

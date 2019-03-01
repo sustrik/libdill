@@ -19,7 +19,7 @@ prefix_topic = {
     """,
     "opaque": {"prefix_storage" : 56},
     "opts": {
-        "prefix": [
+        "prefix_": [
             {
                 "name": "mem",
                 "type": "struct prefix_storage*",

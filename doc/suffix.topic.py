@@ -19,7 +19,7 @@ suffix_topic = {
     """,
     "opaque": {"suffix_storage" : 128},
     "opts": {
-        "suffix": [
+        "suffix_": [
             {
                 "name": "mem",
                 "type": "struct suffix_storage*",

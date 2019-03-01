@@ -44,7 +44,7 @@ http_topic = {
     """,
     "opaque": {"http_storage" : 1296},
     "opts": {
-        "http": [
+        "http_": [
             {
                 "name": "mem",
                 "type": "struct http_storage*",

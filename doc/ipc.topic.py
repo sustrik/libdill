@@ -19,7 +19,7 @@ ipc_topic = {
     """,
     "opaque": {"ipc_storage" : 72},
     "opts": {
-        "ipc": [
+        "ipc_": [
             {
                 "name": "mem",
                 "type": "struct ipc_storage*",

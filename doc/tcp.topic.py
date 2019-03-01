@@ -20,7 +20,7 @@ tcp_topic = {
     """,
     "opaque": {"tcp_storage" : 72},
     "opts": {
-        "tcp": [
+        "tcp_": [
             {
                 "name": "mem",
                 "type": "struct tcp_storage*",

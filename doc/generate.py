@@ -432,14 +432,14 @@ for tname in order:
     for opt, flist in topic["opts"].items():
         fields = (t/'').vjoin([t/'@{dillify(f["type"], f["dill"])} @{f["name"]}@{f["suffix"]};' for f in flist])
         opts |= t/"""
-            struct dill_@{opt}_opts {
+            struct dill_@{opt}opts {
                 @{fields}
             };
 
-            DILL_EXPORT extern const struct dill_@{opt}_opts dill_@{opt}_defaults;
+            DILL_EXPORT extern const struct dill_@{opt}opts dill_@{opt}defaults;
             """
-        defines = (t/'#define @{opt}_opts dill_@{opt}_opts' |
-                   t/'#define @{opt}_defaults dill_@{opt}_defaults' |
+        defines = (t/'#define @{opt}opts dill_@{opt}opts' |
+                   t/'#define @{opt}defaults dill_@{opt}defaults' |
                    defines)
 
     signatures = t/"""

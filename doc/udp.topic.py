@@ -21,7 +21,7 @@ udp_topic = {
     """,
     "opaque": {"udp_storage" : 72},
     "opts": {
-        "udp": [
+        "udp_": [
             {
                 "name": "mem",
                 "type": "struct udp_storage*",

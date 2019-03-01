@@ -27,7 +27,7 @@ term_topic = {
     """,
     "opaque": {"term_storage" : 88},
     "opts": {
-        "term": [
+        "term_": [
             {
                 "name": "mem",
                 "type": "struct term_storage*",

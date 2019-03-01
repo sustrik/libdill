@@ -47,7 +47,7 @@ ws_topic = {
     "consts": {"WS_KEY_SIZE": "32"},
     "opaque": {"ws_storage" : 176},
     "opts": {
-        "ws": [
+        "ws_": [
             {
                 "name": "mem",
                 "type": "struct ws_storage*",

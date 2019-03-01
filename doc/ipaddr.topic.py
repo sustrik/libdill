@@ -33,7 +33,7 @@ ipaddr_topic = {
     },
     "opaque": {"ipaddr": 32},
     "opts": {
-        "ipaddr": [
+        "ipaddr_": [
             {
                 "name": "mode",
                 "type": "int",
