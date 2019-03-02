@@ -33,12 +33,6 @@
 #include "fd.h"
 #include "utils.h"
 
-const struct dill_ipc_opts dill_ipc_defaults = {
-    NULL,  /* mem */
-    10,    /* backlog */
-    1      /* rx_buffering */
-};
-
 static int dill_ipc_resolve(const char *addr, struct sockaddr_un *su);
 
 dill_unique_id(dill_ipc_listener_type);

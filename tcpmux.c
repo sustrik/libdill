@@ -32,13 +32,6 @@
 #include "list.h"
 #include "utils.h"
 
-const struct dill_tcpmux_opts dill_tcpmux_defaults = {
-    NULL,           /* mem */
-    "/tmp/tcpmux",  /* addr */
-    10001,          /* port - RFC1078 specifies port 1, however, superpowers
-                       are needed to listen on port 1 so use port 10001. */
-};
-
 dill_unique_id(dill_tcpmux_type);
 
 static void *dill_tcpmux_hquery(struct dill_hvfs *hvfs, const void *type);

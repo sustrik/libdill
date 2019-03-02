@@ -33,10 +33,6 @@
 #include "iol.h"
 #include "utils.h"
 
-const struct dill_udp_opts dill_udp_defaults = {
-    NULL  /* mem */
-};
-
 dill_unique_id(dill_udp_type);
 
 static void *dill_udp_hquery(struct dill_hvfs *hvfs, const void *type);

@@ -33,10 +33,6 @@
 #include "libdillimpl.h"
 #include "utils.h"
 
-const struct dill_http_opts dill_http_defaults = {
-    NULL  /* mem */
-};
-
 dill_unique_id(dill_http_type);
 
 static void *dill_http_hquery(struct dill_hvfs *hvfs, const void *type);

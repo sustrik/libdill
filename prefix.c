@@ -31,11 +31,6 @@
 #include "libdillimpl.h"
 #include "utils.h"
 
-const struct dill_prefix_opts dill_prefix_defaults = {
-    NULL,  /* mem */
-    0      /* little_endian */
-};
-
 dill_unique_id(dill_prefix_type);
 
 static void *dill_prefix_hquery(struct dill_hvfs *hvfs, const void *type);

@@ -32,12 +32,6 @@
 #include "iol.h"
 #include "utils.h"
 
-const struct dill_ws_opts dill_ws_defaults = {
-    NULL,  /* mem */
-    1,     /* http */
-    1      /* text */
-};
-
 dill_unique_id(dill_ws_type);
 
 struct dill_ws_sock {

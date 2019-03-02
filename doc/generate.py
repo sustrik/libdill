@@ -476,3 +476,49 @@ with open("libdill.tile.h", 'r') as f:
 with open("../libdill.h", 'w') as f:
     f.write(str(t/c))
 
+print("Generating boilerplace files")
+
+for tname in order:
+    topic = topics[tname]
+   
+    opts = t/''
+    for opt, flist in topic["opts"].items():
+        fields = (t/',').vjoin([t/'@{f["default"]}' for f in flist])
+        comments = (t/'').vjoin([t/'/* @{f["name"]} */' for f in flist])
+        opts |= t%'' | t/"""
+            const struct dill_@{opt}opts dill_@{opt}defaults = {
+                @{fields} @{comments}
+            };
+            """
+    gen = t/"""
+        /*
+
+          Copyright (c) 2019 Martin Sustrik
+
+          Permission is hereby granted, free of charge, to any person obtaining a copy
+          of this software and associated documentation files (the "Software"),
+          to deal in the Software without restriction, including without limitation
+          the rights to use, copy, modify, merge, publish, distribute, sublicense,
+          and/or sell copies of the Software, and to permit persons to whom
+          the Software is furnished to do so, subject to the following conditions:
+
+          The above copyright notice and this permission notice shall be included
+          in all copies or substantial portions of the Software.
+
+          THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+          THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+          FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+          IN THE SOFTWARE.
+
+        */
+
+        #include <libdillimpl.h>
+
+        @{opts}
+        """             
+
+    with open("../" + tname + ".gen.c", 'w') as f:
+        f.write(str(gen))

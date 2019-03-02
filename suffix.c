@@ -31,10 +31,6 @@
 #include "libdillimpl.h"
 #include "utils.h"
 
-const struct dill_suffix_opts dill_suffix_defaults = {
-    NULL  /* mem */
-};
-
 dill_unique_id(dill_suffix_type);
 
 static void *dill_suffix_hquery(struct dill_hvfs *hvfs, const void *type);

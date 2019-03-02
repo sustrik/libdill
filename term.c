@@ -34,10 +34,6 @@
 
 #define DILL_MAX_TERMINATOR_LENGTH 32
 
-const struct dill_term_opts dill_term_defaults = {
-    NULL   /* mem */
-};
-
 dill_unique_id(dill_term_type);
 
 static void *dill_term_hquery(struct dill_hvfs *hvfs, const void *type);

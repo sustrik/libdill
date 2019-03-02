@@ -33,13 +33,6 @@
 #include "fd.h"
 #include "utils.h"
 
-const struct dill_tcp_opts dill_tcp_defaults = {
-    NULL,  /* mem */
-    10,    /* backlog */
-    1,     /* rx_buffering */
-    0      /* nodelay */
-};
-
 dill_unique_id(dill_tcp_type);
 dill_unique_id(dill_tcp_listener_type);
 

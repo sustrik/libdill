@@ -32,13 +32,16 @@ dillinclude_HEADERS = libdill.h libdillimpl.h
 lib_LTLIBRARIES = libdill.la
 
 libdill_la_SOURCES = \
-    chan.c \
+    channel.c \
+    channel.gen.c \
     cr.h \
     cr.c \
+    cr.gen.c \
     epoll.h.inc \
     epoll.c.inc \
     handle.h \
     handle.c \
+    handle.gen.c \
     kqueue.h.inc \
     kqueue.c.inc \
     libdill.c \
@@ -62,24 +65,37 @@ libdill_la_SOURCES = \
 
 if DILL_SOCKETS
 libdill_la_SOURCES += \
-    bsock.c \
+    bytestream.c \
+    bytestream.gen.c \
     fd.h \
     fd.c \
+    fd.gen.c \
     happyeyeballs.c \
     http.c \
+    http.gen.c \
     iol.h \
     iol.c \
     ipc.c \
+    ipc.gen.c \
     ipaddr.c \
-    msock.c \
+    ipaddr.gen.c \
+    message.c \
+    message.gen.c \
     prefix.c \
+    prefix.gen.c \
     socks5.c \
     suffix.c \
+    suffix.gen.c \
     tcp.c \
+    tcp.gen.c \
     tcpmux.c \
+    tcpmux.gen.c \
     term.c \
+    term.gen.c \
     udp.c \
+    udp.gen.c \
     ws.c \
+    ws.gen.c \
     dns/dns.h \
     dns/dns.c
 endif
@@ -87,7 +103,8 @@ endif
 if DILL_SOCKETS
 if HAVE_TLS
 libdill_la_SOURCES += \
-    tls.c
+    tls.c \
+    tls.gen.c
 endif
 endif
 

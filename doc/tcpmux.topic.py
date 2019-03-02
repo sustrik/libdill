@@ -25,7 +25,7 @@ tcpmux_topic = {
             {
                 "name": "addr",
                 "type": "const char*",
-                "default": "/tmp/tcpmux",
+                "default": '"/tmp/tcpmux"',
                 "info": "TODO",
             },
             {

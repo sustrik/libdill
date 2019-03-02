@@ -35,10 +35,6 @@
 #define DILL_DISABLE_RAW_NAMES
 #include "libdillimpl.h"
 
-const struct dill_chopts dill_chdefaults = {
-    NULL  /* mem */
-};
-
 struct dill_halfchan {
     /* Table of virtual functions. */
     struct dill_hvfs vfs;

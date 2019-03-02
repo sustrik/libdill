@@ -51,10 +51,6 @@
 DILL_CT_ASSERT(sizeof(struct dill_ipaddr) >= sizeof(struct sockaddr_in));
 DILL_CT_ASSERT(sizeof(struct dill_ipaddr) >= sizeof(struct sockaddr_in6));
 
-const struct dill_ipaddr_opts dill_ipaddr_defaults = {
-    DILL_IPADDR_PREF_IPV4    /* mode  */
-};
-
 static struct dns_resolv_conf *dill_dns_conf = NULL;
 static struct dns_hosts *dill_dns_hosts = NULL;
 static struct dns_hints *dill_dns_hints = NULL;

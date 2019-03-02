@@ -33,10 +33,6 @@
 #include "libdillimpl.h"
 #include "utils.h"
 
-const struct dill_tls_opts dill_tls_defaults = {
-    NULL  /* mem */
-};
-
 dill_unique_id(dill_tls_type);
 
 struct dill_tls_sock {
