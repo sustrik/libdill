@@ -46,13 +46,13 @@
 /*  www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html  */
 
 /*  The current interface version. */
-#define DILL_VERSION_CURRENT 24
+#define DILL_VERSION_CURRENT 25
 
 /*  The latest revision of the current interface. */
 #define DILL_VERSION_REVISION 0
 
 /*  How many past interface versions are still supported. */
-#define DILL_VERSION_AGE 4
+#define DILL_VERSION_AGE 5
 
 /******************************************************************************/
 /*  Symbol visibility                                                         */

@@ -117,7 +117,7 @@ error1:
     return -1;
 }
 
-int dill_icp_fromfd(int fd) {
+int dill_ipc_fromfd(int fd) {
     int err;
     struct dill_ipc_conn *obj = malloc(sizeof(struct dill_ipc_conn));
     if(dill_slow(!obj)) {err = ENOMEM; goto error1;}

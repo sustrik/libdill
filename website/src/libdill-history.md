@@ -1,6 +1,12 @@
 
 # Past versions
 
+**Feb 28th, 2019 <http://libdill.org/libdill-2.14.tar.gz>**
+
+* ipc_sendfd() and ipc_recvfd() functions added. They allow to send OS-level
+  file descriptors to different processes via an IPC connection.
+* Multiple bug fixes.
+
 **Oct 29th, 2018 <http://libdill.org/libdill-2.13.tar.gz>**
 
 * An implementation of Happy Eyeballs protocol (RFC 8305) added.
