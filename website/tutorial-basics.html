@@ -113,7 +113,7 @@ rc = msend(s, outbuf, rc, <span class="dv">-1</span>);
 <li>At yet another terminal, open a new telnet session.</li>
 <li>Observe that the second session hangs without even asking you for your name.</li>
 </ol>
-<p>The reason for this behavior is that the program doesn't even start accepting new connections until the entire dialog with the client has finished. What we want instead is to run any number of dialogues with clients in parallel. And that is where coroutines kick in.</p>
+<p>The reason for this behavior is that the program doesn't even start accepting new connections until the entire dialogue with the client has finished. What we want instead is to run any number of dialogues with clients in parallel. And that is where coroutines kick in.</p>
 <p>Coroutines are defined using the <code>coroutine</code> keyword and launched with the <code>go()</code> construct.</p>
 <p>In our case, we can move the code performing the dialogue with the client into a separate function and launch it as a coroutine:</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c">coroutine <span class="dt">void</span> dialogue(<span class="dt">int</span> s) {
@@ -135,7 +135,7 @@ cleanup:
         assert(s &gt;= <span class="dv">0</span>);
         s = suffix_attach(s, <span class="st">&quot;</span><span class="sc">\r\n</span><span class="st">&quot;</span>, <span class="dv">2</span>);
         assert(s &gt;= <span class="dv">0</span>);
-        <span class="dt">int</span> cr = go(dialog(s));
+        <span class="dt">int</span> cr = go(dialogue(s));
         assert(cr &gt;= <span class="dv">0</span>);
     }
 }</code></pre></div>
@@ -170,7 +170,7 @@ cleanup:
     rc = hclose(ls);
     assert(rc == <span class="dv">0</span>);
 
-    <span class="cf">return</span> <span class="dv">0</span>; 
+    <span class="cf">return</span> <span class="dv">0</span>;
 }</code></pre></div>
 <p>One thing to remember about canceling coroutines is that once a coroutine is canceled all the blocking operations within the coroutine, such as reading from a socket or sleeping, will start returning <code>ECANCELED</code> error. The coroutine should then deallocate all its resources and exit.</p>
 <p>Looking at our <code>dialogue</code> coroutine it turns out that it already does that. It responds to any error, including <code>ECANCELED</code> by closing the socket handle and exiting.</p>
@@ -178,13 +178,13 @@ cleanup:
 <pre><code>==179895== HEAP SUMMARY:
 ==179895==     in use at exit: 0 bytes in 0 blocks
 ==179895==   total heap usage: 11 allocs, 11 frees, 1,329,272 bytes allocated
-==179895== 
+==179895==
 ==179895== All heap blocks were freed -- no leaks are possible</code></pre>
 <p>To get some background on how object lifetimes are supposed to be managed in libdill read the article about <a href="structured-concurrency.html">structured concurrency</a>.</p>
 <h2 id="step-5-deadlines">Step 5: Deadlines</h2>
 <p>File descriptors can be a scarce resource. If a client connects to the greetserver and lets the dialogue hang without entering a name, one file descriptor on the server side is, for all intents and purposes, wasted.</p>
 <p>To deal with the problem, we are going to timeout the whole client/server dialogue. If it takes more than <em>10</em> seconds, the server will kill the connection at once.</p>
-<p>One thing to note is that libdill uses deadlines rather than the more conventional timeouts. In other words, you specify the time instant by which you want the operation to finish rather than the maximum time it should take to run it. To construct deadlines easily, libdill provides the <code>now()</code> function. The deadline is expressed in milliseconds, which means you can create a deadline one minure in the future as follows:</p>
+<p>One thing to note is that libdill uses deadlines rather than the more conventional timeouts. In other words, you specify the time instant by which you want the operation to finish rather than the maximum time it should take to run it. To construct deadlines easily, libdill provides the <code>now()</code> function. The deadline is expressed in milliseconds, which means you can create a deadline one minute in the future as follows:</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int64_t</span> deadline = now() + <span class="dv">60000</span>;</code></pre></div>
 <p>Furthermore, you have to modify all potentially blocking function calls in the program to take the deadline parameter. In our case:</p>
 <div class="sourceCode"><pre class="sourceCode c"><code class="sourceCode c"><span class="dt">int64_t</span> deadline = now() + <span class="dv">60000</span>;
@@ -237,7 +237,7 @@ assert(rc == <span class="dv">0</span> || (rc &lt; <span class="dv">0</span> &am
     <span class="dt">int</span> active = <span class="dv">0</span>;
     <span class="dt">int</span> succeeded = <span class="dv">0</span>;
     <span class="dt">int</span> failed = <span class="dv">0</span>;
-    
+
     <span class="cf">while</span>(<span class="dv">1</span>) {
         <span class="dt">int</span> op;
         <span class="dt">int</span> rc = chrecv(ch, &amp;op, <span class="kw">sizeof</span>(op), <span class="dv">-1</span>);
