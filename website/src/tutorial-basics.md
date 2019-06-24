@@ -22,7 +22,7 @@ Throughout the tutorial, you will learn how to use coroutines, channels, and soc
 ## Step 1: Setting up the stage
 
 Start by including the libdill header file. Later we'll need some functionality from the standard library, so include those headers as well:
-    
+
 ```c
 #include <libdill.h>
 #include <assert.h>
@@ -171,7 +171,7 @@ At this point, the client cannot crash the server, but it can block it. Do the f
 3. At yet another terminal, open a new telnet session.
 4. Observe that the second session hangs without even asking you for your name.
 
-The reason for this behavior is that the program doesn't even start accepting new connections until the entire dialog with the client has finished. What we want instead is to run any number of dialogues with clients in parallel. And that is where coroutines kick in.
+The reason for this behavior is that the program doesn't even start accepting new connections until the entire dialogue with the client has finished. What we want instead is to run any number of dialogues with clients in parallel. And that is where coroutines kick in.
 
 Coroutines are defined using the `coroutine` keyword and launched with the `go()` construct.
 
@@ -197,13 +197,13 @@ int main(int argc, char *argv[]) {
         assert(s >= 0);
         s = suffix_attach(s, "\r\n", 2);
         assert(s >= 0);
-        int cr = go(dialog(s));
+        int cr = go(dialogue(s));
         assert(cr >= 0);
     }
 }
 ```
 
-Let's compile it and try the initial experiment once again. As can be seen, one client now cannot block another one. Excellent. Let's move on. 
+Let's compile it and try the initial experiment once again. As can be seen, one client now cannot block another one. Excellent. Let's move on.
 
 ## Step 4: Shutdown
 
@@ -244,7 +244,7 @@ int main(int argc, char *argv[]) {
     rc = hclose(ls);
     assert(rc == 0);
 
-    return 0; 
+    return 0;
 }
 ```
 
@@ -258,7 +258,7 @@ Now try to compile this step and run it under valgrind. (Don't forget to compile
 ==179895== HEAP SUMMARY:
 ==179895==     in use at exit: 0 bytes in 0 blocks
 ==179895==   total heap usage: 11 allocs, 11 frees, 1,329,272 bytes allocated
-==179895== 
+==179895==
 ==179895== All heap blocks were freed -- no leaks are possible
 ```
 
@@ -270,7 +270,7 @@ File descriptors can be a scarce resource. If a client connects to the greetserv
 
 To deal with the problem, we are going to timeout the whole client/server dialogue. If it takes more than *10* seconds, the server will kill the connection at once.
 
-One thing to note is that libdill uses deadlines rather than the more conventional timeouts. In other words, you specify the time instant by which you want the operation to finish rather than the maximum time it should take to run it. To construct deadlines easily, libdill provides the `now()` function. The deadline is expressed in milliseconds, which means you can create a deadline one minure in the future as follows:
+One thing to note is that libdill uses deadlines rather than the more conventional timeouts. In other words, you specify the time instant by which you want the operation to finish rather than the maximum time it should take to run it. To construct deadlines easily, libdill provides the `now()` function. The deadline is expressed in milliseconds, which means you can create a deadline one minute in the future as follows:
 
 ```c
 int64_t deadline = now() + 60000;
@@ -296,7 +296,7 @@ This can be achieved by calling `bundle_wait()` on the `dialogue()` coroutine bu
 ```c
 rc = bundle_wait(b, now() + 10000);
 assert(rc == 0 || (rc < 0 && errno == ETIMEDOUT));
-``` 
+```
 
 ## Step 6: Communication among coroutines
 
@@ -356,7 +356,7 @@ coroutine void statistics(int ch) {
     int active = 0;
     int succeeded = 0;
     int failed = 0;
-    
+
     while(1) {
         int op;
         int rc = chrecv(ch, &op, sizeof(op), -1);
