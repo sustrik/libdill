@@ -196,7 +196,7 @@ http_server_example = `
         if(rc == -1 && errno == EPIPE) break;
     }
     http_sendstatus(s, 200, "OK", -1);
-    s = http_detach(s, -1); 
+    s = http_detach(s, -1);
     tcp_close(s);
 `
 
@@ -898,7 +898,7 @@ fxs = [
 
             The size of the message requested from the channel must match the
             size of the message sent to the channel. Otherwise, both peers fail
-            with **EMSGSIZE** error. 
+            with **EMSGSIZE** error.
 
             If there's no one sending a message at the moment, the function
             blocks until someone shows up or until the deadline expires.
@@ -959,7 +959,7 @@ fxs = [
 
             The size of the message sent to the channel must match the size of
             the message requested from the channel. Otherwise, both peers fail
-            with **EMSGSIZE** error. 
+            with **EMSGSIZE** error.
 
             If there's no receiver for the message, the function blocks until
             one shows up or until the deadline expires.
@@ -1058,7 +1058,7 @@ fxs = [
         name: "fdclean",
         section: "File descriptors",
         info: "erases cached info about a file descriptor",
-      
+
         args: [
             {
                 name: "fd",
@@ -1099,7 +1099,7 @@ fxs = [
             success: "0",
             error: "-1",
         },
-      
+
         args: [
             {
                 name: "fd",
@@ -1147,7 +1147,7 @@ fxs = [
             success: "0",
             error: "-1",
         },
-      
+
         args: [
             {
                 name: "fd",
@@ -1346,7 +1346,7 @@ fxs = [
                 info: "The handle.",
             },
         ],
-    
+
         has_handle_argument: true,
 
         prologue: `
@@ -2340,7 +2340,7 @@ fxs = [
         prologue: `
             This function closes the outbound half of ICP connection.
             This will cause the peer to get **EPIPE** error after it has
-            received all the data. 
+            received all the data.
         `,
 
         has_handle_argument: true,
@@ -2629,7 +2629,7 @@ fxs = [
 
         prologue: `
             This function sends a message to a socket. It is a blocking
-            operation that unblocks only after entire message is sent. 
+            operation that unblocks only after entire message is sent.
             There is no such thing as partial send. If a problem, including
             timeout, occurs while sending the message error is returned to the
             user and the socket cannot be used for sending from that point on.
@@ -2668,7 +2668,7 @@ fxs = [
 
         prologue: `
             This function sends a message to a socket. It is a blocking
-            operation that unblocks only after entire message is sent. 
+            operation that unblocks only after entire message is sent.
             There is no such thing as partial send. If a problem, including
             timeout, occurs while sending the message error is returned to the
             user and the socket cannot be used for sending from that point on.
@@ -2970,7 +2970,7 @@ fxs = [
             This function closes the outbound half of TCP connection.
             Technically, it sends a FIN packet to the peer. This will, in turn,
             cause the peer to get **EPIPE** error after it has received all
-            the data. 
+            the data.
         `,
 
         has_handle_argument: true,
@@ -3353,7 +3353,7 @@ fxs = [
         prologue: `
             This function closes the outbound half of TLS connection. This will,
             in turn, cause the peer to get **EPIPE** error after it has received
-            all the data. 
+            all the data.
         `,
 
         has_handle_argument: true,
@@ -3778,7 +3778,7 @@ fxs = [
         prologue: `
             This function closes the outbound half of a WebSocket connection.
             This will, in turn, cause the peer to get **EPIPE** error after it
-            has received all the data. 
+            has received all the data.
         `,
 
         has_handle_argument: true,
@@ -4074,12 +4074,12 @@ fxs = [
                name: "buf",
                type: "void*",
                info: "Buffer to fill the terminal message into. If set to " +
-                     "**NULL** the message won't be returned.",           
+                     "**NULL** the message won't be returned.",
            },
            {
                name: "len",
                type: "size_t",
-               info: "Size of the buffer, in bytes.",           
+               info: "Size of the buffer, in bytes.",
            },
         ],
         protocol: ws_protocol,
@@ -4323,7 +4323,7 @@ function generate_man_page(fx, sections, mem) {
     /**************************************************************************/
     t += "# RETURN VALUE\n\n"
     if(fx.result) {
-        
+
         if(fx.result.success && fx.result.error) {
             t += "In case of success the function returns " +
                 fx.result.success + ". "
