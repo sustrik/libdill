@@ -694,6 +694,80 @@ fxs = [
         example: bundle_example,
     },
     {
+        name: "dill_stack_set_default_size",
+        section: "Coroutines",
+        info: "Set the size of the stacks allocated by libdill, when not specified by the application.",
+
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+
+        args: [
+            {
+                name: "value",
+                type: "size_t",
+                info: "Must be greater or equal to 8192 and a multiple of 1024.",
+            }
+        ],
+
+        allocates_handle: false,
+
+        prologue: `
+            Modify the size of the stacks allocated by libdill when it is not
+            specified by the application.
+        `,
+
+        errors: ["EINVAL"],
+
+        example: `
+            ...
+            int main(int argc, char **argv) {
+                dill_stack_set_default_size(16384);
+                ...
+            }
+            ...
+        `,
+    },
+    {
+        name: "dill_stack_set_cache_max",
+        section: "Coroutines",
+        info: "Set the number of stacks cached by libdill.",
+
+        result: {
+            type: "int",
+            success: "0",
+            error: "-1",
+        },
+
+        args: [
+            {
+                name: "sz",
+                type: "int",
+                info: "Must be greater to 1.",
+            }
+        ],
+
+        allocates_handle: false,
+
+        prologue: `
+            Modify the number of stacks cached by libdill to avoid too frequent
+            memory allocation and liberations.
+        `,
+
+        errors: ["EINVAL"],
+
+        example: `
+            ...
+            int main(int argc, char **argv) {
+                dill_stack_set_cache_max(256);
+                ...
+            }
+            ...
+        `,
+    },
+    {
         name: "chdone",
         section: "Channels",
         info: "half-closes a channel",
