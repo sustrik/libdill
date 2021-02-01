@@ -496,7 +496,7 @@ size_t dns_rr_print(void *, size_t, struct dns_rr *, struct dns_packet *, int *)
 
 
 #define dns_rr_i_new(P, ...) \
-	dns_rr_i_init(&dns_quietinit((struct dns_rr_i){ 0, __VA_ARGS__ }), (P))
+	dns_rr_i_init(dns_quietinit(&(struct dns_rr_i){ 0, __VA_ARGS__ }), (P))
 
 struct dns_rr_i {
 	enum dns_section section;
@@ -1006,7 +1006,7 @@ void dns_cache_close(struct dns_cache *);
 #define DNS_OPTS_INITIALIZER  { DNS_OPTS_INITIALIZER_ }
 #define DNS_OPTS_INIT(...)    { DNS_OPTS_INITIALIZER_, __VA_ARGS__ }
 
-#define dns_opts(...) (&dns_quietinit((struct dns_options)DNS_OPTS_INIT(__VA_ARGS__)))
+#define dns_opts(...) (dns_quietinit(&(struct dns_options)DNS_OPTS_INIT(__VA_ARGS__)))
 
 struct dns_options {
 	/*
