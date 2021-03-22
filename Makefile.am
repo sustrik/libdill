@@ -67,6 +67,7 @@ libdill_la_SOURCES += \
     fd.c \
     happyeyeballs.c \
     http.c \
+    hup.c \
     iol.h \
     iol.c \
     ipc.c \
@@ -144,6 +145,7 @@ check_PROGRAMS += \
     tests/http \
     tests/ws \
     tests/term \
+    tests/hup \
     tests/happyeyeballs
 endif
 
