@@ -35,13 +35,17 @@ static void dill_ctx_init_(struct dill_ctx *ctx) {
     dill_assert(rc == 0);
     rc = dill_ctx_pollset_init(&ctx->pollset);
     dill_assert(rc == 0);
+#if defined DILL_SOCKETS
     rc = dill_ctx_fd_init(&ctx->fd);
     dill_assert(rc == 0);
+#endif
 }
 
 static void dill_ctx_term_(struct dill_ctx *ctx) {
     dill_assert(ctx->initialized == 1);
+#if defined DILL_SOCKETS
     dill_ctx_fd_term(&ctx->fd);
+#endif
     dill_ctx_pollset_term(&ctx->pollset);
     dill_ctx_stack_term(&ctx->stack);
     dill_ctx_handle_term(&ctx->handle);
