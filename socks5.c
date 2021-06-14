@@ -436,7 +436,7 @@ int dill_socks5_proxy_recvcommand(int s, struct dill_ipaddr *ipaddr,
     }
     _socks5_addr s5addr;
     s5addr.atyp = conn[3];
-    uint16_t *port;
+    uint16_t *port = NULL;
     switch(s5addr.atyp) {
         case S5ADDR_IPV4:
             memcpy((void *)&(s5addr.addr), (void *)&(conn[4]), S5ADDR_IPV4_SZ);
@@ -473,7 +473,7 @@ int dill_socks5_proxy_recvcommandbyname(int s, char *host, int *port,
     if((conn[1] < DILL_SOCKS5_CONNECT) || (conn[1] > DILL_SOCKS5_UDP_ASSOCIATE)) {
         errno = EPROTO ; return -1;
     }
-    uint16_t *s5port;
+    uint16_t *s5port = NULL;
     switch(conn[3]) {
         case S5ADDR_IPV4:
             inet_ntop(AF_INET, (void *)&(conn[4]), host, 256);
