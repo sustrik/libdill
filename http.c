@@ -44,7 +44,7 @@ struct dill_http_sock {
     int u;
     unsigned int mem : 1;
     struct dill_suffix_storage suffix_mem;
-    struct dill_term_storage term_mem;
+    struct dill_hup_storage hup_mem;
     char rxbuf[1024];
 };
 
@@ -66,10 +66,10 @@ int dill_http_attach_mem(int s, struct dill_http_storage *mem) {
     /* Take the ownership of the underlying socket. */
     s = dill_hown(s);
     if(dill_slow(s < 0)) {err = errno; goto error;}
-    /* Wrap the underlying socket into SUFFIX and TERM protocol. */
+    /* Wrap the underlying socket into SUFFIX and HUP protocol. */
     s = dill_suffix_attach_mem(s, "\r\n", 2, &obj->suffix_mem);
     if(dill_slow(s < 0)) {err = errno; goto error;}
-    s = dill_term_attach_mem(s, NULL, 0, &obj->term_mem);
+    s = dill_hup_attach_mem(s, NULL, 0, &obj->hup_mem);
     if(dill_slow(s < 0)) {err = errno; goto error;}
     /* Create the object. */
     obj->hvfs.query = dill_http_hquery;
@@ -105,14 +105,14 @@ error1:
 int dill_http_done(int s, int64_t deadline) {
     struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
-    return dill_term_done(obj->u, deadline);
+    return dill_hup_done(obj->u, deadline);
 }
 
 int dill_http_detach(int s, int64_t deadline) {
     int err = 0;
     struct dill_http_sock *obj = dill_hquery(s, dill_http_type);
     if(dill_slow(!obj)) return -1;
-    int u = dill_term_detach(obj->u, deadline);
+    int u = dill_hup_detach(obj->u, deadline);
     if(dill_slow(u < 0)) {err = errno; goto error;}
     u = dill_suffix_detach(u, deadline);
     if(dill_slow(u < 0)) {err = errno; goto error;}
