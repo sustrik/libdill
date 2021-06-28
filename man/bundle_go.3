@@ -21,7 +21,7 @@ int\ bundle_go(
 This construct launches a coroutine within the specified bundle.
 For more information about bundles see \f[B]bundle\f[].
 .PP
-The coroutine gets a 1MB stack.
+The coroutine gets a 256KB stack.
 The stack is guarded by a non\-writeable memory page.
 Therefore, stack overflow will result in a \f[B]SEGFAULT\f[] rather than
 overwriting memory that doesn\[aq]t belong to it.

@@ -18,7 +18,7 @@ int\ go(
 .SH DESCRIPTION
 .PP
 This construct launches a coroutine.
-The coroutine gets a 1MB stack.
+The coroutine gets a 256KB stack.
 The stack is guarded by a non\-writeable memory page.
 Therefore, stack overflow will result in a \f[B]SEGFAULT\f[] rather than
 overwriting memory that doesn\[aq]t belong to it.
