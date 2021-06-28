@@ -604,7 +604,7 @@ fxs = [
             This construct launches a coroutine within the specified bundle.
             For more information about bundles see **bundle**.
 
-            The coroutine gets a 1MB stack.
+            The coroutine gets a 256KB stack.
             The stack is guarded by a non-writeable memory page. Therefore,
             stack overflow will result in a **SEGFAULT** rather than overwriting
             memory that doesn't belong to it.
@@ -1207,7 +1207,7 @@ fxs = [
         allocates_handle: true,
 
         prologue: `
-            This construct launches a coroutine. The coroutine gets a 1MB stack.
+            This construct launches a coroutine. The coroutine gets a 256KB stack.
             The stack is guarded by a non-writeable memory page. Therefore,
             stack overflow will result in a **SEGFAULT** rather than overwriting
             memory that doesn't belong to it.

@@ -26,7 +26,7 @@
     expression);</code></pre></div>
 <h1 id="description">DESCRIPTION</h1>
 <p>This construct launches a coroutine within the specified bundle. For more information about bundles see <strong>bundle</strong>.</p>
-<p>The coroutine gets a 1MB stack. The stack is guarded by a non-writeable memory page. Therefore, stack overflow will result in a <strong>SEGFAULT</strong> rather than overwriting memory that doesn't belong to it.</p>
+<p>The coroutine gets a 256KB stack. The stack is guarded by a non-writeable memory page. Therefore, stack overflow will result in a <strong>SEGFAULT</strong> rather than overwriting memory that doesn't belong to it.</p>
 <p><strong>bndl</strong>: Bundle to launch the coroutine in.</p>
 <p><strong>expression</strong>: Expression to evaluate as a coroutine.</p>
 <p>The coroutine is executed concurrently, and its lifetime may exceed the lifetime of the caller coroutine. The return value of the coroutine, if any, is discarded and cannot be retrieved by the caller.</p>
