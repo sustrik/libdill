@@ -134,6 +134,16 @@ DILL_EXPORT __attribute__((noinline)) int dill_prologue(sigjmp_buf **ctx,
     void **ptr, size_t len, int bndl, const char *file, int line);
 DILL_EXPORT __attribute__((noinline)) void dill_epilogue(void);
 
+/* Sets the size of stacks allocated by libdill.
+   The value must be a multiple of 1024 and greater or equal to 8192.
+   Returns 0 upon success of -1 in case of failure (errno is set). */
+DILL_EXPORT int dill_stack_set_default_size(size_t sz);
+
+/* Sets the max number of stacks kept in cache by libdill.
+   The value must be strictly positive.
+   Returns 0 upon success of -1 in case of failure (errno is set). */
+DILL_EXPORT int dill_stack_set_cache_max(int nb);
+
 /* The following macros use alloca(sizeof(size_t)) because clang
    doesn't support alloca with size zero. */
 

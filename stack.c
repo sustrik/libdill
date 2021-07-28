@@ -48,6 +48,30 @@ static size_t dill_align(size_t val, size_t unit) {
     return val % unit ? val + unit - val % unit : val;
 }
 
+int dill_stack_set_default_size(size_t sz) {
+    if (sz < 8192 || (sz % 1024) != 0) {
+        errno = EINVAL;
+        return -1;
+    }
+    else {
+        dill_stack_size = sz;
+        errno = 0;
+        return 0;
+    }
+}
+
+int dill_stack_set_cache_max(int nb) {
+    if (nb <= 0) {
+        errno = EINVAL;
+        return -1;
+    }
+    else {
+        dill_max_cached_stacks = nb;
+        errno = 0;
+        return 0;
+    }
+}
+
 /* Get memory page size. The query is done once. The value is cached. */
 static size_t dill_page_size(void) {
     static long pgsz = 0;
