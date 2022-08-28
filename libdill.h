@@ -1100,6 +1100,43 @@ DILL_EXPORT int dill_term_detach(
 #endif
 
 /******************************************************************************/
+/*  HUP protocol.                                                             */
+/*  Implements half-close behavior on top of any message-based protocol.      */
+/*                                                                            */
+/*  WARNING: The HUP protocol is *NOT* safe for ad-hoc use, as it does not    */
+/*  clean up the read queue when being detached. It is supposed to behave     */
+/*  this way as a building block for other protocols that clearly define      */
+/*  which peer should be sending during an exchange.                          */
+/******************************************************************************/
+
+struct dill_hup_storage {char _[88];};
+
+DILL_EXPORT int dill_hup_attach(
+    int s,
+    const void *buf,
+    size_t len);
+DILL_EXPORT int dill_hup_attach_mem(
+    int s,
+    const void *buf,
+    size_t len,
+    struct dill_hup_storage *mem);
+DILL_EXPORT int dill_hup_done(
+    int s,
+    int64_t deadline);
+DILL_EXPORT int dill_hup_detach(
+    int s,
+    int64_t deadline);
+
+#if !defined DILL_DISABLE_RAW_NAMES
+#define hup_storage     dill_hup_storage
+#define hup_attach      dill_hup_attach
+#define hup_attach_mem  dill_hup_attach_mem
+#define hup_done        dill_hup_done
+#define hup_detach      dill_hup_detach
+#endif
+
+
+/******************************************************************************/
 /* Happy Eyeballs (RFC 8305).                                                 */
 /* Implements concurrent TCP connecting to the remote endpoint.               */
 /******************************************************************************/
