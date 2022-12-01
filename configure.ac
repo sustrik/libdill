@@ -180,6 +180,7 @@ AC_CHECK_FUNCS([clock_gettime])
 AC_CHECK_LIB([socket], [socket])
 AC_CHECK_FUNCS([epoll_create], [AC_DEFINE([HAVE_EPOLL])])
 AC_CHECK_FUNCS([kqueue], [AC_DEFINE([HAVE_KQUEUE])])
+AC_CHECK_FUNCS([accept4], [AC_DEFINE([HAVE_ACCEPT4])])
 
 dnl Check if struct sockaddr contains sa_len member
 AC_CHECK_MEMBERS([struct sockaddr.sa_len], [], [], [
@@ -209,4 +210,3 @@ AC_CONFIG_MACRO_DIR([m4])
 
 AC_OUTPUT([Makefile man/Makefile libdill.pc])
 cp confdefs.h config.h
-

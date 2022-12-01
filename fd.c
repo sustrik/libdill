@@ -22,6 +22,11 @@
 
 */
 
+#ifdef HAVE_ACCEPT4
+#define _GNU_SOURCE
+#include <sys/socket.h>
+#endif
+
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -127,12 +132,27 @@ int dill_fd_connect(int s, const struct sockaddr *addr, socklen_t addrlen,
     return 0;
 }
 
+#ifdef HAVE_ACCEPT4
+#define _dill_accept(fd, addr, addrlen) accept4((fd), (addr), (addrlen), SOCK_CLOEXEC)
+#else
+int _dill_accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
+    int as = accept(sockfd, addr, addrlen);
+    if(dill_fast(as >= 0)) {
+        int fd_flags = fcntl(as, F_GETFD);
+        if (dill_fast(fd_flags != -1)) {
+            fcntl(as, F_SETFD, fd_flags | FD_CLOEXEC);
+        }
+    }
+    return as;
+}
+#endif
+
 int dill_fd_accept(int s, struct sockaddr *addr, socklen_t *addrlen,
       int64_t deadline) {
     int as;
     while(1) {
         /* Try to accept new connection synchronously. */
-        as = accept(s, addr, addrlen);
+        as = _dill_accept(s, addr, addrlen);
         if(dill_fast(as >= 0))
             break;
         /* If connection was aborted by the peer grab the next one. */
@@ -426,4 +446,3 @@ int dill_fd_check(int s, int type, int family1, int family2, int listening) {
         errno = EINVAL; return -1;}
     return 0;
 }
-
