@@ -419,8 +419,18 @@ void dill_fd_close(int s) {
 }
 
 int dill_fd_own(int s) {
+#ifdef F_DUPFD_CLOEXEC
+    int n = fcntl(s, F_DUPFD_CLOEXEC, 0);
+#else
+    int fd_flags = fcntl(s, F_GETFD);
     int n = dup(s);
+#endif
     if(dill_slow(n < 0)) return -1;
+#ifndef F_DUPFD_CLOEXEC
+    if (dill_fast(fd_flags != -1)) {
+        fcntl(n, F_SETFD, fd_flags);
+    }
+#endif
     dill_fd_close(s);
     return n;
 }
