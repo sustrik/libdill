@@ -62,7 +62,7 @@ int dill_ctx_pollset_init(struct dill_ctx_pollset *ctx) {
     /* Changelist is empty. */
     ctx->changelist = DILL_ENDLIST;
     /* Create the kernel-side pollset. */
-    ctx->efd = epoll_create(1);
+    ctx->efd = epoll_create1(EPOLL_CLOEXEC);
     if(dill_slow(ctx->efd < 0)) {err = errno; goto error2;}
     return 0;
 error2:
