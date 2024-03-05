@@ -6,7 +6,7 @@
 
 For the documentation check the project website:
 
-http://libdill.org
+https://sustrik.github.io/libdill/
 
 ## License
 
