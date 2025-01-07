@@ -28,7 +28,7 @@
 #include <string.h>
 
 #define DILL_DISABLE_RAW_NAMES
-#include <libdillimpl.h>
+#include "libdillimpl.h"
 #include "iol.h"
 #include "utils.h"
 
