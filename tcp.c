@@ -384,9 +384,6 @@ int dill_tcp_accept_mem(int s, struct dill_ipaddr *addr,
     int as = dill_fd_accept(lst->fd, (struct sockaddr*)addr, &addrlen,
         deadline);
     if(dill_slow(as < 0)) {err = errno; goto error1;}
-    /* Set it to non-blocking mode. */
-    int rc = dill_fd_unblock(as);
-    if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
     int h = dill_tcp_makeconn(as, mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}

@@ -463,9 +463,6 @@ int dill_ipc_accept_mem(int s, struct dill_ipc_storage *mem, int64_t deadline) {
     /* Try to get new connection in a non-blocking way. */
     int as = dill_fd_accept(lst->fd, NULL, NULL, deadline);
     if(dill_slow(as < 0)) {err = errno; goto error1;}
-    /* Set it to non-blocking mode. */
-    int rc = dill_fd_unblock(as);
-    if(dill_slow(rc < 0)) {err = errno; goto error2;}
     /* Create the handle. */
     int h = dill_ipc_makeconn(as, (struct dill_ipc_conn*)mem);
     if(dill_slow(h < 0)) {err = errno; goto error2;}

@@ -143,8 +143,15 @@ int dill_fd_accept(int s, struct sockaddr *addr, socklen_t *addrlen,
         int rc = dill_fdin(s, deadline);
         if(dill_slow(rc < 0)) return -1;
     }
-    int rc = dill_fd_unblock(as);
-    dill_assert(rc == 0);
+    /* Accepted sockets need O_NONBLOCK and SO_NOSIGPIPE. */
+    int opt = fcntl(as, F_GETFL, 0);
+    if(opt == -1) opt = 0;
+    int rc = fcntl(as, F_SETFL, opt | O_NONBLOCK);
+    if(dill_slow(rc != 0)) {close(as); return -1;}
+#ifdef SO_NOSIGPIPE
+    opt = 1;
+    setsockopt(as, SOL_SOCKET, SO_NOSIGPIPE, &opt, sizeof(opt));
+#endif
     return as;
 }
 
