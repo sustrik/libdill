@@ -137,6 +137,7 @@ check_PROGRAMS += \
     tests/iol \
     tests/tcp \
     tests/ipc \
+    tests/pollset \
     tests/prefix \
     tests/socks5 \
     tests/suffix \

@@ -142,6 +142,7 @@ if(BUILD_TESTING)
         tests/ipaddr.c
         tests/ipc.c
         tests/overload.c
+        tests/pollset.c
         tests/prefix.c
         tests/rbtree.c
         tests/signals.c

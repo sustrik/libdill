@@ -56,6 +56,7 @@ int dill_fdin(int fd, int64_t deadline) {
     int id = dill_wait();
     if(dill_slow(id < 0)) return -1;
     if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
+    if(dill_slow(errno != 0)) return -1;
     return 0;
 }
 
@@ -74,6 +75,7 @@ int dill_fdout(int fd, int64_t deadline) {
     int id = dill_wait();
     if(dill_slow(id < 0)) return -1;
     if(dill_slow(id == 2)) {errno = ETIMEDOUT; return -1;}
+    if(dill_slow(errno != 0)) return -1;
     return 0;
 }
 

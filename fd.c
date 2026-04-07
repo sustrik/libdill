@@ -94,17 +94,17 @@ int dill_fd_unblock(int s) {
     if (opt == -1)
         opt = 0;
     int rc = fcntl(s, F_SETFL, opt | O_NONBLOCK);
-    dill_assert(rc == 0);
+    if(dill_slow(rc != 0)) return -1;
     /*  Allow re-using the same local address rapidly. */
     opt = 1;
     rc = setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof (opt));
-    dill_assert(rc == 0);
+    if(dill_slow(rc != 0)) return -1;
     /* If possible, prevent SIGPIPE signal when writing to the connection
         already closed by the peer. */
 #ifdef SO_NOSIGPIPE
     opt = 1;
     rc = setsockopt (s, SOL_SOCKET, SO_NOSIGPIPE, &opt, sizeof (opt));
-    dill_assert (rc == 0 || errno == EINVAL);
+    if(dill_slow(rc != 0 && errno != EINVAL)) return -1;
 #endif
     return 0;
 }
@@ -385,7 +385,7 @@ next:
 
 void dill_fd_close(int s) {
     int rc = dill_fdclean(s);
-    dill_assert(rc == 0);
+    if(dill_slow(rc != 0)) { close(s); return; }
     /* Discard any pending outbound data. If SO_LINGER option cannot
        be set, never mind and continue anyway. */
     struct linger lng;
