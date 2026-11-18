@@ -65,7 +65,7 @@ int dill_ctx_stack_init(struct dill_ctx_stack *ctx) {
 }
 
 void dill_ctx_stack_term(struct dill_ctx_stack *ctx) {
-    /* Deallocate leftover coroutines. */
+    /* Deallocate the cached stacks. */
     struct dill_slist *it;
     while((it = dill_slist_pop(&ctx->cache)) != &ctx->cache) {
 #if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD

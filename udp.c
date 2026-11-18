@@ -70,7 +70,7 @@ int dill_udp_open_mem(struct dill_ipaddr *local,
     if(dill_slow(local && remote &&
           dill_ipaddr_family(local) != dill_ipaddr_family(remote))) {
         err = EINVAL; goto error1;}
-    /* Open the listening socket. */
+    /* Open the socket. */
     int family = AF_INET;
     if(local) family = dill_ipaddr_family(local);
     if(remote) family = dill_ipaddr_family(remote);
@@ -79,7 +79,7 @@ int dill_udp_open_mem(struct dill_ipaddr *local,
     /* Set it to non-blocking mode. */
     int rc = dill_fd_unblock(s);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
-    /* Start listening. */
+    /* Bind it to the local address. */
     if(local) {
         rc = bind(s, dill_ipaddr_sockaddr(local), dill_ipaddr_len(local));
         if(s < 0) {err = errno; goto error2;}

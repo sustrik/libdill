@@ -26,7 +26,7 @@
 struct dill_handle;
 
 struct dill_ctx_handle {
-    /* Array of handles. The size of the array is stored in 'nall'. */
+    /* Array of handles. The size of the array is stored in 'nhandles'. */
     struct dill_handle *handles;
     int nhandles;
     /* Number of allocated handles. */
