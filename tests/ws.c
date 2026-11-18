@@ -22,6 +22,7 @@
 
 */
 
+#include <stdint.h>
 #include <string.h>
 
 #include "assert.h"
@@ -74,6 +75,44 @@ coroutine void http_client(int s) {
     errno_assert(rc == 0);
 }
 
+/* The length of the close reason comes from the close frame alone, not
+   from the unfinished message that the close frame interrupts. */
+static void test_close_reason_after_unfinished_msg(void) {
+    int p[2];
+    int rc = ipc_pair(p);
+    errno_assert(rc == 0);
+    int s = ws_attach_client(p[0], WS_NOHTTP | WS_BINARY, NULL, NULL, -1);
+    errno_assert(s >= 0);
+    /* Unmasked frames, as sent by a server: the first 100 bytes of a
+       binary message, then a close frame of the maximum size, made of
+       a status and a reason of 123 bytes. */
+    uint8_t frames[2 + 100 + 2 + 125];
+    memset(frames, 'A', sizeof(frames));
+    frames[0] = 0x02;
+    frames[1] = 100;
+    uint8_t *close_frame = frames + 2 + 100;
+    close_frame[0] = 0x88;
+    close_frame[1] = 125;
+    close_frame[2] = 1000 >> 8;
+    close_frame[3] = 1000 & 0xff;
+    memset(close_frame + 4, 'R', 123);
+    rc = bsend(p[1], frames, sizeof(frames), -1);
+    errno_assert(rc == 0);
+    char buf[256];
+    ssize_t sz = mrecv(s, buf, sizeof(buf), -1);
+    assert(sz == -1 && errno == EPIPE);
+    int status;
+    sz = ws_status(s, &status, buf, sizeof(buf));
+    errno_assert(sz >= 0);
+    assert(status == 1000);
+    assert(sz == 123);
+    assert(memcmp(buf, close_frame + 4, 123) == 0);
+    rc = hclose(s);
+    errno_assert(rc == 0);
+    rc = hclose(p[1]);
+    errno_assert(rc == 0);
+}
+
 int main(void) {
     int p[2];
     int rc = ipc_pair(p);
@@ -119,6 +158,8 @@ int main(void) {
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
+
+    test_close_reason_after_unfinished_msg();
     
     return 0;
 }
