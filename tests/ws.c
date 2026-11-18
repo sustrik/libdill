@@ -22,6 +22,7 @@
 
 */
 
+#include <stdint.h>
 #include <string.h>
 
 #include "assert.h"
@@ -74,6 +75,39 @@ coroutine void http_client(int s) {
     errno_assert(rc == 0);
 }
 
+/* mrecvl() without any buffer drops the message and returns its size.
+   The dropped message is longer than the buffer of the previous call, to
+   catch a receive that reuses the leftovers of that call. */
+static void test_recv_drops_msg_without_buffer(void) {
+    int p[2];
+    int rc = ipc_pair(p);
+    errno_assert(rc == 0);
+    int s = ws_attach_client(p[0], WS_NOHTTP | WS_BINARY, NULL, NULL, -1);
+    errno_assert(s >= 0);
+    /* Unmasked binary frames, as sent by a server: "XYZ", "ABCD" and "E". */
+    const uint8_t frames[] = {0x82, 0x03, 'X', 'Y', 'Z',
+        0x82, 0x04, 'A', 'B', 'C', 'D', 0x82, 0x01, 'E'};
+    rc = bsend(p[1], frames, sizeof(frames), -1);
+    errno_assert(rc == 0);
+    char buf[3];
+    struct iolist iol = {buf, sizeof(buf), NULL, 0};
+    ssize_t sz = mrecvl(s, &iol, &iol, -1);
+    errno_assert(sz >= 0);
+    assert(sz == 3);
+    sz = mrecvl(s, NULL, NULL, -1);
+    errno_assert(sz >= 0);
+    assert(sz == 4);
+    assert(buf[0] == 'X' && buf[1] == 'Y' && buf[2] == 'Z');
+    sz = mrecvl(s, &iol, &iol, -1);
+    errno_assert(sz >= 0);
+    assert(sz == 1);
+    assert(buf[0] == 'E');
+    rc = hclose(s);
+    errno_assert(rc == 0);
+    rc = hclose(p[1]);
+    errno_assert(rc == 0);
+}
+
 int main(void) {
     int p[2];
     int rc = ipc_pair(p);
@@ -119,6 +153,8 @@ int main(void) {
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
+
+    test_recv_drops_msg_without_buffer();
     
     return 0;
 }

@@ -379,8 +379,9 @@ static ssize_t dill_ws_recvl_base(struct dill_msock_vfs *mvfs, int *flags,
     int rc = dill_iolcheck(first, last, NULL, NULL);
     if(dill_slow(rc < 0)) return -1;
     size_t res = 0;
-    /* Message may consist of multiple frames. Read them one by one. */
-    struct dill_iolist it;
+    /* Message may consist of multiple frames. Read them one by one.
+       Without a buffer to receive it into, the message is dropped. */
+    struct dill_iolist it = {NULL, SIZE_MAX, NULL, 0};
     if(first) it = *first;
     while(1) {
         struct dill_iolist iol_msg;
