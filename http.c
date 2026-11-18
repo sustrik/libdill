@@ -40,7 +40,7 @@ static void dill_http_hclose(struct dill_hvfs *hvfs);
 
 struct dill_http_sock {
     struct dill_hvfs hvfs;
-    /* Underlying SUFFIX socket. */
+    /* Underlying TERM socket, itself layered on top of a SUFFIX socket. */
     int u;
     unsigned int mem : 1;
     struct dill_suffix_storage suffix_mem;

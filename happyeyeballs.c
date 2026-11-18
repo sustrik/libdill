@@ -43,9 +43,9 @@ static dill_coroutine void dill_happyeyeballs_dnsquery(const char *name,
            dill_assert(rc == 0);
         }
     }
-    /* chdone is deliberately not being called here so that sorter doesn't
-       have to deal with closed channels. Instead we'll send 0.0.0.0 address
-       to mark the end of the results. */
+    /* chdone is deliberately not being called here so that the coordinator
+       doesn't have to deal with closed channels. Instead we'll send 0.0.0.0
+       address to mark the end of the results. */
     struct dill_ipaddr addr;
     int rc = dill_ipaddr_local(&addr, "0.0.0.0", 0, DILL_IPADDR_IPV4);
     dill_assert(rc == 0);

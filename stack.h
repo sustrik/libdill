@@ -31,7 +31,7 @@
 
 /* A stack of unused coroutine stacks. This allows for extra-fast allocation
    of a new stack. The LIFO nature of this structure minimises cache misses.
-   When the stack is cached its dill_qlist_item is placed on its top rather
+   When the stack is cached its dill_slist item is placed on its top rather
    then on the bottom. That way we minimise page misses. */
 struct dill_ctx_stack {
     int count;

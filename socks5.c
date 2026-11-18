@@ -193,9 +193,8 @@ int dill_socks5_proxy_auth(int s, dill_socks5_auth_function *auth_fn,
         authr[3+ulen+plen] = 0x00;
         char *uname = (char *)&authr[2];
         char *passwd = (char *)&authr[3+ulen];
-        // attempt to determine source address
         if((*auth_fn)(uname, passwd)) {
-            // auth accepted based on uname, passwd, ipaddr
+            // auth accepted based on uname, passwd
             goto pwauth_success;
         }
         // PW auth fail
@@ -219,7 +218,7 @@ accept_noauth:
     if(dill_slow(err)) return -1;
     return 0;
 pwauth_success:
-    // accept NOAUTH, no further auth req'd
+    // accept USER/PASS AUTH - per RFC 1929
     resp[0] = RFC1929_VER; // U/P auth VER
     resp[1] = S5AUTH_SUCCESS;
     err = dill_bsend(s, (void *)resp, 2, deadline);
@@ -270,7 +269,7 @@ static int s5_s5addr_to_ipaddr(struct dill_ipaddr *addr, _socks5_addr *s5,
             err = dill_ipaddr_remote(addr, "::1", s5->port,
                 DILL_IPADDR_IPV6, deadline);
             if(err) return -1;
-            // overwrite with actual IPV4
+            // overwrite with actual IPV6
             struct sockaddr_in6 *ipv6 = (struct sockaddr_in6*)addr;
             memcpy((void *)&ipv6->sin6_addr, (void *)s5->addr, s5->alen);
             break;
@@ -386,7 +385,7 @@ static int s5_client_connectbyname(int s, const char *hostname, int port, int64_
         conn_len = 22;
    } else {
         // assume a resolvable domain name
-        // previously validate to be 0 < x <= 255 bytes
+        // previously validated to be <= 255 bytes
         uint8_t alen = (uint8_t)strlen(hostname);
         conn[3] = S5ADDR_NAME; // ATYP
         conn[4] = alen;
@@ -503,11 +502,11 @@ int dill_socks5_proxy_sendreply(int s, int reply, struct dill_ipaddr *ipaddr,
     _socks5_addr s5addr;
     int err = s5_ipaddr_to_s5addr(&s5addr, ipaddr);
     if(dill_slow(err)) return -1;
-    // largest possible connect request = 255 chars for name + 7 bytes for
-    // VER, CMD, RSV, ATYP, ALEN, PORT[2]
+    // largest possible reply = 255 chars for name + 7 bytes for
+    // VER, REP, RSV, ATYP, ALEN, PORT[2]
     uint8_t conn[262];
     conn[0] = RFC1928_VER; // VER
-    conn[1] = reply; // CMD
+    conn[1] = reply; // REP
     conn[2] = 0x00; // RSV
     conn[3] = s5addr.atyp;
     int alen = s5addr.alen;

@@ -141,8 +141,11 @@ void dill_waitfor(struct dill_clause *cl, int id,
    The coroutine will be resumed once one of the clauses previously added by
    dill_waitfor() is triggered. When that happens, all the clauses, whether
    triggered or not, will be canceled. The function returns the ID of the
-   triggered clause or -1 on error. In either case, it sets errno to 0 indicate
-   success or non-zero value to indicate error. */
+   triggered clause and sets errno to the error passed to dill_trigger():
+   0 on success, non-zero otherwise (e.g. ETIMEDOUT for timers). If the
+   coroutine is resumed without any clause being triggered, the function
+   returns -1; errno is then ECANCELED if the coroutine is being canceled,
+   or 0 if it was waiting for another coroutine to finish and it did. */
 int dill_wait(void);
 
 /* Schedule a previously suspended coroutine for execution. Keep in mind that

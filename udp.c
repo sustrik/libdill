@@ -70,7 +70,7 @@ int dill_udp_open_mem(struct dill_ipaddr *local,
     if(dill_slow(local && remote &&
           dill_ipaddr_family(local) != dill_ipaddr_family(remote))) {
         err = EINVAL; goto error1;}
-    /* Open the listening socket. */
+    /* Open the socket. */
     int family = AF_INET;
     if(local) family = dill_ipaddr_family(local);
     if(remote) family = dill_ipaddr_family(remote);
@@ -79,7 +79,7 @@ int dill_udp_open_mem(struct dill_ipaddr *local,
     /* Set it to non-blocking mode. */
     int rc = dill_fd_unblock(s);
     if(dill_slow(rc < 0)) {err = errno; goto error2;}
-    /* Start listening. */
+    /* Bind it to the local address. */
     if(local) {
         rc = bind(s, dill_ipaddr_sockaddr(local), dill_ipaddr_len(local));
         if(s < 0) {err = errno; goto error2;}
@@ -240,12 +240,12 @@ static ssize_t dill_udp_mrecvl(struct dill_msock_vfs *mvfs,
 
 static void dill_udp_hclose(struct dill_hvfs *hvfs) {
     struct dill_udp_sock *obj = (struct dill_udp_sock*)hvfs;
-    /* We do not switch off linger here because if UDP socket was fully
-       implemented in user space, msend() would block until the packet
-       was flushed into network, thus providing some basic reliability.
-       Kernel-space implementation here, on the other hand, may queue
-       outgoing packets rather than flushing them. The effect is balanced
-       out by lingering when closing the socket. */
+    /* If UDP socket was fully implemented in user space, msend() would
+       block until the packet was flushed into network, thus providing
+       some basic reliability. Kernel-space implementation here, on the
+       other hand, may queue outgoing packets rather than flushing them,
+       and dill_fd_close() does not linger to let them out: it sets
+       SO_LINGER to zero, same as for the stream sockets. */
     dill_fd_close(obj->fd);
     if(!obj->mem) free(obj);
 }

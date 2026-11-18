@@ -101,7 +101,7 @@ install(
 
 set(CMAKE_REQUIRED_LIBRARIES )
 
-# check and enable stack guard and dns if available
+# check and enable stack guard if available
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
 
 set(CMAKE_REQUIRED_LIBRARIES )

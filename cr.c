@@ -74,7 +74,7 @@ struct dill_bundle {
     struct dill_hvfs vfs;
     /* List of coroutines in this bundle. */
     struct dill_list crs;
-    /* If somebody is doing hdone() on this bundle, here's the clause
+    /* If somebody is doing bundle_wait() on this bundle, here's the clause
        to trigger when all coroutines are finished. */
     struct dill_clause *waiter;
     /* If true, the bundle was created by bundle_mem. */
@@ -353,7 +353,7 @@ void dill_epilogue(void) {
        in the process of being closed. */
     if(!ctx->r->no_blocking1) {
         /* If this is the last coroutine in the bundle and there's someone
-           waiting for hdone() on the bundle unblock them. */
+           waiting in bundle_wait() on the bundle unblock them. */
         if(dill_list_oneitem(&ctx->r->bundle)) {
             struct dill_bundle *b = dill_cont(ctx->r->bundle.next,
                 struct dill_bundle, crs);

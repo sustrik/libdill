@@ -53,8 +53,9 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd);
 /* Drop any cached info about the file descriptor. */
 int dill_pollset_clean(int fd);
 
-/* Wait for events. 'timeout' is in milliseconds. Return 0 if the timeout expired or
-  1 if at least one clause was triggered. */
+/* Wait for events. 'timeout' is in milliseconds. Return 0 if the timeout
+   expired, 1 if at least one clause was triggered, or -1 if the wait was
+   interrupted by a signal. */
 int dill_pollset_poll(int timeout);
 
 #endif

@@ -43,7 +43,8 @@ static size_t dill_stack_size = 256 * 1024;
 /* Maximum number of unused cached stacks. Must be at least 1. */
 static int dill_max_cached_stacks = 64;
 
-/* Returns the smallest value that's greater than val and is a multiple of unit. */
+/* Returns the smallest value that's greater than or equal to val and is
+   a multiple of unit. */
 static size_t dill_align(size_t val, size_t unit) {
     return val % unit ? val + unit - val % unit : val;
 }
@@ -65,7 +66,7 @@ int dill_ctx_stack_init(struct dill_ctx_stack *ctx) {
 }
 
 void dill_ctx_stack_term(struct dill_ctx_stack *ctx) {
-    /* Deallocate leftover coroutines. */
+    /* Deallocate the cached stacks. */
     struct dill_slist *it;
     while((it = dill_slist_pop(&ctx->cache)) != &ctx->cache) {
 #if (HAVE_POSIX_MEMALIGN && HAVE_MPROTECT) & !defined DILL_NOGUARD

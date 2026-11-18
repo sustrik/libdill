@@ -171,7 +171,7 @@ int dill_base64_decode(const char *in, size_t in_len, uint8_t *out,
         if(in[ii] == '=')
             break;
         ch = DECODEMAP[(int)(in[ii])];
-        /*  Discard invalid characters as per RFC 2045. */
+        /*  Stop decoding at the first invalid character. */
         if(ch == 0xFF)
             break; 
         v = (v << 6) | ch;
@@ -222,7 +222,7 @@ int dill_base64_encode(const uint8_t *in, size_t in_len, char *out,
             return -1;
         out[io++] = ENCODEMAP[v & 63];
     }
-    /*  Pad to a multiple of 3. */
+    /*  Pad to a multiple of 4. */
     while(io & 3) {
         if(io >= out_len)
             return -1;
