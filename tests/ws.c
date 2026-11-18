@@ -22,6 +22,7 @@
 
 */
 
+#include <stdint.h>
 #include <string.h>
 
 #include "assert.h"
@@ -74,6 +75,34 @@ coroutine void http_client(int s) {
     errno_assert(rc == 0);
 }
 
+/* A server skips, rather than unmasks, the payload it has no buffer for.
+   ws_detach() itself drops pending messages that way. */
+static void test_server_skips_masked_payload(void) {
+    int p[2];
+    int rc = ipc_pair(p);
+    errno_assert(rc == 0);
+    int s = ws_attach_server(p[0], WS_NOHTTP | WS_BINARY, NULL, 0, NULL, 0,
+        -1);
+    errno_assert(s >= 0);
+    /* Masked frames, as sent by a client: two binary messages of 3 bytes
+       and an empty close frame. */
+    const uint8_t frames[] = {
+        0x82, 0x83, 0x01, 0x02, 0x03, 0x04, 'A' ^ 0x01, 'B' ^ 0x02, 'C' ^ 0x03,
+        0x82, 0x83, 0x01, 0x02, 0x03, 0x04, 'D' ^ 0x01, 'E' ^ 0x02, 'F' ^ 0x03,
+        0x88, 0x80, 0x01, 0x02, 0x03, 0x04};
+    rc = bsend(p[1], frames, sizeof(frames), -1);
+    errno_assert(rc == 0);
+    ssize_t sz = mrecv(s, NULL, 3, -1);
+    errno_assert(sz >= 0);
+    assert(sz == 3);
+    s = ws_detach(s, 1000, NULL, 0, -1);
+    errno_assert(s >= 0);
+    rc = hclose(s);
+    errno_assert(rc == 0);
+    rc = hclose(p[1]);
+    errno_assert(rc == 0);
+}
+
 int main(void) {
     int p[2];
     int rc = ipc_pair(p);
@@ -119,6 +148,8 @@ int main(void) {
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
+
+    test_server_skips_masked_payload();
     
     return 0;
 }

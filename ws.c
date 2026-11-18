@@ -443,7 +443,7 @@ static ssize_t dill_ws_recvl_base(struct dill_msock_vfs *mvfs, int *flags,
             if(toread > 0) {
                 rc = dill_brecv(self->u, it.iol_base, toread, deadline);
                 if(dill_slow(rc < 0)) return -1;
-                if(self->server) {
+                if(self->server && it.iol_base) {
                     size_t i;
                     for(i = 0; i != toread; ++i)
                         ((uint8_t*)it.iol_base)[i] ^= mask[i % 4];
