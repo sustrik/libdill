@@ -385,7 +385,7 @@ static int s5_client_connectbyname(int s, const char *hostname, int port, int64_
         conn_len = 22;
    } else {
         // assume a resolvable domain name
-        // previously validate to be 0 < x <= 255 bytes
+        // previously validated to be <= 255 bytes
         uint8_t alen = (uint8_t)strlen(hostname);
         conn[3] = S5ADDR_NAME; // ATYP
         conn[4] = alen;

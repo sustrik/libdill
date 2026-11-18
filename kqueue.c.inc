@@ -128,7 +128,7 @@ int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
         fdi->cached = 1;
     }
     if(dill_slow(fdi->in)) {errno = EBUSY; return -1;}
-    /* If fd is not yet in the pollset, add it there. */
+    /* If the fd is not yet in the changelist, add it there. */
     else if(!fdi->next) {
         fdi->next = ctx->changelist;
         ctx->changelist = fd + 1;
@@ -159,7 +159,7 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
         fdi->cached = 1;
     }
     if(dill_slow(fdi->out)) {errno = EBUSY; return -1;}
-    /* If the fd is not yet in the pollset, add it there. */
+    /* If the fd is not yet in the changelist, add it there. */
     else if(!fdi->next) {
         fdi->next = ctx->changelist;
         ctx->changelist = fd + 1;

@@ -126,7 +126,7 @@ int dill_pollset_in(struct dill_fdclause *fdcl, int id, int fd) {
         fdi->cached = 1;
     }
     if(dill_slow(fdi->in)) {errno = EBUSY; return -1;}
-    /* If the fd is not yet in the pollset, add it there. */
+    /* If the fd is not yet in the changelist, add it there. */
     else if(!fdi->next) {
         fdi->next = ctx->changelist;
         ctx->changelist = fd + 1;
@@ -162,7 +162,7 @@ int dill_pollset_out(struct dill_fdclause *fdcl, int id, int fd) {
         fdi->cached = 1;
     }
     if(dill_slow(fdi->out)) {errno = EBUSY; return -1;}
-    /* If the fd is not yet in the pollset, add it there. */
+    /* If the fd is not yet in the changelist, add it there. */
     else if(!fdi->next) {
         fdi->next = ctx->changelist;
         ctx->changelist = fd + 1;
@@ -250,7 +250,7 @@ int dill_pollset_poll(int timeout) {
         /* Resume blocked coroutines. */
         if(fdi->in && (evs[i].events & (EPOLLIN | EPOLLERR | EPOLLHUP))) {
             dill_trigger(&fdi->in->cl, 0);
-            /* Remove the fd from the pollset if needed. */
+            /* Add the fd to the changelist so that the pollset is updated. */
             if(!fdi->in && !fdi->next) {
                 fdi->next = ctx->changelist;
                 ctx->changelist = fd + 1;
@@ -258,7 +258,7 @@ int dill_pollset_poll(int timeout) {
         }
         if(fdi->out && (evs[i].events & (EPOLLOUT | EPOLLERR | EPOLLHUP))) {
             dill_trigger(&fdi->out->cl, 0);
-            /* Remove the fd from the pollset if needed. */
+            /* Add the fd to the changelist so that the pollset is updated. */
             if(!fdi->out && !fdi->next) {
                 fdi->next = ctx->changelist;
                 ctx->changelist = fd + 1;
