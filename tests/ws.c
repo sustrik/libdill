@@ -22,6 +22,7 @@
 
 */
 
+#include <stdint.h>
 #include <string.h>
 
 #include "assert.h"
@@ -74,6 +75,45 @@ coroutine void http_client(int s) {
     errno_assert(rc == 0);
 }
 
+/* Longer than 65535 bytes, so that the frame header carries a 64-bit
+   payload length. */
+static uint8_t large_msg[65536];
+static uint8_t large_buf[sizeof(large_msg)];
+
+coroutine void large_msg_client(int s) {
+    s = ws_attach_client(s, WS_NOHTTP | WS_BINARY, NULL, NULL, -1);
+    errno_assert(s >= 0);
+    int rc = msend(s, large_msg, sizeof(large_msg), -1);
+    errno_assert(rc == 0);
+    s = ws_detach(s, 1000, NULL, 0, -1);
+    errno_assert(s >= 0);
+    rc = hclose(s);
+    errno_assert(rc == 0);
+}
+
+static void test_client_sends_large_msg(void) {
+    size_t i;
+    for(i = 0; i != sizeof(large_msg); ++i) large_msg[i] = (uint8_t)(i % 251);
+    int p[2];
+    int rc = ipc_pair(p);
+    errno_assert(rc == 0);
+    int cr = go(large_msg_client(p[1]));
+    errno_assert(cr >= 0);
+    int s = ws_attach_server(p[0], WS_NOHTTP | WS_BINARY, NULL, 0, NULL, 0,
+        -1);
+    errno_assert(s >= 0);
+    ssize_t sz = mrecv(s, large_buf, sizeof(large_buf), -1);
+    errno_assert(sz >= 0);
+    assert(sz == sizeof(large_msg));
+    assert(memcmp(large_buf, large_msg, sizeof(large_msg)) == 0);
+    s = ws_detach(s, 1000, NULL, 0, -1);
+    errno_assert(s >= 0);
+    rc = hclose(s);
+    errno_assert(rc == 0);
+    rc = hclose(cr);
+    errno_assert(rc == 0);
+}
+
 int main(void) {
     int p[2];
     int rc = ipc_pair(p);
@@ -119,6 +159,8 @@ int main(void) {
     errno_assert(rc == 0);
     rc = hclose(cr);
     errno_assert(rc == 0);
+
+    test_client_sends_large_msg();
     
     return 0;
 }

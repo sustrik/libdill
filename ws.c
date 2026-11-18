@@ -324,7 +324,7 @@ static int dill_ws_sendl_base(struct dill_msock_vfs *mvfs, uint8_t type,
     size_t len;
     int rc = dill_iolcheck(first, last, NULL, &len);
     if(dill_slow(rc < 0)) return -1;
-    uint8_t buf[12];
+    uint8_t buf[14];
     size_t sz;
     buf[0] = 0x80 | type;
     if(len > 0xffff) {
