@@ -437,7 +437,10 @@ static ssize_t dill_ws_recvl_base(struct dill_msock_vfs *mvfs, int *flags,
             rc = dill_brecv(self->u, mask, sizeof(mask), deadline);
             if(dill_slow(rc < 0)) return -1;
         }
-        /* Frame may be read into multiple iolist elements. */
+        /* Frame may be read into multiple iolist elements, and an element
+           may receive multiple frames. The mask applies by position in the
+           frame, wherever the bytes land. */
+        size_t pos = 0;
         while(1) {
             size_t toread = sz < it.iol_len ? sz : it.iol_len;
             if(toread > 0) {
@@ -446,8 +449,11 @@ static ssize_t dill_ws_recvl_base(struct dill_msock_vfs *mvfs, int *flags,
                 if(self->server) {
                     size_t i;
                     for(i = 0; i != toread; ++i)
-                        ((uint8_t*)it.iol_base)[i] ^= mask[i % 4];
+                        ((uint8_t*)it.iol_base)[i] ^= mask[(pos + i) % 4];
                 }
+                pos += toread;
+                if(it.iol_base) it.iol_base = (uint8_t*)it.iol_base + toread;
+                it.iol_len -= toread;
             }
             sz -= toread;
             if(sz == 0) break;
