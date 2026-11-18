@@ -41,6 +41,7 @@ struct dill_ws_sock {
     int flags;
     unsigned int indone : 1;
     unsigned int outdone: 1;
+    unsigned int inerr : 1;
     unsigned int server : 1;
     unsigned int mem : 1;
     uint16_t status;
@@ -82,6 +83,7 @@ int dill_ws_attach_client_mem(int s, int flags, const char *resource,
     self->flags = flags;
     self->indone = 0;
     self->outdone = 0;
+    self->inerr = 0;
     self->server = 0;
     self->mem = 1;
     self->status = 0;
@@ -204,6 +206,7 @@ int dill_ws_attach_server_mem(int s, int flags,
     self->flags = flags;
     self->indone = 0;
     self->outdone = 0;
+    self->inerr = 0;
     self->server = 1;
     self->mem = 1;
     self->status = 0;
@@ -372,12 +375,12 @@ static int dill_ws_sendl_base(struct dill_msock_vfs *mvfs, uint8_t type,
     return 0;
 }
 
-static ssize_t dill_ws_recvl_base(struct dill_msock_vfs *mvfs, int *flags,
-      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
-    struct dill_ws_sock *self = dill_cont(mvfs, struct dill_ws_sock, mvfs);
-    if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
-    int rc = dill_iolcheck(first, last, NULL, NULL);
-    if(dill_slow(rc < 0)) return -1;
+/* Receives one message. Unless the peer closed the connection, a failure
+   may leave the inbound stream in the middle of a frame. */
+static ssize_t dill_ws_recvmsg(struct dill_ws_sock *self, int *flags,
+      struct dill_iolist *first, int64_t deadline) {
+    int rc;
+    int close_frame = 0;
     size_t res = 0;
     /* Message may consist of multiple frames. Read them one by one. */
     struct dill_iolist it;
@@ -408,7 +411,7 @@ static ssize_t dill_ws_recvl_base(struct dill_msock_vfs *mvfs, int *flags,
             iol_msg.iol_len = sizeof(self->msg);
             iol_msg.iol_next = NULL;
             iol_msg.iol_rsvd = 0;
-            self->indone = 1;
+            close_frame = 1;
             break;
         default:
             errno = EPROTO;
@@ -456,7 +459,7 @@ static ssize_t dill_ws_recvl_base(struct dill_msock_vfs *mvfs, int *flags,
         }
         if(hdr1[0] & 0x80) break;
     }
-    if(dill_slow(self->indone)) {
+    if(dill_slow(close_frame)) {
         if(dill_slow(res == 1)) {errno = EPROTO; return -1;}
         if(res >= 2) {
            self->status = dill_gets((uint8_t*)&self->status);
@@ -465,10 +468,24 @@ static ssize_t dill_ws_recvl_base(struct dill_msock_vfs *mvfs, int *flags,
            self->msglen = (uint8_t)res - 2;
         }
         else self->msglen = 0;
+        self->indone = 1;
         errno = EPIPE;
         return -1;
     }
     return res;
+}
+
+static ssize_t dill_ws_recvl_base(struct dill_msock_vfs *mvfs, int *flags,
+      struct dill_iolist *first, struct dill_iolist *last, int64_t deadline) {
+    struct dill_ws_sock *self = dill_cont(mvfs, struct dill_ws_sock, mvfs);
+    if(dill_slow(self->indone)) {errno = EPIPE; return -1;}
+    if(dill_slow(self->inerr)) {errno = ECONNRESET; return -1;}
+    int rc = dill_iolcheck(first, last, NULL, NULL);
+    if(dill_slow(rc < 0)) return -1;
+    ssize_t sz = dill_ws_recvmsg(self, flags, first, deadline);
+    /* The rest of the stream cannot be parsed after a failure. */
+    if(dill_slow(sz < 0 && !self->indone)) self->inerr = 1;
+    return sz;
 }
 
 int dill_ws_send(int s, int flags, const void *buf, size_t len,
